@@ -1,0 +1,12 @@
+{
+  "title": "Print LaTeX Technology",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Add independent print technology: expl3 LaTeX framework with Tectonic, semio design tokens, report/paper/flyer templates, and Zukunft Bau report family.",
+  "summary": "Added independent print technology: expl3 LaTeX framework (semio.cls + modular .sty packages) with Tectonic prebuilt binary bootstrap, token/font generation from ui/styling/tokens.json, report/paper/flyer templates, and Zukunft Bau report family. All 6 template PDFs build via bun ./📜️script.ts test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1833"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️e5c5b3b0c0454acda1eedcd7f5447e17"]
+}

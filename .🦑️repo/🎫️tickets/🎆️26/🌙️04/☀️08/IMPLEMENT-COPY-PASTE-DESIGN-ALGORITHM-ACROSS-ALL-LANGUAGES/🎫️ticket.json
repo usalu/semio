@@ -1,0 +1,11 @@
+{
+  "title": "Implement Copy Paste Design Algorithm Across All Languages",
+  "status": "closed",
+  "description": "Implement CopyDesign and PasteDesign algorithms in Go, Rust, TypeScript adapter, and Storybook story. C# reference implementation is already done and tests pass. Need to port to all other languages with identical behavior and ensure all tests pass.",
+  "summary": "Implemented CopyDesign and PasteDesign algorithms across all languages with passing tests. TypeScript: Added copyDesign/pasteDesign in @semio-tech/compose-js, extended nativeAlgorithmAdapter with copy|paste operations. Added CopyAndPaste Storybook story. Added asset exports. All tests pass across Go, Rust, TypeScript, C#.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1295"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️a7c1b542ae844e41a10185075574426f"]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/plugin-registry",
+  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry",
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry",
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true
+      }
+    }
+  },
+  "tags": [
+    "scope:framework"
+  ]
+}

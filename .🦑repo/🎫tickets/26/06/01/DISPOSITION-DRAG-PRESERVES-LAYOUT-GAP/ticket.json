@@ -1,9 +1,0 @@
-{
-  "title": "Disposition Drag Preserves Layout Gap",
-  "emoji": "🖱",
-  "status": "closed",
-  "description": "When dragging a disposition, all other dispositions must remain in the same spot; leave a gap of exactly the same original size where the dragged disposition was.",
-  "summary": "Dragging a disposition no longer shifts siblings or vacates its original slot.\n\nCanvas: the wrapper stays on the declared frame (layout gap preserved); live drag/resize is applied on the content layer via canvasDispositionDragContentStyle.\n\nFlow: pixel-offset translate moved to content; flowDispositionReserveStyle keeps the wrapper footprint while ink/chrome are active; flow pixel transforms are no longer mistaken for section frames on the wrapper.\n\nAdded geometry tests and DOM regressions for canvas peer stability and resize-on-content. 54 renderer tests pass.",
-  "goal": "🎯framework🎯presentation",
-  "sessions": ["⚪150912a33b6d422b86e86d796633ea60"]
-}

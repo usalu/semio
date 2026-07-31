@@ -45,6 +45,6 @@
       "@semio-tech/compose-sketchpad/*": ["../client/ui/sketchpad/*"]
     }
   },
-  "include": ["index.ts", "kit-store.🟦worker.ts"],
+  "include": ["index.ts", "kit-store.🟦️worker.ts"],
   "exclude": ["node_modules", "_debug_diff.ts", "debug_design.cjs"]
 }

@@ -107,4 +107,4 @@ In `\semio@heading@cap@muted@core` in [print/tex/semio-window.sty](print/tex/sem
 
 1. Kill any stray `tectonic` processes, then rebuild: `bun nx run @semio-tech/mit-bestand-bericht:build` from the repo root.
 2. Re-render the affected pages (paragraph chips `Recherche`/`Bauteilbörsen`, and a kind window header row e.g. `Blockquote`) to a high-zoom PNG and visually confirm the canvas fill no longer overshoots the border on the right/bottom edges, matching the alignment already seen on colored chips (`Arbeitspakete`, `AP-Erfahrung`).
-3. Update `.repo/🎫/26/07/09/FIX-PRINT-PARAGRAPH-CHIP-ALIGNMENT/verify-log.md` with the fix and new verification screenshots, then close/reopen the ticket per repo workflow as needed.
+3. Update `.repo/🎫️/26/07/09/FIX-PRINT-PARAGRAPH-CHIP-ALIGNMENT/verify-log.md` with the fix and new verification screenshots, then close/reopen the ticket per repo workflow as needed.

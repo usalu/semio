@@ -86,7 +86,7 @@ No changes needed to `windowEngagementToGolden` / `windowKindsToGolden` (already
 ### 6. Ticket + validation
 
 - Start by reading `repo://goals` and opening a new ticket (e.g. "Reorganize DAG Nodes with Left-to-Right Tree Layout") via the repo MCP; place any temp logs/scripts under the ticket folder.
-- Rebuild WASM for both crates (`bun ./script.ts wasm` in the dag crate and flow core, invoked by their `test` targets) and run vitest for `@dag/*` and `@flow/*`.
+- Rebuild WASM for both crates (`bun ./📜️script.ts wasm` in the dag crate and flow core, invoked by their `test` targets) and run vitest for `@dag/*` and `@flow/*`.
 - Extend the existing runtime validators `validate-dag-runtime.mjs` and `validate-flow-runtime.mjs` in the `26/06/07` tickets (or the new ticket) to click the Reorganize engagement and assert nodes become left-to-right ordered. Confirm via the `[DEBUG]` fixture logs already emitted on the canvases.
 
 ### Decisions made (opinionated)

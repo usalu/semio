@@ -1,6 +1,0 @@
-{
-  "title": "Consolidate Elements UI Into Index",
-  "emoji": "🧹",
-  "status": "closed",
-  "summary": "Consolidated all ts/tsx files in elements/ui into a single index.tsx (~34k lines). This includes elements.tsx, all configurations (tailwind, postcss, eslint, vitest), and all 40+ story files from .storybook/stories and stories/ folder. Conflicts in story files were resolved by prefixing local declarations with filename-based identifiers. Imports were deduplicated and moved to the top. Updated package.json exports and scripts, and adjusted Storybook main.ts to point to index.tsx for stories."
-}

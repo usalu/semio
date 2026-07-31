@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-// #region 🔖Devcontainer
+// #region 🔖️Devcontainer
 {
   "name": "compose",
   "dockerComposeFile": "docker-compose.yml",
@@ -208,7 +208,7 @@
         "dotnet.defaultSolution": "Monorepo.sln",
         "cmake.useCMakePresets": "always",
         "cmake.configureOnOpen": false,
-        "cmake.buildDirectory": "${containerWorkspaceFolder}/.🦑repo/⚡cache/cmake/${presetName}",
+        "cmake.buildDirectory": "${containerWorkspaceFolder}/.🦑️repo/⚡️cache/cmake/${presetName}",
         "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
         "chat.agent.maxRequests": 5000,
         "editor.minimap.enabled": true,
@@ -226,4 +226,4 @@
     }
   }
 }
-// #endregion 🔖Devcontainer
+// #endregion 🔖️Devcontainer

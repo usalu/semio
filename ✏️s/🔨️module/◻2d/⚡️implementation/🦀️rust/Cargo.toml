@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-kernel-geometry-2d"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+name = "kernel_2d_rs"
+path = "../../../../../✏️s/🔨️module/◻2d/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[features]
+default = ["booleans", "trace"]
+booleans = ["dep:geo"]
+trace = []
+
+[dependencies]
+async-trait = "0.1.88"
+kernel_2d_engine = { path = "../../../../../✏️s/🔨️module/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-kernel-geometry-2d-engine" }
+geo = { version = "0.29", optional = true }
+serde = { version = "1.0.219", features = ["derive"] }
+semio-framework-core = { path = "../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }

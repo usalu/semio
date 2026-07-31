@@ -1,0 +1,14 @@
+{
+  "title": "Generalize VcsHistory/ProtocolList Surfaces to GraphTimeline/BlockList",
+  "emoji": "🧭️",
+  "status": "closed",
+  "description": "Rename the app-named SurfaceKind variants VcsHistory -\u003e GraphTimeline (wire \"vcs-history\" -\u003e \"graph-timeline\") and ProtocolList -\u003e BlockList (wire \"protocol-list\" -\u003e \"block-list\") across ui/wgpu/rs/lib.rs, framework/core/js/index.ts, framework/renderer/react/ui-interpreter.tsx (+ dedicated host component file rename), framework/renderer/wgpu/rs/lib.rs, and any call sites in the owning app's plugin crate. Also generalize scene struct/type names (VcsHistoryScene/HistoryColumn -\u003e GraphTimelineScene/HistoryColumn as needed; ProtocolListScene/ProtocolPaletteEntry -\u003e BlockListScene/BlockPaletteEntry). Pure rename + minor data-driven generalization, part of a sequential surface-generalization series.",
+  "summary": "Found this ticket already open with most of the VcsHistory/ProtocolList -\u003e GraphTimeline/BlockList rename already landed by a prior session (ui/wgpu/rs/lib.rs, framework/core/js/index.ts, framework/renderer/react/ui-interpreter.tsx + graph-timeline-host.tsx/block-list-host.tsx, framework/renderer/wgpu/rs/lib.rs, os-shell.tsx, vcs/plugin/rs/lib.rs, protocol/plugin/rs/lib.rs, forms/plugin/rs/lib.rs, protocol/rs/lib.rs, ui/js/react/index.tsx labels were all already consistent with the new names). Repo-wide grep found two compile-breaking stragglers still using the old UiComponentSceneNode field names (vcs_history/protocol_list) that no longer exist on the struct (which already has graph_timeline/block_list): mathematical/plugin/rs/lib.rs's empty_component_scene() and infinite/world/rs/lib.rs's test-only scene_with_selection() helper. Fixed both by renaming the two struct-literal fields to graph_timeline/block_list (infinite/world/rs/lib.rs was also missing the second field entirely, added it). Left vcs/plugin/rs/lib.rs's own VCS_PLAY_WINDOW_HISTORY = \"vcs-history\" window-id constant and protocol app's build_protocol_list_scene()/test-name vocabulary untouched since those are app-owned identifiers, not the framework SurfaceKind wire name, and don't violate framework purity.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2034"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️75e75ace6e594d9dad1e7149be22e65c"
+  ]
+}

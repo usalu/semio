@@ -42,7 +42,7 @@ isProject: false
 Apps are cross-wired at three levels:
 
 - `ui/styling/vite-elements-assets.ts` exports `playgroundRendererResolveAliases` (~100 entries) mapping every package name to raw source paths; consumed by playground dev, OS dev, Storybook, and ~30 vitest configs. Compose/coda/vscode/mit-bestand configs carry their own manual alias lists (e.g. `@semio-tech/puzzle-2d-react` → `../../../../../puzzle/2d/react/index.tsx` in [compose/client/ui/desktop/js/vite.renderer.config.ts](compose/client/ui/desktop/js/vite.renderer.config.ts)).
-- `framework/product/playground/renderer/react/index.tsx` (~13k lines) statically imports all ~24 apps into per-app `🔖XxxPlayHost` regions; `playgroundRendererShellEntryPlugin` slices it per app. Adding/breaking one app affects all.
+- `framework/product/playground/renderer/react/index.tsx` (~13k lines) statically imports all ~24 apps into per-app `🔖️XxxPlayHost` regions; `playgroundRendererShellEntryPlugin` slices it per app. Adding/breaking one app affects all.
 - Adding an app requires editing three registries: `resolvePlaygroundDevApp` in [script.ts](script.ts), `PACKAGE_ROOT_BY_ENTRY` in [framework/product/playground/dev/script.ts](framework/product/playground/dev/script.ts), `importPlaygroundAppDefinition` in [framework/product/playground/core/js/app-registry.ts](framework/product/playground/core/js/app-registry.ts).
 - No enforcement: `script.ts lint` and `nx.json` reference a root `.dependency-cruiser.cjs` that does not exist.
 
@@ -86,7 +86,7 @@ Dependency direction inverts: apps depend on framework; framework never names a 
 
 ## Phase 3 — Open-closed playground registration (renderer split)
 
-- Move each `🔖XxxPlayHost` region out of `framework/product/playground/renderer/react/index.tsx` into the owning app's `react/index.tsx` (existing files, region-structured). Each app core's `bootRenderer` dynamic-imports its own react package instead of `@semio-tech/framework-playground-renderer-react/<kind>`.
+- Move each `🔖️XxxPlayHost` region out of `framework/product/playground/renderer/react/index.tsx` into the owning app's `react/index.tsx` (existing files, region-structured). Each app core's `bootRenderer` dynamic-imports its own react package instead of `@semio-tech/framework-playground-renderer-react/<kind>`.
 - The framework renderer keeps only generic primitives (`bootPlayground`, chrome, panels). Delete `playgroundRendererShellEntryPlugin` and `stripPlaygroundRendererForPuzzleKind` from `vite-elements-assets.ts`; drop all app core/react deps from `framework/product/playground/renderer/react/package.json` and `framework/product/playground/core/package.json`.
 - Replace the three registries with a manifest mechanism:
   - Each app's core package.json declares itself, e.g. `"semio": { "playgroundApp": { "kind": "flow", "aliases": ["flow"], "packageRoot": "flow", "port": 6016 } }` (ports move here from `PLAYGROUND_PORTS` in `repo/lib/js/index.ts`).
@@ -104,7 +104,7 @@ Dependency direction inverts: apps depend on framework; framework never names a 
 
 ## Phase 5 — Verification
 
-- Run per-app dev servers (`bun ./script.ts dev flow|layout|note|2d|3d|5d|cad|s|...`) and confirm boot via console output; run `bun ./script.ts test` for affected packages; build Storybook and one static play site; run the new lint.
+- Run per-app dev servers (`bun ./📜️script.ts dev flow|layout|note|2d|3d|5d|cad|s|...`) and confirm boot via console output; run `bun ./📜️script.ts test` for affected packages; build Storybook and one static play site; run the new lint.
 
 ## Execution notes
 

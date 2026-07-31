@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 .storybook/stories/cad/Renderer.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/cad/Renderer.stories.tsx
 // Specs: Host `InteractionCanvas`/`InteractionSpatialView` from `@semio-tech/cad-js-renderer` against the real
 // `primitive.box` interaction shipped at `cad/asset/modelDefinition/spatial.shape/interaction/box.json` — no
 // `cad/plugin/rs` wasm exists yet (verified: only `Cargo.toml`/`lib.rs`, no `pkg/`), so this drives the pure-TS
 // interaction state machine (`pureTsStateEngineProvider`) with a story-local `StoryBoxKernel` that copies every
 // preview-math method off `r3fPreviewKernel` (`R3FPreviewKernel extends PreciseSpatialKernelMath`, see
-// `cad/renderer/js/index.tsx`'s `⚡R3FPreviewKernel` region) via `Object.assign` and only overrides the four
+// `cad/renderer/js/index.tsx`'s `⚡️R3FPreviewKernel` region) via `Object.assign` and only overrides the four
 // solid-producing members — the exact pattern the core test suite itself uses
 // (`cad/core/js/index.ts` "runs box workflow with a recording kernel stub (no solid modeling in core)").
 // Summary: `Idle` shows the fresh ground-pick plane; `CommittedBox` scripts corner → corner → height → confirm
@@ -13,19 +13,19 @@
 // `useTessellation`, then leaves the ground-pick canvas and a manual toolbar (height, confirm, undo) live for
 // further exploration.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react";
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { InteractionCanvas, InteractionSpatialView, r3fPreviewKernel, useInteractionRuntime, useInteractionSnapshot, useTessellation } from "@semio-tech/cad-js-renderer";
 import { Model, loadSpatialInteraction, solidRef, type InteractionRuntimeOptions, type InteractionSpec, type MeshTransfer, type SpatialKernel, type Vec3 } from "@semio-tech/cad-js-core";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// #region 🧊StoryBoxKernel
+// #region 🧊️StoryBoxKernel
 type StoryBoxInput = { readonly cornerA: Vec3; readonly cornerB: Vec3; readonly height: number };
 
-/** @emoji 📦 Builds a real (double-sided, so winding never hides it) box `MeshTransfer` purely from JS math — no OpenCascade wasm. */
+/** @emoji 📦️ Builds a real (double-sided, so winding never hides it) box `MeshTransfer` purely from JS math — no OpenCascade wasm. */
 function buildStoryBoxMesh({ cornerA, cornerB, height }: StoryBoxInput): MeshTransfer {
   const minX = Math.min(cornerA[0], cornerB[0]);
   const maxX = Math.max(cornerA[0], cornerB[0]);
@@ -64,7 +64,7 @@ function buildStoryBoxMesh({ cornerA, cornerB, height }: StoryBoxInput): MeshTra
   };
 }
 
-/** @emoji 🧊 Story-local `SpatialKernel` stub: preview math inherited from `r3fPreviewKernel`, solid operations hand-authored — mirrors `RecordingStubKernel` in `cad/core/js/index.ts`'s interaction test suite. */
+/** @emoji 🧊️ Story-local `SpatialKernel` stub: preview math inherited from `r3fPreviewKernel`, solid operations hand-authored — mirrors `RecordingStubKernel` in `cad/core/js/index.ts`'s interaction test suite. */
 class StoryBoxKernel {
   readonly id = "story-box-kernel";
   readonly operations = ["solid.createBox", "entity.tessellate"] as const;
@@ -92,7 +92,7 @@ class StoryBoxKernel {
     return this.lastBox ? buildStoryBoxMesh(this.lastBox) : { position: new Float32Array(0), normal: new Float32Array(0), index: new Uint32Array(0), edges: new Float32Array(0), faceGroups: [], edgeGroups: [], faceInfos: [], edgeInfos: [] };
   }
 }
-// #endregion 🧊StoryBoxKernel
+// #endregion 🧊️StoryBoxKernel
 
 // #region 🎛️StoryHost
 const BOX_INTERACTION_ID = "primitive.box";
@@ -192,7 +192,7 @@ function CadBoxInteractionRuntimeHost({ spec, opts, kernel, autoRun }: { readonl
 // #endregion 🎛️StoryHost
 
 const meta = {
-  title: "📐cad",
+  title: "📐️cad",
   component: CadBoxInteractionStory,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

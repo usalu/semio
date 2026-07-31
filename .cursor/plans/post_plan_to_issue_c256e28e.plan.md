@@ -3,7 +3,7 @@ name: Post Plan To Issue
 overview: When a ticket is opened or reopened with a bound plan (e.g. .cursor/plans for Cursor, and the equivalent for Claude/Codex/Copilot/Kiro), post the plan's markdown to the ticket's GitHub issue as a collapsible comment.
 todos:
  - id: region
-   content: Add 📝TicketPlanComment region in main.go with stripPlanFrontmatter, formatPlanComment, and postTicketPlanComment helpers.
+   content: Add 📝️TicketPlanComment region in main.go with stripPlanFrontmatter, formatPlanComment, and postTicketPlanComment helpers.
    status: completed
  - id: bodyfile
    content: Update ghAddComment to use a temp --body-file for robustness with large plan bodies.
@@ -35,9 +35,9 @@ Decisions confirmed: render the plan markdown inside a collapsible `<details>` (
 
 ## Changes (all in [repo/client/cli/main.go](repo/client/cli/main.go))
 
-### 1. New region `📝TicketPlanComment`
+### 1. New region `📝️TicketPlanComment`
 
-Add after the `📦MoveTicketPlan` region (after line 45349). Three helpers:
+Add after the `📦️MoveTicketPlan` region (after line 45349). Three helpers:
 
 - `stripPlanFrontmatter(content string) string` — if content starts with `---\n`, drop through the next `\n---` line; return the remainder trimmed.
 - `formatPlanComment(plan *TicketPlan, src string) (string, error)` — `os.Stat(src)`:
@@ -46,7 +46,7 @@ Add after the `📦MoveTicketPlan` region (after line 45349). Three helpers:
   - Each section is a collapsible block so long plans stay tidy:
 
 ```text
-# 📋 Plan
+# 📋️ Plan
 
 <details>
 <summary>gumball_to_flow_9e9ce826.plan.md</summary>

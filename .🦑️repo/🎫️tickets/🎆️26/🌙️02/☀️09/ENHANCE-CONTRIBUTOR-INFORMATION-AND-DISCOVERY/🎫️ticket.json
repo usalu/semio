@@ -1,0 +1,12 @@
+{
+  "title": "Enhance Contributor Information and Discovery",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "The contributors should have more information in contributor.json. There should always be the preferred name/email and aliases in plural names/emails. Implement a contributor discovery mechanism from a string like 'Name \u003cemail@example.com\u003e' that updates the contributor if more information is found. Match by email first, then by name. Extend existing tests to cover these changes.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/452"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repocontributormechanism",
+  "sessions": ["⚪️1a1a212aee684a078bc08dfcca485927"]
+}

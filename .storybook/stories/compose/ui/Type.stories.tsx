@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/ui/.storybook/story/Type.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/ui/.storybook/story/Type.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses a type prop directly. Kit is optional for 3D representations.
 // Summary: Type stories: Default, ConnectorsOnly, RepresentationOnly, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { ConnectorGraphDto as Connector, Kit, Type as ComposeKind } from "@semio-tech/compose-react";
 import { ComposeType as TypeView } from "@semio-tech/ui-react";
@@ -31,7 +31,7 @@ const firstConnectorId = (storyKind.connectors ?? [])[0]?.id ?? "";
 
 // #endregion 🖥️Data
 
-// #region 🧱Type
+// #region 🧱️Type
 
 const meta: Meta<typeof TypeView> = {
   title: "🏘️compose⚛️react/Type",
@@ -101,4 +101,4 @@ export const FeaturesDisabled: Story = {
   render: (args) => frame(<TypeView {...args} />),
 };
 
-// #endregion 🧱Type
+// #endregion 🧱️Type

@@ -1,0 +1,12 @@
+{
+  "title": "Implement Rust Session Backend Service",
+  "emoji": "🔨️",
+  "status": "closed",
+  "description": "Implement the Rust session-backend service as specified in the implementation plan (.repo/✍️/rust-session-backend-implementation-plan.md). This includes: session domain types (SessionId, FieldPatch, PropertyKey, ConflictPolicy), session state management, PostgreSQL schema with migrations, persistence layer, HTTP/WebSocket API with axum, session actor with single-writer semantics, conflict resolution with property clocks, compose presence state, and tests. All code goes into the existing compose/rs crate with the session feature flag. Binary at src/bin/bin.rs.",
+  "summary": "Fixed all compilation errors in the compose-session crate. Resolved sqlx/rusqlite libsqlite3-sys conflict by using sqlx-core and sqlx-postgres sub-crates directly. Updated all import paths. Fixed 17-column tuple overflow with Row::get. Added 29 unit tests covering domain, command, and error types. Build and tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1274"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️ef07f15066d440d2aaaefdab675a7e4f"]
+}

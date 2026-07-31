@@ -1,8 +1,0 @@
-{
-  "title": "Decouple Sketchpad From Metabolism Kit",
-  "emoji": "🔌",
-  "status": "closed",
-  "description": "Make sketchpad independent from the metabolism kit: generic env-driven multi-kit preload, remove hardcoded fixture commands and asset roots from production code, stop bundling metabolism.zip in play build, add launch configs that preload the kit for dev/testing.",
-  "goal": "🎯r2602🎯runningsketchpad🎯apps🎯designapp",
-  "sessions": []
-}

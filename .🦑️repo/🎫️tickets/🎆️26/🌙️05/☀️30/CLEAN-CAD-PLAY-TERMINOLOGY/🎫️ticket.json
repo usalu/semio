@@ -1,0 +1,9 @@
+{
+  "title": "Clean Cad Play Terminology",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Remove legacy spatial/R3F package naming from CAD play and related surfaces. Rename user-facing labels and identifiers to follow cad/js folder naming (CAD play, cad-play, CadPlay*, CAD_PLAY_*). Update imports/exports and launch configs. Run tests.",
+  "summary": "Renamed legacy spatial/R3F play naming to CAD-aligned identifiers: SpatialPlay* → CadPlay*, SPATIAL_PLAY_* → CAD_PLAY_*, spatial-play/cad.play string ids, HTML title \"CAD Play\", modelsFromSpatialJson → modelsFromCadJson, __spatialR3fTestKernel → __cadRendererTestKernel. Updated package description and renderer docstring path. All 45 @semio-tech/cad-js-renderer tests pass.",
+  "goal": "🎯️cad",
+  "sessions": ["⚪️966fb08101fc4e3f8d92ecfe94f2f392"]
+}

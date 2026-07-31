@@ -66,7 +66,7 @@ New 6-node diamond with multi-input/output and fan-in/out: `source` -> `scale` &
 
 ### 5. Validation (ticket folder only)
 
-- Extend [validate-dag-runtime.mjs](.repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs) to drive Playwright pointer events: drag a node and reconnect an edge endpoint, then assert the logged `[DEBUG]` fixture JSON shows changed node coords and changed edge wiring.
+- Extend [validate-dag-runtime.mjs](.repo/🎫️/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs) to drive Playwright pointer events: drag a node and reconnect an edge endpoint, then assert the logged `[DEBUG]` fixture JSON shows changed node coords and changed edge wiring.
 - Run `cargo test -p mathematical_graph_port_directed_dag` and the dag vitest via the existing `script.ts test` route; run the runtime probe against `dev:dag`.
 
 ### Risks / notes

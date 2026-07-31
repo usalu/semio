@@ -1,0 +1,19 @@
+{
+  "title": "Fix Aggregator Fill Missing In Top View",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Aggregator: when filling, some objects are missing in the 3D top window and only show in the perspective pane. Both split panes must always show the same filled objects. MCP unavailable (auth skipped); ticket on disk. Goal: 🎯️r2602/🎯️runningsketchpad. Related prior fix: 26/07/28/FIX-PUZZLE-3D-FILL-VIEW-MISMATCH.",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [],
+  "summary": "Fixed Aggregator fill objects missing in Top but visible in Perspective. Root causes: (1) WorldProjectionContentFrame was one-shot — fill planning expands content bounds but Top's orthographic frustum stayed locked to the seed footprint; kept framing while !viewportOwned and re-frame on worldSceneContentBoundsKey changes. (2) revealCutoffs reconciliation reset worldRevealCutoffStore on every fillBuildTick identity churn, clobbering live slider previews — reconcileCommittedRevealCutoffs only writes when the committed number changes. world-r3f vitest framing tests pass; reconcile helper verified.",
+  "files": [
+    ".🦑️repo/🎫️tickets/26/07/31/FIX-AGGREGATOR-FILL-MISSING-IN-TOP-VIEW/notes.md",
+    ".🦑️repo/🎫️tickets/26/07/31/FIX-AGGREGATOR-FILL-MISSING-IN-TOP-VIEW/ticket.json",
+    ".🦑️repo/🎫️tickets/26/07/31/FIX-AGGREGATOR-FILL-MISSING-IN-TOP-VIEW/verify-reconcile.mjs",
+    ".🦑️repo/🎫️tickets/26/07/31/FIX-AGGREGATOR-FILL-MISSING-IN-TOP-VIEW/verify-reconcile.txt",
+    ".🦑️repo/🎫️tickets/26/07/31/FIX-AGGREGATOR-FILL-MISSING-IN-TOP-VIEW/vitest-world-r3f-final.txt",
+    "🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🌍️world/🎨️r3f/⚡️implementation/🟦️typescript/📦️index.tsx",
+    "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx",
+    "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/🧪️index.test.ts"
+  ]
+}

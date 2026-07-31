@@ -97,7 +97,7 @@ Follow `PlaygroundDraw` / `DrawPlayController`:
 ## Tooling and commands
 
 - Root [package.json](package.json): `dev:note`, `test:note` scripts (nx-based, matching `dev:draw`/`test:draw`).
-- [.vscode/launch.json](.vscode/launch.json): `🛠️dev📝note` entry (`bun run dev:note`, `NOTE_PLAY_PORT=6080`, group `3_dev`, ordered next to draw/writer).
+- [.vscode/launch.json](.vscode/launch.json): `🛠️dev📝️note` entry (`bun run dev:note`, `NOTE_PLAY_PORT=6080`, group `3_dev`, ordered next to draw/writer).
 - Verify workspace globs pick up `note/*` packages; add if needed.
 
 ## Verification

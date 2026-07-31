@@ -1,0 +1,11 @@
+{
+  "title": "Fix Windsurf Hook Mapping Semantics",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Windsurf agents hook mapping is not always semantically correct. e.g. grep is not identified as searching, sed is either searching or editing, etc.",
+  "summary": "Fixed tool classification and hook mapping for windsurf pre_run_command. Generic search and edit tools like grep and sed are now correctly classified.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/664"
+  },
+  "goal": "🎯️aioptimizedrepo"
+}

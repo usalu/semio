@@ -44,7 +44,7 @@ This turns each getter from O(scene) into O(chain-depth) and reads `getWorldPosi
 
 - Re-run a CPU profile of a pointer drag/pan on the 5d 3d surface at `localhost:6014`; confirm `updateMatrixWorld`/`multiplyMatrices` no longer dominate and a ~30-move drag completes in well under a second (was 136s).
 - Confirm attraction/cable endpoint lines still render in the correct world positions after relocate, and vortex hover/select still works.
-- Run the puzzle/3d build (`bun ./script.ts build` in `puzzle/3d/play`) and the 5d build (`puzzle/5d/play`) to confirm no type regressions.
+- Run the puzzle/3d build (`bun ./📜️script.ts build` in `puzzle/3d/play`) and the 5d build (`puzzle/5d/play`) to confirm no type regressions.
 
 ## Optional follow-ups (only if jank remains after primary fix)
 

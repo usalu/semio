@@ -1,0 +1,11 @@
+{
+  "title": "Fix VSCode Extension Issues",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "repo vscode extension:\n- target and temp are appearing as user projects although they are not\n- sections in the explorer sideview are not appearing\n- definitions tree items are appearing twice - once wrongly with a section emoji in the right place and once on root of the section (not part of the subsection) as definitions.\n- filter kind menu buttons are working but should indicate the filter state.",
+  "summary": "Fixed VS Code extension issues: target/temp project exclusion, implemented Sections view, added filter state toggles.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/440"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repovscodeextension"
+}

@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,9 +6,9 @@
 
 // Type declarations for Electron Forge environment variables.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🎮Electron Fuses
+// #region 🎮️Electron Fuses
 // Type declarations for Electron Forge fuse options.
 // Consumers MUST use these enums for configuring fuse settings.
 
@@ -26,4 +26,4 @@ declare module "@electron/fuses" {
   }
 }
 
-// #endregion 🎮Electron Fuses
+// #endregion 🎮️Electron Fuses

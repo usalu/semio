@@ -47,7 +47,7 @@ Add a first-class `Cardinality` to every channel. It is the source of truth in `
 
 ## 1. Neural engine — source of truth
 
-In [neural/engine/lib.rs](neural/engine/lib.rs), in a new `#region 🔖Cardinality`:
+In [neural/engine/lib.rs](neural/engine/lib.rs), in a new `#region 🔖️Cardinality`:
 
 - Add `enum Cardinality { ExactlyOne, ZeroOrOne, ZeroOrMore, OneOrMore, Exactly(usize) }` with `Serialize`/`Deserialize` as the compact symbol string (`"!"`,`"?"`,`"*"`,`"+"`, or the number as a string). Methods: `symbol() -> String`, `is_collection() -> bool`, `accepts(count: usize) -> bool`, `count_range() -> (usize, Option<usize>)`.
 - Add `cardinality: Cardinality` to `ChannelSpec` (`#[serde(default)]` = `ExactlyOne`) and a `with_cardinality(...)` builder. Update `ChannelSpec::list(...)` (line ~516) to default to `ZeroOrMore`.

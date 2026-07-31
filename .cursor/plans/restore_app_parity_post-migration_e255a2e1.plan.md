@@ -9,7 +9,7 @@ isProject: false
 
 ## Root cause (applies to nearly every app)
 
-The Rust Plugin Framework Migration (`.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION`) replaced each app's old TypeScript `PlayShellController` (rich commands, real canvas hosts, domain engines) with a new `<domain>/plugin/rs/lib.rs` that only implements a **scaffold**: declarative panels, a handful of CRUD commands, and a simplified scene (`canvas-2d`/`node-graph`/`world-3d`/`table`) that frequently **hardcodes placeholder geometry** (`"box"`, fixed rects, empty pixel buffers) instead of resolving real fixture data. Critically, the actual domain engines from before the migration are often **still present on disk but never called** by the new plugin:
+The Rust Plugin Framework Migration (`.repo/🎫️/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION`) replaced each app's old TypeScript `PlayShellController` (rich commands, real canvas hosts, domain engines) with a new `<domain>/plugin/rs/lib.rs` that only implements a **scaffold**: declarative panels, a handful of CRUD commands, and a simplified scene (`canvas-2d`/`node-graph`/`world-3d`/`table`) that frequently **hardcodes placeholder geometry** (`"box"`, fixed rects, empty pixel buffers) instead of resolving real fixture data. Critically, the actual domain engines from before the migration are often **still present on disk but never called** by the new plugin:
 
 | Engine (still exists)                                | Consumed by new plugin?                                 |
 | ---------------------------------------------------- | ------------------------------------------------------- |
@@ -65,7 +65,7 @@ This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`ren
 
 - All plugins register `mod+z`/`mod+shift+z` keybindings but most never implement `undo`/`redo` in `handle_command` — dead shortcuts everywhere.
 - `connectMediaPorts` exists in flow/dag/sequence plugins but the WGPU node-graph renderer never dispatches it (out of scope per React-only decision, but confirms React is the right renderer target).
-- E2E (`.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts`) only asserts "shell visible" / canvas >8px — it cannot and did not catch any of the above, which is why migration "closed" with 25/25 green.
+- E2E (`.repo/🎫️/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts`) only asserts "shell visible" / canvas >8px — it cannot and did not catch any of the above, which is why migration "closed" with 25/25 green.
 
 ## Execution approach
 

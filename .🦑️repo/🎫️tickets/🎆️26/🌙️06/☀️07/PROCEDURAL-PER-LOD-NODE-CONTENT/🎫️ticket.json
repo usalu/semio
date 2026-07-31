@@ -1,0 +1,17 @@
+{
+  "title": "Procedural Per-Lod Node Content",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Give every DAG node a PascalCase name, abbreviation, and icon; rewrite shared DAG host LOD rendering so each zoom tier shows minimap body only, overview icon, compact abbreviation, normal name, detail icon+abbreviation, micro icon+name.",
+  "summary": "Added PascalCase name, abbreviation, and icon to every DAG node kind (NeuronKindInfo, DagNodeSpec, flow catalogue, brep kinds). Introduced to_pascal_case/normalize_node_display, shared IconPaintCache in directed/types.rs wired into BoardHost and DagHost, and rewrote DagDrawLod content selection: minimap body-only, overview icon, compact abbreviation, normal name, detail icon+abbreviation, micro icon+name. Extended Rust/TS tests and DEBUG lod/icon/label logging on tier changes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1567"
+  },
+  "goal": "🎯️flow",
+  "plan": {
+    "client": "cursor",
+    "id": "91529c2d",
+    "local": "procedural_per-lod_node_content_91529c2d.plan.md"
+  },
+  "sessions": ["⚪️f5fd30765d624f2c95490587e1375045"]
+}

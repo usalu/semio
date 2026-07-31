@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/TableHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/TableHost.stories.tsx
 // Specs: Host the framework renderer's `TableHost` with zero WASM engine — `TableHost` is a pure declarative
 // renderer over `TableScene.columnsJson`/`rowsJson` (`@semio-tech/ui-react`'s `Table`), so a story-local
 // reducer alone is enough to make sorting, row selection, the stepper cell, and the row-action button all
@@ -9,7 +9,7 @@
 // `dispatchCellAction` merges a stepper's `{ delta }` or a row-action button's `{}` into that cell's own
 // `ActionDescriptor.args`, so the reducer reads `rowId` back out of `args` rather than needing a separate wire.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
@@ -34,7 +34,7 @@ const STORY_TABLE_ROWS: readonly StoryTableRow[] = [
 //#region Reducer
 const STORY_TABLE_CONTROLLER_ID = "table-story";
 
-/** @emoji 🧮 Story-local mirror of the `sortTable`/`selectRow`/`adjustCount`/`removeRow` handling a real host app performs against `TableHost`'s dispatched actions. */
+/** @emoji 🧮️ Story-local mirror of the `sortTable`/`selectRow`/`adjustCount`/`removeRow` handling a real host app performs against `TableHost`'s dispatched actions. */
 function reduceStoryTableAction(state: StoryTableState, descriptor: ActionDescriptor): StoryTableState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {
@@ -130,7 +130,7 @@ function TableStoryEmptyHost(): ReactElement {
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/TableHost",
+  title: "🛠️framework🔌️hosts/TableHost",
   component: TableStoryHost,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -140,7 +140,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🧮 Sortable Name/Kind columns, a stepper cell (`adjustCount`), and a row-action delete button (`removeRow`) — click a header to re-sort, the stepper to change count, the row to select it. */
+/** 🧮️ Sortable Name/Kind columns, a stepper cell (`adjustCount`), and a row-action delete button (`removeRow`) — click a header to re-sort, the stepper to change count, the row to select it. */
 export const SortableWithActions: Story = {
   args: { initialRows: STORY_TABLE_ROWS },
 };

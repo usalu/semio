@@ -1,0 +1,12 @@
+{
+  "title": "Fix ID System and Emoji Prefixes",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id. Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/689"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️8553afbd303f45c0ac3d24e724f624ce", "⚪️4a0ed8c5c1254a49b182327d5d505071", "⚪️d896f7417e4c432b9936348c5889d515"]
+}

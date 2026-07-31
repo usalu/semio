@@ -1,0 +1,9 @@
+{
+  "title": "Arrays To Connections in Target Schema",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Replace entity list fields with Relay Connection types in target.schema.graphql; only arrays remain inside Connection.edges (plus ID slice inputs where needed).",
+  "summary": "All entity collection fields now use Relay connection outputs (`FooConnection!`); attribute blobs use `AttributeListingConnection!`. Added `BlueprintEdge`/`BlueprintConnection` for union `Blueprint` replaceables and `OperationEdge`/`OperationConnection` for Change forwards/backwards and Operation-hosted slices. Registered Blueprint*/Operation* in aggregate unions alongside existing connections. Kept `[OperationEdge!]`-style arrays only inside `EntityConnectionInterface` implementations, `[ID!]` only where identifiers must batch (`pieceIds`, `bestRepresentation(tagIds)`). graphql-core parse and cargo test pass.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️5743b82fef5a4b389c788331b5139299"]
+}

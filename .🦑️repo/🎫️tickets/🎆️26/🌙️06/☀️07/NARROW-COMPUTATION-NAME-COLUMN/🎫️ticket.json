@@ -1,0 +1,12 @@
+{
+  "title": "Narrow Computation Name Column",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Middle column of computation nodes should be only as wide as the vertically stacked node name text.",
+  "summary": "Middle computation column width now uses stacked_vertical_name_column_width from per-glyph metrics (dag_glyph_extent) instead of full horizontal label_extent, so brep.box and similar nodes get a narrow center strip that fits vertical text only.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1561"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️05b7f4b2899e4153a36765dae996ccc3"]
+}

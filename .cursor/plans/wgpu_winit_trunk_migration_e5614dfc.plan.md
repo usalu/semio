@@ -50,7 +50,7 @@ if (renderer === "wgpu") {
 }
 ```
 
-`.vscode/launch.json` already has ~26 `🛠️dev<app>🧊wgpu` entries (`s`, `draw`, `cad`, `dag`, `flow`, `puzzle/2d|3d|5d`, `gis/2d`, `forms`, `raster`, `vcs`, `sequence`, `imperative`, `lowpoly`, `layout`, `procedural/2d|3d`, `reasoning/wires`, `shooting`, `trinity/jack|rewrite`, `presentation`, `note`, `writer`) all setting `SEMIO_RENDERER=wgpu`. So the entire scope of "wgpu os, playgrounds, etc" collapses to three crates plus the dev-host wiring:
+`.vscode/launch.json` already has ~26 `🛠️dev<app>🧊️wgpu` entries (`s`, `draw`, `cad`, `dag`, `flow`, `puzzle/2d|3d|5d`, `gis/2d`, `forms`, `raster`, `vcs`, `sequence`, `imperative`, `lowpoly`, `layout`, `procedural/2d|3d`, `reasoning/wires`, `shooting`, `trinity/jack|rewrite`, `presentation`, `note`, `writer`) all setting `SEMIO_RENDERER=wgpu`. So the entire scope of "wgpu os, playgrounds, etc" collapses to three crates plus the dev-host wiring:
 
 - [ui/wgpu/rs](ui/wgpu/rs/lib.rs) — GPU device/surface + input (owns the browser-only bits today)
 - [framework/renderer/wgpu](framework/renderer/wgpu/rs/lib.rs) — the shared boot/shell/scene entry point every app goes through
@@ -137,8 +137,8 @@ flowchart TB
 
 ## 5. Native launch entries
 
-- Add `bun ./script.ts native <plugin>` to [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) (`cargo run -p semio-framework-renderer-wgpu --bin <native-bin> --release -- --plugin <id>`).
-- Add new `.vscode/launch.json` entries following the existing `🛠️dev<emoji><name>🧊wgpu` naming/grouping, e.g. `🛠️dev🖥️s🧊wgpu🖥️native`, starting with `s` plus one or two representative playgrounds (`draw`, `puzzle/3d`) rather than mechanically duplicating all ~26 — native program dylibs need to exist per app first.
+- Add `bun ./📜️script.ts native <plugin>` to [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) (`cargo run -p semio-framework-renderer-wgpu --bin <native-bin> --release -- --plugin <id>`).
+- Add new `.vscode/launch.json` entries following the existing `🛠️dev<emoji><name>🧊️wgpu` naming/grouping, e.g. `🛠️dev🖥️s🧊️wgpu🖥️native`, starting with `s` plus one or two representative playgrounds (`draw`, `puzzle/3d`) rather than mechanically duplicating all ~26 — native program dylibs need to exist per app first.
 
 ## 6. `infinite/world` follow-through
 
@@ -146,5 +146,5 @@ flowchart TB
 
 ## Process
 
-- One MCP ticket (read `repo://goals` first; likely continues the `🎯framework🎯playground` / raw-wgpu-renderer lineage). All temp logs/scripts inside the ticket folder. Edits added to existing files via regions — no new test files, no example files.
+- One MCP ticket (read `repo://goals` first; likely continues the `🎯️framework🎯️playground` / raw-wgpu-renderer lineage). All temp logs/scripts inside the ticket folder. Edits added to existing files via regions — no new test files, no example files.
 - Verification: `trunk build`/`trunk serve` for the web target still boots `s` studio and a couple of single-plugin apps; `cargo run` the native binary opens a real OS window and renders the same shell; hot-swap a plugin dylib while the native app is running and confirm the UI updates without a restart; existing `bun test` / `cargo test` suites stay green.

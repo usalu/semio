@@ -1,0 +1,15 @@
+ 7 | const AGGREGATOR_URL = process.env.AGGREGATOR_URL ?? "http://127.0.0.1:6023/";
+ 8 | const OUT = join(ROOT, "verify-aggregator-e2e.json");
+ 9 | const SHOT = join(ROOT, "aggregator-viewport.png");
+10 | 
+11 | async function warm(url) {
+12 |   const res = await fetch(url);
+                         ^
+error: The socket connection was closed unexpectedly. For more information, pass `verbose: true` in the second argument to fetch()
+  path: "http://127.0.0.1:6023/js/index.ts",
+ errno: 0,
+  code: "ECONNRESET"
+
+      at async warm (/Users/ueli/Documents/semio/.repo/🎫️/26/07/25/FIX-PUZZLE-3D-OBJECTS-NOT-RENDERING/verify-aggregator-e2e.mjs:12:21)
+
+Bun v1.3.14 (macOS arm64)

@@ -1,0 +1,20 @@
+[package]
+name = "semio-framework-os-kernel-protocol-command"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol command layer — Operation/OperationDiff/OpText traits, OperationMeta, Edit, collection ops, descriptor registry"
+
+
+[lints]
+workspace = true
+[lib]
+name = "protocol_command"
+path = "../../../🎮️command/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+protocol_core = { path = "../../../🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol-core" }
+dsl_core = { path = "../../../../🗣️dsl/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+blake3 = "1"

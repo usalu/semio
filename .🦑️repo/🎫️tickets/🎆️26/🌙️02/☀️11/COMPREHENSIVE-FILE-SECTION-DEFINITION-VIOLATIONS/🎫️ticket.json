@@ -1,0 +1,11 @@
+{
+  "title": "Comprehensive File Section Definition Breachs",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Implement comprehensive statutes for files (missing header, wrong header, missing id, wrong id, missing contributors, missing summary, missing license, wrong license, missing requirements, missing docs), sections (wrong format, missing summary, missing requirements, missing docs), and definitions (wrong format, missing summary, missing requirements, missing docs). Ensure every project, bundle, folder, file, section, and definition has proper summary, requirements, todos, and docs. Extend tests to cover all statutes.",
+  "summary": "Completed comprehensive file/section/definition statutes with summary/requirements checks, SectionDocLines exemption system, extended test coverage (5 new tests), all tests passing",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/506"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism"
+}

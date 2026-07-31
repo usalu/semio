@@ -1,7 +1,0 @@
-{
-  "title": "Regenerate metabolism.zip assets with connector schema and copy to all public folders",
-  "emoji": "📋",
-  "status": "closed",
-  "description": "Port was recently renamed to connector. The assets such as metabolism.zip still have sql tables. Regenerate the assets with the scripts. Make sure all metabolism.zip are updated after regenerating such as in public folders on every run.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofoldermechanism"
-}

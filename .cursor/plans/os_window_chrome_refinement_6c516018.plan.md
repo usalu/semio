@@ -110,7 +110,7 @@ Per clarification: add permanent dark-themed PDF targets for every template (not
 
 Applies to: `report`, `paper`, `flyer`, `forschungsbericht`, `zwischenbericht`, `kompaktbericht` (all under [print/template/](print/template/)). `zukunftbau.cls` type-based class loading is unaffected since only the `theme` option changes between wrapper files.
 
-[print/script.ts](print/script.ts) `TEMPLATES` array gains 6 corresponding dark entries (`report-dark` → `report-dark.pdf`, etc.), so `bun ./script.ts test` builds and verifies all 12 PDFs.
+[print/script.ts](print/script.ts) `TEMPLATES` array gains 6 corresponding dark entries (`report-dark` → `report-dark.pdf`, etc.), so `bun ./📜️script.ts test` builds and verifies all 12 PDFs.
 
 `mit-bestand/bericht/zwischenbericht/zwischenbericht.tex` is a standalone real deliverable (not a template gallery entry) and stays light-only — out of scope for the dark variant.
 
@@ -118,9 +118,9 @@ Applies to: `report`, `paper`, `flyer`, `forschungsbericht`, `zwischenbericht`, 
 
 ```mermaid
 flowchart TD
-    gen["bun ./script.ts generate (print/)"] --> tokens["semio-tokens.sty: chrome metrics + colors"]
-    tokens --> testAll["bun ./script.ts test (print/) — builds 12 PDFs: 6 light + 6 dark"]
-    testAll --> mitbestand["bun ./script.ts build (mit-bestand/bericht/) — light zwischenbericht"]
+    gen["bun ./📜️script.ts generate (print/)"] --> tokens["semio-tokens.sty: chrome metrics + colors"]
+    tokens --> testAll["bun ./📜️script.ts test (print/) — builds 12 PDFs: 6 light + 6 dark"]
+    testAll --> mitbestand["bun ./📜️script.ts build (mit-bestand/bericht/) — light zwischenbericht"]
     testAll --> inspect["Visually inspect report.pdf / report-dark.pdf side by side"]
     inspect --> compare["Compare header shape, hierarchy numbers, dark colors against OS tokens"]
 ```

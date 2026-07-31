@@ -1,8 +1,0 @@
-{
-  "title": "Remove All Tests From Launch Json",
-  "emoji": "🗑️",
-  "status": "closed",
-  "description": "Remove all test configurations from .vscode/launch.json",
-  "summary": "Removed all 14 test launch configurations",
-  "goal": "🎯aioptimizedrepo"
-}

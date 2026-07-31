@@ -9,7 +9,7 @@ todos:
     content: Collapse the 5 per-IDE Go MCP packages into the single repo/client/client binary; mcp takes a kind arg; fix serveMcp discarding ctx; update go.work and .gitignore
     status: completed
   - id: configs
-    content: Rewrite all MCP configs, agent-hook configs and git hooks to exec repo/client/client directly instead of bun script.ts -> go run
+    content: Rewrite all MCP configs, agent-hook configs and git hooks to exec repo/client/client directly instead of bun 📜️script.ts -> go run
     status: completed
   - id: zero-touch
     content: Build the binary in native bootstrap scripts and devcontainer post-create; make DevScript resolve-and-build instead of go run
@@ -50,7 +50,7 @@ isProject: false
 
 Two independent gaps, both reachable from "a test hangs forever".
 
-**Tool calls do not go over the repo binary.** Every MCP server config and every agent-hook entry launches `bun script.ts dev mcp stdio <profile>`, which lands on a raw `spawnSync` that bypasses `runCmd` entirely and recompiles the 46k-line godfile through `go run` on every single invocation:
+**Tool calls do not go over the repo binary.** Every MCP server config and every agent-hook entry launches `bun 📜️script.ts dev mcp stdio <profile>`, which lands on a raw `spawnSync` that bypasses `runCmd` entirely and recompiles the 46k-line godfile through `go run` on every single invocation:
 
 ```506:511:script.ts
     const r = spawnSync("go", ["run", pkg, ...extra], {
@@ -67,7 +67,7 @@ The prebuilt binary at `repo/client/client` already exists and is resolved by `r
 
 ## Ticket
 
-Open under goal `🎯aioptimizedrepo🎯repoclient🎯repobinary` (Repo Binary, issue 356). All scratch output goes in the ticket folder.
+Open under goal `🎯️aioptimizedrepo🎯️repoclient🎯️repobinary` (Repo Binary, issue 356). All scratch output goes in the ticket folder.
 
 ## A. One repo binary, every tool call over it
 
@@ -86,7 +86,7 @@ func serveMcp(ctx context.Context, engine *Engine) error {
 
 - `repo/client/mcp/go/main.go` becomes the sole entry, built to `repo/client/client` (extension-less on every platform, so one static command string works in every config; Windows `CreateProcess` accepts an explicit path to a PE without `.exe`).
 - Rewrite all six configs to exec the binary: [.cursor/mcp.json](.cursor/mcp.json), [.mcp.json](.mcp.json), [.vscode/mcp.json](.vscode/mcp.json), [.windsurf/mcp.json](.windsurf/mcp.json), [.kiro/settings/mcp.json](.kiro/settings/mcp.json), [.codex/config.toml](.codex/config.toml) — `command: "repo/client/client"`, `args: ["mcp", "<kind>"]`. Same for the commented hook blocks in [.claude/settings.json](.claude/settings.json), [.windsurf/hooks.json](.windsurf/hooks.json), [.factory/hooks.json](.factory/hooks.json) → `repo/client/client hook <event> <client>`.
-- Point the git hooks in `repo/hook/*` and `repo/hooks/*` at `repo/client/client micro-commit …` instead of `bun ./script.ts micro-commit …`, and move that verb into the Go CLI.
+- Point the git hooks in `repo/hook/*` and `repo/hooks/*` at `repo/client/client micro-commit …` instead of `bun ./📜️script.ts micro-commit …`, and move that verb into the Go CLI.
 - Zero-touch: `repo/native/bootstrap/script.sh` and `script.ps1` currently never build the binary — add it there and to `.devcontainer` post-create, alongside the existing build in `SetupScript.runFull` ([script.ts:245](script.ts)).
 - `DevScript.runMcpStdioRepo` and `repo/client/cli/script.ts` `DevScript` stop using `go run`; they resolve the binary, build it if missing, and exec it.
 
@@ -142,8 +142,8 @@ None of the six MCP tool handlers currently look at `ctx`, and `--timeout` defau
 
 ## Out of scope
 
-Pre-existing unrelated failures found while probing, to be reported but not fixed: 23 failures in `go test ./repo/client/cli/go -short` (removed `fix` mutation, `👤`/`🏘` technology-emoji drift, `TestMcpToolsSchemas` expecting 7 tools where 6 are registered) and 2 in `cargo test -p store_sync` (`fixtures_replay_matches_expected_events`, `folder_external_edit_delivers_remote_operations`) which sit in files currently dirty in the working tree.
+Pre-existing unrelated failures found while probing, to be reported but not fixed: 23 failures in `go test ./repo/client/cli/go -short` (removed `fix` mutation, `👤️`/`🏘️` technology-emoji drift, `TestMcpToolsSchemas` expecting 7 tools where 6 are registered) and 2 in `cargo test -p store_sync` (`fixtures_replay_matches_expected_events`, `folder_external_edit_delivers_remote_operations`) which sit in files currently dirty in the working tree.
 
 ## Verification
 
-`cargo nextest run` across both workspaces, `go test` across all 12 modules, `bun ./script.ts test` at `fundamental` and `quick`, each MCP config handshake-tested, and a deliberate never-terminating test injected temporarily per toolchain to prove the deadline fires and names the test.
+`cargo nextest run` across both workspaces, `go test` across all 12 modules, `bun ./📜️script.ts test` at `fundamental` and `quick`, each MCP config handshake-tested, and a deliberate never-terminating test injected temporarily per toolchain to prove the deadline fires and names the test.

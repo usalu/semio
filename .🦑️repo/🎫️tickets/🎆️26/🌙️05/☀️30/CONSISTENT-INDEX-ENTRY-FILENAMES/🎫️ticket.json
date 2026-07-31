@@ -1,0 +1,9 @@
+{
+  "title": "Consistent Index Entry Filenames",
+  "emoji": "📛️",
+  "status": "closed",
+  "description": "Rename entry files (main.tsx, main.ts) to index.tsx/index.ts across play packages and CAD renderer; update HTML, vite, vitest, package exports, and references.",
+  "summary": "Merged puzzle play play.ts into index.ts (single file: runtime + vitest + guarded Vite boot). Boot uses dynamic imports and only runs when #root exists and not in vitest. Package exports and all @puzzle/*/play aliases point at index.ts; removed play.ts files.",
+  "goal": "🎯️refactoring",
+  "sessions": ["⚪️272cdc72fab64d09acedcd67a167de73", "⚪️23e385c74fc345da8b42f8ef6777af71"]
+}

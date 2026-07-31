@@ -6,13 +6,13 @@ todos:
    content: Rename `factory` → `command` across core/stately/r3f/play + fixtures + schema string + preset keys
    status: completed
  - id: diff
-   content: "Add `🧮Diff` region: `EntityDiff`, `*RecordDiff`, `TopologyDiff`, `applyTopologyDiff`, `invertTopologyDiff`, `isEmptyTopologyDiff`"
+   content: "Add `🧮️Diff` region: `EntityDiff`, `*RecordDiff`, `TopologyDiff`, `applyTopologyDiff`, `invertTopologyDiff`, `isEmptyTopologyDiff`"
    status: completed
  - id: response
-   content: "Add `📨Response` region: `CommandMessage`, `CommandResponse`, `EMPTY_COMMAND_RESPONSE`"
+   content: "Add `📨️Response` region: `CommandMessage`, `CommandResponse`, `EMPTY_COMMAND_RESPONSE`"
    status: completed
  - id: selection-spec
-   content: "Add `🪪Selection` region + per-state `selection: SelectionSpec` in `CommandSpec.machine.states[*]`; expose `listActiveSelectionAccept`"
+   content: "Add `🪪️Selection` region + per-state `selection: SelectionSpec` in `CommandSpec.machine.states[*]`; expose `listActiveSelectionAccept`"
    status: completed
  - id: kernel-diff
    content: Extend `KernelAdapter` with `*Diff` writes + `vertexDistance`/`edgeLength`/`faceArea`/`cellVolume`; implement in `BrepjsKernel`
@@ -57,12 +57,12 @@ Everywhere in `spatial/`:
 - Schema string `spatial.factory/v1` -> `spatial.command/v1`.
 - Fixture filenames: [`spatial/fixture/factory.json`](spatial/fixture/factory.json), [`extrude.factory.json`](spatial/fixture/extrude.factory.json), [`offset-surface.factory.json`](spatial/fixture/offset-surface.factory.json) -> `box.command.json`, `extrude-wire.command.json`, `offset-surface.command.json`. Add two new fixtures `distance.command.json` and `area.command.json` (read-only).
 - Types/classes in [`spatial/js/core/index.ts`](spatial/js/core/index.ts): `FactorySpec`->`CommandSpec`, `FactoryRuntime`->`CommandRuntime`, `FactoryRuntimeOptions`->`CommandRuntimeOptions`, `FactorySnapshot`->`CommandSnapshot`, `FactoryEvent`->`CommandEvent`, `FactorySpatialInteractionConfig/Resolved`->`Command...`, `FactoryKeybindRow`->`CommandKeybindRow`, `SpatialFactoryPreset`->`SpatialCommandPreset`. Replace `buildBoxFactorySpec` / `buildExtrudeFactorySpec` / `buildOffsetSurfaceFactorySpec` with `buildBoxCommandSpec` etc. plus new `buildDistanceCommandSpec`, `buildAreaCommandSpec`, `listSpatialCommandPresets`, `loadSpatialCommandPreset`, `resolveSpatialCommandPresetKey`, `createCommandRuntime`. The XState helper kind `factoryKind` -> `commandKind`.
-- Region renames: `🏭Factory` -> `📜Command`, `📦Factories` -> `📦Commands`. `🎬Statechart` keeps name.
+- Region renames: `🏭️Factory` -> `📜️Command`, `📦️Factories` -> `📦️Commands`. `🎬️Statechart` keeps name.
 - Workspace package names stay (`@spatial/js-core`, `@spatial/js-machine-stately`, `@spatial/js-kernel-brepjs`, `@spatial/js-renderer-r3f`) — the user said "spatial:" not "rename packages", and a package rename adds noise without value.
 
 ## 1. Core: `Selection`, `Diff`, `Response` in [`spatial/js/core/index.ts`](spatial/js/core/index.ts)
 
-Add a new `🪪Selection` region (before `🗺️Expr`):
+Add a new `🪪️Selection` region (before `🗺️Expr`):
 
 ```ts
 export interface SelectionTarget {
@@ -84,7 +84,7 @@ export function filterSelectionTargets(spec: SelectionSpec, targets: readonly Se
 export function selectionEventMatches(spec: SelectionSpec, ev: SelectionEvent): boolean;
 ```
 
-Add a new `🧮Diff` region (after `🧱Topology`):
+Add a new `🧮️Diff` region (after `🧱️Topology`):
 
 ```ts
 export type VertexRecordDiff = Partial<Omit<VertexRecord, "id">> & { id: VertexRef };
@@ -113,7 +113,7 @@ export function invertTopologyDiff(forward: TopologyDiff, before: TopologyGraph)
 export function isEmptyTopologyDiff(d: TopologyDiff): boolean;
 ```
 
-Add a new `📨Response` region (before `📜Command`):
+Add a new `📨️Response` region (before `📜️Command`):
 
 ```ts
 export interface CommandMessage {
@@ -164,7 +164,7 @@ export interface KernelAdapter {
 
 ## 4. Command runtime: diff-driven commit + selection filter
 
-Rewrite `commit()` in `CommandRuntime` ([`spatial/js/core/index.ts`](spatial/js/core/index.ts), `🏭Factory` region):
+Rewrite `commit()` in `CommandRuntime` ([`spatial/js/core/index.ts`](spatial/js/core/index.ts), `🏭️Factory` region):
 
 ```ts
 async commit(): Promise<CommandResponse> {
@@ -218,7 +218,7 @@ async commit(): Promise<CommandResponse> {
 
 ## 7. Tests (extend existing test regions only)
 
-Per workspace rules: no new test files. Extend the `🧪Tests` region in each of the three TS files.
+Per workspace rules: no new test files. Extend the `🧪️Tests` region in each of the three TS files.
 
 - `core`: cases for `applyTopologyDiff` round-trip (apply then apply-inverse restores original), `selectionEventMatches` filter behaviour, distance command commit (`response.data === 5`), area command commit (`isEmptyTopologyDiff(response.diff) === true`), box command commit (`response.diff.faces.added` non-empty), per-state `selection.accept` filter rejection (event dropped, no transition).
 - `machine-stately`: extend the existing parity tests to also drive distance + area commands and assert both providers return equal `CommandResponse.data` and equal `CommandResponse.diff` shapes.

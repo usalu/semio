@@ -1,0 +1,8 @@
+{
+  "title": "Exhaustive Single File Consolidation",
+  "emoji": "📁️",
+  "status": "open",
+  "description": "Behavior-preserving consolidation of multi-module Rust crates and small TS logic splits into single physical source files per package.",
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo",
+  "sessions": []
+}

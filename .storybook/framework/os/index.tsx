@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/framework/os/index.tsx
+// #region 🧲️Header
+// 💻️ .storybook/framework/os/index.tsx
 // Specs: Boot `FrameworkOsShell` inside Storybook's own React tree, filtered to one plugin from the generated registry.
 // Summary: Mirrors `bootFrameworkOs` (`framework/os/renderer/js/react/index.tsx`) minus its `createRoot` call — Storybook already owns the tree, so this renders the shell directly and lets decorator/story unmount handle cleanup. Serves prebuilt plugin WASM from `/plugin-modules` (aliased + static-dir'd by the `framework/os` scope in `.storybook/scopes.ts`) and never triggers a cargo build: a missing artifact renders an instruction panel instead of failing silently.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { useEffect, useMemo, useState } from "react";
 import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/product/os/module/renderer/js/react/index.tsx";
@@ -13,8 +13,8 @@ import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } 
 export { PLUGIN_BUILD_TARGETS };
 export type { PluginBuildTarget };
 
-// #region 🔖ArtifactProbe
-/** @emoji 🔍 HEAD-probes a plugin's module URL; `undefined` while probing, then true/false. Never blocks on a cargo build — a missing artifact just renders an instruction panel. */
+// #region 🔖️ArtifactProbe
+/** @emoji 🔍️ HEAD-probes a plugin's module URL; `undefined` while probing, then true/false. Never blocks on a cargo build — a missing artifact just renders an instruction panel. */
 function usePluginArtifactAvailable(moduleUrl: string): boolean | undefined {
   const [available, setAvailable] = useState<boolean | undefined>(undefined);
   useEffect(() => {
@@ -29,9 +29,9 @@ function usePluginArtifactAvailable(moduleUrl: string): boolean | undefined {
   }, [moduleUrl]);
   return available;
 }
-// #endregion 🔖ArtifactProbe
+// #endregion 🔖️ArtifactProbe
 
-// #region 🔖OsBootHost
+// #region 🔖️OsBootHost
 export type OsBootHostProps = {
   /** Registry `pluginId`, e.g. `"s"`, `"puzzle"`, `"gis"`. Also used as the shell's `pluginFilter`. */
   readonly plugin: string;
@@ -84,9 +84,9 @@ export function OsBootHost({ program, appId, locks }: OsBootHostProps) {
     </div>
   );
 }
-// #endregion 🔖OsBootHost
+// #endregion 🔖️OsBootHost
 
-// #region 🔖WgpuBootHost
+// #region 🔖️WgpuBootHost
 export type WgpuBootHostProps = {
   /** Registry `pluginId` passed through to the wgpu renderer as its `pluginFilter`. */
   readonly plugin: string;
@@ -96,7 +96,7 @@ type WgpuBootState = { readonly kind: "booting" } | { readonly kind: "unavailabl
 
 const WGPU_RENDERER_DIR_URL = "/renderer-modules/wgpu";
 
-/** @emoji 🔍 Trunk hashes the wgpu bundle's filename per build (`semio-framework-renderer-wgpu-<hash>.js`);
+/** @emoji 🔍️ Trunk hashes the wgpu bundle's filename per build (`semio-framework-renderer-wgpu-<hash>.js`);
  * parse it out of the built `index.html`'s module script instead of hardcoding a hash that goes stale on
  * every rebuild. */
 async function resolveWgpuRendererModuleUrl(): Promise<string> {
@@ -115,7 +115,7 @@ function navigatorGpuUnavailableReason(): string | undefined {
   return undefined;
 }
 
-/** @emoji 🧊 Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry program,
+/** @emoji 🧊️ Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry program,
  * with a graceful fallback when WebGPU itself is unavailable (headless CI Chromium without `--enable-unsafe-webgpu`,
  * Safari/Firefox, …) and when the plugin has no prebuilt artifact — mirrors {@link OsBootHost}'s artifact probe. */
 export function WgpuBootHost({ program }: WgpuBootHostProps) {
@@ -178,4 +178,4 @@ export function WgpuBootHost({ program }: WgpuBootHostProps) {
   }
   return <div id="root" className="h-full w-full" data-testid="wgpu-boot-root" />;
 }
-// #endregion 🔖WgpuBootHost
+// #endregion 🔖️WgpuBootHost

@@ -100,6 +100,6 @@ JS side ([framework/renderer/wgpu/js/index.ts](framework/renderer/wgpu/js/index.
 ## Verification
 
 - `cargo test -p ui_wasm` (native) and `cargo build -p semio-framework-renderer-wgpu --target wasm32-unknown-unknown --release` both green.
-- `bun ./script.ts wasm` in `framework/renderer/wgpu` regenerates `public/renderer-modules/wgpu/`.
+- `bun ./📜️script.ts wasm` in `framework/renderer/wgpu` regenerates `public/renderer-modules/wgpu/`.
 - Existing vitest suites (`framework/renderer/wgpu`, `framework/renderer/react`) still pass.
 - Dev server with `SEMIO_RENDERER=wgpu` serves and boots (`[DEBUG] wgpu renderer booted` on console).

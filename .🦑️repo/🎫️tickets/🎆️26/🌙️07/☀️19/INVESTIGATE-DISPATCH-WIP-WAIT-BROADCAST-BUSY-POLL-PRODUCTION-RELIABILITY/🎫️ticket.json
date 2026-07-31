@@ -1,0 +1,14 @@
+{
+  "title": "Investigate Dispatch Wip Wait Broadcast Busy Poll Production Reliability",
+  "emoji": "🩺️",
+  "status": "closed",
+  "description": "Investigate compose/client/lib/rs/lib.rs ParentStore::dispatch_wip_wait (busy-polls self.bus.subscribe() via try_recv()+yield_now() with a hard 30s deadline before returning \"command timed out\"). During test-level-budget verification, three tests routed through this path (now under `mod long`) measured ~30.1-30.4s each under heavy host CPU contention, suggesting the CommandSucceeded/OperationFailed broadcast event is missed or arrives late. Investigate: (1) whether this lag/miss risk exists in production under real load, not just parallel test execution; (2) whether the bus subscription should use blocking recv().await instead of busy-polling; (3) whether 30s is an appropriate worst-case timeout for a user-facing GraphQL mutation, or should be shorter with a clearer retry/error path. Production reliability question, separate from the test-wiring ticket — do not move tests around.",
+  "summary": "Investigated dispatch_wip_wait's busy-poll timeout. Found two independent production-relevant defects beyond the test-parallelism artifact: (B) the shared 1024-slot EventBus has overflow(true) — silently drops the oldest event under load, and it's shared unfiltered by every mutation waiter and every open GraphQL subscription, so it scales with real traffic; (C) the try_recv()+yield_now() wait loop hot-spins full CPU per in-flight mutation for up to 30s, a self-amplifying contention source, worst under CPU-limited/CFS-throttled containers. Also found a correctness bug: timing out does not cancel the already-enqueued command, and there's no request_id idempotency in apply_kit_operation, so a client retry after a false timeout can double-apply the mutation. No code changed — investigation only, findings and recommendations written to report.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2147"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️feb197c1a67b433796498326ca6dd066"
+  ]
+}

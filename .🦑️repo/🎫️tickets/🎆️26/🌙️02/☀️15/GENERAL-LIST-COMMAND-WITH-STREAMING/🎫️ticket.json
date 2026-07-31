@@ -1,0 +1,12 @@
+{
+  "title": "General List Command With Streaming",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Introduce a general list command that always streams a list of items. By default show everything such as tree but streaming. Only when --sorted is passed, wait until you gathered all the results and sort everything by id. Remove the existing entity-level list and tree subcommands as they are equivalent to list --only-\u003centity\u003e. Keep all existing tests and extend them to be extensive.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/576"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️9b57ce56af904029a6e9f3ff7d7669b9"]
+}

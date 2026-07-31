@@ -27,7 +27,7 @@ isProject: false
 
 ## Goal / ticket
 
-- Associate with **Running Sketchpad** (`🎯r2602🎯runningsketchpad`).
+- Associate with **Running Sketchpad** (`🎯️r2602🎯️runningsketchpad`).
 - Open a **new** ticket (existing `CANONICAL-PLAYGROUND-EXAMPLE-CLEANUP` is unrelated).
 - Scope: **Puzzle 3D**, with the **same selection/tool fixes applied to Puzzle 5D** in the same program file (identical defects; same technology).
 

@@ -1,0 +1,12 @@
+{
+  "title": "Get All Tests Complying Domain And UI",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Fix all failing tests in the compose monorepo - both domain tests (Python) and UI tests (vitest) - without removing any functionality. Make all tests pass.",
+  "summary": "Fixed all failing tests in both domain (Python) and UI (vitest) suites.\\n\\n**UI fix (elements/ui/index.tsx):** Fixed syntax error at line ~20175 where `};` should have been `});` — the closing parenthesis for `lifecycle.registerCleanup()` callback was missing.\\n\\n**Domain fix (compose/py/main.py):** Fixed SQLite folder kit roundtrip failure in `_write_kit_to_sqlite`. The function was missing CREATE TABLE and INSERT statements for `folder`, `file`, and `model_tag` tables. Added all three table schemas and their corresponding INSERT logic. The `_read_kit_from_sqlite` function already had read logic for these tables but they were never created/populated during write, causing files and folders to be lost during export-import roundtrip.\\n\\nResults: 57/57 Python tests pass, 134/134 vitest tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1219"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️5284e4d07f614d72b835eaf9f84e89ca"]
+}

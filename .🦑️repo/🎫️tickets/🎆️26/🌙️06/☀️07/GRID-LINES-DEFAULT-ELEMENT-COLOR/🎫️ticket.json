@@ -1,0 +1,12 @@
+{
+  "title": "Grid Lines Default Element Color",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Grid lines should use element gray by default, not emphasized foreground.",
+  "summary": "Grid lines now use element gray instead of emphasized foreground. Scene drei Grid reads element + muted-foreground via readSceneGridColors; Vello gridMinorStroke uses themeColorVar(element) in resolve.ts and puzzle2d; WorldLodGridHelper GridHelper uses element for both stroke colors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1577"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient",
+  "sessions": ["⚪️ec7d6897631746c6b139ec8fb15f0430"]
+}

@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/story/infinite/WorldR3f.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/story/infinite/WorldR3f.stories.tsx
 // Specs: Compose the raw `@semio-tech/infinite-world-r3f` layer primitives (`WorldChunks`/`ViewRadiusLayer`/`WorldLodGridHelper`/`GridLayer`/`WorldLayer`/`WorldLayerStack`) inside a plain `@react-three/fiber` `Canvas`, independent of `World3dHost`'s full componentScene wiring (that's `../puzzle/3d/World.stories.tsx`'s job).
 // Summary: `WorldChunks`/`ViewRadiusLayer` bucket-and-cull their children by an `origin` prop read straight off each child element (see `chunkKey`/`useVisibleChunkKeys` in `framework/product/os/module/infinite/world/r3f/index.tsx`), so a grid of plain `<mesh>` boxes tagged with `origin` is enough to exercise real chunk visibility culling with zero fixtures/WASM. `WorldLodGridHelper`/`GridLayer` need the `useLod()` context that only `WorldLodBridge` provides — wired here exactly as `World3dHost` wires it.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useMemo, useRef, type ReactElement } from "react";
@@ -28,7 +28,7 @@ const STORY_CHUNK_SPACING = 12;
 const STORY_CHUNK_SIZE = 20;
 const STORY_CHUNK_COLORS = ["#2563eb", "#f97316", "#16a34a", "#dc2626"] as const;
 
-/** @emoji 🧊 A grid of boxes tagged with `origin` (read by `WorldChunks`/`ViewRadiusLayer` to bucket+cull) so real chunk visibility culling has something to cull. */
+/** @emoji 🧊️ A grid of boxes tagged with `origin` (read by `WorldChunks`/`ViewRadiusLayer` to bucket+cull) so real chunk visibility culling has something to cull. */
 function useStoryChunkOrigins(): readonly Vec3[] {
   return useMemo(() => {
     const origins: Vec3[] = [];
@@ -41,7 +41,7 @@ function useStoryChunkOrigins(): readonly Vec3[] {
   }, []);
 }
 
-/** @emoji 🧊 `origin` is this component's own (fully-typed) prop, not a Three.js one — `WorldChunks` reads `child.props.origin` straight off the `<StoryChunkBox>` element it buckets (see header docstring), never off the `<mesh>` it renders internally. */
+/** @emoji 🧊️ `origin` is this component's own (fully-typed) prop, not a Three.js one — `WorldChunks` reads `child.props.origin` straight off the `<StoryChunkBox>` element it buckets (see header docstring), never off the `<mesh>` it renders internally. */
 function StoryChunkBox({ origin }: { readonly origin: Vec3 }): ReactElement {
   const colorIndex = (Math.round(origin[0] / STORY_CHUNK_SIZE) + Math.round(origin[1] / STORY_CHUNK_SIZE) + STORY_CHUNK_COLORS.length * 2) % STORY_CHUNK_COLORS.length;
   return (
@@ -94,11 +94,11 @@ function WorldR3fOrderedLayersStoryHost(): ReactElement {
           <WorldOrbitGated zoom={1} />
           <WorldLodBridge lodRef={lodRef} distanceReference={30} gridFactor={DEFAULT_LOD_GRID_FACTOR} gridSnapEnabled={false} showLodGrid={false} automaticLod depthVariableLod={false} manualLod={DEFAULT_MANUAL_LOD}>
             <WorldLayerStack>
-              {/* 📐 Background layer (negative order): the LOD grid, composed explicitly via `GridLayer` instead of `WorldLodBridge`'s built-in `showLodGrid` toggle. */}
+              {/* 📐️ Background layer (negative order): the LOD grid, composed explicitly via `GridLayer` instead of `WorldLodBridge`'s built-in `showLodGrid` toggle. */}
               <WorldLayer order={-1} name="grid-background">
                 <GridLayer gridDatum={[0, 0, 0]} />
               </WorldLayer>
-              {/* 🧊 Foreground layer (order 0): the actual content, rendered after (i.e. visually atop) the grid. */}
+              {/* 🧊️ Foreground layer (order 0): the actual content, rendered after (i.e. visually atop) the grid. */}
               <WorldLayer order={0} name="content">
                 <mesh position={[0, 0, 2]}>
                   <boxGeometry args={[4, 4, 4]} />
@@ -124,7 +124,7 @@ const meta = {
 
 export default meta;
 
-/** 🧊 `WorldChunks`/`ViewRadiusLayer` bucketing a 7x7 grid of origin-tagged boxes, plus `WorldLodBridge`'s built-in LOD grid. */
+/** 🧊️ `WorldChunks`/`ViewRadiusLayer` bucketing a 7x7 grid of origin-tagged boxes, plus `WorldLodBridge`'s built-in LOD grid. */
 export const ChunkedField: StoryObj<typeof WorldR3fChunkedStoryHost> = {
   render: (args) => <WorldR3fChunkedStoryHost {...args} />,
   args: {
@@ -133,7 +133,7 @@ export const ChunkedField: StoryObj<typeof WorldR3fChunkedStoryHost> = {
   },
 };
 
-/** 🧊 A tight view radius so most chunks are culled — same field, `maxDistance` lowered below the grid's span. */
+/** 🧊️ A tight view radius so most chunks are culled — same field, `maxDistance` lowered below the grid's span. */
 export const CulledField: StoryObj<typeof WorldR3fChunkedStoryHost> = {
   render: (args) => <WorldR3fChunkedStoryHost {...args} />,
   args: {

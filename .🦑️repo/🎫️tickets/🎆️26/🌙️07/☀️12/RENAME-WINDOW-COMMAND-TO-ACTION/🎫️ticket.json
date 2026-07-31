@@ -1,0 +1,12 @@
+{
+  "title": "Rename Window Command To Action",
+  "emoji": "🔤️",
+  "status": "closed",
+  "description": "In ui, os, and playground: rename the concept of \"command\" (as used for window kinds — actions and tools bound to a window) to \"action\". Every window kind can have actions; actions and tools are bound to windows. \"Command\" is being reserved for a different concept, so all naming referring to window commands must become \"action\" naming — types, functions, variables, props, file names, docs, comments — with no legacy aliases or backwards-compatible re-exports left behind.",
+  "summary": "Verified the Command→Action rename is fully complete across the wgpu renderer stack: framework/renderer/wgpu/rs/lib.rs and infinite/world/rs/lib.rs already use ActionDescriptor/ActionResult/ActionInvocationId/handle_action*/\"handleAction\" consistently, and both `cargo check -p semio-framework-renderer-wgpu -p infinite_world` and a full `cargo check --workspace` pass clean (one transient, unrelated procedural-plugin error vanished on retest and has zero rename-related code). A repo-wide grep for the renamed identifiers found no other in-scope leftovers — remaining \"Command\" hits belong to the deliberately-untouched compose-domain CQRS command protocol, or are inert historical ticket-scratch files. One actual leftover was found and fixed: .cursor/extract-playhost-regions.ts still referenced the old \"CommandBus\"/\"CommandDescriptor\" names, but was fully orphaned (its SOURCE path framework/product/playground/renderer/react/index.tsx no longer exists post-restructure to framework/product/os, and nothing in the repo imports or invokes it) — deleted rather than patched, per the no-migration-scripts convention.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1937"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️3bbd30c9a1384b9784556387d57990db", "⚪️2232e2626fdb4a0ea81910eb13e9a4e7", "⚪️c20a3d83243742c9bfb672fa2a988c35"]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Remove Redundant Fields from Ticket JSON",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Remove status, started, finished, and prompt fields from ticket.json. Status should be derived from whether the last interaction was finished or not.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/346"
+  },
+  "sessions": ["⚪️9b57ce56af904029a6e9f3ff7d7669b9"]
+}

@@ -59,7 +59,7 @@ In [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 
 - Update [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) tests: replace AABB penetration tests with `solidOverlapVolume` cases on simple meshes with known overlap (e.g. two unit cubes overlapping 0.5 m3), a sparse-lattice regression (two synthetic meshes: deep overlap detected, clean interleave free), and budget-threshold behavior. Update fill/preview tests.
 - Update [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) tolerance tests to the m3 budget.
-- Add a verification script under `.repo/🎫/26/06/05/FIX-BRUSH-FILL-COLLISION/` re-running the real-mesh-overlap audit after the fix (expect 0 pairs over budget). Run the existing `@semio-tech/puzzle-3d-react` and `@semio-tech/puzzle-3d-play` test targets.
+- Add a verification script under `.repo/🎫️/26/06/05/FIX-BRUSH-FILL-COLLISION/` re-running the real-mesh-overlap audit after the fix (expect 0 pairs over budget). Run the existing `@semio-tech/puzzle-3d-react` and `@semio-tech/puzzle-3d-play` test targets.
 
 ## Defaults to confirm during implementation
 

@@ -66,7 +66,7 @@ isProject: false
 ## 4. Framework + build wiring
 
 - `FlowPlayPaneSurfaceHost` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) already renders `<FlowCanvas/>`; the catalogue is an in-canvas overlay so framework changes are minimal (verify exports still build).
-- Add `flow/module/text`, `flow/module/logic` to root [Cargo.toml](Cargo.toml) members and `flow/core/Cargo.toml` deps. Optionally add `🦀rs` cargo-test launch entries near the existing `🌊flow` group in [.vscode/launch.json](.vscode/launch.json) (existing `dev:flow`/validate entries stay).
+- Add `flow/module/text`, `flow/module/logic` to root [Cargo.toml](Cargo.toml) members and `flow/core/Cargo.toml` deps. Optionally add `🦀️rs` cargo-test launch entries near the existing `🌊️flow` group in [.vscode/launch.json](.vscode/launch.json) (existing `dev:flow`/validate entries stay).
 
 ## 5. Validation (must confirm at runtime)
 

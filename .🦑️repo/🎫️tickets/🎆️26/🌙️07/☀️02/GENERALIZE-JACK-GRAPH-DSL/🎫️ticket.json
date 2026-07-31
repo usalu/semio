@@ -1,0 +1,7 @@
+{
+  "title": "Generalize Jack Graph DSL",
+  "status": "closed",
+  "description": "Generalize Jack query DSL to mathematical/graph foundation; add writer fixture; add Jack window kind to all graph playgrounds with bidirectional hover/selection bridge.",
+  "summary": "Implemented Jack query windows for puzzle/2d, puzzle/3d, puzzle/5d, and s/play following the DAG play template. Each play package gained jack window constants, layout stack child, shell controller JackHoverBridge with command handlers, default queries, and fixture/media-graph bridge helpers. The playground renderer registers Puzzle2dPlayJackSurfaceHost, Puzzle3dPlayJackSurfaceHost, Puzzle5dPlayJackSurfaceHost, and SPlayJackSurfaceHost with WriterCanvas wiring and graph hover/select bridging on puzzle 2d canvases.",
+  "goal": "🎯️trinity"
+}

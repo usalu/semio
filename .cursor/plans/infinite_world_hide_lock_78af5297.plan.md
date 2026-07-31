@@ -47,7 +47,7 @@ isProject: false
 
 ## Workflow
 
-- Open a ticket via repo MCP first (read `repo://goals`, associate with the puzzle3d/world goal used by the closed unify ticket `🎯puzzle3d🎯puzzle3dplay`, or a more fitting one). Keep temp files under the ticket folder. Add code into existing files using `//#region` blocks. Extend existing test regions only. Close ticket with summary + touched files when done.
+- Open a ticket via repo MCP first (read `repo://goals`, associate with the puzzle3d/world goal used by the closed unify ticket `🎯️puzzle3d🎯️puzzle3dplay`, or a more fitting one). Keep temp files under the ticket folder. Add code into existing files using `//#region` blocks. Extend existing test regions only. Close ticket with summary + touched files when done.
 
 ## 1. Shared mechanism in `@semio-tech/infinite-world-r3f`
 

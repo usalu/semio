@@ -1,0 +1,11 @@
+{
+  "title": "Inline Docs Migration",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Rename .bundle.md/.folder.md to README.md, merge summaries and docs from AGENTS.md Codebase and README.md Bundles/Ecosystems into distributed README.md files. Introduce code:docs:missing-readme statute. Extend tests.",
+  "summary": "Migrated all doc content from centralized AGENTS.md Codebase section and README.md Ecosystems/Bundles into distributed bundle README.md files. Renamed .bundle.md/.folder.md to README.md. Introduced BreachCodeDocsMissingReadme statute with docsPolicy and 5 tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/472"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism"
+}

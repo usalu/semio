@@ -1,0 +1,12 @@
+{
+  "title": "Fix Elements Ui Storybook Duplicate Symbol Declarations",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix /workspaces/semio/elements/ui/index.tsx which has duplicate symbol declarations that break esbuild. Remove duplicate sections, prefix generic exports and local variables with story component names.",
+  "summary": "Fixed all duplicate symbol declarations in elements/ui/index.tsx that were breaking Storybook esbuild. Removed 279 duplicate lines (Button_stories, tailwind_config, postcss_config, eslint_config, vitest_config sections duplicated at end of file). Removed two duplicate Button story sections. Prefixed all generic story exports (Window, Panel, Overlay, Temporary) with their component name. Prefixed duplicate local variables (createLevelRender, defaultArgs, defaultItems, CodaThemeWrapper, WindowContent) and updated references. Fixed preview.ts to remove imports of deleted decorator files. Storybook build succeeds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1081"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️342b3c2ce89c4f6fa6a1f1886d7fb88d", "⚪️8a73809f81a347f197dbdcaa83254d69"]
+}

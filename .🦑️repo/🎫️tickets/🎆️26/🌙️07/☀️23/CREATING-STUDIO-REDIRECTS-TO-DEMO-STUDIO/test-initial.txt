@@ -1,0 +1,1022 @@
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1216:36
+     |
+1216 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1216 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1216 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1463:24
+     |
+1463 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1463 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1463 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:334:28
+    |
+334 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+334 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+334 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:363:36
+    |
+363 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+363 -             terminology_documents: std::collections::HashMap::new(),
+363 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3807:17
+     |
+3807 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3807 -     let action: serde_json::Value =
+3807 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3809:18
+     |
+3809 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3809 -     let context: serde_json::Value =
+3809 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3837:18
+     |
+3837 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3837 -     let command: serde_json::Value =
+3837 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3839:18
+     |
+3839 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3839 -     let context: serde_json::Value =
+3839 +     let context: Value =
+     |
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:187:16
+    |
+187 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+187 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+187 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:188:17
+    |
+188 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+188 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+188 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:198:16
+    |
+198 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+198 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+198 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:199:17
+    |
+199 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+199 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:251:41
+    |
+251 |     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+251 -     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+251 +     pub fn receive(&mut self, envelope: OpEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:855:37
+    |
+855 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |                                     ^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+855 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+855 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:238:28
+    |
+238 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+238 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+238 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:241:28
+    |
+241 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+241 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+241 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:28
+     |
+1384 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:106
+     |
+1384 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:28
+     |
+1427 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:106
+     |
+1427 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: `semio-framework-sync` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-sync` to apply 6 suggestions)
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:386:27
+    |
+386 |         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |                           ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+386 -         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+386 +         let mut document: Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:387:17
+    |
+387 |         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+387 -         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+387 +         let op: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:32
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut Value, patch: &serde_json::Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:59
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut serde_json::Value, patch: &Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:14
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:53
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (serde_json::Value::Object(target_map), Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:411:77
+    |
+411 |                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+    |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+411 -                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+411 +                         let entry = target_map.entry(key.clone()).or_insert(Value::Null);
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:47
+    |
+598 |     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate:...
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:126
+    |
+598 | ...ode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:2475:41
+     |
+2475 |     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2475 -     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+2475 +     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3618:21
+     |
+3618 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3618 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3618 +                     OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3618:72
+     |
+3618 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3618 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3618 +                     crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3618:127
+     |
+3618 | ...tance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3618 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3618 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3618:177
+     |
+3618 | ...e::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3618 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3618 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3627:29
+     |
+3627 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3627 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3627 +                             OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3627:82
+     |
+3627 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3627 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3627 +                             crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3627:139
+     |
+3627 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3627 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3627 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3627:191
+     |
+3627 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3627 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3627 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3641:33
+     |
+3641 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3641 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3641 +                                 OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3641:86
+     |
+3641 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3641 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3641 +                                 crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3641:143
+     |
+3641 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3641 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3641 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3641:195
+     |
+3641 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3641 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3641 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3649:30
+     |
+3649 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3649 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3649 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3667:30
+     |
+3667 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3667 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3667 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:4403:36
+     |
+4403 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4403 -             terminology_documents: std::collections::HashMap::new(),
+4403 +             terminology_documents: HashMap::new(),
+     |
+
+warning: `semio-framework-os` (lib) generated 25 warnings (run `cargo fix --lib -p semio-framework-os` to apply 25 suggestions)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1518:22
+     |
+1518 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1518 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1518 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling infinite_board_port_directed_dag v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs)
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:263:25
+    |
+263 |     pub default: Option<serde_json::Value>,
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+263 -     pub default: Option<serde_json::Value>,
+263 +     pub default: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:265:23
+    |
+265 |     pub value: Option<serde_json::Value>,
+    |                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+265 -     pub value: Option<serde_json::Value>,
+265 +     pub value: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:377:15
+    |
+377 |         json: serde_json::Value,
+    |               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+377 -         json: serde_json::Value,
+377 +         json: Value,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:435:43
+    |
+435 | fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+    |                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+435 - fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+435 + fn preview_tree_collapsed_summary(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:437:9
+    |
+437 |         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+437 -         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+437 +         Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:438:9
+    |
+438 |         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+438 -         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+438 +         Value::Array(arr) => format!("[{} items]", arr.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:439:9
+    |
+439 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+439 -         serde_json::Value::String(s) => format!("\"{s}\""),
+439 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:440:9
+    |
+440 |         serde_json::Value::Number(n) => n.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+440 -         serde_json::Value::Number(n) => n.to_string(),
+440 +         Value::Number(n) => n.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:441:9
+    |
+441 |         serde_json::Value::Bool(b) => b.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+441 -         serde_json::Value::Bool(b) => b.to_string(),
+441 +         Value::Bool(b) => b.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:442:9
+    |
+442 |         serde_json::Value::Null => "null".into(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+442 -         serde_json::Value::Null => "null".into(),
+442 +         Value::Null => "null".into(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:446:40
+    |
+446 | fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+    |                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+446 - fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+446 + fn preview_tree_scalar_display(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:448:9
+    |
+448 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+448 -         serde_json::Value::String(s) => format!("\"{s}\""),
+448 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:509:29
+    |
+509 | fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |                             ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+509 - fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+509 + fn preview_tree_rows(json: &Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:512:9
+    |
+512 |         serde_json::Value::Object(map) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+512 -         serde_json::Value::Object(map) => {
+512 +         Value::Object(map) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:515:50
+    |
+515 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+515 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+515 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:515:81
+    |
+515 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+515 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+515 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:524:9
+    |
+524 |         serde_json::Value::Array(arr) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+524 -         serde_json::Value::Array(arr) => {
+524 +         Value::Array(arr) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:528:50
+    |
+528 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+528 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+528 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:528:81
+    |
+528 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+528 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+528 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:594:56
+    |
+594 | fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+594 - fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+594 + fn preview_tree_row_layouts(node: &DagNodeSpec, json: &Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1657:40
+     |
+1657 | fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+     |                                        ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1657 - fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+1657 + fn lod_max_zoom_json(max_zoom: f64) -> Value {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1667:19
+     |
+1667 |     let rows: Vec<serde_json::Value> = DAG_LODS
+     |                   ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1667 -     let rows: Vec<serde_json::Value> = DAG_LODS
+1667 +     let rows: Vec<Value> = DAG_LODS
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3718:92
+     |
+3718 |     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                                                            ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3718 -     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+3718 +     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3725:122
+     |
+3725 | ...wLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                           ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3725 -     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+3725 +     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3753:48
+     |
+3753 |                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3753 -                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+3753 +                     obj.insert("ghost".into(), Value::Bool(ghost));
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3761:105
+     |
+3761 |     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+     |                                                                                                         ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3761 -     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+3761 +     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3832:30
+     |
+3832 |         let mut sliders: Vec<serde_json::Value> = Vec::new();
+     |                              ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3832 -         let mut sliders: Vec<serde_json::Value> = Vec::new();
+3832 +         let mut sliders: Vec<Value> = Vec::new();
+     |
+
+warning: `infinite_board_port_directed_dag` (lib) generated 27 warnings (run `cargo fix --lib -p infinite_board_port_directed_dag` to apply 27 suggestions)
+   Compiling s-plugin v0.1.0 (/Users/ueli/Documents/semio/s/plugin/rs)
+warning: unnecessary qualification
+   --> s/plugin/rs/lib.rs:669:33
+    |
+669 |             let envelope_value: serde_json::Value = serde_json::from_str(&envelope).expect("envelope json");
+    |                                 ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+669 -             let envelope_value: serde_json::Value = serde_json::from_str(&envelope).expect("envelope json");
+669 +             let envelope_value: Value = serde_json::from_str(&envelope).expect("envelope json");
+    |
+
+warning: unnecessary qualification
+    --> s/plugin/rs/lib.rs:3571:80
+     |
+3571 |             semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |_doc| {
+     |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3571 -             semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |_doc| {
+3571 +             semio_framework_os::register_os_media_export_handler("2d.drawing", OsMediaFormat::Dwg, |_doc| {
+     |
+
+warning: unnecessary qualification
+    --> s/plugin/rs/lib.rs:3576:32
+     |
+3576 |                     mime_type: semio_framework_os::OsMediaFormat::Dwg.mime_type().into(),
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3576 -                     mime_type: semio_framework_os::OsMediaFormat::Dwg.mime_type().into(),
+3576 +                     mime_type: OsMediaFormat::Dwg.mime_type().into(),
+     |
+
+warning: `s-plugin` (lib test) generated 3 warnings (run `cargo fix --lib -p s-plugin --tests` to apply 3 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 28.21s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests lib.rs (.repo/🎫️/26/07/23/CREATING-STUDIO-REDIRECTS-TO-DEMO-STUDIO/target/debug/deps/s_plugin-939dcdd5e01fd486)
+
+running 1 test
+test app_studio::tests::initial_projection_is_empty_not_demo ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 43 filtered out; finished in 0.00s
+

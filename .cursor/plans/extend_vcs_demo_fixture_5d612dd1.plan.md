@@ -75,7 +75,7 @@ This is backward compatible: any usage that never calls `checkoutCheckpoint`/`sw
 
 ## Part 2 — Rich fixture in `vcs/play`
 
-In [vcs/play/index.ts](vcs/play/index.ts), inside the `//#region 🔖demo` block:
+In [vcs/play/index.ts](vcs/play/index.ts), inside the `//#region 🔖️demo` block:
 
 1. **Widen the projection** — add `status: string` and `tags: readonly string[]` to `VcsDemoProjection`; update `emptyVcsDemoProjection()`.
 2. **Add 2 new operation kinds** to `VcsDemoOperation`/`applyVcsDemoOp`/`backwardsVcsDemoOp`: `setStatus`, and `addTag`/`removeTag` (inverse of each other), alongside the existing `setCounter`/`setTitle`/`setNotes` — 5 operation kinds total.

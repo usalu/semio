@@ -1,0 +1,9 @@
+{
+  "title": "Board Icon Contain Scale And Fit Inset",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Board detail SVG icons: replace min-side scale with aspect-preserving contain (min(avail/bw, avail/h)); use slightly smaller fit inset than clip inset so art sits inside stroke; bump icon cache v4.",
+  "summary": "Replaced min-side/icon oversizing with standard contain scaling scale=min(avail_w/bw, avail_h/bh) so the full painted union bbox fits inside the node. Fit uses inset 0.76 vs clip 0.88 for breathing room inside the stroke. Dropped union with document (0,0,tree size) so bbox centers on actual paths (layer ∪ stroke ∪ fill) and avoids offset empty margin. Icon cache key v4. wasm-pack release OK; Vitest 58 passed.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️8b8906ca9c824e74936e663912f8cb19"]
+}

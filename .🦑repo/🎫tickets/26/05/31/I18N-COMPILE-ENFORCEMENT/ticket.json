@@ -1,9 +1,0 @@
-{
-  "title": "I18n Compile Enforcement",
-  "emoji": "🪁",
-  "status": "closed",
-  "description": "Wrap i18next behind a typed port; enforce translation keys, locale parity, and toolbar category coverage at compile time; add nx typecheck gates.",
-  "summary": "Typed i18n lives in ui/react/index.tsx (🪁I18n Resources): UiTranslationSchema, ui.toolbar.parent.*, UiI18nPort, useUiTranslation, setUiLocale. Compile gates via satisfies on bundles, AssertUiToolbarParentKeysCovered in framework platform renderer and cad play/playground shells, typed sketchpad toolbar parent entries. nx typecheck only on @semio-tech/ui-react (existing tsconfig.json + script.ts). No separate i18n-types or i18n-typecheck files.",
-  "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": []
-}

@@ -1,0 +1,11 @@
+{
+  "title": "Consolidate Rust Async Backbone",
+  "status": "closed",
+  "description": "Consolidate compose/rs/kit_backbone_async.rs into compose/rs/lib.rs, refactor the async backbone into a properly integrated object-oriented API, extend existing tests only, and verify the Rust package passes.",
+  "summary": "Consolidated the Rust async kit backbone into compose/rs/lib.rs by ensuring the native-only inline module owns the public backbone API, keeping the authority runtime as KitBackboneAuthority, removing the standalone kit_backbone_async.rs source, and verifying the existing async backbone tests through the full Rust test suite. Updated the remote backbone test path to the current kind-based wire discriminator. Verification: cargo fmt and cargo test from compose/rs passed with 83 passed, 1 ignored.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1367"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️kitapp",
+  "sessions": ["⚪️7127c329eda84497ba9f540053f93c83"]
+}

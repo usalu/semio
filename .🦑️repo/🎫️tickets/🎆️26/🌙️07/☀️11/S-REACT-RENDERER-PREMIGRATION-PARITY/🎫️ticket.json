@@ -1,0 +1,21 @@
+{
+  "title": "S React Renderer Premigration Parity",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Restore every observable premigration (git tag `premigration`, f8376e84) behavior of the S (Semios) experience on the Rust-plugin + shared React renderer architecture. Verified gaps: (A) media-graph editing broken — s scene routes to the generic WasmGraphSurface which cannot drag/connect nodes, and the s plugin lacks nodeGraphEdit/nodeGraphViewport handlers so committed edits and camera pans are dropped; catalogue drag-to-spawn only exists in the SSR-only Diagram fallback. Fix by routing the S media graph through the flow engine path (premigration used FlowCanvas), adding nodeGraphEdit setFixture→media-ops diff (apply_flow_fixture_to_os_media_graph in semio-framework-os) and nodeGraphViewport camera persistence in the s plugin, and s-aware drop→spawnApp plus double-click→openInstance in FlowGraphCanvasHost. (B) presence stubbed — presence_peers_json() returns []; implement backbone-backed presence (OsPresencePeer records under presence:\u003cstudioId\u003e URIs with staleness eviction) in semio-framework-os, emission + presenceHeartbeat in the s plugin, and per-tab client identity + heartbeat in os-shell.tsx. (C) add s entry to .claude/launch.json. Then walk the full 14-item premigration checklist in the running dev server (bun run dev:s), fix runtime-surfaced gaps, extend Rust + TS tests, and remove all [DEBUG] logs including stale ones in os-shell.tsx backbone sync. Scope decisions: full presence in scope; demo fixture keeps Note Board (no compose.sketchpad restore).",
+  "summary": "Restored the S (Semios) studio to premigration level on the Rust-plugin + shared React renderer architecture. Media graph now routes through the flow engine (premigration FlowCanvas equivalent): the s plugin emits a flow fixture with persisted camera plus engine:\"flow\" capabilities, and handles nodeGraphEdit (setFixture diffed back into MoveMediaNode/ConnectMediaPorts/DisconnectMediaEdge/RemoveAppInstance ops via new apply_flow_fixture_to_os_media_graph in semio-framework-os, the Rust analog of premigration applyFlowFixtureJsonToSMediaGraph) and nodeGraphViewport (camera persistence). FlowGraphCanvasHost gained catalogue drop→spawnApp at world position and double-click→openInstance. Presence restored end-to-end: OsPresencePeer records with staleness eviction in semio-framework-os over backbone URIs, presenceHeartbeat + live peer emission in the s plugin, per-tab client identity + 5s heartbeat in os-shell (verified live: peer record written to localStorage through the WIT host). Unblocked the whole s plugin in the browser by fixing three root causes: (1) js-sys panics under wasm32-wasip2 — added host_port module to semio-framework-plugin (WIT backbone-read/write/now-ms bindings, HostBackbonePort registered into vcs at init) with a generated host-shim.js mapped at jco transpile, and gated web_sys/js_sys in vcs to non-p2 wasm; (2) plugin registry generator wrote per-session filtered catalogs into the shared generated plugins.ts causing cross-session clobbering — now always emits the full catalog; (3) \"Maximum update depth exceeded\" crashes — Radix/React 19.2 unstable composed-ref loops (react-slot override ^1.2.5, react-select ^2.3.3) and a measure/setState feedback loop in useWindowMeasuresReservePx (ui/js/react). Added s-react-dev launch.json entry (port 6070) and dev:s-driven verification. Tests: 82 rust + 64 vitest green, wasm32-wasip2 clean. Remaining known gap: interactive canvas walkthrough (drag/connect/drop/two-tab presence overlay) blocked by the concurrent COMPOSABLE-WINDOW-CONTENT-LAYOUT refactor collapsing window content to 0x0 repo-wide (reproduced on ?plugin=flow); s-side logic covered by unit tests, re-verify after that refactor lands.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1919"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️2cf46ea5c1fd40609dfe67b16daa5f33",
+    "⚪️70e11d5ba97a4f789e902247f75d5891",
+    "⚪️78d6b86577de425391088a2bf4249983",
+    "⚪️e72b7aef47ed4886ac5e803d12c0b09c",
+    "⚪️40aca69d5a5b41ad90381ef0e54120ec",
+    "⚪️f1594d32326f4ab4b387a9e64b1a041a",
+    "⚪️d8fcaca35d85491db9c46730daa123cd",
+    "⚪️d45f3042e609444e9f00f01540974575"
+  ]
+}

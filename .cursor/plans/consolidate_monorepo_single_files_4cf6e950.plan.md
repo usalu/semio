@@ -1,6 +1,6 @@
 ---
 name: Consolidate Monorepo Single Files
-overview: Continue the existing open ticket "Consolidate Monorepo Into Single Files" (goal `🎯aioptimizedrepo🎯singlefilerepo`) to flatten stray `src/` folders, remove the one extra non-`script.ts` script file, merge remaining scattered same-bundle source files into their single entry file, fill in missing `package.json` script blocks, and normalize the remaining `project.json` targets that bypass `script.ts` by calling `cargo`/`go`/`dotnet`/`vite`/`uv` directly.
+overview: Continue the existing open ticket "Consolidate Monorepo Into Single Files" (goal `🎯️aioptimizedrepo🎯️singlefilerepo`) to flatten stray `src/` folders, remove the one extra non-`script.ts` script file, merge remaining scattered same-bundle source files into their single entry file, fill in missing `package.json` script blocks, and normalize the remaining `project.json` targets that bypass `script.ts` by calling `cargo`/`go`/`dotnet`/`vite`/`uv` directly.
 todos:
  - id: reopen-ticket
    content: Reopen CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES ticket via ticket_reopen
@@ -36,13 +36,13 @@ isProject: false
 
 ## Context
 
-This request maps directly onto an **already-open** ticket: [`.repo/🎫/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json`](.repo/🎫/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json) under goal `🎯aioptimizedrepo🎯singlefilerepo`. Its description: _"Consolidate monorepo source into single files where frameworks allow. Keep required separate entry points... Update imports and package exports. Run tests."_ Prior sessions already merged `geometry-brep-js`, `repo/lib/js` (internal files only, not the `src/` wrapper itself), `repo/client/vscode` codegen, `mathematical/graph` Rust modules, `infinite/cavas` vello, and `compose/client/lib/py` tests. Per the repo workflow rule, this work continues by **reopening that ticket** rather than creating a new one.
+This request maps directly onto an **already-open** ticket: [`.repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json`](.repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json) under goal `🎯️aioptimizedrepo🎯️singlefilerepo`. Its description: _"Consolidate monorepo source into single files where frameworks allow. Keep required separate entry points... Update imports and package exports. Run tests."_ Prior sessions already merged `geometry-brep-js`, `repo/lib/js` (internal files only, not the `src/` wrapper itself), `repo/client/vscode` codegen, `mathematical/graph` Rust modules, `infinite/cavas` vello, and `compose/client/lib/py` tests. Per the repo workflow rule, this work continues by **reopening that ticket** rather than creating a new one.
 
 Only **2** real `src/` folders exist in the whole repo (`repo/lib/js/src/`, `ui/styling/rs/src/`) — both are documented as not-yet-flattened follow-ups in the ticket's own history.
 
 ## Phase 0 — Ticket
 
-- Reopen `.repo/🎫/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES` via `ticket_reopen` (goal already `🎯aioptimizedrepo🎯singlefilerepo`, no goal changes needed).
+- Reopen `.repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES` via `ticket_reopen` (goal already `🎯️aioptimizedrepo🎯️singlefilerepo`, no goal changes needed).
 - Add any new temp/rewrite scripts for this session under that same ticket folder.
 
 ## Phase 1 — Flatten the 2 stray `src/` folders (highest blast radius)
@@ -61,7 +61,7 @@ Only **2** real `src/` folders exist in the whole repo (`repo/lib/js/src/`, `ui/
 - `compose/client/ui/gh/Compose.Grasshopper/yak/script.ts` is a second `script.ts` nested beneath a bundle that already has its own `script.ts` — violates "only `script.ts` per bundle".
 - Merge its `build`/`publish`/`setup`/`test` command classes into the parent [`Compose.Grasshopper/script.ts`](compose/client/ui/gh/Compose.Grasshopper/script.ts) router (rename subcommands as needed to avoid clashing with the existing `build`/`test` targets, e.g. fold yak packaging into `build`, keep yak push/search under `test`, login under `setup`).
 - Delete `yak/script.ts` (keep other non-script files under `yak/`, e.g. `manifest.yml`).
-- Update [`Compose.Grasshopper/project.json`](compose/client/ui/gh/Compose.Grasshopper/project.json) so `build`/`publish`/`setup`/`test` targets call only `bun ./script.ts <command>`.
+- Update [`Compose.Grasshopper/project.json`](compose/client/ui/gh/Compose.Grasshopper/project.json) so `build`/`publish`/`setup`/`test` targets call only `bun ./📜️script.ts <command>`.
 
 ## Phase 3 — Merge remaining scattered same-bundle files
 
@@ -90,7 +90,7 @@ Continuing the ticket's established pattern (fold sibling files into the bundle'
 
 ## Phase 5 — Route remaining `project.json` bypasses through `script.ts`
 
-Using the generic helpers already in `repo/lib/js` (`runCargo`, `runCmd`, `runViteBuild`, `runVitest`, `runBunx`, `runPlaywright`), add missing command classes to each bundle's `script.ts` (creating one where absent) so `project.json` targets call only `bun ./script.ts <command>`:
+Using the generic helpers already in `repo/lib/js` (`runCargo`, `runCmd`, `runViteBuild`, `runVitest`, `runBunx`, `runPlaywright`), add missing command classes to each bundle's `script.ts` (creating one where absent) so `project.json` targets call only `bun ./📜️script.ts <command>`:
 
 - Cargo direct calls: `reasoning/mindmap`, `procedural/{2d,3d}/rs`, `puzzle/{3d,5d}/rs`, `gis/2d/rs`, `writer/rs`, `trinity/jack/lsp`, `mathematical/graph/manifest`, `compose/server/hub`, `compose/client/lib/{query,rs}`
 - Go direct calls: `repo/client/cli`, `repo/lib/go`, `repo/server/coordinator`, `coda/client/lib/{programming,blnbo}/go`, `compose/client/lib/go`

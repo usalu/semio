@@ -1,0 +1,11 @@
+{
+  "title": "Add Baum Slide Systematik Typologien",
+  "emoji": "🌳️",
+  "status": "open",
+  "description": "Add Baum slide under Systematik/Typologien to projektetage with new picture.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1702"
+  },
+  "goal": "🎯️presentation",
+  "sessions": ["⚪️804b4575195d46679858462a1a8f55a7"]
+}

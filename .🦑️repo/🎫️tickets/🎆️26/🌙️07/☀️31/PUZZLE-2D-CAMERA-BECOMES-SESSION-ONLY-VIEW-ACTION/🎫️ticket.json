@@ -1,0 +1,14 @@
+{
+  "title": "Puzzle 2D Camera Becomes Session-Only View Action",
+  "emoji": "🎥️",
+  "status": "closed",
+  "description": "Prerequisite for the universal command-log: the puzzle-2d app's camera pose (pan/zoom) is currently stored inside the VCS document (setCamera declared ActionKind::Operation, persisted as a \"camera\" key on the fixture, and as a Puzzle2dOperation::SetCamera variant in the op crate). Move the camera value out of the document entirely into the app's ephemeral Puzzle2dPlayRuntime, change setCamera's ActionKind to View, stop emitting any document operation for it, remove the coalesce_key usage, delete the SetCamera operation variant from the op crate (diff/absorb/apply/backwards/KNOWN_KEYS allowlist), and hand-fix every embedded example fixture / test that assumed camera lived in the document.",
+  "summary": "Moved the puzzle-2d play app's camera (pan/zoom) out of the VCS document entirely into Puzzle2dPlayRuntime session state. setCamera is now ActionKind::View (no operation, no coalesce_key). focusSelection/applyBoardEvents' \"camera\" board event now write runtime instead of the fixture. Deleted Puzzle2dOperation::SetCamera from the op crate (diff/absorb/apply/backwards/KNOWN_KEYS), removed \"camera\" from the fixture allowlist, stripped the stray \"camera\" key from the two embedded example fixtures (parsed via the typed DSL bridge) and from the DWG-import path, and rewrote every test that asserted document.camera to assert runtime/rendered state and empty operations instead. cargo check + cargo test pass for both semio-s-app-puzzle-2d-ui (26/28; 2 pre-existing failures from a concurrent session's in-progress universal-command-history framework change, unrelated) and semio-s-app-puzzle-2d-op (1/1), plus semio-s-app-puzzle-2d-protocol (1/1) and clean cargo check on semio-s-app-puzzle-2d, -dsl, -pack, -engine.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2391"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️3f26997cc5094244a88b0e4e7af5646e"
+  ]
+}

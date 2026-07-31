@@ -1,0 +1,12 @@
+{
+  "title": "Accurate Hover Detection in Design App Scene",
+  "emoji": "🎬️",
+  "status": "closed",
+  "description": "Fix inaccurate hover detection in the sketchpad design app scene window. Goal: extremely accurate hover for dense 3D scenes with many meshes, giving clear instant feedback and always selecting the correct visible front object even when shapes overlap in depth.",
+  "summary": "Fixed inaccurate hover detection in design app scene with two changes:\n\n1. Disabled raycasting on non-mesh objects (Line/LineSegments/Points) in GLTFMesh, FBXMesh, OBJMesh. These had a default raycast threshold of 1 world unit, causing lines to capture hover intersections intended for mesh surfaces of other pieces — the primary cause of inaccurate hover in dense scenes.\n\n2. Centralized hover via onPointerMove on ModelDesign group instead of per-piece onPointerEnter/onPointerLeave. The centralized handler iterates event.intersections (sorted by distance) and resolves the first intersection piece GUID, guaranteeing the front-most visible piece is always hovered. Removed per-piece hover state management from ModelPiece to eliminate race conditions between enter/leave events on overlapping objects.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1091"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️0839ce7411d847b98661c581b6452438"]
+}

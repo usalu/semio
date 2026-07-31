@@ -1,0 +1,9 @@
+{
+  "title": "Delete All Empty Folders",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Delete all empty folders (including folders containing untracked build artifacts/files, counting as empty if none of the items inside are checked into git).",
+  "sessions": [
+    "c3a99bb3-fe2e-426d-9109-e7d5722760f6"
+  ]
+}

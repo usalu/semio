@@ -43,7 +43,7 @@ isProject: false
 
 ## 0. Ticket
 
-Open `spatial-interactions-and-actions` via repo MCP `ticket_open`. All scratch files under `.repo/🎫/YY/MM/DD/spatial-interactions-and-actions/`.
+Open `spatial-interactions-and-actions` via repo MCP `ticket_open`. All scratch files under `.repo/🎫️/YY/MM/DD/spatial-interactions-and-actions/`.
 
 ## 1. Concept split
 
@@ -65,10 +65,10 @@ flowchart LR
 
 Region renames + symbol renames (kept in same file per `AGENTS.md`):
 
-- `🎮CommandEvent` → `🎮InteractionEvent`; `CommandEvent` → `InteractionEvent`; `SelectionEvent` stays but extends `InteractionEvent`.
-- `📜Spec` → `📜InteractionSpec`; `CommandSpec` → `InteractionSpec`; `parseCommandSpec` → `parseInteractionSpec`; `compileCommand` → `compileInteraction`; `CommandSpatialInteractionConfig` → `InteractionSpatialConfig`; `CommandSpatialInteractionResolved` → `InteractionSpatialResolved`; `mergeCommandSpatialInteraction` → `mergeInteractionSpatial`.
-- `📜Command` → `📜Interaction`; `CommandRuntime` → `InteractionRuntime`; `CommandRuntimeOptions` → `InteractionRuntimeOptions`; `createCommandRuntime` → `createInteractionRuntime`; `CommandSnapshot` → `InteractionSnapshot`; `CommandResponse` → `InteractionResponse`; `EMPTY_COMMAND_RESPONSE` → `EMPTY_INTERACTION_RESPONSE`; `CommandMessage` → `InteractionMessage`; `CommandKeybindRow` → `InteractionKeybindRow`; `listKeyedCommandTransitions` → `listKeyedInteractionTransitions`; `isCommandSessionActive` → `isInteractionSessionActive`.
-- `📦Commands` → `📦Interactions`; `SpatialCommandPreset` → `SpatialInteractionPreset`; `listSpatialCommandPresets` / `loadSpatialCommandPreset` / `resolveSpatialCommandPresetKey` → `listSpatialInteractionPresets` / `loadSpatialInteractionPreset` / `resolveSpatialInteractionPresetKey`; `buildBoxCommandSpec` → `buildBoxInteractionSpec`; same for `Extrude`/`OffsetSurface`/`Distance`/`Area`.
+- `🎮️CommandEvent` → `🎮️InteractionEvent`; `CommandEvent` → `InteractionEvent`; `SelectionEvent` stays but extends `InteractionEvent`.
+- `📜️Spec` → `📜️InteractionSpec`; `CommandSpec` → `InteractionSpec`; `parseCommandSpec` → `parseInteractionSpec`; `compileCommand` → `compileInteraction`; `CommandSpatialInteractionConfig` → `InteractionSpatialConfig`; `CommandSpatialInteractionResolved` → `InteractionSpatialResolved`; `mergeCommandSpatialInteraction` → `mergeInteractionSpatial`.
+- `📜️Command` → `📜️Interaction`; `CommandRuntime` → `InteractionRuntime`; `CommandRuntimeOptions` → `InteractionRuntimeOptions`; `createCommandRuntime` → `createInteractionRuntime`; `CommandSnapshot` → `InteractionSnapshot`; `CommandResponse` → `InteractionResponse`; `EMPTY_COMMAND_RESPONSE` → `EMPTY_INTERACTION_RESPONSE`; `CommandMessage` → `InteractionMessage`; `CommandKeybindRow` → `InteractionKeybindRow`; `listKeyedCommandTransitions` → `listKeyedInteractionTransitions`; `isCommandSessionActive` → `isInteractionSessionActive`.
+- `📦️Commands` → `📦️Interactions`; `SpatialCommandPreset` → `SpatialInteractionPreset`; `listSpatialCommandPresets` / `loadSpatialCommandPreset` / `resolveSpatialCommandPresetKey` → `listSpatialInteractionPresets` / `loadSpatialInteractionPreset` / `resolveSpatialInteractionPresetKey`; `buildBoxCommandSpec` → `buildBoxInteractionSpec`; same for `Extrude`/`OffsetSurface`/`Distance`/`Area`.
 - Existing transition `ActionSpec` → `EffectSpec`; field `transitions[*].actions` → `effects`; helper `applyActionAsync` → `applyEffectAsync`. `EffectSpec` drops the `box.transform` variant and gains a generic action variant:
   ```ts
   | { operator: "action"; action: string; params?: Record<string, Expr>; assignTo?: PathTarget }
@@ -76,7 +76,7 @@ Region renames + symbol renames (kept in same file per `AGENTS.md`):
 - Remove `applyBoxGeometryTransform` (~120 lines in [spatial/js/core/index.ts](spatial/js/core/index.ts)); its 12 sub-operations become registered Actions (see §3).
 - Remove `history.excludeEvents` from `InteractionSpec` and from `InteractionRuntime.excludeFromHistory` — every non-transient transition is undoable per requirement. `transient: true` remains the single opt-out.
 
-New region `🧮ActionRegistry` (after `🪪Refs`):
+New region `🧮️ActionRegistry` (after `🪪️Refs`):
 
 ```ts
 export interface ActionResult<TData = unknown> {
@@ -104,7 +104,7 @@ Built-in actions registered by `ActionRegistry.withBuiltins`:
 - Geometry actions (call `KernelAdapter`): `primitive.createBoxFromCorners`, `primitive.createBoxFrom3Points` (composed of `aabbFromDiagonalCorners` + `setCubeHeightFromFootprint`), `feature.extrudeWireToCell`, `feature.offsetFaces`, `measure.vertexDistance`, `measure.faceArea`, `measure.cellVolume`.
 - Pure geometry helpers (no kernel): the 12 ex-`box.transform` operations, each as its own `ActionDef` reading typed params (`origin`, `corner`, `cursor`, `p0`/`p1`, …) and returning `{ data: { origin?, corner?, height?, … } }` so transitions assign them back via `assignTo`.
 
-New region `🧭InteractionRegistry`:
+New region `🧭️InteractionRegistry`:
 
 ```ts
 export class InteractionRegistry {
@@ -135,11 +135,11 @@ All previous variants (`cell.createBox`, `wire.extrudeToCell`, `face.offset`, `m
 
 ## 4. Undo/redo for every state transition
 
-`InteractionRuntime.send` already snapshots `{state, context}` before every non-transient transition into `snapUndoStack`. Confirm the removal of `excludeEvents` is the only behavioral change needed. Update the snapshot comment + `🪩Repl` docs accordingly.
+`InteractionRuntime.send` already snapshots `{state, context}` before every non-transient transition into `snapUndoStack`. Confirm the removal of `excludeEvents` is the only behavioral change needed. Update the snapshot comment + `🪩️Repl` docs accordingly.
 
 ## 5. `spatial/js/machine-stately/index.ts`
 
-Mirror all type/symbol renames (`CommandSpec` → `InteractionSpec`, `SpatialStatelyMachineView` keeps its name but its `commandId` field → `interactionId`, `commandVersion` → `interactionVersion`, `buildSpatialStatelyMachineCatalogView`, etc.). The XState wiring is unchanged — `applyTransition` keeps the same semantics, only types rename. Update the `🧪Tests` region accordingly.
+Mirror all type/symbol renames (`CommandSpec` → `InteractionSpec`, `SpatialStatelyMachineView` keeps its name but its `commandId` field → `interactionId`, `commandVersion` → `interactionVersion`, `buildSpatialStatelyMachineCatalogView`, etc.). The XState wiring is unchanged — `applyTransition` keeps the same semantics, only types rename. Update the `🧪️Tests` region accordingly.
 
 ## 6. `spatial/js/renderer-r3f/index.tsx`
 
@@ -152,16 +152,16 @@ Update imports and symbol names. CLI surfacing of presets (`listSpatialInteracti
 
 ## 8. Tests — extend existing vitest suites only
 
-In the `🧪Tests` region of [spatial/js/core/index.ts](spatial/js/core/index.ts):
+In the `🧪️Tests` region of [spatial/js/core/index.ts](spatial/js/core/index.ts):
 
 - `ActionRegistry`: `withBuiltins` lists all built-in ids; `register` allows overriding; `createBoxFrom3Points` returns the same diff as `createBoxFromCorners` for axis-aligned inputs.
 - `InteractionRegistry.withBuiltins` returns all 5 presets and `get("primitive.box")` matches `buildBoxInteractionSpec`.
 - Box interaction end-to-end through the new `effects:[{operation:"action",action:"box.aabbFromDiagonalCorners",…}]` path produces identical context to the old test (snapshot of `state` + `context` after each `pointer.down`).
 - `send` push to `snapUndoStack` on every non-transient transition (regression: previously `excludeEvents` could skip).
 
-Extend `spatial/js/machine-stately/index.ts` `🧪Tests` to assert pure-ts vs XState parity through the new `effects` + `{kind:"action"}` commit path.
+Extend `spatial/js/machine-stately/index.ts` `🧪️Tests` to assert pure-ts vs XState parity through the new `effects` + `{kind:"action"}` commit path.
 
-Extend `spatial/js/renderer-r3f/index.tsx` `🧪Tests` to rename + cover one full interaction via the renamed `InteractionRuntime`.
+Extend `spatial/js/renderer-r3f/index.tsx` `🧪️Tests` to rename + cover one full interaction via the renamed `InteractionRuntime`.
 
 ## 9. Out of scope
 

@@ -1,8 +1,0 @@
-{
-  "title": "Add Auth And Sharable Links To Server And Sketchpad",
-  "status": "closed",
-  "description": "Add authentication to compose server and sketchpad (optional for remote kits). Add sharable links for kit, design and type with read-only options. \n\nServer changes:\n- Add auth token system (session-scoped bearer tokens)\n- Add session access modes: owner (read-write) and viewer (read-only)\n- Auth middleware: token required for mutation endpoints, optional for read endpoints\n- Sharable link generation: create read-only share tokens for kit/design/type views\n- New endpoints: POST /sessions/{id}/share (create share link), GET /share/{token} (resolve share)\n\nSketchpad changes:\n- SessionKitStore: send auth token with requests, handle 401/403\n- Share dialog: generate and copy sharable links\n- Read-only mode when accessing via share link\n- URL support for share tokens",
-  "summary": "Bulk close",
-  "goal": "🎯r2603",
-  "sessions": ["⚪39f6da61a0c945bbac4c6a290650e7ec"]
-}

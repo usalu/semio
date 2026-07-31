@@ -1,0 +1,11 @@
+{
+  "title": "Add Kit Properties to Right Toggle Panel",
+  "status": "closed",
+  "description": "The Kit app's right toggle panel (details panel) doesn't show kit properties. The root cause is that `AppContent` (which registers sections) is rendered inside Golden Layout's separate React root (via `LayoutScopeWrapper` with its own `PanelSectionProvider`), while the right panel (`DynamicPanelTabContent`) reads from the ROOT `PanelSectionContext`. Move the kit details section registrations (KitSection, TypeSection, DesignSection, PortSection, TagSection, FileSection, FolderSection, MultipleArtifactsSection) from `AppContent` to `MultiWindowApp` (the route-level component in the root context), mirroring the pattern used by `DesignWindowApp`.",
+  "summary": "Moved Kit app detail-section registration from the table window root into the route-level MultiWindowApp panel context so the visible right details panel now receives kit, type, design, port, tag, file, folder, and multi-artifact sections. Extended the existing Kit Playwright test to assert the kit metadata fields mount in the right panel.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1318"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️2705d78093da4b3eb2d5005af2dcba32"]
+}

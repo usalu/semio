@@ -1,0 +1,17 @@
+{
+  "title": "Unify Cad And Puzzle3d Infinite World",
+  "emoji": "🌍️",
+  "status": "closed",
+  "description": "Migrate @semio-tech/infinite-world-r3f and puzzle/3d to native z-up; rebuild cad/js/renderer on the same engine with full layer set (chunking, pooling, LOD grid).",
+  "summary": "Fixed CAD spatial interactions (box, etc.) after infinite-world unification: WorldLodGridHelper grids now disable raycasting (matching legacy cad GridHelper), so GroundPickPlane receives pointer hits again. Added world test; minor GroundPickPlane renderOrder tweak.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1534"
+  },
+  "goal": "🎯️puzzle3d🎯️puzzle3dplay",
+  "plan": {
+    "client": "cursor",
+    "id": "e87f468f",
+    "local": "unify_cad_and_puzzle3d_world_e87f468f.plan.md"
+  },
+  "sessions": ["⚪️2175abf76c94497b842d41024879dc74", "⚪️97159614f14c4093abcab8b5917223ca"]
+}

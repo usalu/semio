@@ -1,0 +1,12 @@
+{
+  "title": "Variadic Flow Ports",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "Add generic variadic-port mechanism to flow: port-level synapses, zoom-gated + controls, dictionary.merge as first user.",
+  "summary": "Implemented generic variadic flow ports end-to-end: NeuronKindInfo VariadicSpec + port-aware Synapse routing in neural engine; dictionary.merge folds N ordered items slots; FlowHost persists input_ports and port-level synapses with add/remove_input_port APIs; DAG paints zoom-gated + insert controls; React forwards kind metadata via setNeuronKindInfosJson. All Rust and vitest suites pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1548"
+  },
+  "goal": "🎯️flow🎯️runtime",
+  "sessions": ["⚪️7976d6b7640b43a882fc196d8673b0e7"]
+}

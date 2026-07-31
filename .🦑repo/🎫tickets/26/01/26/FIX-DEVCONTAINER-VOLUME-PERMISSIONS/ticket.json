@@ -1,6 +1,0 @@
-{
-  "title": "Fix Devcontainer Volume Permissions",
-  "emoji": "🔧",
-  "status": "closed",
-  "summary": "Resolved permission denied errors and disk space issues in the Devcontainer. Optimized the Dockerfile by consolidating installation steps and pre-creating mount points. Updated project documentation with disk hygiene requirements to prevent future 'No space left on device' errors."
-}

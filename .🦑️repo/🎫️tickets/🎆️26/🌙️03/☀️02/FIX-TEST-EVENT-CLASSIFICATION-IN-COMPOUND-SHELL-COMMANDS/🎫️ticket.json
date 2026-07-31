@@ -1,0 +1,12 @@
+{
+  "title": "Fix Test Event Classification in Compound Shell Commands",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix classifyCommandKind, resolveTestFilesFromCommand, and parseTestInfoFromCommand to handle compound shell commands (cd \u0026\u0026 go test, npm run \u0026\u0026 jest, etc.) so test events are correctly identified as agent.tool.test.starting instead of agent.tool.terminal.starting. Also ensure all individual test IDs are listed in the tests field.",
+  "summary": "Fixed test event classification for compound shell commands. classifyCommandKind now splits by sequence operators and finds the highest-priority kind across segments. Pipe chains handled by checking only first command. Added extractTestSegmentFromCommand helper for resolveTestFilesFromCommand and parseTestInfoFromCommand. All tests pass plus new compound command tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/744"
+  },
+  "goal": "🎯️hookseventclassification🎯️testhookeventclassification",
+  "sessions": ["⚪️17724283326807290666629540004659648792"]
+}

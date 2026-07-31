@@ -1,0 +1,9 @@
+{
+  "title": "Mode Dock Gap Baseline Overshoot",
+  "emoji": "🐛️",
+  "status": "open",
+  "description": "Fix pixel-perfect alignment of the bottom baseline between the last tab and fullscreen button in Mode dock chrome — the horizontal line overshoots on both sides at the L-joint corners.",
+  "summary": "Fixed Mode dock gap baseline overshoot: the horizontal stroke between the last tab and fullscreen cap now uses an inset `after:border-b` (`inset-x-px`) so it meets the L-joint corners without extending into the tab or controls cap. Added regression assertions on the active stack gap slot.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️9d7c7d29a85b4237b489633e45f0d795", "⚪️ed7962d1ae5749bba24da2aaff479e33"]
+}

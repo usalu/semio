@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle2d Label Color On Selection",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Labels on puzzle2d sometimes keep stale primary/secondary colors after selection changes; zoom forces correct repaint. Fix text overlay dirty detection to include selection/preselect chrome.",
-  "summary": "Fixed stale puzzle2d label colors after selection: textOverlayDirty() recorded selection/preselect in rememberTextOverlayPainted() but never compared them, so paintTextOverlays() skipped repaints until camera zoom bumped viewport state. Now selection/preselect chrome always marks the overlay dirty; camera/viewport/LOD stays deferred during wheelZoomGestureActive. Added tests for selection dirty/repaint and selection repaint mid wheel-zoom.",
-  "goal": "🎯framework",
-  "sessions": ["⚪77d9ef45d4aa463ab12748c6b94696c2"]
-}

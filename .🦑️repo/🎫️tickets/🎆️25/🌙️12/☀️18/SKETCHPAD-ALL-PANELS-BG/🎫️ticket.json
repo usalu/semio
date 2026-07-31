@@ -1,0 +1,7 @@
+{
+  "title": "Ensure all panels paint panel background",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "All panels should have panel background. Currently I only see the border of e.g. details or settings panel in home. Toolbar panel is transparent but should have the panel background.",
+  "goal": "🎯️r2602🎯️runningsketchpad"
+}

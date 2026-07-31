@@ -1,0 +1,12 @@
+{
+  "title": "Camera State Synchronization in CAD Windows",
+  "emoji": "📷️",
+  "status": "closed",
+  "description": "the camera in cad windows is wrongly synchronized. every window should have its own camera state.",
+  "summary": "Isolated camera states across Shape, Building, Energy, and Structure Classic viewports in CAD layout.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1875"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️da917753348d4ab0b6bfa994d718acdf"]
+}

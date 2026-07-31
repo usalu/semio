@@ -1,0 +1,17 @@
+{
+  "title": "Procedural 3d Slider and Preview Hang Fix",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix procedural 3d react renderer parity: restore inspector slider editing (Tree defaultOpen regression), add in-canvas slider overlays wired to setSliderValue, and cache BREP preview evaluation to stop re-running expensive mesh boolean on every UI command (sphere cut with torus hang).",
+  "summary": "Restored procedural 3d react parity by fixing three root causes: (1) global Tree regression — leaf property rows with controls now default open so Inspector slider Value fields render; (2) in-canvas slider overlays wired end-to-end via dag.slider_overlay_state_json → flow_core/framework_graph wasm → GraphSliderOverlays + setSliderValue; (3) signature-gated preview cache in Procedural3dRuntime stops re-running expensive BREP mesh boolean on viewport-only commands (sphere cut with torus hang). Verified with kernel, dag, procedural-plugin, framework-renderer-react, ui-react vitest, and headless browser smoke on :6018.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1878"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "7a4bc3a2",
+    "local": "procedural_3d_slider_and_hang_fix_7a4bc3a2.plan.md"
+  },
+  "sessions": ["⚪️4386691cff374e65adbc4fd3b555b1cd"]
+}

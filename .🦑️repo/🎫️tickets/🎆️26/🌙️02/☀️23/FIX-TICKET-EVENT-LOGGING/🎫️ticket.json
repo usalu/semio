@@ -1,0 +1,11 @@
+{
+  "title": "Fix Ticket Event Logging",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "ticket.json is not correctly adding all events from hooks. Events are filtered out when they lack file/pattern data. Fix trackHookInOpenTicket to pass result data and remove overly restrictive filter. Also fix dispatchHook missing case for HookAgentToolSearched causing unknown hook event error. Prompts field should only be derived by agent hook events (agent.prompt.submitting), not created as empty stubs.",
+  "summary": "Fixed three issues: (1) Rebuilt stale CLI binary resolving agent.tool.searching.ended dispatch error that blocked PostToolUse hooks. (2) Removed ghost-prompt stub in trackHookInOpenTicket so prompts only come from agent.prompt.submitting hooks; saves session metadata before returning. (3) Isolated TestTicketOpenContinueKeyword with tmpDir to prevent real-filesystem interference. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/648"
+  },
+  "goal": "🎯️testgoal"
+}

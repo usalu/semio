@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,9 +6,9 @@
 
 // Storybook stories for ValidationTree component with Treppenraum_A example.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 📮Stories
+// #region 📮️Stories
 // Storybook stories exercising the validation tree viewer with real evaluation data.
 // Stories MUST use the Treppenraum_A example from the OWL ontology validation.
 
@@ -17,7 +17,7 @@ import { ValidationTree } from "@semio-tech/coda-desktop/renderer";
 import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 
-// 🎨#region 🏷️CodaThemeWrapper
+// 🎨️#region 🏷️CodaThemeWrapper
 const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
@@ -44,7 +44,7 @@ const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (
 // #endregion 🏷️CodaThemeWrapper
 
 // #region 🖼️TreppenraumReport
-// 📋The full Treppenraum_A validation report as JSON-compatible data.
+// 📋️The full Treppenraum_A validation report as JSON-compatible data.
 const treppenraumReport: ValidationReport = {
   instance: "Treppenraum_A",
   expression: "not (verbindet exactly 2 (Geschoss and (verbundenZu some Rettungsweg) and (in exactly 1 (Nutzungseinheit and (bruttoGrundfläche some xsd:float[<= 200.0f])))))",
@@ -329,8 +329,8 @@ const treppenraumReport: ValidationReport = {
 };
 // #endregion 🖼️TreppenraumReport
 
-// #region 📔IncompleteDataReport
-// 🌿Example with unknown (gray) nodes due to incomplete data.
+// #region 📔️IncompleteDataReport
+// 🌿️Example with unknown (gray) nodes due to incomplete data.
 const incompleteDataReport: ValidationReport = {
   instance: "Treppenraum_B",
   expression: "not (verbindet exactly 2 (Geschoss and (verbundenZu some Rettungsweg) and (in exactly 1 (Nutzungseinheit and (bruttoGrundfläche some xsd:float[<= 200.0f])))))",
@@ -472,9 +472,9 @@ const incompleteDataReport: ValidationReport = {
     ],
   },
 };
-// #endregion 📔IncompleteDataReport
+// #endregion 📔️IncompleteDataReport
 
-// 🌳#region ✏️ValidationTreeMeta
+// 🌳️#region ✏️ValidationTreeMeta
 const validationMeta = {
   title: "🖱️ui⚛️react/ValidationTree",
   component: ValidationTree,
@@ -615,6 +615,6 @@ export const MultipleWitnessAlternatives: ValidationStory = {
     defaultExpanded: true,
   },
 };
-// #endregion 📮ValidationTreeStories
+// #endregion 📮️ValidationTreeStories
 
-//#endregion 📮Stories
+//#endregion 📮️Stories

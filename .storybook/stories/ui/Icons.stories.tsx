@@ -1,19 +1,19 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/Icons.stories.tsx
+// 🥼️ .storybook/stories/ui/Icons.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Cursor, Icon, LoadingRow, Spinner } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import { ICON_NAMES, ICON_CONCEPT_ASSIGNMENTS, type IconName } from "@semio-tech/ui-asset";
 import type { Meta, StoryObj } from "@storybook/react";
 
-// 🖼️#region 🛒Icons
+// 🖼️#region 🛒️Icons
 const Box = createIconComponent("box");
 
 const meta = {
@@ -48,9 +48,9 @@ export const Default: Story = {
   ),
 };
 
-// 🔷#region 🫨IconAnimations
+// 🔷️#region 🫨️IconAnimations
 const NON_CATALOG_KIND_TILES: { readonly label: string; readonly icon: React.ComponentProps<typeof Icon>["icon"] }[] = [
-  { label: "kind:emoji", icon: { kind: "emoji", emoji: "🙂" } },
+  { label: "kind:emoji", icon: { kind: "emoji", emoji: "🙂️" } },
   { label: "kind:text", icon: { kind: "text", text: "Hi" } },
   { label: "kind:typst", icon: { kind: "typst", src: "$x^2$" } },
   { label: "kind:image", icon: { kind: "url", url: "https://picsum.photos/32" } },
@@ -84,7 +84,7 @@ export const IconAnimations: Story = {
     </div>
   ),
 };
-// #endregion 🫨IconAnimations
+// #endregion 🫨️IconAnimations
 
 export const Concepts: Story = {
   args: { color: "#000000" },
@@ -101,9 +101,9 @@ export const Concepts: Story = {
   ),
 };
 
-// #endregion 🛒Icons
+// #endregion 🛒️Icons
 
-// 🔷#region 🎹Spinner
+// 🔷️#region 🎹️Spinner
 export const SpinnerSizes: Story = {
   args: { color: "#000000" },
   render: () => (
@@ -114,9 +114,9 @@ export const SpinnerSizes: Story = {
     </div>
   ),
 };
-// #endregion 🎹Spinner
+// #endregion 🎹️Spinner
 
-// 🔷#region 🎺LoadingRow
+// 🔷️#region 🎺️LoadingRow
 export const LoadingRowDefault: Story = {
   args: { color: "#000000" },
   render: () => (
@@ -127,4 +127,4 @@ export const LoadingRowDefault: Story = {
     </div>
   ),
 };
-// #endregion 🎺LoadingRow
+// #endregion 🎺️LoadingRow

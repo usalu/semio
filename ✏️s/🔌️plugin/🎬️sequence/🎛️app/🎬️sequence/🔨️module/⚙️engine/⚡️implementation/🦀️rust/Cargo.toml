@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-sequence-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sequence app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+sequence = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/⚡️implementation/🦀️rust", package = "semio-s-app-sequence" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+imperative_engine = { path = "../../../../../../../../../✏️s/🔨️module/📜️imperative/⚡️implementation/🦀️rust", package = "imperative_engine" }
+neural_engine = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚙️engine/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
+mathematical_graph_manifest = { path = "../../../../../../../../../🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }
+infinite_cavas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/🕸️dag/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+thiserror = "2.0.12"
+serde_json = "1.0.140"

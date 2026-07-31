@@ -1,0 +1,12 @@
+{
+  "title": "Fill Bottom Schema Unions",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Fill union EntityEdge, OwnerEntity, and OwnsEntityConnection at bottom of compose/graphql/target.schema.graphql to match all concrete edge types, entity owners, and connection implementations.",
+  "summary": "Completed union EntityEdge with all 36 concrete edge types (sorted alphabetically). Filled union OwnerEntity with every concrete type implementing Entity (operations and relay entities including Connection). Filled union OwnsEntityConnection with the same member list as union EntityConnection (all EntityConnectionInterface implementations). SDL parses; cargo tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1397"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️2cc4f027a057494eabd2822f98b3b5a8"]
+}

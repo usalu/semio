@@ -1,0 +1,12 @@
+{
+  "title": "Optimize D3 Node Sizing and Force Parameters",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Make node sizing noticeably smaller, size each circle from the text's bounding box so the circle is roughly twice as large as the label footprint, with the label centered and enough inner padding to feel balanced, then optimize the remaining D3 force parameters for a compact, balanced, readable relational layout with minimal overlap and crossings.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1203"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️7050d8c6255c44208d764cec43b0d514"]
+}

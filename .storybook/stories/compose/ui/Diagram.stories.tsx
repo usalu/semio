@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/ui/.storybook/story/Diagram.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/ui/.storybook/story/Diagram.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly (no kit/designId).
 // Summary: Diagram stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Design, Kit, type Design as DesignType, type DesignPlain } from "@semio-tech/compose-react";
 import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
@@ -26,7 +26,7 @@ const designDiff = nakaginDiff as any;
 
 // #endregion 🖥️Data
 
-// #region 🧫Diagram
+// #region 🧫️Diagram
 
 const meta: Meta<typeof Diagram> = {
   title: "🏘️compose⚛️react/Diagram",
@@ -122,4 +122,4 @@ export const ZoomNone: Story = {
   render: (args) => frame(<Diagram {...args} />),
 };
 
-// #endregion 🧫Diagram
+// #endregion 🧫️Diagram

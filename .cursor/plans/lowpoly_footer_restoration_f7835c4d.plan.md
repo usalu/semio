@@ -25,7 +25,7 @@ Separately, the old editor's `windowEngagement()` (same file, lines 706-736) sup
 
 In [ui/asset/script.ts](ui/asset/script.ts), add to `VENDORED_ICON_IDS` (all confirmed present in `node_modules/lucide-static/icons/`): `flip-vertical`, `flip-horizontal`, `git-branch`, `git-commit`, `git-merge`, `eraser`, `triangle`, `paintbrush`, `paint-bucket`, `pipette`, `scissors`, `unlink`, `undo`, `redo`, `pen-tool`, `magnet`.
 
-Regenerate via `bun nx run @semio-tech/ui-asset:build` (runs `bun ./script.ts generate all`), which rewrites [ui/asset/icon/generated/icons.ts](ui/asset/icon/generated/icons.ts) (+ `.cs`/`.py` bindings + vendored `.svg` files + README) — do not hand-edit generated output.
+Regenerate via `bun nx run @semio-tech/ui-asset:build` (runs `bun ./📜️script.ts generate all`), which rewrites [ui/asset/icon/generated/icons.ts](ui/asset/icon/generated/icons.ts) (+ `.cs`/`.py` bindings + vendored `.svg` files + README) — do not hand-edit generated output.
 
 ## Phase 2 — Restore footer tool labels, icons, and grouping
 
@@ -50,9 +50,9 @@ In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs) `create_lowpoly_app()`:
 
 - `cargo test -p lowpoly-plugin --lib` (extend/adjust the `edit_tools_include_extrude`/`paint_tools_include_brush` tests to also assert on the new collection ids `lowpoly-tools-edit`/`lowpoly-paint-uv`/`lowpoly-paint-history` and that labels are present).
 - `bun nx run @semio-tech/ui-asset:build` and diff `ui/asset/icon/generated/icons.ts` to confirm the 16 new icons were vendored cleanly.
-- Rebuild the lowpoly wasm program and run the React E2E sweep: `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts --plugin lowpoly`.
+- Rebuild the lowpoly wasm program and run the React E2E sweep: `.repo/🎫️/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts --plugin lowpoly`.
 - Manual live-browser screenshot of the footer in both Edit and Paint modes to confirm real icons render (no stray circles), tooltips show labels on hover, edit operations collapse into a single grouped button, and the window engagement rail (Snap/Smooth/command bar) appears at the top of the Model/UV windows.
-- Update the ticket `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/important.md` with a summary of the icon-vendoring root cause and files touched.
+- Update the ticket `.repo/🎫️/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/important.md` with a summary of the icon-vendoring root cause and files touched.
   </plan>
   <todos>[{"id": "vendor-icons", "content": "Add 16 missing icon ids to VENDORED_ICON_IDS in ui/asset/script.ts and regenerate via bun nx run @semio-tech/ui-asset:build"}, {"id": "tool-helper-labels", "content": "Add label parameter to tool_button/tool_toggle/tool_collection in framework/core/rs/tools.rs"}, {"id": "restore-edit-tools", "content": "Restore labels, icons, and edit collection grouping in lowpoly edit_tools()"}, {"id": "restore-paint-tools", "content": "Restore labels, icons, and uv/history collection grouping in lowpoly paint_tools()"}, {"id": "fix-flip-icon-consistency", "content": "Fix document face flip-normal action icon to flip-vertical for consistency with edit tool"}, {"id": "restore-window-engagement", "content": "Build WindowEngagement (Snap/Smooth/command input/possible engagements/status) and wire via window_kind_with_engagement; add engagementSubmit handler"}, {"id": "verify-footer-fix", "content": "Run cargo tests, rebuild wasm, run React E2E for lowpoly, manually verify footer and engagement rail in browser, update ticket"}]</todos>
   </CreatePlan>

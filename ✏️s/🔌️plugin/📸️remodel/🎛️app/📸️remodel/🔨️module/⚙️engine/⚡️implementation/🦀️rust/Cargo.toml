@@ -1,0 +1,25 @@
+[package]
+name = "semio-s-app-remodel-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Remodel app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+remodel = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust", package = "semio-s-app-remodel" }
+remodel_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "remodel_engine" }
+remodel_camera = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "remodel_camera" }
+remodel_sfm = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📸️sfm/⚡️implementation/🦀️rust", package = "remodel_sfm" }
+remodel_mesh = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🥽️mesh/⚡️implementation/🦀️rust", package = "remodel_mesh" }
+remodel_geo = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🗺️geo/⚡️implementation/🦀️rust", package = "remodel_geo" }
+remodel_video = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "remodel_video" }
+remodel_image = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
+serde_json = "1.0.140"
+base64 = "0.22.1"

@@ -34,7 +34,7 @@ isProject: false
 
 Glyphs must **resemble** their meaning (orthographic top ≠ three-point perspective ≠ generic cube).
 
-Goal: `🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp` (same family as [window_kind_icons](.cursor/plans/window_kind_icons_acc26d72.plan.md)).
+Goal: `🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp` (same family as [window_kind_icons](.cursor/plans/window_kind_icons_acc26d72.plan.md)).
 
 ## Current failure (example)
 
@@ -97,7 +97,7 @@ Wire:
 4. Dock tabs: `iconId: windowIconsById[id] ?? kind.iconId` for base and extras.
 5. Display tree: `worldProjectionTemplatesToTreeItems` sets `icon` from template `iconId`.
 6. Projection pane / switch tree: stop using generic `camera` for all modes; use mode-specific icons.
-7. Codegen (`bun ./script.ts generate all` in `ui/asset`), unique `[data-icon]` hover CSS in [ui/styling/js/ui.css](ui/styling/js/ui.css), extend existing icon-animation tests.
+7. Codegen (`bun ./📜️script.ts generate all` in `ui/asset`), unique `[data-icon]` hover CSS in [ui/styling/js/ui.css](ui/styling/js/ui.css), extend existing icon-animation tests.
 8. wgpu parity: dock + display pick up new SVGs via existing atlas build.
 
 ## Phase 2 — Window kinds and apps (kill generic reuse)

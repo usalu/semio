@@ -1,0 +1,9 @@
+{
+  "title": "Wasm Authoritative Selection Exit Highlight",
+  "emoji": "🎯️",
+  "status": "closed",
+  "description": "Finish board selection-exit highlight: TS reads exitHighlightIds from wasm select events; descriptor JSON no longer sends selectionExitHighlightIds; setSelectionIds wasm-first then drain; Rust test asserts exit highlight from set_selection_ids not descriptor field.",
+  "summary": "Selection exit secondary chrome is wasm-owned: JS applies exitHighlightIds from every select drain event, stops sending selectionExitHighlightIds in descriptor JSON, and calls setSelectionIdsJson before draining to avoid descriptor races. Rust sync_descriptor no longer replaces selection_exit_highlight from the descriptor; it prunes dead ids and emits push_select_event when selection changes. Replaced the old descriptor-fed test with set_selection_ids coverage; pub(crate) handle_world_pos and effective_handle_radius fix host test visibility.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️57498c2fa99149c9a05c41f37099ad30", "⚪️fb19c03ac6a447869747e17c8915366b"]
+}

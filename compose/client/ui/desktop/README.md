@@ -5,7 +5,7 @@ Electron desktop shell for the compose sketchpad, working primarily with local k
 # Docs
 
 <details>
-<summary><strong>📚 Resources:</strong></summary>
+<summary><strong>📚️ Resources:</strong></summary>
 
 - [Electron](https://www.npmjs.com/package/electron) - `npm`
   - [Docs](https://www.electronjs.org/docs) - `official`
@@ -17,4 +17,4 @@ Electron desktop shell for the compose sketchpad, working primarily with local k
 
 </details>
 
-# 💯Requirements
+# 💯️Requirements

@@ -1,0 +1,12 @@
+{
+  "title": "Repair CLI Hook Runtime And Normalize Test Targets",
+  "emoji": "📏️",
+  "status": "closed",
+  "description": "Repair repo cli/main.go hook runtime after tail corruption, restore dispatcher/logging helpers, and normalize test-start events to emit labs for full runs and tests for subset runs without fake file entries.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/912"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️655ef248542245128a63e28b1627afbd"]
+}

@@ -1,0 +1,64 @@
+% !TEX program = tectonic
+% 🧪️ Scratch verification fixture for the reopened PRINT-UNIFORM-BLOCK-SPACING
+% ticket (single-unit body spacing). Not a permanent template.
+% Exercises every adjacency: para<->para, para<->window, window<->window,
+% heading<->heading (stacked), heading<->window, window<->heading, SemioNest,
+% a Table window, and content right after \newpage / at a chapter start.
+\documentclass[type=report,theme=light,language=de]{semio}
+\title{Uniform Spacing Verify}
+\author{Test}
+\begin{document}
+
+\chapter{Erstes Kapitel}
+\section{Erster Abschnitt}
+\subsection{Erste Unterabschnitt}
+
+Dies ist der erste Absatz mit etwas Flie\ss text, damit die Zeilenh\"ohe realistisch ist.
+
+Dies ist der zweite Absatz direkt danach, um den Absatz-zu-Absatz-Abstand zu pr\"ufen.
+
+\begin{Figure}[title=Erstes Fenster]
+  Inhalt des ersten Fensters.
+\end{Figure}
+
+\begin{Figure}[title=Zweites Fenster]
+  Inhalt des zweiten Fensters, direkt nach dem ersten.
+\end{Figure}
+
+Ein Absatz direkt nach zwei aufeinanderfolgenden Fenstern.
+
+\chapter{Zweites Kapitel}
+\section{Zweiter Abschnitt}
+\subsection{Zweite Unterabschnitt}
+\subsubsection{Dritte Ebene}
+\paragraph{Vierte Ebene}
+\subparagraph{F\"unfte Ebene}
+
+Ein Absatz direkt nach f\"unf gestapelten \"Uberschriften ohne Zwischentext.
+
+\begin{Table}[title=Testtabelle]
+  \SemioTableThree{%
+    \SemioTableHeaderRow{Spalte A & Spalte B & Spalte C}
+    \SemioTableRow{1 & 2 & 3}
+    \SemioTableRow{4 & 5 & 6}
+  }%
+\end{Table}
+
+\section{Abschnitt nach Fenster}
+
+Text direkt nach einem Abschnittstitel, der auf ein Fenster folgt.
+
+\begin{SemioNest}
+\paragraph{Genestet Eins}
+Text im ersten genesteten Absatz.
+\paragraph{Genestet Zwei}
+Text im zweiten genesteten Absatz.
+\end{SemioNest}
+
+\newpage
+Text direkt nach einem expliziten Seitenumbruch.
+
+\chapter{Drittes Kapitel}
+Text direkt am Kapitelanfang.
+
+\end{document}

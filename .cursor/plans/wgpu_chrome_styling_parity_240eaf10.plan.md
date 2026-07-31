@@ -62,5 +62,5 @@ From the React shell audit (`ui/js/react/index.tsx`, `ui/styling/js/ui.css`):
 ## Verification
 
 - `cargo test` for `ui_wgpu`, `ui_styling`, and the wgpu renderer crate; rebuild the wasm bundles.
-- Re-run the existing wgpu E2E (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) and pixel-assert chrome parity against the React screenshots: navbar `#ebe8d9`, canvas `#f0ecdd`, glass panel ≈`#d8d5c6`, footer `#ebe8d9` (light theme), plus border-presence samples on the toggle group and dock cap buttons. Side-by-side visual check on at least flow + one 3D app.
+- Re-run the existing wgpu E2E (`.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) and pixel-assert chrome parity against the React screenshots: navbar `#ebe8d9`, canvas `#f0ecdd`, glass panel ≈`#d8d5c6`, footer `#ebe8d9` (light theme), plus border-presence samples on the toggle group and dock cap buttons. Side-by-side visual check on at least flow + one 3D app.
 - Repo workflow: read `repo://goals`, reopen the existing chrome-parity ticket (or open a new one), keep all temp scripts/screenshots inside the ticket folder.

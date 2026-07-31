@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-space-home-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Home launcher app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+home = { path = "../../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/⚡️implementation/🦀️rust", package = "semio-s-app-space-home" }
+pack = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

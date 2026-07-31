@@ -52,7 +52,7 @@ isProject: false
 
 ## Audit summary
 
-Full three-way audit (S command surface, shell/chrome, build health) completed via parallel `explore` subagents comparing pre-migration TypeScript (`git show f8376e848:s/core/js/index.ts`, `s/react/index.tsx`, and the old `PlatformView`/`PlaygroundView`) against the current Rust/WASM `s/plugin/rs/lib.rs` + `framework/renderer/react/os-shell.tsx`. Most CQRS command-level parity (spawn/undo/redo/checkpoint/parameter bind, catalogue/parameters/inspector panels) genuinely made it over and is test-covered. The gaps below were independently verified against actual source, not the (partially stale) migration-ticket docs in `.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/`.
+Full three-way audit (S command surface, shell/chrome, build health) completed via parallel `explore` subagents comparing pre-migration TypeScript (`git show f8376e848:s/core/js/index.ts`, `s/react/index.tsx`, and the old `PlatformView`/`PlaygroundView`) against the current Rust/WASM `s/plugin/rs/lib.rs` + `framework/renderer/react/os-shell.tsx`. Most CQRS command-level parity (spawn/undo/redo/checkpoint/parameter bind, catalogue/parameters/inspector panels) genuinely made it over and is test-covered. The gaps below were independently verified against actual source, not the (partially stale) migration-ticket docs in `.repo/🎫️/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/`.
 
 Two of the "missing features" turned out, on manual reproduction, to be confirmed runtime bugs rather than simple omissions — these are called out separately since they're regressions, not gaps.
 
@@ -109,7 +109,7 @@ A concurrent edit added 6 fields to `World3dScene` (`framework/core/rs/ui.rs`) t
 
 - `cargo test -p s-plugin` (extend existing tests, don't add new files) after each Rust change.
 - `bun nx run @semio-tech/framework-renderer-react:test` after shell changes.
-- Re-run `S_STUDIO_URL=http://127.0.0.1:6070/ node .repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`.
+- Re-run `S_STUDIO_URL=http://127.0.0.1:6070/ node .repo/🎫️/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`.
 - Manual repro checks for the two confirmed bugs: (a) type "checkpoint" or press "z"/"n"/"o"/"s" while focused in a text input — should no longer trigger commands; (b) close a studio window via the dock close button, then dispatch any other command — the window should stay closed.
 - Manual mobile-viewport check (resize to ≤767px) that Catalogue/Parameters/Inspector/Settings are reachable via the mobile panel.
 - Reload the browser tab after creating/editing a studio — data should survive (Phase 4 persistence).

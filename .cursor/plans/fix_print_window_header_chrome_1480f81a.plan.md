@@ -134,7 +134,7 @@ Once the chips render with real content/height (Bug 1), re-check whether the `\v
 1. Reopen ticket `PRINT-WINDOW-BORDER-GAP` (already open, covers this exact area — "borders should touch seamlessly").
 2. Apply the four fixes above in [print/tex/semio-window.sty](print/tex/semio-window.sty).
 3. Rebuild `zwischenbericht` (and `report`, if the unrelated pre-existing `\SemioReferences`/`etoolbox` build failure in that template doesn't block it — that failure belongs to ticket `PRINT-BIBLIOGRAPHY-REFERENCES-TABLE` and is out of scope here) using `bun print/script.ts build zwischenbericht`.
-4. Rasterize page 1 with the existing `.repo/🎫/26/07/09/PRINT-WINDOW-BORDER-GAP/rasterize.ts` (and the standalone `minimal-window.tex`/`verify-window.tex` harnesses already in that ticket folder) and visually confirm:
+4. Rasterize page 1 with the existing `.repo/🎫️/26/07/09/PRINT-WINDOW-BORDER-GAP/rasterize.ts` (and the standalone `minimal-window.tex`/`verify-window.tex` harnesses already in that ticket folder) and visually confirm:
    - Title chip shows its label text; number chip shows its number (or is truly absent/zero-width when there is no number).
    - Top border only appears above the chips (U-shaped cutout), not as one continuous line.
    - No duplicate hairlines at the left edge.

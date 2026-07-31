@@ -1,0 +1,12 @@
+{
+  "title": "Fix TypeScript Errors in Compose JS and Elements UI",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix TypeScript compilation errors in compose/js/index.ts and elements/ui/index.tsx. The errors include: missing arguments in function calls, wrong property names (definition vs attributes), type incompatibilities with Plane/ArrayBuffer, spread types on unknown, and DraggableAttributes type mismatches.",
+  "summary": "Fixed 7 TypeScript compilation errors across compose/js/index.ts and elements/ui/index.tsx. Cast PlaneDiff to Plane in deletePiecesAndConnectionsInDesign. Added missing kit argument. Removed non-existent definition and attributes fields from hash functions. Fixed Uint8Array generic. Cast slot to ReactElement. Widened TreeDragHandle attributes prop. tsc passes clean, all 134 tests pass, dev server running.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1258"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️a8019d1bc392451d8ec3613b580ce3d0"]
+}

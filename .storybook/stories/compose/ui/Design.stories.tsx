@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/ui/.storybook/story/Design.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/ui/.storybook/story/Design.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Uses design prop directly. Kit is optional for 3D representations.
 // Summary: Design stories: Default, Diff, Selection, FeaturesDisabled.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Design, Kit, type Connection, type Design as DesignType, type DesignPlain, type Piece } from "@semio-tech/compose-react";
 import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
@@ -37,7 +37,7 @@ const minimalKit = { types: minimalTypes, files: minimalFiles } as any;
 
 // #endregion 🖥️Data
 
-// #region 📌Design
+// #region 📌️Design
 
 const meta: Meta<typeof DesignView> = {
   title: "🏘️compose⚛️react/Design",
@@ -136,4 +136,4 @@ export const ZoomNone: Story = {
   render: (args) => frame(<DesignView {...args} />),
 };
 
-// #endregion 📌Design
+// #endregion 📌️Design

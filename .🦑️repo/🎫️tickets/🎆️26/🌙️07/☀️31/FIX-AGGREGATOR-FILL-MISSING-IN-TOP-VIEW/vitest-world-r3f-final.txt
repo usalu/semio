@@ -1,0 +1,9 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🌍️world/🎨️r3f/⚡️implementation/🟦️typescript
+
+
+ Test Files  2 passed (2)
+      Tests  4 passed | 194 skipped (198)
+   Start at  15:37:53
+   Duration  5.95s (transform 3.77s, setup 0ms, import 10.77s, tests 7ms, environment 797ms)
+

@@ -1,0 +1,12 @@
+{
+  "title": "Fix Puzzle 2d Fill Freeze on Start",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When starting fill tool in puzzle 2d, the window freezes and loads forever because preparePuzzle2dFillSession synchronously computes up to 1000 fill placements via WASM on the main thread.",
+  "summary": "Fixed puzzle 2D fill tool freezing on start by replacing synchronous computeBrushFillSequence(1000) on fill enter with async chunked WASM fill session builds (8 placements per setTimeout tick), progress UI on the engagement slider, and O(1) prefix application via cached appended nodes/edges. Added Rust brush_fill_session_begin/step/clear, WASM bindings, renderer session API, and play host session management mirroring puzzle 3D.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1698"
+  },
+  "goal": "🎯️puzzle🎯️2d",
+  "sessions": ["⚪️b5c3b4d65d9742bebd057d522a83eb5b"]
+}

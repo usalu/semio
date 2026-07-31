@@ -120,7 +120,7 @@ Same pattern (pure `App` + `Controller` class + thin `*-react.ts` registering wi
 
 Per repo rules, extend existing test files; no new test files:
 
-- `elements/client/lib/react/index.tsx` `#region 🧪Tests` — add: `UI` activates apps; `App.resolveActive()` merges mode tools over app tools; `CommandBus` dispatches to the right controller; `IconRegistry` resolves by id; `WindowKindRenderer` registry returns registered components; `ReactUI.mount` renders Navbar+Toolbar+Window.
+- `elements/client/lib/react/index.tsx` `#region 🧪️Tests` — add: `UI` activates apps; `App.resolveActive()` merges mode tools over app tools; `CommandBus` dispatches to the right controller; `IconRegistry` resolves by id; `WindowKindRenderer` registry returns registered components; `ReactUI.mount` renders Navbar+Toolbar+Window.
 - `elements/client/lib/geometry/play/index.tsx` tests — keep existing behavior tests; add class-level tests for `GeometryPlayController` toggle/select/transform state transitions (no React).
 - `elements/client/lib/geometry/play/react.tsx` tests — keep the "renders through wasm fixture load" smoke; assert no hook-order errors with `ReactUI.mount`.
 - Equivalent additions in board/scene/topology/sketchpad test sections.

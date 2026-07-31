@@ -44,7 +44,7 @@ This matches the bug report: breadcrumb “touches” the nav controls wrongly b
 
 ## Intended pattern (already used elsewhere)
 
-Sketchpad’s recovered shell groups all three controls in **one** navbar item and one `ButtonGroup` (see `[.repo/🎫/26/05/24/SKETCHPAD-DECLARATIVE-UI-SHELL/recover-index.tsx](.repo/🎫/26/05/24/SKETCHPAD-DECLARATIVE-UI-SHELL/recover-index.tsx)` ~22460–22482): single outer border, `divide-x` between items, then `flex-1` breadcrumb as the next navbar item.
+Sketchpad’s recovered shell groups all three controls in **one** navbar item and one `ButtonGroup` (see `[.repo/🎫️/26/05/24/SKETCHPAD-DECLARATIVE-UI-SHELL/recover-index.tsx](.repo/🎫️/26/05/24/SKETCHPAD-DECLARATIVE-UI-SHELL/recover-index.tsx)` ~22460–22482): single outer border, `divide-x` between items, then `flex-1` breadcrumb as the next navbar item.
 
 ```mermaid
 flowchart LR
@@ -107,5 +107,5 @@ Optional (low value): add a small static markup test in `[ui/react/index.tsx](ui
 
 ## Out of scope
 
-- `.repo/🎫/...` archive copies (`framework-react-head.tsx`) — not production sources
+- `.repo/🎫️/...` archive copies (`framework-react-head.tsx`) — not production sources
 - Sketchpad / other products unless they duplicate this navbar (grep shows only `PlatformView` uses `ui.nav.`\* today)

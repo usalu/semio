@@ -1,0 +1,16 @@
+{
+  "title": "Creating Studio Redirects to Demo Studio",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Bug: when creating a studio it redirects to demo studio instead of creating/opening a new one. createStudio correctly creates a catalog entry and navigates to /studios/{id}, but the studio app always boots from demo_studio_projection(), openStudio never loads the catalog document, and boot setActiveExample(\"demo\") can override the URL to /studios/demo.",
+  "summary": "Implemented ephemeral studio create-and-open: `create_ephemeral_os_studio` in os-core mints empty docs with `backbone: None` and no port write. Default/temporary `createStudio` registers in `EPHEMERAL_STUDIOS` and emits Navigate only (no download, no catalog backbone). `resolve_studio_document` checks ephemeral first; `openStudio` loads ephemeral/catalog docs, uses demo fixture only for explicit `studioId: demo`, otherwise mints empty doc on miss. Extended unit tests and rebuilt s WASM.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2260"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️05f6a0973a514e3280064913a541911b",
+    "⚪️010d2f8ef69d4ad7be2b592be0f88303",
+    "⚪️f1ca802423bf4459855b1581f6b3394f"
+  ]
+}

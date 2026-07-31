@@ -1,0 +1,12 @@
+{
+  "title": "Diff Ladder Per Concrete Entity in Target Schema",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Remove duplicate union DiffConnection (conflicts with type DiffConnection); add AttributeModificationEdge/Connection; add PlaneDiffs/PositionDiffs/LocationDiffs/PlaceDiffs with Edge/Connection per domain; add AttributesDiffEdge/Connection; expand catalog unions and DiffsOwned.",
+  "summary": "Removed polymorphic union DiffConnection that duplicated relay type DiffConnection. Completed diff ladders per spatial/value domain: AttributeModificationEdge/Connection; PlaneDiffs/Edge/Connection, PositionDiffs/Edge/Connection, LocationDiffs/Edge/Connection, PlaceDiffs/Edge/Connection mirroring global Diffs; AttributesDiffEdge/Connection; expanded DiffsOwned and aggregate unions with DiffConnection, ModificationConnection, new Edge types; OwnerEntity entries for *Diffs. Renamed catalog union EntityEdge to AggregateEntityEdge (illegal duplicate name vs interface EntityEdge). Replaced Diff/Diffs/DiffOwner/AttributesDiffOwner unions listing interfaces Operation/Diff with concrete Operation implementations and concrete Diff implementations for valid union membership; ChangeOwned Operation expanded similarly. Added Subscription stub types Command and Error so Subscription/SDL validates.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1401"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️a9950868a970432088d7646349f8e4c8"]
+}

@@ -1,0 +1,17 @@
+[package]
+name = "remodel_camera"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/➕️algebra/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_lie = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/🔷️lie/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-lie" }
+mathematical_optimize = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/🎯️optimize/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-optimize" }

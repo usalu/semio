@@ -5,102 +5,102 @@
 - This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
   \*/}
 
-##### 🧩 Understanding compose: The Anatomy of a Modular Design System
+##### 🧩️ Understanding compose: The Anatomy of a Modular Design System
 
 Let’s say you’ve just bought a big LEGO box. Inside, you can build a spaceship, a castle, or a race car. Everything starts from that box, and that’s how compose’s architecture works too.
 
-## <span id="kit">📦 Kit = The LEGO Box</span>
+## <span id="kit">📦️ Kit = The LEGO Box</span>
 
 <br />
 
-- A **Kit** is your complete LEGO set 🧰
-- It holds all the parts, instructions, and representations you need to build anything 🧱
-- In compose, the Kit is your **project container** 📁
+- A **Kit** is your complete LEGO set 🧰️
+- It holds all the parts, instructions, and representations you need to build anything 🧱️
+- In compose, the Kit is your **project container** 📁️
 - It includes everything related to your modular system:
-  - 📁 Designs, 🧱 Building Blocks, 🔗 Connection Logic, 📊 Various Data
+  - 📁️ Designs, 🧱️ Building Blocks, 🔗️ Connection Logic, 📊️ Various Data
 
 <br />
 
-<Aside type="note">**Kits** keep your whole system in one place 🧩 You can reuse Kit elements across multiple projects or teams 🔄</Aside>
+<Aside type="note">**Kits** keep your whole system in one place 🧩️ You can reuse Kit elements across multiple projects or teams 🔄️</Aside>
 
 ---
 
-## <span id="design">🧾 Design = The Representation You Build</span>
+## <span id="design">🧾️ Design = The Representation You Build</span>
 
 <br />
 
 - A **Design** is one specific thing you build
-  - Like a spaceship 🚀, a launchpad 🧱, or a tower 🏰
-- It’s made of multiple LEGO parts arranged with intention 🎯
-- You can build many different Designs from the same building components 🧰
+  - Like a spaceship 🚀️, a launchpad 🧱️, or a tower 🏰️
+- It’s made of multiple LEGO parts arranged with intention 🎯️
+- You can build many different Designs from the same building components 🧰️
 
 <br />
 
-<Aside type="note">A Kit can include multiple Designs 📚</Aside>
+<Aside type="note">A Kit can include multiple Designs 📚️</Aside>
 
 ---
 
-## <span id="type">🧱 Type = The Unique Brick Mold</span>
+## <span id="type">🧱️ Type = The Unique Brick Mold</span>
 
 <br />
 
-A **Type** in compose is your **brick mold** — the unique template behind a **distinct kind of brick** 🧱
+A **Type** in compose is your **brick mold** — the unique template behind a **distinct kind of brick** 🧱️
 
-- 🧊 Each Type defines a **distinct** brick mold
+- 🧊️ Each Type defines a **distinct** brick mold
   - That means: a unique combination of shape, role, and connection logic
-  - For example: a 2×4 brick, a window brick, or a roof brick 🧱
-- 📐 It acts as the **blueprint** of that brick
-  - Describing **what it is**, **how it looks**, and **how it connects** 🔧
+  - For example: a 2×4 brick, a window brick, or a roof brick 🧱️
+- 📐️ It acts as the **blueprint** of that brick
+  - Describing **what it is**, **how it looks**, and **how it connects** 🔧️
 - ♻️ Once defined, a Type can be **reused** to create many identical bricks
-  - Helping you build **modular**, **consistent**, and **scalable** systems 🧩
+  - Helping you build **modular**, **consistent**, and **scalable** systems 🧩️
 
 <br />
 
-<Aside type="note" title="💡 A Common Mistake to Avoid">
-It’s easy to think that a 2×4 red brick 🟥 and a 3×2 gray brick ⬜ should be different Types.  
+<Aside type="note" title="💡️ A Common Mistake to Avoid">
+It’s easy to think that a 2×4 red brick 🟥️ and a 3×2 gray brick ⬜️ should be different Types.  
 But in compose, they can be **variants of the same Type** if they follow the same **design logic**.
 
-✅ Differences in size, color, or detail are just variations, as long as the overall structure and the way these connect feel like part of the same port.
+✅️ Differences in size, color, or detail are just variations, as long as the overall structure and the way these connect feel like part of the same port.
 
-🧱 Create a new Type only when the **design language changes**.  
-For example, a window 🪟 introduces a different rhythm, visual structure, and connection pattern. It doesn’t feel like the same kind of block anymore, so it should be its own Type.
+🧱️ Create a new Type only when the **design language changes**.  
+For example, a window 🪟️ introduces a different rhythm, visual structure, and connection pattern. It doesn’t feel like the same kind of block anymore, so it should be its own Type.
 
 </Aside>
 
 ---
 
-## <span id="piece">🔁 Piece = A Brick You Actually Use</span>
+## <span id="piece">🔁️ Piece = A Brick You Actually Use</span>
 
 <br />
 
-- A **Piece** is an individual brick you place in your design 🧱
-  - It’s a **distinct instance** of a Type — the brick mold it was made from 🧰
+- A **Piece** is an individual brick you place in your design 🧱️
+  - It’s a **distinct instance** of a Type — the brick mold it was made from 🧰️
 - For example, if you use ten red 2×4 bricks, each one is a separate Piece — but they all come from the same mold
 - Each Piece inherits the following from its Type:  
-  🧬 **Geometry** – its shape  
-  🧠 **Design meaning** – what it represents  
-  🔌 **Connection Points** – where and how it snaps to others  
-  📄 **Metadata** – additional properties
+  🧬️ **Geometry** – its shape  
+  🧠️ **Design meaning** – what it represents  
+  🔌️ **Connection Points** – where and how it snaps to others  
+  📄️ **Metadata** – additional properties
 
 <br />
 
-<Aside type="note">Pieces are the actual **building blocks** in your design 🛠️ They turn your abstract molds into real configurations you can assemble and manipulate 🧩</Aside>
+<Aside type="note">Pieces are the actual **building blocks** in your design 🛠️ They turn your abstract molds into real configurations you can assemble and manipulate 🧩️</Aside>
 
 ---
 
-## <span id="connector">⚓ Connector = The Connection Point</span>
+## <span id="connector">⚓️ Connector = The Connection Point</span>
 
 <br />
 
-- A **Connector** is a smart, intentional connector 🧲
-  - Like a LEGO stud or socket 🧱, but placed exactly where it’s needed 🎯
-- Each Connector tells the system where and how a Piece connects 🔧
-- Connectors are defined once on a **Type** and automatically inherited by all its **Pieces** 🧩
+- A **Connector** is a smart, intentional connector 🧲️
+  - Like a LEGO stud or socket 🧱️, but placed exactly where it’s needed 🎯️
+- Each Connector tells the system where and how a Piece connects 🔧️
+- Connectors are defined once on a **Type** and automatically inherited by all its **Pieces** 🧩️
 
 <br />
 
 <Aside type="note" title="Minimal Connectors, Maximum Clarity">
-LEGO bricks have studs on every side 🔳, but in compose, you only add Connectors where they’re needed.  
+LEGO bricks have studs on every side 🔳️, but in compose, you only add Connectors where they’re needed.  
 To connect two pieces, one Connector on top ⬆️ and one on the bottom ⬇️ is enough.
 
 You can place Connectors all over if you want, or just in specific spots to guide the design.
@@ -109,20 +109,20 @@ You can place Connectors all over if you want, or just in specific spots to guid
 
 ---
 
-## <span id="connection">🔗 Connection = The Snapping Together</span>
+## <span id="connection">🔗️ Connection = The Snapping Together</span>
 
 <br />
 
-- A **Connection** defines how two bricks fit together 🧷
-  - Like snapping a window piece onto a wall 🪟
-- It’s not a shape or object — it’s a **policy** 🧠
-- It tells the system which Connectors to join and how they align ⚓
+- A **Connection** defines how two bricks fit together 🧷️
+  - Like snapping a window piece onto a wall 🪟️
+- It’s not a shape or object — it’s a **policy** 🧠️
+- It tells the system which Connectors to join and how they align ⚓️
 
-📐 **Example:**  
+📐️ **Example:**  
 “Connect the top Connector of Piece A ⬆️ to the bottom Connector of Piece B ⬇️”
 
 <br />
 
 <Aside type="note">
-  Connections define how your design is assembled 🔄 They don’t rely on fixed geometry. Instead, they let you build flexible, modular systems where parts can be rearranged, replaced, or repeated without breaking the structure 🧠
+  Connections define how your design is assembled 🔄️ They don’t rely on fixed geometry. Instead, they let you build flexible, modular systems where parts can be rearranged, replaced, or repeated without breaking the structure 🧠️
 </Aside>

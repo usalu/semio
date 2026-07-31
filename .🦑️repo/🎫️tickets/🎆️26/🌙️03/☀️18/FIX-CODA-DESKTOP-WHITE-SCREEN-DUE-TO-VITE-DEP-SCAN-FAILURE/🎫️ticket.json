@@ -1,0 +1,12 @@
+{
+  "title": "Fix Coda Desktop White Screen Due to Vite Dep Scan Failure",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The coda desktop dev mode shows a white window because Vite dep pre-bundling fails when dist/index.html exists alongside index.html. Without pre-bundling, Electron hits ERR_INSUFFICIENT_RESOURCES loading 124+ ESM modules over HTTP/1.1's 6-connection limit.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/969"
+  },
+  "goal": "🎯️fixcodadesktopengineintegration",
+  "sessions": ["⚪️3132c552bf3f463aad2f73498db5d870", "⚪️95a77c057ef543fe969b6e7a05d506a9", "⚪️dc2f82fad3624ba684c5295f6d3aab14"]
+}

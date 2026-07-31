@@ -1,0 +1,12 @@
+{
+  "title": "Rename Tree Command to Search",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Rename the top-level `tree` CLI command to `search` in repo/cli/main.go. Update all references in main_test.go and repo/vscode/extension.ts.",
+  "summary": "Renamed top-level CLI `tree` command to `search` in main.go (function treeCommand→searchCommand, Use: \"tree\"→\"search\"). Updated all test references in main_test.go and VSCode extension CLI calls. Also added missing net/url import that caused pre-existing build failure.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/679"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️17718806881345976462332382058346124787", "⚪️f01b4db2e0a347f1898742fe175af65a", "⚪️0667d8ff928740a983023703ce26153e"]
+}

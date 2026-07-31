@@ -1,9 +1,0 @@
-{
-  "title": "Projektetage Affiliation Abbreviation Morph",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Universities on projektetage intro leave big empty space when morphing to abbreviations (LUH, UdK). Fix so they abbreviate in place without reserved full-name width.",
-  "summary": "Fixed university affiliation lines leaving empty space when morphing to abbreviations (LUH, UdK) on projektetage intro.\n\nRoot cause: reveal.js matched `data-id` on the full-name morph ghost (`w-full`), so the animated box kept the long university width while the abbreviation rendered in a separate element.\n\nFix: put `data-id` and `presentation-morph-into` on the abbreviated label; keep the prior full name as an absolute fade-out ghost without `data-id`. Tightened `.presentation-affiliation-line-part` to `width: max-content`.\n\n63 renderer + 39 core tests pass.",
-  "goal": "🎯presentation",
-  "sessions": ["⚪c074e9779cc143e7ade46c5c4242aacd"]
-}

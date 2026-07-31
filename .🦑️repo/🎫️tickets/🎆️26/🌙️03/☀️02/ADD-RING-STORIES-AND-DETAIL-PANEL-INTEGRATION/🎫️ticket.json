@@ -1,0 +1,1073 @@
+{
+  "title": "Add Ring Stories and Detail Panel Integration",
+  "status": "closed",
+  "prompt": "Create Ring/Orb storybook stories and integrate Ring component into sketchpad Type detail panel ConnectorsListSection.",
+  "summary": "Ring replaces Slider for connector t in Type detail panel. ConnectorsListSection shows all connectors as draggable orbs on shared Ring. ConnectorSection shows single-orb Ring. Per-connector Slider for t removed. Stories created for Orb and Ring. Build passes, 14 tests green.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/760"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-02T17:38:11.995611029Z",
+  "finished": "2026-03-02T19:56:08.126098574Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-02 17:38:11",
+        "finished": "2026-03-02 17:45:44"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Create Ring/Orb storybook stories and integrate Ring component into sketchpad Type detail panel ConnectorsListSection.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 0,
+                "removed": 81
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx",
+              "lines": {
+                "added": 161,
+                "removed": 242
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App",
+              "lines": {
+                "added": 28,
+                "removed": 38
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Imports",
+              "lines": {
+                "added": 4,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Internal State Management",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details",
+              "lines": {
+                "added": 119,
+                "removed": 180
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Settings",
+              "lines": {
+                "added": 10,
+                "removed": 20
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Header",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb",
+              "lines": {
+                "added": 89,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Header",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring",
+              "lines": {
+                "added": 113,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§TypeKindToggles",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§createTypeFilterStore",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§typeFilterStore",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§useTypeFilters",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App§App",
+              "lines": {
+                "added": 28,
+                "removed": 11
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App§App",
+              "lines": {
+                "added": 0,
+                "removed": 38
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Imports§KitSectionLazy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "lines": {
+                "added": 6,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "lines": {
+                "added": 4,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSection",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 40
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "lines": {
+                "added": 49,
+                "removed": 39
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsMultipleSection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSection",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "lines": {
+                "added": 6,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "lines": {
+                "added": 14,
+                "removed": 21
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "lines": {
+                "added": 10,
+                "removed": 17
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Tools§SelectionAdditiveTool",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Tools§SelectionNormalTool",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx§TypeAppTools",
+              "lines": {
+                "added": 28,
+                "removed": 11
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx§TypeAppTools",
+              "lines": {
+                "added": 0,
+                "removed": 38
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Base",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Default",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Disabled",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Hovered",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§OrbInRing",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Overlay",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Panel",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Selected",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Story",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Temporary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Window",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§createLevelRender",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§defaultArgs",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§meta",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Base",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Default",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Overlay",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Panel",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§RingDemo",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Story",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Temporary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Window",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§createLevelRender",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultArgs",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultOrbs",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§meta",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-02 19:52:30",
+        "finished": "2026-03-02 19:56:08"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Replace Slider t with Ring in detail panel. Each connector orb on the ring replaces the t property. Selected connector draggable on ring to set t value.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 0,
+                "removed": 93
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx",
+              "lines": {
+                "added": 168,
+                "removed": 261
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App",
+              "lines": {
+                "added": 28,
+                "removed": 38
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Imports",
+              "lines": {
+                "added": 4,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Internal State Management",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details",
+              "lines": {
+                "added": 126,
+                "removed": 199
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Settings",
+              "lines": {
+                "added": 10,
+                "removed": 20
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Header",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb",
+              "lines": {
+                "added": 89,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Header",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring",
+              "lines": {
+                "added": 113,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§TypeFilterKind",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§TypeFilterState",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§TypeKindToggles",
+              "lines": {
+                "added": 0,
+                "removed": 22
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§typeFilterStore",
+              "lines": {
+                "added": 0,
+                "removed": 26
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App#Filters§useTypeFilters",
+              "lines": {
+                "added": 0,
+                "removed": 24
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App§App",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#App§App",
+              "lines": {
+                "added": 0,
+                "removed": 38
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Imports§KitSectionLazy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Internal State Management§TypeAppWindowKind",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSection",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AttributesSectionForm",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§AuthorsSectionForm",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSection",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "lines": {
+                "added": 47,
+                "removed": 49
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsListSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 51
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ConnectorsMultipleSection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSection",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§ModelsSectionForm",
+              "lines": {
+                "added": 6,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Details§TypeDetailsForm",
+              "lines": {
+                "added": 14,
+                "removed": 21
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "lines": {
+                "added": 10,
+                "removed": 19
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Panels#Right#Settings§TypeSettingsContent",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Tools§ConnectorTool",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Tools§ConnectorToolContent",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Tools§SelectionAdditiveTool",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx#Tools§SelectionSubtractiveTool",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx§TypeAppTools",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Type.tsx§TypeAppTools",
+              "lines": {
+                "added": 0,
+                "removed": 38
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Base",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Default",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Disabled",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Hovered",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§OrbInRing",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Overlay",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Panel",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Selected",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Story",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Temporary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§Window",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§createLevelRender",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§defaultArgs",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Orb.stories.tsx#Orb§meta",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Base",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Default",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Overlay",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Panel",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§RingDemo",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Story",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Temporary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§Window",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§createLevelRender",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultArgs",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§defaultOrbs",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/.storybook/stories/elements/input/Ring.stories.tsx#Ring§meta",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

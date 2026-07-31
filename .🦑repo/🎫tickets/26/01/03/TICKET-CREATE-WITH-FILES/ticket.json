@@ -1,7 +1,0 @@
-{
-  "title": "TICKET-CREATE-WITH-FILES",
-  "emoji": "🆕",
-  "status": "closed",
-  "description": "Creating a new ticket should always start the first interaction. At least one file needs to be provided per interaction (and when opening a ticket). The vscode extension should add a file dialog to select files from the repo. The current opened active file should be preselected.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"
-}

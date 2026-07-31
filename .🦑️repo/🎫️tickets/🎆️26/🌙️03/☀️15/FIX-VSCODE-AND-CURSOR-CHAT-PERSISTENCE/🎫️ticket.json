@@ -1,0 +1,8 @@
+{
+  "title": "Fix VS Code And Cursor Chat Persistence",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix devcontainer chat persistence for VS Code chat providers by reconciling persisted workspaceStorage chat data across changing workspace hashes after rebuilds and reattaches.",
+  "summary": "Added post-attach reconciliation for VS Code workspace chat storage so Copilot and ChatGPT transcript/resource folders are merged into active workspaceStorage hashes after attach. Updated devcontainer docs to define the persistence requirement and verified the attach script runs successfully.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Cad Transform Window Option",
-  "emoji": "🎛",
-  "status": "closed",
-  "description": "Move CAD transform gumball mode (None, Move, Rotate, Scale) from toolbar toggles to per-window combobox measure like Compute.",
-  "summary": "Moved CAD transform gumball mode from toolbar toggles to a per-window combobox measure (None, Move, Rotate, Scale) alongside Compute. Transform state is stored per quad pane in CadPlayShellController; toolbar transform category removed.",
-  "goal": "🎯cad",
-  "sessions": ["⚪6f48888aea3a4d79a993aa443bb40506"]
-}

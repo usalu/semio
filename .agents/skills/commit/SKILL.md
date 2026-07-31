@@ -8,7 +8,7 @@ description: >-
 
 # Commit (bundle)
 
-**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊uloc` block at the end of each message. Per-bundle and per-day full `📊uloc💯…` apply only here (`bun ./script.ts commit prepare`).
+**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊️uloc` block at the end of each message. Per-bundle and per-day full `📊️uloc💯️…` apply only here (`bun ./📜️script.ts commit prepare`).
 
 ## Rule (always)
 
@@ -22,9 +22,9 @@ description: >-
 
 | Script (automatic)                                                                                                                     | You (from analysis)                                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Subject `🐙…🔀`                                                                                                                        | —                                                                                                    |
-| Per-bundle and per-day full `📊uloc💯…` from git **after** you name bundles (`🟰` = ➕+✏️+➖); **bundles sorted highest 🟰 first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
-| Footer `📊uloc💯…` (+ per-language `📊uloc{emoji}{slug}💯…` rows) + `Signed-off-by`                                                                    | Date lines `🎆YY🌙MM☀️DD` (no uloc on stdin)                                                         |
+| Subject `🐙️…🔀️`                                                                                                                        | —                                                                                                    |
+| Per-bundle and per-day full `📊️uloc💯️…` from git **after** you name bundles (`🟰️` = ➕️+✏️+➖️); **bundles sorted highest 🟰️ first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
+| Footer `📊️uloc💯️…` (+ per-language `📊️uloc{emoji}{slug}💯️…` rows) + `Signed-off-by`                                                                    | Date lines `🎆️YY🌙️MM☀️DD` (no uloc on stdin)                                                         |
 | Four `git` commands on prepare stdout                                                                                                  | **New** bullets `{emoji}{description}`                                                               |
 
 **Nothing** in the script reads prior commit bullets and auto-fills the bundle body. Prior messages may be wrong or another format — **never** copy them.
@@ -37,23 +37,23 @@ description: >-
 
 1. **`commit log`** — read the **last** bundle/WIP squash and micro-commits since then (what was shipped before, rough dates). Context only; do not copy bullets.
 2. **`commit diff`** — read **`--stat` and the full diff** for every changed path (files and folders). This is what actually changed.
-3. **Decide attribution** — from that evidence, choose emoji bundle scopes, group work by `🎆YY🌙MM☀️DD`, and write **new** impact bullets per bundle/day. If a path could fit multiple bundles, pick the one that matches **this** diff’s intent, not an old folder map from memory.
+3. **Decide attribution** — from that evidence, choose emoji bundle scopes, group work by `🎆️YY🌙️MM☀️DD`, and write **new** impact bullets per bundle/day. If a path could fit multiple bundles, pick the one that matches **this** diff’s intent, not an old folder map from memory.
 
 Do not assume yesterday’s bundle boundaries still apply. Do not let path-token heuristics replace reading the tree.
 
 **Uloc constraints (enforced on `check` and `prepare`):**
 
-| Level                    | Must sum (➕ ✏️ ➖ 🟰)              |
+| Level                    | Must sum (➕️ ✏️ ➖️ 🟰️)              |
 | ------------------------ | ----------------------------------- |
-| Each bundle’s `🎆` days  | That bundle’s scope header `📊uloc` |
-| All bundle headers       | Footer `📊uloc💯…` (full WIP range) |
-| Each footer language row | Same footer `📊uloc💯…` deltas     |
+| Each bundle’s `🎆️` days  | That bundle’s scope header `📊️uloc` |
+| All bundle headers       | Footer `📊️uloc💯️…` (full WIP range) |
+| Each footer language row | Same footer `📊️uloc💯️…` deltas     |
 
 Every changed path must belong to **exactly one** bundle. If days, bundles, or languages do not add up, attribution is wrong — fix scopes/dates and re-run check.
 
 ## Level (set once, then repeat)
 
-1. Read `.repo/🧑‍💻/{alias}/commit.json` → `level` (default `prepare-only`).
+1. Read `.repo/🧑️‍💻️/{alias}/commit.json` → `level` (default `prepare-only`).
 2. **Prepare-only reply:** paste **all** of stdout verbatim — **six** fenced blocks in order (see below).
 
 ## Execute (prepare-only) — four steps
@@ -61,25 +61,25 @@ Every changed path must belong to **exactly one** bundle. If days, bundles, or l
 ### 1. Prior commits (context only)
 
 ```bash
-bun ./script.ts commit log
+bun ./📜️script.ts commit log
 ```
 
-Read **stderr**: every micro-commit since the last `…🔀` WIP. Use only to see **what happened when** (dates, rough themes). **Do not** reuse bullet wording — messages may be mistaken or obsolete.
+Read **stderr**: every micro-commit since the last `…🔀️` WIP. Use only to see **what happened when** (dates, rough themes). **Do not** reuse bullet wording — messages may be mistaken or obsolete.
 
 ### 2. Git diff (source of truth)
 
 ```bash
-bun ./script.ts commit diff
+bun ./📜️script.ts commit diff
 ```
 
 Read **stderr**: `git diff --stat` and full `git diff` for `lastWIP..HEAD`. **All bundle bullets must come from this patch** — what files and behavior actually changed.
 
-Optional single command: `bun ./script.ts commit analyze` (= log + diff).
+Optional single command: `bun ./📜️script.ts commit analyze` (= log + diff).
 
 ### 3. Check (validate attribution)
 
 ```bash
-bun ./script.ts commit check <<'EOF'
+bun ./📜️script.ts commit check <<'EOF'
 …bundle body…
 EOF
 ```
@@ -89,15 +89,15 @@ Exit **0** on stderr: `commit check: OK`. Exit **1** with which constraint faile
 ### 4. Prepare (your new summary)
 
 ```bash
-bun ./script.ts commit prepare <<'EOF'
+bun ./📜️script.ts commit prepare <<'EOF'
 🏘️compose✍️sketchpad
-🎆26🌙06☀️04
+🎆️26🌙️06☀️04
 🗺️Summarize highest-impact change you see in the diff that day
-🎆26🌙06☀️03
-🧪Next change from diff for that date
+🎆️26🌙️06☀️03
+🧪️Next change from diff for that date
 
 🖱️ui⚛️react
-🎆26🌙06☀️02
+🎆️26🌙️06☀️02
 🖥️Another area from diff
 EOF
 ```
@@ -106,8 +106,8 @@ EOF
 
 ## Bundle body rules
 
-- **Scope:** emoji + area name (`🏘️compose✍️sketchpad`, `🥅framework`, `🖱️ui⚛️react`) — no paths, no `🔀` / `📊uloc`. You choose scopes after analyzing log + diff; stdin order does not matter — the script reorders bundles by **highest 🟰** once scopes exist.
-- **Dates:** group bullets by calendar day (`🎆YY🌙MM☀️DD`), **newest first** within each bundle. Script appends full `📊uloc💯…` to each date line from micro-commits that day (same bundle paths).
+- **Scope:** emoji + area name (`🏘️compose✍️sketchpad`, `🥅️framework`, `🖱️ui⚛️react`) — no paths, no `🔀️` / `📊️uloc`. You choose scopes after analyzing log + diff; stdin order does not matter — the script reorders bundles by **highest 🟰️** once scopes exist.
+- **Dates:** group bullets by calendar day (`🎆️YY🌙️MM☀️DD`), **newest first** within each bundle. Script appends full `📊️uloc💯️…` to each date line from micro-commits that day (same bundle paths).
 - **Bullets:** impact order; one leading emoji; written **after** reading the diff.
 - **Never** paste subject, uloc block, or `Signed-off-by` on stdin.
 - **Rejected:** bullets that verbatim-match a line from a prior commit in the range.
@@ -116,12 +116,12 @@ EOF
 
 Paste **entire** `prepare` stdout verbatim — **six** fenced blocks, in order:
 
-1. `git tag -s -m '…🚩' '…🚩' HEAD`
+1. `git tag -s -m '…🚩️' '…🚩️' HEAD`
 2. `git reset --soft <sha> && git commit -S -F '.git/compose-commit-message'`
 3. `git push --follow-tags`
 4. One chained line (tag + squash + push)
-5. **Tag name only** — e.g. `🐙ueli🎆26🌙06☀️04🚩` (single line in the fence)
-6. **Full commit message** — subject `…🔀`, bundles, `📊uloc`, `Signed-off-by` (exact script output)
+5. **Tag name only** — e.g. `🐙️ueli🎆️26🌙️06☀️04🚩️` (single line in the fence)
+6. **Full commit message** — subject `…🔀️`, bundles, `📊️uloc`, `Signed-off-by` (exact script output)
 
 - Blocks 1–4 are shell commands to copy-run; blocks 5–6 are for review / GitKraken.
 - Do not merge, reorder, omit, or re-wrap; do not add prose outside the fences.
@@ -132,7 +132,7 @@ Paste **entire** `prepare` stdout verbatim — **six** fenced blocks, in order:
 
 ## Branch
 
-Only `⛳wip` or `🏗️dev`.
+Only `⛳️wip` or `🏗️dev`.
 
 ## Forbidden
 

@@ -1,0 +1,10 @@
+{
+  "title": "Sketchpad Double Click App Navigation",
+  "emoji": "🧭️",
+  "status": "closed",
+  "description": "Double clicking a type or design from sketchpad VFS rows or wires nodes should navigate to the matching app, with design using Puzzle 5D.",
+  "summary": "Aligned sketchpad route parsing and active app resolution with the singular /type/:id and /design/:id routes already emitted by VFS rows, wires activation, breadcrumbs, and selection query handling. Added regression coverage for type/design app resolution, route parsing, wires navigation, and updated existing browser expectations to singular routes. Verified focused tests, play build, and an in-browser runtime route/app check with [DEBUG] logs.",
+  "files": ["compose/client/lib/sketchpad/js/index.ts", ".repo/🎫️/26/06/23/SKETCHPAD-DOUBLE-CLICK-APP-NAVIGATION/ticket.json"],
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
+  "sessions": ["⚪️codex-2026-06-23-sketchpad-double-click-app-navigation"]
+}

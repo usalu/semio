@@ -18,14 +18,14 @@ pub use transport::{MemoryTransport, OpKind, Transport, TransportError};
 #[cfg(target_arch = "wasm32")]
 pub use wasm_api::{architect_compile, architect_run};
 
-/// 🌉 `mathematical_graph_manifest::PropertyValue` (Jack literal values) <-> `serde_json::Value`
+/// 🌉️ `mathematical_graph_manifest::PropertyValue` (Jack literal values) <-> `serde_json::Value`
 /// (GraphQL/row values) — `PropertyValue` is `#[serde(untagged)]`, so this is exactly its JSON
 /// shape; shared by `schema::call_variables`, `executor`'s `WHERE` comparisons, and `wasm_api`.
 fn property_value_to_json(value: &mathematical_graph_manifest::PropertyValue) -> serde_json::Value {
     serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
 }
 
-//#region 🔖Errors
+//#region 🔖️Errors
 mod errors {
     use thiserror::Error;
 
@@ -42,9 +42,9 @@ mod errors {
         Transport(#[from] super::transport::TransportError),
     }
 }
-//#endregion 🔖Errors
+//#endregion 🔖️Errors
 
-//#region 🔖Schema
+//#region 🔖️Schema
 mod schema {
     use mathematical_graph_dsl as jack;
     use mathematical_graph_manifest::PropertyValue;
@@ -127,7 +127,7 @@ mod schema {
         }
     }
 
-    /// @emoji 🔗 Architect relationship predicate. `Parent`/`Child` replace the old boolean
+    /// @emoji 🔗️ Architect relationship predicate. `Parent`/`Child` replace the old boolean
     /// `{parent: true/false}` edge-property disambiguation — Jack's pattern grammar carries no
     /// property-map literal, so the two `Connection -> Side` edges are told apart by predicate
     /// keyword instead (`[:PARENT]` / `[:CHILD]`).
@@ -218,7 +218,7 @@ mod schema {
         }
     }
 
-    /// @emoji 📞 Static `CALL` target (mutation or subscription). Jack's `CALL <ident>(...)`
+    /// @emoji 📞️ Static `CALL` target (mutation or subscription). Jack's `CALL <ident>(...)`
     /// grammar takes a single, un-dotted identifier (no `session.end`-style path), so targets are
     /// named with flat camelCase idents instead of the old dotted `path: &[&str]`.
     #[derive(Debug, Clone, Copy)]
@@ -274,9 +274,9 @@ mod schema {
         serde_json::Value::Object(vars)
     }
 }
-//#endregion 🔖Schema
+//#endregion 🔖️Schema
 
-//#region 🔖Transport
+//#region 🔖️Transport
 mod transport {
     use futures_util::stream::{self, BoxStream};
     #[cfg(not(target_arch = "wasm32"))]
@@ -287,7 +287,7 @@ mod transport {
     use std::pin::Pin;
     use thiserror::Error;
 
-    /// @emoji 📡 GraphQL operation kind for the host transport.
+    /// @emoji 📡️ GraphQL operation kind for the host transport.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
     pub enum OpKind {
         Query,
@@ -302,17 +302,17 @@ mod transport {
         Msg(String),
     }
 
-    /// 🌊 Async result of [`Transport::subscribe`]: a stream of GraphQL payloads, or a transport-level failure.
+    /// 🌊️ Async result of [`Transport::subscribe`]: a stream of GraphQL payloads, or a transport-level failure.
     pub type SubscribeResult = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>;
 
-    /// @emoji 🌐 Async GraphQL IO boundary (native + wasm).
+    /// @emoji 🌐️ Async GraphQL IO boundary (native + wasm).
     pub trait Transport {
         fn execute(&self, kind: OpKind, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>>;
 
         fn subscribe(&self, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = SubscribeResult> + '_>>;
     }
 
-    /// @emoji 🧪 In-memory transport for unit tests.
+    /// @emoji 🧪️ In-memory transport for unit tests.
     pub struct MemoryTransport {
         pub responses: HashMap<String, Value>,
     }
@@ -439,9 +439,9 @@ mod transport {
         }
     }
 }
-//#endregion 🔖Transport
+//#endregion 🔖️Transport
 
-//#region 🔖Planner
+//#region 🔖️Planner
 mod planner {
     use super::errors::ArchitectError;
     use super::schema::{self, Label};
@@ -450,7 +450,7 @@ mod planner {
     use serde_json::{json, Value};
     use std::collections::{BTreeMap, BTreeSet};
 
-    /// @emoji 🧭 Planned execution steps for an architect query, lowered from Jack's `Query`.
+    /// @emoji 🧭️ Planned execution steps for an architect query, lowered from Jack's `Query`.
     #[derive(Debug, Clone, PartialEq)]
     pub struct OpPlan {
         pub steps: Vec<Step>,
@@ -491,7 +491,7 @@ mod planner {
         bind: BindSpec,
     }
 
-    /// @emoji 🧭 Lower Jack's `Query` into an `OpPlan`. Jack's `MATCH` clause carries no nested
+    /// @emoji 🧭️ Lower Jack's `Query` into an `OpPlan`. Jack's `MATCH` clause carries no nested
     /// `WHERE`/multi-hop chaining of its own (each `Pattern` is at most one node-edge-node hop,
     /// and `WHERE` always shows up as its own following `Clause`), so a long relationship chain is
     /// simply written as several comma-separated single-hop patterns sharing var names — the
@@ -605,7 +605,7 @@ mod planner {
 
         let anchor_var = if anchor_is_left { pat.nodes[0].var.clone() } else { pat.edge.as_ref().expect("edge present whenever !anchor_is_left").right.var.clone() };
         paths.insert(anchor_var, JsonPath { segments: anchor_path.clone() });
-        // 🩹 the non-anchor side of a hop (if any) is bound to the SAME anchor row rather than its
+        // 🩹️ the non-anchor side of a hop (if any) is bound to the SAME anchor row rather than its
         // own nested entity — this crate never returns fields of the "many" side of a hop directly
         // (see `build_nested_selection`'s cardinality-aware embedding below), only uses it for
         // `WHERE`/`Join` purposes, so a precise per-row extraction isn't needed here.
@@ -664,9 +664,9 @@ mod planner {
         out
     }
 }
-//#endregion 🔖Planner
+//#endregion 🔖️Planner
 
-//#region 🔖Executor
+//#region 🔖️Executor
 mod executor {
     use super::errors::ArchitectError;
     use super::planner::{JsonPath, OpPlan, PathSeg, Step};
@@ -680,7 +680,7 @@ mod executor {
 
     pub type Row = BTreeMap<String, Value>;
 
-    /// @emoji 📊 Tabular architect result.
+    /// @emoji 📊️ Tabular architect result.
     #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
     pub struct QueryResult {
         pub columns: Vec<String>,
@@ -785,7 +785,7 @@ mod executor {
             Ok(())
         }
 
-        /// 🪝 `CALL` binds the whole (unwrapped) response payload to a single conventional `result`
+        /// 🪝️ `CALL` binds the whole (unwrapped) response payload to a single conventional `result`
         /// row/var — Jack's `CALL` grammar has no `YIELD` clause, so per-field extraction is done by
         /// `RETURN result.<field>` (one property-access level) instead of `YIELD <field> AS ...`.
         fn ingest_call_result(&mut self, data: &Value) {
@@ -815,7 +815,7 @@ mod executor {
         }
     }
 
-    /// 🔑 `RETURN`/`WITH` column key for a Jack `ReturnItem` — Jack has no `AS` aliasing on return
+    /// 🔑️ `RETURN`/`WITH` column key for a Jack `ReturnItem` — Jack has no `AS` aliasing on return
     /// items, so the key is always derived from the item itself (`var` or `var.prop`).
     fn item_key(item: &jack::ReturnItem) -> String {
         match item {
@@ -954,9 +954,9 @@ mod executor {
         }
     }
 }
-//#endregion 🔖Executor
+//#endregion 🔖️Executor
 
-//#region 🔖Api
+//#region 🔖️Api
 mod api {
     use super::errors::ArchitectError;
     use super::executor::{Executor, QueryResult};
@@ -965,18 +965,18 @@ mod api {
     use futures_util::StreamExt;
     use mathematical_graph_dsl as jack;
 
-    /// 🔍 Parse architect source — literally Jack's own parser (`mathematical_graph_dsl::parse`);
+    /// 🔍️ Parse architect source — literally Jack's own parser (`mathematical_graph_dsl::parse`);
     /// architect no longer carries any lexer/parser/AST of its own.
     pub fn parse(text: &str) -> Result<jack::Query, ArchitectError> {
         jack::parse(text).map_err(|e| ArchitectError::Parse(e.to_string()))
     }
 
-    /// @emoji 🧭 Plan Jack's AST.
+    /// @emoji 🧭️ Plan Jack's AST.
     pub fn plan(ast: &jack::Query) -> Result<OpPlan, ArchitectError> {
         plan_query(ast)
     }
 
-    /// @emoji 📜 Compile to `OpPlan` JSON-friendly plan.
+    /// @emoji 📜️ Compile to `OpPlan` JSON-friendly plan.
     pub fn compile(text: &str) -> Result<OpPlan, ArchitectError> {
         plan(&parse(text)?)
     }
@@ -995,7 +995,7 @@ mod api {
         Executor::run(&plan, transport).await
     }
 }
-//#endregion 🔖Api
+//#endregion 🔖️Api
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_api {
@@ -1035,7 +1035,7 @@ mod wasm_api {
         }
     }
 
-    /// @emoji 📤 Wasm-safe `OpPlan` JSON, built by hand rather than via `serde` derive since Jack's
+    /// @emoji 📤️ Wasm-safe `OpPlan` JSON, built by hand rather than via `serde` derive since Jack's
     /// `Expr`/`ReturnItem` (reused directly, no architect-owned mirror) don't implement `Serialize`.
     fn export_plan(plan: &OpPlan) -> Value {
         let steps: Vec<Value> = plan
@@ -1085,7 +1085,7 @@ mod wasm_api {
         })
     }
 
-    /// @emoji 🌐 Compile architect query to JSON plan (wasm).
+    /// @emoji 🌐️ Compile architect query to JSON plan (wasm).
     #[wasm_bindgen(js_name = architectCompile)]
     pub fn architect_compile(query: &str) -> Result<JsValue, JsValue> {
         console_error_panic_hook::set_once();
@@ -1095,7 +1095,7 @@ mod wasm_api {
         }
     }
 
-    /// @emoji 🌐 Run architect query via JS transport callbacks (wasm).
+    /// @emoji 🌐️ Run architect query via JS transport callbacks (wasm).
     #[wasm_bindgen(js_name = architectRun)]
     pub async fn architect_run(query: &str, execute_fn: js_sys::Function, subscribe_fn: js_sys::Function) -> Result<JsValue, JsValue> {
         console_error_panic_hook::set_once();
@@ -1114,7 +1114,7 @@ mod tests {
     use std::collections::HashMap;
     use std::path::PathBuf;
 
-    //#region 🧪architect_cases
+    //#region 🧪️architect_cases
     fn fixtures_dir() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../fixture")
     }
@@ -1304,10 +1304,10 @@ mod tests {
             assert_query_expect(name, &result, &case["expect"]);
         }
     }
-    //#endregion 🧪architect_cases
+    //#endregion 🧪️architect_cases
 
-    //#region 🧪unified_jack_syntax_round_trips
-    // 🌱 Architect's `parse()` is literally `mathematical_graph_dsl::parse` now — these tests
+    //#region 🧪️unified_jack_syntax_round_trips
+    // 🌱️ Architect's `parse()` is literally `mathematical_graph_dsl::parse` now — these tests
     // verify that identity directly, and that Jack's own formatter/parser pair (shared with every
     // other Jack consumer in the repo) round-trips the query shapes architect relies on.
     #[test]
@@ -1334,9 +1334,9 @@ mod tests {
         let formatted_unwind = jack::format(unwind_src).expect("format");
         assert_eq!(parse(unwind_src).expect("parse"), jack::parse(&formatted_unwind).expect("reparse"));
     }
-    //#endregion 🧪unified_jack_syntax_round_trips
+    //#endregion 🧪️unified_jack_syntax_round_trips
 
-    //#region 🧪unit_coverage
+    //#region 🧪️unit_coverage
     #[test]
     fn parser_escaped_string_literal_unescapes_embedded_quote() {
         let q = parse(r#"MATCH (d:Design) WHERE d.name = "a\"b" RETURN d"#).expect("parse");
@@ -1582,5 +1582,5 @@ mod tests {
         let transport_err: ArchitectError = TransportError::Msg("boom".into()).into();
         assert_eq!(transport_err.to_string(), "transport: boom");
     }
-    //#endregion 🧪unit_coverage
+    //#endregion 🧪️unit_coverage
 }

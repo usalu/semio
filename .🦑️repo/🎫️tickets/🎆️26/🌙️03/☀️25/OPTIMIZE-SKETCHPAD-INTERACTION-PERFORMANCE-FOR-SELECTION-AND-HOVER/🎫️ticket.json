@@ -1,0 +1,12 @@
+{
+  "title": "Optimize Sketchpad Interaction Performance for Selection and Hover",
+  "emoji": "✏️",
+  "status": "closed",
+  "description": "Optimize interaction performance for selection and hover across linked views (scene and diagram window). Reduce latency, avoid unnecessary updates, synchronize states efficiently, and keep interactions smooth, responsive, and scalable under heavy complexity.",
+  "summary": "Restored all discarded performance optimizations. All 15 changes re-applied: DerivedNode custom isEqual, DerivedStore.getOrCreate isEqual passthrough, simplified clear hover guard, useDesignAppHover setter with queueMicrotask + deduplication + stable ref, 6 granular boolean selectors (isPieceHovered/Selected, isConnectionHovered/Selected, isPortHovered, isPiecePortSelected), useDesignAppSelectedConnector with stable ref, computeHoverData with Set/Map for O(1) lookups, useTypeAppIsPortHovered with inline selector. Build verified: 239 pre-existing errors, 0 new.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1093"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️678c6fc6b3824443bcd9a00466342e3c", "⚪️47e0aa5c1e1747d6b86f0baaa30ed354"]
+}

@@ -1,19 +1,19 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/Layout.stories.tsx
+// 🥼️ .storybook/stories/ui/Layout.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, Page, singleTreeLeaf, Window, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
 
-// 🔷#region 🪨Layout
+// 🔷️#region 🪨️Layout
 const Home = createIconComponent("home");
 const Info = createIconComponent("info");
 const Layers = createIconComponent("layers");
@@ -190,7 +190,7 @@ export const Default: Story = {
   },
 };
 
-// 📱 Mobile: the merged panel fills the space between navbar and footer while open; the canvas stays
+// 📱️ Mobile: the merged panel fills the space between navbar and footer while open; the canvas stays
 // mounted underneath (hidden, not unmounted) so toggling the panel doesn't replug the 3D world.
 export const Mobile: Story = {
   args: { canvas: null },
@@ -231,9 +231,9 @@ export const Mobile: Story = {
   },
 };
 
-// #endregion 🪨Layout
+// #endregion 🪨️Layout
 
-// 🔷#region 🌈Page
+// 🔷️#region 🌈️Page
 export const PageDefault: Story = {
   args: { canvas: null },
   render: () => (
@@ -247,9 +247,9 @@ export const PageDefault: Story = {
     </div>
   ),
 };
-// #endregion 🌈Page
+// #endregion 🌈️Page
 
-// 💻#region 🧭Panel
+// 💻️#region 🧭️Panel
 export const PanelDefault: Story = {
   args: { canvas: null },
   render: () => {
@@ -266,4 +266,4 @@ export const PanelDefault: Story = {
     );
   },
 };
-// #endregion 🧭Panel
+// #endregion 🧭️Panel

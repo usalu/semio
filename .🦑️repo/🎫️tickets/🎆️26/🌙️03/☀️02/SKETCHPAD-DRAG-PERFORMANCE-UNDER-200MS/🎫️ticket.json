@@ -1,0 +1,320 @@
+{
+  "title": "Sketchpad Drag Performance Under 200ms",
+  "status": "closed",
+  "prompt": "Create a performance test in sketchpad.test.ts where in the Design app a node is selected and dragged for 100 units. The test must pass only if it completes in less than 1 second.",
+  "summary": "Updated the existing Design Drag Performance test with hard render, zoom, drag, and long-task budgets. Focused validation now fails on the explicit 50ms long-task ceiling, exposing current regressions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/767"
+  },
+  "goal": "PERFORMANCE/SKETCHPAD",
+  "started": "2026-03-02T22:38:14.123138266Z",
+  "finished": "2026-03-02T23:01:19.616474402Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-02 22:38:14",
+        "finished": "2026-03-02 22:49:26"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Create a performance test in sketchpad.test.ts where in the Design app a node is selected and dragged for 100 units. The test must pass only if it completes in less than 1 second.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 597,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts",
+              "lines": {
+                "added": 625,
+                "removed": 28
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Connection Delete",
+              "lines": {
+                "added": 219,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Drag Performance",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Panel Combinations",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Selection State",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "lines": {
+                "added": 109,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Home Panel Combinations",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Kit Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Kit Zip Entry Filtering",
+              "lines": {
+                "added": 38,
+                "removed": 6
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Multiple Connections Detail Panel",
+              "lines": {
+                "added": 21,
+                "removed": 22
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Type Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "compose/js/sketchpad.test.ts#Connection Delete",
+              "lines": {
+                "added": 219,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/sketchpad.test.ts#Design Drag Performance",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "lines": {
+                "added": 109,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-02 22:52:49",
+        "finished": "2026-03-02 23:01:19"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Change the drag performance test threshold from 1000ms to 200ms and optimize the sketchpad drag handling code to pass. Must not break any existing functionality.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 597,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts",
+              "lines": {
+                "added": 625,
+                "removed": 28
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Connection Delete",
+              "lines": {
+                "added": 219,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Drag Performance",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Panel Combinations",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Selection State",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "lines": {
+                "added": 109,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Home Panel Combinations",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Kit Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Kit Zip Entry Filtering",
+              "lines": {
+                "added": 38,
+                "removed": 6
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Multiple Connections Detail Panel",
+              "lines": {
+                "added": 21,
+                "removed": 22
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Type Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "compose/js/sketchpad.test.ts#Connection Delete",
+              "lines": {
+                "added": 219,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/sketchpad.test.ts#Design Drag Performance",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "compose/js/sketchpad.test.ts#Design Selection State#UI Multi Piece Selection",
+              "lines": {
+                "added": 109,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

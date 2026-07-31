@@ -1,9 +1,0 @@
-{
-  "title": "Board Force Graph Barnes Hut",
-  "emoji": "🧮",
-  "status": "closed",
-  "description": "Replace O(n²) all-pairs repulsion in board WASM force_graph with Barnes-Hut quadtree (configurable theta); keep springs, gravity, integration; extend existing Rust tests if needed.",
-  "summary": "Repulsion now uses a Barnes–Hut quadtree (opening-angle θ, COM + subtree max repulsion radius) for O(n log n) far-field approximation when visible body count exceeds `pairwiseRepulsionMaxBodies` (default 56); smaller graphs keep exact pairwise forces. New JSON/Rust options: `barnesHutTheta`, `pairwiseRepulsionMaxBodies`. Springs, gravity, and integration unchanged. Added Rust test `force_graph_barnes_hut_many_bodies_yields_finite_coordinates`. Verified: cargo test -p elements_board (54), board vitest (72).",
-  "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": ["⚪2a9a9c9eccf94934a43592d2a7a33dde"]
-}

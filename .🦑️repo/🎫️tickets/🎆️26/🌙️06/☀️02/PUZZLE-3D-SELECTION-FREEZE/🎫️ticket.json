@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 3D Selection Freeze",
+  "emoji": "🎯️",
+  "status": "closed",
+  "description": "Eliminate ~6s UI freeze when selecting an object in puzzle 3D play harness by routing document selection through Tree selectedIds instead of rebuilding 538-node tree.",
+  "summary": "Document selection no longer rebuilds ~538 tree rows on every click. Structural sections are cached per fixtureRevision; selection flows via UiTreeNode.selectedIds into Tree's per-id store. PlaygroundDeclarativeTree memoizes TreeData by stable sections identity. Fixed missing BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX import in play controller.",
+  "goal": "🎯️puzzle3d🎯️puzzle3dplay",
+  "sessions": []
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Field Only Kit Reads Phase 1 Kit Design",
-  "emoji": "📜",
-  "status": "closed",
-  "description": "Phase 1 Kit + Design: compose/js Kit/Design regions fieldRead/subscribeField, defineFields/defineOperations vs KitOperationInput and DesignOperationInput; compose/react Kit/Design hooks and Contexts regions; phase-1-kit-design.json notes.",
-  "summary": "Phase 1 Kit/Design: JS Kit/Design gained fieldRead/subscribeField/on*, list id reads, and defineOperations/defineFields mirrors for KitOperationInput and DesignOperationInput (specs in 🏭Factories). React gained bindKitFieldToReact/bindKitOpToReact, 🪝HooksKit (reads+writes), 🪝HooksDesign (reads+writes), and 🎭Contexts wrapping Kit runtime + Design entity context moved from EntityContexts. Ticket notes in phase-1-kit-design.json. Verified with tsc -p compose/js and compose/react.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪861913ea838142b28ea44162a8137597"]
-}

@@ -1,0 +1,100 @@
+$ bun ./script.ts nx run "@semio-tech/infinite-world-r3f:test-quick"
+
+> nx run @semio-tech/infinite-world-r3f:test-quick
+
+> bun ./script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯️ |@semio-tech/infinite-world-r3f| index.tsx (72 tests | 1 failed) 22ms
+     × brightens axis and neutral fills on hover 7ms
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯️ |@semio-tech/infinite-world-r3f| index.tsx (72 tests | 1 failed) 22ms
+     × brightens axis and neutral fills on hover 7ms
+
+⎯ Failed Tests 2 ⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > projectionGizmoHover > brightens axis and neutral fills on hover
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > projectionGizmoHover > brightens axis and neutral fills on hover
+TypeError: base.lerp is not a function
+ ❯️ brightenProjectionGizmoColor index.tsx:1322:8
+    1320|   const base = resolveThreeColor(baseColor);
+    1321|   const accent = resolveThreeColor(accentColor);
+    1322|   base.lerp(accent, amount);
+       |        ^
+    1323|   return `#${base.getHexString()}`;
+    1324| }
+ ❯️ projectionGizmoHeadFillColor index.tsx:1333:10
+ ❯️ index.tsx:4384:25
+
+⎯[1/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 142 passed (144)
+   Start at  09:42:13
+   Duration  4.36s (transform 2.25s, setup 0ms, import 7.45s, tests 45ms, environment 853ms)
+
+Warning: command "bun ./script.ts test quick" exited with non-zero status code
+
+
+ NX   Running target test-quick for project @semio-tech/infinite-world-r3f failed
+
+Failed tasks:
+
+- @semio-tech/infinite-world-r3f:test-quick
+
+Hint: run the command with --verbose for more details.
+
+1073 |  * `null` to exempt); throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1074 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1075 |  */
+1076 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1077 |   const status = runCmdInternal(cmd, args, opts);
+1078 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/infinite-world-r3f:test-quick exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/repo/lib/js/index.ts:1078:31)
+      at run (/Users/ueli/Documents/semio/script.ts:507:5)
+      at run (/Users/ueli/Documents/semio/repo/lib/js/index.ts:813:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/repo/lib/js/index.ts:848:16)
+      at /Users/ueli/Documents/semio/script.ts:1841:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

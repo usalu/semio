@@ -5,102 +5,102 @@
   // "hooks": {
   //   "afterAgentResponse": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook afterAgentResponse"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook afterAgentResponse"
   //     }
   //   ],
   //   "afterAgentThought": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook afterAgentThought"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook afterAgentThought"
   //     }
   //   ],
   //   "afterFileEdit": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook afterFileEdit"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook afterFileEdit"
   //     }
   //   ],
   //   "afterMCPExecution": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook afterMCPExecution"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook afterMCPExecution"
   //     }
   //   ],
   //   "afterShellExecution": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook afterShellExecution"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook afterShellExecution"
   //     }
   //   ],
   //   "afterTabFileEdit": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook afterTabFileEdit"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook afterTabFileEdit"
   //     }
   //   ],
   //   "beforeMCPExecution": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook beforeMCPExecution"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook beforeMCPExecution"
   //     }
   //   ],
   //   "beforeReadFile": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook beforeReadFile"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook beforeReadFile"
   //     }
   //   ],
   //   "beforeShellExecution": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook beforeShellExecution"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook beforeShellExecution"
   //     }
   //   ],
   //   "beforeSubmitPrompt": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook beforeSubmitPrompt"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook beforeSubmitPrompt"
   //     }
   //   ],
   //   "beforeTabFileRead": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook beforeTabFileRead"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook beforeTabFileRead"
   //     }
   //   ],
   //   "postToolUse": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook postToolUse"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook postToolUse"
   //     }
   //   ],
   //   "postToolUseFailure": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook postToolUseFailure"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook postToolUseFailure"
   //     }
   //   ],
   //   "preCompact": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook preCompact"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook preCompact"
   //     }
   //   ],
   //   "preToolUse": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook preToolUse"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook preToolUse"
   //     }
   //   ],
   //   "sessionEnd": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook sessionEnd"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook sessionEnd"
   //     }
   //   ],
   //   "sessionStart": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook sessionStart"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook sessionStart"
   //     }
   //   ],
   //   "stop": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook stop"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook stop"
   //     }
   //   ],
   //   "subagentStart": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook subagentStart"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook subagentStart"
   //     }
   //   ],
   //   "subagentStop": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio cursor hook subagentStop"
+  //       "command": "bun ./📜️script.ts dev mcp stdio cursor hook subagentStop"
   //     }
   //   ]
   // }

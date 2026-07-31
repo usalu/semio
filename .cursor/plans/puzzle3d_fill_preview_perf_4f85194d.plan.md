@@ -75,7 +75,7 @@ Confirmed sites:
 
 ### 1. Engine: split the precompute queue into lanes
 
-In [engine lib.rs](✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/🔨module/⚙️engine/⚡️implementation/🦀rust/📦lib.rs), replace `queue: Vec<PrecomputeTask>` with explicit lanes (`brush_queue: VecDeque<String>`, `fill_pending: usize`) and give `precompute_step` a lane argument so `fillBuildTick` advances only fill and `suggestionsTick` advances only brush. Neither lane can starve the other.
+In [engine lib.rs](✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs), replace `queue: Vec<PrecomputeTask>` with explicit lanes (`brush_queue: VecDeque<String>`, `fill_pending: usize`) and give `precompute_step` a lane argument so `fillBuildTick` advances only fill and `suggestionsTick` advances only brush. Neither lane can starve the other.
 
 ### 2. Engine: make a single task respect the wall clock
 
@@ -95,7 +95,7 @@ Split `fill_progress()` into a scalar `fill_progress_summary()` (`count`, `appli
 
 ### 6. UI: gate brush options and narrow dirty scopes
 
-In [puzzle3d ui lib.rs](✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/🔨module/🖱️ui/⚡️implementation/🦀rust/📦lib.rs):
+In [puzzle3d ui lib.rs](✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs):
 
 - `puzzle3d_brush_utility_options` only reads candidates when `envelope.active_utility == "brush"`, and only from cache.
 - Add `puzzle3d_viewport_scope()` and `puzzle3d_selection_scope()` alongside the existing `puzzle3d_*_scope` helpers; use them for `setHover`, `worldPick`, `worldSelect`, `setSelection`, `clearSelection`, `selectAll`, `worldVortexHover`, `worldVortexSelect` instead of the default `Full`.
@@ -104,7 +104,7 @@ In [puzzle3d ui lib.rs](✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/🔨modu
 
 ### 7. React host: coalesce hover
 
-In [react renderer index.tsx](🧰framework/🛍️product/💻os/🔨module/📺renderer/🧑‍🎨engine/⚛️react/⚡️implementation/🟦typescript/📦index.tsx), add a latest-value coalescing dispatcher next to `createInFlightSkippingInterval` in the same region, and use it for `setHover` / `worldVortexHover`: drop a dispatch when the id is unchanged, and keep at most one in flight. Hoist `registeredBrushMeshesRef` to a module-level set so split panes do not re-register the same GLB.
+In [react renderer index.tsx](🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx), add a latest-value coalescing dispatcher next to `createInFlightSkippingInterval` in the same region, and use it for `setHover` / `worldVortexHover`: drop a dispatch when the id is unchanged, and keep at most one in flight. Hoist `registeredBrushMeshesRef` to a module-level set so split panes do not re-register the same GLB.
 
 ## Verification
 

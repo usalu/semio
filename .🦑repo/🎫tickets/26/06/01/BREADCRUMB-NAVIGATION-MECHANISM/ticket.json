@@ -1,9 +1,0 @@
-{
-  "title": "Breadcrumb Navigation Mechanism",
-  "emoji": "🧭",
-  "status": "closed",
-  "description": "Introduce a framework-level navigation-tree model (breadcrumb decoupled from URL and VFS) whose separators dynamically suggest alternatives. Wire sketchpad with Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design}.",
-  "summary": "Replaced Platform.breadcrumb with NavigationDestination, NavigationLevel, and Platform.navigation in framework/core. Platform renderer maps navigation trails to Breadcrumb options via navigationTrailToBreadcrumbItems. Sketchpad implements sketchpadNavigation with typology-aware trails and home/docs/feedback alternatives. Tests: navigationTrailToBreadcrumbItems (platform renderer, 22 pass); Sketchpad navigation (1 pass).",
-  "goal": "🎯framework",
-  "sessions": []
-}

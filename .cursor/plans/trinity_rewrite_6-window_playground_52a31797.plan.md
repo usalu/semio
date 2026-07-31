@@ -56,7 +56,7 @@ LHS constructs `MATCH`, RHS derives `CREATE`/`DELETE`/`SET`/`MERGE` (per `trinit
 
 ## Engine: real parameters (root fix, not a TS hack)
 
-[trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs) `#region 🔖Rewrite`:
+[trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs) `#region 🔖️Rewrite`:
 
 - Add `ParameterKind { String, Number, Boolean }` and `ParameterSpec { name, kind, default: PropertyValue }`.
 - Add `parameters: Vec<ParameterSpec>` (serde default) to `Rhs` — parameters are declared where they're consumed (mutations), matching AGENTS.md wording exactly.
@@ -67,7 +67,7 @@ LHS constructs `MATCH`, RHS derives `CREATE`/`DELETE`/`SET`/`MERGE` (per `trinit
 - `TrinityHost::apply_rewrite_json(&mut self, rule_json, bindings_json)` updated signature.
 - New free wasm export `ruleQueryJson(ruleJson, bindingsJson)` (module-level `#[wasm_bindgen]` fn, not a `TrinitySession` method — avoids needing a loaded graph just to preview text).
 - Update `rewrite_rule_labels_core` test to pass `&HashMap::new()`; add a new test proving parameter substitution: RHS `set: [{var:"a",prop:"label",value:"$label"}]`, `parameters: [{name:"label",kind:"string",default:"nakagin-core"}]`, bindings override `{"label":"override-core"}` → node gets `"override-core"`; default (no bindings) → `"nakagin-core"`.
-- Rebuild wasm after these changes: `bun nx run @semio-tech/trinity-core:wasm` (existing launch config `📦build🔺trinity⚙️core`) — `trinity/react/index.tsx` imports the compiled `pkg/trinity_rewrite.js` directly.
+- Rebuild wasm after these changes: `bun nx run @semio-tech/trinity-core:wasm` (existing launch config `📦️build🔺️trinity⚙️core`) — `trinity/react/index.tsx` imports the compiled `pkg/trinity_rewrite.js` directly.
 
 ## trinity-react: thin bridge updates
 
@@ -107,5 +107,5 @@ In the `TrinityPlayHost` region:
 
 - `bun nx run @semio-tech/trinity-core:wasm` then `cargo test -p trinity_rewrite` (existing + new parameter test).
 - `bun nx run @semio-tech/trinity-rewrite-play:test` (vitest) and the renderer package's vitest.
-- Boot `dev:trinity:rewrite` (launch config `🛠️dev🔺trinity♻️rewrite`, port 6056) and confirm all 6 panes render, editing the RHS parameter's default in the Parameters form updates Jack text and the After graph live while Before stays static.
+- Boot `dev:trinity:rewrite` (launch config `🛠️dev🔺️trinity♻️rewrite`, port 6056) and confirm all 6 panes render, editing the RHS parameter's default in the Parameters form updates Jack text and the After graph live while Before stays static.
 - Work happens under a new ticket (`ticket_open`) per repo workflow; no `launch.json` changes needed since the dev entry already exists.

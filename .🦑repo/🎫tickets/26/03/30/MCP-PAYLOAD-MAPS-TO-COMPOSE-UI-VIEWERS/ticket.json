@@ -1,9 +1,0 @@
-{
-  "title": "Mcp Payload Maps To Compose Ui Viewers",
-  "emoji": "🎨",
-  "status": "closed",
-  "description": "Refactor McpDesignViewer: mode-first surface resolution, merge incremental payloads via mergeRichestDesignFromCandidates, sync surface from mode after merge, export mcpMapPayloadToDesignViewerViewModel as single mapping to ComposeDesign/ComposeScene/ComposeDiagram/ComposeKit. Tests updated.",
-  "summary": "Refactored MCP design viewer so payloads map cleanly to compose/ui: (1) mcpEffectiveSurface now prefers mode over stale surface (fixes diagram-only when surface was diagram but mode show-design). (2) mergeDiagramPayload merges [cur,p] via mergeRichestDesignFromCandidates instead of replacing state. (3) mergeRichestDesignFromCandidates syncs surface from mode after merge, merges richer points/lines. (4) mcpMapPayloadToDesignViewerViewModel centralizes flatten + diagram fallback + kit fallback flags; McpDesignViewer is a thin switch. Tests: mcpEffectiveSurface, mcpMapPayloadToDesignViewerViewModel. compose/ui vitest 176/176 passed.",
-  "goal": "🎯designapp",
-  "sessions": ["⚪9bdd0fb64cbc4328b56d3706334c3290"]
-}

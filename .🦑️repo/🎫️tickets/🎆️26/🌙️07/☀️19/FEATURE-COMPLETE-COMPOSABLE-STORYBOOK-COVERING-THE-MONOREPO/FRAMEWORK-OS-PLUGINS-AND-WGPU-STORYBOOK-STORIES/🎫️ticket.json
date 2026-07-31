@@ -1,0 +1,14 @@
+{
+  "title": "Framework Os Plugins And Wgpu Storybook Stories",
+  "emoji": "🖥️",
+  "status": "closed",
+  "description": "Extend the framework/os Storybook scope: add plugins.stories.tsx (one story per PLUGIN_BUILD_TARGETS entry via OsBootHost) and Wgpu.stories.tsx (boots @semio-tech/framework-renderer-wgpu with a WebGPU-unavailable fallback), a WgpuBootHost helper in .storybook/framework/os/index.tsx, a dispose-callback fix to framework/renderer/wgpu/index.ts's bootFrameworkOsWgpu (which had a stale 3-arg call against the real 2-arg semioRendererBoot wasm-bindgen export), and .storybook/os-plugins.spec.ts (Playwright coverage of the plugin matrix boot outcomes). Part of the parallel workforce populating the composable root Storybook (parent ticket FEATURE-COMPLETE-COMPOSABLE-STORYBOOK-COVERING-THE-MONOREPO).",
+  "summary": "Added the OS plugin-matrix story (stories/framework/os/plugins.stories.tsx: one literal export per PLUGIN_BUILD_TARGETS entry — confirmed the destructured Object.fromEntries generator pattern is not statically indexable by Storybook's CSF indexer, fell back to explicit exports plus a module-eval-time assertPluginMatrixCoverage() drift guard) and the Wgpu boot story (stories/framework/os/Wgpu.stories.tsx + WgpuBootHost in .storybook/framework/os/index.tsx, dynamically importing @semio-tech/framework-renderer-wgpu, resolving its Trunk-hashed bundle filename from the served index.html, with WebGPU-capability and missing-artifact fallbacks). Added a small teardown-handle addition to framework/renderer/wgpu/index.ts's bootFrameworkOsWgpu (now returns a dispose callback) so the story can unmount cleanly. Added .storybook/os-plugins.spec.ts (Playwright, iterates PLUGIN_BUILD_TARGETS, waits on the data-semio-os-ready/-error beacon). Verified by the parent session: the framework/os scope boots cleanly with zero warnings, /index.json lists all 4 Shell stories + 33 Plugins stories + 3 Wgpu stories, and iframe.html serves 200 for spot-checked story ids. The agent's own final report was truncated before it recorded this, but the work is complete and verified.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2152"
+  },
+  "goal": "🎯️r2602🎯️updateddocs🎯️updateddevdocs",
+  "sessions": [
+    "⚪️6941b53545bd417f92f0c903f187dbe4"
+  ]
+}

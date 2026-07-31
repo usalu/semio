@@ -85,8 +85,8 @@ Replace the two `\vspace{\semio@spacing@touch}` calls and the one `\vspace{\Semi
 
 ### 5. Regenerate + verify
 
-- Run `bun ./script.ts generate` to rewrite `semio-tokens.sty`.
-- Run `bun ./script.ts test` to rebuild all 6 templates × light/dark (12 PDFs) with Tectonic and confirm no build errors.
+- Run `bun ./📜️script.ts generate` to rewrite `semio-tokens.sty`.
+- Run `bun ./📜️script.ts test` to rebuild all 6 templates × light/dark (12 PDFs) with Tectonic and confirm no build errors.
 - Visually spot-check `zwischenbericht.pdf`/`zwischenbericht-dark.pdf` (the template shown in the reference screenshot) to confirm: caption text now has visible, equal padding on all tab/control boxes; the header-to-box gap and the flyer/title-page gaps read as a consistent, single-unit-derived rhythm instead of the previous mismatched `compact`/`touch`/`3pt` mix.
 
 ## Files touched
@@ -100,4 +100,4 @@ Replace the two `\vspace{\semio@spacing@touch}` calls and the one `\vspace{\Semi
 
 ## Ticket
 
-Per repo workflow rules, open a new ticket (`.repo/🎫/YY/MM/DD/PRINT-SINGLE-SPACING-UNIT` or similar) before implementing, since the closed `OS-WINDOW-STYLE-FOR-PRINT` ticket covered chrome color tokens, not spacing — a different concern.
+Per repo workflow rules, open a new ticket (`.repo/🎫️/YY/MM/DD/PRINT-SINGLE-SPACING-UNIT` or similar) before implementing, since the closed `OS-WINDOW-STYLE-FOR-PRINT` ticket covered chrome color tokens, not spacing — a different concern.

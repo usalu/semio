@@ -1,0 +1,11 @@
+{
+  "title": "Update Repo ID URI System and Projects",
+  "emoji": "📂️",
+  "status": "closed",
+  "description": "Update ID/URI system, implement project commands, support multi-package bundles, and update vscode extension projects view.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/289"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoprojectmechanism"
+}

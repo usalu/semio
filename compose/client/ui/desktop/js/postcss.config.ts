@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,7 +6,7 @@
 
 // PostCSS configuration for the desktop app with Tailwind and autoprefixer.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
 // PostCSS program configuration for the desktop application.

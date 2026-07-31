@@ -1,9 +1,9 @@
-mod header { // 🧲Header
+mod header { // 🧲️Header
              // 2026 Ueli Saluz <ueli@compose-tech.de>
              // AGPL-3.0
              // Specs: Single-binary session-backend consolidating domain, command, event, state, error, store, actor, directory, API, WS, and admin modules.
              // Summary: Consolidated session-backend service for compose. `db`-backed (db::Database owns WAL/conflict/durability), single-writer actor per session, HTTP+WS (protocol_wire v2) API with axum, in-memory state with typed entity structs.
-} // 🧲Header
+} // 🧲️Header
 
 pub use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 pub use axum::extract::{Path, State};
@@ -23,7 +23,7 @@ pub use tokio::sync::{broadcast, mpsc, oneshot};
 pub use uuid::Uuid;
 
 mod domain {
-    // 🗿Domain
+    // 🗿️Domain
     // Specs: Newtype IDs wrap Uuid for session-scoped identity. FieldPatch distinguishes no-change/set/clear. PropertyKey enumerates all mutable properties. ConflictPolicy defines per-property merge behaviour.
     // Summary: Session domain newtypes, FieldPatch, PropertyKey, ConflictPolicy, EntityKind, Lifecycle, SessionStatus.
 
@@ -47,7 +47,7 @@ mod domain {
     pub type ComposeVersion = i64;
 
     mod field_patch {
-        // 📭FieldPatch
+        // 📭️FieldPatch
 
         use super::*;
         #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -78,7 +78,7 @@ mod domain {
                 !matches!(self, Self::NoChange)
             }
         }
-    } // 📭FieldPatch
+    } // 📭️FieldPatch
     pub use field_patch::*;
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -244,11 +244,11 @@ mod domain {
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
     pub struct ShareTokenId(pub Uuid);
-} // 🗿Domain
+} // 🗿️Domain
 pub use domain::*;
 
 mod lookback {
-    // 🎏Lookback
+    // 🎏️Lookback
     // Specs: Named lookback points define retention boundaries for kit history. Each token maps to seconds.
     // Summary: Configurable lookback points for historical kit snapshot retention and auto-compaction.
 
@@ -261,11 +261,11 @@ mod lookback {
     pub fn lookback_tokens() -> Vec<&'static str> {
         LOOKBACK_POINTS.iter().map(|(t, _)| *t).collect()
     }
-} // 🎏Lookback
+} // 🎏️Lookback
 pub use lookback::*;
 
 mod command {
-    // 🪆Command
+    // 🪆️Command
     // Specs: CommandEnvelope carries per-command metadata. DomainCommand enumerates all CRUD variants. ComposeCommand handles presence mutations. CommandResult reports outcome.
     // Summary: Explicit command types for domain and compose mutations.
 
@@ -420,7 +420,7 @@ mod command {
         pub entity_id: Uuid,
         pub reason: String,
     }
-} // 🪆Command
+} // 🪆️Command
 pub use command::*;
 
 mod event {
@@ -752,7 +752,7 @@ mod state {
 pub use state::*;
 
 mod error {
-    // 🎼Error
+    // 🎼️Error
     // Specs: SessionError covers all service error cases. ErrorBody serializes error details for HTTP responses.
     // Summary: Error types and HTTP response mapping for the session backend.
 
@@ -806,7 +806,7 @@ mod error {
             (status, Json(body)).into_response()
         }
     }
-} // 🎼Error
+} // 🎼️Error
 pub use error::*;
 
 mod store {
@@ -828,7 +828,7 @@ mod store {
 
     use super::*;
 
-    //#region 🔖Database
+    //#region 🔖️Database
     /// 🗄️ Opens (or creates) the `db::Database` backing every compose session document, rooted at
     /// `<data_dir>/db`. Zero-touch: `FsStorage`, the family's default profile is overridable via
     /// `COMPOSE_HUB_DB_PROFILE` (`dev` default, `prod`, or `test`).
@@ -843,12 +843,12 @@ mod store {
         Ok(db::Database::open_at(&root, profile)?)
     }
 
-    /// 🗄️#️⃣ The document id a compose session's `db::Database` document lives under.
+    /// 🗄️#⃣ The document id a compose session's `db::Database` document lives under.
     pub fn document_id(session_id: Uuid) -> protocol::DocumentId {
         protocol::DocumentId(session_id.to_string())
     }
 
-    /// 🗄️🌉 `db::Frontier` -> `protocol::RuntimeFrontierSummary` (the `protocol_wire` frame shape) —
+    /// 🗄️🌉️ `db::Frontier` -> `protocol::RuntimeFrontierSummary` (the `protocol_wire` frame shape) —
     /// `head_edit_id` has no direct db counterpart (a frontier summary carries no per-op label), so a
     /// deterministic `<document>@<head_seq>` stand-in is used; only `head_edit_ordinal`/`chain_hash`
     /// participate in `protocol::runtime_frontier_delta`'s actual comparison.
@@ -856,7 +856,7 @@ mod store {
         protocol::RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id: format!("{}@{}", frontier.document.0, frontier.head_seq), last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
     }
 
-    /// 🗄️⏰ A `HybridLogicalTimestamp` for one submit: `actor` seeded from the first 8 bytes of the
+    /// 🗄️⏰️ A `HybridLogicalTimestamp` for one submit: `actor` seeded from the first 8 bytes of the
     /// submitting person's uuid (stable per-person tiebreak), `physical_ms` real wall-clock.
     pub fn now_hlc(actor_person_id: Uuid) -> protocol::HybridLogicalTimestamp {
         let bytes = actor_person_id.as_bytes();
@@ -868,9 +868,9 @@ mod store {
     fn now_ms() -> i64 {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as i64
     }
-    //#endregion 🔖Database
+    //#endregion 🔖️Database
 
-    //#region 🔖Atomic JSON File
+    //#region 🔖️Atomic JSON File
     /// 🗄️✍️ Reads `path` as JSON, defaulting to `T::default()` if the file does not exist yet.
     fn read_json_or_default<T: serde::de::DeserializeOwned + Default>(path: &std::path::Path) -> Result<T, SessionError> {
         match std::fs::read(path) {
@@ -892,9 +892,9 @@ mod store {
         std::fs::rename(&tmp, path).map_err(|e| SessionError::Internal(format!("rename {} -> {}: {e}", tmp.display(), path.display())))?;
         Ok(())
     }
-    //#endregion 🔖Atomic JSON File
+    //#endregion 🔖️Atomic JSON File
 
-    //#region 🔖Directory
+    //#region 🔖️Directory
     #[derive(Debug, Clone, Serialize, Deserialize)]
     pub struct SessionRecord {
         pub root_kit_id: Uuid,
@@ -922,7 +922,7 @@ mod store {
         compaction_configs: BTreeMap<Uuid, Vec<String>>,
     }
 
-    /// 🗄️🧭 File-backed identity/tenancy bookkeeping compose-hub owns directly (not `db`'s concern,
+    /// 🗄️🧭️ File-backed identity/tenancy bookkeeping compose-hub owns directly (not `db`'s concern,
     /// mirroring the plan's `os-hub`/`HubDirectory` split): session ownership + status, share tokens,
     /// per-session compaction (lookback) configuration.
     pub struct ComposeDirectoryStore {
@@ -1095,9 +1095,9 @@ mod store {
         pub created_at: String,
         pub expires_at: Option<String>,
     }
-    //#endregion 🔖Directory
+    //#endregion 🔖️Directory
 
-    //#region 🔖Kit Identity
+    //#region 🔖️Kit Identity
     pub fn session_kit_id(kit_json: &serde_json::Value) -> Result<Uuid, SessionError> {
         let id = kit_json.get("id").and_then(|value| value.as_str()).ok_or_else(|| SessionError::Validation("kit snapshot must include string id".into()))?;
         Uuid::parse_str(id).map_err(|err| SessionError::Validation(format!("invalid kit id '{id}': {err}")))
@@ -1117,10 +1117,10 @@ mod store {
         let nanos = now.subsec_nanos();
         format!("{}.{:09}Z", secs, nanos)
     }
-    //#endregion 🔖Kit Identity
+    //#endregion 🔖️Kit Identity
 
-    //#region 🔖Kit Serialization
-    /// 🗄️📤 Serializes a `SessionState` into the same kit JSON shape the compose GraphQL schema
+    //#region 🔖️Kit Serialization
+    /// 🗄️📤️ Serializes a `SessionState` into the same kit JSON shape the compose GraphQL schema
     /// expects — unchanged from the pre-CW6b implementation (pure function, no storage dependency).
     pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
         let types: Vec<serde_json::Value> = state
@@ -1445,9 +1445,9 @@ mod store {
             }
         }
     }
-    //#endregion 🔖Kit Serialization
+    //#endregion 🔖️Kit Serialization
 
-    //#region 🔖History
+    //#region 🔖️History
     #[derive(Debug, Clone, Default, Serialize, Deserialize)]
     struct SessionHistory {
         domain_commits: Vec<(i64, Uuid, i64)>,
@@ -1462,7 +1462,7 @@ mod store {
         pub logs_deleted: u64,
     }
 
-    /// 🗄️🔩 Compose's own bespoke kit-history/lookback/compaction feature — see this module's doc for
+    /// 🗄️🔩️ Compose's own bespoke kit-history/lookback/compaction feature — see this module's doc for
     /// why it stays a lightweight file-backed store rather than reaching into `db`'s WAL directly.
     pub struct HistoryStore {
         root: std::path::PathBuf,
@@ -1591,12 +1591,12 @@ mod store {
             Ok(CompactionResult { snapshots_created, logs_deleted })
         }
     }
-    //#endregion 🔖History
+    //#endregion 🔖️History
 } // 🗄️Store
 pub use store::*;
 
 mod actor {
-    // 🎹Actor
+    // 🎹️Actor
     // Specs: ActorMessage is the inbox message kind. SessionActor processes commands one at a time in
     // arrival order, submitting through `db::DocumentHandle` (WAL/conflict/durability/frontier
     // authority) and keeping an in-memory `SessionState` replica for fast reads + kit-JSON history.
@@ -1687,7 +1687,7 @@ mod actor {
                 actor: protocol::ActorId(envelope.actor_person_id.0.to_string()),
                 dependencies: Vec::new(),
                 diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-                // 🎯 No real inverse yet — compose-hub has no undo/redo feature today (the original
+                // 🎯️ No real inverse yet — compose-hub has no undo/redo feature today (the original
                 // Postgres implementation didn't have one either); a per-command-kind inverse is
                 // future work, flagged in this ticket's report.
                 inverse: protocol::InverseOperation {
@@ -1766,7 +1766,7 @@ mod actor {
         }
     }
 
-    //#region 🔖Command Apply
+    //#region 🔖️Command Apply
     fn find_design_id_for_piece(state: &SessionState, piece_id: Uuid) -> Option<Uuid> {
         state.designs.values().find(|d| d.pieces.contains_key(&piece_id)).map(|d| d.design_id)
     }
@@ -2023,12 +2023,12 @@ mod actor {
             }
         }
     }
-    //#endregion 🔖Command Apply
-} // 🎹Actor
+    //#endregion 🔖️Command Apply
+} // 🎹️Actor
 pub use actor::*;
 
 mod directory {
-    // 🎯Directory
+    // 🎯️Directory
     // Specs: SessionHandle holds the sender to an active session actor. SessionDirectory provides
     // get-or-create semantics, rebuilding a cold session's typed `SessionState` by reconstructing its
     // kit JSON from `HistoryStore` (snapshot + change-log replay) and reading `db`'s own frontier for
@@ -2045,7 +2045,7 @@ mod directory {
         pub activated_at: Arc<Instant>,
     }
 
-    //#region 🔖ActiveSessionInfo
+    //#region 🔖️ActiveSessionInfo
 
     #[derive(Debug, Clone, Serialize)]
     pub struct ActiveSessionInfo {
@@ -2054,10 +2054,10 @@ mod directory {
         pub activated_at_secs_ago: u64,
     }
 
-    //#endregion 🔖ActiveSessionInfo
+    //#endregion 🔖️ActiveSessionInfo
 
-    //#region 🔖StateRehydration
-    /// 🗄️📥 Rebuilds a typed `SessionState` from a reconstructed kit JSON (`HistoryStore::
+    //#region 🔖️StateRehydration
+    /// 🗄️📥️ Rebuilds a typed `SessionState` from a reconstructed kit JSON (`HistoryStore::
     /// reconstruct_kit_at_version`/a freshly-seeded genesis kit) — the single place both session
     /// creation and cold-activation funnel through, so they can never drift from each other. Scope
     /// matches the pre-CW6b `load_session_state`'s own (it too never populated `locations`/
@@ -2239,7 +2239,7 @@ mod directory {
         Ok(SessionState { session_id: SessionId(session_id), domain_version, compose_version, status: SessionStatus::Active, kit, authors, locations: BTreeMap::new(), folders, files, tags, concepts, ports, qualities, types, designs, compose_people: BTreeMap::new() })
     }
 
-    /// 🗄️🌱 The kit JSON a brand-new session starts from — `initial_kit` (if the caller supplied one)
+    /// 🗄️🌱️ The kit JSON a brand-new session starts from — `initial_kit` (if the caller supplied one)
     /// is used as-is; otherwise an empty kit named `fallback_kit_name`. Unchanged pure logic from the
     /// pre-CW6b implementation, still the single seeding path `create_session` and
     /// `session_state_from_kit_json` both funnel through (fixing a latent pre-CW6b gap: a caller-
@@ -2269,7 +2269,7 @@ mod directory {
             )),
         }
     }
-    //#endregion 🔖StateRehydration
+    //#endregion 🔖️StateRehydration
 
     #[derive(Clone)]
     pub struct SessionDirectory {
@@ -2284,7 +2284,7 @@ mod directory {
             Self { sessions: Arc::new(DashMap::new()), db, history, directory_store }
         }
 
-        /// 🗄️🌱 Creates a brand-new session: a `db` document (empty at `head_seq == 0`, matching
+        /// 🗄️🌱️ Creates a brand-new session: a `db` document (empty at `head_seq == 0`, matching
         /// `domain_version == 0` — no genesis commit is submitted through `db` itself, so the first
         /// REAL domain command still lands at `domain_version == 1`, unchanged from the pre-CW6b
         /// numbering) + directory record + a `HistoryStore` snapshot at version 0 for the initial kit.
@@ -2358,7 +2358,7 @@ mod directory {
             &self.directory_store
         }
 
-        //#region 🔖Admin Introspection
+        //#region 🔖️Admin Introspection
 
         /// Snapshot of all currently-active session actors with WS connection counts.
         pub fn list_active(&self) -> Vec<ActiveSessionInfo> {
@@ -2381,13 +2381,13 @@ mod directory {
             self.sessions.iter().map(|e| e.value().active_connections.load(AtomicOrdering::Relaxed)).sum()
         }
 
-        //#endregion 🔖Admin Introspection
+        //#endregion 🔖️Admin Introspection
     }
-} // 🎯Directory
+} // 🎯️Directory
 pub use directory::*;
 
 mod api {
-    // 🛕Api
+    // 🛕️Api
     // Specs: AppState holds shared resources. Router defines all HTTP endpoints. Auth enforced via Bearer token: owner token for mutations, viewer/no token for reads. Share tokens provide scoped read-only access.
     // Summary: HTTP API routes for session management, command submission, auth enforcement, and sharable links.
 
@@ -2635,11 +2635,11 @@ mod api {
         let resolved = state.directory.directory_store().resolve_share_token(token)?;
         Ok(Json(resolved))
     }
-} // 🛕Api
+} // 🛕️Api
 pub use api::*;
 
 mod ws {
-    // 🤖Ws
+    // 🤖️Ws
     // Specs: WebSocket handler upgrades HTTP to WS and speaks `protocol_wire`'s binary lane-tagged
     // `ClientFrame`/`ServerFrame` frames — CW6b's "compose client sync moves to wire v2" (the pre-
     // CW6b handler sent ad hoc JSON text and never actually parsed anything a client sent back).
@@ -2660,7 +2660,7 @@ mod ws {
                 return;
             }
         };
-        //#region 🔖Connection Accounting
+        //#region 🔖️Connection Accounting
         handle.active_connections.fetch_add(1, AtomicOrdering::Relaxed);
         let conn_counter = handle.active_connections.clone();
         struct Decrement(Arc<AtomicUsize>);
@@ -2670,7 +2670,7 @@ mod ws {
             }
         }
         let _guard = Decrement(conn_counter);
-        //#endregion 🔖Connection Accounting
+        //#endregion 🔖️Connection Accounting
 
         let Ok(db_handle) = state.directory.db().document(&document_id(session_id)) else {
             tracing::warn!("ws: session {} has no db document", session_id);
@@ -2766,7 +2766,7 @@ mod ws {
             protocol::ClientFrame::Bye => Err(()),
         }
     }
-} // 🤖Ws
+} // 🤖️Ws
 pub use ws::*;
 
 mod admin {
@@ -2781,7 +2781,7 @@ mod admin {
     use super::*;
     use axum::http::HeaderMap;
 
-    //#region 🔖AdminConfig
+    //#region 🔖️AdminConfig
 
     /// Process-global admin configuration. Populated from environment at startup.
     #[derive(Clone)]
@@ -2797,9 +2797,9 @@ mod admin {
         }
     }
 
-    //#endregion 🔖AdminConfig
+    //#endregion 🔖️AdminConfig
 
-    //#region 🔖AdminAuth
+    //#region 🔖️AdminAuth
 
     /// Validates Bearer token against configured admin token. Returns error if token is unset or wrong.
     pub fn require_admin(headers: &HeaderMap, config: &AdminConfig) -> Result<(), SessionError> {
@@ -2817,9 +2817,9 @@ mod admin {
         Ok(())
     }
 
-    //#endregion 🔖AdminAuth
+    //#endregion 🔖️AdminAuth
 
-    //#region 🔖AdminRows
+    //#region 🔖️AdminRows
 
     #[derive(Debug, Serialize)]
     pub struct AdminSessionRow {
@@ -2896,9 +2896,9 @@ mod admin {
         pub last_compacted_at: Option<String>,
     }
 
-    //#endregion 🔖AdminRows
+    //#endregion 🔖️AdminRows
 
-    //#region 🔖AdminQueries
+    //#region 🔖️AdminQueries
     // 🗄️ Reads through `SessionDirectory` (`db` frontier for kit identity + `ComposeDirectoryStore`
     // for session/share-token bookkeeping) instead of `sqlx_core::query_as` row tuples against
     // Postgres — every function here keeps its pre-CW6b name/shape so `AdminHandlers` below barely
@@ -3017,9 +3017,9 @@ mod admin {
         admin_load_compaction_config(directory, session_id)
     }
 
-    //#endregion 🔖AdminQueries
+    //#endregion 🔖️AdminQueries
 
-    //#region 🔖AdminHandlers
+    //#region 🔖️AdminHandlers
 
     #[derive(Clone)]
     pub struct AdminState {
@@ -3128,9 +3128,9 @@ mod admin {
         Ok(Json(admin_update_compaction_config(&s.directory, session_id, body.lookback_tokens)?))
     }
 
-    //#endregion 🔖AdminHandlers
+    //#endregion 🔖️AdminHandlers
 
-    //#region 🔖Dashboard HTML
+    //#region 🔖️Dashboard HTML
 
     pub const DASHBOARD_HTML: &str = r###"<!doctype html>
 <html lang="en">
@@ -3380,7 +3380,7 @@ else show('auth');
 </body>
 </html>
 "###;
-    //#endregion 🔖Dashboard HTML
+    //#endregion 🔖️Dashboard HTML
 } // 🛡️Admin
 pub use admin::*;
 
@@ -3440,17 +3440,17 @@ async fn main() -> std::process::ExitCode {
     std::process::ExitCode::SUCCESS
 }
 
-// 🔖Main End
+// 🔖️Main End
 
 #[cfg(test)]
 // Specs: Tests cover domain types, commands, events, serde, error HTTP mapping, and integration with metabolism/nakagin data.
 // Summary: Comprehensive tests for all domain types, serialization, error mapping, and integration with real asset data.
 mod tests {
-    // 📐Tests
+    // 📐️Tests
 
     use super::*;
     mod domain_tests {
-        // 👓Domain Tests
+        // 👓️Domain Tests
 
         use super::*;
         #[test]
@@ -3562,10 +3562,10 @@ mod tests {
             let s = ShareTokenId(u);
             assert_eq!(s.0, u);
         }
-    } // 👓Domain Tests
+    } // 👓️Domain Tests
 
     mod command_tests {
-        // 📜Command Tests
+        // 📜️Command Tests
 
         use super::*;
         #[test]
@@ -3643,7 +3643,7 @@ mod tests {
             assert!(json.contains("Accepted"));
             assert!(json.contains("5"));
         }
-    } // 📜Command Tests
+    } // 📜️Command Tests
 
     mod error_tests {
         // 🌤️Error Tests
@@ -3700,7 +3700,7 @@ mod tests {
     } // 🌤️Error Tests
 
     mod event_tests {
-        // 🔮Event Tests
+        // 🔮️Event Tests
 
         use super::*;
         #[test]
@@ -3751,10 +3751,10 @@ mod tests {
                 let _back: ComposeUpdate = serde_json::from_str(&json).unwrap();
             }
         }
-    } // 🔮Event Tests
+    } // 🔮️Event Tests
 
     mod state_tests {
-        // 📝State Tests
+        // 📝️State Tests
 
         use super::*;
         #[test]
@@ -3901,10 +3901,10 @@ mod tests {
             assert_eq!(ds.pieces.len(), 2);
             assert_eq!(ds.connections.len(), 1);
         }
-    } // 📝State Tests
+    } // 📝️State Tests
 
     mod metabolism_integration_tests {
-        // 🔐Metabolism Integration Tests
+        // 🔐️Metabolism Integration Tests
 
         use super::*;
         pub fn load_metabolism_kit_json() -> serde_json::Value {
@@ -3929,7 +3929,7 @@ mod tests {
         #[test]
         pub fn metabolism_kit_has_authors() {
             let kit = load_metabolism_kit_json();
-            // 🧾 The fixture's `authors` is content-addressed (`{hash, items: [...]}`), not a bare
+            // 🧾️ The fixture's `authors` is content-addressed (`{hash, items: [...]}`), not a bare
             // array — matches every other content-addressed collection in this fixture family.
             let authors = kit["authors"]["items"].as_array().expect("authors items array");
             assert!(!authors.is_empty());
@@ -4016,11 +4016,11 @@ mod tests {
             assert!(json.contains("Batch"));
             assert!(json.contains("Capsule"));
         }
-    } // 🔐Metabolism Integration Tests
+    } // 🔐️Metabolism Integration Tests
     pub use metabolism_integration_tests::*;
 
     mod nakagin_integration_tests {
-        // 🎵Nakagin Integration Tests
+        // 🎵️Nakagin Integration Tests
 
         use super::*;
         pub fn load_nakagin_design_json() -> serde_json::Value {
@@ -4182,11 +4182,11 @@ mod tests {
             }
             assert_eq!(commands.len(), 179, "should create 179 CreateConnection commands");
         }
-    } // 🎵Nakagin Integration Tests
+    } // 🎵️Nakagin Integration Tests
     pub use nakagin_integration_tests::*;
 
     mod multi_frontend_tests {
-        // 🗽Multi-Frontend Tests
+        // 🗽️Multi-Frontend Tests
 
         use super::*;
         #[test]
@@ -4293,7 +4293,7 @@ mod tests {
             assert_eq!(f2_count, 10);
             assert_eq!(f3_count, 10);
         }
-    } // 🗽Multi-Frontend Tests
+    } // 🗽️Multi-Frontend Tests
 
     mod full_metabolism_nakagin_session_test {
         // 🌦️Full Metabolism + Nakagin Session Test
@@ -4453,7 +4453,7 @@ mod tests {
     } // 🌦️Full Metabolism + Nakagin Session Test
 
     mod metabolism_diff_tests {
-        // 📹Metabolism Diff Tests
+        // 📹️Metabolism Diff Tests
 
         use super::*;
         pub fn load_metabolism_diff_json() -> serde_json::Value {
@@ -4498,10 +4498,10 @@ mod tests {
             let back: DomainCommand = serde_json::from_str(&json).unwrap();
             assert!(matches!(back, DomainCommand::Batch(_)));
         }
-    } // 📹Metabolism Diff Tests
+    } // 📹️Metabolism Diff Tests
 
     mod lookback_tests {
-        // 🧫Lookback Tests
+        // 🧫️Lookback Tests
 
         use super::*;
         #[test]
@@ -4542,10 +4542,10 @@ mod tests {
                 prev = secs;
             }
         }
-    } // 🧫Lookback Tests
+    } // 🧫️Lookback Tests
 
     mod history_unit_tests {
-        // 💊History Unit Tests
+        // 💊️History Unit Tests
 
         use super::*;
         #[test]
@@ -4746,10 +4746,10 @@ mod tests {
             assert!(json.contains("snapshots_created"));
             assert!(json.contains("logs_deleted"));
         }
-    } // 💊History Unit Tests
+    } // 💊️History Unit Tests
 
     mod exhaustive {
-        // 🌊Exhaustive: full db-backed integration suite (no external services — `db::Database` is a
+        // 🌊️Exhaustive: full db-backed integration suite (no external services — `db::Database` is a
         // zero-touch `FsStorage` embedded in a tempdir, replacing the Postgres testcontainer suite
         // this module used to gate behind `docker_available()`).
 
@@ -5401,5 +5401,5 @@ mod tests {
             assert!(html.contains("compose"));
             assert!(html.contains("overview"));
         }
-    } // 🌊Exhaustive: full db-backed integration suite (no external services)
-} // 📐Tests
+    } // 🌊️Exhaustive: full db-backed integration suite (no external services)
+} // 📐️Tests

@@ -1,0 +1,1283 @@
+diff --git a/writer/plugin/rs/lib.rs b/writer/plugin/rs/lib.rs
+index 435574e78a..555afa0f3c 100644
+--- a/writer/plugin/rs/lib.rs
++++ b/writer/plugin/rs/lib.rs
+@@ -108,7 +108,7 @@ use trinity_jack::{complete, example_graph, format as jack_format, lint, semanti
+ use writer::{empty_writer_projection, WriterCamera, WriterOp, WriterProjection};
+ use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
+     build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
+-    tree_item_with_action, ui_declarative_sections_to_tree, ui_text, App,
++    tree_item, ui_declarative_sections_to_tree, ui_text, App,
+     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt,
+     DocumentApp, DocumentView, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiSectionNode,
+     UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
+@@ -243,441 +243,22 @@ fn jack_ast_tree_icon(kind: &str) -> Option<&'static str> {
+     }
+ }
+ 
+-/// 🌊️ Collapses runs of whitespace to a single space, matching premigration `label` derivation.
+-fn collapse_whitespace(text: &str) -> String {
+-    let mut out = String::new();
+-    let mut last_was_space = false;
+-    for ch in text.chars() {
+-        if ch.is_whitespace() {
+-            if !last_was_space {
+-                out.push(' ');
+-                last_was_space = true;
+-            }
+-        } else {
+-            out.push(ch);
+-            last_was_space = false;
+-        }
+-    }
+-    out.trim().to_string()
+-}
+-
+-fn jack_ast_node(kind: &str, start: usize, end: usize, source: &str, children: Vec<JackAstNode>, label: Option<&str>) -> JackAstNode {
+-    let slice = collapse_whitespace(source.get(start..end).unwrap_or(""));
+-    let label = label.map(str::to_string).unwrap_or_else(|| if slice.is_empty() { kind.to_string() } else { slice });
++/// 🌉️ Adapts trinity_jack's shared [`trinity_jack::SpannedNode`] tree into writer's own [`JackAstNode`]
++/// (adds the stable tree-item `id` the outline panel needs; `kind`/`label`/spans pass through unchanged).
++fn jack_ast_from_spanned(node: &trinity_jack::SpannedNode) -> JackAstNode {
+     JackAstNode {
+-        id: format!("jack-ast-{kind}-{start}-{end}"),
+-        kind: kind.into(),
+-        label,
+-        start,
+-        end,
+-        children,
+-    }
+-}
+-
+-//#region JackLexer
+-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+-enum JackLexKind {
+-    KwMatch,
+-    KwWhere,
+-    KwReturn,
+-    KwCreate,
+-    KwDelete,
+-    KwSet,
+-    KwMerge,
+-    KwAnd,
+-    KwOr,
+-    Ident,
+-    Number,
+-    Str,
+-    LParen,
+-    RParen,
+-    LBracket,
+-    RBracket,
+-    Colon,
+-    Comma,
+-    Dot,
+-    Eq,
+-    Ne,
+-    Dash,
+-    Arrow,
+-    Eof,
+-}
+-
+-#[derive(Clone, Debug)]
+-struct JackLexToken {
+-    kind: JackLexKind,
+-    start: usize,
+-    end: usize,
+-    text: String,
+-}
+-
+-fn tok(kind: JackLexKind, start: usize, end: usize, text: &str) -> JackLexToken {
+-    JackLexToken { kind, start, end, text: text.to_string() }
+-}
+-
+-/// 🔤️ Ports premigration `tokenizeJackSource` (writer/core/js/internal.ts) byte-for-byte.
+-fn tokenize_jack_source(input: &str) -> Vec<JackLexToken> {
+-    let bytes = input.as_bytes();
+-    let len = bytes.len();
+-    let mut tokens = Vec::new();
+-    let mut i = 0usize;
+-    while i < len {
+-        let start = i;
+-        let c = bytes[i] as char;
+-        if c.is_whitespace() {
+-            i += 1;
+-            continue;
+-        }
+-        match c {
+-            '(' => { tokens.push(tok(JackLexKind::LParen, start, start + 1, "")); i += 1; continue; }
+-            ')' => { tokens.push(tok(JackLexKind::RParen, start, start + 1, "")); i += 1; continue; }
+-            '[' => { tokens.push(tok(JackLexKind::LBracket, start, start + 1, "")); i += 1; continue; }
+-            ']' => { tokens.push(tok(JackLexKind::RBracket, start, start + 1, "")); i += 1; continue; }
+-            ':' => { tokens.push(tok(JackLexKind::Colon, start, start + 1, "")); i += 1; continue; }
+-            ',' => { tokens.push(tok(JackLexKind::Comma, start, start + 1, "")); i += 1; continue; }
+-            '.' => { tokens.push(tok(JackLexKind::Dot, start, start + 1, "")); i += 1; continue; }
+-            '=' => { tokens.push(tok(JackLexKind::Eq, start, start + 1, "")); i += 1; continue; }
+-            _ => {}
+-        }
+-        if c == '!' && bytes.get(i + 1) == Some(&b'=') {
+-            tokens.push(tok(JackLexKind::Ne, start, start + 2, ""));
+-            i += 2;
+-            continue;
+-        }
+-        if c == '-' && bytes.get(i + 1) == Some(&b'>') {
+-            tokens.push(tok(JackLexKind::Arrow, start, start + 2, ""));
+-            i += 2;
+-            continue;
+-        }
+-        if c == '-' && i + 1 < len && (bytes[i + 1] as char).is_ascii_digit() {
+-            let mut j = i + 1;
+-            while j < len && ((bytes[j] as char).is_ascii_digit() || bytes[j] == b'.') {
+-                j += 1;
+-            }
+-            tokens.push(tok(JackLexKind::Number, start, j, &input[start..j]));
+-            i = j;
+-            continue;
+-        }
+-        if c == '-' {
+-            tokens.push(tok(JackLexKind::Dash, start, start + 1, ""));
+-            i += 1;
+-            continue;
+-        }
+-        if c == '\'' || c == '"' {
+-            let quote = c;
+-            i += 1;
+-            let lit_start = i;
+-            while i < len && (bytes[i] as char) != quote {
+-                i += 1;
+-            }
+-            let text = input.get(lit_start..i).unwrap_or("").to_string();
+-            if i < len {
+-                i += 1;
+-            }
+-            tokens.push(tok(JackLexKind::Str, start, i, &text));
+-            continue;
+-        }
+-        if c.is_ascii_digit() {
+-            let mut j = i;
+-            while j < len && ((bytes[j] as char).is_ascii_digit() || bytes[j] == b'.') {
+-                j += 1;
+-            }
+-            tokens.push(tok(JackLexKind::Number, start, j, &input[start..j]));
+-            i = j;
+-            continue;
+-        }
+-        if c.is_ascii_alphabetic() || c == '_' {
+-            let mut j = i;
+-            while j < len && ((bytes[j] as char).is_ascii_alphanumeric() || bytes[j] == b'_') {
+-                j += 1;
+-            }
+-            let word = &input[start..j];
+-            let upper = word.to_uppercase();
+-            let kind = match upper.as_str() {
+-                "MATCH" => Some(JackLexKind::KwMatch),
+-                "WHERE" => Some(JackLexKind::KwWhere),
+-                "RETURN" => Some(JackLexKind::KwReturn),
+-                "CREATE" => Some(JackLexKind::KwCreate),
+-                "DELETE" => Some(JackLexKind::KwDelete),
+-                "SET" => Some(JackLexKind::KwSet),
+-                "MERGE" => Some(JackLexKind::KwMerge),
+-                "AND" => Some(JackLexKind::KwAnd),
+-                "OR" => Some(JackLexKind::KwOr),
+-                _ => None,
+-            };
+-            if let Some(kind) = kind {
+-                tokens.push(tok(kind, start, j, ""));
+-            } else {
+-                tokens.push(tok(JackLexKind::Ident, start, j, word));
+-            }
+-            i = j;
+-            continue;
+-        }
+-        i += 1;
+-    }
+-    tokens.push(tok(JackLexKind::Eof, len, len, ""));
+-    tokens
+-}
+-//#endregion JackLexer
+-
+-//#region JackParser
+-struct JackAstParser<'a> {
+-    tokens: &'a [JackLexToken],
+-    source: &'a str,
+-    pos: usize,
+-}
+-
+-impl<'a> JackAstParser<'a> {
+-    fn new(tokens: &'a [JackLexToken], source: &'a str) -> Self {
+-        Self { tokens, source, pos: 0 }
+-    }
+-
+-    fn peek(&self) -> &JackLexToken {
+-        &self.tokens[self.pos.min(self.tokens.len() - 1)]
+-    }
+-
+-    fn bump(&mut self) -> JackLexToken {
+-        let token = self.peek().clone();
+-        if token.kind != JackLexKind::Eof {
+-            self.pos += 1;
+-        }
+-        token
+-    }
+-
+-    fn expect_ident(&mut self) -> Result<JackLexToken, String> {
+-        let token = self.bump();
+-        if token.kind != JackLexKind::Ident {
+-            return Err(format!("expected ident at {}", token.start));
+-        }
+-        Ok(token)
+-    }
+-
+-    fn expect(&mut self, kind: JackLexKind) -> Result<JackLexToken, String> {
+-        let token = self.bump();
+-        if token.kind != kind {
+-            return Err(format!("expected {kind:?} at {}, got {:?}", token.start, token.kind));
+-        }
+-        Ok(token)
+-    }
+-
+-    fn parse_query(&mut self) -> Result<JackAstNode, String> {
+-        let mut children = Vec::new();
+-        while self.peek().kind != JackLexKind::Eof {
+-            children.push(self.parse_clause()?);
+-        }
+-        Ok(jack_ast_node("query", 0, self.source.len(), self.source, children, Some("Query")))
+-    }
+-
+-    fn parse_clause(&mut self) -> Result<JackAstNode, String> {
+-        let start = self.peek().start;
+-        match self.peek().kind {
+-            JackLexKind::KwMatch => {
+-                self.bump();
+-                let mut patterns = vec![self.parse_pattern()?];
+-                while self.peek().kind == JackLexKind::Comma {
+-                    self.bump();
+-                    patterns.push(self.parse_pattern()?);
+-                }
+-                let end = patterns.last().map(|p| p.end).unwrap_or(start);
+-                Ok(jack_ast_node("match", start, end, self.source, patterns, Some("MATCH")))
+-            }
+-            JackLexKind::KwWhere => {
+-                self.bump();
+-                let expr = self.parse_expr()?;
+-                let end = expr.end;
+-                Ok(jack_ast_node("where", start, end, self.source, vec![expr], Some("WHERE")))
+-            }
+-            JackLexKind::KwReturn => {
+-                self.bump();
+-                let mut items = vec![self.parse_return_item()?];
+-                while self.peek().kind == JackLexKind::Comma {
+-                    self.bump();
+-                    items.push(self.parse_return_item()?);
+-                }
+-                let end = items.last().map(|i| i.end).unwrap_or(start);
+-                Ok(jack_ast_node("return", start, end, self.source, items, Some("RETURN")))
+-            }
+-            JackLexKind::KwCreate => {
+-                self.bump();
+-                let pattern = self.parse_pattern()?;
+-                let end = pattern.end;
+-                Ok(jack_ast_node("create", start, end, self.source, vec![pattern], Some("CREATE")))
+-            }
+-            JackLexKind::KwDelete => {
+-                self.bump();
+-                let mut vars = vec![self.expect_ident()?];
+-                while self.peek().kind == JackLexKind::Comma {
+-                    self.bump();
+-                    vars.push(self.expect_ident()?);
+-                }
+-                let end = vars.last().map(|v| v.end).unwrap_or(start);
+-                let children: Vec<JackAstNode> = vars
+-                    .iter()
+-                    .map(|v| jack_ast_node("var", v.start, v.end, self.source, Vec::new(), Some(v.text.as_str())))
+-                    .collect();
+-                Ok(jack_ast_node("delete", start, end, self.source, children, Some("DELETE")))
+-            }
+-            JackLexKind::KwSet => {
+-                self.bump();
+-                let mut items = vec![self.parse_assignment()?];
+-                while self.peek().kind == JackLexKind::Comma {
+-                    self.bump();
+-                    items.push(self.parse_assignment()?);
+-                }
+-                let end = items.last().map(|i| i.end).unwrap_or(start);
+-                Ok(jack_ast_node("set", start, end, self.source, items, Some("SET")))
+-            }
+-            JackLexKind::KwMerge => {
+-                self.bump();
+-                let pattern = self.parse_pattern()?;
+-                let end = pattern.end;
+-                Ok(jack_ast_node("merge", start, end, self.source, vec![pattern], Some("MERGE")))
+-            }
+-            _ => Err(format!("unexpected clause at {start}")),
+-        }
+-    }
+-
+-    fn parse_pattern(&mut self) -> Result<JackAstNode, String> {
+-        let start = self.expect(JackLexKind::LParen)?.start;
+-        let left = self.parse_pattern_node()?;
+-        self.expect(JackLexKind::RParen)?;
+-        if self.peek().kind == JackLexKind::Dash {
+-            let edge_start = self.bump().start;
+-            self.expect(JackLexKind::LBracket)?;
+-            let mut edge_children = Vec::new();
+-            if self.peek().kind == JackLexKind::Ident {
+-                let edge_var = self.expect_ident()?;
+-                edge_children.push(jack_ast_node("edgeVar", edge_var.start, edge_var.end, self.source, Vec::new(), Some(edge_var.text.as_str())));
+-            }
+-            if self.peek().kind == JackLexKind::Colon {
+-                self.bump();
+-                let edge_kind = self.expect_ident()?;
+-                edge_children.push(jack_ast_node("edgeKind", edge_kind.start, edge_kind.end, self.source, Vec::new(), Some(edge_kind.text.as_str())));
+-            }
+-            self.expect(JackLexKind::RBracket)?;
+-            self.expect(JackLexKind::Arrow)?;
+-            self.expect(JackLexKind::LParen)?;
+-            let right = self.parse_pattern_node()?;
+-            self.expect(JackLexKind::RParen)?;
+-            let edge_end = right.end;
+-            let edge = jack_ast_node("edge", edge_start, edge_end, self.source, edge_children, Some("edge"));
+-            return Ok(jack_ast_node("pattern", start, edge_end, self.source, vec![left, edge, right], None));
+-        }
+-        let end = left.end;
+-        Ok(jack_ast_node("pattern", start, end, self.source, vec![left], None))
+-    }
+-
+-    fn parse_pattern_node(&mut self) -> Result<JackAstNode, String> {
+-        let start = self.peek().start;
+-        let var_tok = self.expect_ident()?;
+-        self.expect(JackLexKind::Colon)?;
+-        let kind_tok = self.expect_ident()?;
+-        let var_node = jack_ast_node("var", var_tok.start, var_tok.end, self.source, Vec::new(), Some(var_tok.text.as_str()));
+-        let kind_node = jack_ast_node("label", kind_tok.start, kind_tok.end, self.source, Vec::new(), Some(kind_tok.text.as_str()));
+-        let label = format!("{}:{}", var_tok.text, kind_tok.text);
+-        Ok(jack_ast_node("patternNode", start, kind_tok.end, self.source, vec![var_node, kind_node], Some(label.as_str())))
+-    }
+-
+-    fn parse_return_item(&mut self) -> Result<JackAstNode, String> {
+-        let start = self.peek().start;
+-        let var_tok = self.expect_ident()?;
+-        if self.peek().kind == JackLexKind::Dot {
+-            self.bump();
+-            let prop_tok = self.expect_ident()?;
+-            let var_node = jack_ast_node("var", var_tok.start, var_tok.end, self.source, Vec::new(), Some(var_tok.text.as_str()));
+-            let prop_node = jack_ast_node("property", prop_tok.start, prop_tok.end, self.source, Vec::new(), Some(prop_tok.text.as_str()));
+-            let label = format!("{}.{}", var_tok.text, prop_tok.text);
+-            return Ok(jack_ast_node("returnItem", start, prop_tok.end, self.source, vec![var_node, prop_node], Some(label.as_str())));
+-        }
+-        let var_node = jack_ast_node("var", var_tok.start, var_tok.end, self.source, Vec::new(), Some(var_tok.text.as_str()));
+-        Ok(jack_ast_node("returnItem", start, var_tok.end, self.source, vec![var_node], Some(var_tok.text.as_str())))
+-    }
+-
+-    fn parse_assignment(&mut self) -> Result<JackAstNode, String> {
+-        let start = self.peek().start;
+-        let var_tok = self.expect_ident()?;
+-        self.expect(JackLexKind::Dot)?;
+-        let prop_tok = self.expect_ident()?;
+-        self.expect(JackLexKind::Eq)?;
+-        let value = self.parse_value()?;
+-        let var_node = jack_ast_node("var", var_tok.start, var_tok.end, self.source, Vec::new(), Some(var_tok.text.as_str()));
+-        let prop_node = jack_ast_node("property", prop_tok.start, prop_tok.end, self.source, Vec::new(), Some(prop_tok.text.as_str()));
+-        let end = value.end;
+-        Ok(jack_ast_node("assignment", start, end, self.source, vec![var_node, prop_node, value], None))
+-    }
+-
+-    fn parse_expr(&mut self) -> Result<JackAstNode, String> {
+-        self.parse_or_expr()
+-    }
+-
+-    fn parse_or_expr(&mut self) -> Result<JackAstNode, String> {
+-        let mut left = self.parse_and_expr()?;
+-        while self.peek().kind == JackLexKind::KwOr {
+-            let op_start = self.bump().start;
+-            let right = self.parse_and_expr()?;
+-            let end = right.end;
+-            left = jack_ast_node("or", op_start, end, self.source, vec![left, right], Some("OR"));
+-        }
+-        Ok(left)
+-    }
+-
+-    fn parse_and_expr(&mut self) -> Result<JackAstNode, String> {
+-        let mut left = self.parse_cmp_expr()?;
+-        while self.peek().kind == JackLexKind::KwAnd {
+-            let op_start = self.bump().start;
+-            let right = self.parse_cmp_expr()?;
+-            let end = right.end;
+-            left = jack_ast_node("and", op_start, end, self.source, vec![left, right], Some("AND"));
+-        }
+-        Ok(left)
+-    }
+-
+-    fn parse_cmp_expr(&mut self) -> Result<JackAstNode, String> {
+-        let start = self.peek().start;
+-        let var_tok = self.expect_ident()?;
+-        self.expect(JackLexKind::Dot)?;
+-        let prop_tok = self.expect_ident()?;
+-        let op = self.bump();
+-        if op.kind != JackLexKind::Eq && op.kind != JackLexKind::Ne {
+-            return Err(format!("expected comparison at {}", op.start));
+-        }
+-        let value = self.parse_value()?;
+-        let var_node = jack_ast_node("var", var_tok.start, var_tok.end, self.source, Vec::new(), Some(var_tok.text.as_str()));
+-        let prop_node = jack_ast_node("property", prop_tok.start, prop_tok.end, self.source, Vec::new(), Some(prop_tok.text.as_str()));
+-        let kind = if op.kind == JackLexKind::Eq { "eq" } else { "ne" };
+-        let end = value.end;
+-        Ok(jack_ast_node(kind, start, end, self.source, vec![var_node, prop_node, value], None))
+-    }
+-
+-    fn parse_value(&mut self) -> Result<JackAstNode, String> {
+-        let token = self.bump();
+-        match token.kind {
+-            JackLexKind::Number => Ok(jack_ast_node("number", token.start, token.end, self.source, Vec::new(), Some(token.text.as_str()))),
+-            JackLexKind::Str => Ok(jack_ast_node("string", token.start, token.end, self.source, Vec::new(), Some(token.text.as_str()))),
+-            JackLexKind::Ident => {
+-                let lower = token.text.to_lowercase();
+-                if lower == "true" || lower == "false" {
+-                    Ok(jack_ast_node("bool", token.start, token.end, self.source, Vec::new(), Some(token.text.as_str())))
+-                } else if lower == "null" {
+-                    Ok(jack_ast_node("null", token.start, token.end, self.source, Vec::new(), Some("null")))
+-                } else {
+-                    Err(format!("expected value at {}", token.start))
+-                }
+-            }
+-            _ => Err(format!("expected value at {}", token.start)),
+-        }
++        id: format!("jack-ast-{}-{}-{}", node.kind, node.start, node.end),
++        kind: node.kind.clone(),
++        label: node.label.clone(),
++        start: node.start,
++        end: node.end,
++        children: node.children.iter().map(jack_ast_from_spanned).collect(),
+     }
+ }
+-//#endregion JackParser
+ 
+-/// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels (premigration `parseJackAst`).
++/// 🌳️ Parse jack source into a span-tracked AST for hierarchy panels, via the shared `trinity_jack` parser.
+ fn parse_jack_ast(text: &str) -> JackAstNode {
+-    let tokens = tokenize_jack_source(text);
+-    let mut parser = JackAstParser::new(&tokens, text);
+-    match parser.parse_query() {
+-        Ok(node) => node,
+-        Err(message) => jack_ast_node("error", 0, text.len(), text, Vec::new(), Some(message.as_str())),
+-    }
++    jack_ast_from_spanned(&trinity_jack::parse_spanned(text))
+ }
+ 
+ /// 🎯️ Deepest AST node containing a byte offset.
+@@ -807,24 +388,31 @@ fn jack_placeholder_visible(caret: usize, offset: usize) -> bool {
+     caret >= offset - 32 && caret <= offset + 48
+ }
+ 
+-fn jack_token_expects_expr(kind: JackLexKind) -> bool {
+-    matches!(kind, JackLexKind::KwAnd | JackLexKind::KwOr)
++/// 🔤️ Fine-grained, never-fails jack tokens for editor heuristics — routed through `trinity_jack`'s shared
++/// forgiving lexer instead of a hand-rolled writer copy.
++fn jack_tokens(text: &str) -> Vec<trinity_jack::SpannedToken> {
++    trinity_jack::lex_spanned(text, true).unwrap_or_default()
++}
++
++fn jack_token_expects_expr(token: &trinity_jack::Token) -> bool {
++    matches!(token, trinity_jack::Token::And | trinity_jack::Token::Or)
+ }
+ 
+-fn jack_token_expects_pattern(kind: JackLexKind) -> bool {
+-    matches!(kind, JackLexKind::KwMatch | JackLexKind::KwCreate | JackLexKind::KwMerge)
++fn jack_token_expects_pattern(token: &trinity_jack::Token) -> bool {
++    matches!(token, trinity_jack::Token::KwMatch | trinity_jack::Token::KwCreate | trinity_jack::Token::KwMerge)
+ }
+ 
+ /// 👻️ Required jack token placeholders near the caret (premigration `jackEditorPlaceholders`).
+ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlaceholder> {
+-    let tokens = tokenize_jack_source(text);
++    use trinity_jack::Token;
++    let tokens = jack_tokens(text);
+     let mut out = Vec::new();
+     for i in 0..tokens.len() {
+         let token = &tokens[i];
+         let next = tokens.get(i + 1);
+-        let next_kind = next.map(|t| t.kind);
+-        if jack_token_expects_pattern(token.kind) {
+-            let bad_next = !matches!(next_kind, Some(JackLexKind::LParen) | Some(JackLexKind::Ident));
++        let next_kind = next.map(|t| &t.token);
++        if jack_token_expects_pattern(&token.token) {
++            let bad_next = !matches!(next_kind, Some(Token::LParen) | Some(Token::Ident(_)));
+             if bad_next {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -832,8 +420,8 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if token.kind == JackLexKind::KwReturn {
+-            let bad = matches!(next_kind, None | Some(JackLexKind::Eof) | Some(JackLexKind::Comma));
++        if token.token == Token::KwReturn {
++            let bad = matches!(next_kind, None | Some(Token::Eof) | Some(Token::Comma));
+             if bad {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -841,8 +429,8 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if token.kind == JackLexKind::KwWhere {
+-            let bad = matches!(next_kind, None | Some(JackLexKind::Eof) | Some(JackLexKind::KwReturn));
++        if token.token == Token::KwWhere {
++            let bad = matches!(next_kind, None | Some(Token::Eof) | Some(Token::KwReturn));
+             if bad {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -850,9 +438,9 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if jack_token_expects_expr(token.kind) {
++        if jack_token_expects_expr(&token.token) {
+             let bad = match next_kind {
+-                None | Some(JackLexKind::Eof) | Some(JackLexKind::KwWhere) | Some(JackLexKind::KwReturn) => true,
++                None | Some(Token::Eof) | Some(Token::KwWhere) | Some(Token::KwReturn) => true,
+                 Some(k) => jack_token_expects_expr(k),
+             };
+             if bad {
+@@ -862,8 +450,8 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if token.kind == JackLexKind::Colon {
+-            let bad = matches!(next_kind, None | Some(JackLexKind::Eof) | Some(JackLexKind::RParen) | Some(JackLexKind::Comma) | Some(JackLexKind::RBracket));
++        if token.token == Token::Colon {
++            let bad = matches!(next_kind, None | Some(Token::Eof) | Some(Token::RParen) | Some(Token::Comma) | Some(Token::RBracket));
+             if bad {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -871,8 +459,8 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if token.kind == JackLexKind::Comma && i > 0 && tokens[i - 1].kind == JackLexKind::KwReturn {
+-            let bad = matches!(next_kind, None | Some(JackLexKind::Eof) | Some(JackLexKind::Comma));
++        if token.token == Token::Comma && i > 0 && tokens[i - 1].token == Token::KwReturn {
++            let bad = matches!(next_kind, None | Some(Token::Eof) | Some(Token::Comma));
+             if bad {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -880,8 +468,8 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if token.kind == JackLexKind::Dash {
+-            let bad = !matches!(next_kind, Some(JackLexKind::LBracket));
++        if token.token == Token::Dash {
++            let bad = !matches!(next_kind, Some(Token::LBracket));
+             if bad {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -889,9 +477,9 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if token.kind == JackLexKind::LBracket {
++        if token.token == Token::LBracket {
+             let after = tokens.get(i + 1);
+-            let close = tokens.iter().enumerate().find(|(j, t)| *j > i && t.kind == JackLexKind::RBracket);
++            let close = tokens.iter().enumerate().find(|(j, t)| *j > i && t.token == Token::RBracket);
+             if close.is_none() {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -900,7 +488,7 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+             } else {
+                 let bad = match after {
+                     None => true,
+-                    Some(t) => matches!(t.kind, JackLexKind::RBracket | JackLexKind::Colon),
++                    Some(t) => matches!(t.token, Token::RBracket | Token::Colon),
+                 };
+                 if bad {
+                     let offset = token.end;
+@@ -910,8 +498,8 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+                 }
+             }
+         }
+-        if token.kind == JackLexKind::Eq || token.kind == JackLexKind::Ne {
+-            let bad = matches!(next_kind, None | Some(JackLexKind::Eof) | Some(JackLexKind::KwAnd) | Some(JackLexKind::KwOr));
++        if token.token == Token::Eq || token.token == Token::Ne {
++            let bad = matches!(next_kind, None | Some(Token::Eof) | Some(Token::And) | Some(Token::Or));
+             if bad {
+                 let offset = token.end;
+                 if jack_placeholder_visible(caret, offset) {
+@@ -923,21 +511,21 @@ fn jack_editor_placeholders(text: &str, caret: usize) -> Vec<JackEditorPlacehold
+     out
+ }
+ 
+-const JACK_NEWLINE_AFTER_KEYWORDS: &[JackLexKind] = &[
+-    JackLexKind::KwMatch,
+-    JackLexKind::KwWhere,
+-    JackLexKind::KwReturn,
+-    JackLexKind::KwCreate,
+-    JackLexKind::KwDelete,
+-    JackLexKind::KwSet,
+-    JackLexKind::KwMerge,
+-    JackLexKind::KwAnd,
+-    JackLexKind::KwOr,
++const JACK_NEWLINE_AFTER_KEYWORDS: &[trinity_jack::Token] = &[
++    trinity_jack::Token::KwMatch,
++    trinity_jack::Token::KwWhere,
++    trinity_jack::Token::KwReturn,
++    trinity_jack::Token::KwCreate,
++    trinity_jack::Token::KwDelete,
++    trinity_jack::Token::KwSet,
++    trinity_jack::Token::KwMerge,
++    trinity_jack::Token::And,
++    trinity_jack::Token::Or,
+ ];
+ 
+-fn jack_lex_token_at_offset(tokens: &[JackLexToken], offset: usize) -> Option<&JackLexToken> {
++fn jack_lex_token_at_offset(tokens: &[trinity_jack::SpannedToken], offset: usize) -> Option<&trinity_jack::SpannedToken> {
+     for token in tokens {
+-        if token.kind == JackLexKind::Eof {
++        if token.token == trinity_jack::Token::Eof {
+             break;
+         }
+         if offset >= token.start && offset <= token.end {
+@@ -949,11 +537,12 @@ fn jack_lex_token_at_offset(tokens: &[JackLexToken], offset: usize) -> Option<&J
+ 
+ /// ↩️ Whether a jack query may break onto a new line at a byte offset (premigration `jackNewlineAllowedAt`).
+ fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
++    use trinity_jack::Token;
+     let clamped = offset.min(text.len());
+     if !text.is_char_boundary(clamped) {
+         return false;
+     }
+-    let tokens = tokenize_jack_source(text);
++    let tokens = jack_tokens(text);
+     if let Some(at) = jack_lex_token_at_offset(&tokens, clamped) {
+         if clamped > at.start && clamped < at.end {
+             return false;
+@@ -971,10 +560,10 @@ fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
+         return false;
+     }
+ 
+-    let mut prev: Option<&JackLexToken> = None;
+-    let mut next: Option<&JackLexToken> = None;
++    let mut prev: Option<&trinity_jack::SpannedToken> = None;
++    let mut next: Option<&trinity_jack::SpannedToken> = None;
+     for token in &tokens {
+-        if token.kind == JackLexKind::Eof {
++        if token.token == Token::Eof {
+             break;
+         }
+         if token.end <= clamped {
+@@ -994,16 +583,16 @@ fn jack_newline_allowed_at(text: &str, offset: usize) -> bool {
+         if !gap.chars().all(|c| c.is_whitespace()) {
+             return false;
+         }
+-        if JACK_NEWLINE_AFTER_KEYWORDS.contains(&prev.kind) {
++        if JACK_NEWLINE_AFTER_KEYWORDS.contains(&prev.token) {
+             return true;
+         }
+-        if matches!(prev.kind, JackLexKind::Comma | JackLexKind::RParen | JackLexKind::RBracket | JackLexKind::Arrow) {
++        if matches!(prev.token, Token::Comma | Token::RParen | Token::RBracket | Token::Arrow) {
+             return true;
+         }
+-        if matches!(prev.kind, JackLexKind::Ident | JackLexKind::Number | JackLexKind::Str) {
+-            return next.map(|n| n.kind != JackLexKind::Dot).unwrap_or(true);
++        if matches!(prev.token, Token::Ident(_) | Token::Number(_) | Token::StringLit(_)) {
++            return next.map(|n| n.token != Token::Dot).unwrap_or(true);
+         }
+-        if matches!(prev.kind, JackLexKind::LParen | JackLexKind::LBracket | JackLexKind::Colon | JackLexKind::Eq | JackLexKind::Ne | JackLexKind::Dash) {
++        if matches!(prev.token, Token::LParen | Token::LBracket | Token::Colon | Token::Eq | Token::Ne | Token::Dash) {
+             return true;
+         }
+     }
+@@ -1020,7 +609,8 @@ fn jack_newline_gate_offsets(text: &str) -> Vec<usize> {
+ 
+ /// 🔗️ Bound jack variable names from pattern bindings (premigration `jackBoundVariableNames`).
+ fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
+-    let tokens = tokenize_jack_source(text);
++    use trinity_jack::Token;
++    let tokens = jack_tokens(text);
+     let mut vars = std::collections::HashSet::new();
+     for i in 0..tokens.len() {
+         if i + 2 >= tokens.len() {
+@@ -1029,28 +619,33 @@ fn jack_bound_variable_names(text: &str) -> std::collections::HashSet<String> {
+         let open = &tokens[i];
+         let name = &tokens[i + 1];
+         let colon = &tokens[i + 2];
+-        if matches!(open.kind, JackLexKind::LParen | JackLexKind::LBracket) && name.kind == JackLexKind::Ident && colon.kind == JackLexKind::Colon {
+-            vars.insert(name.text.clone());
++        if matches!(open.token, Token::LParen | Token::LBracket) && colon.token == Token::Colon {
++            if let Token::Ident(text) = &name.token {
++                vars.insert(text.clone());
++            }
+         }
+     }
+     vars
+ }
+ 
+-fn is_jack_variable_use_token(tokens: &[JackLexToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
++fn is_jack_variable_use_token(tokens: &[trinity_jack::SpannedToken], index: usize, bound: &std::collections::HashSet<String>) -> bool {
++    use trinity_jack::Token;
+     let Some(token) = tokens.get(index) else { return false };
+-    if token.kind != JackLexKind::Ident || !bound.contains(&token.text) {
++    let Token::Ident(text) = &token.token else { return false };
++    if !bound.contains(text) {
+         return false;
+     }
+     if index == 0 {
+         return true;
+     }
+     let prev = &tokens[index - 1];
+-    !matches!(prev.kind, JackLexKind::Colon | JackLexKind::Dot)
++    !matches!(prev.token, Token::Colon | Token::Dot)
+ }
+ 
+ /// 🔁️ All bound-variable occurrences for a jack variable name (premigration `jackVariableOccurrences`).
+ fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)> {
+-    let tokens = tokenize_jack_source(text);
++    use trinity_jack::Token;
++    let tokens = jack_tokens(text);
+     let bound = jack_bound_variable_names(text);
+     if !bound.contains(var_name) {
+         return Vec::new();
+@@ -1058,7 +653,7 @@ fn jack_variable_occurrences(text: &str, var_name: &str) -> Vec<(usize, usize)>
+     let mut out = Vec::new();
+     for i in 0..tokens.len() {
+         let token = &tokens[i];
+-        if token.kind == JackLexKind::Ident && token.text == var_name && is_jack_variable_use_token(&tokens, i, &bound) {
++        if matches!(&token.token, Token::Ident(text) if text == var_name) && is_jack_variable_use_token(&tokens, i, &bound) {
+             out.push((token.start, token.end));
+         }
+     }
+@@ -1082,25 +677,27 @@ struct JackSymbolAtCursor {
+ 
+ /// 🎯️ Resolve the jack symbol at a byte offset for semantic editor actions (premigration `jackSymbolAtOffset`).
+ fn jack_symbol_at_offset(text: &str, offset: usize) -> Option<JackSymbolAtCursor> {
+-    let tokens = tokenize_jack_source(text);
++    use trinity_jack::Token;
++    let tokens = jack_tokens(text);
+     let clamped = offset.min(text.len());
+-    let index = tokens.iter().position(|token| token.kind == JackLexKind::Ident && clamped >= token.start && clamped < token.end)?;
++    let index = tokens.iter().position(|token| matches!(token.token, Token::Ident(_)) && clamped >= token.start && clamped < token.end)?;
+     let token = &tokens[index];
++    let Token::Ident(name) = &token.token else { return None };
+     let prev = if index > 0 { tokens.get(index - 1) } else { None };
+     if let Some(prev) = prev {
+-        if prev.kind == JackLexKind::Colon {
+-            let kind = if index >= 2 && tokens[index - 2].kind == JackLexKind::LBracket { JackSymbolKind::EdgeKind } else { JackSymbolKind::NodeKind };
+-            return Some(JackSymbolAtCursor { kind, name: token.text.clone(), occurrences: vec![(token.start, token.end)] });
++        if prev.token == Token::Colon {
++            let kind = if index >= 2 && tokens[index - 2].token == Token::LBracket { JackSymbolKind::EdgeKind } else { JackSymbolKind::NodeKind };
++            return Some(JackSymbolAtCursor { kind, name: name.clone(), occurrences: vec![(token.start, token.end)] });
+         }
+-        if prev.kind == JackLexKind::Dot {
+-            return Some(JackSymbolAtCursor { kind: JackSymbolKind::Property, name: token.text.clone(), occurrences: vec![(token.start, token.end)] });
++        if prev.token == Token::Dot {
++            return Some(JackSymbolAtCursor { kind: JackSymbolKind::Property, name: name.clone(), occurrences: vec![(token.start, token.end)] });
+         }
+     }
+     let bound = jack_bound_variable_names(text);
+     if !is_jack_variable_use_token(&tokens, index, &bound) {
+         return None;
+     }
+-    Some(JackSymbolAtCursor { kind: JackSymbolKind::Variable, name: token.text.clone(), occurrences: jack_variable_occurrences(text, &token.text) })
++    Some(JackSymbolAtCursor { kind: JackSymbolKind::Variable, name: name.clone(), occurrences: jack_variable_occurrences(text, name) })
+ }
+ 
+ /// ✏️ Apply a semantic jack rename across all occurrence spans (premigration `applyJackRename`).
+@@ -1186,7 +783,7 @@ semio_framework_plugin::app_labels! {
+ //#endregion 🔖️Terminology
+ 
+ //#region 🔖️CommandLabels
+-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_writer_play_app`'s
++/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_writer_app`'s
+ /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
+ /// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
+ fn writer_action_labels(is_de: bool) -> HashMap<String, String> {
+@@ -1216,7 +813,7 @@ fn writer_action_labels(is_de: bool) -> HashMap<String, String> {
+     localized_label_map(is_de, ENTRIES)
+ }
+ 
+-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_writer_play_app`.
++/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_writer_app`.
+ /// Writer declares no utilities today; kept for parity with the other apps' `app_labels()` wiring.
+ fn writer_utility_labels(_is_de: bool) -> HashMap<String, String> {
+     HashMap::new()
+@@ -1232,27 +829,7 @@ fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> Action
+     }
+ }
+ 
+-fn empty_tree_item(id: &str, label: &str) -> UiTreeItemNode {
+-    UiTreeItemNode {
+-        id: id.into(),
+-        label: label.into(),
+-        description: None,
+-        icon_id: None,
+-        selected: None,
+-        default_open: None,
+-        action: None,
+-        hover_action: None,
+-        unhover_action: None,
+-        actions: None,
+-        draggable: None,
+-        drag_data: None,
+-        items: None,
+-        control: None,
+-        is_hidden: None,
+-    }
+-}
+-
+-fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterLabels) -> UiNode {
++fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterPlayLabels) -> UiNode {
+     if document.language_id != "jack" {
+         return ui_declarative_sections_to_tree(&[UiSectionNode {
+             id: "writer-document".into(),
+@@ -1266,27 +843,21 @@ fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntim
+         vec![UiTreeItemNode {
+             description: Some(root.kind.clone()),
+             icon_id: jack_ast_tree_icon(&root.kind).map(str::to_string),
+-            ..empty_tree_item(&root.id, &root.label)
++            ..tree_item(root.id.as_str(), root.label.as_str())
+         }]
+     } else {
+         vec![jack_ast_to_tree_item(&root)]
+     };
+     let (highlighted_ast_id, _, _) = editor_hover_context(document, runtime);
+-    UiNode::Tree(UiTreeNode {
+-        sections: vec![UiTreeSectionNode {
+-            id: "writer-play-document.ast".into(),
+-            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+-            default_open: Some(true),
+-            items: if items.is_empty() { vec![empty_tree_item("writer-play-document.empty", labels.empty_query)] } else { items },
+-        }],
+-        selected_ids: Some(runtime.selected_ast_ids.clone()),
+-        highlighted_ids: highlighted_ast_id.map(|id| vec![id]),
+-        selection_change: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstSelection", None)),
+-        drop_action: None,
+-    })
++    PanelTreeBuilder::new("writer-play-document")
++        .section_or_placeholder("writer-play-document.ast", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, items, labels.empty_query)
++        .selected(runtime.selected_ast_ids.clone())
++        .highlighted(highlighted_ast_id.map(|id| vec![id]).unwrap_or_default())
++        .selection_change(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstSelection", None))
++        .build()
+ }
+ 
+-fn render_catalogue_panel(labels: &WriterLabels) -> UiNode {
++fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
+     ui_declarative_sections_to_tree(&[UiSectionNode {
+         id: "writer-catalogue".into(),
+         label: Some(labels.language.into()),
+@@ -1295,7 +866,7 @@ fn render_catalogue_panel(labels: &WriterLabels) -> UiNode {
+     }])
+ }
+ 
+-fn render_inspection_panel(document: &WriterProjection, labels: &WriterLabels) -> UiNode {
++fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabels) -> UiNode {
+     let mut sections = vec![
+         UiSectionNode {
+             id: "writer-inspector.document".into(),
+@@ -1336,7 +907,7 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterLabels) -
+ }
+ //#endregion 🔖️Panels
+ 
+-//#region 🔖️Scene
++//#region 🔖️Render
+ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -> UiNode {
+     let is_jack = document.language_id == "jack";
+     let selection = runtime.editor_selection.clone().unwrap_or_default();
+@@ -1421,7 +992,7 @@ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -
+         },
+     )
+ }
+-//#endregion 🔖️Scene
++//#endregion 🔖️Render
+ 
+ //#region 🔖️Engagement
+ /// 💬️ Natural-language engagement parsing (premigration `applyEngagement`). Accepts both the
+@@ -1464,15 +1035,15 @@ fn apply_engagement(runtime: &mut WriterPlayRuntime, current_text: &str, languag
+ }
+ //#endregion 🔖️Engagement
+ 
+-//#region 🔖️WriterApp
++//#region 🔖️WriterPlayApp
+ #[derive(Default)]
+-struct WriterApp {
++struct WriterPlayApp {
+     /// 🎛️ Ephemeral view state (selection, hover, editor settings, signals, engagement draft) that
+     /// lives on the app struct — never in the document projection, so it emits no history entries.
+     runtime: WriterPlayRuntime,
+ }
+ 
+-impl DocumentApp for WriterApp {
++impl DocumentApp for WriterPlayApp {
+     type Projection = WriterProjection;
+     type Op = WriterOp;
+ 
+@@ -1702,7 +1273,7 @@ impl DocumentApp for WriterApp {
+ 
+     fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> UiNode {
+         let document = doc.projection;
+-        let labels = writer_labels(view_state);
++        let labels = resolve_labels::<WriterPlayLabels>(view_state);
+         match body_key {
+             WRITER_PLAY_BODY_MAIN => render_main_scene(document, &self.runtime),
+             WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, &self.runtime, labels),
+@@ -1714,7 +1285,7 @@ impl DocumentApp for WriterApp {
+ 
+     fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+         let settings = &self.runtime.editor_settings;
+-        let labels = writer_labels(view_state);
++        let labels = resolve_labels::<WriterPlayLabels>(view_state);
+         let engagement = WindowEngagement {
+             session_active: Some(false),
+             options: Some(vec![WindowEngagementOption {
+@@ -1749,7 +1320,7 @@ impl DocumentApp for WriterApp {
+ 
+     fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+         let settings = &self.runtime.editor_settings;
+-        let labels = writer_labels(view_state);
++        let labels = resolve_labels::<WriterPlayLabels>(view_state);
+         let measures = vec![
+             WindowMeasure::Slider {
+                 id: "writer-font-size-measure".into(),
+@@ -1790,23 +1361,16 @@ impl DocumentApp for WriterApp {
+         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), measures)])
+     }
+ 
+-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+-        let labels = writer_labels(view_state);
+-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+-        semio_framework_plugin::AppLabelsOverlay {
+-            window_kind_labels: std::collections::HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), labels.window_main.to_string())]),
+-            panel_tab_labels: std::collections::HashMap::from([
+-                (WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID.to_string(), labels.panel_tab_content.to_string()),
+-                (WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID.to_string(), labels.panel_tab_outline.to_string()),
+-            ]),
+-            mode_labels: std::collections::HashMap::from([("edit".to_string(), labels.mode_edit.to_string())]),
+-            action_labels: writer_action_labels(is_de),
+-            utility_labels: writer_utility_labels(is_de),
+-            example_labels: HashMap::new(),
+-            action_arg_labels: HashMap::new(),
+-            dialog_labels: HashMap::new(),
+-            introduction_labels: HashMap::new(),
+-        }
++    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
++        let labels = resolve_labels::<WriterPlayLabels>(view_state);
++        let is_de = is_de_locale(view_state);
++        AppLabelsOverlay::default()
++            .window_kind_label(WRITER_PLAY_WINDOW_KIND, labels.window_main)
++            .panel_tab_label(WRITER_PANEL_TAB_DOCUMENT_CONTENT_ID, labels.panel_tab_content)
++            .panel_tab_label(WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID, labels.panel_tab_outline)
++            .mode_label("edit", labels.mode_edit)
++            .action_labels(writer_action_labels(is_de))
++            .utility_labels(writer_utility_labels(is_de))
+     }
+ }
+ //#endregion 🔖️WriterPlayApp
+@@ -1915,7 +1479,7 @@ fn register_writer_exports() {}
+ semio_framework_plugin::semio_plugin! {
+     id: "writer", label: "Writer", version: "0.1.0",
+     setup: register_writer_exports,
+-    apps: [ create_writer_app => WriterApp ],
++    apps: [ create_writer_app => WriterPlayApp ],
+ }
+ //#endregion 🔖️Manifest
+ 
+@@ -1923,58 +1487,45 @@ semio_framework_plugin::semio_plugin! {
+ #[cfg(test)]
+ mod tests {
+     use super::*;
+-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+-
+-    fn meta() -> ActionMeta {
+-        ActionMeta { actor: "local".into(), instance_id: 1 }
+-    }
+-
+-    fn new_app() -> VcsDocumentApp<WriterApp> {
+-        VcsDocumentApp::new(WriterApp::default())
+-    }
++    use semio_framework_plugin::{
++        testkit::{meta, new_app, new_app_with_registry},
++        PluginApp, VcsDocumentApp,
++    };
+ 
+     /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
+-    fn app_with_jack() -> VcsDocumentApp<WriterApp> {
+-        let mut app = new_app();
+-        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta()).expect("load jack");
++    fn app_with_jack() -> VcsDocumentApp<WriterPlayApp> {
++        let mut app = new_app::<WriterPlayApp>();
++        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta("local")).expect("load jack");
+         app
+     }
+ 
+-    /// 🧬️ A wrapper carrying the real action registry so declared defaults materialize and kind discipline
+-    /// (View/Shell actions must not emit ops) is enforced.
+-    fn new_app_with_registry() -> VcsDocumentApp<WriterApp> {
+-        use semio_framework_plugin::app::AppActionRegistry;
+-        let definition = create_writer_app().definition;
+-        VcsDocumentApp::with_registry(WriterApp::default(), AppActionRegistry::from_definition(&definition))
+-    }
+-
+     #[test]
+     fn text_edit_burst_coalesces_into_one_undo_step() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         for text in ["h", "he", "hel", "hell", "hello"] {
+-            app.handle_action("textEdit", Some(&json!({ "text": text })), &ViewState::default(), &meta()).expect("type");
++            app.handle_action("textEdit", Some(&json!({ "text": text })), &ViewState::default(), &meta("local")).expect("type");
+         }
+         assert_eq!(app.projection().expect("projection").text, "hello");
+         // The whole typing burst shares one coalesce key, so a single undo restores the pre-burst buffer
+         // rather than backing out one keystroke at a time.
+-        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
++        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+         assert_eq!(app.projection().expect("projection").text, "", "coalesced typing collapses to one undo step");
+     }
+ 
+     #[test]
+     fn lint_is_a_view_action_and_example_default_materializes() {
+-        let mut app = new_app_with_registry();
++        let mut app = new_app_with_registry::<WriterPlayApp>(create_writer_app);
+         // lintDocument is a declared View action: registry kind discipline requires it emit no ops.
+-        let result = app.handle_action("lintDocument", None, &ViewState::default(), &meta()).expect("lint");
++        let result = app.handle_action("lintDocument", None, &ViewState::default(), &meta("local")).expect("lint");
+         assert!(result.operations.is_empty(), "lint re-runs diagnostics into runtime, never the document");
+         // setActiveExample fired with no args materializes the declared default example ("jack").
+-        app.handle_action("setActiveExample", None, &ViewState::default(), &meta()).expect("example");
++        app.handle_action("setActiveExample", None, &ViewState::default(), &meta("local")).expect("example");
+         assert!(!app.projection().expect("projection").text.is_empty(), "jack default materialized from the registry");
+     }
+ 
+     #[test]
+     fn renders_text_editor_scene() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+         let json = serde_json::to_string(&node).unwrap();
+         assert!(json.contains("text-editor"));
+@@ -1982,7 +1533,7 @@ mod tests {
+ 
+     #[test]
+     fn renders_document_tree_for_jack() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let node = app.render(WRITER_PLAY_BODY_DOCUMENT, Some(JACK_EXAMPLE_JSON), &ViewState::default()).expect("render");
+         let json = serde_json::to_string(&node).unwrap();
+         assert!(json.contains("\"type\":\"tree\""));
+@@ -1991,7 +1542,7 @@ mod tests {
+ 
+     #[test]
+     fn renders_catalogue_panel() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let node = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
+         let json = serde_json::to_string(&node).unwrap();
+         assert!(json.contains("jack"));
+@@ -2000,8 +1551,8 @@ mod tests {
+     #[test]
+     fn format_document_reformats_jack_query() {
+         let mut app = app_with_jack();
+-        app.handle_action("setText", Some(&json!({ "text": "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name" })), &ViewState::default(), &meta()).expect("set text");
+-        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta()).expect("format");
++        app.handle_action("setText", Some(&json!({ "text": "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name" })), &ViewState::default(), &meta("local")).expect("set text");
++        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta("local")).expect("format");
+         assert_eq!(result.operations.len(), 1);
+         assert!(app.projection().expect("projection").text.contains('\n'));
+     }
+@@ -2010,8 +1561,8 @@ mod tests {
+     fn format_document_without_change_emits_no_op() {
+         // A no-op format (already-formatted or non-jack empty doc) bumps the format signal but must
+         // not record a history entry.
+-        let mut app = new_app();
+-        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta()).expect("format");
++        let mut app = new_app::<WriterPlayApp>();
++        let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta("local")).expect("format");
+         assert!(result.operations.is_empty());
+     }
+ 
+@@ -2023,30 +1574,30 @@ mod tests {
+ 
+     #[test]
+     fn set_text_action_updates_projection() {
+-        let mut app = new_app();
+-        let result = app.handle_action("setText", Some(&json!({ "text": "MATCH (a) RETURN a" })), &ViewState::default(), &meta()).expect("set text");
++        let mut app = new_app::<WriterPlayApp>();
++        let result = app.handle_action("setText", Some(&json!({ "text": "MATCH (a) RETURN a" })), &ViewState::default(), &meta("local")).expect("set text");
+         assert_eq!(result.operations.len(), 1);
+         assert_eq!(app.projection().expect("projection").text, "MATCH (a) RETURN a");
+     }
+ 
+     #[test]
+     fn set_text_undo_redo_round_trips_through_the_wrapper() {
+-        let mut app = new_app();
+-        app.handle_action("setText", Some(&json!({ "text": "first" })), &ViewState::default(), &meta()).expect("first");
+-        app.handle_action("setText", Some(&json!({ "text": "second" })), &ViewState::default(), &meta()).expect("second");
++        let mut app = new_app::<WriterPlayApp>();
++        app.handle_action("setText", Some(&json!({ "text": "first" })), &ViewState::default(), &meta("local")).expect("first");
++        app.handle_action("setText", Some(&json!({ "text": "second" })), &ViewState::default(), &meta("local")).expect("second");
+         assert_eq!(app.projection().expect("projection").text, "second");
+-        let undo = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
++        let undo = app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+         assert!(undo.operations.is_empty());
+         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
+         assert_eq!(app.projection().expect("projection").text, "first");
+-        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
++        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+         assert_eq!(app.projection().expect("projection").text, "second");
+     }
+ 
+     #[test]
+     fn set_camera_action_updates_projection() {
+-        let mut app = new_app();
+-        let result = app.handle_action("setCamera", Some(&json!({ "camera": { "x": 3.0, "y": 4.0, "zoom": 2.0 } })), &ViewState::default(), &meta()).expect("set camera");
++        let mut app = new_app::<WriterPlayApp>();
++        let result = app.handle_action("setCamera", Some(&json!({ "camera": { "x": 3.0, "y": 4.0, "zoom": 2.0 } })), &ViewState::default(), &meta("local")).expect("set camera");
+         assert_eq!(result.operations.len(), 1);
+         let projection = app.projection().expect("projection");
+         assert_eq!(projection.camera.x, 3.0);
+@@ -2055,8 +1606,8 @@ mod tests {
+ 
+     #[test]
+     fn view_action_emits_no_operations() {
+-        let mut app = new_app();
+-        let result = app.handle_action("toggleLineNumbers", None, &ViewState::default(), &meta()).expect("toggle");
++        let mut app = new_app::<WriterPlayApp>();
++        let result = app.handle_action("toggleLineNumbers", None, &ViewState::default(), &meta("local")).expect("toggle");
+         assert!(result.operations.is_empty());
+     }
+ 
+@@ -2151,7 +1702,7 @@ mod tests {
+             "commitRename",
+             Some(&json!({ "occurrences": occurrences_json, "text": "piece" })),
+             &ViewState::default(),
+-            &meta(),
++            &meta("local"),
+         )
+         .expect("commit rename");
+         assert_eq!(result.operations.len(), 1);
+@@ -2162,8 +1713,8 @@ mod tests {
+ 
+     #[test]
+     fn engagement_submit_parses_font_size() {
+-        let mut app = new_app();
+-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "font 16" })), &ViewState::default(), &meta()).expect("submit");
++        let mut app = new_app::<WriterPlayApp>();
++        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "font 16" })), &ViewState::default(), &meta("local")).expect("submit");
+         // Font size is ephemeral view state — no history entry.
+         assert!(result.operations.is_empty());
+         let measures = app.window_measures(&ViewState::default());
+@@ -2176,7 +1727,7 @@ mod tests {
+         // The React shell PascalCases and strips separators from every draft before submitting it
+         // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",
+         // and "line numbers" as "LineNumbers".
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let before_toggle = app
+             .window_engagements(&ViewState::default())
+             .get(WRITER_PLAY_WINDOW_KIND)
+@@ -2185,9 +1736,9 @@ mod tests {
+             .and_then(|option| option.pressed)
+             .expect("line-numbers pressed state");
+ 
+-        app.handle_action("engagementSubmit", Some(&json!({ "value": "Font16" })), &ViewState::default(), &meta()).expect("font");
+-        app.handle_action("engagementSubmit", Some(&json!({ "value": "Tab4" })), &ViewState::default(), &meta()).expect("tab");
+-        app.handle_action("engagementSubmit", Some(&json!({ "value": "LineNumbers" })), &ViewState::default(), &meta()).expect("line numbers");
++        app.handle_action("engagementSubmit", Some(&json!({ "value": "Font16" })), &ViewState::default(), &meta("local")).expect("font");
++        app.handle_action("engagementSubmit", Some(&json!({ "value": "Tab4" })), &ViewState::default(), &meta("local")).expect("tab");
++        app.handle_action("engagementSubmit", Some(&json!({ "value": "LineNumbers" })), &ViewState::default(), &meta("local")).expect("line numbers");
+ 
+         let measures = app.window_measures(&ViewState::default());
+         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
+@@ -2206,7 +1757,7 @@ mod tests {
+ 
+     #[test]
+     fn window_measures_expose_font_line_height_tab_and_toggle() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let measures = app.window_measures(&ViewState::default());
+         let main = measures.get(WRITER_PLAY_WINDOW_KIND).expect("main measures");
+         assert_eq!(main.len(), 4);
+@@ -2215,7 +1766,7 @@ mod tests {
+ 
+     #[test]
+     fn window_engagements_expose_format_lint_placeholder() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let engagements = app.window_engagements(&ViewState::default());
+         let main = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("main engagement");
+         let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
+@@ -2225,7 +1776,7 @@ mod tests {
+ 
+     #[test]
+     fn tools_include_format_and_lint_buttons() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let tools = app.tools(&ViewState::default());
+         let json = serde_json::to_string(&tools).unwrap();
+         assert!(json.contains("writer-format"));
+@@ -2234,7 +1785,7 @@ mod tests {
+ 
+     #[test]
+     fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let node = app.render(WRITER_PLAY_BODY_MAIN, Some(JACK_EXAMPLE_JSON), &ViewState::default()).expect("render");
+         let json = serde_json::to_string(&node).unwrap();
+         assert!(json.contains("placeholdersJson"));
+@@ -2246,7 +1797,7 @@ mod tests {
+     fn set_ast_hover_updates_tree_highlight_and_scene_hover() {
+         let mut app = app_with_jack();
+         let root = parse_jack_ast(&app.projection().expect("projection").text);
+-        let result = app.handle_action("setAstHover", Some(&json!({ "id": root.id })), &ViewState::default(), &meta()).expect("hover");
++        let result = app.handle_action("setAstHover", Some(&json!({ "id": root.id })), &ViewState::default(), &meta("local")).expect("hover");
+         assert!(result.operations.is_empty());
+         let tree_node = app.render(WRITER_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render tree");
+         let tree_json = serde_json::to_string(&tree_node).unwrap();
+@@ -2269,8 +1820,8 @@ mod tests {
+ 
+     #[test]
+     fn set_active_example_loads_jack_fixture() {
+-        let mut app = new_app();
+-        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta()).expect("load");
++        let mut app = new_app::<WriterPlayApp>();
++        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta("local")).expect("load");
+         assert_eq!(result.operations.len(), 1);
+         let projection = app.projection().expect("projection");
+         assert_eq!(projection.id, "jack");
+@@ -2279,8 +1830,8 @@ mod tests {
+ 
+     #[test]
+     fn set_active_example_loads_dag_jack_fixture() {
+-        let mut app = new_app();
+-        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &ViewState::default(), &meta()).expect("load");
++        let mut app = new_app::<WriterPlayApp>();
++        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "dag.jack" })), &ViewState::default(), &meta("local")).expect("load");
+         assert_eq!(result.operations.len(), 1);
+         assert_eq!(app.projection().expect("projection").id, "dag-jack");
+     }
+@@ -2288,7 +1839,7 @@ mod tests {
+     #[test]
+     fn set_active_example_falls_back_to_empty_document() {
+         let mut app = app_with_jack();
+-        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta()).expect("load");
++        let result = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("load");
+         assert_eq!(result.operations.len(), 1);
+         let projection = app.projection().expect("projection");
+         assert_eq!(projection.id, "empty");
+@@ -2297,7 +1848,7 @@ mod tests {
+ 
+     #[test]
+     fn writer_labels_resolve_native_by_default() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &ViewState::default()).expect("render");
+         let inspection_json = serde_json::to_string(&inspection).unwrap();
+         assert!(inspection_json.contains("\"Document\""));
+@@ -2320,7 +1871,7 @@ mod tests {
+ 
+     #[test]
+     fn writer_labels_resolve_german_locale() {
+-        let mut app = new_app();
++        let mut app = new_app::<WriterPlayApp>();
+         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+         let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &view_state).expect("render");
+         let inspection_json = serde_json::to_string(&inspection).unwrap();

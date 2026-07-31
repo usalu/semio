@@ -1,0 +1,13 @@
+{
+  "title": "DSL And Op Text Wave 4: Multi-App Technologies",
+  "emoji": "🧱️",
+  "status": "open",
+  "description": "Wave 4 of the library/dsl/op/ui split refactor (plan: /Users/ueli/.claude/plans/all-technologies-should-be-groovy-wozniak.md). Implement DocumentDsl + OpText for: gis (2 apps), trinity (2 apps: jack graph + rewrite), s (2 document types: SStudioProjection + SHomeDocument), process/3d, animate (delete dead broken TS mirror first), framework/product/os. forms is deferred until protocol (wave 3) completes since it re-exports protocol's operation types directly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2331"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": [
+    "⚪️ab4adfa6dd874fe083330d2198c50315"
+  ]
+}

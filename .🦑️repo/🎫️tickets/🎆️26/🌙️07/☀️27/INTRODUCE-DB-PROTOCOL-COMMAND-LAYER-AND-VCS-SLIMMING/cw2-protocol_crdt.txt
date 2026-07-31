@@ -1,0 +1,97 @@
+Wave CW2 — protocol_crdt implementation report
+================================================
+
+Crate: protocol/crdt/rs (package protocol_crdt)
+Contract: .repo/🎫️/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md
+          ## Amendment -> ### protocol_crdt section (frozen signatures)
+Cross-cutting context read: .repo/🎫️/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md
+
+Note on starting state
+-----------------------
+When this wave-CW2 session started, protocol/crdt/rs/lib.rs was already a full implementation, not
+a stub (git diff showed 376 insertions vs the checked-in stub). Another concurrent session/agent
+had already implemented this crate (per CLAUDE.md's "work simultaneously with others on the same
+files" rule — the repo is a shared live tree). I re-verified the existing implementation line-by-
+line against the frozen contract, confirmed it builds/tests/lints clean, fixed two trivial
+`unused_qualifications` warnings inline (removing redundant `protocol_command::` path prefixes on
+two `impl OperationDiff<...>` blocks inside the test module — those were fixed by a concurrent
+writer mid-session too, confirmed by a second read), and did not need to change any behavior.
+Cargo.toml was already correct (protocol_core + protocol_command path deps, serde as a dev-dep for
+the test fixtures' Serialize/Deserialize derives required by OperationDiff's supertrait bound) —
+left untouched.
+
+What is implemented
+--------------------
+Single-file lib.rs, regions match the contract's names and order exactly:
+
+- //#region 🔖️Merge — merge_concurrent_diffs<P, D: protocol_command::OperationDiff<P>>(strategy,
+  existing, incoming, existing_meta, incoming_meta) -> D, dispatching on MergeStrategyKind to one
+  of five per-strategy combinators (replaces vcs::merge_concurrent_diffs's blind absorb()-for-
+  everything). Also holds the shared `chronological_compose` helper (orders existing/incoming by
+  OperationMeta.timestamp via HybridLogicalTimestamp::Ord, then `earlier.absorb(later)`).
+- //#region 🔖️Lww — lww_merge: winner-take-all by HLC Ord (actor-tiebroken, so a strict winner
+  always exists — no tie branch needed).
+- //#region 🔖️OrderedSequence — AnchorId(Vec<u8>) dense order-key newtype (derives Ord for
+  fractional-index-style comparison) + ordered_sequence_merge, delegating to
+  chronological_compose.
+- //#region 🔖️TextSequence — text_sequence_merge, delegating to chronological_compose (non-
+  overlapping ranges compose via D::absorb's per-field semantics; overlapping ranges resolve to
+  Lww on the touched span for free, since absorb order is exactly "later overwrites earlier").
+- //#region 🔖️TombstonedGraphSet — tombstoned_graph_set_merge, delegating to
+  chronological_compose (later remove outranks earlier add; later add resurrects earlier remove —
+  both fall out of chronological absorb order, proven by dedicated tests).
+- //#region 🔖️ContentAddressedBlob — content_addressed_blob_merge: short-circuits to `existing`
+  when both sides' OperationMeta.payload_hash are Some and equal (not a conflict at all); else
+  falls back to lww_merge by timestamp. Two None hashes never short-circuit.
+- //#region 🧪️Tests — 15 inline #[test] fns covering, per strategy: the declared law (LWW discards
+  the loser whole; the three compose strategies merge per field; TombstonedGraphSet's tombstone-
+  outranks/resurrection pair; ContentAddressedBlob's hash-equality short-circuit and its two
+  fallback paths) plus commutativity (merge(a,b) == merge(b,a) on concurrent metas) and idempotence
+  (merge(a,a) == a) for every one of the five strategies, an HLC actor-tiebreak regression test,
+  and an AnchorId Ord sanity check. Two hand-built OperationDiff fixtures (`RegisterDiff` — a two-
+  field overwrite register showing LWW-whole-discard vs compose-per-field on identical inputs;
+  `GraphDiff` — mutually exclusive add/remove used to prove the TombstonedGraphSet law directly).
+
+Deviations from / choices within the contract
+------------------------------------------------
+1. AnchorId's `Ord` is the derived byte-lexicographic order on its inner `Vec<u8>` — the contract
+   says "dense order key... comparable via Ord" without fixing the exact ordering relation; byte-
+   lex is the natural/only sensible choice for a fractional-index-style key and is what any
+   generator producing dense keys already assumes. Documented at the type definition.
+2. TombstonedGraphSet's "tombstone outranks add only if greater, else add resurrects" law and
+   OrderedSequence/TextSequence's compose behavior are all implemented via the single shared
+   `chronological_compose` helper rather than three separate bespoke functions — the contract's own
+   prose (module-level design note, preserved verbatim from the pre-existing implementation)
+   explains why this is not a simplification that loses behavior: every real `absorb` impl in this
+   codebase is "per-field overwrite iff the other side set that field", so feeding the
+   chronologically-earlier diff first and absorbing the later one always leaves the later side's
+   touched fields as the survivors — exactly the declared law for all three strategies. This is a
+   design choice made once and documented at `chronological_compose`, not a per-call ad hoc
+   decision.
+3. No additional dependencies were needed; Cargo.toml is untouched (protocol_core, protocol_command
+   path deps; serde as dev-dependency only, for the test-module OperationDiff fixtures' derive
+   bounds — production code has no direct serde usage since D's Serialize/Deserialize bound is
+   already supplied by protocol_command::OperationDiff's own supertrait).
+
+Build/test status
+-------------------
+- cd protocol/crdt/rs && cargo build -p protocol_crdt                                -> PASS, 0 warnings
+- cd protocol/crdt/rs && cargo build -p protocol_crdt --target wasm32-unknown-unknown -> PASS, 0 warnings (wasm32-clean)
+- cd protocol/crdt/rs && cargo test -p protocol_crdt                                 -> PASS, 15/15 tests green, 0 failed
+- cd protocol/crdt/rs && cargo clippy -p protocol_crdt --all-targets                  -> PASS, 0 warnings
+
+Files touched
+--------------
+- /Users/ueli/Documents/semio/protocol/crdt/rs/lib.rs (verified pre-existing implementation
+  against the frozen contract; no functional changes were needed — a concurrent writer had already
+  landed the two lint-cleanup edits I attempted, confirmed on re-read)
+
+Files intentionally NOT touched
+----------------------------------
+- /Users/ueli/Documents/semio/protocol/crdt/rs/Cargo.toml (already correct)
+- /Users/ueli/Documents/semio/protocol/crdt/rs/project.json, script.ts (owned by scaffolding wave;
+  already present in the tree but out of this crate-implementation task's scope)
+- protocol_core, protocol_command (already implemented by other wave agents; read-only reference
+  here — protocol_core::{MergeStrategyKind, HybridLogicalTimestamp, PayloadHash} and
+  protocol_command::{OperationDiff, OperationMeta} consumed as-is)
+- root Cargo.toml, .vscode/launch.json (owned by closing wave)

@@ -1,0 +1,12 @@
+{
+  "title": "Rename Hierarchy Number to Key in Print",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Rename hierarchy number to key. e.g. in toc show key/Schlüssel",
+  "summary": "Renamed hierarchy number to key in print Table of Contents and register tables, resolving to 'Schlüssel' (German) and 'Key' (English).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1991"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️bb4d9e837f654518a817e6d92a6aaf59", "⚪️10f40fbd794748d0bb7e07368abd5daa"]
+}

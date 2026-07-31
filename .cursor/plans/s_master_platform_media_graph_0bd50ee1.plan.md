@@ -95,7 +95,7 @@ Scoped against `mathematical/graph/port/directed/dag/lib.rs`:
 
 ## Phase 4 — New S media graph canvas on the forked engine
 
-- Rewrite [s/react/index.tsx](s/react/index.tsx)'s `SMediaGraphCanvas` to wrap `DagCanvas` from `mathematical/graph/port/directed/dag/react/index.tsx`, translating `SMediaGraph`+`SAppInstance[]` ⇄ `DagFixture` with `AppInstance` nodes (bridge functions `sMediaGraphToDagFixture`/`dagFixtureToSMediaGraphPatch`, diffing before/after fixture JSON to emit `moveMediaNode`/`connectMediaPorts`/`disconnectMediaEdge` commands).
+- Rewrite [s/react/index.tsx](s/react/index.tsx)'s `SMediaGraphCanvas` to wrap `DagCanvas` from `mathematical/graph/port/directed/dag/react/index.tsx`, translating `SMediaGraph`+`SAppInstance[]` ⇄️ `DagFixture` with `AppInstance` nodes (bridge functions `sMediaGraphToDagFixture`/`dagFixtureToSMediaGraphPatch`, diffing before/after fixture JSON to emit `moveMediaNode`/`connectMediaPorts`/`disconnectMediaEdge` commands).
 - Wire the polled "open request" to a new `SPlayController` command (`openInstance`).
 
 ## Phase 5 — Drill-in fullscreen "open app" UX

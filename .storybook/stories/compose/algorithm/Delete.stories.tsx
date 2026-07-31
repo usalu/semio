@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/algorithm/.storybook/story/Delete.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/algorithm/.storybook/story/Delete.stories.tsx
 // Specs: Pure UI proxy to flatDesign + deletePieces via shared story hooks.
 // Summary: IPO delete board — selection input, delete diff, output with applied diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Design, DesignDiff } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -75,7 +75,7 @@ function DeleteFrame() {
 }
 
 const meta = {
-  title: "🏘️compose🧪algorithms/Delete",
+  title: "🏘️compose🧪️algorithms/Delete",
   component: DeleteFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

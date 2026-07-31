@@ -27,7 +27,7 @@ isProject: false
 
 ## Root causes found
 
-Screenshots from the last E2E run ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/screenshot-s.png](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/screenshot-s.png)) show a flat dark canvas — the suite "passed" because the paint check only inspects compressed PNG byte variance.
+Screenshots from the last E2E run ([.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/screenshot-s.png](.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/screenshot-s.png)) show a flat dark canvas — the suite "passed" because the paint check only inspects compressed PNG byte variance.
 
 ### Bug 1 — All draw layers alias one GPU buffer (the main cause)
 
@@ -59,5 +59,5 @@ In `UiPipelines::render` ([ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs) ~line 1329), 
 
 ## Verification (make it impossible to pass blank)
 
-- Strengthen the paint check in [.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts): in-page `page.evaluate` draws the WebGPU canvas into a 2D canvas and reads real pixels via `getImageData`; assert (a) ≥1% of pixels differ from the background color and (b) a navbar-height strip at top and footer strip at bottom differ from the window body (chrome structure present).
+- Strengthen the paint check in [.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts): in-page `page.evaluate` draws the WebGPU canvas into a 2D canvas and reads real pixels via `getImageData`; assert (a) ≥1% of pixels differ from the background color and (b) a navbar-height strip at top and footer strip at bottom differ from the window body (chrome structure present).
 - Rebuild wasm (`bun ./framework/renderer/wgpu/script.ts wasm`), run `cargo test -p ui_wgpu`, run the 25-plugin suite, and visually inspect regenerated `screenshot-s.png` / `screenshot-flow.png` for navbar, footer, floating panels, and text.

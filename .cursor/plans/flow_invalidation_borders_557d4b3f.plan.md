@@ -124,9 +124,9 @@ Extend existing tests (no new test files):
 
 ## Ticket / Goal
 
-- Goal: `🎯r2602/🎯runningsketchpad`
+- Goal: `🎯️r2602/🎯️runningsketchpad`
 - Open a new ticket (no open ticket covers this gap; prior `FLOW-OFF-MAIN-THREAD-NODE-COMPUTATION-WITH-LOADING-CHROME` closed and left this UX hole).
-- Temp logs/artifacts only under the new `.repo/🎫/...` folder.
+- Temp logs/artifacts only under the new `.repo/🎫️/...` folder.
 
 ## Out of Scope
 

@@ -1,18 +1,18 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/CanvasPickMenu.stories.tsx
+// 🥼️ .storybook/stories/ui/CanvasPickMenu.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { CanvasPickMenu, useCanvasPickInteraction, type CanvasHoverFocus, type CanvasPickRequest, type CanvasPickTarget } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 
-// 🎯#region 🎯CanvasPickMenu
+// 🎯️#region 🎯️CanvasPickMenu
 const meta = {
   title: "🖱️ui⚛️react/CanvasPickMenu",
   component: CanvasPickMenu,
@@ -32,7 +32,7 @@ const overlappingTargets: CanvasPickTarget[] = [
   { domain: "opening", id: "opening-3", generality: 0, label: "Opening 3" },
 ];
 
-/** @emoji 🎯 Toggleable host so `Default` can show both the open menu and its dismissed (no-operation) state on demand. */
+/** @emoji 🎯️ Toggleable host so `Default` can show both the open menu and its dismissed (no-operation) state on demand. */
 const CanvasPickMenuDemo = ({ request }: { readonly request: CanvasPickRequest | null }) => {
   const [currentRequest, setCurrentRequest] = useState<CanvasPickRequest | null>(request);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
@@ -77,16 +77,16 @@ export const Dismissed: Story = {
   render: (args) => <CanvasPickMenuDemo request={args.request} />,
 };
 
-// #endregion 🎯CanvasPickMenu
+// #endregion 🎯️CanvasPickMenu
 
-// #region 🪝useCanvasPickInteraction
+// #region 🪝️useCanvasPickInteraction
 const leftHalfTargets: CanvasPickTarget[] = [
   { domain: "piece", id: "capsule-l-01", generality: 2, label: "Capsule L #01" },
   { domain: "wall", id: "wall-04", generality: 1, label: "Wall 04" },
 ];
 const rightHalfTargets: CanvasPickTarget[] = [{ domain: "piece", id: "capsule-p-02", generality: 2, label: "Capsule P #02" }];
 
-/** @emoji 🪝 Fake "canvas" surface wiring pointer events straight through {@link useCanvasPickInteraction} — a stand-in for the real WebGL/2d canvas hosts that share this hook. */
+/** @emoji 🪝️ Fake "canvas" surface wiring pointer events straight through {@link useCanvasPickInteraction} — a stand-in for the real WebGL/2d canvas hosts that share this hook. */
 const CanvasPickInteractionDemo = () => {
   const [focus, setFocus] = useState<CanvasHoverFocus | null>(null);
   const [lastSelected, setLastSelected] = useState<string | null>(null);
@@ -132,4 +132,4 @@ export const PointerInteraction: Story = {
   render: () => <CanvasPickInteractionDemo />,
 };
 
-// #endregion 🪝useCanvasPickInteraction
+// #endregion 🪝️useCanvasPickInteraction

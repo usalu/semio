@@ -1,9 +1,0 @@
-{
-  "title": "Move Compose Server Compose Setup Into Compose",
-  "emoji": "📦",
-  "status": "closed",
-  "description": "Move compose server setup that is wrongly stored under the repo technology into the compose bundle so compose-specific compose infrastructure only lives inside compose. Update existing references and verify the compose configuration from its new compose location.",
-  "summary": "Moved the compose server compose setup out of the repo technology and into compose/server/compose.yml. Updated all relative paths for the new location, removed the misplaced repo/compose.yml, and replaced the broken Dockerfile.session build reference with a direct Rust-based session service command so the compose file is internally consistent from its compose-owned location. Validated the moved file by parsing it with the local Node YAML library and confirming the expected services are present.",
-  "goal": "🎯r2603",
-  "sessions": ["⚪c792342275ad499bae79fb6d193178e9"]
-}

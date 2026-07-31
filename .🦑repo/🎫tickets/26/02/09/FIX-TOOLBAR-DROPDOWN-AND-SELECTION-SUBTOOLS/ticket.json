@@ -1,9 +1,0 @@
-{
-  "title": "Fix Toolbar Dropdown and Selection Subtools",
-  "emoji": "🔧",
-  "status": "closed",
-  "summary": "Implemented group-agnostic toolbar subtool infrastructure without changing current UI, and added Settings subtool i18n scaffolding for App Settings, Command, and Tools.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/455"
-  }
-}

@@ -1,0 +1,12 @@
+{
+  "title": "Flip Semio Logo Emblem Orange And Teal",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Flip semio emblem colors: left I part orange→teal, two small E parts teal→orange. Top and right pink unchanged. Update all logo assets.",
+  "summary": "Swapped semio emblem colors back: I bar orange (#fa9500), E bars teal (#34d1bf), pink L unchanged. Updated compact emblems, round variants, wordmarks, kit horizontals, SemioLogo React component, inkscape sources, regenerated PNGs/ICO, and sketchpad favicon copies.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1745"
+  },
+  "goal": "🎯️asset",
+  "sessions": ["⚪️42b0e98c5393400c8a10716d2261943c", "⚪️81dfd6fc33da4802b70b593deff819f3"]
+}

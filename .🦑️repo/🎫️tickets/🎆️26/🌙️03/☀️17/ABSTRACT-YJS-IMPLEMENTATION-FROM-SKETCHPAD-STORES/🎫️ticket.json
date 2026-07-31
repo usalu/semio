@@ -1,0 +1,12 @@
+{
+  "title": "Abstract Yjs Implementation From Sketchpad Stores",
+  "emoji": "✏️",
+  "status": "closed",
+  "description": "Remove ALL Yjs implementation-specific details from Sketchpad.tsx. Define abstract reactive interfaces (RMap, RArray, RDoc) in studio.ts. Replace all Y.Map, Y.Array, Y.Doc with abstract types. Rename all Y*-prefixed type aliases. Replace new Y.Map/Array/Doc constructors with factory calls. Replace instanceof checks with type guards. Make everything implementable by YjsKitProvider, JsonFileKitProvider, FolderKitProvider, MemoryKitProvider.",
+  "summary": "Completed abstraction of Yjs from all sketchpad files. Kit.tsx was also refactored (86 Y-references removed including Y.Map/Y.Array type refs, new Y.Map/Array constructor calls, and Y-prefixed type aliases). Y-prefixed store class names (YCoordStore, YVecStore, YPointStore, YVectorStore, YPlaneStore, YCameraStore, YLocationStore) renamed to Rx prefix. Fixed index.ts stale export YProviderFactory → RxProviderFactory. Removed Y import from Kit.tsx, added RMap/RArray imports from studio. All 22 tests pass, Vite build succeeds. Zero Y-prefixed identifiers remain in sketchpad code.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/956"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️83c7b33179ed497eb418368c4e0a48e1"]
+}

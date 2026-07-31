@@ -1,0 +1,11 @@
+{
+  "title": "Refactor Grasshopper Components Store Api",
+  "emoji": "🦗️",
+  "status": "open",
+  "description": "Refactor Grasshopper LoadKit/SaveKit/UpdateKit components to use StoreSession/WipKit getters-methods-events instead of legacy StoreKitIO patterns.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1463"
+  },
+  "goal": "🎯️r2603🎯️runningnet🎯️runninggrasshopper",
+  "sessions": ["⚪️e56da554b2624c388f49cc81121ca5d4"]
+}

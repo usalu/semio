@@ -1,6 +1,0 @@
-{
-  "title": "Family First Class Entity in Compose JS",
-  "status": "open",
-  "description": "Refactor compose/js/index.ts to make Family a first-class entity. Move ports from Kit level into Family. Change Type/Design families from string[] to FamilyId[]. Update all Kit code to use families instead of ports.",
-  "goal": "🎯r2603"
-}

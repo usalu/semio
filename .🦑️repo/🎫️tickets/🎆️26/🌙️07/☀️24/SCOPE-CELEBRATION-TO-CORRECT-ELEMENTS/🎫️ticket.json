@@ -1,0 +1,16 @@
+{
+  "title": "Scope Celebration to Correct Elements",
+  "emoji": "🎉️",
+  "status": "closed",
+  "description": "Introduce a new shared UI element state `celebrating` (attribute `data-celebrated=\"true\"`) applied everywhere via the existing cross-language state model (ui/styling/js/index.ts UiState + ui/wgpu/rs/lib.rs UiState). Visual: a spinning conic-gradient border cycling through the three brand colors (primary/secondary/tertiary) whose ring thickness pulses/bursts, following the existing border-loading/border-waiting masked-ring CSS pattern in ui/styling/js/ui.css. Wire it as the completion celebration fired when an introduction step advances by the user performing the taught action (framework/renderer/react/index.tsx advanceIntroductionStep). Add a transient celebrateElements(selector, durationMs) stamping helper in ui/js/react/index.tsx, extend WindowSilhouetteBorderKind + resolveWindowSilhouetteBorderKind, mirror the enum in ui/wgpu/rs/lib.rs (Celebrating variant + celebrate_if helper), and extend existing tests (ui/styling/js/index.test.ts, ui/js/react/index.tsx in-source tests, ui/wgpu/rs/lib.rs cfg(test)). No new files outside this ticket folder; all edits within existing regions/subregions.",
+  "summary": "Fixed celebration leaking to unrelated UI controls. Removed blanket celebrateCompletedInteraction from panel tabs, toggles, buttons, actions, action-group items, and window pane chrome toggles. Celebration now only fires for the introduction step's introduce target via advanceIntroductionByDoing → celebrateElements, and for newly placed catalogue-drop meshes via celebrateWorldInstances. Added regression tests that ordinary tab/toggle presses do not stamp data-celebrated.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2310"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️fe1778654d5e49bbb86000980bcde270",
+    "⚪️5e123f5976b0403b811def4ee69f5c96",
+    "⚪️68895506c227408c820ee34c16fbe9e2"
+  ]
+}

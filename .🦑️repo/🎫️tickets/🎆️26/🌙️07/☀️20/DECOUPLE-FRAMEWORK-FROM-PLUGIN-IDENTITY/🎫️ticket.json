@@ -1,0 +1,10 @@
+{
+  "title": "Use Native Umlauts in German Labels",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "All German words that use Umlaute must not use ue for ü etc in label strings but use the native symbols",
+  "goal": "🎯️norm",
+  "sessions": [
+    "⚪️6557fc06c8954ff49cbf246233f3ee47"
+  ]
+}

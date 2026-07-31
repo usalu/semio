@@ -1,0 +1,12 @@
+{
+  "title": "Fix Search Limit Handling for All Tools and Clients",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix extractSearchFromInput to correctly handle limit/offset parameters from the Read tool and native.event.tool_input for Claude Code native events. All search ranges must respect the actual lines being read. Implement for all common tools: Read (offset+limit as line range), native Claude Code format (native.event.tool_input extraction). Also fix extractToolInputFromStdin to handle native.event.tool_input. Add tests for all cases.",
+  "summary": "Added extractToolInputMapFromData helper that resolves tool_input from direct, native.event, and event wrapper formats. Updated extractSearchFromInput to use this helper and handle offset/limit parameters. Grep-style tools with pattern key correctly exclude their path from file range. Updated extractToolInputFromStdin and other extraction functions to use the helper. Added TestExtractToolInputMapFromData, TestExtractToolInputFromStdinNativeFormat, and 6 new subtests to TestExtractSearchFromInput.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/756"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️17724683303796439454368879202683317589"]
+}

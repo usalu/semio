@@ -1,0 +1,12 @@
+{
+  "title": "Jack Text Editor",
+  "emoji": "🔺️",
+  "status": "closed",
+  "description": "Replace adhoc Jack engagement input with handcrafted code editor (syntax highlighting + autocomplete from Rust jack core via WASM), generic framework editor component, split layout: graph canvas + Jack editor + results table.",
+  "summary": "Fixed jack play so writer-bodied windows never mirror Jack query text in the engagement command line. Added `createWindowCommandEngagement` helper in framework-playground-core for command-only window engagement. Jack editor window command line now accepts window commands only (run, presets); query text lives exclusively in the WriterCanvas surface. `runJackQuery` reads from writer document state, not command-line input.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1765"
+  },
+  "goal": "🎯️trinity",
+  "sessions": ["⚪️3d9149ec092843fcbf3b4344d0c09b3b", "⚪️22b35a97759c42e1920d73e9ed91c8b5"]
+}

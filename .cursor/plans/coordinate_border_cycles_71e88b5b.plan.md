@@ -101,7 +101,7 @@ Extend the existing CSS contract vitest in [`ui/js/react/index.tsx`](ui/js/react
 
 ### 6. Ticket
 
-Open under `🎯r2602/🎯runningsketchpad` (same goal as recent intro/celebrate border tickets). Keep logs/notes in the ticket folder; close with summary + files when done.
+Open under `🎯️r2602/🎯️runningsketchpad` (same goal as recent intro/celebrate border tickets). Keep logs/notes in the ticket folder; close with summary + files when done.
 
 ## Out of scope
 

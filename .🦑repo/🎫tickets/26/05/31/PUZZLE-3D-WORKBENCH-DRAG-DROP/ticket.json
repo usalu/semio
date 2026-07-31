@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle 3d Workbench Drag Drop",
-  "emoji": "🧩",
-  "status": "closed",
-  "description": "Make object kinds from the workbench panel draggable and droppable into puzzle 3d at cursor intersection with the grid plane.",
-  "summary": "Fixed puzzle 3D kinds tree palette drag when native HTML5 drag never starts. Tree pointer gestures now track on window pointermove (works inside Radix ScrollArea). FixtureDropPreview stays mounted during fixture drag-drop and reads active encoded payload from ref so drag-session is not missed after hover. Added pointer-drag unit test.",
-  "goal": "🎯puzzle",
-  "sessions": ["⚪d6fabd2a644c47d881448f3630e4dd0f", "⚪3dc0cd3162ac428eaf128a314de41a85", "⚪bf15490f3b0f4e0182a495d428476d54", "⚪222d76e2501748238285431df1dd0560", "⚪d5b41338d5be4650add163fff05fd76c"]
-}

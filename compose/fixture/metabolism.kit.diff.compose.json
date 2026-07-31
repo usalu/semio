@@ -78,7 +78,7 @@
           "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
         },
         "diff": {
-          "name": "updated-📐base_1to500.3dm"
+          "name": "updated-📐️base_1to500.3dm"
         }
       }
     ],
@@ -163,7 +163,7 @@
         "id": "019caa00-0000-7000-a000-000000000023",
         "name": "New Test Type",
         "description": "New type",
-        "icon": "test-🔣type.svg"
+        "icon": "test-🔣️type.svg"
       }
     ]
   },

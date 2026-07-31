@@ -1,0 +1,12 @@
+{
+  "title": "Enforce Section and Definition Identification",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Add missing-identification statutes for sections and definitions. Section IDs (autofixable) require [🔖️id](uri) comment after region start. Definition IDs (autofixable) require [emoji id](uri) as last line in docstring. Extend tests for all languages, implement enforcement, and fix all breachs.",
+  "summary": "Fixed containsUriDefinition to also accept old-format composerepo://definition/ URIs (not just new /d/ compact format). Fixed containsUriSection similarly for composerepo://section/. Definitions/sections with old-format IDs now correctly show Wrong Identification URI instead of Missing Identification. Fixed test build failures by replacing HookContext.Timestamp with Second (field was renamed in latest main.go commit). All identification tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/548"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism",
+  "sessions": ["⚪️1a1a212aee684a078bc08dfcca485927", "⚪️17721134469865595121795126895630083394"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Draw points instead of spheres for lowpoly vertices",
-  "emoji": "🎨",
-  "status": "closed",
-  "description": "The vertices spheres are way too big. Just make sure to draw points, they do not need to be visible spheres.",
-  "summary": "Draw points instead of spheres for lowpoly vertices by rendering them as small 3D crosses in the line overlay pipeline and disabling the vertex sphere instances.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪1646ff26e82149aaa71917753d9d5201"]
-}

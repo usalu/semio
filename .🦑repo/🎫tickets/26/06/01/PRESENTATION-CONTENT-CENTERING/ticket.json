@@ -1,9 +1,0 @@
-{
-  "title": "Presentation Content Centering",
-  "emoji": "📽",
-  "status": "closed",
-  "description": "All presentation content must be centered horizontally and vertically. Projektetage intro currently starts at the top because text dispositions incorrectly use the positioned canvas layout.",
-  "summary": "Re-fixed slide 2 (Ziel) content pushed to bottom after `position: relative` was reintroduced on `.presentation-arrangement--interactive` (alongside `overflow: visible`).\n\nRemoved `position: relative` again so reveal.js `position: absolute` stack overlay is preserved. Kept `overflow: visible` for interaction chrome. Strengthened regression test to assert overflow remains but position:relative does not. Verified live on :6050 Ziel slide — content centered (section position:absolute, headings ~279–762 in 1166px viewport). All 40 renderer tests pass.",
-  "goal": "🎯framework🎯presentation",
-  "sessions": ["⚪b812016df39e415ba16af84411819f7c", "⚪3944b9686f8e4bd8ba97726d1b382ce9", "⚪a56de0f273244b90b16e0640ac552863"]
-}

@@ -1,9 +1,0 @@
-{
-  "title": "Ui Browser Default Suppress",
-  "emoji": "🖱️",
-  "status": "closed",
-  "description": "Inside the ui suppress the browser default Tab focus traversal and native right-click context menu via applyElementsSurfaceChrome.",
-  "summary": "Added document capture listeners via `installElementsSurfaceBrowserDefaultSuppression`, wired from `applyElementsSurfaceChrome` so every Elements shell suppresses the native context menu and default Tab focus traversal outside `isUiTypingTarget` fields. Vitest covers context menu + Tab on plain div vs text input. `@semio-tech/ui-react:test` 115/115 pass.",
-  "goal": "🎯ui",
-  "sessions": ["⚪6a2a950732af427fbf9f2a89e8c73f37"]
-}

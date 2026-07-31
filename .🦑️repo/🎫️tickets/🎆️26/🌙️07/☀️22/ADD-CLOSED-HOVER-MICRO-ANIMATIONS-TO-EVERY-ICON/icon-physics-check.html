@@ -1,0 +1,6036 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Icon physics check</title>
+<style>
+/* SPDX-License-Identifier: AGPL-3.0-only */
+@import "tailwindcss";
+@import "./palette.css";
+@plugin "@tailwindcss/typography";
+
+/* 🩹️ Tailwind v4's production CSS pass silently drops `@layer base` custom properties it decides are
+   "unused" (its content scan only credits a property as used through a Tailwind-generated utility class,
+   never through a plain hand-authored rule elsewhere in this file that reads it via `var()`) — these six
+   are exactly that case (border/scrollbar/hover-fill colors consumed by plain selectors like
+   `[data-slot="navbar"]`, never through a matching utility class), so their `@layer base :root` originals
+   below get pruned in production while every rule that reads them keeps working in dev. Re-declaring them
+   here, outside any `@layer`, sidesteps the pruning: unlayered CSS is always the highest-priority layer
+   in the cascade, so this wins regardless of textual order and regardless of whether Tailwind also keeps
+   or drops the `@layer base` copy. Values must stay in lockstep with the originals in the `:root` block
+   under `@layer base` further down this file. */
+:root {
+  --border-normal-color: var(--color-gray);
+  --border-emphasized-color: var(--foreground);
+  --border-color: var(--border-normal-color);
+  --hover-interactive-fill: var(--border-normal-color);
+  --scrollbar-thumb: var(--border-color);
+  --scrollbar-thumb-hover: var(--muted-foreground);
+}
+
+#navbar,
+#compose\.sketchpad\.navbar,
+[data-slot="navbar"],
+[data-slot="footer"] {
+  position: relative !important;
+  z-index: var(--z-base) !important;
+  pointer-events: auto !important;
+}
+
+#navbar button,
+#navbar [role="button"],
+#navbar a,
+#navbar [role="link"],
+#navbar input,
+#navbar select,
+#navbar textarea,
+#compose\.sketchpad\.navbar button,
+#compose\.sketchpad\.navbar [role="button"],
+#compose\.sketchpad\.navbar a,
+#compose\.sketchpad\.navbar [role="link"],
+#compose\.sketchpad\.navbar input,
+#compose\.sketchpad\.navbar select,
+#compose\.sketchpad\.navbar textarea,
+[data-slot="navbar"] button,
+[data-slot="navbar"] [role="button"],
+[data-slot="navbar"] a,
+[data-slot="navbar"] [role="link"],
+[data-slot="navbar"] input,
+[data-slot="navbar"] select,
+[data-slot="navbar"] textarea {
+  pointer-events: auto !important;
+  -webkit-app-region: no-drag !important;
+}
+
+#navbar,
+#compose\.sketchpad\.navbar,
+[data-slot="navbar"] {
+  -webkit-app-region: drag !important;
+}
+
+/* https://tailwindcss.com/doc/theme */
+/* https://ui.shadcn.com/doc/theming */
+
+.body {
+}
+
+/* Set base all components */
+@layer base {
+  :root {
+    --spacing-compact: 0.2rem;
+    --spacing-touch: 0.275rem;
+    --base: var(--color-light);
+    --canvas: var(--color-light-8-9);
+    --window: var(--color-light-6-7);
+    --panel: var(--color-light-5-7);
+    --overlay: transparent;
+    --temporary: var(--color-light-4-7);
+    --foreground: var(--color-dark);
+    --muted: var(--color-light-8-9);
+    --muted-foreground: var(--color-gray);
+    --accent: var(--color-primary);
+    --accent-secondary: var(--color-secondary);
+    --accent-tertiary: var(--color-tertiary);
+    --accent-foreground: var(--color-dark);
+    --hover-base: var(--color-gray-700);
+    --hover-canvas: var(--color-light-7-9);
+    --hover-window: var(--color-light-gray);
+    --hover-panel: var(--color-gray-600);
+    --hover-overlay: var(--color-gray-600);
+    --hover-temporary: var(--color-light-gray-gray);
+    --element-base: var(--color-gray);
+    --element-canvas: var(--color-gray);
+    --element-window: var(--color-gray);
+    --element-panel: var(--color-dark-5-9);
+    --element-overlay: var(--color-gray);
+    --element-temporary: var(--color-gray);
+    --active-base: var(--color-primary);
+    --active-foreground: var(--color-dark);
+    --border-normal-color: var(--color-gray);
+    --border-emphasized-color: var(--foreground);
+    --border-element-color: var(--element-base);
+    --border-color: var(--border-normal-color);
+    --loading-border-duration: 1.6s;
+    --waiting-border-duration: 3.2s;
+    --introduced-border-duration: 1.6s;
+    --hover-interactive-fill: var(--border-normal-color);
+    --plaster: var(--color-gray);
+    --plaster-edge: var(--color-foreground);
+    --info-bg: var(--color-light-8-9);
+    --info-foreground: var(--color-dark);
+    --info-border: var(--color-info);
+    --success-bg: var(--color-light-7-9);
+    --success-foreground: var(--color-dark);
+    --success-border: var(--color-success);
+    --warning-bg: var(--color-light-6-7);
+    --warning-foreground: var(--color-dark);
+    --warning-border: var(--color-warning);
+    --destructive-bg: var(--color-light-8-9);
+    --destructive-foreground: var(--color-danger);
+    --destructive-border: var(--color-danger);
+    --scrollbar-thumb: var(--border-color);
+    --scrollbar-thumb-hover: var(--muted-foreground);
+    --color-new: var(--success-border);
+    --color-modified: var(--warning-border);
+    --color-removed: var(--destructive-border);
+    --color-changed-selected: var(--accent);
+    --color-changed-hovered: var(--accent-secondary);
+    --cursor-default: url("../../../asset/cursor/cursor.svg") 0 0, default;
+    --cursor-pointer: url("../../../asset/cursor/cursor_pointer.svg") 0 0, pointer;
+    --cursor-grab: url("../../../asset/cursor/cursor_grab.svg") 0 0, grab;
+    --cursor-grabbing: url("../../../asset/cursor/cursor_grabbing.svg") 0 0, grabbing;
+    --cursor-ew-resize: url("../../../asset/cursor/cursor_ew-resize.svg") 16 2, ew-resize;
+    --cursor-col-resize: url("../../../asset/cursor/cursor_ew-resize.svg") 16 2, col-resize;
+    --cursor-ns-resize: url("../../../asset/cursor/cursor_ns-resize.svg") 2 16, ns-resize;
+    --cursor-nesw-resize: url("../../../asset/cursor/cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
+    --cursor-nwse-resize: url("../../../asset/cursor/cursor_nwse-resize.svg") 16 16, nwse-resize;
+    --cursor-move: url("../../../asset/cursor/cursor_move_inkscape.svg") 16 16, move;
+    --cursor-crosshair: url("../../../asset/cursor/cursor_crosshair.svg") 0 0, crosshair;
+    --cursor-crosshair-centered: url("../../../asset/cursor/cursor_crosshair.svg") 16 16, crosshair;
+    --cursor-selectable: url("../../../asset/cursor/cursor_selectable.svg") 0 0, pointer;
+    --cursor-foldable: url("../../../asset/cursor/cursor_foldable.svg") 0 0, pointer;
+    --cursor-help: help;
+    --cursor-not-allowed: url("../../../asset/cursor/cursor_not-allowed.svg") 0 0, not-allowed;
+    --cursor-text: text;
+    * {
+      cursor: var(--cursor-default);
+    }
+
+    ::selection {
+      background-color: var(--accent);
+      color: var(--border-emphasized-color);
+    }
+
+    ::-moz-selection {
+      background-color: var(--accent);
+      color: var(--border-emphasized-color);
+    }
+
+    html {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: transparent transparent;
+    }
+
+    @supports not selector(::-webkit-scrollbar) {
+      *:hover {
+        scrollbar-color: var(--scrollbar-thumb) transparent;
+      }
+    }
+
+    *::-webkit-scrollbar {
+      width: var(--scrollbar-size);
+      height: var(--scrollbar-size);
+    }
+
+    *::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background-color: transparent;
+      border-radius: 0;
+      transition: background-color 120ms ease;
+    }
+
+    *::-webkit-scrollbar:hover::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb);
+    }
+
+    *::-webkit-scrollbar-thumb:hover,
+    *::-webkit-scrollbar-thumb:active {
+      background-color: var(--scrollbar-thumb-hover);
+    }
+
+    *::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    .ui-scrollbar-hidden {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    [data-slot="scroll-area-scrollbar"] {
+      background: transparent;
+    }
+
+    [data-slot="scroll-area-scrollbar"][data-orientation="vertical"] {
+      width: var(--scrollbar-size);
+    }
+
+    [data-slot="scroll-area-scrollbar"][data-orientation="horizontal"] {
+      height: var(--scrollbar-size);
+    }
+
+    [data-slot="scroll-area-thumb"] {
+      background-color: var(--scrollbar-thumb);
+      border-radius: 0;
+      opacity: 0;
+      transition:
+        opacity 120ms ease,
+        background-color 120ms ease;
+    }
+
+    [data-slot="scroll-area-scrollbar"]:hover [data-slot="scroll-area-thumb"] {
+      opacity: 1;
+    }
+
+    [data-slot="scroll-area-thumb"]:hover {
+      background-color: var(--scrollbar-thumb-hover);
+    }
+
+    body.cursor-selectable {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    body.cursor-selectable * {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    .cursor-default,
+    [style*="cursor: default"],
+    [style*="cursor:default"],
+    [class*="cursor-default"],
+    [class*="before:cursor-default"]::before,
+    [class*="after:cursor-default"]::after {
+      cursor: var(--cursor-default) !important;
+    }
+
+    .cursor-pointer,
+    [style*="cursor: pointer"],
+    [style*="cursor:pointer"],
+    [class*="cursor-pointer"],
+    [class*="before:cursor-pointer"]::before,
+    [class*="after:cursor-pointer"]::after {
+      cursor: var(--cursor-pointer) !important;
+    }
+
+    .cursor-selectable,
+    [style*="cursor: selectable"],
+    [style*="cursor:selectable"],
+    [class*="cursor-selectable"],
+    [class*="before:cursor-selectable"]::before,
+    [class*="after:cursor-selectable"]::after {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    .cursor-foldable,
+    [style*="cursor: foldable"],
+    [style*="cursor:foldable"],
+    [class*="cursor-foldable"],
+    [class*="before:cursor-foldable"]::before,
+    [class*="after:cursor-foldable"]::after {
+      cursor: var(--cursor-foldable) !important;
+    }
+
+    .cursor-grab,
+    [style*="cursor: grab"],
+    [style*="cursor:grab"],
+    [class*="cursor-grab"],
+    [class*="before:cursor-grab"]::before,
+    [class*="after:cursor-grab"]::after {
+      cursor: var(--cursor-grab) !important;
+    }
+
+    .cursor-grabbing,
+    [style*="cursor: grabbing"],
+    [style*="cursor:grabbing"],
+    [class*="cursor-grabbing"],
+    [class*="before:cursor-grabbing"]::before,
+    [class*="after:cursor-grabbing"]::after {
+      cursor: var(--cursor-grabbing) !important;
+    }
+
+    .cursor-ew-resize,
+    .cursor-w-resize,
+    .cursor-e-resize,
+    [style*="cursor: ew-resize"],
+    [style*="cursor:ew-resize"],
+    [style*="cursor: w-resize"],
+    [style*="cursor:w-resize"],
+    [style*="cursor: e-resize"],
+    [style*="cursor:e-resize"],
+    [class*="cursor-ew-resize"],
+    [class*="cursor-w-resize"],
+    [class*="cursor-e-resize"],
+    [class*="before:cursor-ew-resize"]::before,
+    [class*="before:cursor-w-resize"]::before,
+    [class*="before:cursor-e-resize"]::before,
+    [class*="after:cursor-ew-resize"]::after,
+    [class*="after:cursor-w-resize"]::after,
+    [class*="after:cursor-e-resize"]::after {
+      cursor: var(--cursor-ew-resize) !important;
+    }
+
+    .cursor-col-resize,
+    [style*="cursor: col-resize"],
+    [style*="cursor:col-resize"],
+    [class*="cursor-col-resize"],
+    [class*="before:cursor-col-resize"]::before,
+    [class*="after:cursor-col-resize"]::after {
+      cursor: var(--cursor-col-resize) !important;
+    }
+
+    .cursor-ns-resize,
+    .cursor-n-resize,
+    .cursor-s-resize,
+    .cursor-row-resize,
+    [style*="cursor: ns-resize"],
+    [style*="cursor:ns-resize"],
+    [style*="cursor: n-resize"],
+    [style*="cursor:n-resize"],
+    [style*="cursor: s-resize"],
+    [style*="cursor:s-resize"],
+    [style*="cursor: row-resize"],
+    [style*="cursor:row-resize"],
+    [class*="cursor-ns-resize"],
+    [class*="cursor-n-resize"],
+    [class*="cursor-s-resize"],
+    [class*="cursor-row-resize"],
+    [class*="before:cursor-ns-resize"]::before,
+    [class*="before:cursor-n-resize"]::before,
+    [class*="before:cursor-s-resize"]::before,
+    [class*="before:cursor-row-resize"]::before,
+    [class*="after:cursor-ns-resize"]::after,
+    [class*="after:cursor-n-resize"]::after,
+    [class*="after:cursor-s-resize"]::after,
+    [class*="after:cursor-row-resize"]::after {
+      cursor: var(--cursor-ns-resize) !important;
+    }
+
+    .cursor-nesw-resize,
+    .cursor-ne-resize,
+    .cursor-sw-resize,
+    [style*="cursor: nesw-resize"],
+    [style*="cursor:nesw-resize"],
+    [style*="cursor: ne-resize"],
+    [style*="cursor:ne-resize"],
+    [style*="cursor: sw-resize"],
+    [style*="cursor:sw-resize"],
+    [class*="cursor-nesw-resize"],
+    [class*="cursor-ne-resize"],
+    [class*="cursor-sw-resize"],
+    [class*="before:cursor-nesw-resize"]::before,
+    [class*="before:cursor-ne-resize"]::before,
+    [class*="before:cursor-sw-resize"]::before,
+    [class*="after:cursor-nesw-resize"]::after,
+    [class*="after:cursor-ne-resize"]::after,
+    [class*="after:cursor-sw-resize"]::after {
+      cursor: var(--cursor-nesw-resize) !important;
+    }
+
+    .cursor-nwse-resize,
+    .cursor-nw-resize,
+    .cursor-se-resize,
+    [style*="cursor: nwse-resize"],
+    [style*="cursor:nwse-resize"],
+    [style*="cursor: nw-resize"],
+    [style*="cursor:nw-resize"],
+    [style*="cursor: se-resize"],
+    [style*="cursor:se-resize"],
+    [class*="cursor-nwse-resize"],
+    [class*="cursor-nw-resize"],
+    [class*="cursor-se-resize"],
+    [class*="before:cursor-nwse-resize"]::before,
+    [class*="before:cursor-nw-resize"]::before,
+    [class*="before:cursor-se-resize"]::before,
+    [class*="after:cursor-nwse-resize"]::after,
+    [class*="after:cursor-nw-resize"]::after,
+    [class*="after:cursor-se-resize"]::after {
+      cursor: var(--cursor-nwse-resize) !important;
+    }
+
+    .cursor-move,
+    [style*="cursor: move"],
+    [style*="cursor:move"],
+    [class*="cursor-move"],
+    [class*="before:cursor-move"]::before,
+    [class*="after:cursor-move"]::after {
+      cursor: var(--cursor-move) !important;
+    }
+
+    .cursor-crosshair,
+    [style*="cursor: crosshair"],
+    [style*="cursor:crosshair"],
+    [class*="cursor-crosshair"],
+    [class*="before:cursor-crosshair"]::before,
+    [class*="after:cursor-crosshair"]::after {
+      cursor: var(--cursor-crosshair) !important;
+    }
+
+    .cursor-not-allowed,
+    [class~="cursor-not-allowed"],
+    [style*="cursor: not-allowed"],
+    [style*="cursor:not-allowed"] {
+      cursor: var(--cursor-not-allowed) !important;
+    }
+
+    [class*="cursor-not-allowed"]:is(:disabled, [aria-disabled="true"], [data-disabled="true"]) {
+      cursor: var(--cursor-not-allowed) !important;
+    }
+
+    .cursor-help,
+    [style*="cursor: help"],
+    [style*="cursor:help"],
+    [class*="cursor-help"],
+    [class*="before:cursor-help"]::before,
+    [class*="after:cursor-help"]::after {
+      cursor: var(--cursor-help) !important;
+    }
+
+    .cursor-text,
+    [style*="cursor: text"],
+    [style*="cursor:text"],
+    [class*="cursor-text"],
+    [class*="before:cursor-text"]::after {
+      cursor: var(--cursor-text) !important;
+    }
+
+    .react-flow__node:not(.cursor-pointer):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text) {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    .react-flow__node:has([data-kit-node]),
+    .react-flow__node:has([data-kit-node]) * {
+      cursor: var(--cursor-selectable) !important;
+    }
+
+    .react-flow__edge {
+      cursor: var(--cursor-pointer) !important;
+    }
+
+    .react-flow__pane.draggable {
+      cursor: var(--cursor-grab) !important;
+    }
+    .react-flow__pane.dragging {
+      cursor: var(--cursor-grabbing) !important;
+    }
+    .react-flow__handle.connectionindicator {
+      cursor: var(--cursor-crosshair-centered) !important;
+    }
+
+    .temp .react-flow__edge-path {
+      stroke: #e98787;
+      stroke-dasharray: 5 5;
+    }
+
+    .react-flow__handle.connectionindicator,
+    .react-flow__handle.connectionindicator:hover {
+      cursor: var(--cursor-crosshair-centered) !important;
+    }
+
+    .react-flow__viewport-portal {
+      pointer-events: none !important;
+    }
+
+    [data-slot="popover-trigger"] {
+      cursor: var(--cursor-pointer) !important;
+    }
+
+    [data-slot="resizable-handle"][data-panel-group-direction="horizontal"],
+    [data-slot="resizable-handle"][data-panel-group-direction="horizontal"]::before,
+    [data-slot="resizable-handle"][data-panel-group-direction="horizontal"]::after {
+      cursor: var(--cursor-ew-resize) !important;
+    }
+
+    [data-slot="resizable-handle"][data-panel-group-direction="vertical"],
+    [data-slot="resizable-handle"][data-panel-group-direction="vertical"]::before,
+    [data-slot="resizable-handle"][data-panel-group-direction="vertical"]::after {
+      cursor: var(--cursor-ns-resize) !important;
+    }
+
+    [data-slot="resizable-handle"][data-resize-orientation="horizontal"] {
+      cursor: var(--cursor-ew-resize) !important;
+    }
+
+    [data-slot="resizable-handle"][data-resize-orientation="vertical"] {
+      cursor: var(--cursor-ns-resize) !important;
+    }
+
+    [data-slot="resizable-corner"] {
+      touch-action: none;
+      cursor: var(--cursor-move) !important;
+    }
+
+    [data-slot="resizable-handle"]:has([data-slot="resizable-corner"]:hover) {
+      cursor: var(--cursor-move) !important;
+    }
+
+    [role="button"]:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
+    [role="link"]:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
+    a:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text),
+    button:not(.cursor-selectable):not(.cursor-foldable):not(.cursor-grab):not(.cursor-grabbing):not(.cursor-move):not(.cursor-crosshair):not(.cursor-not-allowed):not(.cursor-help):not(.cursor-text) {
+      cursor: var(--cursor-pointer) !important;
+    }
+
+    [data-slot="breadcrumb-link"],
+    [data-slot="breadcrumb-separator"][class*="cursor-pointer"] {
+      cursor: var(--cursor-pointer) !important;
+    }
+  }
+}
+
+/* Toolbar anchor: left-aligned content growing through the remaining footer width. */
+[data-slot="ribbon-anchor"] {
+  flex: 1 1 0%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  pointer-events: none;
+}
+
+[data-slot="ribbon-anchor"] > * {
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+[data-slot="ribbon-anchor"] [role="toolbar"] {
+  max-height: 100%;
+}
+
+.dark {
+  --base: var(--color-dark);
+  --canvas: var(--color-dark-6-7);
+  --window: var(--color-dark-8-9);
+  --panel: var(--color-dark-7-9);
+  --overlay: transparent;
+  --temporary: var(--color-dark-gray);
+  --foreground: var(--color-light);
+  --active-base: var(--color-primary);
+  --active-foreground: var(--color-light);
+  --muted: var(--color-dark-8-9);
+  --muted-foreground: var(--color-gray);
+  --accent: var(--color-primary);
+  --accent-secondary: var(--color-secondary);
+  --accent-tertiary: var(--color-tertiary);
+  --accent-foreground: var(--color-light);
+  --hover-base: var(--color-gray-300);
+  --hover-canvas: var(--color-dark-5-7);
+  --hover-window: var(--color-dark-gray);
+  --hover-panel: var(--color-gray-400);
+  --hover-overlay: var(--color-gray-400);
+  --hover-temporary: var(--color-dark-dark-gray-2);
+  --element-base: var(--color-gray);
+  --element-canvas: var(--color-gray);
+  --element-window: var(--color-gray);
+  --element-panel: var(--color-gray-600);
+  --element-overlay: var(--color-gray);
+  --element-temporary: var(--color-gray);
+  --cursor-default: url("../../../asset/cursor/cursor_dark.svg") 0 0, default;
+  --cursor-pointer: url("../../../asset/cursor/cursor_pointer_dark_inkscape.svg") 0 0, pointer;
+  --cursor-grab: url("../../../asset/cursor/cursor_grab_dark.svg") 0 0, grab;
+  --cursor-grabbing: url("../../../asset/cursor/cursor_grabbing.svg") 0 0, grabbing;
+  --cursor-ew-resize: url("../../../asset/cursor/cursor_ew-resize_dark.svg") 16 2, ew-resize;
+  --cursor-col-resize: url("../../../asset/cursor/cursor_ew-resize_dark.svg") 16 2, col-resize;
+  --cursor-ns-resize: url("../../../asset/cursor/cursor_ns-resize_dark.svg") 2 16, ns-resize;
+  --cursor-nesw-resize: url("../../../asset/cursor/cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
+  --cursor-nwse-resize: url("../../../asset/cursor/cursor_nwse-resize_dark.svg") 16 16, nwse-resize;
+  --cursor-move: url("../../../asset/cursor/cursor_move_dark.svg") 16 16, move;
+  --cursor-crosshair: url("../../../asset/cursor/cursor_crosshair_dark.svg") 0 0, crosshair;
+  --cursor-crosshair-centered: url("../../../asset/cursor/cursor_crosshair_dark.svg") 16 16, crosshair;
+  --cursor-selectable: url("../../../asset/cursor/cursor_selectable_dark.svg") 0 0, pointer;
+  --cursor-foldable: url("../../../asset/cursor/cursor_foldable_dark.svg") 0 0, pointer;
+  --cursor-not-allowed: url("../../../asset/cursor/cursor_not-allowed_dark.svg") 0 0, not-allowed;
+  --info-bg: var(--color-dark-8-9);
+  --info-foreground: var(--color-light);
+  --info-border: var(--color-info);
+  --success-bg: var(--color-dark-7-9);
+  --success-foreground: var(--color-light);
+  --success-border: var(--color-success);
+  --warning-bg: var(--color-dark-6-7);
+  --warning-foreground: var(--color-light);
+  --warning-border: var(--color-warning);
+  --destructive-bg: var(--color-dark-8-9);
+  --destructive-foreground: var(--color-danger);
+  --destructive-border: var(--color-danger);
+  --plaster: var(--color-gray);
+  --plaster-edge: var(--color-foreground);
+}
+
+.touch {
+  --ui-spacing: var(--spacing-touch);
+  --ribbon-item-height: var(--size-large);
+  --ribbon-gap: var(--spacing-single);
+  --ribbon-padding-inline: var(--spacing-single);
+  --text-xs: 0.75rem;
+  --text-xs--line-height: calc(1 / 0.75);
+  --text-sm: 0.875rem;
+  --text-sm--line-height: calc(1.25 / 0.875);
+  --text-base: 1rem;
+  --text-base--line-height: calc(1.5 / 1);
+  --text-lg: 1.125rem;
+  --text-lg--line-height: calc(1.75 / 1.125);
+  --text-xl: 1.25rem;
+  --text-xl--line-height: calc(1.75 / 1.25);
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: calc(2 / 1.5);
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: calc(2.25 / 1.875);
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: calc(2.5 / 2.25);
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4.5rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 6rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 8rem;
+  --text-9xl--line-height: 1;
+}
+
+.touch .lm_header {
+  height: var(--size-large) !important;
+  min-height: var(--size-large) !important;
+  max-height: var(--size-large) !important;
+}
+
+.touch .lm_tab {
+  padding: var(--spacing-single) var(--size-workbench) !important;
+  padding-bottom: calc(var(--spacing-single) + var(--stroke-hairline)) !important;
+}
+
+.touch .lm_title {
+  font-size: var(--text-sm) !important;
+  line-height: var(--text-sm--line-height) !important;
+}
+
+.touch [data-slot="mobile-panel-tab-button"] {
+  min-height: var(--layout-touch-min);
+}
+
+.touch :is([data-slot="button-group-item"], [data-slot="toggle-group-item"], [data-slot="action-group-item"], [data-slot="select-trigger"], [data-slot="mode-dock-tab"], [data-slot="mode-dock-maximize"], [data-slot="mode-dock-close"]) {
+  min-height: var(--layout-touch-min);
+}
+
+@layer base {
+  .prose {
+    --tw-prose-body: var(--foreground);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-lead: var(--muted-foreground);
+    --tw-prose-links: var(--accent);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-counters: var(--muted-foreground);
+    --tw-prose-bullets: var(--primary);
+    --tw-prose-hr: var(--border-color);
+    --tw-prose-quotes: var(--foreground);
+    --tw-prose-quote-borders: var(--border-color);
+    --tw-prose-code: var(--foreground);
+    --tw-prose-pre-bg: var(--muted);
+    --tw-prose-th-borders: var(--border-color);
+    --tw-prose-td-borders: var(--border-color);
+  }
+  .prose a {
+    color: var(--accent);
+  }
+  .prose a:hover {
+    color: var(--hover-base);
+  }
+  .prose code {
+    background-color: var(--muted);
+  }
+  .prose pre code {
+    background-color: transparent;
+  }
+  .prose blockquote {
+    border: var(--stroke-hairline) solid var(--border-color);
+    border-radius: 0;
+    padding: var(--ui-spacing);
+  }
+}
+/* https://reactflow.dev/learn/customization/theming */
+
+@theme inline {
+  --ui-spacing: var(--spacing-compact);
+  --spacing-single: calc(1 * var(--ui-spacing));
+  --spacing-double: calc(2 * var(--ui-spacing));
+  --size-tiny: calc(3 * var(--ui-spacing));
+  --size-small: calc(5 * var(--ui-spacing));
+  --size-workbench: calc(1.5 * var(--size-small));
+  --size-medium: calc(7 * var(--ui-spacing));
+  --window-chrome-scroll-clearance: calc(var(--size-medium) + 2 * var(--ui-spacing));
+  --window-content-dead-line: var(--window-chrome-scroll-clearance);
+  --size-large: calc(9 * var(--ui-spacing));
+  --size-huge: calc(11 * var(--ui-spacing));
+  --size-mega: calc(13 * var(--ui-spacing));
+  --size-giga: calc(15 * var(--ui-spacing));
+  --size-xl: calc(10 * var(--ui-spacing));
+  --size-tera: calc(17 * var(--ui-spacing));
+  --size-peta: calc(19 * var(--ui-spacing));
+  --layout-touch-min: 2.75rem;
+  --layout-label: calc(30 * var(--ui-spacing));
+  --layout-popover-min: calc(37.5 * var(--ui-spacing));
+  --layout-panel-min: calc(46.875 * var(--ui-spacing));
+  --layout-panel-rail: calc(70 * var(--ui-spacing));
+  --layout-panel-max: calc(150 * var(--ui-spacing));
+  --layout-command-max: calc(93.75 * var(--ui-spacing));
+  --layout-engagement-max: calc(140 * var(--ui-spacing));
+  --layout-deck-width: 60rem;
+  --layout-deck-height: 43.75rem;
+  --layout-story-height: 25rem;
+  --layout-story-width-sm: 37.5rem;
+  --layout-story-width-md: 50rem;
+  --layout-story-width-lg: 60rem;
+  --layout-floating-menu-sm: calc(68.75 * var(--ui-spacing));
+  --layout-floating-menu-md: calc(87.5 * var(--ui-spacing));
+  --layout-floating-menu-lg: calc(112.5 * var(--ui-spacing));
+  --layout-floating-overlay: calc(131.25 * var(--ui-spacing));
+  --layout-preview-min: 4.5rem;
+  --layout-preview-md: 5.5rem;
+  --layout-offscreen: -100vw;
+  --stroke-hairline: 1px;
+  --stroke-default: calc(2 * var(--stroke-hairline));
+  --stroke-focus: calc(3 * var(--stroke-hairline));
+  --radius: 0rem;
+  --radius-xs: 0rem;
+  --radius-sm: 0rem;
+  --radius-md: 0rem;
+  --radius-lg: 0rem;
+  --radius-xl: 0rem;
+  --radius-2xl: 0rem;
+  --radius-3xl: 0rem;
+  --radius-4xl: 0rem;
+  --radius-full: 0rem;
+  --shadow-2xs: 0 0 rgb(0 0 0 / 0);
+  --shadow-xs: 0 0 rgb(0 0 0 / 0);
+  --shadow-sm: 0 0 rgb(0 0 0 / 0);
+  --shadow-md: 0 0 rgb(0 0 0 / 0);
+  --shadow-lg: 0 0 rgb(0 0 0 / 0);
+  --shadow-xl: 0 0 rgb(0 0 0 / 0);
+  --shadow-2xl: 0 0 rgb(0 0 0 / 0);
+  --inset-shadow-2xs: inset 0 0 rgb(0 0 0 / 0);
+  --inset-shadow-xs: inset 0 0 rgb(0 0 0 / 0);
+  --inset-shadow-sm: inset 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-xs: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-sm: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-md: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-lg: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-xl: 0 0 rgb(0 0 0 / 0);
+  --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
+  --ribbon-item-height: var(--size-medium);
+  --ribbon-gap: var(--spacing-single);
+  --ribbon-group-gap: var(--spacing-single);
+  --ribbon-padding-inline: var(--spacing-single);
+  --ribbon-divider-height: var(--size-small);
+  --text-2xs: 0.6rem;
+  --text-2xs--line-height: calc(0.9 / 0.6);
+  --text-xs: 0.7rem;
+  --text-xs--line-height: calc(1 / 0.7);
+  --text-sm: 0.8rem;
+  --text-sm--line-height: calc(1.2 / 0.8);
+  --text-base: 0.9rem;
+  --text-base--line-height: calc(1.4 / 0.9);
+  --text-lg: 1rem;
+  --text-lg--line-height: calc(1.6 / 1);
+  --text-xl: 1.125rem;
+  --text-xl--line-height: calc(1.6 / 1.125);
+  --text-2xl: 1.35rem;
+  --text-2xl--line-height: calc(1.9 / 1.35);
+  --text-3xl: 1.7rem;
+  --text-3xl--line-height: calc(2.1 / 1.7);
+  --text-4xl: 2rem;
+  --text-4xl--line-height: calc(2.3 / 2);
+  --text-5xl: 2.7rem;
+  --text-5xl--line-height: 1;
+  --text-6xl: 3.4rem;
+  --text-6xl--line-height: 1;
+  --text-7xl: 4rem;
+  --text-7xl--line-height: 1;
+  --text-8xl: 5.4rem;
+  --text-8xl--line-height: 1;
+  --text-9xl: 7.2rem;
+  --text-9xl--line-height: 1;
+  --z-base: 0;
+  --z-canvas: 3;
+  --z-window: 5;
+  --z-panel: 10;
+  --z-overlay: 20;
+  --z-temporary: 30;
+  --z-navbar: 100;
+  --z-modal: 1000;
+  --z-tutorial: 10000;
+  --glass-blur: 1.5rem;
+  --glass-panel-blur: 2.5rem;
+  --glass-window-options-blur: 0.875rem;
+  --glass-veil-blur: 0.5rem;
+  --glass-saturate: 1.45;
+  --glass-panel-alpha: 0.72;
+  --glass-window-options-alpha: 0.22;
+  --glass-ribbon-alpha: 0.3;
+  --glass-menu-alpha: 0.36;
+  /* 🎓️ Deliberately more transparent than --glass-panel-alpha so an introduction's info box reads as
+     less see-through than the veil it sits on. */
+  --glass-veil-alpha: 0.38;
+  --scrollbar-size: var(--spacing-double);
+  --color-background: var(--base);
+  --color-base: var(--base);
+  --color-canvas: var(--canvas);
+  --color-window: var(--window);
+  --color-panel: var(--panel);
+  --color-overlay: var(--overlay);
+  --color-temporary: var(--temporary);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-hover-base: var(--hover-base);
+  --color-hover-canvas: var(--hover-canvas);
+  --color-hover-window: var(--hover-window);
+  --color-hover-panel: var(--hover-panel);
+  --color-hover-overlay: var(--hover-overlay);
+  --color-hover-temporary: var(--hover-temporary);
+  --color-active-base: var(--active-base);
+  --color-active-foreground: var(--active-foreground);
+  --color-changed-base: var(--color-warning);
+  --color-selected-changed: color-mix(in oklch, var(--active-base) 50%, var(--color-warning) 50%);
+  --color-selected-added: color-mix(in oklch, var(--active-base) 50%, var(--color-success) 50%);
+  --color-selected-removed: color-mix(in oklch, var(--active-base) 50%, var(--color-danger) 50%);
+  --color-plaster: var(--plaster);
+  --color-plaster-edge: var(--plaster-edge);
+  --color-popover: var(--temporary);
+  --color-popover-foreground: var(--border-element-color);
+  --color-border: var(--border-normal-color);
+  --color-element: var(--border-element-color);
+  --color-emphasized: var(--border-emphasized-color);
+  --color-hover-interactive-fill: var(--hover-interactive-fill);
+}
+
+/* Per-level element foreground — mirrors the --hover-* family. */
+[data-level="base"] {
+  --border-element-color: var(--element-base);
+}
+
+[data-level="canvas"] {
+  --border-element-color: var(--element-canvas);
+}
+
+[data-level="window"] {
+  --border-element-color: var(--element-window);
+}
+
+[data-level="panel"] {
+  --border-element-color: var(--element-panel);
+}
+
+[data-level="overlay"] {
+  --border-element-color: var(--element-overlay);
+}
+
+[data-level="temporary"] {
+  --border-element-color: var(--element-temporary);
+}
+
+@utility border-normal {
+  border-color: var(--border-normal-color);
+}
+
+@utility border-element {
+  border-color: var(--border-element-color);
+}
+
+@utility divide-element {
+  --tw-divide-color: var(--border-element-color);
+}
+
+@utility divide-normal {
+  --tw-divide-color: var(--border-normal-color);
+}
+
+@utility border-emphasized {
+  border-color: var(--border-emphasized-color);
+}
+
+@utility border-active-base {
+  border-color: var(--active-base);
+}
+
+@property --loading-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ⏱️ `@property`-registers the two `animation-duration` tokens below for the same reason the angle above
+   is registered: an unregistered custom property that's only ever read via `var()` inside another
+   hand-authored rule (never through a Tailwind-generated utility class Tailwind's content scan can see)
+   gets silently dropped from `@layer base` by Tailwind v4's production CSS pass, invalidating the
+   `animation`/`animation-duration` declaration that reads it and killing the animation outright — a plain
+   `:root` custom property isn't enough insurance against that pruning; `@property` is. */
+@property --loading-border-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 1.6s;
+}
+
+@property --waiting-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --waiting-border-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 3.2s;
+}
+
+/* Same pruning risk as above, but these two are plain static keywords (never theme/appearance-reactive,
+   just like the angle/duration tokens), so `@property` is a complete fix on its own. The six *color*
+   tokens below it (`--border-normal-color` and friends) need a different fix — see the unlayered `:root`
+   re-declaration near the top of this file: their real value is a `var()` chain into theme colors that
+   legitimately differs per light/dark appearance, and `@property`'s `initial-value` must be a single
+   static fallback, so registering them here would have silently locked every border/scrollbar/hover-fill
+   color to one guessed shade regardless of theme — wrong in exactly the way this bug already was. */
+@property --cursor-help {
+  syntax: "*";
+  inherits: false;
+  initial-value: help;
+}
+
+@property --cursor-text {
+  syntax: "*";
+  inherits: false;
+  initial-value: text;
+}
+
+@property --introduced-border-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 1.6s;
+}
+
+@keyframes loading-border-spin {
+  to {
+    --loading-border-angle: 360deg;
+  }
+}
+
+@keyframes loading-border-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes waiting-border-spin {
+  to {
+    --waiting-border-angle: 360deg;
+  }
+}
+
+@keyframes waiting-border-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Clockwise spinning + pulsing loading ring in the element's normal border color; recolor via --loading-border-color. */
+@utility border-loading {
+  position: relative;
+  --loading-border-angle: 0deg;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: var(--stroke-hairline);
+    background:
+      conic-gradient(from var(--loading-border-angle), transparent, var(--loading-border-color, var(--border-normal-color))), conic-gradient(color-mix(in oklab, var(--loading-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation:
+      loading-border-spin var(--loading-border-duration) linear infinite,
+      loading-border-pulse var(--loading-border-duration) ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+/* Recolor the loading ring to the active stroke (selected/on elements). */
+@utility border-loading-active {
+  --loading-border-color: var(--active-base);
+}
+
+/* Recolor the loading ring to the level-aware element border color. */
+@utility border-loading-element {
+  --loading-border-color: var(--border-element-color);
+}
+
+/* Clockwise dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color; recolor via --waiting-border-color. */
+@utility border-waiting {
+  position: relative;
+  --waiting-border-angle: 0deg;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: var(--stroke-hairline);
+    background:
+      repeating-conic-gradient(from var(--waiting-border-angle), var(--waiting-border-color, var(--border-normal-color)) 0deg 18deg, transparent 18deg 30deg), conic-gradient(color-mix(in oklab, var(--waiting-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation:
+      waiting-border-spin var(--waiting-border-duration) linear infinite,
+      waiting-border-pulse var(--waiting-border-duration) ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+/* Recolor the waiting ring to the active stroke (selected/on elements). */
+@utility border-waiting-active {
+  --waiting-border-color: var(--active-base);
+}
+
+/* Recolor the waiting ring to the level-aware element border color. */
+@utility border-waiting-element {
+  --waiting-border-color: var(--border-element-color);
+}
+
+@keyframes introduced-border-pulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 var(--stroke-hairline) var(--introduced-border-color, var(--color-secondary));
+  }
+  50% {
+    box-shadow: inset 0 0 0 var(--stroke-focus) var(--introduced-border-color, var(--color-secondary));
+  }
+}
+
+/* 🎓️ Any element stamped data-introduced="true" (by the introduction system, or declaratively) pulses an
+   inset ring in the highlight color whose THICKNESS breathes — deliberately not the spinning border-loading
+   conic ring. Inset so it stays inside an introduction cutout rather than sitting under the glass veil. */
+[data-introduced="true"] {
+  animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
+}
+
+/* 🪟️ Docked windows: rectangular body rings are wrong for *window-chrome* introduce targets — the
+   silhouette SVG on `[data-slot="mode-dock-stack"]` owns those. Suppress only the window body stamp
+   (scroll surface `framework.window.{segment}` / `[data-slot="window"]`), not nested introduce targets
+   such as a utility toggle (`transform`) that must keep their own inset pulse. Action-row ids
+   (`framework.window.{segment}.action.*`) are nested targets and keep their pulse. */
+[data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
+[data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+[data-slot="mode-dock-stack"] [data-slot="window"].border-loading::after,
+[data-slot="mode-dock-stack"] [data-slot="window"].border-waiting::after {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+}
+
+@keyframes window-silhouette-border-introduced-pulse {
+  0%,
+  100% {
+    stroke-width: var(--stroke-hairline);
+  }
+  50% {
+    stroke-width: var(--stroke-focus);
+  }
+}
+
+@keyframes window-silhouette-border-loading-dash {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+@keyframes window-silhouette-border-loading-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes window-silhouette-border-waiting-dash {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+@keyframes window-silhouette-border-waiting-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.window-silhouette-border {
+  stroke-width: var(--stroke-hairline);
+}
+
+.window-silhouette-border-introduced {
+  stroke-width: var(--stroke-hairline);
+  animation: window-silhouette-border-introduced-pulse var(--introduced-border-duration) ease-in-out infinite;
+}
+
+.window-silhouette-border-loading {
+  stroke-width: var(--stroke-hairline);
+  stroke-dasharray: 28 20;
+  stroke-linecap: butt;
+  animation:
+    window-silhouette-border-loading-dash var(--loading-border-duration) linear infinite,
+    window-silhouette-border-loading-pulse var(--loading-border-duration) ease-in-out infinite;
+}
+
+.window-silhouette-border-waiting {
+  stroke-width: var(--stroke-hairline);
+  stroke-dasharray: 10 14;
+  stroke-linecap: butt;
+  animation:
+    window-silhouette-border-waiting-dash var(--waiting-border-duration) linear infinite,
+    window-silhouette-border-waiting-pulse var(--waiting-border-duration) ease-in-out infinite;
+}
+
+.window-silhouette-border-active {
+  stroke: var(--active-base);
+}
+
+.window-silhouette-border-normal {
+  stroke: var(--border-normal-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-introduced="true"] {
+    animation: none;
+    box-shadow: inset 0 0 0 var(--stroke-default) var(--introduced-border-color, var(--color-secondary));
+  }
+
+  [data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
+  [data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
+    box-shadow: none !important;
+  }
+
+  .window-silhouette-border-introduced,
+  .window-silhouette-border-loading,
+  .window-silhouette-border-waiting {
+    animation: none;
+    opacity: 1;
+  }
+
+  .window-silhouette-border-introduced {
+    stroke-width: var(--stroke-default);
+  }
+}
+
+/* 🎓️ The chrome unit (panel/window/navbar/footer) containing a step's introduce/show target — raised
+   above the single fullscreen introduction veil (z-tutorial) so the real element renders crisp and stays
+   interactive, instead of the veil punching cutout holes around it. !important is required to outrank
+   Panel's inline zIndex; the attribute is unmanaged by React (stamped/cleared imperatively, like
+   data-introduced), so re-renders can't clobber it. */
+[data-introduction-elevated] {
+  z-index: calc(var(--z-tutorial) + 1) !important;
+}
+
+/* #region 🫨️IconAnim — closed hover micro-animations. Every @keyframes has an identical 0% and 100%
+   frame (shared rest pose), EXCEPT declared full-turn spins (rotate/rotateX/rotateY to ±360deg — a
+   visually identical pose, so the loop is still seamless): rotate-ccw, rotate-cw, loader-2,
+   flip-horizontal, flip-vertical, arrow-right-left, settings, globe. */
+
+:where([data-icon], [data-icon-kind]) {
+  transform-origin: 50% 50%;
+}
+
+:where([data-icon], [data-icon-kind]):hover,
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) {
+  animation: var(--icon-animation, none) var(--icon-animation-duration, 500ms)
+             var(--icon-animation-ease, ease-in-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-icon], [data-icon-kind]) {
+    animation: none !important;
+  }
+}
+
+
+
+
+
+@keyframes icon-chevron-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-12%);
+  }
+  70% {
+    transform: translateY(3%);
+  }
+}
+[data-icon="chevron-up"] { --icon-animation: icon-chevron-up; --icon-animation-duration: 400ms; }
+
+@keyframes icon-chevron-down {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(12%);
+  }
+  70% {
+    transform: translateY(-3%);
+  }
+}
+[data-icon="chevron-down"] { --icon-animation: icon-chevron-down; --icon-animation-duration: 400ms; }
+
+@keyframes icon-chevron-left {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(-12%);
+  }
+  70% {
+    transform: translateX(3%);
+  }
+}
+[data-icon="chevron-left"] { --icon-animation: icon-chevron-left; --icon-animation-duration: 400ms; }
+
+@keyframes icon-chevron-right {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(12%);
+  }
+  70% {
+    transform: translateX(-3%);
+  }
+}
+[data-icon="chevron-right"] { --icon-animation: icon-chevron-right; --icon-animation-duration: 400ms; }
+
+
+
+
+
+
+
+/* play: a button depresses when pressed — uniform scale (z-depth), not a slide-and-grow. */
+@keyframes icon-play {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.92);
+  }
+  65% {
+    transform: scale(1.04);
+  }
+}
+[data-icon="play"] { --icon-animation: icon-play; --icon-animation-duration: 450ms; }
+
+
+
+
+
+
+
+
+
+
+@keyframes icon-rotate-ccw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-360deg);
+  }
+}
+[data-icon="rotate-ccw"] { --icon-animation: icon-rotate-ccw; --icon-animation-duration: 600ms; }
+
+@keyframes icon-rotate-cw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+[data-icon="rotate-cw"] { --icon-animation: icon-rotate-cw; --icon-animation-duration: 600ms; }
+
+@keyframes icon-loader-2 {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+[data-icon="loader-2"] { --icon-animation: icon-loader-2; --icon-animation-duration: 600ms; --icon-animation-ease: linear; }
+
+
+
+
+@keyframes icon-settings {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+[data-icon="settings"] { --icon-animation: icon-settings; --icon-animation-duration: 800ms; }
+
+@keyframes icon-globe {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+[data-icon="globe"] { --icon-animation: icon-globe; --icon-animation-duration: 700ms; }
+
+
+
+
+
+
+
+
+
+/* folder / folder-open: Lucide draws the tab as a notch in one continuous outline (not a separate closed
+   shape), so there is no literal sub-part to hinge without redrawing the vendored artwork. A folder is
+   rigid, so it must not deform (no skew/squash) — instead it tips as a rigid 3D body around its bottom
+   edge (the same rigid-rotation technique as book-open's page turn), like a laptop lid tipping back. */
+@keyframes icon-folder-flap {
+  0%,
+  100% {
+    transform: perspective(60px) rotateX(0deg);
+  }
+  45% {
+    transform: perspective(60px) rotateX(-22deg);
+  }
+  75% {
+    transform: perspective(60px) rotateX(4deg);
+  }
+}
+[data-icon="folder"] { --icon-animation: icon-folder-flap; transform-origin: 50% 100%; }
+
+@keyframes icon-folder-open-flap {
+  0%,
+  100% {
+    transform: perspective(60px) rotateX(0deg);
+  }
+  45% {
+    transform: perspective(60px) rotateX(-28deg);
+  }
+  75% {
+    transform: perspective(60px) rotateX(5deg);
+  }
+}
+[data-icon="folder-open"] { --icon-animation: icon-folder-open-flap; transform-origin: 50% 100%; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@keyframes icon-wrench {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(20deg);
+  }
+  75% {
+    transform: rotate(-4deg);
+  }
+}
+[data-icon="wrench"] { --icon-animation: icon-wrench; transform-origin: 17px 6px; }
+
+
+
+
+
+
+
+@keyframes icon-mouse-pointer-2 {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(-10deg);
+  }
+}
+[data-icon="mouse-pointer-2"] { --icon-animation: icon-mouse-pointer-2; transform-origin: 0% 0%; }
+
+@keyframes icon-text-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+[data-icon="text-cursor"] { --icon-animation: icon-text-cursor; --icon-animation-duration: 600ms; }
+
+
+
+
+
+
+
+
+
+@keyframes icon-search {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+}
+[data-icon="search"] { --icon-animation: icon-search; transform-origin: 35% 35%; }
+
+
+
+
+/* filter: a funnel is rigid — no squash. It settles/wobbles slightly about its mouth when tapped. */
+@keyframes icon-filter {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(3deg);
+  }
+  70% {
+    transform: rotate(-1.5deg);
+  }
+}
+[data-icon="filter"] { --icon-animation: icon-filter; transform-origin: 50% 0%; }
+
+
+
+@keyframes icon-moon {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-15deg);
+  }
+}
+[data-icon="moon"] { --icon-animation: icon-moon; transform-origin: 15px 10px; }
+
+
+
+
+
+
+@keyframes icon-check {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.22);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="check"] { --icon-animation: icon-check; transform-origin: 9px 17px; }
+
+
+
+
+@keyframes icon-minus {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(1.2);
+  }
+}
+[data-icon="minus"] { --icon-animation: icon-minus; }
+
+
+
+
+
+
+
+
+
+
+@keyframes icon-circle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+[data-icon="circle"] { --icon-animation: icon-circle; }
+
+
+@keyframes icon-square {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+}
+[data-icon="square"] { --icon-animation: icon-square; }
+
+
+@keyframes icon-triangle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-8%);
+  }
+}
+[data-icon="triangle"] { --icon-animation: icon-triangle; }
+
+@keyframes icon-hexagon {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(30deg);
+  }
+}
+[data-icon="hexagon"] { --icon-animation: icon-hexagon; }
+
+
+
+
+
+@keyframes icon-puzzle {
+  0%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  35% {
+    transform: rotate(-10deg) translateX(4%);
+  }
+  65% {
+    transform: rotate(6deg) translateX(4%);
+  }
+}
+[data-icon="puzzle"] { --icon-animation: icon-puzzle; }
+
+
+
+
+
+@keyframes icon-table-2-header {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  45% {
+    transform: scaleX(0.94);
+  }
+  75% {
+    transform: scaleX(1.02);
+  }
+}
+@keyframes icon-table-2-divider {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-1.4px);
+  }
+  75% {
+    transform: translateX(0.2px);
+  }
+}
+[data-icon="table-2"] { --icon-animation: none; --icon-part-2-anim: icon-table-2-divider; --icon-part-3-anim: icon-table-2-header; --icon-part-3-origin: 3px 9px; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+@keyframes icon-sigma {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.9);
+  }
+}
+[data-icon="sigma"] { --icon-animation: icon-sigma; transform-origin: 0% 50%; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+@keyframes icon-cloud {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(8%);
+  }
+}
+[data-icon="cloud"] { --icon-animation: icon-cloud; --icon-animation-duration: 700ms; }
+
+
+
+
+/* message-square / message-circle: the tail is fused into the bubble's stroke outline (not a separate
+   shape), but a speech bubble is a single rigid object in reality — it physically pivots on its tail tip
+   when nudged, so a rotation anchored there is the mechanically correct single-body motion. */
+@keyframes icon-message-circle-bob {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(6deg);
+  }
+  72% {
+    transform: rotate(-1.5deg);
+  }
+}
+[data-icon="message-circle"] { --icon-animation: icon-message-circle-bob; transform-origin: 2px 21px; }
+
+@keyframes icon-message-square-bob {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(5deg);
+  }
+  72% {
+    transform: rotate(-1.5deg);
+  }
+}
+[data-icon="message-square"] { --icon-animation: icon-message-square-bob; transform-origin: 3px 22px; }
+
+
+
+
+
+@keyframes icon-kind-emoji {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.15);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+}
+[data-icon-kind="emoji"] { --icon-animation: icon-kind-emoji; }
+
+@keyframes icon-kind-text {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8%);
+  }
+}
+[data-icon-kind="text"] { --icon-animation: icon-kind-text; }
+
+@keyframes icon-kind-typst {
+  0%,
+  100% {
+    transform: skewX(0deg);
+  }
+  50% {
+    transform: skewX(-8deg);
+  }
+}
+[data-icon-kind="typst"] { --icon-animation: icon-kind-typst; }
+
+@keyframes icon-kind-image {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+[data-icon-kind="image"] { --icon-animation: icon-kind-image; }
+
+@keyframes icon-kind-svg {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(4deg);
+  }
+  70% {
+    transform: rotate(-4deg);
+  }
+}
+[data-icon-kind="svg"] { --icon-animation: icon-kind-svg; }
+
+@keyframes icon-kind-node {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+[data-icon-kind="node"] { --icon-animation: icon-kind-node; }
+
+@keyframes icon-kind-shortcode {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-6deg);
+  }
+  60% {
+    transform: rotate(6deg);
+  }
+}
+[data-icon-kind="shortcode"] { --icon-animation: icon-kind-shortcode; }
+
+@keyframes icon-kind-missing {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-8%);
+  }
+  55% {
+    transform: translateX(8%);
+  }
+  80% {
+    transform: translateX(-3%);
+  }
+}
+[data-icon-kind="missing"] { --icon-animation: icon-kind-missing; }
+
+/* flip-horizontal/flip-vertical are whole-icon full-turn spins on purpose: a literal "flip" IS a rotation
+   of the entire glyph around an axis, which is more mechanically correct than tugging the brackets apart. */
+@keyframes icon-flip-horizontal {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+[data-icon="flip-horizontal"] { --icon-animation: icon-flip-horizontal; --icon-animation-duration: 600ms; }
+
+@keyframes icon-flip-vertical {
+  0% {
+    transform: rotateX(0deg);
+  }
+  100% {
+    transform: rotateX(360deg);
+  }
+}
+[data-icon="flip-vertical"] { --icon-animation: icon-flip-vertical; --icon-animation-duration: 600ms; }
+
+/* #endregion 🫨️IconAnim */
+
+/* #region 🔧️IconPartAnim — mechanism-accurate hover animations for icons with cleanly separable SVG
+   parts (verified against committed SVG source). Overrides the whole-icon rigid-body animation
+   above (--icon-animation: none) and instead drives individual svg children by position. Every
+   @keyframes here is closed (0% === 100%). */
+
+/* Generic per-part engine: any icon can drive its own SVG children via --icon-part-<N>-anim/-origin/-duration.
+   Slots default to none/center/500ms so this is a no-op for icons that don't set them. */
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(1),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(1) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-1-origin, 50% 50%);
+  animation: var(--icon-part-1-anim, none) var(--icon-part-1-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(2),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(2) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-2-origin, 50% 50%);
+  animation: var(--icon-part-2-anim, none) var(--icon-part-2-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(3),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(3) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-3-origin, 50% 50%);
+  animation: var(--icon-part-3-anim, none) var(--icon-part-3-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(4),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(4) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-4-origin, 50% 50%);
+  animation: var(--icon-part-4-anim, none) var(--icon-part-4-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(5),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(5) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-5-origin, 50% 50%);
+  animation: var(--icon-part-5-anim, none) var(--icon-part-5-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(6),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(6) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-6-origin, 50% 50%);
+  animation: var(--icon-part-6-anim, none) var(--icon-part-6-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(7),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(7) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-7-origin, 50% 50%);
+  animation: var(--icon-part-7-anim, none) var(--icon-part-7-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(8),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(8) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-8-origin, 50% 50%);
+  animation: var(--icon-part-8-anim, none) var(--icon-part-8-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(9),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(9) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-9-origin, 50% 50%);
+  animation: var(--icon-part-9-anim, none) var(--icon-part-9-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(10),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(10) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-10-origin, 50% 50%);
+  animation: var(--icon-part-10-anim, none) var(--icon-part-10-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(11),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(11) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-11-origin, 50% 50%);
+  animation: var(--icon-part-11-anim, none) var(--icon-part-11-duration, 500ms) ease-in-out 1;
+}
+
+:where([data-icon], [data-icon-kind]):hover svg > :nth-child(12),
+:where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
+       [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
+       [role="combobox"]):hover :where([data-icon], [data-icon-kind]) svg > :nth-child(12) {
+  transform-box: view-box;
+  transform-origin: var(--icon-part-12-origin, 50% 50%);
+  animation: var(--icon-part-12-anim, none) var(--icon-part-12-duration, 500ms) ease-in-out 1;
+}
+
+/* Handcrafted per-icon mechanism keyframes — every icon below has bespoke, uniquely-named keyframes (icon-<id>-<part>), never shared with another icon. Preserved from earlier passes where the choreography was already icon-specific; regenerated everywhere else. */
+
+@keyframes icon-award-ribbon {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(-6deg);
+  }
+  70% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes icon-bell-clapper {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  45% {
+    transform: rotate(9deg);
+  }
+  62% {
+    transform: rotate(-6deg);
+  }
+  80% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes icon-bell-ring {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  18% {
+    transform: rotate(14deg);
+  }
+  36% {
+    transform: rotate(-12deg);
+  }
+  54% {
+    transform: rotate(8deg);
+  }
+  70% {
+    transform: rotate(-5deg);
+  }
+  85% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes icon-box {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-10%);
+  }
+  60% {
+    transform: translateY(0);
+  }
+  78% {
+    transform: translateY(-4%);
+  }
+}
+@keyframes icon-eraser-scrub {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px);
+  }
+  55% {
+    transform: translateX(2px);
+  }
+  80% {
+    transform: translateX(-0.8px);
+  }
+}
+@keyframes icon-hammer {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(14deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+/* landmark: stone columns are rigid and load-bearing — they don't slide up and down. Light sweeps
+   across the colonnade instead (opacity), left to right. */
+@keyframes icon-landmark-col-a {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.45;
+  }
+  55% {
+    opacity: 1;
+  }
+}
+@keyframes icon-landmark-col-b {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.45;
+  }
+  70% {
+    opacity: 1;
+  }
+}
+@keyframes icon-landmark-col-c {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.45;
+  }
+  85% {
+    opacity: 1;
+  }
+}
+@keyframes icon-landmark-col-d {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.45;
+  }
+  95% {
+    opacity: 1;
+  }
+}
+@keyframes icon-layers-bottom {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(2.2px);
+  }
+  75% {
+    transform: translateY(-0.3px);
+  }
+}
+@keyframes icon-layers-top {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-2.2px);
+  }
+  75% {
+    transform: translateY(0.3px);
+  }
+}
+@keyframes icon-link-tug-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.4px, -1.4px);
+  }
+  70% {
+    transform: translate(-0.3px, 0.3px);
+  }
+}
+@keyframes icon-link-tug-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.4px, 1.4px);
+  }
+  70% {
+    transform: translate(0.3px, -0.3px);
+  }
+}
+@keyframes icon-lock-open-shackle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes icon-lock-shackle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(32deg);
+  }
+  75% {
+    transform: rotate(-6deg);
+  }
+}
+@keyframes icon-magnet-tick {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  45% {
+    opacity: 0.25;
+    transform: scale(0.7);
+  }
+  75% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+@keyframes icon-paintbrush-stroke {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  65% {
+    transform: rotate(10deg);
+  }
+}
+/* pipette: a liquid drop falls straight down under gravity, not diagonally. */
+@keyframes icon-pipette-drop {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(1.8px);
+    opacity: 0.35;
+  }
+}
+@keyframes icon-plug-body {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-3px);
+  }
+  65% {
+    transform: translateY(1px);
+  }
+}
+@keyframes icon-trash-2-lid {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  45% {
+    transform: rotate(32deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes icon-alert-circle-exclaim {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.55);
+  }
+  55% {
+    transform: scale(0.88);
+  }
+  75% {
+    transform: scale(1.1);
+  }
+}
+@keyframes icon-align-left-line-a {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  40% {
+    transform: scaleX(0.86);
+  }
+  68% {
+    transform: scaleX(1.03);
+  }
+}
+@keyframes icon-align-left-line-b {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.86);
+  }
+  76% {
+    transform: scaleX(1.03);
+  }
+}
+@keyframes icon-align-left-line-c {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  60% {
+    transform: scaleX(0.86);
+  }
+  84% {
+    transform: scaleX(1.03);
+  }
+}
+@keyframes icon-app-window-control-a {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.4);
+  }
+  68% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-app-window-control-b {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.4);
+  }
+  80% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-arrow-down {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(2.5px);
+  }
+  70% {
+    transform: translateY(-0.4px);
+  }
+}
+@keyframes icon-arrow-left {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(-2.5px);
+  }
+  70% {
+    transform: translateX(0.4px);
+  }
+}
+@keyframes icon-arrow-right {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(2.5px);
+  }
+  70% {
+    transform: translateX(-0.4px);
+  }
+}
+@keyframes icon-arrow-right-left-bottom {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  55% {
+    transform: translateX(-2px);
+  }
+  80% {
+    transform: translateX(0.3px);
+  }
+}
+@keyframes icon-arrow-right-left-top {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(2px);
+  }
+  60% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-arrow-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-2.5px);
+  }
+  70% {
+    transform: translateY(0.4px);
+  }
+}
+@keyframes icon-award-medal {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  85% {
+    transform: scale(0.97);
+  }
+}
+@keyframes icon-bar-chart-3-bar {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  45% {
+    transform: scaleY(1.25);
+  }
+  75% {
+    transform: scaleY(0.95);
+  }
+}
+@keyframes icon-book-open-cover {
+  0%,
+  100% {
+    transform: perspective(60px) rotateY(0deg);
+  }
+  50% {
+    transform: perspective(60px) rotateY(28deg);
+  }
+}
+@keyframes icon-calendar-days-day-1 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.4);
+  }
+  42% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-calendar-days-day-2 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.4);
+  }
+  52% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-calendar-days-day-3 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.4);
+  }
+  62% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-calendar-days-day-4 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.4);
+  }
+  72% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-calendar-days-day-5 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.4);
+  }
+  82% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-calendar-days-day-6 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  70% {
+    transform: scale(1.4);
+  }
+  90% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-calendar-days-ring-a {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-2px);
+  }
+  60% {
+    transform: translateY(0.3px);
+  }
+}
+@keyframes icon-calendar-days-ring-b {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-2px);
+  }
+  72% {
+    transform: translateY(0.3px);
+  }
+}
+@keyframes icon-camera-lens {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  45% {
+    transform: scaleY(0.15);
+  }
+  60% {
+    transform: scaleY(1.1);
+  }
+}
+@keyframes icon-check-circle-2-tick {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.35);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  70% {
+    transform: scale(1.25);
+  }
+  88% {
+    transform: scale(0.98);
+  }
+}
+@keyframes icon-chevrons-up-down-bottom {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(1.8px);
+  }
+  75% {
+    transform: translateY(-0.3px);
+  }
+}
+@keyframes icon-chevrons-up-down-top {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-1.8px);
+  }
+  75% {
+    transform: translateY(0.3px);
+  }
+}
+@keyframes icon-circle-dot-core {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.6);
+  }
+  65% {
+    transform: scale(0.85);
+  }
+  85% {
+    transform: scale(1.1);
+  }
+}
+@keyframes icon-clipboard-clip {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  70% {
+    transform: translateY(0.5px);
+  }
+}
+@keyframes icon-clipboard-list-clip {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-3.4px);
+  }
+  65% {
+    transform: translateY(0.6px);
+  }
+}
+@keyframes icon-clock-hands {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(15deg);
+  }
+  70% {
+    transform: rotate(-4deg);
+  }
+}
+@keyframes icon-code-chevron-l {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-2.2px);
+  }
+  75% {
+    transform: translateX(0.3px);
+  }
+}
+@keyframes icon-code-chevron-r {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(2.2px);
+  }
+  75% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-combine-box-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(1.8px, 1.8px);
+  }
+  75% {
+    transform: translate(-0.3px, -0.3px);
+  }
+}
+@keyframes icon-combine-box-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(-1.8px, -1.8px);
+  }
+  75% {
+    transform: translate(0.3px, 0.3px);
+  }
+}
+@keyframes icon-component-diamond-bottom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.4);
+  }
+  80% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-component-diamond-left {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  70% {
+    transform: scale(1.4);
+  }
+  92% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-component-diamond-right {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.4);
+  }
+  65% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-component-diamond-top {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.4);
+  }
+  50% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-copy-back-sheet {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(-2.5px, -2.5px);
+  }
+  75% {
+    transform: translate(0.4px, 0.4px);
+  }
+}
+@keyframes icon-crosshair-tick-bottom {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(1.6px);
+  }
+  75% {
+    transform: translateY(-0.3px);
+  }
+}
+@keyframes icon-crosshair-tick-left {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-1.6px);
+  }
+  75% {
+    transform: translateX(0.3px);
+  }
+}
+@keyframes icon-crosshair-tick-right {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(1.6px);
+  }
+  75% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-crosshair-tick-top {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-1.6px);
+  }
+  75% {
+    transform: translateY(0.3px);
+  }
+}
+/* cylinder: the cap is a rigid disc — it doesn't squash, it lifts (like peeking under a lid). */
+@keyframes icon-cylinder-cap {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1.5px);
+  }
+  78% {
+    transform: translateY(0.2px);
+  }
+}
+@keyframes icon-download-drop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(2.2px);
+  }
+  70% {
+    transform: translateY(-0.3px);
+  }
+}
+@keyframes icon-edit-3-pen {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  55% {
+    transform: rotate(6deg);
+  }
+  80% {
+    transform: rotate(-3deg);
+  }
+}
+@keyframes icon-edit-3-underline {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  45% {
+    transform: scaleX(0.15);
+  }
+  78% {
+    transform: scaleX(1.06);
+  }
+}
+@keyframes icon-external-link-arrow {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(1.6px, -1.6px);
+  }
+  75% {
+    transform: translate(-0.3px, 0.3px);
+  }
+}
+@keyframes icon-eye-lid {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  35% {
+    transform: scaleY(0.1);
+  }
+  55% {
+    transform: scaleY(0.1);
+  }
+  80% {
+    transform: scaleY(1.08);
+  }
+}
+@keyframes icon-eye-off-pupil {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.2);
+  }
+  45% {
+    transform: scale(0.85);
+  }
+  65% {
+    transform: scale(1.05);
+  }
+}
+@keyframes icon-eye-pupil {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.15;
+  }
+  60% {
+    opacity: 0.15;
+  }
+  85% {
+    opacity: 1;
+  }
+}
+@keyframes icon-file-archive-zip {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(1.5px);
+  }
+  75% {
+    transform: translateY(-0.2px);
+  }
+}
+@keyframes icon-file-code-chevron-l {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-1.4px);
+  }
+  75% {
+    transform: translateX(0.2px);
+  }
+}
+@keyframes icon-file-code-chevron-r {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(1.4px);
+  }
+  75% {
+    transform: translateX(-0.2px);
+  }
+}
+@keyframes icon-file-corner {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  45% {
+    transform: translate(-1.2px, 1px) rotate(8deg);
+  }
+  75% {
+    transform: translate(0.2px, -0.2px) rotate(-1deg);
+  }
+}
+@keyframes icon-file-image-sun {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.3);
+  }
+  85% {
+    transform: scale(0.98);
+  }
+}
+@keyframes icon-file-json-brace-l {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+  45% {
+    transform: translateX(-1.6px) scaleX(1.1);
+  }
+  75% {
+    transform: translateX(0.2px) scaleX(1);
+  }
+}
+@keyframes icon-file-json-brace-r {
+  0%,
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+  45% {
+    transform: translateX(1.6px) scaleX(1.1);
+  }
+  75% {
+    transform: translateX(-0.2px) scaleX(1);
+  }
+}
+@keyframes icon-file-spreadsheet-cell {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.25;
+  }
+  70% {
+    opacity: 1;
+  }
+}
+@keyframes icon-file-text-line-a {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  35% {
+    transform: scaleX(0.82);
+  }
+  62% {
+    transform: scaleX(1.05);
+  }
+}
+@keyframes icon-file-text-line-b {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  48% {
+    transform: scaleX(0.82);
+  }
+  72% {
+    transform: scaleX(1.05);
+  }
+}
+@keyframes icon-file-text-line-c {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  60% {
+    transform: scaleX(0.82);
+  }
+  82% {
+    transform: scaleX(1.05);
+  }
+}
+@keyframes icon-file-type-glyph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.3);
+  }
+  75% {
+    transform: scale(0.95);
+  }
+}
+@keyframes icon-file-video-play {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  85% {
+    transform: scale(0.97);
+  }
+}
+@keyframes icon-focus-bracket-bl {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.6px, -1.6px);
+  }
+  70% {
+    transform: translate(-0.3px, 0.3px);
+  }
+}
+@keyframes icon-focus-bracket-br {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.6px, -1.6px);
+  }
+  70% {
+    transform: translate(0.3px, 0.3px);
+  }
+}
+@keyframes icon-focus-bracket-tl {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.6px, 1.6px);
+  }
+  70% {
+    transform: translate(-0.3px, -0.3px);
+  }
+}
+@keyframes icon-focus-bracket-tr {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.6px, 1.6px);
+  }
+  70% {
+    transform: translate(0.3px, -0.3px);
+  }
+}
+@keyframes icon-focus-subject {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  80% {
+    transform: scale(0.97);
+  }
+}
+@keyframes icon-git-branch-tip {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.35);
+  }
+  82% {
+    transform: scale(0.98);
+  }
+}
+@keyframes icon-git-commit-node {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.6);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+}
+@keyframes icon-git-merge-target {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.3);
+  }
+  55% {
+    transform: scale(0.95);
+  }
+  75% {
+    transform: scale(1.15);
+  }
+  90% {
+    transform: scale(0.98);
+  }
+}
+@keyframes icon-graduation-cap-tassel {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(8deg);
+  }
+  70% {
+    transform: rotate(-3deg);
+  }
+}
+@keyframes icon-grid-3x3-col-a {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(-1.2px);
+  }
+  65% {
+    transform: translateX(0.2px);
+  }
+}
+@keyframes icon-grid-3x3-col-b {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(1.2px);
+  }
+  65% {
+    transform: translateX(-0.2px);
+  }
+}
+@keyframes icon-grid-3x3-row-a {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-1.2px);
+  }
+  65% {
+    transform: translateY(0.2px);
+  }
+}
+@keyframes icon-grid-3x3-row-b {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(1.2px);
+  }
+  65% {
+    transform: translateY(-0.2px);
+  }
+}
+/* grip-vertical: the dots are molded bumps on a rigid handle — they don't pop loose and bounce.
+   A light wave crosses the grip top-to-bottom instead (opacity). */
+@keyframes icon-grip-vertical-dot-1 {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.35;
+  }
+  55% {
+    opacity: 1;
+  }
+}
+@keyframes icon-grip-vertical-dot-2 {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.35;
+  }
+  70% {
+    opacity: 1;
+  }
+}
+@keyframes icon-grip-vertical-dot-3 {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 0.35;
+  }
+  85% {
+    opacity: 1;
+  }
+}
+/* hand: fingers are rigid segments that flex at the knuckle — they don't stretch out of their sockets.
+   Each rotates about its own base, staggered, like fingers wiggling in a wave. */
+@keyframes icon-hand-finger-a {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  35% {
+    transform: rotate(6deg);
+  }
+  65% {
+    transform: rotate(-1deg);
+  }
+}
+@keyframes icon-hand-finger-b {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+  78% {
+    transform: rotate(-1deg);
+  }
+}
+@keyframes icon-hand-finger-c {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  65% {
+    transform: rotate(6deg);
+  }
+  90% {
+    transform: rotate(-1deg);
+  }
+}
+@keyframes icon-hard-drive-led-a {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.15;
+  }
+  55% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.2;
+  }
+  90% {
+    opacity: 1;
+  }
+}
+@keyframes icon-hard-drive-led-b {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.15;
+  }
+  65% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 0.2;
+  }
+}
+@keyframes icon-hash-bar-bottom {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(1px);
+  }
+  60% {
+    transform: translateY(-0.2px);
+  }
+}
+@keyframes icon-hash-bar-left {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(-1px);
+  }
+  60% {
+    transform: translateX(0.2px);
+  }
+}
+@keyframes icon-hash-bar-right {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(1px);
+  }
+  60% {
+    transform: translateX(-0.2px);
+  }
+}
+@keyframes icon-hash-bar-top {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  35% {
+    transform: translateY(-1px);
+  }
+  60% {
+    transform: translateY(0.2px);
+  }
+}
+/* home: a door swings on its vertical hinge (rotateY about the jamb), not tips flat like a trapdoor. */
+@keyframes icon-home-door {
+  0%,
+  100% {
+    transform: perspective(50px) rotateY(0deg);
+  }
+  45% {
+    transform: perspective(50px) rotateY(35deg);
+  }
+  75% {
+    transform: perspective(50px) rotateY(-5deg);
+  }
+}
+@keyframes icon-image-plus-glyph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.5);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-image-sun {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.3);
+  }
+  88% {
+    transform: scale(0.98);
+  }
+}
+@keyframes icon-image-up-arrow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-2.5px);
+  }
+  70% {
+    transform: translateY(0.4px);
+  }
+}
+@keyframes icon-info-glyph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.25);
+  }
+  75% {
+    transform: scale(0.95);
+  }
+}
+@keyframes icon-lasso-anchor {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.4);
+  }
+  60% {
+    transform: scale(0.85);
+  }
+  80% {
+    transform: scale(1.1);
+  }
+}
+@keyframes icon-lasso-loop {
+  0%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  50% {
+    transform: rotate(-8deg) translateX(1.2px);
+  }
+}
+@keyframes icon-layout-divider-side {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  55% {
+    transform: translateX(-1.8px);
+  }
+  82% {
+    transform: translateX(0.3px);
+  }
+}
+@keyframes icon-layout-divider-top {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  55% {
+    transform: translateY(-1.8px);
+  }
+  82% {
+    transform: translateY(0.3px);
+  }
+}
+@keyframes icon-layout-grid-cell-bl {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(-1.4px, 1.4px);
+  }
+  75% {
+    transform: translate(0.2px, -0.2px);
+  }
+}
+@keyframes icon-layout-grid-cell-br {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(1.4px, 1.4px);
+  }
+  75% {
+    transform: translate(-0.2px, -0.2px);
+  }
+}
+@keyframes icon-layout-grid-cell-tl {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(-1.4px, -1.4px);
+  }
+  75% {
+    transform: translate(0.2px, 0.2px);
+  }
+}
+@keyframes icon-layout-grid-cell-tr {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(1.4px, -1.4px);
+  }
+  75% {
+    transform: translate(-0.2px, 0.2px);
+  }
+}
+@keyframes icon-library-spine {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(6deg);
+  }
+  70% {
+    transform: rotate(-1deg);
+  }
+}
+@keyframes icon-lightbulb-glass {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0.7;
+  }
+}
+@keyframes icon-link-2-off-loop-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(3px, -3px);
+  }
+  55% {
+    transform: translate(-0.5px, 0.5px);
+  }
+}
+@keyframes icon-link-2-off-loop-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  30% {
+    transform: translate(-3px, 3px);
+  }
+  55% {
+    transform: translate(0.5px, -0.5px);
+  }
+}
+@keyframes icon-list-bullet-bottom {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.5);
+  }
+  80% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-list-bullet-middle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.5);
+  }
+  65% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-list-bullet-top {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.5);
+  }
+  50% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-list-ordered-digit-1 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.4);
+  }
+  55% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-list-ordered-digit-2 {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  55% {
+    transform: scale(1.4);
+  }
+  80% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-list-ordered-row-a {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(2px);
+  }
+  65% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-list-ordered-row-b {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(2px);
+  }
+  72% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-list-ordered-row-c {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  55% {
+    transform: translateX(2px);
+  }
+  80% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-list-tree-branch-a {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(2.2px);
+  }
+  68% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-list-tree-branch-b {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  55% {
+    transform: translateX(2.2px);
+  }
+  82% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-maximize-2-arm-bl {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.4px, 1.4px);
+  }
+  70% {
+    transform: translate(0.2px, -0.2px);
+  }
+}
+@keyframes icon-maximize-2-arm-tr {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.4px, -1.4px);
+  }
+  70% {
+    transform: translate(-0.2px, 0.2px);
+  }
+}
+@keyframes icon-minimize-2-arm-bl {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.3px, -1.3px);
+  }
+  70% {
+    transform: translate(-0.2px, 0.2px);
+  }
+}
+@keyframes icon-minimize-2-arm-tr {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.3px, 1.3px);
+  }
+  70% {
+    transform: translate(0.2px, -0.2px);
+  }
+}
+@keyframes icon-monitor-screen {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  35% {
+    opacity: 0.4;
+  }
+  65% {
+    opacity: 1;
+  }
+}
+@keyframes icon-more-horizontal-dot-a {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.5);
+  }
+  55% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-more-horizontal-dot-b {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.5);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-more-horizontal-dot-c {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  65% {
+    transform: scale(1.5);
+  }
+  85% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-mouse-pointer-ray {
+  0%,
+  100% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(1px, 1px);
+    opacity: 0.3;
+  }
+}
+@keyframes icon-move-3d-arrow-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.4px, -1.4px);
+  }
+  70% {
+    transform: translate(0.2px, 0.2px);
+  }
+}
+@keyframes icon-move-3d-arrow-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.4px, 1.4px);
+  }
+  70% {
+    transform: translate(-0.2px, -0.2px);
+  }
+}
+/* move: the whole draggable object (cross + all 4 arrowheads) is one rigid glyph — it orbits in a tiny
+   square path to read as "this can be dragged," rather than the arrowheads detaching from the cross. */
+@keyframes icon-move {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  22% {
+    transform: translate(1.6px, 0);
+  }
+  44% {
+    transform: translate(1.6px, 1.6px);
+  }
+  66% {
+    transform: translate(0, 1.6px);
+  }
+  85% {
+    transform: translate(0, 0.3px);
+  }
+}
+@keyframes icon-network-node-left {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+  72% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-network-node-right {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  65% {
+    transform: scale(1.5);
+  }
+  88% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-network-node-top {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.5);
+  }
+  55% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-paint-bucket-drip {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(1);
+  }
+  45% {
+    transform: translateY(1.5px) scaleY(1.15);
+  }
+  75% {
+    transform: translateY(-0.2px) scaleY(0.95);
+  }
+}
+@keyframes icon-paintbrush-stroke-mark {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.2);
+  }
+  85% {
+    transform: scaleX(1.04);
+  }
+}
+@keyframes icon-panel-left-divider {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  55% {
+    transform: translateX(-1.8px);
+  }
+  82% {
+    transform: translateX(0.3px);
+  }
+}
+@keyframes icon-panel-right-divider {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  55% {
+    transform: translateX(1.8px);
+  }
+  82% {
+    transform: translateX(-0.3px);
+  }
+}
+@keyframes icon-panel-top-divider {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  55% {
+    transform: translateY(-1.8px);
+  }
+  82% {
+    transform: translateY(0.3px);
+  }
+}
+@keyframes icon-pause-bar-left {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(1px);
+  }
+  75% {
+    transform: translateX(-0.2px);
+  }
+}
+@keyframes icon-pause-bar-right {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-1px);
+  }
+  75% {
+    transform: translateX(0.2px);
+  }
+}
+@keyframes icon-pen-tool-anchor {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.4);
+  }
+  55% {
+    transform: scale(0.9);
+  }
+}
+@keyframes icon-plus-strokes {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.55);
+  }
+  68% {
+    transform: scale(0.9);
+  }
+  88% {
+    transform: scale(1.08);
+  }
+}
+@keyframes icon-redo-2 {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(2px);
+  }
+  62% {
+    transform: translateX(-0.4px);
+  }
+}
+@keyframes icon-redo {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(2.2px);
+  }
+  58% {
+    transform: translateX(-0.4px);
+  }
+}
+/* save: the write-protect notch is a rigid corner fold — it doesn't hinge into the disk, it slides
+   like a real floppy's metal shutter. */
+@keyframes icon-save-tab {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-1.5px);
+  }
+  75% {
+    transform: translateX(0.2px);
+  }
+}
+@keyframes icon-scaling-handle-in {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.3px, 1.3px);
+  }
+  70% {
+    transform: translate(0.2px, -0.2px);
+  }
+}
+@keyframes icon-scaling-handle-out {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.3px, -1.3px);
+  }
+  70% {
+    transform: translate(-0.2px, 0.2px);
+  }
+}
+@keyframes icon-scissors-handle-a {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(10deg);
+  }
+  75% {
+    transform: rotate(-2deg);
+  }
+}
+@keyframes icon-scissors-handle-b {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+}
+@keyframes icon-settings-2-knob-a {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(0.5px);
+  }
+}
+@keyframes icon-settings-2-knob-b {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  45% {
+    transform: translateX(3px);
+  }
+  75% {
+    transform: translateX(-0.5px);
+  }
+}
+@keyframes icon-shapes-circle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  65% {
+    transform: scale(1.4);
+  }
+  88% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-shapes-square {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.4);
+  }
+  70% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-shapes-triangle {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.4);
+  }
+  50% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-skip-back-tri {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-1.8px);
+  }
+  65% {
+    transform: translateX(-1.8px);
+  }
+  85% {
+    transform: translateX(0px);
+  }
+}
+@keyframes icon-skip-forward-tri {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(1.8px);
+  }
+  65% {
+    transform: translateX(1.8px);
+  }
+  85% {
+    transform: translateX(0px);
+  }
+}
+@keyframes icon-smartphone-button {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.75);
+  }
+  70% {
+    transform: scale(1.15);
+  }
+}
+@keyframes icon-smile-eye-l {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  45% {
+    transform: scaleY(0.15);
+  }
+  60% {
+    transform: scaleY(1.1);
+  }
+}
+@keyframes icon-smile-eye-r {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.15);
+  }
+  65% {
+    transform: scaleY(1.1);
+  }
+}
+@keyframes icon-smile-mouth {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  45% {
+    transform: scaleX(1.25);
+  }
+  75% {
+    transform: scaleX(0.95);
+  }
+}
+@keyframes icon-sparkles-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  60% {
+    opacity: 0.35;
+    transform: scale(0.75);
+  }
+  85% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+@keyframes icon-sparkles-star {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+@keyframes icon-sparkles-tick {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  45% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+@keyframes icon-square-arrow-down-left-head {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.3px, 1.3px);
+  }
+  70% {
+    transform: translate(0.2px, -0.2px);
+  }
+}
+@keyframes icon-square-arrow-down-right-head {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.3px, 1.3px);
+  }
+  70% {
+    transform: translate(-0.2px, -0.2px);
+  }
+}
+@keyframes icon-square-arrow-up-left-head {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-1.3px, -1.3px);
+  }
+  70% {
+    transform: translate(0.2px, 0.2px);
+  }
+}
+@keyframes icon-square-arrow-up-right-head {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(1.3px, -1.3px);
+  }
+  70% {
+    transform: translate(-0.2px, 0.2px);
+  }
+}
+@keyframes icon-square-dashed-dash-a {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes icon-square-dashed-dash-b {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.25;
+  }
+  65% {
+    opacity: 1;
+  }
+}
+@keyframes icon-square-dashed-dash-c {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 0.25;
+  }
+  80% {
+    opacity: 1;
+  }
+}
+@keyframes icon-square-dashed-dash-d {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.25;
+  }
+  95% {
+    opacity: 1;
+  }
+}
+@keyframes icon-sun-disc {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.6;
+  }
+  70% {
+    opacity: 1;
+  }
+}
+@keyframes icon-sun-ray {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+  78% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+@keyframes icon-tablet-button {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(0.75);
+  }
+  65% {
+    transform: scale(1.15);
+  }
+}
+@keyframes icon-tags-back-tag {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  40% {
+    transform: translate(-2px, 2px) rotate(-6deg);
+  }
+  70% {
+    transform: translate(0.3px, -0.3px) rotate(1deg);
+  }
+}
+@keyframes icon-tags-hole {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+  45% {
+    transform: scale(1.3) rotate(15deg);
+  }
+  75% {
+    transform: scale(0.95) rotate(-4deg);
+  }
+}
+@keyframes icon-text-search-lens {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  30% {
+    transform: rotate(-12deg);
+  }
+  60% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes icon-triangle-alert-exclaim {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.7);
+  }
+  45% {
+    transform: scale(0.85);
+  }
+  65% {
+    transform: scale(1.15);
+  }
+  85% {
+    transform: scale(0.95);
+  }
+}
+@keyframes icon-undo-2 {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-2.2px);
+  }
+  58% {
+    transform: translateX(0.4px);
+  }
+}
+@keyframes icon-undo {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  35% {
+    transform: translateX(-2px);
+  }
+  62% {
+    transform: translateX(0.4px);
+  }
+}
+@keyframes icon-unlink-loop-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(2.2px, -2.2px);
+  }
+  70% {
+    transform: translate(-0.4px, 0.4px);
+  }
+}
+@keyframes icon-unlink-loop-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40% {
+    transform: translate(-2.2px, 2.2px);
+  }
+  70% {
+    transform: translate(0.4px, -0.4px);
+  }
+}
+@keyframes icon-user-head {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-1.4px);
+  }
+  72% {
+    transform: translateY(0.2px);
+  }
+}
+@keyframes icon-users-back {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  60% {
+    transform: translateY(-1px);
+  }
+  85% {
+    transform: translateY(0.2px);
+  }
+}
+@keyframes icon-users-front {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-1.2px);
+  }
+  70% {
+    transform: translateY(0.2px);
+  }
+}
+@keyframes icon-x-stroke-a {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(14deg);
+  }
+  72% {
+    transform: rotate(-3deg);
+  }
+}
+@keyframes icon-x-stroke-b {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-14deg);
+  }
+  72% {
+    transform: rotate(3deg);
+  }
+}
+@keyframes icon-zoom-in-glyph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.45);
+  }
+  75% {
+    transform: scale(0.92);
+  }
+}
+@keyframes icon-zoom-out-glyph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(0.6);
+  }
+  75% {
+    transform: scale(1.08);
+  }
+}
+
+[data-icon="clipboard"] { --icon-animation: none; --icon-part-1-anim: icon-clipboard-clip; --icon-part-1-origin: 12px 4px; }
+[data-icon="clipboard-list"] { --icon-animation: none; --icon-part-1-anim: icon-clipboard-list-clip; --icon-part-1-origin: 12px 4px; }
+[data-icon="save"] { --icon-animation: none; --icon-part-3-anim: icon-save-tab; --icon-part-3-origin: 10px 4px; --icon-part-3-duration: 450ms; }
+[data-icon="calendar-days"] { --icon-animation: none; --icon-part-1-anim: icon-calendar-days-ring-a; --icon-part-2-anim: icon-calendar-days-ring-b; --icon-part-5-anim: icon-calendar-days-day-1; --icon-part-5-origin: 8px 14px; --icon-part-8-anim: icon-calendar-days-day-4; --icon-part-8-origin: 8px 18px; --icon-part-6-anim: icon-calendar-days-day-2; --icon-part-6-origin: 12px 14px; --icon-part-9-anim: icon-calendar-days-day-5; --icon-part-9-origin: 12px 18px; --icon-part-7-anim: icon-calendar-days-day-3; --icon-part-7-origin: 16px 14px; --icon-part-10-anim: icon-calendar-days-day-6; --icon-part-10-origin: 16px 18px; }
+[data-icon="copy"] { --icon-animation: none; --icon-part-2-anim: icon-copy-back-sheet; }
+[data-icon="tags"] { --icon-animation: none; --icon-part-2-anim: icon-tags-back-tag; --icon-part-3-anim: icon-tags-hole; --icon-part-3-origin: 10.5px 6.5px; --icon-part-3-duration: 400ms; }
+[data-icon="file"] { --icon-animation: none; --icon-part-2-anim: icon-file-corner; }
+[data-icon="camera"] { --icon-animation: none; --icon-part-2-anim: icon-camera-lens; --icon-part-2-origin: 12px 13px; --icon-part-2-duration: 350ms; }
+[data-icon="eye"] { --icon-animation: none; --icon-part-1-anim: icon-eye-lid; --icon-part-1-origin: 12px 12px; --icon-part-2-anim: icon-eye-pupil; --icon-part-2-origin: 12px 12px; }
+[data-icon="cylinder"] { --icon-animation: none; --icon-part-1-anim: icon-cylinder-cap; --icon-part-1-origin: 12px 5px; }
+[data-icon="git-commit"] { --icon-animation: none; --icon-part-1-anim: icon-git-commit-node; --icon-part-1-origin: 12px 12px; --icon-part-1-duration: 450ms; }
+[data-icon="git-branch"] { --icon-animation: none; --icon-part-2-anim: icon-git-branch-tip; --icon-part-2-origin: 18px 6px; --icon-part-2-duration: 450ms; }
+[data-icon="git-merge"] { --icon-animation: none; --icon-part-1-anim: icon-git-merge-target; --icon-part-1-origin: 18px 18px; --icon-part-1-duration: 450ms; }
+[data-icon="focus"] { --icon-animation: none; --icon-part-1-anim: icon-focus-subject; --icon-part-1-origin: 12px 12px; --icon-part-2-anim: icon-focus-bracket-tl; --icon-part-3-anim: icon-focus-bracket-tr; --icon-part-4-anim: icon-focus-bracket-br; --icon-part-5-anim: icon-focus-bracket-bl; }
+[data-icon="image-plus"] { --icon-animation: none; --icon-part-1-anim: icon-image-plus-glyph; --icon-part-1-origin: 19px 5px; --icon-part-1-duration: 450ms; --icon-part-2-anim: icon-image-plus-glyph; --icon-part-2-origin: 19px 5px; --icon-part-2-duration: 450ms; }
+[data-icon="app-window"] { --icon-animation: none; --icon-part-2-anim: icon-app-window-control-a; --icon-part-2-origin: 10px 6px; --icon-part-2-duration: 400ms; --icon-part-4-anim: icon-app-window-control-b; --icon-part-4-origin: 6px 6px; --icon-part-4-duration: 400ms; }
+[data-icon="award"] { --icon-animation: none; --icon-part-1-anim: icon-award-ribbon; --icon-part-1-origin: 12px 13px; --icon-part-2-anim: icon-award-medal; --icon-part-2-origin: 12px 8px; --icon-part-2-duration: 450ms; }
+[data-icon="list-ordered"] { --icon-animation: none; --icon-part-1-anim: icon-list-ordered-row-a; --icon-part-2-anim: icon-list-ordered-row-b; --icon-part-3-anim: icon-list-ordered-row-c; --icon-part-5-anim: icon-list-ordered-digit-1; --icon-part-5-origin: 4.5px 8px; --icon-part-5-duration: 400ms; --icon-part-6-anim: icon-list-ordered-digit-2; --icon-part-6-origin: 5px 15px; --icon-part-6-duration: 400ms; }
+[data-icon="list"] { --icon-animation: none; --icon-part-3-anim: icon-list-bullet-top; --icon-part-3-origin: 3px 6px; --icon-part-3-duration: 400ms; --icon-part-1-anim: icon-list-bullet-middle; --icon-part-1-origin: 3px 12px; --icon-part-1-duration: 400ms; --icon-part-2-anim: icon-list-bullet-bottom; --icon-part-2-origin: 3px 18px; --icon-part-2-duration: 400ms; }
+[data-icon="network"] { --icon-animation: none; --icon-part-3-anim: icon-network-node-top; --icon-part-3-origin: 12px 5px; --icon-part-3-duration: 450ms; --icon-part-2-anim: icon-network-node-left; --icon-part-2-origin: 5px 19px; --icon-part-2-duration: 450ms; --icon-part-1-anim: icon-network-node-right; --icon-part-1-origin: 19px 19px; --icon-part-1-duration: 450ms; }
+[data-icon="list-tree"] { --icon-animation: none; --icon-part-1-anim: icon-list-tree-branch-a; --icon-part-3-anim: icon-list-tree-branch-b; }
+[data-icon="file-type"] { --icon-animation: none; --icon-part-3-anim: icon-file-type-glyph; --icon-part-3-origin: 12px 15px; --icon-part-3-duration: 400ms; --icon-part-4-anim: icon-file-type-glyph; --icon-part-4-origin: 12px 15px; --icon-part-4-duration: 400ms; --icon-part-5-anim: icon-file-type-glyph; --icon-part-5-origin: 12px 15px; --icon-part-5-duration: 400ms; }
+[data-icon="file-text"] { --icon-animation: none; --icon-part-3-anim: icon-file-text-line-a; --icon-part-3-origin: 8px 9px; --icon-part-4-anim: icon-file-text-line-b; --icon-part-4-origin: 8px 13px; --icon-part-5-anim: icon-file-text-line-c; --icon-part-5-origin: 8px 17px; }
+[data-icon="users"] { --icon-animation: none; --icon-part-1-anim: icon-users-front; --icon-part-4-anim: icon-users-front; --icon-part-2-anim: icon-users-back; --icon-part-3-anim: icon-users-back; }
+[data-icon="sparkles"] { --icon-animation: none; --icon-part-1-anim: icon-sparkles-star; --icon-part-1-origin: 13px 12px; --icon-part-2-anim: icon-sparkles-tick; --icon-part-2-origin: 20px 4px; --icon-part-3-anim: icon-sparkles-tick; --icon-part-3-origin: 20px 4px; --icon-part-4-anim: icon-sparkles-dot; --icon-part-4-origin: 4px 20px; }
+[data-icon="smile"] { --icon-animation: none; --icon-part-2-anim: icon-smile-mouth; --icon-part-2-origin: 12px 15px; --icon-part-3-anim: icon-smile-eye-l; --icon-part-3-origin: 9px 9px; --icon-part-4-anim: icon-smile-eye-r; --icon-part-4-origin: 15px 9px; }
+[data-icon="scaling"] { --icon-animation: none; --icon-part-2-anim: icon-scaling-handle-in; --icon-part-3-anim: icon-scaling-handle-out; }
+[data-icon="pen-tool"] { --icon-animation: none; --icon-part-4-anim: icon-pen-tool-anchor; --icon-part-4-origin: 11px 11px; --icon-part-4-duration: 400ms; }
+[data-icon="paint-bucket"] { --icon-animation: none; --icon-part-4-anim: icon-paint-bucket-drip; --icon-part-4-origin: 20px 18px; }
+[data-icon="move-3d"] { --icon-animation: none; --icon-part-3-anim: icon-move-3d-arrow-a; --icon-part-4-anim: icon-move-3d-arrow-b; }
+[data-icon="minimize-2"] { --icon-animation: none; --icon-part-1-anim: icon-minimize-2-arm-tr; --icon-part-2-anim: icon-minimize-2-arm-tr; --icon-part-3-anim: icon-minimize-2-arm-bl; --icon-part-4-anim: icon-minimize-2-arm-bl; }
+[data-icon="maximize-2"] { --icon-animation: none; --icon-part-1-anim: icon-maximize-2-arm-tr; --icon-part-2-anim: icon-maximize-2-arm-tr; --icon-part-3-anim: icon-maximize-2-arm-bl; --icon-part-4-anim: icon-maximize-2-arm-bl; }
+[data-icon="library"] { --icon-animation: none; --icon-part-1-anim: icon-library-spine; --icon-part-1-origin: 20px 20px; --icon-part-2-anim: icon-library-spine; --icon-part-2-origin: 12px 20px; --icon-part-3-anim: icon-library-spine; --icon-part-3-origin: 8px 20px; --icon-part-4-anim: icon-library-spine; --icon-part-4-origin: 4px 20px; }
+[data-icon="layout-grid"] { --icon-animation: none; --icon-part-1-anim: icon-layout-grid-cell-tl; --icon-part-2-anim: icon-layout-grid-cell-tr; --icon-part-3-anim: icon-layout-grid-cell-br; --icon-part-4-anim: icon-layout-grid-cell-bl; }
+[data-icon="hash"] { --icon-animation: none; --icon-part-1-anim: icon-hash-bar-top; --icon-part-2-anim: icon-hash-bar-bottom; --icon-part-3-anim: icon-hash-bar-left; --icon-part-4-anim: icon-hash-bar-right; }
+[data-icon="hand"] { --icon-animation: none; --icon-part-1-anim: icon-hand-finger-a; --icon-part-1-origin: 18px 11px; --icon-part-2-anim: icon-hand-finger-b; --icon-part-2-origin: 14px 10px; --icon-part-3-anim: icon-hand-finger-c; --icon-part-3-origin: 10px 10.5px; }
+[data-icon="file-json"] { --icon-animation: none; --icon-part-3-anim: icon-file-json-brace-l; --icon-part-4-anim: icon-file-json-brace-r; }
+[data-icon="file-image"] { --icon-animation: none; --icon-part-3-anim: icon-file-image-sun; --icon-part-3-origin: 10px 12px; --icon-part-3-duration: 400ms; }
+[data-icon="file-code"] { --icon-animation: none; --icon-part-1-anim: icon-file-code-chevron-l; --icon-part-2-anim: icon-file-code-chevron-r; }
+[data-icon="eye-off"] { --icon-animation: none; --icon-part-2-anim: icon-eye-off-pupil; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 400ms; }
+[data-icon="component"] { --icon-animation: none; --icon-part-1-anim: icon-component-diamond-right; --icon-part-1-origin: 18.6px 12.3px; --icon-part-1-duration: 400ms; --icon-part-2-anim: icon-component-diamond-left; --icon-part-2-origin: 5.6px 12.3px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-component-diamond-bottom; --icon-part-3-origin: 12.3px 19.6px; --icon-part-3-duration: 400ms; --icon-part-4-anim: icon-component-diamond-top; --icon-part-4-origin: 12.3px 5.05px; --icon-part-4-duration: 400ms; }
+[data-icon="bar-chart-3"] { --icon-animation: none; --icon-part-2-anim: icon-bar-chart-3-bar; --icon-part-2-origin: 18px 17px; --icon-part-3-anim: icon-bar-chart-3-bar; --icon-part-3-origin: 13px 17px; --icon-part-4-anim: icon-bar-chart-3-bar; --icon-part-4-origin: 8px 17px; }
+[data-icon="arrow-right-left"] { --icon-animation: none; --icon-part-1-anim: icon-arrow-right-left-top; --icon-part-2-anim: icon-arrow-right-left-top; --icon-part-3-anim: icon-arrow-right-left-bottom; --icon-part-4-anim: icon-arrow-right-left-bottom; }
+[data-icon="grid-3x3"] { --icon-animation: none; --icon-part-2-anim: icon-grid-3x3-row-a; --icon-part-3-anim: icon-grid-3x3-row-b; --icon-part-4-anim: icon-grid-3x3-col-a; --icon-part-5-anim: icon-grid-3x3-col-b; }
+[data-icon="combine"] { --icon-animation: none; --icon-part-6-anim: icon-combine-box-a; --icon-part-5-anim: icon-combine-box-b; }
+[data-icon="triangle-alert"] { --icon-animation: none; --icon-part-2-anim: icon-triangle-alert-exclaim; --icon-part-2-origin: 12px 11px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-triangle-alert-exclaim; --icon-part-3-origin: 12px 17px; --icon-part-3-duration: 400ms; }
+[data-icon="square-arrow-up-right"] { --icon-animation: none; --icon-part-2-anim: icon-square-arrow-up-right-head; --icon-part-3-anim: icon-square-arrow-up-right-head; }
+[data-icon="square-arrow-up-left"] { --icon-animation: none; --icon-part-2-anim: icon-square-arrow-up-left-head; --icon-part-3-anim: icon-square-arrow-up-left-head; }
+[data-icon="square-arrow-down-right"] { --icon-animation: none; --icon-part-2-anim: icon-square-arrow-down-right-head; --icon-part-3-anim: icon-square-arrow-down-right-head; }
+[data-icon="square-arrow-down-left"] { --icon-animation: none; --icon-part-2-anim: icon-square-arrow-down-left-head; --icon-part-3-anim: icon-square-arrow-down-left-head; }
+[data-icon="shapes"] { --icon-animation: none; --icon-part-1-anim: icon-shapes-triangle; --icon-part-1-origin: 12px 6px; --icon-part-1-duration: 400ms; --icon-part-2-anim: icon-shapes-square; --icon-part-2-origin: 6.5px 17.5px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-shapes-circle; --icon-part-3-origin: 17.5px 17.5px; --icon-part-3-duration: 400ms; }
+[data-icon="more-horizontal"] { --icon-animation: none; --icon-part-1-anim: icon-more-horizontal-dot-b; --icon-part-1-origin: 12px 12px; --icon-part-2-anim: icon-more-horizontal-dot-c; --icon-part-2-origin: 19px 12px; --icon-part-3-anim: icon-more-horizontal-dot-a; --icon-part-3-origin: 5px 12px; }
+[data-icon="monitor"] { --icon-animation: none; --icon-part-1-anim: icon-monitor-screen; }
+[data-icon="lightbulb"] { --icon-animation: none; --icon-part-1-anim: icon-lightbulb-glass; }
+[data-icon="layout"] { --icon-animation: none; --icon-part-2-anim: icon-layout-divider-top; --icon-part-3-anim: icon-layout-divider-side; }
+[data-icon="lasso"] { --icon-animation: none; --icon-part-1-anim: icon-lasso-loop; --icon-part-3-anim: icon-lasso-anchor; --icon-part-3-origin: 5px 16px; --icon-part-3-duration: 400ms; }
+[data-icon="info"] { --icon-animation: none; --icon-part-2-anim: icon-info-glyph; --icon-part-2-origin: 12px 14px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-info-glyph; --icon-part-3-origin: 12px 8px; --icon-part-3-duration: 400ms; }
+[data-icon="image"] { --icon-animation: none; --icon-part-2-anim: icon-image-sun; --icon-part-2-origin: 9px 9px; --icon-part-2-duration: 400ms; }
+[data-icon="graduation-cap"] { --icon-animation: none; --icon-part-2-anim: icon-graduation-cap-tassel; --icon-part-2-origin: 22px 10px; }
+[data-icon="file-video"] { --icon-animation: none; --icon-part-3-anim: icon-file-video-play; --icon-part-3-origin: 12.5px 14.5px; --icon-part-3-duration: 400ms; }
+[data-icon="align-left"] { --icon-animation: none; --icon-part-1-anim: icon-align-left-line-a; --icon-part-2-anim: icon-align-left-line-b; --icon-part-3-anim: icon-align-left-line-c; }
+[data-icon="alert-circle"] { --icon-animation: none; --icon-part-2-anim: icon-alert-circle-exclaim; --icon-part-2-origin: 12px 10px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-alert-circle-exclaim; --icon-part-3-origin: 12px 16px; --icon-part-3-duration: 400ms; }
+[data-icon="x"] { --icon-animation: none; --icon-part-1-anim: icon-x-stroke-a; --icon-part-1-origin: 12px 12px; --icon-part-1-duration: 400ms; --icon-part-2-anim: icon-x-stroke-b; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 400ms; }
+[data-icon="user"] { --icon-animation: none; --icon-part-2-anim: icon-user-head; }
+[data-icon="undo-2"] { --icon-animation: icon-undo-2; }
+[data-icon="undo"] { --icon-animation: icon-undo; }
+[data-icon="tablet"] { --icon-animation: none; --icon-part-2-anim: icon-tablet-button; --icon-part-2-origin: 12px 18px; --icon-part-2-duration: 400ms; }
+[data-icon="smartphone"] { --icon-animation: none; --icon-part-2-anim: icon-smartphone-button; --icon-part-2-origin: 12px 18px; --icon-part-2-duration: 400ms; }
+[data-icon="skip-forward"] { --icon-animation: none; --icon-part-2-anim: icon-skip-forward-tri; }
+[data-icon="skip-back"] { --icon-animation: none; --icon-part-1-anim: icon-skip-back-tri; }
+[data-icon="redo"] { --icon-animation: icon-redo; }
+[data-icon="redo-2"] { --icon-animation: icon-redo-2; }
+[data-icon="plus"] { --icon-animation: none; --icon-part-1-anim: icon-plus-strokes; --icon-part-1-origin: 12px 12px; --icon-part-2-anim: icon-plus-strokes; --icon-part-2-origin: 12px 12px; }
+[data-icon="pause"] { --icon-animation: none; --icon-part-1-anim: icon-pause-bar-right; --icon-part-2-anim: icon-pause-bar-left; }
+[data-icon="panel-top"] { --icon-animation: none; --icon-part-2-anim: icon-panel-top-divider; }
+[data-icon="panel-right"] { --icon-animation: none; --icon-part-2-anim: icon-panel-right-divider; }
+[data-icon="panel-left"] { --icon-animation: none; --icon-part-2-anim: icon-panel-left-divider; }
+[data-icon="mouse-pointer"] { --icon-animation: none; --icon-part-1-anim: icon-mouse-pointer-ray; }
+[data-icon="home"] { --icon-animation: none; --icon-part-1-anim: icon-home-door; --icon-part-1-origin: 10px 17px; }
+[data-icon="code"] { --icon-animation: none; --icon-part-1-anim: icon-code-chevron-r; --icon-part-2-anim: icon-code-chevron-l; }
+[data-icon="clock"] { --icon-animation: none; --icon-part-1-anim: icon-clock-hands; --icon-part-1-origin: 12px 12px; }
+[data-icon="circle-dot"] { --icon-animation: none; --icon-part-2-anim: icon-circle-dot-core; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 400ms; }
+[data-icon="chevrons-up-down"] { --icon-animation: none; --icon-part-1-anim: icon-chevrons-up-down-bottom; --icon-part-2-anim: icon-chevrons-up-down-top; }
+[data-icon="check-circle-2"] { --icon-animation: none; --icon-part-2-anim: icon-check-circle-2-tick; --icon-part-2-origin: 12px 13px; --icon-part-2-duration: 400ms; }
+[data-icon="arrow-up"] { --icon-animation: icon-arrow-up; }
+[data-icon="arrow-right"] { --icon-animation: icon-arrow-right; }
+[data-icon="arrow-left"] { --icon-animation: icon-arrow-left; }
+[data-icon="arrow-down"] { --icon-animation: icon-arrow-down; }
+[data-icon="external-link"] { --icon-animation: none; --icon-part-1-anim: icon-external-link-arrow; --icon-part-2-anim: icon-external-link-arrow; }
+[data-icon="download"] { --icon-animation: none; --icon-part-1-anim: icon-download-drop; --icon-part-3-anim: icon-download-drop; }
+[data-icon="hard-drive"] { --icon-animation: none; --icon-part-3-anim: icon-hard-drive-led-a; --icon-part-3-duration: 600ms; --icon-part-4-anim: icon-hard-drive-led-b; --icon-part-4-duration: 600ms; }
+[data-icon="settings-2"] { --icon-animation: none; --icon-part-3-anim: icon-settings-2-knob-a; --icon-part-4-anim: icon-settings-2-knob-b; }
+[data-icon="image-up"] { --icon-animation: none; --icon-part-2-anim: icon-image-up-arrow; --icon-part-3-anim: icon-image-up-arrow; }
+[data-icon="grip-vertical"] { --icon-animation: none; --icon-part-1-anim: icon-grip-vertical-dot-1; --icon-part-4-anim: icon-grip-vertical-dot-1; --icon-part-2-anim: icon-grip-vertical-dot-2; --icon-part-5-anim: icon-grip-vertical-dot-2; --icon-part-3-anim: icon-grip-vertical-dot-3; --icon-part-6-anim: icon-grip-vertical-dot-3; }
+[data-icon="file-spreadsheet"] { --icon-animation: none; --icon-part-3-anim: icon-file-spreadsheet-cell; --icon-part-4-anim: icon-file-spreadsheet-cell; --icon-part-5-anim: icon-file-spreadsheet-cell; --icon-part-6-anim: icon-file-spreadsheet-cell; }
+[data-icon="file-archive"] { --icon-animation: none; --icon-part-6-anim: icon-file-archive-zip; --icon-part-6-origin: 10px 20px; --icon-part-6-duration: 450ms; }
+[data-icon="text-search"] { --icon-animation: none; --icon-part-4-anim: icon-text-search-lens; --icon-part-4-origin: 17px 15px; --icon-part-5-anim: icon-text-search-lens; --icon-part-5-origin: 17px 15px; }
+[data-icon="unlink"] { --icon-animation: none; --icon-part-1-anim: icon-unlink-loop-a; --icon-part-2-anim: icon-unlink-loop-b; }
+[data-icon="link-2-off"] { --icon-animation: none; --icon-part-1-anim: icon-link-2-off-loop-a; --icon-part-2-anim: icon-link-2-off-loop-b; }
+[data-icon="scissors"] { --icon-animation: none; --icon-part-1-anim: icon-scissors-handle-a; --icon-part-1-origin: 12px 12px; --icon-part-1-duration: 450ms; --icon-part-2-anim: icon-scissors-handle-a; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 450ms; --icon-part-4-anim: icon-scissors-handle-b; --icon-part-4-origin: 12px 12px; --icon-part-4-duration: 450ms; --icon-part-5-anim: icon-scissors-handle-b; --icon-part-5-origin: 12px 12px; --icon-part-5-duration: 450ms; }
+[data-icon="box"] { --icon-animation: icon-box; }
+[data-icon="move"] { --icon-animation: icon-move; }
+[data-icon="sun"] { --icon-animation: none; --icon-part-1-anim: icon-sun-disc; --icon-part-2-anim: icon-sun-ray; --icon-part-3-anim: icon-sun-ray; --icon-part-4-anim: icon-sun-ray; --icon-part-5-anim: icon-sun-ray; --icon-part-6-anim: icon-sun-ray; --icon-part-7-anim: icon-sun-ray; --icon-part-8-anim: icon-sun-ray; --icon-part-9-anim: icon-sun-ray; }
+[data-icon="zoom-in"] { --icon-animation: none; --icon-part-3-anim: icon-zoom-in-glyph; --icon-part-3-origin: 11px 11px; --icon-part-3-duration: 450ms; --icon-part-4-anim: icon-zoom-in-glyph; --icon-part-4-origin: 11px 11px; --icon-part-4-duration: 450ms; }
+[data-icon="zoom-out"] { --icon-animation: none; --icon-part-3-anim: icon-zoom-out-glyph; --icon-part-3-origin: 11px 11px; --icon-part-3-duration: 450ms; }
+[data-icon="crosshair"] { --icon-animation: none; --icon-part-2-anim: icon-crosshair-tick-right; --icon-part-2-duration: 450ms; --icon-part-3-anim: icon-crosshair-tick-left; --icon-part-3-duration: 450ms; --icon-part-4-anim: icon-crosshair-tick-top; --icon-part-4-duration: 450ms; --icon-part-5-anim: icon-crosshair-tick-bottom; --icon-part-5-duration: 450ms; }
+[data-icon="edit-3"] { --icon-animation: none; --icon-part-1-anim: icon-edit-3-underline; --icon-part-1-origin: 13px 21px; --icon-part-2-anim: icon-edit-3-pen; --icon-part-2-origin: 4px 20px; }
+[data-icon="book-open"] { --icon-animation: none; --icon-part-2-anim: icon-book-open-cover; --icon-part-2-origin: 12px 14px; }
+[data-icon="paintbrush"] { --icon-animation: none; --icon-part-1-anim: icon-paintbrush-stroke-mark; --icon-part-1-origin: 4px 15px; --icon-part-2-anim: icon-paintbrush-stroke; --icon-part-2-origin: 90% 10%; --icon-part-3-anim: icon-paintbrush-stroke; --icon-part-3-origin: 90% 10%; }
+[data-icon="square-dashed"] { --icon-animation: none; --icon-part-1-anim: icon-square-dashed-dash-a; --icon-part-5-anim: icon-square-dashed-dash-a; --icon-part-9-anim: icon-square-dashed-dash-a; --icon-part-2-anim: icon-square-dashed-dash-b; --icon-part-6-anim: icon-square-dashed-dash-b; --icon-part-10-anim: icon-square-dashed-dash-b; --icon-part-3-anim: icon-square-dashed-dash-c; --icon-part-7-anim: icon-square-dashed-dash-c; --icon-part-11-anim: icon-square-dashed-dash-c; --icon-part-4-anim: icon-square-dashed-dash-d; --icon-part-8-anim: icon-square-dashed-dash-d; --icon-part-12-anim: icon-square-dashed-dash-d; }
+
+[data-icon="trash-2"] { --icon-animation: none; --icon-part-4-anim: icon-trash-2-lid; --icon-part-4-origin: 21px 6px; --icon-part-4-duration: 700ms; --icon-part-5-anim: icon-trash-2-lid; --icon-part-5-origin: 21px 6px; --icon-part-5-duration: 700ms; }
+[data-icon="lock"] { --icon-animation: none; --icon-part-2-anim: icon-lock-shackle; --icon-part-2-origin: 17px 11px; --icon-part-2-duration: 650ms; }
+[data-icon="lock-open"] { --icon-animation: none; --icon-part-2-anim: icon-lock-open-shackle; --icon-part-2-origin: 7px 11px; --icon-part-2-duration: 550ms; }
+[data-icon="plug"] { --icon-animation: none; --icon-part-2-anim: icon-plug-body; --icon-part-3-anim: icon-plug-body; --icon-part-4-anim: icon-plug-body; }
+[data-icon="layers"] { --icon-animation: none; --icon-part-1-anim: icon-layers-top; --icon-part-3-anim: icon-layers-bottom; }
+[data-icon="link"] { --icon-animation: none; --icon-part-1-anim: icon-link-tug-a; --icon-part-1-duration: 450ms; --icon-part-2-anim: icon-link-tug-b; --icon-part-2-duration: 450ms; }
+[data-icon="pipette"] { --icon-animation: none; --icon-part-3-anim: icon-pipette-drop; }
+[data-icon="magnet"] { --icon-animation: none; --icon-part-1-anim: icon-magnet-tick; --icon-part-1-origin: 14px 17px; --icon-part-3-anim: icon-magnet-tick; --icon-part-3-origin: 7px 10px; }
+[data-icon="eraser"] { --icon-animation: none; --icon-part-1-anim: icon-eraser-scrub; --icon-part-2-anim: icon-eraser-scrub; }
+[data-icon="hammer"] { --icon-animation: icon-hammer; transform-origin: 4px 21px; }
+[data-icon="bell"] { --icon-animation: none; --icon-part-1-anim: icon-bell-clapper; --icon-part-1-origin: 12px 19px; --icon-part-1-duration: 650ms; --icon-part-2-anim: icon-bell-ring; --icon-part-2-origin: 50% 12%; --icon-part-2-duration: 650ms; }
+[data-icon="landmark"] { --icon-animation: none; --icon-part-6-anim: icon-landmark-col-a; --icon-part-6-duration: 550ms; --icon-part-1-anim: icon-landmark-col-b; --icon-part-1-duration: 550ms; --icon-part-3-anim: icon-landmark-col-c; --icon-part-3-duration: 550ms; --icon-part-4-anim: icon-landmark-col-d; --icon-part-4-duration: 550ms; }
+
+/* #endregion 🔧️IconPartAnim */
+
+
+
+
+/* #region 🪟️ShellParentHover
+ * Parent-shell edge strokes mirror mode-dock silhouette hover: a dedicated stroke layer
+ * (navbar/footer pseudo-edges, panel/pane `[data-slot="chrome-frame"]`) recolors while the
+ * pointer is inside the parent. Never recolor the parent's own Tailwind `!border-*` — those
+ * utilities win the cascade and made the previous border-*-color :hover rules invisible.
+ */
+
+[data-slot="navbar"],
+[data-slot="footer"] {
+  border-width: 0 !important;
+  border-style: none !important;
+}
+
+[data-slot="navbar"]::after,
+[data-slot="footer"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--stroke-hairline);
+  background-color: var(--border-normal-color);
+  pointer-events: none;
+  transition: background-color 120ms ease;
+  z-index: 50;
+}
+
+[data-slot="navbar"]::after {
+  bottom: 0;
+}
+
+[data-slot="footer"]::before {
+  top: 0;
+}
+
+[data-slot="navbar"]:hover::after,
+[data-slot="navbar"]:focus-within::after,
+[data-slot="footer"]:hover::before,
+[data-slot="footer"]:focus-within::before {
+  background-color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] :is([data-slot="breadcrumb"], [data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"], [data-slot="app-panel-toggle-group"], [data-slot="breadcrumb-item"], [data-slot="breadcrumb-separator-control"]),
+[data-slot="footer"] :is([data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"]) {
+  border-color: var(--border-normal-color) !important;
+}
+
+/* Shell chrome: reinforce level-aware hover on navbar, footer, and toolbar controls. */
+[data-slot="navbar"] [data-level]:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level]:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="breadcrumb-link"],
+[data-slot="navbar"] [data-slot="breadcrumb-separator-control"] {
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
+}
+
+[data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
+[data-slot="navbar"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
+[data-slot="navbar"] [data-slot="action-group-item"][data-state="on"]:not(:disabled),
+[data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
+[data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
+[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:not(:disabled),
+:is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"])[data-state="on"]:not(:disabled) {
+  background-color: var(--active-base);
+  border-color: var(--active-base) !important;
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="navbar"] [data-slot="button-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="navbar"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled) {
+  background-color: color-mix(in oklab, var(--active-base) 90%, black);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="base"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="base"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="canvas"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="canvas"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="window"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="window"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="panel"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="panel"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="overlay"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="overlay"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-level="temporary"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level="temporary"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="navbar"] [data-slot="breadcrumb-link"]:hover,
+[data-slot="navbar"] [data-slot="breadcrumb-separator-control"]:hover {
+  background-color: var(--hover-interactive-fill);
+  color: var(--border-emphasized-color);
+}
+
+[data-slot="toggle-group"],
+[data-slot="button-group"],
+[data-slot="action-group"],
+[data-slot="app-panel-toggle-group"],
+[data-slot="breadcrumb"] {
+  border-color: var(--border-normal-color);
+}
+
+[data-slot="toggle-group"].divide-x > :not(:last-child),
+[data-slot="button-group"].divide-x > :not(:last-child),
+[data-slot="action-group"].divide-x > :not(:last-child),
+[data-slot="toggle-group"].divide-normal > :not(:last-child),
+[data-slot="button-group"].divide-normal > :not(:last-child),
+[data-slot="action-group"].divide-normal > :not(:last-child) {
+  border-color: var(--border-normal-color);
+}
+
+@utility gap-single {
+  gap: var(--spacing-single);
+}
+@utility gap-double {
+  gap: var(--spacing-double);
+}
+@utility gap-tiny {
+  gap: var(--size-tiny);
+}
+@utility gap-small {
+  gap: var(--size-small);
+}
+@utility gap-medium {
+  gap: var(--size-medium);
+}
+
+@utility p-single {
+  padding: var(--spacing-single);
+}
+@utility p-double {
+  padding: var(--spacing-double);
+}
+@utility p-tiny {
+  padding: var(--size-tiny);
+}
+@utility p-small {
+  padding: var(--size-small);
+}
+@utility p-medium {
+  padding: var(--size-medium);
+}
+
+@utility px-single {
+  padding-left: var(--spacing-single);
+  padding-right: var(--spacing-single);
+}
+@utility px-double {
+  padding-left: var(--spacing-double);
+  padding-right: var(--spacing-double);
+}
+@utility px-tiny {
+  padding-left: var(--size-tiny);
+  padding-right: var(--size-tiny);
+}
+@utility px-small {
+  padding-left: var(--size-small);
+  padding-right: var(--size-small);
+}
+
+@utility py-single {
+  padding-top: var(--spacing-single);
+  padding-bottom: var(--spacing-single);
+}
+@utility py-double {
+  padding-top: var(--spacing-double);
+  padding-bottom: var(--spacing-double);
+}
+@utility py-tiny {
+  padding-top: var(--size-tiny);
+  padding-bottom: var(--size-tiny);
+}
+@utility py-small {
+  padding-top: var(--size-small);
+  padding-bottom: var(--size-small);
+}
+
+@utility m-single {
+  margin: var(--spacing-single);
+}
+@utility m-double {
+  margin: var(--spacing-double);
+}
+@utility mx-single {
+  margin-left: var(--spacing-single);
+  margin-right: var(--spacing-single);
+}
+@utility mx-double {
+  margin-left: var(--spacing-double);
+  margin-right: var(--spacing-double);
+}
+@utility ml-single {
+  margin-left: var(--spacing-single);
+}
+@utility ml-double {
+  margin-left: var(--spacing-double);
+}
+@utility mr-single {
+  margin-right: var(--spacing-single);
+}
+@utility mr-double {
+  margin-right: var(--spacing-double);
+}
+@utility my-single {
+  margin-top: var(--spacing-single);
+  margin-bottom: var(--spacing-single);
+}
+@utility my-small {
+  margin-top: var(--size-small);
+  margin-bottom: var(--size-small);
+}
+@utility my-medium {
+  margin-top: var(--size-medium);
+  margin-bottom: var(--size-medium);
+}
+
+@utility size-dot {
+  width: calc(2 * var(--ui-spacing));
+  height: calc(2 * var(--ui-spacing));
+}
+@utility w-dot {
+  width: calc(2 * var(--ui-spacing));
+}
+@utility h-dot {
+  height: calc(2 * var(--ui-spacing));
+}
+
+@utility size-single {
+  width: var(--spacing-single);
+  height: var(--spacing-single);
+}
+@utility w-single {
+  width: var(--spacing-single);
+}
+@utility h-single {
+  height: var(--spacing-single);
+}
+@utility size-double {
+  width: var(--spacing-double);
+  height: var(--spacing-double);
+}
+@utility w-double {
+  width: var(--spacing-double);
+}
+@utility h-double {
+  height: var(--spacing-double);
+}
+
+@utility size-tiny {
+  width: var(--size-tiny);
+  height: var(--size-tiny);
+}
+@utility w-tiny {
+  width: var(--size-tiny);
+}
+@utility h-tiny {
+  height: var(--size-tiny);
+}
+
+@utility size-small {
+  width: var(--size-small);
+  height: var(--size-small);
+}
+@utility w-small {
+  width: var(--size-small);
+}
+@utility h-small {
+  height: var(--size-small);
+}
+
+@utility size-workbench {
+  width: var(--size-workbench);
+  height: var(--size-workbench);
+}
+@utility w-workbench {
+  width: var(--size-workbench);
+}
+@utility h-workbench {
+  height: var(--size-workbench);
+}
+@utility min-h-workbench {
+  min-height: var(--size-workbench);
+}
+@utility max-h-workbench {
+  max-height: var(--size-workbench);
+}
+
+@utility size-medium {
+  width: var(--size-medium);
+  height: var(--size-medium);
+}
+@utility w-medium {
+  width: var(--size-medium);
+}
+@utility h-medium {
+  height: var(--size-medium);
+}
+
+@utility size-large {
+  width: var(--size-large);
+  height: var(--size-large);
+}
+@utility w-large {
+  width: var(--size-large);
+}
+@utility h-large {
+  height: var(--size-large);
+}
+
+@utility size-huge {
+  width: var(--size-huge);
+  height: var(--size-huge);
+}
+@utility w-huge {
+  width: var(--size-huge);
+}
+@utility h-huge {
+  height: var(--size-huge);
+}
+
+@utility size-mega {
+  width: var(--size-mega);
+  height: var(--size-mega);
+}
+@utility w-mega {
+  width: var(--size-mega);
+}
+@utility h-mega {
+  height: var(--size-mega);
+}
+
+@utility size-giga {
+  width: var(--size-giga);
+  height: var(--size-giga);
+}
+@utility w-giga {
+  width: var(--size-giga);
+}
+@utility h-giga {
+  height: var(--size-giga);
+}
+
+@utility size-xl {
+  width: var(--size-xl);
+  height: var(--size-xl);
+}
+@utility w-xl {
+  width: var(--size-xl);
+}
+@utility h-xl {
+  height: var(--size-xl);
+}
+
+@utility size-tera {
+  width: var(--size-tera);
+  height: var(--size-tera);
+}
+@utility w-tera {
+  width: var(--size-tera);
+}
+@utility h-tera {
+  height: var(--size-tera);
+}
+@utility min-h-tera {
+  min-height: var(--size-tera);
+}
+
+@utility size-peta {
+  width: var(--size-peta);
+  height: var(--size-peta);
+}
+
+@utility min-w-layout-label {
+  min-width: var(--layout-label);
+}
+@utility w-layout-label {
+  width: var(--layout-label);
+}
+@utility min-w-layout-popover {
+  min-width: var(--layout-popover-min);
+}
+@utility min-w-layout-panel {
+  min-width: var(--layout-panel-min);
+}
+@utility w-layout-rail {
+  width: var(--layout-panel-rail);
+}
+@utility max-w-layout-panel {
+  max-width: var(--layout-panel-max);
+}
+@utility max-h-layout-command {
+  max-height: var(--layout-command-max);
+}
+@utility max-w-layout-engagement {
+  max-width: var(--layout-engagement-max);
+}
+@utility w-layout-deck {
+  width: var(--layout-deck-width);
+}
+@utility h-layout-deck {
+  height: var(--layout-deck-height);
+}
+@utility h-layout-story {
+  height: var(--layout-story-height);
+}
+@utility w-layout-story-sm {
+  width: var(--layout-story-width-sm);
+}
+@utility w-layout-story-md {
+  width: var(--layout-story-width-md);
+}
+@utility w-layout-story-lg {
+  width: var(--layout-story-width-lg);
+}
+@utility w-layout-floating-menu-sm {
+  width: var(--layout-floating-menu-sm);
+}
+@utility w-layout-floating-menu-md {
+  width: var(--layout-floating-menu-md);
+}
+@utility w-layout-floating-menu-lg {
+  width: var(--layout-floating-menu-lg);
+}
+@utility w-layout-floating-overlay {
+  width: var(--layout-floating-overlay);
+}
+@utility min-h-layout-preview {
+  min-height: var(--layout-preview-min);
+}
+@utility min-h-layout-preview-md {
+  min-height: var(--layout-preview-md);
+}
+@utility left-offscreen {
+  left: var(--layout-offscreen);
+}
+
+@utility min-w-tiny {
+  min-width: var(--size-tiny);
+}
+@utility min-h-tiny {
+  min-height: var(--size-tiny);
+}
+@utility min-w-small {
+  min-width: var(--size-small);
+}
+@utility min-w-medium {
+  min-width: var(--size-medium);
+}
+@utility min-w-large {
+  min-width: var(--size-large);
+}
+
+@utility max-w-tiny {
+  max-width: var(--size-tiny);
+}
+@utility max-w-small {
+  max-width: var(--size-small);
+}
+@utility max-w-medium {
+  max-width: var(--size-medium);
+}
+@utility max-w-large {
+  max-width: var(--size-large);
+}
+
+@utility max-h-tiny {
+  max-height: var(--size-tiny);
+}
+@utility max-h-small {
+  max-height: var(--size-small);
+}
+@utility max-h-medium {
+  max-height: var(--size-medium);
+}
+@utility max-h-large {
+  max-height: var(--size-large);
+}
+
+@utility min-h-tiny {
+  min-height: var(--size-tiny);
+}
+@utility min-h-small {
+  min-height: var(--size-small);
+}
+@utility min-h-medium {
+  min-height: var(--size-medium);
+}
+@utility min-h-large {
+  min-height: var(--size-large);
+}
+@utility min-h-huge {
+  min-height: var(--size-huge);
+}
+
+@utility cursor-pointer {
+  cursor: var(--cursor-pointer);
+}
+
+@utility cursor-selectable {
+  cursor: var(--cursor-selectable);
+}
+
+@utility cursor-grab-draggable {
+  cursor: var(--cursor-grab);
+}
+
+@utility cursor-grabbing {
+  cursor: var(--cursor-grabbing);
+}
+
+@utility z-base {
+  z-index: var(--z-base);
+}
+
+@utility z-canvas {
+  z-index: var(--z-canvas);
+}
+
+@utility z-window {
+  z-index: var(--z-window);
+}
+
+@utility z-panel {
+  z-index: var(--z-panel);
+}
+
+@utility z-overlay {
+  z-index: var(--z-overlay);
+}
+
+@utility z-temporary {
+  z-index: var(--z-temporary);
+}
+
+@utility z-navbar {
+  z-index: var(--z-navbar);
+}
+
+@utility z-modal {
+  z-index: var(--z-modal);
+}
+
+@utility z-tutorial {
+  z-index: var(--z-tutorial);
+}
+
+@utility ui-glass-panel {
+  -webkit-backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-panel-alpha) * 100%), transparent);
+}
+
+/* 🎓️ The introduction glass veil — one fullscreen panel; the step's introduce/show elements elevate
+   above it via [data-introduction-elevated] rather than punching a cutout hole in the veil itself. */
+@utility ui-glass-veil {
+  -webkit-backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-veil-alpha) * 100%), transparent);
+}
+
+/* Shell frame stroke is on [data-slot="chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
+[data-slot="panel"] [data-slot="scroll-area"],
+[data-slot="pane"] [data-slot="scroll-area"] {
+  box-sizing: border-box;
+  padding: var(--stroke-hairline);
+}
+
+[data-slot="chrome-frame"] {
+  border-width: var(--stroke-hairline);
+  border-style: solid;
+  border-color: var(--border-normal-color) !important;
+  transition: border-color 120ms ease;
+}
+
+:is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"],
+:is([data-slot="panel"], [data-slot="pane"]):focus-within [data-slot="chrome-frame"] {
+  border-color: var(--border-emphasized-color) !important;
+}
+
+[data-slot="mode-dock-stack"]:not([data-active="true"]):hover [data-slot="mode-dock-silhouette-border"][data-kind="normal"] path {
+  stroke: var(--border-emphasized-color) !important;
+  transition: stroke 120ms ease;
+}
+
+[data-slot="introduction-info-box"],
+[data-slot="dialog-box"] {
+  border-width: var(--stroke-hairline);
+  border-style: solid;
+  border-color: var(--border-normal-color) !important;
+  transition: border-color 120ms ease;
+}
+
+/* 🎓️ Introduction steps are advanced by clicking Next — focus stays on that button across steps, so
+   :focus-within would permanently emphasize the border after the first click. Pointer hover only. */
+[data-slot="introduction-info-box"]:hover,
+[data-slot="dialog-box"]:hover,
+[data-slot="dialog-box"]:focus-within {
+  border-color: var(--border-emphasized-color) !important;
+}
+
+/* #endregion 🪟️ShellParentHover */
+
+/* 🪟️ Outer stroke is owned by the stack silhouette SVG — never reintroduce piecewise chrome borders. */
+[data-slot="mode-dock-stack"]
+  :is(
+    [data-slot="mode-dock-stack-body"],
+    [data-slot="mode-dock-tab-cap"],
+    [data-slot="mode-dock-tab-gap"],
+    [data-slot="mode-dock-controls-cap"]
+  ) {
+  border-width: 0 !important;
+  border-style: none !important;
+}
+
+[data-slot="side-panel-tab-button"],
+[data-slot="mobile-panel-tab-button"] {
+  appearance: none;
+  font: inherit;
+}
+
+[data-slot="side-panel-tabs"],
+[data-slot="mobile-panel-tabs"],
+[data-slot="accordion-item"],
+[data-slot="command-input-wrapper"],
+table tbody tr,
+table thead.border-b {
+  border-bottom-color: var(--border-normal-color);
+}
+
+@utility ui-glass-ribbon {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-ribbon-alpha) * 100%), transparent);
+}
+
+@utility ui-glass-menu {
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--temporary) calc(var(--glass-menu-alpha) * 100%), transparent);
+}
+
+@utility ui-glass-window-options {
+  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
+}
+
+[data-slot="window-measures-stack"] {
+  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
+}
+
+[data-slot="window-engagement-zone"] {
+  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
+}
+
+[data-slot="utility-bar"] {
+  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
+}
+
+@utility text-tiny {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+}
+
+@utility text-2xs {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+}
+
+/* Window measures rail: force compact type; component defaults (text-xs/text-sm) are larger. */
+[data-slot="window-measures-tree"] {
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+}
+
+[data-slot="window-measures-tree"] [data-slot="tree-label"],
+[data-slot="window-measures-tree"] [data-slot="inline-label"],
+[data-slot="window-measures-tree"] [data-slot="select-trigger"],
+[data-slot="window-measures-tree"] [data-slot="select-value"],
+[data-slot="window-measures-tree"] [data-slot="slider-value"] {
+  font-size: var(--text-2xs) !important;
+  line-height: var(--text-2xs--line-height) !important;
+}
+
+[data-slot="window-measures-tree"] [data-slot="select-trigger"][data-state="open"],
+[data-slot="window-measures-tree"] [data-slot="select-trigger"]:focus-visible {
+  border-color: var(--accent);
+  box-shadow: none;
+  outline: none;
+}
+
+[data-slot="window-measures-tree"] [data-slot="toggle-group-item"][data-state="on"] {
+  box-shadow: none;
+}
+
+/* Puzzle 2d (and other full-bleed canvases) fill the window body; stack padding is for panel chrome only. */
+[data-slot="mode-dock-stack-body"]:has([data-testid="puzzle2d-canvas"]) {
+  padding: 0;
+}
+
+/* #region SelectionMarquee */
+.selection-marquee rect,
+.selection-marquee polygon {
+  fill: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  stroke: var(--color-primary);
+  stroke-width: 1.5;
+}
+
+.selection-marquee[data-coverage="partial"] rect,
+.selection-marquee[data-coverage="partial"] polygon {
+  stroke-dasharray: 5 4;
+}
+/* #endregion SelectionMarquee */
+
+body { background: #1a1a1a; color: #eee; font-family: sans-serif; padding: 2rem; }
+.grid { display: grid; grid-template-columns: repeat(8, 100px); gap: 12px; }
+.tile { display: flex; flex-direction: column; align-items: center; gap: 6px; background: #2a2a2a; border: 1px solid #444; border-radius: 6px; padding: 12px; cursor: pointer; }
+.tile:hover { background: #3a3a3a; }
+.icon-wrap { width: 40px; height: 40px; display: inline-flex; }
+.icon-wrap svg { width: 100%; height: 100%; stroke: #eee; }
+.label { font-size: 11px; color: #aaa; }
+</style>
+</head>
+<body>
+<p>Hover each icon (or its button) to trigger its animation. Checking: rigid parts stay rigid, hinges swing open (not into the object), no deformation on rigid objects.</p>
+<div class="grid">
+<button type="button" class="tile"><span data-icon="trash-2" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 11v6" />
+  <path d="M14 11v6" />
+  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+  <path d="M3 6h18" />
+  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+</svg></span><span class="label">trash-2</span></button>
+<button type="button" class="tile"><span data-icon="hammer" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m15 12-9.373 9.373a1 1 0 0 1-3.001-3L12 9" />
+  <path d="m18 15 4-4" />
+  <path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172v-.344a2 2 0 0 0-.586-1.414l-1.657-1.657A6 6 0 0 0 12.516 3H9l1.243 1.243A6 6 0 0 1 12 8.485V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5" />
+</svg></span><span class="label">hammer</span></button>
+<button type="button" class="tile"><span data-icon="lock" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+</svg></span><span class="label">lock</span></button>
+<button type="button" class="tile"><span data-icon="lock-open" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+  <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+</svg></span><span class="label">lock-open</span></button>
+<button type="button" class="tile"><span data-icon="folder" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+</svg></span><span class="label">folder</span></button>
+<button type="button" class="tile"><span data-icon="folder-open" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2" />
+</svg></span><span class="label">folder-open</span></button>
+<button type="button" class="tile"><span data-icon="home" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+  <path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+</svg></span><span class="label">home</span></button>
+<button type="button" class="tile"><span data-icon="plug" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 22v-5" />
+  <path d="M9 8V2" />
+  <path d="M15 8V2" />
+  <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z" />
+</svg></span><span class="label">plug</span></button>
+<button type="button" class="tile"><span data-icon="arrow-up" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m5 12 7-7 7 7" />
+  <path d="M12 19V5" />
+</svg></span><span class="label">arrow-up</span></button>
+<button type="button" class="tile"><span data-icon="arrow-down" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 5v14" />
+  <path d="m19 12-7 7-7-7" />
+</svg></span><span class="label">arrow-down</span></button>
+<button type="button" class="tile"><span data-icon="arrow-left" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m12 19-7-7 7-7" />
+  <path d="M19 12H5" />
+</svg></span><span class="label">arrow-left</span></button>
+<button type="button" class="tile"><span data-icon="arrow-right" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 12h14" />
+  <path d="m12 5 7 7-7 7" />
+</svg></span><span class="label">arrow-right</span></button>
+<button type="button" class="tile"><span data-icon="move" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 2v20" />
+  <path d="m15 19-3 3-3-3" />
+  <path d="m19 9 3 3-3 3" />
+  <path d="M2 12h20" />
+  <path d="m5 9-3 3 3 3" />
+  <path d="m9 5 3-3 3 3" />
+</svg></span><span class="label">move</span></button>
+<button type="button" class="tile"><span data-icon="undo" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M3 7v6h6" />
+  <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+</svg></span><span class="label">undo</span></button>
+<button type="button" class="tile"><span data-icon="undo-2" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M9 14 4 9l5-5" />
+  <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" />
+</svg></span><span class="label">undo-2</span></button>
+<button type="button" class="tile"><span data-icon="redo" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21 7v6h-6" />
+  <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7" />
+</svg></span><span class="label">redo</span></button>
+<button type="button" class="tile"><span data-icon="redo-2" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m15 14 5-5-5-5" />
+  <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13" />
+</svg></span><span class="label">redo-2</span></button>
+<button type="button" class="tile"><span data-icon="maximize-2" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 3h6v6" />
+  <path d="m21 3-7 7" />
+  <path d="m3 21 7-7" />
+  <path d="M9 21H3v-6" />
+</svg></span><span class="label">maximize-2</span></button>
+<button type="button" class="tile"><span data-icon="minimize-2" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m14 10 7-7" />
+  <path d="M20 10h-6V4" />
+  <path d="m3 21 7-7" />
+  <path d="M4 14h6v6" />
+</svg></span><span class="label">minimize-2</span></button>
+<button type="button" class="tile"><span data-icon="box" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+  <path d="m3.3 7 8.7 5 8.7-5" />
+  <path d="M12 22V12" />
+</svg></span><span class="label">box</span></button>
+<button type="button" class="tile"><span data-icon="play" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" />
+</svg></span><span class="label">play</span></button>
+<button type="button" class="tile"><span data-icon="pipette" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m12 9-8.414 8.414A2 2 0 0 0 3 18.828v1.344a2 2 0 0 1-.586 1.414A2 2 0 0 1 3.828 21h1.344a2 2 0 0 0 1.414-.586L15 12" />
+  <path d="m18 9 .4.4a1 1 0 1 1-3 3l-3.8-3.8a1 1 0 1 1 3-3l.4.4 3.4-3.4a1 1 0 1 1 3 3z" />
+  <path d="m2 22 .414-.414" />
+</svg></span><span class="label">pipette</span></button>
+<button type="button" class="tile"><span data-icon="hand" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
+  <path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2" />
+  <path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8" />
+  <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+</svg></span><span class="label">hand</span></button>
+<button type="button" class="tile"><span data-icon="cylinder" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <ellipse cx="12" cy="5" rx="9" ry="3" />
+  <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+</svg></span><span class="label">cylinder</span></button>
+<button type="button" class="tile"><span data-icon="filter" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" />
+</svg></span><span class="label">filter</span></button>
+<button type="button" class="tile"><span data-icon="save" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" />
+  <path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7" />
+  <path d="M7 3v4a1 1 0 0 0 1 1h7" />
+</svg></span><span class="label">save</span></button>
+<button type="button" class="tile"><span data-icon="landmark" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10 18v-7" />
+  <path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z" />
+  <path d="M14 18v-7" />
+  <path d="M18 18v-7" />
+  <path d="M3 22h18" />
+  <path d="M6 18v-7" />
+</svg></span><span class="label">landmark</span></button>
+<button type="button" class="tile"><span data-icon="grip-vertical" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="9" cy="12" r="1" />
+  <circle cx="9" cy="5" r="1" />
+  <circle cx="9" cy="19" r="1" />
+  <circle cx="15" cy="12" r="1" />
+  <circle cx="15" cy="5" r="1" />
+  <circle cx="15" cy="19" r="1" />
+</svg></span><span class="label">grip-vertical</span></button>
+<button type="button" class="tile"><span data-icon="book-open" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 7v14" />
+  <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+</svg></span><span class="label">book-open</span></button>
+<button type="button" class="tile"><span data-icon="message-square" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
+</svg></span><span class="label">message-square</span></button>
+<button type="button" class="tile"><span data-icon="message-circle" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719" />
+</svg></span><span class="label">message-circle</span></button>
+<button type="button" class="tile"><span data-icon="arrow-right-left" class="icon-wrap"><svg
+ 
+  xmlns="http://www.w3.org/2000/svg"
+ 
+ 
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="m16 3 4 4-4 4" />
+  <path d="M20 7H4" />
+  <path d="m8 21-4-4 4-4" />
+  <path d="M4 17h16" />
+</svg></span><span class="label">arrow-right-left</span></button>
+
+</div>
+</body></html>

@@ -1,0 +1,12 @@
+{
+  "title": "Embed Event Data in Hook Log",
+  "emoji": "📥️",
+  "status": "closed",
+  "description": "Update the hook log format to embed event-specific data directly under the 'event' property instead of using a separate 'data' property. This involves removing the 'data' field from HookLogEntry and merging the result JSON with the event metadata.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/652"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️6ed5c1ec2f9f4c1f87c224464f5d686a", "⚪️b277c69c004c48e7bcd2dea994790bab"]
+}

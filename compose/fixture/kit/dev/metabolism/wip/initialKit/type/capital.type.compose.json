@@ -158,7 +158,7 @@
           "y": 0,
           "z": -1
         },
-        "description": "🧼 The center of the bottom.",
+        "description": "🧼️ The center of the bottom.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -309,9 +309,9 @@
       }
     ]
   },
-  "icon": "icons/🔣capital.svg",
+  "icon": "icons/🔣️capital.svg",
   "image": "images/capital.png",
-  "description": "🏗 A roof that has the skin of a cut extruded cuboid.",
+  "description": "🏗️ A roof that has the skin of a cut extruded cuboid.",
   "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
     "items": [

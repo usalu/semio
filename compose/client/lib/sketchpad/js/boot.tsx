@@ -1,8 +1,8 @@
-// #region 🧲Header
-/** @emoji 🚀 Vite entry: sketchpad {@link Platform} shell + docs MDX host. */
-// #endregion 🧲Header
+// #region 🧲️Header
+/** @emoji 🚀️ Vite entry: sketchpad {@link Platform} shell + docs MDX host. */
+// #endregion 🧲️Header
 
-import "./🎨globals.css";
+import "./🎨️globals.css";
 import { MDXProvider } from "@mdx-js/react";
 import type { Platform } from "@semio-tech/framework-core";
 import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";

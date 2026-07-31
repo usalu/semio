@@ -1,0 +1,7 @@
+{
+  "title": "FIX-NPM-INSTALL",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix npm Invalid Version error on npm install",
+  "goal": "🎯️aioptimizedrepo"
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Overview Camera Stable On Detail Radius Edits",
-  "emoji": "📷",
-  "status": "closed",
-  "description": "Overview camera jumps when editing node radius in detail: fixture effect bumped cameraBasisTick on every patchFixture. Fix by baseline pane cameras state updated only on setFixture, redraw play start, and post-redraw ease end; fixture effect only syncs cameraBasisFixtureRef.",
-  "summary": "Overview (and all panes) jumped when changing node radius in the detail inspector because every fixture patch bumped cameraBasisTick, recomputing bbox-fit cameras from triptychCamerasFromFixture for all panes. Replaced tick+useMemo with boardPlayPaneCamerasBaseline state updated only on setFixture (new graph), redraw play start, and post-redraw ease end; the fixture sync effect now only updates cameraBasisFixtureRef for layout/redraw snapshots.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪803a994dfa444e2395bdf248ae8d86a6"]
-}

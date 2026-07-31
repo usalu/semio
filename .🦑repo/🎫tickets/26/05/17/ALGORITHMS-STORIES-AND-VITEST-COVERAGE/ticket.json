@@ -1,9 +1,0 @@
-{
-  "title": "Algorithms Stories And Vitest Coverage",
-  "emoji": "🧬",
-  "status": "closed",
-  "description": "compose/dev/algorithms: fix vitest nx target, add WASM smoke tests, add Storybook play tests for all algorithm stories.",
-  "summary": "Added compose/dev/algorithms/vitest.config.ts and pointed @semio-tech/compose-algorithms nx test at it (replacing broken ../../elements/ui path). Extended embedded Vitest in index.ts with a runner export smoke test. Added Storybook interaction tests (storybook/test within + findByText, 120s timeout) to every compose/algorithms story: Cluster, CopyAndPaste (both variants), Delete, Drag, FindReplaceableTypesInDesigns, Flatten, KitStore, Move. Direct vitest run for algorithms: 2 passed.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪5d617492e72d4ea1b4952a0399c0a181"]
-}

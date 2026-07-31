@@ -3,7 +3,7 @@ name: Print Heading Color Scheme
 overview: Give `\part`/`\chapter`/`\section`/`\subsection`/`\subsubsection`/`\paragraph` bordered/filled title banners that reuse the UI's actual color tiers (primary/secondary/tertiary/normal) and reserve the theme's "emphasized" text color for headings only, instead of the current situation where ordinary default styling already looks like the UI's hover/emphasis state.
 todos:
  - id: ticket
-   content: Open repo ticket under goal 🎯r2602 for the print heading color scheme work
+   content: Open repo ticket under goal 🎯️r2602 for the print heading color scheme work
    status: completed
  - id: heading-styles
    content: "Add %region Headings to print/tex/semio-window.sty: titlesec require, semio~heading~base tcbset style, per-level tier color definitions"
@@ -15,7 +15,7 @@ todos:
    content: Extend print/template/report/report.content.tex to exercise section/subsection/subsubsection/paragraph under an existing chapter
    status: completed
  - id: build-verify
-   content: Run bun ./script.ts build in print/, rasterize resulting PDFs to images, visually verify colors/contrast in light+dark themes across report/paper/flyer
+   content: Run bun ./📜️script.ts build in print/, rasterize resulting PDFs to images, visually verify colors/contrast in light+dark themes across report/paper/flyer
    status: completed
  - id: close-ticket
    content: Close the ticket with summary and list of touched files
@@ -59,12 +59,12 @@ All changes live in [print/tex/semio-window.sty](print/tex/semio-window.sty) (al
 ## Verification
 
 - Extend the existing `report` template content ([print/template/report/report.content.tex](print/template/report/report.content.tex)) to exercise the full hierarchy at least once (add a `\section`/`\subsection`/`\subsubsection`/`\paragraph` under one existing `\chapter`) — no new example files, per repo convention; this template already ships as the canonical demo.
-- Run `bun ./script.ts build` (or the `report` target) in `print/` to compile light + dark PDFs via Tectonic, then rasterize a page to PNG (Tectonic/tectonic-produced PDF -> image) to visually confirm: correct fill/border/text colors per level, legible contrast in both light and dark theme, and that `paper`/`flyer` (no `\chapter`) still compile cleanly.
+- Run `bun ./📜️script.ts build` (or the `report` target) in `print/` to compile light + dark PDFs via Tectonic, then rasterize a page to PNG (Tectonic/tectonic-produced PDF -> image) to visually confirm: correct fill/border/text colors per level, legible contrast in both light and dark theme, and that `paper`/`flyer` (no `\chapter`) still compile cleanly.
 - Fix any KOMA/titlesec interaction issues found during the real compile (e.g. spacing, page-break behavior for `\part`) before considering this done — do not claim it works without having compiled and visually inspected the PDF output, per repo rules.
 
 ## Ticket
 
-Per repo workflow rules, this work will be tracked in a new ticket under goal `🎯r2602` (Running Sketchpad — same goal used by the prior `PRINT-WINDOW-ELEMENT-TAXONOMY` ticket which established the tier-color convention this reuses).
+Per repo workflow rules, this work will be tracked in a new ticket under goal `🎯️r2602` (Running Sketchpad — same goal used by the prior `PRINT-WINDOW-ELEMENT-TAXONOMY` ticket which established the tier-color convention this reuses).
 
 ## Out of scope
 

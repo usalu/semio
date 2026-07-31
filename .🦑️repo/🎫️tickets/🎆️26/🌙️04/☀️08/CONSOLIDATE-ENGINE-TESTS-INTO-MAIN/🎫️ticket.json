@@ -1,0 +1,11 @@
+{
+  "title": "Consolidate Engine Tests Into Main",
+  "status": "closed",
+  "description": "Move all pytest tests from compose/engine/engine.test.py into compose/engine/main.py, update pyproject pytest discovery, remove engine.test.py, run pytest to verify.",
+  "summary": "Moved the full pytest suite from compose/engine/engine.test.py into compose/engine/main.py under region 🥼️Tests, binding sys.modules[\"engine\"] so patch(\"engine.…\") matches the in-file module. Deleted engine.test.py. Root pyproject.toml python_files now includes **/engine/main.py and **/py/main.py so monorepo discovery collects engine tests without a separate file; compose/engine/pyproject.toml still lists main.py. Verified: uv run pytest compose/engine (177 passed). Full compose/py+engine: 242 passed, 1 failure in compose/py TestChange::TestMetabolism::test_kit_change_forward_backward_inverse_behavior (computed diff vs fixture; unrelated to engine move).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1294"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️13b16c51463c4705bdc47cafbdf45da5"]
+}

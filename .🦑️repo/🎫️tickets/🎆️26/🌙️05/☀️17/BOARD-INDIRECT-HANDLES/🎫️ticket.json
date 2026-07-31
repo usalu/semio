@@ -1,0 +1,12 @@
+{
+  "title": "Board Indirect Handles",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Introduce board indirect handles: in normal LOD, hide normal handles unless exactly one node is selected; show a ring of scaled-up handles around selected node above other nodes; clicking a source ring handle starts a wire; dropping the wire on a target node shows that target node's ring; selecting a target handle creates the edge, otherwise the wire stops. Validate behavior with existing board tests/runtime checks where feasible.",
+  "summary": "Indirect-connect ghost rings now omit handles that already have an incident edge: append_indirect_handle_ring skips drawing them and resolve_hit_world skips them before other picks. Added handle_eligible_indirect_connect_ring helper and host_tests board_host_indirect_ring_resolve_skips_connected_handles with link_test_scene_node_a_two_handles_one_busy.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1422"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️7472efecb6584a31bc6cd9dc0356dadd"]
+}

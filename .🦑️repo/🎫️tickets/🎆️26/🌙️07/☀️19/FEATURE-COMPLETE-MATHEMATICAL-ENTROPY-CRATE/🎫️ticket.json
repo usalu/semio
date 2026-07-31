@@ -1,0 +1,13 @@
+{
+  "title": "Feature Complete Mathematical Entropy Crate",
+  "emoji": "🌀️",
+  "status": "open",
+  "description": "Build a new zero-dependency, headless, stateful Rust crate `mathematical_entropy` at mathematical/entropy/rs implementing a feature-complete entropy/information-theory library: discrete/continuous/mixed entropies (Shannon/Rényi/Tsallis/...), bias-corrected estimators (Miller-Madow/Grassberger/NSB/Chao-Shen/...), divergences (KL/JS/Rényi/Wasserstein/...), mutual information family (MI/CMI/KSG/total correlation/...), partial information decomposition, time-series entropies (ApEn/SampEn/permutation/dispersion/...), multiscale entropy, hand-rolled FFT/spectral entropy, wavelet entropy, matrix/SVD/von-Neumann entropy, transfer entropy \u0026 information dynamics, image/graph/ML-uncertainty domain adapters, statistical inference (bootstrap/surrogates), streaming/online estimators, and a batch feature-extraction registry. No external crates (own FFT, kd-tree, eigensolver, special functions, RNG), mirroring the mathematical/sampling and mathematical/polynomial crate conventions (region-organized, emoji docstrings, inline tiered tests, hand-written error enum). A UI will consume this crate later. Full architecture and numerics plan already designed; see the approved plan.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2157"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": [
+    "⚪️f370104656554792a91e167089763c32"
+  ]
+}

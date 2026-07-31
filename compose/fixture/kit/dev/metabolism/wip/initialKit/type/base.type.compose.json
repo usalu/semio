@@ -167,7 +167,7 @@
           "y": 0,
           "z": 1
         },
-        "description": "🪠 The center of the east rectangular core (an elevator and a staircase around it).",
+        "description": "🪠️ The center of the east rectangular core (an elevator and a staircase around it).",
         "port": {
           "id": "019ab243-21f3-7380-93c6-a04a8b137527",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -203,7 +203,7 @@
           "y": 0,
           "z": 1
         },
-        "description": "🧹 The center of the west rectangular core (an elevator and a staircase around it).",
+        "description": "🧹️ The center of the west rectangular core (an elevator and a staircase around it).",
         "port": {
           "id": "019ab243-21f3-7380-93c6-a04a8b137527",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -384,9 +384,9 @@
       }
     ]
   },
-  "icon": "icons/🔣base.svg",
+  "icon": "icons/🔣️base.svg",
   "image": "images/🖼️base.png",
-  "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
+  "description": "🏠️ A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
   "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
     "items": [

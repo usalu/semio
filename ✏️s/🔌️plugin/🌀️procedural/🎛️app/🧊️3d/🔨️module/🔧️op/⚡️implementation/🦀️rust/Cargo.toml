@@ -1,0 +1,25 @@
+[package]
+name = "semio-s-app-procedural-3d-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Procedural 3D app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+procedural_3d = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-3d" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
+playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+procedural_3d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-3d-engine" }
+vcs = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }

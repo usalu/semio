@@ -1,0 +1,8 @@
+{
+  "title": "Show Mesh Outlines in Compose Ui",
+  "status": "closed",
+  "description": "Compose UI should render mesh outlines for all scene meshes even when imported content has no authored line geometry. Use the same visual treatment as existing lines and extend existing tests to cover the behavior.",
+  "summary": "Imported scene meshes now synthesize outline lines so meshes render with the same line styling even without authored line geometry, and the existing compose/ui tests cover outline creation and recoloring.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️c7a0c8417eff4ae88c04ce68330ab30c"]
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Repo API",
+  "description": "Goal for Repo API",
+  "prompt": "Instructions for Repo API",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯️aioptimizedrepo🎯️reposerver",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/361"
+  }
+}

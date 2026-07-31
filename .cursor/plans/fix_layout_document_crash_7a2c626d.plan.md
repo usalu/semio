@@ -44,7 +44,7 @@ Extend the existing `if (import.meta.vitest)` block at the bottom of [layout/cor
 ## Verification (end-to-end)
 
 1. Run `bun nx run @semio-tech/layout-core:test` (vitest) to confirm the fix and new test pass.
-2. Launch the standalone Layout playground (`bun run dev:layout`, port 6079, matches the `🛠️dev📄layout` launch config) and load it in the browser to confirm:
+2. Launch the standalone Layout playground (`bun run dev:layout`, port 6079, matches the `🛠️dev📄️layout` launch config) and load it in the browser to confirm:
    - No console errors / no `<PlaygroundView>` crash.
    - Document panel lists Document/Spreads/Pages/Parent Pages/Layers/Stories/Links/Styles correctly.
    - Inspector panel shows page/frame fields when selecting a document item.
@@ -56,4 +56,4 @@ No other gaps were found: the Layout app definition, window bodies, panel tabs, 
 
 ## Process Note
 
-Per repo convention this work should happen inside a `.repo/🎫/...` ticket associated with the relevant goal, closed with a summary of changed files. The repo MCP server is currently reporting "not ready"; I will retry opening/closing the ticket at execution start, and will flag it if it's still unavailable.
+Per repo convention this work should happen inside a `.repo/🎫️/...` ticket associated with the relevant goal, closed with a summary of changed files. The repo MCP server is currently reporting "not ready"; I will retry opening/closing the ticket at execution start, and will flag it if it's still unavailable.

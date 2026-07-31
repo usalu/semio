@@ -1,0 +1,11 @@
+{
+  "title": "Refactor TypeScript Kit API to Stateful with Five Kit Kinds",
+  "status": "closed",
+  "description": "Refactor TypeScript Kit API to Stateful with Five Kit Kinds",
+  "summary": "Refactored all ~35 applyDiff functions in compose/js/index.ts from functional (returning new objects) to in-place mutation (void return). Renamed kit kinds to dev/local/archive/remote/transport. Added Kit Kind classes (TransportKit, ArchiveKit, SyncKit, DevKit, LocalKit, RemoteKit). Updated all callers in index.ts (~56 call sites) and sketchpad/index.tsx (9 call sites + 3 transact methods). Fixed JsonFileKitStore save interleave detection using mutationGeneration counter instead of reference equality. All 230 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1353"
+  },
+  "goal": "🎯️refactortsapidifftoinplacemutation",
+  "sessions": ["⚪️8fe9b1b02d1d482380e5f177da9f2d38"]
+}

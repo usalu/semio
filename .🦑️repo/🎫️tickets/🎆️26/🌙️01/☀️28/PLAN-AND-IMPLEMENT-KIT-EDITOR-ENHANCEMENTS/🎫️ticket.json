@@ -1,0 +1,9 @@
+{
+  "title": "Plan and Implement Kit Editor Enhancements",
+  "emoji": "🔨️",
+  "status": "closed",
+  "summary": "Implemented Kit diagram D3/React Flow sync with drag pinning, alphaTarget reheating/cooldown, and edge alignment diagnostics; updated README/AGENTS.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/243"
+  }
+}

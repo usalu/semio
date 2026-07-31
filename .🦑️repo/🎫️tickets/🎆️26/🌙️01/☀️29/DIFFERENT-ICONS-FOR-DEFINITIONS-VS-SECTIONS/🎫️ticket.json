@@ -1,0 +1,11 @@
+{
+  "title": "Different Icons for Definitions vs Sections",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "The definitions tree item icon should be different compared to the section tree item icon.",
+  "summary": "Successfully updated tree item icons to provide better visual distinction between sections and definitions. Section items now use symbol-folder icons to represent their container nature, while definition items use symbol-variable icons to clearly identify them as individual code elements. This improves the visual document and makes the tree view easier to navigate.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/270"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️reposectionmechanism"
+}

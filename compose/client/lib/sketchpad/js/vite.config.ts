@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,13 +6,13 @@
 
 // Vite build and development configuration for the sketchpad app.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
 // Vite build configuration for the sketchpad application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
@@ -26,17 +26,17 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { meshCollectionVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
-import { readInitialKitFixtureFromPath } from "../../../../fixture/📜script.ts";
-// #endregion 🔌Adapters
+import { meshCollectionVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
+import { readInitialKitFixtureFromPath } from "../../../../fixture/📜️script.ts";
+// #endregion 🔌️Adapters
 
-/** @emoji 🧊 Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad app — mirrors
+/** @emoji 🧊️ Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad app — mirrors
  * puzzle/plugin/rs's `[[package.metadata.semio.assets]]` `mesh-collection` row (see {@link meshCollectionVitePlugin}). */
 const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
   kind: "mesh-collection",
   route: "/mesh",
   roots: ["framework/asset/metabolism/representation", "mit-bestand/asset/abbau-aufbau"],
-  placeholder: "framework/asset/mesh/🧊placeholder.glb",
+  placeholder: "framework/asset/mesh/🧊️placeholder.glb",
   filterFromExamples: true,
 };
 
@@ -46,7 +46,7 @@ type CjsFacadeResolveOpts = {
   schedulerEntry: string;
 };
 
-/** @emoji 🧱 Pre-transforms workspace TypeScript sources so Rollup import analysis accepts JSX and types. */
+/** @emoji 🧱️ Pre-transforms workspace TypeScript sources so Rollup import analysis accepts JSX and types. */
 function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
   const root = workspaceRoot.replace(/\\/g, "/");
   return {
@@ -83,7 +83,7 @@ function monorepoWorkspaceTransformPlugin(workspaceRoot: string): Plugin {
   };
 }
 
-const EMBEDDED_NODE_TEST_REGIONS = [/\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/, /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/];
+const EMBEDDED_NODE_TEST_REGIONS = [/\/\/#region 🧪️Tests[\s\S]*?\/\/#endregion 🧪️Tests\s*/, /\/\/#region 🧪️E2E[\s\S]*?\/\/#endregion 🧪️E2E\s*/];
 
 function isSketchpadIndexModule(id: string): boolean {
   return id.replace(/\\/g, "/").endsWith("/compose/client/lib/sketchpad/js/index.ts");
@@ -148,7 +148,7 @@ const PLAYWRIGHT_DEV_STUB_ID = "\0compose-sketchpad-playwright-dev-stub";
 const VITEST_DEV_STUB_ID = "\0compose-sketchpad-vitest-dev-stub";
 const TESTING_LIBRARY_DEV_STUB_ID = "\0compose-sketchpad-testing-library-dev-stub";
 
-/** @emoji 🧱 Keeps Playwright out of the browser dev graph when embedded E2E regions are scanned. */
+/** @emoji 🧱️ Keeps Playwright out of the browser dev graph when embedded E2E regions are scanned. */
 function monorepoPlaywrightDevStubPlugin(): Plugin {
   return {
     name: "compose-sketchpad-playwright-dev-stub",
@@ -164,7 +164,7 @@ function monorepoPlaywrightDevStubPlugin(): Plugin {
   };
 }
 
-/** @emoji 🧱 Keeps vitest and testing-library out of the browser dev graph when embedded test regions are scanned. */
+/** @emoji 🧱️ Keeps vitest and testing-library out of the browser dev graph when embedded test regions are scanned. */
 function monorepoVitestDevStubPlugin(): Plugin {
   return {
     name: "compose-sketchpad-vitest-dev-stub",
@@ -185,7 +185,7 @@ function monorepoVitestDevStubPlugin(): Plugin {
   };
 }
 
-/** @emoji 🔀 Pre-resolves monorepo workspace package names before import-analysis. */
+/** @emoji 🔀️ Pre-resolves monorepo workspace package names before import-analysis. */
 function monorepoWorkspaceResolvePlugin(aliases: Array<{ find: string | RegExp; replacement: string }>): Plugin {
   const exact = new Map<string, string>();
   for (const alias of aliases) {
@@ -267,7 +267,7 @@ function attachWasmAndAssetsMiddleware(server: { middlewares: { use: (fn: (req: 
 // Vite configuration with plugins, resolve aliases, and asset serving.
 // Export MUST call defineConfig with the complete build configuration.
 export default defineConfig(async ({ mode }) => {
-  // 📥normal import fails in electron due to esm stuff
+  // 📥️normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
   const workspaceRoot = path.resolve(__dirname, "../../../../../");

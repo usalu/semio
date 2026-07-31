@@ -1,0 +1,12 @@
+{
+  "title": "Extend Entities Like Vector Owner Pattern",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Extend all Entity/Diff/Operation types in compose/graphql/target.schema.graphql like Vector: section comments (# WeakEntity / StrongEntity / Modification), typed owner union field, nullable ownerX refs per union member, ownerEntity and ownedEntities with union comments, then # Fields.",
+  "summary": "Aligned Entity surface with Vector-style blocks: section markers (# WeakEntity / StrongEntity / Modification / Diff), typed owner union (owner: XOwner), nullable owner\u003cType\u003e narrowing fields per union variant where feasible, ownerEntity + ownedEntities (OwnedEntityConnection) with union comments, then # Fields for payload fields. Updated Diff interface with owner: DiffOwner plus ownerDiffs/ownerChange/ownerOperation and applied to PlaneDiff/PositionDiff/LocationDiff/AttributeDiff/PlaceDiff. Extended Operation interface with owner: OperationOwner + ownerChange and applied Kit/VCS/Design/File/Piece/Connector/strong entities and Operation implementations. Renamed union OwnsEntityConnection → OwnedEntityConnection (matches Entity). AttributesDiff now implements Entity; AttributesDiff added to OwnerEntity union. Fixed accidental truncation of Position type body while adding PositionOwned comment.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1399"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️345a1552297b4a4383e3d9b416f7cbac"]
+}

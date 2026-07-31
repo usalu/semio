@@ -1,0 +1,12 @@
+{
+  "title": "Side Panels On Top Of All Windows",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "make sure that the side panels are on top of all windows e.g.flow is wrongly infront",
+  "summary": "Add z-0 class to the Layout central column to create a stacking context for all canvas and window children. This prevents flow nodes (which can have high inline z-indices like 1000) from escaping the canvas context and rendering in front of the side panels.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1825"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️d171c23569c04ad2b1cdb9a88fd5814f", "⚪️9c45bc5693ff4d06b1dd4728329928ad"]
+}

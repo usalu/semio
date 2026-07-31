@@ -1,0 +1,154 @@
+Wave: CW2 (protocol crate family implementation)
+Crate: protocol_io (protocol/io/rs)
+Agent scope: implement lib.rs only, strictly against
+.repo/🎫️/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md "## protocol_io" section (protocol_io
+is not touched by that ticket's "## Amendment" section — no new signatures there for this crate).
+
+STATUS:
+  cargo build -p protocol_io                              -> clean, no warnings.
+  cargo build -p protocol_io --target wasm32-unknown-unknown -> clean (crate compiles inert, as
+                                                                required by the contract).
+  cargo clippy -p protocol_io --all-targets                -> clean, 0 warnings.
+  cargo test -p protocol_io                                -> 12/12 tests pass.
+
+Files touched
+-------------
+- protocol/io/rs/lib.rs   — full implementation, replacing the scaffold stub.
+- protocol/io/rs/Cargo.toml — NOT modified; the existing deps (protocol_core, protocol_format,
+  protocol_history, pack_core, pack_io) were exactly what was needed.
+
+WHAT WAS IMPLEMENTED (single-file lib.rs, `mod native` gated
+`#[cfg(not(target_arch = "wasm32"))]`, regions matching the contract exactly)
+
+- //#region 🔖️File
+  ResumeState { end_offset, last_commit_seq, chain_hash }. HistoryFile { appender:
+  Option<HistoryAppender<pack_io::FilePackSink>>, resume: ResumeState } with create/open_append/
+  open_read_only/resume_state/appender exactly per the contract's signatures. A private
+  resume_state_for(path, limits) helper re-derives ResumeState via protocol_format::recover +
+  either chain_0 = blake3(header) (no commit yet) or protocol_format::parse_commit_payload on the
+  trusted tail's REC_COMMIT frame.
+
+- //#region 🔖️Sidecar
+  sidecar_path/write_sidecar/read_sidecar exactly per the contract's signatures and naming
+  (`<stem>.<hex8-of-body-hash>.sprc`), write_sidecar via pack_io::write_atomic.
+
+- //#region 🔖️Recover
+  recover_file(path, limits, mode) — thin wrapper: FilePackSource::open + protocol_format::recover.
+
+- //#region 🔖️Sync
+  TailFollower { path, next_edit_ordinal }: open(path, from_edit_ordinal) validates the header
+  eagerly; poll() re-reads the whole file and re-decodes via HistoryReader::open + .edits().skip(n)
+  every call (see deviation #3 below for why); last_edit_ordinal() returns the cursor position.
+
+- //#region 🔖️Compact
+  CompactOptions { drop_ephemeral, keep_snapshots }, KeepSnapshots { All, LatestPerAlternative,
+  LatestN(u32) }, compact(path, options, limits). Decodes the trusted prefix to a HistoryLog,
+  re-encodes it into a brand-new single-generation .spr byte stream (hand-rolled SprWriter loop,
+  not protocol_history::encode_history — see deviation #2) carrying one REC_COMPACTION provenance
+  record right after REC_DOC, and swaps it in via pack_io::write_atomic.
+
+- //#region 🧪️Tests
+  12 inline #[test] fns (no quick/long/exhaustive submodules — nothing here is slow), nested inside
+  `mod native` per pack_io's own convention (tests need every native-only type in scope): create+
+  append+commit+open_read_only round trip; appender() panics on a read-only handle (documented,
+  intentional); open_read_only never writes a single byte to disk (before/after byte-equality
+  check); open_append resumes and preserves prior edits across a simulated process restart;
+  open_append truncates a simulated torn tail (garbage bytes appended past the last valid commit)
+  before resuming, and the resumed file decodes cleanly; sidecar write/read round trip + hex8
+  naming + missing-file Io error; recover_file reports a valid RecoveryReport; TailFollower polls
+  new edits across multiple commits and advances its ordinal correctly, including a from-nonzero-
+  ordinal open that skips already-known edits; compact preserves every field HistoryLog models
+  (full struct equality before/after) across edits/changes/checkpoints/alternatives/active, writes
+  the REC_COMPACTION marker immediately after REC_DOC with the exact drop_ephemeral/keep_snapshots
+  encoding, and restarts the commit chain at seq 1; compact on an already-minimal (doc + commit,
+  no edits) file is a harmless content-preserving no-op.
+
+DEVIATIONS / DESIGN CHOICES (each also documented inline in lib.rs at its decision site)
+
+1. HistoryFile::open_read_only never writes to disk (no truncation, no rewrite) — it only calls
+   protocol_format::recover (a pure read) to compute ResumeState. Since the contract's `appender()`
+   signature returns `&mut HistoryAppender<pack_io::FilePackSink>` (not an Option) uniformly for
+   every HistoryFile regardless of how it was opened, and a read-only handle by construction never
+   builds a write path, `appender()` is implemented as
+   `self.appender.as_mut().expect("...opened via open_read_only...")` — a documented, deliberate
+   panic on misuse, rather than silently building (and therefore mutating the file via) a write
+   path just to satisfy the non-Option return type. Verified by a dedicated
+   `open_read_only_never_writes_to_the_file` byte-equality test and a
+   `#[should_panic]` misuse test.
+
+2. HistoryFile::open_append / compact() cannot literally "resume" a `protocol_format::SprWriter` /
+   `protocol_history::HistoryAppender` mid-stream: `SprWriter::begin` and `HistoryAppender::begin`
+   are the ONLY public constructors for those types (verified by reading both crates' actual
+   implementations, not just the contract prose), and both unconditionally write a fresh header
+   (`SprWriter::begin`) / fresh header+REC_DOC (`HistoryAppender::begin`) at the sink's current
+   position — there is no public "continue an existing running chain_hash / dict / commit_seq"
+   entry point anywhere in protocol_format/protocol_history's frozen API, and this crate may not
+   add one (out of scope: another crate's file). The only correctness-preserving option available
+   from protocol_io alone:
+     - open_append: recover the trusted prefix, fully decode it to a HistoryLog via
+       protocol_history::decode_history, truncate/recreate the physical file
+       (pack_io::FilePackSink::create), and replay every edit/change/checkpoint/alternative/active
+       back through a freshly-begun HistoryAppender's own public append_*/set_active methods (the
+       only way to correctly rebuild its internal dictionary/edit-ordinal bookkeeping) before commit
+       and handing the live appender back to the caller for further real-time appends.
+     - compact: same decode-to-HistoryLog step, but re-encoded via a hand-rolled SprWriter loop
+       (protocol_io's own, mirroring protocol_history's private encode_history loop structure using
+       only its PUBLIC encode_doc/encode_edit/encode_change/encode_checkpoint/encode_alternative/
+       encode_active functions) instead of calling protocol_history::encode_history as a black box,
+       because compact needs to interleave one extra REC_COMPACTION record into the same commit
+       generation and neither encode_history nor HistoryAppender exposes a raw write_record
+       passthrough for that. This duplicates a small amount of protocol_history's private
+       flush_dict_delta logic (reimplemented locally, byte-for-byte identical wire format, since
+       that helper isn't itself public).
+   Both operations are therefore O(file size) rather than O(torn-tail-only) on every resume/compact
+   — a real cost worth revisiting if protocol_format/protocol_history ever grow a genuine "resume a
+   writer mid-stream" constructor, which is outside this crate's own scope to add. Verified by
+   open_append_resumes_and_preserves_prior_edits_across_a_process_restart and
+   open_append_truncates_a_torn_tail_before_resuming (simulated crash: garbage bytes appended past
+   the last valid commit, resume must silently discard them and continue cleanly).
+
+3. Caveat shared by #2: protocol_history::HistoryLog has no slot for REC_PROJECTION/REC_INDEX/
+   REC_SEALED/REC_EPHEMERAL records (decode_history's match arm silently skips every kind it
+   doesn't model). Since protocol_io deliberately has NO protocol_materialize dependency (per the
+   contract's own frozen dependency list for this crate — protocol_materialize owns
+   encode_projection/decode_projection), a decode-to-HistoryLog-and-replay resume/compact cannot
+   preserve those record kinds. The op log itself (every edit/change/checkpoint/alternative) is
+   fully preserved byte-for-byte in content (verified by full HistoryLog struct equality in the
+   compact test); only acceleration/snapshot data would be lost on a resume/compact of a file that
+   actually contains projections — a scenario the wider system already tolerates gracefully
+   (protocol_materialize::resolve_plan explicitly falls back to full replay-from-genesis when a
+   projection is missing/corrupt). Documented inline at HistoryFile::open_append and compact().
+
+4. TailFollower::poll() re-reads the whole file and fully re-decodes from the start on EVERY call,
+   rather than incrementally parsing only new bytes since the last poll. This is not merely the
+   simplest option: protocol_history::HistoryReader::edits() always begins a fresh DictReader/
+   edit-id table at the top of the trusted record stream (REC_STR_DICT deltas are interleaved
+   incrementally through the file, so any single edit's dictrefs can only be resolved by walking
+   from the beginning), and EditIter's internal fields are private with no public constructor other
+   than via HistoryReader::edits() — there is no way to seed an iterator with a prior poll's
+   dictionary state through protocol_history's public API. A true incremental "just the new tail"
+   decode is therefore unreachable from this crate; full re-scan per poll is the only correct
+   option available, not a shortcut.
+
+5. TailFollower::last_edit_ordinal()'s exact off-by-one semantics are unspecified by the contract
+   (`pub fn last_edit_ordinal(&self) -> u64` with no further prose). Implemented as "the ordinal
+   boundary this follower has consumed through" — poll() returns edits starting at this ordinal and
+   advances it past everything returned; equals from_edit_ordinal until the first poll() that
+   returns at least one edit. Documented inline; exercised by both TailFollower tests (including a
+   from_edit_ordinal=1 open that correctly skips the already-known first edit).
+
+6. REC_COMPACTION's payload byte layout is protocol_io's own choice (protocol_core fixes only the
+   0x12 kind byte; no payload codec for it exists anywhere else in the frozen contract, including
+   its Amendment section): `format: u8 (=1), drop_ephemeral: u8 (0/1), keep_snapshots_tag: u8
+   (0=All, 1=LatestPerAlternative, 2=LatestN), [latest_n: varint u64 iff tag==2]`. Verified by
+   inspecting the raw frame bytes in compact_preserves_every_edit_and_records_a_compaction_
+   provenance_marker.
+
+7. HistoryFile::create doesn't call protocol_format::recover at all — right after
+   HistoryAppender::begin (which is documented, by inspection of protocol_history's actual
+   implementation, to write header+REC_DOC and never call commit internally), the state is known
+   deterministically (no commit yet, chain_hash = blake3(header)), so ResumeState is computed
+   directly from a fresh read of the just-written header rather than paying for a redundant
+   recover() pass over a file that's provably tiny and freshly written.
+
+No changes made outside protocol/io/rs/lib.rs. No git commands were run.

@@ -1,0 +1,9 @@
+{
+  "title": "Fix Repo Client Build Script",
+  "emoji": "🧰️",
+  "status": "closed",
+  "description": "repo/client: get it building; root npm run build:repo-cli currently fails because the script is missing while build:repo-client exists.",
+  "summary": "Added the missing root npm script build:repo-cli as an alias to the existing build:repo-client target. Verified npm run build:repo-cli completes and npx nx build repo/client --skip-nx-cache performs the Go build successfully.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️23c3f1c9b96b4a2694d587d973da2d3d"]
+}

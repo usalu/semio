@@ -1,0 +1,12 @@
+{
+  "title": "Increase Tree Spacing Visibility",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Improve readability of the Details panel by introducing structure-driven spacing rules in shared tree primitives: minimal spacing between rows in same property group, larger gap between sibling nested groups, strongest separation plus divider between top-level property sections. Generic by document/structural role, not by section/field name.",
+  "summary": "Increased all tree spacing values for more visible separation: treeBranchRowGapPx 2→4, treeSectionContentPaddingTopPx 12→20, CSS tier-3 section divider padding 10→16 and margin 6→10, CSS tier-2 group gaps 6→12, CSS tier-2 property gaps 4→8. Updated test assertion for section content padding. All 11 elements/ui tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1187"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️89143d4f979548c6a1ae606b8559b7f9", "⚪️3a7c317947964b289110ab9307782fa2"]
+}

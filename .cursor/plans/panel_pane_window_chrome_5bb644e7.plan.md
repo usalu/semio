@@ -105,4 +105,4 @@ Verify by running the `ui/js/react` typecheck and test targets through nx, and c
 
 ## Ticket
 
-Read `repo://goals` first, then open a ticket for this work (the related [.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/ticket.json](.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/ticket.json) covers the surface-level formula, not window chrome parity). Keep all scratch output inside the ticket folder.
+Read `repo://goals` first, then open a ticket for this work (the related [.repo/🎫️/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/ticket.json](.repo/🎫️/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/ticket.json) covers the surface-level formula, not window chrome parity). Keep all scratch output inside the ticket folder.

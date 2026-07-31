@@ -1,0 +1,8 @@
+{
+  "title": "Home Kit Kinds and Export Archive Tool",
+  "status": "closed",
+  "description": "Home MUST have create, open, filter for exactly these kits: File kit (*.kit.compose.json file), Folder kit (folder with .compose/kit.db sqlite file), Remote kit (from compose/server), Temporary kit (in-memory). Add Export - Archive tool which exports the current kit as an archive kit (*.kit.compose.zip).",
+  "summary": "Refactored KitKind from 3 kinds (temporary/local/remote) to 4 kinds (temporary/file/folder/remote) across the entire sketchpad codebase. Updated: KitKind type, SketchpadKitKindAvailability, InitialStateKit, CollaborativeKitStore, all hooks (useKitKind, useGetKitKind, useFilteredKitShallows), all store methods (inferKitPersistenceKind, registerKitStore, resolveKitFileProviderFactory, createBackedKitStore, createKit, openKit, persistKitsToStorage, dumpState), all UI components (HomeToolbarFilters with 4 toggles, HomeToolbarCreate with 4 buttons, HomeToolbarOpen unchanged, navbar breadcrumbs with 4 kinds, table row icons, hotkeys). Added new HomeToolbarExport component with FileArchiveIcon that exports selected kits as *.kit.compose.zip archive files via the existing compose.kit.export command. Added FileArchiveIcon to assets/icons.ts and elements/ui/index.tsx from lucide-react. Fixed availableKitKinds.local bug in Home component. Fixed test createKit calls from old boolean pattern to new KitKind string pattern. Added backward compatibility fallback for old local boolean in sync map metadata. All 196 vitest tests pass.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️418385902cde40d1ad6d0eaeb741bea9"]
+}

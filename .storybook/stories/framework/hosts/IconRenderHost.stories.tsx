@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/IconRenderHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/IconRenderHost.stories.tsx
 // Specs: Host the framework renderer's `IconRenderHost` with zero WASM engine and zero dev-server asset route —
 // the `framework/hosts` scope registers no static-dir for GLBs (unlike `framework/os`'s `/plugin-modules`), so
 // `assetUrl` is a hand-built `data:model/gltf+json` fixture (`.storybook/framework/hosts/iconRenderFixture.ts`).
@@ -9,7 +9,7 @@
 // "svg"`) per the toolbar's own description in `.storybook/preview.tsx` ("read directly from
 // context.globals.iconRenderer, not applied by a decorator"); `SvgFixed`/`PngFixed` pin the format via args.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useMemo, type ReactElement } from "react";
@@ -40,7 +40,7 @@ const STORY_ICON_RENDER_CONTROLLER_ID = "icon-render-story";
 
 //#region StoryHost
 function noopAction(_action: ActionDescriptor): void {
-  // 🔇 IconRenderHost never dispatches — it's a read-only preview surface.
+  // 🔇️ IconRenderHost never dispatches — it's a read-only preview surface.
 }
 
 function IconRenderStoryHost({ format }: { readonly format: IconRenderRequest["format"] }): ReactElement {
@@ -63,7 +63,7 @@ function IconRenderStoryHost({ format }: { readonly format: IconRenderRequest["f
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/IconRenderHost",
+  title: "🛠️framework🔌️hosts/IconRenderHost",
   component: IconRenderStoryHost,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

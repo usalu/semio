@@ -1,0 +1,12 @@
+{
+  "title": "TOC Table Header Top Border",
+  "emoji": "📑️",
+  "status": "closed",
+  "description": "TOC Table Header Top Border",
+  "summary": "Aligned register longtable window chrome with short Window tables: added vskip_stroke_hairline after external muted header, removed extra par gap, and added leading hline on longtable for the top window rule. Reduced header-to-first-row gap via negative rowsep on long header repeat. Hardened TOC aux to .register-toc with Hy@ filtering, detokenized writes, seq sanitization, and stale aux cleanup in print/script.ts. Build still needs verification after Tectonic aux cache clears on next full rerun.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1893"
+  },
+  "goal": "🎯️print🎯️semiowindowtables",
+  "sessions": ["⚪️678229a81de747f1900db44e18c77628"]
+}

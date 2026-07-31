@@ -1,0 +1,12 @@
+{
+  "title": "Disposition Enlarge Naming",
+  "emoji": "⛶️",
+  "status": "closed",
+  "description": "Dispositions can be enlarged. Remove legacy fullscreen naming — it is called enlarge (CSS classes, API, tests, docstrings).",
+  "summary": "Renamed legacy disposition fullscreen naming to enlarge across the presentation React renderer: API (`isEnlarged`, `toggleEnlarge`, `toggleEnlargeRect`, `SLIDE_INTERACTIVE_ENLARGE_FRAME`, `PresentationDispositionEnlargeContext`), CSS classes (`--enlarged`, `presentation-interaction-enlarge`), UI titles (Enlarge / Exit enlarge), and regression tests. 84/85 renderer tests pass; one pre-existing PDF cover-scale test remains failing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1518"
+  },
+  "goal": "🎯️framework🎯️product🎯️presentation",
+  "sessions": ["⚪️26f6be9ce7c442e8aab6ede4038638b2"]
+}

@@ -42,7 +42,7 @@ flowchart LR
 
 ## Phase 1 - Neural CAS cache (`neural/engine/lib.rs`)
 
-- Add a `// #region 🔖Cache` with a thread-safe `NeuralCache`:
+- Add a `// #region 🔖️Cache` with a thread-safe `NeuralCache`:
   - `pub struct NeuralCache { entries: Mutex<HashMap<u64, (u64 /*epoch*/, Dictionary)>>, epoch: AtomicU64 }` (Mutex/Atomic keep it `Send + Sync` for the rayon path; no external deps, per the no-direct-deps rule).
   - `begin_epoch()`, `get_or_insert_with(key, f)` (marks entry epoch = current), and `sweep()` (drops entries older than current epoch) for automatic bounding.
 - Deterministic content hash: implement a small `fn node_hash(kind: &str, input: &Dictionary) -> u64` using `std::hash` with manual hashing of `Dictionary`/`Value`/`Atom` (BTreeMap order is stable; hash `f64` via `to_bits()`).
@@ -50,7 +50,7 @@ flowchart LR
   - Parallel `evaluate_channels_with` (`compute_jobs` -> `par_iter`): wrap each job with a cache lookup before `dispatch`.
   - Sequential `evaluate_channels_sequential_with`: same wrap before `dispatch`.
 - Keep existing public methods (`evaluate`, `evaluate_with`, `evaluate_channels`) working by giving them an ephemeral `NeuralCache::new()` internally; add cache-taking variants `evaluate_channels_cached(...)` / `evaluate_channels_sequential_cached(...)` used by FlowHost.
-- Extend the existing `// #region 🔖Tests` to assert a second evaluate with an unchanged branch does not re-invoke the dispatch closure (hit), and that changing one branch only recomputes that branch.
+- Extend the existing `// #region 🔖️Tests` to assert a second evaluate with an unchanged branch does not re-invoke the dispatch closure (hit), and that changing one branch only recomputes that branch.
 
 ## Phase 2 - Persist cache in FlowHost (flow + procedural)
 

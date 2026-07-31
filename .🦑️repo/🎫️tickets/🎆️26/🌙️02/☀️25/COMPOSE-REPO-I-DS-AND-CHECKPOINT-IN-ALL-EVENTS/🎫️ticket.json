@@ -1,0 +1,12 @@
+{
+  "title": "Compose Repo IDs and Checkpoint in All Events",
+  "emoji": "📂️",
+  "status": "closed",
+  "description": "All repo event information should use repo IDs. Add checkpoint (commit SHA from git provider) to all events. Ensure folder/file/line/range/section/definition IDs follow the repo ID scheme. Add Checkpoint field to HookResultAgentBase and all version result types.",
+  "summary": "Added Checkpoint field to HookResultAgentBase and all version result types (CheckpointStarting, CheckpointEnded, CheckoutStarting, CheckoutEnded). Updated dispatchHook to resolve currentCheckpoint at function start via DefaultVersionControlProvider().CurrentCheckpoint() and populate it in all events. Renamed ID→Checkpoint in CheckpointEnded/CheckoutEnded. Updated extractCheckpointIDFromResult. Fixed mmss→hhmmss variable bug in logHook. Added 4 new tests: TestCheckpointInAllAgentEvents (17 subtests), TestCheckpointInAllVersionEvents (6 subtests), TestCheckpointInLoggedEventJSON, TestEventIDsUseComposeRepoFormat. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/701"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️64ebca44036043ddb7ed351ace78a6c4"]
+}

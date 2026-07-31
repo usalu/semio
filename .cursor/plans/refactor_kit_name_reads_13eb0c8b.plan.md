@@ -63,9 +63,9 @@ Replace with three small generic primitives in `compose/js/index.ts`. Each new f
 ### Generic primitives
 
 ```typescript
-//#region 🧱 generic store primitives
+//#region 🧱️ generic store primitives
 
-/** @emoji 📥 Sync mirror of one rs-owned value, fed by the rs event stream. */
+/** @emoji 📥️ Sync mirror of one rs-owned value, fed by the rs event stream. */
 export class StoreField<T> {
  private readonly value$: BehaviorSubject<T>;
  constructor(initial: T) {
@@ -89,7 +89,7 @@ export class StoreField<T> {
  }
 }
 
-/** @emoji 📝 Async kit-store command with bound runner + render-ready {@link WriteStatus}. */
+/** @emoji 📝️ Async kit-store command with bound runner + render-ready {@link WriteStatus}. */
 export class StoreCommand<TArgs> {
  readonly status: StoreField<WriteStatus> = new StoreField<WriteStatus>(SCHEMA_HOOK_IDLE_STATUS);
  private lastError: SetError | null = null;
@@ -115,7 +115,7 @@ export class StoreCommand<TArgs> {
  }
 }
 
-/** @emoji 🚦 Generic request-id ↔ Promise-resolver correlator (no per-command duplication). */
+/** @emoji 🚦️ Generic request-id ↔ Promise-resolver correlator (no per-command duplication). */
 export class RequestCorrelator {
  private readonly resolvers = new Map<string, (r: SetResult) => void>();
  private readonly pending = new Map<string, SetResult>();
@@ -157,7 +157,7 @@ export class RequestCorrelator {
  }
 }
 
-/** @emoji 🚌 Routes typed rs operation events to listeners; one demux for the whole store. */
+/** @emoji 🚌️ Routes typed rs operation events to listeners; one demux for the whole store. */
 export interface OperationEvent<P = JsonObject> {
  readonly kind: string;
  readonly requestId: string | null;
@@ -223,7 +223,7 @@ export class KitStore {
   return r;
  }
 
- /** @emoji 🚌 Single rs subscription loop pumping every operation event into {@link router} + {@link correlator}. */
+ /** @emoji 🚌️ Single rs subscription loop pumping every operation event into {@link router} + {@link correlator}. */
  private startEventStreamLoop(): void {
   /* one subscription on operationSucceeded + one on operationFailed; routes by event kind, resolves correlator by requestId */
  }

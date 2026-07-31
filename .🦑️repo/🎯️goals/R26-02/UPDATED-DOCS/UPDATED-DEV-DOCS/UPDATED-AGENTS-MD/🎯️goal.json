@@ -1,0 +1,15 @@
+{
+  "title": "Updated AGENTS.md",
+  "description": "Goal for Updated AGENTS.md",
+  "prompt": "Instructions for Updated AGENTS.md",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯️r2602🎯️updateddocs🎯️updateddevdocs",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/364"
+  }
+}

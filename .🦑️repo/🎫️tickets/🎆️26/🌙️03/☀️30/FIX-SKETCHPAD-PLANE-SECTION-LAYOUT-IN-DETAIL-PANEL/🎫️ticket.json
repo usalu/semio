@@ -1,0 +1,12 @@
+{
+  "title": "Fix Sketchpad Plane Section Layout in Detail Panel",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix sketchpad design app detail panel: plane section and its tree items/rows are breaking when selecting a fixed base piece. Make plane section visually consistent with rest of detail panel - proper spacing, alignment, no overlaps. All input fields single-row, fully visible, editable, with consistent sizing matching the rest of the panel.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1177"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️a07b45984e294b7f9cc3ca062a7adf7d", "⚪️ff9cc72bb0c34eb3898a8684da9c9e6e"]
+}

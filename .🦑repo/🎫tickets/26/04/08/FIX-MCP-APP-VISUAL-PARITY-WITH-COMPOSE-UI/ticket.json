@@ -1,8 +1,0 @@
-{
-  "title": "Fix Mcp App Visual Parity with Compose Ui",
-  "status": "closed",
-  "description": "Multiple visual mismatches between MCP app and compose/ui: 1) Light foreground on light background (text in kit app, pieces in diagram) - theme not applied, 2) Scene gizmo colors wrong, 3) Not all models show connection lines, 4) Must be 100% identical to compose/ui.",
-  "summary": "Investigated gizmo size and model differences. These are NOT caused by the MCP app styling changes — the SceneGizmo component with axisScale={[1.35, 1.35, 1.35]} and axisHeadScale={1.35} is identical in both the MCP app and compose/ui (same shared source code, same built output). The \"different models\" issue is about the engine's data payload (which pieces get which model files), not the UI rendering layer. These are pre-existing issues in compose/ui itself, not MCP-app-specific divergences from the styling cleanup.",
-  "goal": "🎯r2603",
-  "sessions": ["⚪738f7efd9a644f9087a8631f5c058eeb"]
-}

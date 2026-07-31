@@ -77,4 +77,4 @@ flowchart LR
 - Rust: add a `sync_descriptor` + normal-mode test confirming node-id edges render/hit-test without handles ([puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) host_tests).
 - Vitest ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) test region): node-id edge binds in `syncPuzzle2dScene`; `puzzle2dBroadcastNodeMove`/`applyNodePositionSilent` and `applySelectionFromPeerSilent`/`syncPreselectionSilent` mirror across two normal-mode peers.
 - Runtime: wires play on :6015 - drag a topic in one pane, confirm live + committed move in the other two panes; confirm hover, selection, and preselect mirror; confirm document lists topics and inspector edits one.
-- Keep temp logs under `.repo/🎫/26/06/03/WIRES-NORMAL-GRAPH/`; reopen that ticket; close with file summary.
+- Keep temp logs under `.repo/🎫️/26/06/03/WIRES-NORMAL-GRAPH/`; reopen that ticket; close with file summary.

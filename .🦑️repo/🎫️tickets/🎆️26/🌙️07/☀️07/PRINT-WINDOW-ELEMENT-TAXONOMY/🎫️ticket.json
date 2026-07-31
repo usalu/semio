@@ -1,0 +1,17 @@
+{
+  "title": "Print Window Element Taxonomy",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Restrict semio print window chrome to 14 special document element kinds (Visual/Logical/Structural tiers with primary/secondary/tertiary border+fill). Remove chapter/section auto-windowing. Retire Semiobox. Migrate existing call sites.",
+  "summary": "Added consistent single-unit spacing between element windows: each window environment now inserts \\addvspace{\\semio@spacing@single} before its header chip, giving uniform gaps between consecutive windows without doubling when stacked.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1850"
+  },
+  "goal": "🎯️r2602",
+  "plan": {
+    "client": "cursor",
+    "id": "0d9601b9",
+    "local": "print_window_element_taxonomy_0d9601b9.plan.md"
+  },
+  "sessions": ["⚪️c24f512e7d53431db13d7979b6b48758", "⚪️9871ca28479f4defab0e98622a3640d7"]
+}

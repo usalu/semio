@@ -1,0 +1,13 @@
+{
+  "title": "Fix Workspace-Blocking Doc Comment Placement in ui/wgpu",
+  "emoji": "🩹️",
+  "status": "open",
+  "description": "ui/wgpu/rs/lib.rs lines 12380-12387 place an inner doc comment block (//! ...) inside a #[cfg(test)] mod scope after other items (a //#region marker and preceding #[test] fn), which Rust rejects with E0753 \"expected outer doc comment\" since inner doc comments must appear before all other content in their enclosing scope. This blocks `cargo check --workspace` for the entire monorepo (confirmed by three independent cargo check runs from different sessions/tickets today, unrelated to those tickets' own scope). Minimal fix: convert the //! lines to /// (outer doc comment) so they attach to the following fn to_widget_node instead, which is syntactically valid and semantically equivalent (the comment describes the GoldenHarness region's acceptance-gate purpose, which reads naturally as documentation on the first function in that region too). No other changes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2065"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️a65394d316a140e6bc92daaa3a16904d"
+  ]
+}

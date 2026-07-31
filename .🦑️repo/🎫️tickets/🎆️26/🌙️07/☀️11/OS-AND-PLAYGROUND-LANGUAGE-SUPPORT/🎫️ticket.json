@@ -1,0 +1,12 @@
+{
+  "title": "OS and Playground Language Support",
+  "emoji": "🌐️",
+  "status": "closed",
+  "description": "Add compile-time-checked internationalization (English + German) to the OS shell (framework/renderer/react/os-shell.tsx) and playground (framework/product/os/dev). Extend the existing typed i18n system in ui/js/react/index.tsx (UiTranslationSchema, UiLocale, satisfies-guarded bundles) with missing shell keys, add a ui.chrome.locale localStorage setting, and add a Language dropdown to the OS Settings panel with English/Deutsch options.",
+  "summary": "Extended the existing compile-time-checked i18n system in ui/js/react/index.tsx (UiTranslationSchema, UiLocale, satisfies-guarded en/de bundles) with the missing shell keys (settings language/app fields, display save/layouts/unavailable, common name/save), added a `ui.chrome.locale` localStorage helper pair matching the theme/compact/expertise pattern, added an AssertUiSettingsLanguageKeysCovered compile-time coverage check, and wired the browser language detector to prefer that key without double-caching. Wired framework/renderer/react/os-shell.tsx (both the OS shell and the playground boot through it) to consume the schema via a new non-hook `shellLabel` helper: added a Language dropdown (English/Deutsch) to the Settings panel, persisted/reactive uiLocale state, and translated the Settings, Display, Search and Find panel copy. Also fixed a pre-existing compile error where the bundles used an untyped `fullscreen` key missing from the schema. Verified with tsc (no new errors vs baseline, full diff saved in ticket folder), vitest for both packages (69/69 renderer-react pass; ui-react's 9 pre-existing unrelated failures are jsdom/PointerEvent and tree-rendering issues, not caused by this change), and end-to-end in the running playground (port 6070): switching Settings → Language to Deutsch instantly retranslates the whole shell chrome (navbar panel toggles, Settings/Display panels, Search/Find dialogs), and the choice persists across reload via localStorage `ui.chrome.locale`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1925"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️28918644756b479894ececb80aab5faf"]
+}

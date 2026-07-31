@@ -1,9 +1,0 @@
-{
-  "title": "Engine Tests Metabolism Path And Nakagin Design Payload",
-  "emoji": "🎨",
-  "status": "closed",
-  "description": "Add engine tests for start_working_in_local_kit(metabolism dir) returning Metabolism and start_working_in_design(nakagin guid) returning design with scene and diagram; extend engine payload for show-design/show-scene with points/lines.",
-  "summary": "Extended _build_app_payload so show-design and show-scene include precomputed diagram points/lines alongside design+kit (split viewer / MCP). Added test_metabolism_folder_path_returns_metabolism_and_nakagin_design_scene_and_diagram using /workspaces/semio/.../metabolism when present else METABOLISM_DIR.resolve(); asserts Metabolism in payload and nakagin guid returns non-empty design pieces plus points/lines. Updated test_start_working_in_design, test_show_design_returns_diagram_json, test_show_scene_returns_scene_data. engine.test.py passes.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
-  "sessions": ["⚪2ffea81a03864426af8f98a20d1265c9"]
-}

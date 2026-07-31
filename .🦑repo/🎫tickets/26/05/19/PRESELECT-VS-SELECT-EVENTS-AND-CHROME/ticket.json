@@ -1,9 +1,0 @@
-{
-  "title": "Preselect Vs Select Events And Chrome",
-  "emoji": "🎯",
-  "status": "closed",
-  "description": "Separate preselect (rectangle/lasso drag) from committed select; preselect secondary = anchor minus preselect; preselectCancel on Escape; onPreselect/onPreselectCancel events in TS.",
-  "summary": "Single source of truth for interaction chrome: selectionIds + preselection only. Text overlays use boardInteractionChromeStyleKey from that state (not stale node.selected). syncBoardScene no longer applies descriptor selected/highlighted; reapplies syncInteractionChrome after JSX sync. Play markers no longer pass selected/highlighted props. 76 Vitest + 76 Rust tests pass.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪abf30dada2954e86be9d6c35250ed41c", "⚪79a7c8180f874e3c88a4bcae25e27a01", "⚪84e5ad2467f24197b40ff9d2865ad249", "⚪4aa5cb34e67047ffb87edcda7e4bd09a", "⚪9b6d8ee65135453c8a5b66a5c7090380", "⚪76906cd4dcd147b5ab556e6e31366032"]
-}

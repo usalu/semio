@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/TextEditorHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/TextEditorHost.stories.tsx
 // Specs: Host the framework renderer's `TextEditorHost` against the real prebuilt `framework/editor/rs`
 // `EditorSession` WASM engine.
 // Summary: A debug-readout host mounts `TextEditorHost` against a `TextEditorScene`; `parameters.wasm: ["editor"]`
 // gates first paint on `WASM_LOADERS.editor` (see `.storybook/preview.tsx`) resolving.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useState, type ReactElement } from "react";
@@ -54,7 +54,7 @@ function TextEditorStoryHost({ scene, controllerId, surfaceId }: { readonly scen
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/TextEditorHost",
+  title: "🛠️framework🔌️hosts/TextEditorHost",
   component: TextEditorStoryHost,
   parameters: { layout: "fullscreen", wasm: ["editor"] },
   tags: ["autodocs"],

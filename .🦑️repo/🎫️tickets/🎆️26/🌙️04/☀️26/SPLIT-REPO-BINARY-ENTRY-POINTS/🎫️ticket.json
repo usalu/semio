@@ -1,0 +1,12 @@
+{
+  "title": "Split Repo Binary Entry Points",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Refactor repo/cli/main.go into repo/client/main.go for shared client code, repo/cli/main.go for Cobra CLI code, and repo/mcp/main.go for MCP code. Keep existing behavior working and update existing tests only as needed.",
+  "summary": "Refactored the repo binary entry points into repo/client, repo/cli, and repo/mcp. The shared implementation lives in repo/client with exported CLI and MCP runners; repo/cli/main.go and repo/mcp/main.go are thin process entry points. Repo workspace modules include client/cli/mcp, and MCP configuration files point directly at go run ./repo/mcp. Verification: go test ./client ./cli ./mcp ./go ./server -run TestDoesNotExist passed; go run ./cli --help passed; focused client tests for configure/CLI ticket lifecycle/MCP tool registration passed. Full go test ./client still times out/fails on pre-existing unrelated tests: TestNativeBootstrapAssetsStayRepoRelative compose/coda expectations, TestCollectGoTestsInSection, TestFixtureBreachsByLanguage, and TestGraphQLAnalyzeQuery timeout.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1382"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary",
+  "sessions": ["⚪️6055c278721c47f8921069f3ee243328"]
+}

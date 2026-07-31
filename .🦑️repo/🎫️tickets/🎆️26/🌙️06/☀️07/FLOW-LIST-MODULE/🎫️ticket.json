@@ -1,0 +1,12 @@
+{
+  "title": "Flow List Module",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Add flow list module where a list is a dictionary with index keys. Provide list neuron kinds and integrate with math (e.g. sum over list of numbers).",
+  "summary": "Fixed list module not appearing in flow play: wired list into FLOW_MODULE_LOADERS, FLOW_DEFAULT_MODULE_IDS (auto-activated on startup), FLOW_NEURON_MODULE_IDS, vitest WASM init, react/play wasm build scripts, launch.json dev command, and list package.json.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1546"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️2cd2cda2c5a547d08919918bbc87e3fc", "⚪️f1388d9e0f2648a3adb544ea2ed07b58"]
+}

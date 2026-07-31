@@ -56,7 +56,7 @@ function MoveFrame() {
 }
 
 const meta = {
-  title: "🏘️compose🧪algorithms/Move",
+  title: "🏘️compose🧪️algorithms/Move",
   component: MoveFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

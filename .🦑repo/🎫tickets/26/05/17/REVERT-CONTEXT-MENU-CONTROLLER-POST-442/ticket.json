@@ -1,9 +1,0 @@
-{
-  "title": "Revert Context Menu Controller Post 442",
-  "emoji": "↩️",
-  "status": "closed",
-  "description": "Git 440..442: no Rust changes; ContextMenuController gained document pointerdown capture blocking board. Revert controller to Radix Root+Portal like 440, keep renderContextMenuTrigger for position.",
-  "summary": "Compared git 440..442: zero Rust file changes; regression is JS-only in `ContextMenuController` (441–442). Commit 442 added `document.addEventListener(\"pointerdown\", …, true)` which runs in capture before the board `eventSurface` bubble handlers when the window pointer bridge is off—interactivity dead while GPU still paints. Final fix: keep portaled fixed menu (Playwright anchor) and `renderFixedContextMenuItems`, but attach outside-dismiss on `window` with capture=false (bubble phase on window runs after target + ancestor handlers including board surface). Removed failed experiments (Radix-only in-tree and portaled Radix Root—Radix still offset menu ~140px vs client coords). Ran `bun nx run @elements/board:test --skip-nx-cache` exit 0.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪111426369e854f449a57a22221359ecc"]
-}

@@ -1,8 +1,0 @@
-{
-  "title": "Remove Repo Cli Hook File Logger",
-  "status": "closed",
-  "description": "Remove all file logging from the repo CLI after git and agent hook events so git operations remain seamless. Refactor the repo CLI hook pipeline to stop creating or appending session metadata files for hook events, remove repo-operation file logging tied to hook execution, and extend existing repo/cli tests to cover the no-file-logging behavior. Verify with focused repo/cli tests.",
-  "summary": "Scoped hook file logging suppression to git/version lifecycle events only. Restored agent/session and derived repo-operation session.json logging, kept version.checkpoint/checkin/checkout hooks file-silent, and added focused repo/cli coverage proving version hooks do not write .repo/⚡ session logs while existing agent logging tests continue to pass. Focused hook-related go tests pass; a full go test ./repo/cli run still times out in the pre-existing TestDevcontainerPostAttachGitKrakenWorkspaceBootstrap suite.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
-  "sessions": ["⚪46d302d2111a4b76be3e8e309259958c"]
-}

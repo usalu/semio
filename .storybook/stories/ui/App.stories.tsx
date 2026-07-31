@@ -1,11 +1,11 @@
-// #region 🧲Header
+// #region 🧲️Header
 // .storybook/story/elements/ui/App.stories.tsx
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { App, Mode, reactHostPort } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 const meta = {
   title: "🖱️ui⚛️react/App",

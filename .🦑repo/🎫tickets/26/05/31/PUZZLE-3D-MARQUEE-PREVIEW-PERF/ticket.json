@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle 3d Marquee Selection",
-  "emoji": "🖱️",
-  "status": "closed",
-  "description": "Left-drag marquee selection (rectangle/lasso) with modifier modes, CAD crossing/window semantics, window-header kind toggles, and right-button camera controls.",
-  "summary": "Implemented left-drag marquee selection in puzzle 3D: Rectangle (default) and Lasso tools, modifier-driven modes (default / Shift additive / Ctrl subtractive / Shift+Ctrl invertive), and CAD-style crossing (drag left) vs window (drag right) semantics. Remapped camera to right button (orbit), Shift+right pan, Alt+right zoom; left button is free for selection. Added window-header toggles for Objects, Vortices, Attractions (wired to existing selectableKinds) plus Rectangle/Lasso method toggles. Renamed SelectionMode from single/toggle to default/invertive. All vitest extended tests pass (puzzle/3d/react: 110, puzzle/3d/play index: 16).",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "files": ["puzzle/3d/react/index.tsx", "puzzle/3d/play/index.ts", "framework/product/playground/renderer/react/index.tsx"]
-}

@@ -1,0 +1,11 @@
+{
+  "title": "Board Theme Reactive Chrome",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Board: make hover edges, handle outlines, and related chrome react cleanly and consistently to theme settings instead of using fixed dark colors. Inspect board theming/styling paths, patch existing files only, validate with targeted tests or runtime checks, and close with touched-file summary.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1445"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps",
+  "sessions": ["⚪️6dc011b207464f14b83220f2738944b2"]
+}

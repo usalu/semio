@@ -1,0 +1,394 @@
+{
+  "title": "Fix Design App Node Uv Snap Back After Drag",
+  "status": "closed",
+  "prompt": "Node UV positions snap back to original positions after drag because onNodeDragStop mutates the nodes array directly instead of calling setNodes. Need to replace direct node mutation with proper setNodes call.",
+  "summary": "Persisted drag diff updates now include moved descendant subtree piece centers and compute connection diffs using selected plus descendant IDs; extended existing drag propagation test to require non-zero persisted center deltas for parent/child/grandchild.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/798"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-08T10:57:11.737574773Z",
+  "finished": "2026-03-11T10:56:31.134568228Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-08 10:57:11",
+        "finished": "2026-03-08 11:00:02"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "25a194ed76ad1a71a5d242990f19c5ace57b0bc2",
+      "prompt": "Node UV positions snap back to original positions after drag because onNodeDragStop mutates the nodes array directly instead of calling setNodes. Need to replace direct node mutation with proper setNodes call.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 29,
+                "removed": 26
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 28,
+                "removed": 26
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-08 11:32:17",
+        "finished": "2026-03-08 11:42:31"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "25a194ed76ad1a71a5d242990f19c5ace57b0bc2",
+      "prompt": "Previous setNodes fix was insufficient. User reports positions still snap back. Suspect flattenDesign BFS recomputing centers and overwriting dragged positions. Need to trace full path from onNodeDragStop -\u003e updatePieces -\u003e store.change -\u003e piecesMetadata -\u003e flattenDesign -\u003e designToNodesAndEdges.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 30,
+                "removed": 27
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 29,
+                "removed": 27
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-11 08:51:11",
+        "finished": "2026-03-11 09:37:42"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "prompt": "Fix the drag snap-back issue: currently after drag, node positions get updated but the node gets dragged without children, then snaps back to pre-drag position before finally moving to post-drag position with all children. Need: while dragging all children move with parent node, when drag finished the position of parent and children is updated without resetting to original position.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 65,
+                "removed": 36
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 61,
+                "removed": 33
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-11 10:53:51",
+        "finished": "2026-03-11 10:56:31"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "prompt": "Ensure diagram diff updates recursively for dragged node subtree (children + descendants) during drag stop updates.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 136,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 135,
+                "removed": 38
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts",
+              "lines": {
+                "added": 52,
+                "removed": 13
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App",
+              "lines": {
+                "added": 31,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App#Settings",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 7,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 66,
+                "removed": 34
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Drag Propagation",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App#Settings§DesignSettingsContent",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 31,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App#Settings§DesignSettingsContent",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

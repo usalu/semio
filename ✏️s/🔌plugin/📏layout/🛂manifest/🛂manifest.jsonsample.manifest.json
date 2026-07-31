@@ -1,7 +1,0 @@
-{
-  "schema": "layout.manifest/v1",
-  "id": "layout-sample",
-  "name": "Sample Layout Document",
-  "fixture": "📏sample.layout",
-  "description": "Parent page, threaded text, missing linked image, and deliberate preflight issues."
-}

@@ -15,7 +15,7 @@
     <SignAssembly>False</SignAssembly>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Authors>Ueli Saluz &lt;ueli@semio-tech.com&gt;</Authors>
-    <Description>🧩Design-Information-Representationing for Kit-of-Parts 🏘️ </Description>
+    <Description>🧩️Design-Information-Representationing for Kit-of-Parts 🏘️ </Description>
     <Title>compose</Title>
     <Copyright>GNU Affero General Public License v3 or later</Copyright>
     <PackageProjectUrl>https://docs.semio-tech.com</PackageProjectUrl>

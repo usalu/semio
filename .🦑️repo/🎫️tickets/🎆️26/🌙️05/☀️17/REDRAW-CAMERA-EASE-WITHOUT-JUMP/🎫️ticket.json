@@ -1,0 +1,9 @@
+{
+  "title": "Redraw Camera Ease Without Jump",
+  "emoji": "📷️",
+  "status": "closed",
+  "description": "After board redraw play stops: no end camera jump; 1s hold then 2s ease-in-out zoom to graph bbox; do not abort ease on fixture churn during suppress; fix timer clearing in effect 2140.",
+  "summary": "Post-redraw camera: 1s hold + 2s ease unchanged; easing uses ease-in-out cubic (slow–fast–slow). Effect that depended on fixture no longer clears hold/RAF while suppressCameraBasisSyncRef is true, so progressive fixture churn cannot abort the ease. Animation ends by applying blend(t=1), then clearing override on the next rAF so derived cameras match. Default play cameras are bbox-centered fit for all panes (replacing triptych offsets) so the ease target matches post-ease derived state—no end jump. Settings blurb updated.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️897e424babbe46609064576dd390b49c"]
+}

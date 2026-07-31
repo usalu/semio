@@ -1,0 +1,11 @@
+{
+  "title": "Replace Cad Placeholder References with Concrete Forest PNG",
+  "emoji": "🖼️",
+  "status": "open",
+  "description": "Replace the CAD play default world references that use placeholder infinite-fixture files (sketch.png, site.pdf) with the actual concrete-forest-reference.png from cad/fixture. This requires adding a cadFixtureVitePlugin to serve cad/fixture at /cad-fixture/ and updating CAD_PLAY_DEFAULT_WORLD_REFERENCES in cad/js/renderer/play/index.tsx.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1676"
+  },
+  "goal": "🎯️cad🎯️play",
+  "sessions": ["⚪️1d866fe27b90454e89cfbcf160f44cdd"]
+}

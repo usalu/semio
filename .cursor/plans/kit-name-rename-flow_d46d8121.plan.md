@@ -153,7 +153,7 @@ async rename(name: string): Promise<{ ok: boolean; requestId: string; error?: Se
   - On `OperationFailed { requestId, message }`: if it matches the in-flight rename's requestId -> `renameStatus$.next({ kind: "error", requestId, message })`
 - `awaitRenameOutcome(requestId)` resolves on the first matching success/error.
 
-Region-place all of this under a new `//#region 🪪Rename` block inside the `KitStore` class.
+Region-place all of this under a new `//#region 🪪️Rename` block inside the `KitStore` class.
 
 ### 4. `compose/react/index.tsx`
 

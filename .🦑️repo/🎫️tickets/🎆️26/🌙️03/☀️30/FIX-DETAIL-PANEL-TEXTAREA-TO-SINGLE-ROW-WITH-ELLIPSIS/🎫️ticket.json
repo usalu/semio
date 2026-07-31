@@ -1,0 +1,12 @@
+{
+  "title": "Fix Detail Panel Textarea to Single Row with Ellipsis",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix Detail Panel Textarea to Single Row with Ellipsis",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1170"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️053a1c792e4643ab8a4cf0a5098eb019"]
+}

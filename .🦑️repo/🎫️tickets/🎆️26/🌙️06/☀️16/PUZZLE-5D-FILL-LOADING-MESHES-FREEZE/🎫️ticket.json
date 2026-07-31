@@ -1,0 +1,12 @@
+{
+  "title": "Puzzle 5d Fill Loading Meshes Freeze",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When starting fill in puzzle 5d, the 3d window shows \"Loading meshes…\" and freezes. Puzzle 3d works normally. Root cause: outer Suspense in FiveD3d deadlocks when fill mesh preload suspends. Fix by removing/moving Suspense and preloading fill catalog meshes like 3d.",
+  "summary": "Fixed puzzle 5d 3d surface host crash: `sceneHostPort`, `brushMeshUrlsForFillSession`, `isLoadableMeshUrl`, `resolvePuzzle3dFixtureDrop`, and `Puzzle3dFixtureDropDetail` were only imported in the puzzle 3d host region of `framework/product/playground/renderer/react/index.tsx`. The `./puzzle/5d` subpath entry tree-shakes away that region, so `Puzzle5d3dSurfaceHost` threw `ReferenceError: sceneHostPort is not defined` on mount. Added the missing imports to the puzzle 5d adapters region. Verified: puzzle 5d play build succeeds, dev server loads 2d+3d canvases, fill tool activates without \"Loading meshes…\" freeze.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1704"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️apps",
+  "sessions": ["⚪️bbadd34fb98a49ea80c20f44925f4b6f"]
+}

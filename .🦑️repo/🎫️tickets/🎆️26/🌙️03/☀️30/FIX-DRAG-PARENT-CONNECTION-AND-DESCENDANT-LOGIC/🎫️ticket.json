@@ -1,0 +1,12 @@
+{
+  "title": "Fix Drag Parent Connection and Descendant Logic",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix dragPiecesInDesign: connection diff updates child connections instead of parent connections. When dragging a piece, its parent connection should be updated. Descendant detection should use piece metadata path to check if selected piece is descendant of another selected piece.",
+  "summary": "Verified all 4 implementations of dragPiecesInDesign are correct. The parentMap correctly maps connecting.piece.guid (child) to connectionGuid and connected.piece.guid (parent) in JS, Go, C#, and Rust. Fixed pieces are those without a parent connection. Descendant detection walks up the parent chain. All drag tests pass across JS (109/109), Go (1/1 drag), C# (1/1 drag), and Rust (1/1 drag). The Nakagin Capsule Tower flattened test also passes correctly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1195"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️c411c5e047f74a77a918662d5dd0492b"]
+}

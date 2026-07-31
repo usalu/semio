@@ -1,0 +1,9 @@
+{
+  "title": "Board Node Icon Inset Tuning",
+  "emoji": "📏️",
+  "status": "closed",
+  "description": "Reduce perceived whitespace around board node SVG icons by increasing fit_inset and clip_inset constants; align handle marker icon insets slightly.",
+  "summary": "Reduced perceived icon padding: introduced NODE_ICON_FIT_INSET 0.82 (was 0.76) and NODE_ICON_CLIP_INSET 0.93 (was 0.88) so contain-fit uses more of the node while clip stays slightly outside the fitted rect. Handle marker icons use HANDLE_MARKER_ICON_FIT_INSET 0.68 and HANDLE_MARKER_ICON_CLIP_FRAC 0.87 (was 0.62 / 0.82). wasm32 check, wasm-pack release, Vitest 60 passed.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️ba4b389d873742faafa33e692489615c"]
+}

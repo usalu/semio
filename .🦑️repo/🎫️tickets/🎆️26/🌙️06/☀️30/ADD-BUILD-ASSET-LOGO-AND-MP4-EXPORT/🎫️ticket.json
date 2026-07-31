@@ -1,0 +1,9 @@
+{
+  "title": "Add Build Asset Logo and MP4 Export",
+  "emoji": "🎥️",
+  "status": "closed",
+  "description": "add build asset logo and in general add functionality to scripts to export animated svg to mp4",
+  "summary": "Added exportAnimatedSvgToMp4 utility using playwright and ffmpeg in repo/lib/js/index.ts, and integrated it into the asset/logo workspace to build logo.mp4.",
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️bbc848c6c1104632abaf5e94cca715a8"]
+}

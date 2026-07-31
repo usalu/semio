@@ -1,0 +1,130 @@
+pack_cli — wave 0 implementation summary
+==========================================
+
+File implemented: /Users/ueli/Documents/semio/pack/cli/rs/lib.rs (single-file, per repo convention)
+Cargo.toml edited: /Users/ueli/Documents/semio/pack/cli/rs/Cargo.toml (added one dependency, see "Deviation" below)
+
+What was built
+--------------
+`pub fn main_impl(args: &[String]) -> i32` plus `fn main()` (guarded `#[cfg(not(test))]`) at the
+bottom of lib.rs, wired to both the `[lib]` (`pack_cli`) and `[[bin]] name = "pack"` Cargo targets,
+both pointing at the same lib.rs file as instructed. Verified green:
+
+  cargo check -p pack_cli
+  cargo build -p pack_cli --lib
+  cargo build -p pack_cli --bin pack   (produces target/debug/pack, ran manually, see below)
+  cargo test  -p pack_cli              (8 tests, run twice — once per target — 16/16 pass)
+
+Only warnings emitted (no errors): a Cargo warning that lib.rs is shared by both the `lib` and
+`bin` targets (expected/instructed), and a `dead_code` warning on `fn main` when building the
+`--lib` target in isolation (also expected — `main` is only reachable from the `bin` target).
+
+Subcommands (regions 🔖️Inspect/🔖️Verify/🔖️Hash/🔖️ToDsl/🔖️FromDsl/🔖️Diff in lib.rs):
+  pack inspect <file>                          — header/footer/manifest/segment-span text +
+                                                  a forward-scan (pack::recover) sanity summary;
+                                                  degrades to recovery-only output if the manifest
+                                                  fails to load, never panics.
+  pack verify <file> [--level=trusted|standard|full]
+                                                — opens manifest, reads body_bytes, reads every
+                                                  chunk, all at the requested VerificationLevel;
+                                                  prints OK / FAIL: <reason>.
+  pack hash <file>                             — pack::content_hash (footer-only read).
+  pack to-dsl <file> --schema <name>           — decode_document against a registry spec, print
+                                                  canonical Document-mode DSL text via
+                                                  dsl_schema::Writer/print_record.
+  pack from-dsl <file> --schema <name> --out <file>
+                                                — dsl_schema::parse + pack::encode_document +
+                                                  pack::write_atomic.
+  pack diff <file-a> <file-b> [--schema <name>]
+                                                — field-level RecordValue diff (+/-/~ per field id)
+                                                  when --schema resolves; else content_hash/length/
+                                                  first-mismatch-byte raw summary. Exit 0 identical,
+                                                  1 differs, 2 usage/schema error.
+  pack help / --help / -h                      — usage + explicit schema-registry-limitation note.
+
+Schema registry (region 🔖️Registry): a local `HashMap<&str, fn() -> dsl_schema::RecordSpec>` with
+two demonstration specs defined in this crate — "sample" (no keyword, Text/UInt/Bool fields,
+mirrors the `pack` facade's own test fixture) and "note" (keyword "note", Text/optional-Text/
+List(Text)). `--help` output and this summary both state explicitly: full schema resolution
+across the 49 app document kinds is OUT OF SCOPE for pack_cli — that belongs to the app crates in
+wave 2. inspect/verify/hash never need a schema (self-describing decode).
+
+Deviation from contract.md's "Deps:" line (documented, necessary)
+-------------------------------------------------------------------
+contract.md's pack_cli section lists only `pack = { path = "../../rs" }` as a dependency. My task
+brief explicitly requires a `HashMap<&str, fn() -> dsl_schema::RecordSpec>` built-in registry, and
+`pack` (the facade) deliberately does NOT re-export `dsl_schema` (contract.md pack facade section:
+"This crate does NOT re-export dsl_schema itself as pack::dsl_schema"). Constructing real
+`RecordSpec`/`FieldSpec`/`RecordValue`/`FieldValue` values for the registry and for to-dsl/from-dsl
+is therefore impossible without a direct `dsl_schema` path dependency. I added:
+  dsl_schema = { path = "../../../dsl/schema/rs" }
+to pack/cli/rs/Cargo.toml (same relative depth pack_value/pack_testkit already use). This is a
+source-of-truth type dependency only (RecordSpec/RecordValue are the schema-less-decode-compatible
+public vocabulary types every pack_* crate already depends on), not an app-crate dependency, so it
+does not violate "You MUST NOT mix technologies" / "no app crate" constraints from the task brief.
+
+Testing (region 🧪️Tests, inline `mod tests` — no separate test files)
+-----------------------------------------------------------------------
+Builds real encoded pack files via `pack::encode_document` + the local `sample_spec()`, writes them
+to `std::env::temp_dir()` (unique per-test via an atomic counter + pid), then drives `main_impl`
+with argv-style `&[String]` slices:
+  - cli_inspect_verify_hash_on_valid_pack        — inspect/verify(standard)/verify(full)/hash all
+                                                    exit 0 on a valid file.
+  - cli_verify_fails_on_corrupted_pack_without_panicking
+                                                  — flips one byte mid-file; verify --level=full
+                                                    exits non-zero; inspect/hash degrade gracefully
+                                                    (0 or 1, never panic — a panic would abort the
+                                                    test itself, so passing already proves this).
+  - cli_handles_truncated_pack_without_panicking — half-length file; verify/inspect/hash all exit 1
+                                                    cleanly (Truncated error path).
+  - cli_reports_missing_file_without_panicking   — nonexistent path; all three exit 1.
+  - cli_to_dsl_and_from_dsl_round_trip_via_registry
+                                                  — to-dsl on a real pack file (exit 0); to-dsl with
+                                                    an unknown/missing --schema (exit 2 both ways);
+                                                    from-dsl parses hand-printed DSL text back into
+                                                    a pack file, verify on the result exits 0, diff
+                                                    (--schema) between the two distinct records
+                                                    reports 1 (differ), diff of a file against itself
+                                                    reports 0 (identical).
+  - cli_from_dsl_reports_parse_failure_without_panicking
+                                                  — malformed DSL text ("name=") exits 1, output file
+                                                    is never created.
+  - cli_help_and_unknown_subcommand              — no-args (2), help/--help (0), unknown subcommand
+                                                    (2).
+  - cli_parse_args_splits_flags_and_positionals  — unit test of the `--flag value`/`--flag=value`
+                                                    argv splitter.
+
+Manual smoke test (also run, not part of the automated suite; scratch artifacts left in this
+ticket folder per repo convention):
+  .repo/🎫️/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave0-cli-smoke.dsl
+  .repo/🎫️/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave0-cli-smoke.spk
+  `pack from-dsl ... --schema sample --out ...` -> `pack inspect/hash/verify --level=full/to-dsl/diff`
+  all behaved as expected end to end via the built `target/debug/pack` binary.
+
+Downstream bug observed (NOT fixed — outside pack_cli's file scope, flagging for the ticket owner)
+-----------------------------------------------------------------------------------------------------
+`pack inspect` on the smoke-test file printed `schema_name: "Ada Lovelace"` instead of the empty
+string `pack_value::encode_document` actually sets (it always writes `Manifest.schema_name =
+String::new()`, since pack_cli's demonstration path — and every current pack_value caller — never
+sets a schema name). Root cause is in `pack_format::PackWriter::finish` (pack/format/rs/lib.rs
+~line 691): it encodes `schema_symref = 0` whenever `manifest.schema_name.is_empty()`, and on the
+read side `pack_format::resolve_manifest` (~line 529) only treats `schema_symref == 0` as "no
+name" when the symbol table is ALSO empty — otherwise it resolves symref 0 to whatever the first
+interned symbol happens to be (here, the interned "Ada Lovelace" text field value), so an empty
+schema name becomes indistinguishable from "the schema is named symbols[0]" whenever the document
+has at least one interned string. This is a pack_format/pack_value cross-crate issue, not a
+pack_cli bug — pack_cli faithfully displays whatever `Manifest.schema_name` the facade returns. I
+did not touch any file outside pack/cli/rs/lib.rs and pack/cli/rs/Cargo.toml to fix this, per my
+task's directory boundary; flagging here so the ticket owner/closing agent can route a fix (likely
+a reserved out-of-band sentinel, or storing `Option<u64>`-shaped presence instead of overloading
+symref 0) to whichever agent owns pack_format/pack_value.
+
+Files touched
+-------------
+  /Users/ueli/Documents/semio/pack/cli/rs/lib.rs       (full implementation, replaced placeholder)
+  /Users/ueli/Documents/semio/pack/cli/rs/Cargo.toml    (added dsl_schema path dependency, see above)
+  /Users/ueli/Documents/semio/.repo/🎫️/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave0-cli.txt (this file)
+  /Users/ueli/Documents/semio/.repo/🎫️/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave0-cli-smoke.dsl (scratch)
+  /Users/ueli/Documents/semio/.repo/🎫️/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave0-cli-smoke.spk (scratch)
+
+No files outside pack/cli/rs and this ticket folder were modified. No git commands were run.

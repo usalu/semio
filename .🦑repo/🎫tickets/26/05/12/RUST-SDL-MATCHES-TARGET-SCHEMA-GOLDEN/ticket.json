@@ -1,9 +1,0 @@
-{
-  "title": "Rust SDL Matches Target Schema Golden",
-  "emoji": "📜",
-  "status": "open",
-  "description": "Align compose/rs/lib.rs GraphQL surface with compose/graphql/target.schema.graphql: ensure gql::sdl() round-trip (schema_matches_target_graphql_file), register_entities SDL fragments policy per macro-driven_entity_family_refactor + single-source_entity_layers plans, fix any drift.",
-  "summary": "Adjusted compose/rs SDL export to embed schema.golden.graphql, updated the schema equality guard to compare against the golden file, and regenerated compose/schema/graphql/schema.graphql. Verified the focused Rust schema guard and confirmed generated schema is normalized-equal to the golden schema.",
-  "goal": "🎯r2602runningsketchpadmacrodrivenentityfamilyrefactor",
-  "sessions": ["⚪1f6e4f0fb0c64982b0236a8a783d3b2c", "⚪eaffb71218ab482aa391ca84d0fe2d72", "⚪9c845cefd36c49f9b0ed914833a9e257"]
-}

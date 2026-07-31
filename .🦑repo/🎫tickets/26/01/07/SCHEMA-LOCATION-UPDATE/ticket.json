@@ -1,7 +1,0 @@
-{
-  "title": "SCHEMA-LOCATION-UPDATE",
-  "emoji": "📋",
-  "status": "closed",
-  "description": "Update gqlgen.yml to reference the new schema location at graphql/repo/schema.graphql",
-  "goal": "🎯aioptimizedrepo"
-}

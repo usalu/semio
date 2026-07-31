@@ -1,0 +1,9 @@
+{
+  "title": "Install Ripgrep",
+  "emoji": "📥️",
+  "status": "closed",
+  "description": "Install ripgrep (rg) in the devcontainer for zero-touch development without rebuilding the container.",
+  "summary": "Installed ripgrep (rg) manually via apt-get and updated post-create.sh to include it for future-proofing.",
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️current"]
+}

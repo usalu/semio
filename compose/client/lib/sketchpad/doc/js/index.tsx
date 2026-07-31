@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,16 +6,16 @@
 
 // Docs site entry: generic platform shell for sketchpad.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🛎️Entrypoint
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
 import { ensureSketchpadPlatform } from "@semio-tech/compose-sketchpad";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-import "../🎨globals.css";
+import "../🎨️globals.css";
 
 void mountPlatform(ensureSketchpadPlatform).catch((err) => {
   console.error("[compose.sketchpad.docs]", err);

@@ -46,7 +46,7 @@ Make `subscription { wip { alternative(id: $alt) { kit { design(id: $des) { piec
 ### Schema replacement (`compose/graphql/target.schema.graphql` lines 8256-8259)
 
 ```graphql
-# 🔴 Live subscription. Each field mirrors `Query`. The server emits the
+# 🔴️ Live subscription. Each field mirrors `Query`. The server emits the
 # resolved selection on subscribe and re-emits whenever any field within
 # the selection changes (live-query). Subscribe to a single leaf scalar to
 # receive only that scalar's updates.
@@ -111,4 +111,4 @@ flowchart LR
 
 ## Ticket
 
-Open ticket `🎫 Live Subscription Field Tree` under goal `🎯r2602🎯runningsketchpad` (sketchpad apps need fine-grained reactive selections). Files touched: `compose/graphql/target.schema.graphql`. Plan id: this plan's id.
+Open ticket `🎫️ Live Subscription Field Tree` under goal `🎯️r2602🎯️runningsketchpad` (sketchpad apps need fine-grained reactive selections). Files touched: `compose/graphql/target.schema.graphql`. Plan id: this plan's id.

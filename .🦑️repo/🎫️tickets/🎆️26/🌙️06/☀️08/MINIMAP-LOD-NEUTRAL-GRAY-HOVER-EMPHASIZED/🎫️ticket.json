@@ -1,0 +1,12 @@
+{
+  "title": "Minimap Lod Neutral Gray Hover Emphasized",
+  "emoji": "🗺️",
+  "status": "closed",
+  "description": "On minimap LOD in flow and puzzle 2d, nodes and edges are wrongly shown with emphasized color at rest and turn gray on hover. Fix to show element gray (like navbar toggles) at rest and emphasize on hover.",
+  "summary": "Fixed flow minimap selected nodes showing emphasized instead of primary. Root cause was serializeGraphVelloThemePaletteJson mapping nodeStrokeSelected, edgeStrokeSelected, handleStrokeSelected, wireStrokeSelected, and selectionPreviewStroke to border-emphasized instead of --color-primary. Restored primary for all selection strokes; hover strokes use emphasized again. Flow JS label overlay uses primary for selected captions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1588"
+  },
+  "goal": "🎯️ui🎯️theming",
+  "sessions": ["⚪️0c178030e6cb40289197f5f18532a7d4", "⚪️2bc3e13a999143bea9d8b49eebc035c1", "⚪️14c7a8e2d31f428d9951a111d03f579b"]
+}

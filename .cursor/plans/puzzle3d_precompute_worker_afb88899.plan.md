@@ -80,7 +80,7 @@ New file mirroring `compose/client/lib/js/kit-store.worker.ts` and its transport
 
 ## 3. Main-thread client + interface boundary (in `puzzle/3d/react/index.tsx`)
 
-Add `//#region 🧵Precompute` with a `Puzzle3dCollisionEngine` interface (rule: external libs/workers behind an interface) and two impls:
+Add `//#region 🧵️Precompute` with a `Puzzle3dCollisionEngine` interface (rule: external libs/workers behind an interface) and two impls:
 
 - `WasmCollisionEngine` - talks to the worker; `createPuzzle3dPrecomputeWorker()` factory (mirrors `createKitStoreWorker` at [compose/client/lib/js/index.ts](compose/client/lib/js/index.ts) line 233) using `new Worker(new URL("./precompute.worker", import.meta.url), { type: "module" })`.
 - `MeshBvhCollisionEngine` - wraps the existing `three-mesh-bvh` functions, used as fallback when no worker (vitest/SSR/headless), so current tests keep passing.
@@ -94,7 +94,7 @@ Wiring:
 
 ## 4. Build / launch / tooling wiring (zero-touch, cross-platform)
 
-- `puzzle/3d/rs/project.json` + `package.json`: `wasm` target calling `bun ./script.ts wasm` (mirror `@semio-tech/puzzle-2d-rs`).
+- `puzzle/3d/rs/project.json` + `package.json`: `wasm` target calling `bun ./📜️script.ts wasm` (mirror `@semio-tech/puzzle-2d-rs`).
 - Register the wasm build + worker debug entries in `launch.json` following the existing puzzle/2d ordering/grouping.
 - Vite already bundles `new Worker(new URL(...))`; confirm `puzzle/3d/play/vite.config.ts` resolves the wasm asset (same approach as 2d).
 

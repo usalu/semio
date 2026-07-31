@@ -1,7 +1,7 @@
-//#region 🔖composeWasm
+//#region 🔖️composeWasm
 import initCompose, { boot, KitStoreHandle } from "@semio-tech/compose-rs-wasm";
 
-/** @emoji 🧪 Empty WASM store URI — must match {@link RS_WASM_EMPTY_STORE_URI} in `@semio-tech/compose-js`. */
+/** @emoji 🧪️ Empty WASM store URI — must match {@link RS_WASM_EMPTY_STORE_URI} in `@semio-tech/compose-js`. */
 export const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
 
 // Bundle `compose.js` in Storybook, the default `new URL("compose_bg.wasm", import.meta.url)` is often wrong;
@@ -32,8 +32,8 @@ export function ensureComposeWasm(): Promise<void> {
 
 export { boot, initCompose, KitStoreHandle };
 
-// #region 🧰StorybookGraphqlWire
-/** @emoji 🔌 Storybook-only GraphQL execute boundary (same shape as WASM `KitStoreHandle.execute`). */
+// #region 🧰️StorybookGraphqlWire
+/** @emoji 🔌️ Storybook-only GraphQL execute boundary (same shape as WASM `KitStoreHandle.execute`). */
 export type StorybookKitGraphqlHandle = Pick<KitStoreHandle, "execute" | "subscribe">;
 
 function storybookKitGraphqlData(response: unknown): Record<string, unknown> {
@@ -49,7 +49,7 @@ async function sbGqlMut(handle: StorybookKitGraphqlHandle, query: string, variab
   return storybookKitGraphqlData(JSON.parse(json) as unknown);
 }
 
-/** @emoji 📥 Opens `dev://empty` then seeds kit JSON through GraphQL `installProjection` (rs/js contract). */
+/** @emoji 📥️ Opens `dev://empty` then seeds kit JSON through GraphQL `installProjection` (rs/js contract). */
 export async function createStorybookKitGraphqlHandle(seedKit: unknown): Promise<KitStoreHandle> {
   await ensureComposeWasm();
   const created = KitStoreHandle.create(RS_WASM_EMPTY_STORE_URI);
@@ -69,7 +69,7 @@ export async function createStorybookKitGraphqlHandle(seedKit: unknown): Promise
   return handle;
 }
 
-/** @emoji 🌐 Runs one GraphQL document over a handle; resolves with the **complete JSON** response. */
+/** @emoji 🌐️ Runs one GraphQL document over a handle; resolves with the **complete JSON** response. */
 export async function storybookKitGraphqlRun(handle: Pick<KitStoreHandle, "execute">, body: { query: string; variables?: Record<string, unknown>; operationName?: string }): Promise<unknown> {
   const json = await handle.execute(JSON.stringify(body));
   return JSON.parse(json) as unknown;
@@ -87,7 +87,7 @@ function altIn(payload: { alternativeId?: string | null }, draftBlock: { alterna
   return a;
 }
 
-/** @emoji 🧾 Maps legacy `executeSessionCommands` / nested draft-transaction shapes to `Mutation.session` (no `kitStore.batch`). */
+/** @emoji 🧾️ Maps legacy `executeSessionCommands` / nested draft-transaction shapes to `Mutation.session` (no `kitStore.batch`). */
 async function storybookExecuteSessionCommands(handle: StorybookKitGraphqlHandle, value: Record<string, unknown>): Promise<Record<string, unknown>> {
   const commands = value["commands"];
   if (!Array.isArray(commands) || commands.length === 0) throw new Error("executeSessionCommands.commands");
@@ -234,7 +234,7 @@ async function storybookExecuteSessionCommands(handle: StorybookKitGraphqlHandle
   return { executeSessionCommands: { results: results } };
 }
 
-/** @emoji 🧾 Executes one tagged `KitStoreExecuteCommand` variant (session / batch) over GraphQL (Storybook). */
+/** @emoji 🧾️ Executes one tagged `KitStoreExecuteCommand` variant (session / batch) over GraphQL (Storybook). */
 export async function storybookKitGraphqlExecuteStoreCommand(handle: StorybookKitGraphqlHandle, cmd: unknown): Promise<StorybookKitStoreExecuteResult> {
   try {
     if (cmd == null || typeof cmd !== "object" || Array.isArray(cmd)) throw new Error("command object expected");
@@ -320,11 +320,11 @@ export async function storybookKitGraphqlExecuteStoreCommand(handle: StorybookKi
     return { ok: false, error: { kind: "Internal", message: String(e) } };
   }
 }
-// #endregion 🧰StorybookGraphqlWire
-//#endregion 🔖composeWasm
+// #endregion 🧰️StorybookGraphqlWire
+//#endregion 🔖️composeWasm
 
-//#region 🔖commandSchema
-/** @emoji 📇 Root `ReadKitCommand` variant keys (camelCase), aligned with `compose/rs` `read::ReadKitCommand`. */
+//#region 🔖️commandSchema
+/** @emoji 📇️ Root `ReadKitCommand` variant keys (camelCase), aligned with `compose/rs` `read::ReadKitCommand`. */
 export const ALL_READ_KIT_COMMAND_KEYS: readonly string[] = [
   "readKitFullCommand",
   "readKitShallowCommand",
@@ -593,12 +593,12 @@ export const KIT_STORE_COVERAGE_ROWS: readonly { group: string; key: string }[] 
   { group: "ChangeType", key: "see CHANGE_TYPE_COMMAND_KEYS" },
   { group: "ReadKit", key: "see ALL_READ_KIT_COMMAND_KEYS (generated from compose/rs/read_module.rs)" },
 ];
-//#endregion 🔖commandSchema
+//#endregion 🔖️commandSchema
 
-//#region 🔖useKitStore
+//#region 🔖️useKitStore
 import * as React from "react";
 
-// #region 🎨 RJV Theme
+// #region 🎨️ RJV Theme
 // Tracks the `dark` class on <html> and maps it to a base-16 theme name
 // consumed by `@microlink/react-json-view` so JSON viewers track Storybook theme toggles.
 export type RjvThemeName = "rjv-default" | "monokai";
@@ -619,7 +619,7 @@ export function useRjvTheme(): RjvThemeName {
   }, []);
   return isDark ? "monokai" : "rjv-default";
 }
-// #endregion 🎨 RJV Theme
+// #endregion 🎨️ RJV Theme
 
 let evSeq = 0;
 function nextEvId() {
@@ -748,9 +748,9 @@ export function useKitStore(seedKit: unknown) {
     onCommandRun,
   };
 }
-//#endregion 🔖useKitStore
+//#endregion 🔖️useKitStore
 
-//#region 🔖HistoryControls
+//#region 🔖️HistoryControls
 import * as React from "react";
 
 type IdCallback = (s: string) => void;
@@ -1197,13 +1197,13 @@ const B: React.FC<{ onClick: () => void; disabled?: boolean; children: React.Rea
   </button>
 );
 
-// #region 🌳KitTreeGraph
-// 🌳 GitKraken-inspired visualisation of the complete kit history: root (initial kit),
+// #region 🌳️KitTreeGraph
+// 🌳️ GitKraken-inspired visualisation of the complete kit history: root (initial kit),
 // checkpoints (chronological column, latest top — uuidv7 is time-sortable), alternatives
 // (left lane, hover highlights the full line), drafts (bubbles pinned to their parent
 // checkpoint showing session + transaction state), release badges.
 
-// #region 📦VcsState shape
+// #region 📦️VcsState shape
 interface VcsCheckpointDto {
   readonly id: string;
   readonly parent: string | null;
@@ -1251,9 +1251,9 @@ interface VcsStateDto {
   readonly sessions: readonly VcsSessionDto[];
   readonly theKitLine: readonly string[];
 }
-// #endregion 📦VcsState shape
+// #endregion 📦️VcsState shape
 
-// #region 🎨Lane palette
+// #region 🎨️Lane palette
 const KIT_TREE_LANE_COLORS = [
   "#0ea5e9", // sky-500 → the kit
   "#f97316", // orange-500
@@ -1273,18 +1273,18 @@ function kitTreeLaneColor(index: number): string {
 function kitTreeShortId(id: string, len = 8): string {
   return id.length <= len ? id : id.slice(0, len);
 }
-// #endregion 🎨Lane palette
+// #endregion 🎨️Lane palette
 
-// #region 🔎Selection
+// #region 🔎️Selection
 export interface KitTreeSelection {
   readonly onCheckpointSelect: (id: string) => void;
   readonly onAlternativeSelect: (id: string) => void;
   readonly onSessionSelect: (id: string) => void;
   readonly onDraftSelect: (id: string) => void;
 }
-// #endregion 🔎Selection
+// #endregion 🔎️Selection
 
-// #region 🧮Layout derivation
+// #region 🧮️Layout derivation
 interface KitTreeCheckpointRowModel {
   readonly checkpoint: VcsCheckpointDto;
   readonly laneIndex: number;
@@ -1331,7 +1331,7 @@ function buildKitTreeRows(state: VcsStateDto): readonly KitTreeCheckpointRowMode
     };
   });
 }
-// #endregion 🧮Layout derivation
+// #endregion 🧮️Layout derivation
 
 // #region 🖼️KitTreeGraph component
 export interface KitTreeGraphProps {
@@ -1426,7 +1426,7 @@ export const KitTreeGraph: React.FC<KitTreeGraphProps> = ({ handle, selection, s
 };
 // #endregion 🖼️KitTreeGraph component
 
-// #region 🧭KitTreeAlternatives panel
+// #region 🧭️KitTreeAlternatives panel
 const KitTreeAlternatives: React.FC<{
   readonly alternatives: readonly VcsAlternativeDto[];
   readonly onHover: (id: string | null) => void;
@@ -1476,9 +1476,9 @@ const KitTreeAlternatives: React.FC<{
     )}
   </aside>
 );
-// #endregion 🧭KitTreeAlternatives panel
+// #endregion 🧭️KitTreeAlternatives panel
 
-// #region 📜KitTreeCheckpoints column
+// #region 📜️KitTreeCheckpoints column
 const KitTreeCheckpoints: React.FC<{
   readonly rows: readonly KitTreeCheckpointRowModel[];
   readonly theKitHead: string | null;
@@ -1553,7 +1553,7 @@ const KitTreeCheckpointRow: React.FC<{
           {altIds.length > 0 ? <span className="text-muted-foreground text-[9px]">alts: {altIds.length}</span> : null}
           <span className="text-muted-foreground ml-auto text-[9px]">
             Δ{cp.changeCount}
-            {cp.authors.length ? ` · 👤${cp.authors.length}` : ""}
+            {cp.authors.length ? ` · 👤️${cp.authors.length}` : ""}
           </span>
         </div>
         <div className="w-full truncate text-foreground">{cp.message || <span className="text-muted-foreground italic">(no message)</span>}</div>
@@ -1587,9 +1587,9 @@ const KitTreeCheckpointRow: React.FC<{
     </div>
   );
 };
-// #endregion 📜KitTreeCheckpoints column
+// #endregion 📜️KitTreeCheckpoints column
 
-// #region 💾KitTreeDraftBubble
+// #region 💾️KitTreeDraftBubble
 const KitTreeDraftBubble: React.FC<{
   readonly session: VcsSessionDto;
   readonly draft: VcsDraftDto;
@@ -1602,21 +1602,21 @@ const KitTreeDraftBubble: React.FC<{
   return (
     <div className={`flex items-center gap-1 rounded border px-1 py-0.5 ${border} bg-white dark:bg-zinc-900`} title={`draft ${draft.id}\nsession ${session.id}`}>
       <button type="button" className="text-[9px]" onClick={() => onSessionSelect(session.id)}>
-        📦<span className="font-mono">{kitTreeShortId(session.id, 6)}</span>
+        📦️<span className="font-mono">{kitTreeShortId(session.id, 6)}</span>
       </button>
       <button type="button" className="text-[9px]" onClick={() => onDraftSelect(draft.id)}>
         ✏️<span className="font-mono">{kitTreeShortId(draft.id, 6)}</span>
       </button>
       <span className="text-muted-foreground text-[9px]">
         tx {draft.finalizedTransactionCount}
-        {draft.redoTransactionCount ? `↩${draft.redoTransactionCount}` : ""}
-        {draft.openTransactionId ? " · ⏺" : ""}
+        {draft.redoTransactionCount ? `↩️${draft.redoTransactionCount}` : ""}
+        {draft.openTransactionId ? " · ⏺️" : ""}
         {draft.targetAlternative ? " · alt" : ""}
       </span>
     </div>
   );
 };
-// #endregion 💾KitTreeDraftBubble
+// #endregion 💾️KitTreeDraftBubble
 
 // #region 🏷️KitTreeOrphanDrafts
 const KitTreeOrphanDrafts: React.FC<{
@@ -1657,10 +1657,10 @@ const KitTreeOrphanDrafts: React.FC<{
 };
 // #endregion 🏷️KitTreeOrphanDrafts
 
-// #endregion 🌳KitTreeGraph
-//#endregion 🔖HistoryControls
+// #endregion 🌳️KitTreeGraph
+//#endregion 🔖️HistoryControls
 
-//#region 🔖CommandForm
+//#region 🔖️CommandForm
 import * as React from "react";
 
 type Mode = "changeKit" | "readKit" | "execute";
@@ -1776,9 +1776,9 @@ export const CommandForm: React.FC<{
     </div>
   );
 };
-//#endregion 🔖CommandForm
+//#endregion 🔖️CommandForm
 
-//#region 🔖EntityPicker
+//#region 🔖️EntityPicker
 import * as React from "react";
 
 export const EntityPicker: React.FC<{
@@ -1879,9 +1879,9 @@ export function applyEntityPlaceholders(s: string, ctx: { typeId: string; design
     .split("PLACEHOLDER_CONNECTION_ID")
     .join(ctx.connectionId);
 }
-//#endregion 🔖EntityPicker
+//#endregion 🔖️EntityPicker
 
-//#region 🔖EventsFeed
+//#region 🔖️EventsFeed
 import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
 
@@ -1931,7 +1931,7 @@ export const EventsFeed: React.FC<{
   );
 };
 
-// #region 🔖 RjvPayload
+// #region 🔖️ RjvPayload
 // Renders a single event payload with @microlink/react-json-view.
 // Non-object payloads are wrapped into `{ value: ... }` because rjv requires an object root.
 const RjvPayload: React.FC<{ payload: unknown; theme: "rjv-default" | "monokai" }> = ({ payload, theme }) => {
@@ -1952,7 +1952,7 @@ const RjvPayload: React.FC<{ payload: unknown; theme: "rjv-default" | "monokai" 
     />
   );
 };
-// #endregion 🔖 RjvPayload
+// #endregion 🔖️ RjvPayload
 
 function isErr(p: unknown): boolean {
   if (p == null) return false;
@@ -1966,15 +1966,15 @@ function eventKind(p: unknown): string {
   if (p && typeof p === "object" && "SetRejected" in (p as object)) return "reject";
   return "event";
 }
-//#endregion 🔖EventsFeed
+//#endregion 🔖️EventsFeed
 
-//#region 🔖SnapshotViewer
+//#region 🔖️SnapshotViewer
 import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
 
 type Tab = "live" | "theKit" | "mat" | "vcs";
 
-//#region 🧮Snapshot value helpers
+//#region 🧮️Snapshot value helpers
 function cloneSnapshotValue<T>(value: T): T {
   try {
     return typeof structuredClone === "function" ? structuredClone(value) : (JSON.parse(JSON.stringify(value)) as T);
@@ -1992,7 +1992,7 @@ function readHandleValue(handle: KitStoreHandle, tab: Tab, matAt: string): unkno
   }
   return cloneSnapshotValue(handle.vcsState());
 }
-//#endregion 🧮Snapshot value helpers
+//#endregion 🧮️Snapshot value helpers
 
 export const SnapshotViewer: React.FC<{
   handle: KitStoreHandle | null;
@@ -2124,9 +2124,9 @@ if (snapshotViewerVitest) {
     });
   });
 }
-//#endregion 🔖SnapshotViewer
+//#endregion 🔖️SnapshotViewer
 
-//#region 🔖DiffViewer
+//#region 🔖️DiffViewer
 import ReactJson from "@microlink/react-json-view";
 import * as React from "react";
 
@@ -2160,7 +2160,7 @@ export const DiffViewer: React.FC<{
   );
 };
 
-// #region 🔖 RjvValue
+// #region 🔖️ RjvValue
 // Renders any JSON-serialisable value with @microlink/react-json-view.
 // Wraps primitives into `{ value: ... }` because rjv requires an `object` root.
 const RjvValue: React.FC<{ value: unknown; theme: "rjv-default" | "monokai" }> = ({ value, theme }) => {
@@ -2181,5 +2181,5 @@ const RjvValue: React.FC<{ value: unknown; theme: "rjv-default" | "monokai" }> =
     />
   );
 };
-// #endregion 🔖 RjvValue
-//#endregion 🔖DiffViewer
+// #endregion 🔖️ RjvValue
+//#endregion 🔖️DiffViewer

@@ -1,0 +1,7 @@
+{
+  "title": "UPDATE-NPM-REQUIREMENTS",
+  "emoji": "🔄️",
+  "status": "closed",
+  "description": "User encountered EBADENGINE while trying to install npm@11.7.0. Current Node.js v20.14.0 is incompatible with npm@11.7.0 requirements (^20.17.0 or \u003e=22.9.0). Update package.json to reflect these requirements.",
+  "goal": "🎯️r2602🎯️runningsketchpad"
+}

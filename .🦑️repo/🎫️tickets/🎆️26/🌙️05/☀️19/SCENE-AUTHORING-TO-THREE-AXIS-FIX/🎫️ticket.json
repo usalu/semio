@@ -1,0 +1,9 @@
+{
+  "title": "Scene Authoring To Three Axis Fix",
+  "emoji": "🧭️",
+  "status": "closed",
+  "description": "Fix planeBasisToThreeJs authoring→three mapping so assets are not flipped (y→z per user).",
+  "summary": "planeBasisToThreeJs now maps authoring vectors with (x,y,z)_auth → (x,z,y)_three so authoring y maps to three z and authoring z to three y (removed -y flip). Regenerated nakagin scene fixture; tightened Vitest origin assertions; Vitest + Playwright green.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️4411ce0d345d42ac80f6dfc31862b361"]
+}

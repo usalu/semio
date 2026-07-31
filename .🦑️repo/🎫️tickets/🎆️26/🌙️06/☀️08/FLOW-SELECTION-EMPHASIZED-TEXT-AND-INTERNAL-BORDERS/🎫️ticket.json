@@ -1,0 +1,12 @@
+{
+  "title": "Flow Selection Emphasized Text and Internal Borders",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Fix flow graph selection styling: node text and internal borders should use emphasized color when selected (like navbar toggles), not primary/active color.",
+  "summary": "Selected flow node text and internal dividers now use emphasized color (matching navbar toggle active text) instead of primary. flowOverlayLabelFill maps selected/preselect preview labels to border-emphasized-color. dag_node_internal_chrome_stroke treats selection like hover so row/column dividers stay emphasized while the outer node stroke remains primary.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1603"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️6a46e051d6bd4f579d0bd765537970c6"]
+}

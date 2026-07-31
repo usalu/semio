@@ -45,24 +45,24 @@ New top-level `print/` technology for printable LaTeX documents that follow semi
 
 ```
 print/
-├── script.ts            # bun router: generate | fonts | build | watch | test
-├── project.json         # nx targets delegating to script.ts
-├── package.json         # @semio-tech/print, bundleKind "asset"
-├── tex/
-│   ├── semio.cls            # core class: expl3, l3keys config, hooks, type=report|paper|flyer
-│   ├── semio-tokens.sty     # GENERATED from ui/styling/tokens.json (colors, spacing)
-│   ├── semio-fonts.sty      # fontspec: Anta / Kelly Slab / Share Tech Mono / Noto Emoji
-│   ├── semio-core.sty       # expl3 module: key trees, metadata store, hook registration
-│   ├── semio-components.sty # title pages, headers/footers, boxes (sharp corners, borders)
-│   ├── semio-logo.sty       # handcrafted TikZ emblem/logo (ported from asset/logo/emblem.svg)
-│   └── zukunftbau.cls       # loads semio.cls; type=forschungsbericht|zwischenbericht|kompaktbericht
-├── template/
-│   ├── report/report.tex
-│   ├── paper/paper.tex
-│   ├── flyer/flyer.tex
-│   └── zukunftbau/{forschungsbericht,zwischenbericht,kompaktbericht}.tex
-├── asset/font/          # gitignored, TTFs fetched by script.ts fonts
-└── dist/                # gitignored, compiled PDFs
+├️─️ script.ts            # bun router: generate | fonts | build | watch | test
+├️─️ project.json         # nx targets delegating to script.ts
+├️─️ package.json         # @semio-tech/print, bundleKind "asset"
+├️─️ tex/
+│️   ├️─️ semio.cls            # core class: expl3, l3keys config, hooks, type=report|paper|flyer
+│️   ├️─️ semio-tokens.sty     # GENERATED from ui/styling/tokens.json (colors, spacing)
+│️   ├️─️ semio-fonts.sty      # fontspec: Anta / Kelly Slab / Share Tech Mono / Noto Emoji
+│️   ├️─️ semio-core.sty       # expl3 module: key trees, metadata store, hook registration
+│️   ├️─️ semio-components.sty # title pages, headers/footers, boxes (sharp corners, borders)
+│️   ├️─️ semio-logo.sty       # handcrafted TikZ emblem/logo (ported from asset/logo/emblem.svg)
+│️   └️─️ zukunftbau.cls       # loads semio.cls; type=forschungsbericht|zwischenbericht|kompaktbericht
+├️─️ template/
+│️   ├️─️ report/report.tex
+│️   ├️─️ paper/paper.tex
+│️   ├️─️ flyer/flyer.tex
+│️   └️─️ zukunftbau/{forschungsbericht,zwischenbericht,kompaktbericht}.tex
+├️─️ asset/font/          # gitignored, TTFs fetched by script.ts fonts
+└️─️ dist/                # gitignored, compiled PDFs
 ```
 
 ## LaTeX architecture (per the modern-framework brief)
@@ -96,11 +96,11 @@ print/
 ## Repo registration
 
 - [package.json](package.json): add `"print"` to `workspaces`; add scripts `"dev:print": "bun nx run @semio-tech/print:watch"` and `"build:print": "bun nx run @semio-tech/print:build"`.
-- [.vscode/launch.json](.vscode/launch.json): `🛠️dev🖨️print` in group `3_dev` (watch) and `📦build🖨️print` in group `4_build` (order between `📦build📽️presentationplay` 100 and `📦audit🛝playground` 105, following alphabetical-ish ordering).
+- [.vscode/launch.json](.vscode/launch.json): `🛠️dev🖨️print` in group `3_dev` (watch) and `📦️build🖨️print` in group `4_build` (order between `📦️build📽️presentationplay` 100 and `📦️audit🛝️playground` 105, following alphabetical-ish ordering).
 - [.gitignore](.gitignore): `print/dist/` and `print/asset/font/`.
 - No Cargo workspace, plugin registry, or playground port entries (templates-only shape, as decided).
 - Ticket via repo MCP `ticket_open` (goal `r2603`), all logs/temp files inside the ticket folder.
 
 ## Verification
 
-Run `bun ./script.ts test` in `print/` (Tectonic install → font fetch → token generation → compile all six templates) and confirm each PDF is produced; inspect one PDF visually for brand fidelity.
+Run `bun ./📜️script.ts test` in `print/` (Tectonic install → font fetch → token generation → compile all six templates) and confirm each PDF is produced; inspect one PDF visually for brand fidelity.

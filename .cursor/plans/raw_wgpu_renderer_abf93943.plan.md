@@ -39,7 +39,7 @@ isProject: false
 
 ## Goal
 
-Add `framework/renderer/wgpu` — a renderer implemented only in Rust on raw wgpu — as a peer of [framework/renderer/react](framework/renderer/react/index.tsx). Both renderers interpret the same `UiNode` tree that plugins return (defined in [framework/core/rs/ui.rs](framework/core/rs/ui.rs), mirrored in [framework/wit/world.wit](framework/wit/world.wit)). The os-dev host gains a renderer switch, and the launch config `🛠️dev🖥️s` splits into `🛠️dev🖥️s⚛️react` (current behavior) and `🛠️dev🖥️s🧊wgpu` (new).
+Add `framework/renderer/wgpu` — a renderer implemented only in Rust on raw wgpu — as a peer of [framework/renderer/react](framework/renderer/react/index.tsx). Both renderers interpret the same `UiNode` tree that plugins return (defined in [framework/core/rs/ui.rs](framework/core/rs/ui.rs), mirrored in [framework/wit/world.wit](framework/wit/world.wit)). The os-dev host gains a renderer switch, and the launch config `🛠️dev🖥️s` splits into `🛠️dev🖥️s⚛️react` (current behavior) and `🛠️dev🖥️s🧊️wgpu` (new).
 
 Decisions already made: the wgpu renderer runs in the browser (wasm32 + wasm-bindgen, fullscreen `<canvas>`, WebGPU surface via `wgpu::SurfaceTarget::Canvas` like [infinite/cavas/rs/lib.rs](infinite/cavas/rs/lib.rs)); the GPU stack is strictly raw wgpu — hand-written WGSL shaders, own glyph atlas, own vector tessellation. No Vello, glyphon, lyon, egui, or winit. CPU-side font parsing/rasterization uses `ttf-parser` + `fontdue` (pixels in, our atlas and shaders out); everything GPU-side is hand-rolled.
 
@@ -101,7 +101,7 @@ Move the plugin module loader from [framework/renderer/react/plugin-runtime.ts](
 In [.vscode/launch.json](.vscode/launch.json), following existing order/grouping/naming:
 
 - Rename `🛠️dev🖥️s` (line 947) to `🛠️dev🖥️s⚛️react` — unchanged command, `S_OS_PORT=6066`, `SEMIO_PLUGIN=s`, plus explicit `SEMIO_RENDERER=react`.
-- Add `🛠️dev🖥️s🧊wgpu` — same nx target, `S_OS_PORT=6067`, `SEMIO_PLUGIN=s`, `SEMIO_RENDERER=wgpu` (distinct port so both renderers can run side by side).
+- Add `🛠️dev🖥️s🧊️wgpu` — same nx target, `S_OS_PORT=6067`, `SEMIO_PLUGIN=s`, `SEMIO_RENDERER=wgpu` (distinct port so both renderers can run side by side).
 
 ## Delivery order (all inside one ticket via repo MCP)
 

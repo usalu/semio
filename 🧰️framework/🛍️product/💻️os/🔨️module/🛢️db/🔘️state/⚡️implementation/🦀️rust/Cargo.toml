@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-db-state"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db persistent diff-state overlays — PMap/PVec/PText/PTree/PGraph, content-addressed pages, touched-region descriptors"
+
+[lints]
+workspace = true
+[lib]
+name = "db_state"
+path = "../../../🔘️state/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+db_core = { path = "../../../🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-db-core" }
+pack_core = { path = "../../../../🎒️pack/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack-core" }
+blake3 = "1"

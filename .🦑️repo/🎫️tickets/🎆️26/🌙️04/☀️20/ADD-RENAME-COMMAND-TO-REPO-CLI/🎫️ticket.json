@@ -1,0 +1,11 @@
+{
+  "title": "Add Rename Command to Repo CLI",
+  "status": "closed",
+  "description": "Introduce a `repo rename` command that renames all occurrences of a token (and its case variants UPPER/lower/Title/snake_case/camelCase/etc.) across all non-git-ignored files. Usage: `repo rename \"model\" \"representation\"`. Must walk the repo, skip .gitignored files, rewrite both filenames (paths) and file contents, preserving casing per occurrence.",
+  "summary": "Added `repo rename \u003cold\u003e \u003cnew\u003e` command. Introduced Rename region in repo/cli/main.go with `applyRenameCasings` (three passes: UPPER, Title, lower substring replacement), `titleCaseToken` helper, `ToolRename` (walks rootDir, skips .git/node_modules/isGitIgnored, rewrites UTF-8 file contents, renames files/folders deepest-first), and `renameCommand` cobra wrapper. Registered in `NewRootWithConfig`. Added Rename test region in repo/cli/main_test.go with four tests (casing replacement, unrelated-content invariance, end-to-end file+folder rename respecting .gitignore, validation errors). All four tests pass; `go build ./...` clean.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1365"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️37c7d3570b5b48aebaef60f670653086"]
+}

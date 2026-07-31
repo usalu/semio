@@ -1,0 +1,14 @@
+{
+  "title": "Celebrate All Elements When Introduction Finishes",
+  "emoji": "🎉️",
+  "status": "closed",
+  "description": "Once the introduction is finished all the ui elements should show the celebration effect.",
+  "summary": "When the introduction completes (Done on the last step, or finishing the last interaction-gated step), every mounted UI element now shows the celebration ring. Added celebrateAllElements() which stamps data-celebrated on all valid element ids/aliases (skipping ui.introduction.* chrome). Wired via dismissIntroduction(completed) — completed=true celebrates all; Skip/Escape does not. Per-step celebration of introduce/interaction targets is unchanged.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2312"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️3ded8d94c4e54d259ec386d7f5b5571c"
+  ]
+}

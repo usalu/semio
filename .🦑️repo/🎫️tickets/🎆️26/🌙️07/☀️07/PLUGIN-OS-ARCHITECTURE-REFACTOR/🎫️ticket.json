@@ -1,0 +1,17 @@
+{
+  "title": "Plugin OS Architecture Refactor",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "Formalize semio's OS plugin architecture: consolidate multi-app plugins (puzzle/procedural/trinity/gis/reasoning), closed SurfaceKind, capability manifest + lint, wasmtime sandbox host with capability-gated imports, retire native dlopen, wire PluginHost hot-swap, single-source generated plugin registry.",
+  "summary": "Plugin OS Architecture Refactor complete. Consolidated plugins (21 registry entries), SurfaceKind + Capability, unified C-ABI + wasmtime host, backbone on OS core, retired dlopen, generated registry, hot-swap test + native wasm reload.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1854"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "plan": {
+    "client": "cursor",
+    "id": "d7f44063",
+    "local": "plugin_os_architecture_refactor_d7f44063.plan.md"
+  },
+  "sessions": ["⚪️69a958e3a6fd4cc3aecae21118d0b6df", "⚪️54f5ebe34b1c4839bafa7c949f4b18a0"]
+}

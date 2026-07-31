@@ -1,0 +1,20 @@
+{
+  "title": "Uncollapsed Panel Styling Bug",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "ui: There is a bug when clicking on e.g. the left window panel then when it uncollapses the toggle is cut and has wrong styling.",
+  "summary": "Prevented overflowing panel tab rows from reserving horizontal scrollbar height: the shared panel/mobile tab strip now hides its native scrollbar while retaining horizontal scrolling, so fixed-height rows keep every tab as a full-height control. Extended the existing React and styling tests with the component/CSS invariant.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2008"
+  },
+  "goal": "🎯️ui🎯️desktop",
+  "sessions": [
+    "⚪️f8281de610f64e909defbf655199876a",
+    "⚪️e8670d729da6409894fb01fc0c9c1566",
+    "⚪️aa78bd439fc64c0d81c9cdb1921add2f",
+    "⚪️3dea439b7b1a4fc8bd65c956028eeb9b",
+    "⚪️e22ab7e14f674e9b9aa8bec41c2861df",
+    "⚪️b1abc5bf45e0497895042606e91ee6b1",
+    "⚪️05731b9d568f4a3599cd2f7897860cea"
+  ]
+}

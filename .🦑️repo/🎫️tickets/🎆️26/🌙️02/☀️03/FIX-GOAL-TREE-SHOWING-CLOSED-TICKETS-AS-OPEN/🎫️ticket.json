@@ -1,0 +1,11 @@
+{
+  "title": "Fix Goal Tree Showing Closed Tickets as Open",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "After running ticket close --all, the goal tree command still shows tickets as open. Investigate and fix the issue.",
+  "summary": "Fixed case-sensitive status comparison in formatGoalTree function. The GraphQL API returns status in uppercase (CLOSED) but the comparison was checking for lowercase (closed). Used strings.ToLower() for case-insensitive comparison.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/318"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoticketmechanism"
+}

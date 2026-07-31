@@ -1,0 +1,11 @@
+{
+  "title": "Replace File Path Headers with Artifact IDs",
+  "emoji": "🔄️",
+  "status": "closed",
+  "description": "Replace file path in source file headers with artifact IDs from the repo ID system. Make BreachCodeHeaderMissingFilename into BreachCodeHeaderWrongFileId that is autofixable. Fix all existing headers. Extend tests.",
+  "summary": "Replaced plain file paths in source code headers with emoji-prefixed artifact IDs. Renamed BreachCodeHeaderMissingFilename to BreachCodeHeaderWrongFileId (autofixable). Added FileHeaderId helper, updated headerPolicy detection, generateFileHeader, and applyAutofixes. Fixed ~155 file headers across the repo. Added 5 new tests. Fixed pre-existing BundleKindClient bug. Updated AGENTS.md and README.md documentation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/427"
+  },
+  "goal": "🎯️codebase"
+}

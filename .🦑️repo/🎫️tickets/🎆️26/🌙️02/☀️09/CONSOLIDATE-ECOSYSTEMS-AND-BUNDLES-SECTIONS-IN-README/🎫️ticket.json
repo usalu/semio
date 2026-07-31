@@ -1,0 +1,11 @@
+{
+  "title": "Consolidate Ecosystems And Bundles Sections In Readme",
+  "emoji": "🧹️",
+  "status": "closed",
+  "description": "Replaced Ecosystems and Bundles sections in README.md with compact reference tables",
+  "summary": "Replaced ~856 lines of Ecosystems and Bundles sections (lines 1007-1862) with a compact 33-line reference section pointing to bundle README.md files. File went from 2097 to 1274 lines (-823 lines).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/479"
+  },
+  "goal": "🎯️r2602🎯️updateddocs🎯️updateddevdocs🎯️updatedreadmemd"
+}

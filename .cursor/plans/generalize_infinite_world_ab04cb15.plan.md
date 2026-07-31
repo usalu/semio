@@ -83,7 +83,7 @@ In [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 
 - Root [package.json](package.json) `workspaces`: add `infinite/world/r3f` (after `infinite/cavas/react-renderer`).
 - Vite alias in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) (~405): add `@semio-tech/infinite-world-r3f` -> `infinite/world/r3f/index.tsx`.
-- [.vscode/launch.json](.vscode/launch.json): add `🛠️dev♾️world🧪r3f` test entry next to the cavas entry (~678, order ~169.55), `bun nx run @semio-tech/infinite-world-r3f:test`.
+- [.vscode/launch.json](.vscode/launch.json): add `🛠️dev♾️world🧪️r3f` test entry next to the cavas entry (~678, order ~169.55), `bun nx run @semio-tech/infinite-world-r3f:test`.
 - Validate: `bun nx run @semio-tech/infinite-world-r3f:test`, `bun nx run @semio-tech/puzzle-3d-react:test`, and a `@semio-tech/puzzle-3d-play` dev smoke confirming (with `[DEBUG]` console logs) chunk load/unload, grid/LOD bands, object pooling, selection/attraction still work.
 
 ## Workflow note (execution)

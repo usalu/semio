@@ -36,7 +36,7 @@ isProject: false
 
 ## Context
 
-The viewport lives in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (region `🎬Viewport`). It already has a full selection store (`SelectionSnapshot`, `mergeSelection`, `RegistryProvider`), per-mesh click picking, hover, and a `SelectionMissBridge`. Camera uses `OrbitControls` with `LEFT: MOUSE.ROTATE` at line 3789. The play controller in [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) already holds `selectableKinds` (objects/vortices/attractions), `selectionMode`, and a window-header measure builder (`lodMeasures()`), and filters every emitted selection via `filterSelectionByPlaygroundKinds`. The host wiring is in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (`Puzzle3dPlayViewportHost` → `PlayCanvas`).
+The viewport lives in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (region `🎬️Viewport`). It already has a full selection store (`SelectionSnapshot`, `mergeSelection`, `RegistryProvider`), per-mesh click picking, hover, and a `SelectionMissBridge`. Camera uses `OrbitControls` with `LEFT: MOUSE.ROTATE` at line 3789. The play controller in [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) already holds `selectableKinds` (objects/vortices/attractions), `selectionMode`, and a window-header measure builder (`lodMeasures()`), and filters every emitted selection via `filterSelectionByPlaygroundKinds`. The host wiring is in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (`Puzzle3dPlayViewportHost` → `PlayCanvas`).
 
 ## 1. Remap camera controls to the right button
 
@@ -53,7 +53,7 @@ In `OrbitGated` ([puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) line ~37
 
 ## 3. Marquee gesture + hit testing
 
-Add a `🔖Marquee` subregion in `🎬Viewport`.
+Add a `🔖️Marquee` subregion in `🎬️Viewport`.
 
 Pure helpers (testable, mirroring existing `pickNearestScreenVortex` style):
 

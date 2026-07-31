@@ -30,7 +30,7 @@ isProject: false
 - **Source of truth:** [`vcs/rs/lib.rs`](vcs/rs/lib.rs) only. Delete [`vcs/core/`](vcs/core/) (TS mirror + vitest). No dual runtime.
 - **IO boundary stays:** `vcs` remains a non-blocking queue + storage format helpers; hub/file/folder IO stays in [`framework/sync/rs/lib.rs`](framework/sync/rs/lib.rs) and [`framework/product/os/hub/`](framework/product/os/hub/). Do not pull HTTP/fs into `vcs`.
 - **Browser sync becomes Rust:** replace [`backbone-worker.ts`](framework/product/os/core/js/backbone-worker.ts) by shipping `framework/sync`'s existing wasm `DocumentHost` path as the browser actor (no TS twin). Thin JS only hosts the worker entrypoint.
-- **Ticket:** reopen [`26/07/12/OS-VCS-HUB-CQRS-EVENT-SOURCING-REFACTOR`](.repo/🎫/26/07/12/OS-VCS-HUB-CQRS-EVENT-SOURCING-REFACTOR/ticket.json) (goal `🎯r2602🎯runningsketchpad` / issue #1956) — same task, not a new ticket.
+- **Ticket:** reopen [`26/07/12/OS-VCS-HUB-CQRS-EVENT-SOURCING-REFACTOR`](.repo/🎫️/26/07/12/OS-VCS-HUB-CQRS-EVENT-SOURCING-REFACTOR/ticket.json) (goal `🎯️r2602🎯️runningsketchpad` / issue #1956) — same task, not a new ticket.
 - **Out of scope for this pass:** WS-F mass program `setDocument` migration (~20 plugins). Hub/backbone must work for already-migrated typed-operation apps (shooting, vcs-play, architect, etc.).
 
 ## Architecture (target)

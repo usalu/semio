@@ -130,6 +130,6 @@ Each requires: window kind registration + `buildWriterWindowBody`, a new surface
 
 ## Execution notes
 
-- Work happens under a single new ticket (e.g. `GENERALIZE-JACK-GRAPH-DSL`), goal `🎯trinity` or a new cross-cutting goal — confirm goal via `repo://goals` at ticket-open time.
+- Work happens under a single new ticket (e.g. `GENERALIZE-JACK-GRAPH-DSL`), goal `🎯️trinity` or a new cross-cutting goal — confirm goal via `repo://goals` at ticket-open time.
 - Given the size, phases 1-3 (DSL generalization) should land and be verified (existing `trinity/jack` tests + `trinity/rewrite` tests still green) before phase 5 (8 playground UIs) begins, since phase 5 depends on phase 2/3's per-domain query entry points.
 - All existing Jack/Trinity call sites (`trinity/react`'s `runJackOnFixture`, `trinity/rewrite`, `trinity/jack/play`, `trinity/jack/lsp`) must keep working unchanged after the extraction — this is the regression bar for phases 1-2.

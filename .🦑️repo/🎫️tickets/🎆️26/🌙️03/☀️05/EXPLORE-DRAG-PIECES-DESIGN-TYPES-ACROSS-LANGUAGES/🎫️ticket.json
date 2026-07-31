@@ -1,0 +1,10 @@
+{
+  "title": "Explore Drag Pieces Design Types Across Languages",
+  "status": "closed",
+  "description": "Read Design, DesignDiff, Piece, Connection, Coord/Point2D types in py, go, rs, net, gh, js. Document line numbers, regions, connection structures, and test patterns.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/780"
+  },
+  "goal": "🎯️sketchpadimprovements"
+}

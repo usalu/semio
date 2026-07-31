@@ -1,0 +1,12 @@
+{
+  "title": "Projektetage Enlarge Tile Cover",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When enlarging a split/catalogue tile it shows the full original image instead of only the tile crop. Enlarged view must cover with the same tile crop as the thumbnail.",
+  "summary": "Fixed enlarged split/catalogue tiles showing the full source image instead of the cropped tile.\n\nRoot cause: interactive enlarge cleared `disposition.position`, so `MorphDispositionView` / `FigureMorphView` fell back to a plain `\u003cimg\u003e` of the whole figure.\n\nFix: when enlarged, cropped figure dispositions keep crop rendering with `SLIDE_INTERACTIVE_ENLARGE_FRAME` as the cover frame; PDF/video enlarge still strips position to avoid nested frames.\n\n96 renderer tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1527"
+  },
+  "goal": "🎯️presentation",
+  "sessions": ["⚪️9659c68c6e6244fe85de67cf769df2e1"]
+}

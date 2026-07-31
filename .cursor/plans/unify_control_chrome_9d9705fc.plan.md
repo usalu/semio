@@ -3,7 +3,7 @@ name: Unify Control Chrome
 overview: Make window chips, buttons, and toggles share one control chrome so opening a panel only flips the pressed/on state (and optionally reveals a body)—never restyles the toggle strip.
 todos:
   - id: ticket
-    content: List goals, open/reopen ticket under 🎯r2602 for unify control chrome
+    content: List goals, open/reopen ticket under 🎯️r2602 for unify control chrome
     status: completed
   - id: shared-tokens
     content: Define one group+item chrome recipe; wire ButtonGroup, ToggleGroup, ActionGroup, and chip/tab cells to it
@@ -51,7 +51,7 @@ flowchart LR
 
 **One shared chrome-control vocabulary** (glass group + transparent cells + shared hover/on fill). Panel open/close only adds the body and the on/active fill—same strip classes either way. Buttons and toggles use that same vocabulary so chips / buttons / toggles read as one family.
 
-Goal: `🎯r2602`. Prefer reopening related chrome work only if still open; otherwise open a new ticket (e.g. unify control chrome). Keep temp logs under the ticket folder. Do not mix other technologies.
+Goal: `🎯️r2602`. Prefer reopening related chrome work only if still open; otherwise open a new ticket (e.g. unify control chrome). Keep temp logs under the ticket folder. Do not mix other technologies.
 
 ## Implementation
 

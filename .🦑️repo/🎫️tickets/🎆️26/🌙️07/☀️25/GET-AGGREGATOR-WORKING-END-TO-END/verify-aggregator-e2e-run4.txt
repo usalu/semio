@@ -1,0 +1,39 @@
+[console:log] [DEBUG] World3dHost scene payload {instanceCount: 1, instances: Array(1), meshes: Array(4), revealCutoffs: Object}
+[console:log] [DEBUG] World3dHost scene payload {instanceCount: 1, instances: Array(1), meshes: Array(4), revealCutoffs: Object}
+[console:log] [DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}
+[console:log] [DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}
+[console:log] [DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}
+[console:log] [DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}
+[console:log] [DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}
+[console:log] [DEBUG] World3dHost scene payload {instanceCount: 1, instances: Array(1), meshes: Array(4), revealCutoffs: Object}
+{
+  "ok": false,
+  "out": "/Users/ueli/Documents/semio/.repo/🎫️/26/07/25/FIX-PUZZLE-3D-OBJECTS-NOT-RENDERING/verify-aggregator-e2e.json",
+  "summary": {
+    "title": "Entwerfen mit Bestand · Aggregator",
+    "instanceCount": 1,
+    "revealCutoff": 0,
+    "revealRows": [
+      {
+        "id": "seed-left-001",
+        "visible": true,
+        "rootVisible": true
+      }
+    ],
+    "r3f": {
+      "hasScene": false,
+      "meshCount": 0,
+      "visibleMeshCount": 0,
+      "hiddenAncestorMeshCount": 0
+    },
+    "glbProbe": {
+      "url": "/mesh/hexagonal-cut-concrete-forest-left.glb",
+      "ok": true,
+      "status": 200,
+      "bytes": 86112,
+      "contentType": "model/gltf-binary"
+    },
+    "errorCount": 0,
+    "firstErrors": []
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Disable Hidden Lod Connection Hitboxes",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "In flow minimap, overview, and compact LODs handles are not visible; creating connections by accidentally clicking on the connection hitbox should not work. Only normal LOD (input row hitbox) and detail/micro LOD (visible handles) should allow connection picking.",
+  "summary": "Added `DagDrawLod::allows_connection_hit_picking()` (normal input-row hitbox + detail/micro visible handles only). DagHost now syncs `engine.handle_pointer_picking` per LOD and ignores invisible handle/row hits in `world_hits_handle`, so minimap/overview/compact clicks select nodes instead of starting wire drag. Regression test covers all three hidden LODs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1598"
+  },
+  "goal": "🎯️flow🎯️gui",
+  "sessions": ["⚪️92a1395aeb0f4576a2e54debcaa908ab"]
+}

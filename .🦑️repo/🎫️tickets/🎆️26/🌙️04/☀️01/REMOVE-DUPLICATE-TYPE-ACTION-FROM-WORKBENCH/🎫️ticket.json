@@ -1,0 +1,12 @@
+{
+  "title": "Remove Duplicate Type Action From Workbench",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix duplicate type action in workbench: (1) rename tooltip from \"Duplicate Type\" to \"Duplicate Type by Hover\", (2) rename the duplicated type from \"{name} Copy\" to \"{name} Duplicate\", (3) insert the duplicate right after the original in the types array so it appears immediately below in the workbench.",
+  "summary": "Removed the remaining duplicate-type action from the design workbench type rows in `compose/sketchpad/index.tsx`, removed the stale `CopyIcon` import, and deleted the old inline Design Playwright block that still exercised duplicate-type behavior. Re-verified in source that the type-row action list now only contains `compose.sketchpad.app.design.panel.workbench.types.addPiece`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1235"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️87faa5326a2c42f0812c8df96b05b4f4", "⚪️f7cd922899bd4bfab250a8457d2ba1e3", "⚪️c7f20534423a4748827b34659816e4b8"]
+}

@@ -1,0 +1,345 @@
+diff --git a/trinity/jack/core/rs/lib.rs b/trinity/jack/core/rs/lib.rs
+index c0de46dbeb..addae20700 100644
+--- a/trinity/jack/core/rs/lib.rs
++++ b/trinity/jack/core/rs/lib.rs
+@@ -246,8 +246,10 @@ pub struct TokenSpan {
+     pub end: usize,
+ }
+ 
++/// 🔤️ Fine-grained jack token kind, shared with editor consumers (e.g. writer's outline/hover heuristics) that
++/// need exact keyword/punctuation identity rather than the coarse [`TokenClass`] used for syntax highlighting.
+ #[derive(Clone, Debug, PartialEq)]
+-enum Token {
++pub enum Token {
+     KwMatch,
+     KwWhere,
+     KwReturn,
+@@ -274,11 +276,12 @@ enum Token {
+     Eof,
+ }
+ 
++/// 🔤️ A [`Token`] with its source byte span.
+ #[derive(Clone, Debug, PartialEq)]
+-struct SpannedToken {
+-    token: Token,
+-    start: usize,
+-    end: usize,
++pub struct SpannedToken {
++    pub token: Token,
++    pub start: usize,
++    pub end: usize,
+ }
+ 
+ fn token_class(token: &Token) -> TokenClass {
+@@ -311,7 +314,9 @@ fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end:
+     tokens.push(SpannedToken { token, start, end });
+ }
+ 
+-fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String> {
++/// 🔤️ Byte-span-tracked jack lexer. `forgiving = true` never fails (used by live editors mid-keystroke);
++/// `forgiving = false` rejects unterminated strings and unrecognized characters.
++pub fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, String> {
+     let mut tokens = Vec::new();
+     let bytes = input.as_bytes();
+     let mut i = 0;
+@@ -1154,6 +1159,300 @@ pub fn parse(query: &str) -> Result<Query, String> {
+ }
+ // #endregion 🔖️Parser
+ 
++// #region 🔖️SpannedAst
++/// 🌳️ Span-tracked jack AST node for editor tree/hover/outline surfaces (e.g. writer's document panel),
++/// which need source positions the semantic [`Query`] AST from [`parse`] discards.
++#[derive(Clone, Debug, PartialEq)]
++pub struct SpannedNode {
++    pub kind: String,
++    pub label: String,
++    pub start: usize,
++    pub end: usize,
++    pub children: Vec<SpannedNode>,
++}
++
++/// 🌊️ Collapses runs of whitespace to a single space, for deriving a node's default display label.
++fn collapse_spanned_whitespace(text: &str) -> String {
++    let mut out = String::new();
++    let mut last_was_space = false;
++    for ch in text.chars() {
++        if ch.is_whitespace() {
++            if !last_was_space {
++                out.push(' ');
++                last_was_space = true;
++            }
++        } else {
++            out.push(ch);
++            last_was_space = false;
++        }
++    }
++    out.trim().to_string()
++}
++
++fn spanned_node(kind: &str, start: usize, end: usize, source: &str, children: Vec<SpannedNode>, label: Option<&str>) -> SpannedNode {
++    let slice = collapse_spanned_whitespace(source.get(start..end).unwrap_or(""));
++    let label = label.map(str::to_string).unwrap_or_else(|| if slice.is_empty() { kind.to_string() } else { slice });
++    SpannedNode { kind: kind.into(), label, start, end, children }
++}
++
++struct SpannedParser<'a> {
++    tokens: &'a [SpannedToken],
++    source: &'a str,
++    pos: usize,
++}
++
++impl<'a> SpannedParser<'a> {
++    fn new(tokens: &'a [SpannedToken], source: &'a str) -> Self {
++        Self { tokens, source, pos: 0 }
++    }
++
++    fn peek(&self) -> &SpannedToken {
++        &self.tokens[self.pos.min(self.tokens.len() - 1)]
++    }
++
++    fn bump(&mut self) -> SpannedToken {
++        let token = self.peek().clone();
++        if !matches!(token.token, Token::Eof) {
++            self.pos += 1;
++        }
++        token
++    }
++
++    fn expect_ident(&mut self) -> Result<(String, usize, usize), String> {
++        let token = self.bump();
++        match token.token {
++            Token::Ident(text) => Ok((text, token.start, token.end)),
++            other => Err(format!("expected ident at {}, got {other:?}", token.start)),
++        }
++    }
++
++    fn expect(&mut self, want: &Token) -> Result<SpannedToken, String> {
++        let token = self.bump();
++        if std::mem::discriminant(&token.token) == std::mem::discriminant(want) {
++            Ok(token)
++        } else {
++            Err(format!("expected {want:?} at {}, got {:?}", token.start, token.token))
++        }
++    }
++
++    fn parse_query(&mut self) -> Result<SpannedNode, String> {
++        let mut children = Vec::new();
++        while !matches!(self.peek().token, Token::Eof) {
++            children.push(self.parse_clause()?);
++        }
++        Ok(spanned_node("query", 0, self.source.len(), self.source, children, Some("Query")))
++    }
++
++    fn parse_clause(&mut self) -> Result<SpannedNode, String> {
++        let start = self.peek().start;
++        match self.peek().token {
++            Token::KwMatch => {
++                self.bump();
++                let mut patterns = vec![self.parse_pattern()?];
++                while matches!(self.peek().token, Token::Comma) {
++                    self.bump();
++                    patterns.push(self.parse_pattern()?);
++                }
++                let end = patterns.last().map(|p| p.end).unwrap_or(start);
++                Ok(spanned_node("match", start, end, self.source, patterns, Some("MATCH")))
++            }
++            Token::KwWhere => {
++                self.bump();
++                let expr = self.parse_expr()?;
++                let end = expr.end;
++                Ok(spanned_node("where", start, end, self.source, vec![expr], Some("WHERE")))
++            }
++            Token::KwReturn => {
++                self.bump();
++                let mut items = vec![self.parse_return_item()?];
++                while matches!(self.peek().token, Token::Comma) {
++                    self.bump();
++                    items.push(self.parse_return_item()?);
++                }
++                let end = items.last().map(|i| i.end).unwrap_or(start);
++                Ok(spanned_node("return", start, end, self.source, items, Some("RETURN")))
++            }
++            Token::KwCreate => {
++                self.bump();
++                let pattern = self.parse_pattern()?;
++                let end = pattern.end;
++                Ok(spanned_node("create", start, end, self.source, vec![pattern], Some("CREATE")))
++            }
++            Token::KwDelete => {
++                self.bump();
++                let mut vars = vec![self.expect_ident()?];
++                while matches!(self.peek().token, Token::Comma) {
++                    self.bump();
++                    vars.push(self.expect_ident()?);
++                }
++                let end = vars.last().map(|(_, _, end)| *end).unwrap_or(start);
++                let children: Vec<SpannedNode> = vars.iter().map(|(text, vstart, vend)| spanned_node("var", *vstart, *vend, self.source, Vec::new(), Some(text.as_str()))).collect();
++                Ok(spanned_node("delete", start, end, self.source, children, Some("DELETE")))
++            }
++            Token::KwSet => {
++                self.bump();
++                let mut items = vec![self.parse_assignment()?];
++                while matches!(self.peek().token, Token::Comma) {
++                    self.bump();
++                    items.push(self.parse_assignment()?);
++                }
++                let end = items.last().map(|i| i.end).unwrap_or(start);
++                Ok(spanned_node("set", start, end, self.source, items, Some("SET")))
++            }
++            Token::KwMerge => {
++                self.bump();
++                let pattern = self.parse_pattern()?;
++                let end = pattern.end;
++                Ok(spanned_node("merge", start, end, self.source, vec![pattern], Some("MERGE")))
++            }
++            ref other => Err(format!("unexpected clause at {start}, got {other:?}")),
++        }
++    }
++
++    fn parse_pattern(&mut self) -> Result<SpannedNode, String> {
++        let start = self.expect(&Token::LParen)?.start;
++        let left = self.parse_pattern_node()?;
++        self.expect(&Token::RParen)?;
++        if matches!(self.peek().token, Token::Dash) {
++            let edge_start = self.bump().start;
++            self.expect(&Token::LBracket)?;
++            let mut edge_children = Vec::new();
++            if matches!(self.peek().token, Token::Ident(_)) {
++                let (text, s, e) = self.expect_ident()?;
++                edge_children.push(spanned_node("edgeVar", s, e, self.source, Vec::new(), Some(text.as_str())));
++            }
++            if matches!(self.peek().token, Token::Colon) {
++                self.bump();
++                let (text, s, e) = self.expect_ident()?;
++                edge_children.push(spanned_node("edgeKind", s, e, self.source, Vec::new(), Some(text.as_str())));
++            }
++            self.expect(&Token::RBracket)?;
++            self.expect(&Token::Arrow)?;
++            self.expect(&Token::LParen)?;
++            let right = self.parse_pattern_node()?;
++            self.expect(&Token::RParen)?;
++            let edge_end = right.end;
++            let edge = spanned_node("edge", edge_start, edge_end, self.source, edge_children, Some("edge"));
++            return Ok(spanned_node("pattern", start, edge_end, self.source, vec![left, edge, right], None));
++        }
++        let end = left.end;
++        Ok(spanned_node("pattern", start, end, self.source, vec![left], None))
++    }
++
++    fn parse_pattern_node(&mut self) -> Result<SpannedNode, String> {
++        let start = self.peek().start;
++        let (var_text, _, var_end) = self.expect_ident()?;
++        self.expect(&Token::Colon)?;
++        let (kind_text, kind_start, kind_end) = self.expect_ident()?;
++        let var_node = spanned_node("var", start, var_end, self.source, Vec::new(), Some(var_text.as_str()));
++        let kind_node = spanned_node("label", kind_start, kind_end, self.source, Vec::new(), Some(kind_text.as_str()));
++        let label = format!("{var_text}:{kind_text}");
++        Ok(spanned_node("patternNode", start, kind_end, self.source, vec![var_node, kind_node], Some(label.as_str())))
++    }
++
++    fn parse_return_item(&mut self) -> Result<SpannedNode, String> {
++        let start = self.peek().start;
++        let (var_text, var_start, var_end) = self.expect_ident()?;
++        if matches!(self.peek().token, Token::Dot) {
++            self.bump();
++            let (prop_text, prop_start, prop_end) = self.expect_ident()?;
++            let var_node = spanned_node("var", var_start, var_end, self.source, Vec::new(), Some(var_text.as_str()));
++            let prop_node = spanned_node("property", prop_start, prop_end, self.source, Vec::new(), Some(prop_text.as_str()));
++            let label = format!("{var_text}.{prop_text}");
++            return Ok(spanned_node("returnItem", start, prop_end, self.source, vec![var_node, prop_node], Some(label.as_str())));
++        }
++        let var_node = spanned_node("var", var_start, var_end, self.source, Vec::new(), Some(var_text.as_str()));
++        Ok(spanned_node("returnItem", start, var_end, self.source, vec![var_node], Some(var_text.as_str())))
++    }
++
++    fn parse_assignment(&mut self) -> Result<SpannedNode, String> {
++        let start = self.peek().start;
++        let (var_text, var_start, var_end) = self.expect_ident()?;
++        self.expect(&Token::Dot)?;
++        let (prop_text, prop_start, prop_end) = self.expect_ident()?;
++        self.expect(&Token::Eq)?;
++        let value = self.parse_value()?;
++        let var_node = spanned_node("var", var_start, var_end, self.source, Vec::new(), Some(var_text.as_str()));
++        let prop_node = spanned_node("property", prop_start, prop_end, self.source, Vec::new(), Some(prop_text.as_str()));
++        let end = value.end;
++        Ok(spanned_node("assignment", start, end, self.source, vec![var_node, prop_node, value], None))
++    }
++
++    fn parse_expr(&mut self) -> Result<SpannedNode, String> {
++        self.parse_or_expr()
++    }
++
++    fn parse_or_expr(&mut self) -> Result<SpannedNode, String> {
++        let mut left = self.parse_and_expr()?;
++        while matches!(self.peek().token, Token::Or) {
++            let op_start = self.bump().start;
++            let right = self.parse_and_expr()?;
++            let end = right.end;
++            left = spanned_node("or", op_start, end, self.source, vec![left, right], Some("OR"));
++        }
++        Ok(left)
++    }
++
++    fn parse_and_expr(&mut self) -> Result<SpannedNode, String> {
++        let mut left = self.parse_cmp_expr()?;
++        while matches!(self.peek().token, Token::And) {
++            let op_start = self.bump().start;
++            let right = self.parse_cmp_expr()?;
++            let end = right.end;
++            left = spanned_node("and", op_start, end, self.source, vec![left, right], Some("AND"));
++        }
++        Ok(left)
++    }
++
++    fn parse_cmp_expr(&mut self) -> Result<SpannedNode, String> {
++        let start = self.peek().start;
++        let (var_text, var_start, var_end) = self.expect_ident()?;
++        self.expect(&Token::Dot)?;
++        let (prop_text, prop_start, prop_end) = self.expect_ident()?;
++        let op = self.bump();
++        if !matches!(op.token, Token::Eq | Token::Ne) {
++            return Err(format!("expected comparison at {}", op.start));
++        }
++        let value = self.parse_value()?;
++        let var_node = spanned_node("var", var_start, var_end, self.source, Vec::new(), Some(var_text.as_str()));
++        let prop_node = spanned_node("property", prop_start, prop_end, self.source, Vec::new(), Some(prop_text.as_str()));
++        let kind = if op.token == Token::Eq { "eq" } else { "ne" };
++        let end = value.end;
++        Ok(spanned_node(kind, start, end, self.source, vec![var_node, prop_node, value], None))
++    }
++
++    fn parse_value(&mut self) -> Result<SpannedNode, String> {
++        let token = self.bump();
++        match token.token {
++            Token::Number(_) => Ok(spanned_node("number", token.start, token.end, self.source, Vec::new(), None)),
++            Token::StringLit(text) => Ok(spanned_node("string", token.start, token.end, self.source, Vec::new(), Some(text.as_str()))),
++            Token::Ident(text) => {
++                let lower = text.to_lowercase();
++                if lower == "true" || lower == "false" {
++                    Ok(spanned_node("bool", token.start, token.end, self.source, Vec::new(), Some(text.as_str())))
++                } else if lower == "null" {
++                    Ok(spanned_node("null", token.start, token.end, self.source, Vec::new(), Some("null")))
++                } else {
++                    Err(format!("expected value at {}", token.start))
++                }
++            }
++            other => Err(format!("expected value at {}, got {other:?}", token.start)),
++        }
++    }
++}
++
++/// 🌳️ Parse jack source into a span-tracked AST for hierarchy/outline panels (moved from writer's premigration
++/// `parseJackAst`; lexing never fails — only parsing can, in which case a single `"error"` node spans the source).
++pub fn parse_spanned(source: &str) -> SpannedNode {
++    let tokens = lex_spanned(source, true).unwrap_or_else(|_| vec![SpannedToken { token: Token::Eof, start: source.len(), end: source.len() }]);
++    let mut parser = SpannedParser::new(&tokens, source);
++    match parser.parse_query() {
++        Ok(node) => node,
++        Err(message) => spanned_node("error", 0, source.len(), source, Vec::new(), Some(message.as_str())),
++    }
++}
++// #endregion 🔖️SpannedAst
++
+ // #region 🔖️Executor
+ /// 🎯️ Variable binding in a match row.
+ #[derive(Clone, Debug, Default)]

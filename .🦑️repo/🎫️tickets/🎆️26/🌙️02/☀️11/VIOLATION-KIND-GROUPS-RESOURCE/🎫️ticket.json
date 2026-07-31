@@ -1,0 +1,8 @@
+{
+  "title": "Breach Kind Groups Resource",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Introduce statute groups as a new resource. Replace path-based statute tree with explicit Territory document. Groups have name, description, scopes (glob filters applied general-to-specific). Groups can contain statutes or other groups as children. Update IDs, URIs, policies, trees, GraphQL schema, MCP tools, CLI commands, and tests.",
+  "summary": "Introduced Territory as hierarchical intermediate tree item in policy system. Refactored PolicyDef to use Groups instead of flat Kinds. Updated GraphQL schema/resolvers, CLI tree rendering, and all tests. Fixed pre-existing test failures from concurrent dev changes (fixture files, section requirements removal, test file detection, file ID emoji changes).",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism"
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Entity Edge Connection Ordering in Target Schema",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Reorder compose/graphql/target.schema.graphql so every Relay triple lists types as: concrete entity type, then Edge, then Connection (attribute listing after Attribute; bridge after Connection entity).",
+  "summary": "Reordered target.schema.graphql so each Relay group follows Entity → Edge → Connection across weak entities, Kit/Place/File/Author, Type/Connector/Representation, Piece listing and Connection bridge, Design, Kit, and VCS entities. Attribute section: Attribute then AttributeListingEdge/Connection before modifications and diff listing triple. Verified graphql-core parse and parses_target_schema.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1396"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️4dcbe7adbb5e4cfa8e791fc85aa08ef9"]
+}

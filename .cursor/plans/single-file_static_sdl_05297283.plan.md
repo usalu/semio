@@ -81,24 +81,24 @@ flowchart TD
 
 Region tree (one `lib.rs`):
 
-- `🆔 id`, `⏱️ timestamp`, `🚨 error`, `🪪 hash` — keep.
-- `📐 geom` — lift `Vector/Point/Coordinate/Offset/Plane/Position/Place/Location` from `SimpleObject` to `Arc`-shared `RwLock` structs with `#[Object]` (gain `id`, `hash`, `entityOwner`, `ownedEntities`).
+- `🆔️ id`, `⏱️ timestamp`, `🚨️ error`, `🪪️ hash` — keep.
+- `📐️ geom` — lift `Vector/Point/Coordinate/Offset/Plane/Position/Place/Location` from `SimpleObject` to `Arc`-shared `RwLock` structs with `#[Object]` (gain `id`, `hash`, `entityOwner`, `ownedEntities`).
 - `🏷️ meta` — same lift for 12 meta entities.
-- `🏠 type-tree`, `🏘 design-tree`, `📦 kit`, `🌿 vcs` — keep entities; add missing `Conflict/ReadVersion/WriteVersion` Arc structs.
-- `🪪 interfaces` — `EntityIface`, `WeakEntityIface`, `StrongEntityIface`, `ArtifactIface`, `DocumentIface`, `ModificationIface`, `DiffIface`, `OperationIface`, plus `OwnerEntity`, `OwnedEntity`, `ChangeOwned`, `DiffOwner`, `DiffsOwner`, `Input` as `#[derive(Union)] enum { … }` with `Arc<…>` variants.
-- `🪢 relay-macros` — three `macro_rules!` at module scope:
+- `🏠️ type-tree`, `🏘️ design-tree`, `📦️ kit`, `🌿️ vcs` — keep entities; add missing `Conflict/ReadVersion/WriteVersion` Arc structs.
+- `🪪️ interfaces` — `EntityIface`, `WeakEntityIface`, `StrongEntityIface`, `ArtifactIface`, `DocumentIface`, `ModificationIface`, `DiffIface`, `OperationIface`, plus `OwnerEntity`, `OwnedEntity`, `ChangeOwned`, `DiffOwner`, `DiffsOwner`, `Input` as `#[derive(Union)] enum { … }` with `Arc<…>` variants.
+- `🪢️ relay-macros` — three `macro_rules!` at module scope:
   - `entity_relay!(X)` → `XEdge`, `XConnection { edges, pageInfo, hash, totalCount }` (`#[derive(SimpleObject)]`).
   - `entity_diffs!(X, fields = [name, description, …])` → `XModification { name: Option<String>, removeName: Option<bool>, … }` + `XModificationEdge`/`Connection` + `XDiff { before: Arc<X>, modification: Arc<XModification>, after: Arc<X> }` + `XDiffEdge/Connection` + `XDiffs { removed: Vec<Arc<X>>, diffs: Vec<Arc<XDiff>>, added: Vec<Arc<X>> }` + `XDiffsEdge/Connection`.
   - `entity_owner!(X, owner = [Kit, Type, …], owned = [Tag, Concept, …])` → `XOwner` / `XOwned` / `XModificationOwner` / `XModificationOwned` / `XDiffsOwner` / `XDiffsOwned` unions.
-- `📐 geom-relay`, `🏷️ meta-relay`, `🏠 type-relay`, `🏘 design-relay`, `📦 kit-relay`, `🌿 vcs-relay` — invoke the three macros once per entity (60 entity families × 12 types ≈ 720 generated types).
-- `🪡 operation-history` — per-`Graph` ordered `Vec<Arc<OperationIface>>`. Each operation stored carries `Arc<Snapshot>` of `before`/`after` (cheap: shared `Arc` to whatever was mutated, plus a small `Modification` value).
+- `📐️ geom-relay`, `🏷️ meta-relay`, `🏠️ type-relay`, `🏘️ design-relay`, `📦️ kit-relay`, `🌿️ vcs-relay` — invoke the three macros once per entity (60 entity families × 12 types ≈ 720 generated types).
+- `🪡️ operation-history` — per-`Graph` ordered `Vec<Arc<OperationIface>>`. Each operation stored carries `Arc<Snapshot>` of `before`/`after` (cheap: shared `Arc` to whatever was mutated, plus a small `Modification` value).
 - `⚙️ operations` — single declarative `operations! { … }` macro that, for each operation row `(StructName, mutate_fn, modification_fields, owner_unions)`, expands to:
   - `pub struct StructName { id, hash, owner: Arc<Change>, modification: Arc<XModification>, before: Arc<X>, after: Arc<X>, input: Arc<XInput> }`
   - `#[Object(name="StructName")] impl StructName { … }` (id, hash, owner, before, modification, after, input).
   - `XEdge`/`XConnection`/`XModificationEdge`/`Connection`/`XDiffEdge`/`Connection`/`XDiffsEdge`/`Connection`.
   - registration in `OperationIface`, `OperationOwner`, `Input`.
   - 100 operation rows: `RenamedKit, ChangedDescription, CreatedTag, CreatedTags, RenamedTag, UpdatedTagDescription, UpdatedTagIcon, AddedAttributeToTag, AddedAttributesToTag, RemovedAttributeFromTag, RemovedAttributesFromTag, DeletedTag, DeletedTags`, mirrored for `Concept`, `Port`, `Quality`, `Type`; connector operations; design operations; piece operations (`AddedFixedPieceToDesign`, `AddedChildPieceWithParentConnectionToDesign`, `DraggedPieceInDesign`, `DraggedPiecesInDesign`, `MovedPieceInDesign`, `MovedPiecesInDesign`, `FixedPieceInDesign`, `FixedPiecesInDesign`, `ChangedPieceToTypeInDesign`, `ChangedPiecesToTypeInDesign`, `RenamedPieceInDesign`, `UpdatedPieceDescriptionInDesign`, `DeletedPieceInDesign`, `DeletedPiecesInDesign`, `DeletedPiecesAndConnectionsInDesign`, `FlattenedDesign`).
-- `🌐 query` — `Query { session, wip, authoritative, conflicts, node, entity, pieceInDesign, alternativePieceKind }` static `#[Object]`.
+- `🌐️ query` — `Query { session, wip, authoritative, conflicts, node, entity, pieceInDesign, alternativePieceKind }` static `#[Object]`.
 - `✏️ mutation` — `Mutation` as one `#[Object]` impl with one `async fn` per operation (~100 fields). Each fn:
   1. snapshots the target entity into `Arc<X>` (before),
   2. mutates the live `Arc`/`RwLock` graph,
@@ -106,9 +106,9 @@ Region tree (one `lib.rs`):
   4. builds the `XModification` and the matching `OperationIface` variant,
   5. appends to operation history, emits via `EventBus`,
   6. returns `Id`.
-- `📡 subscription` — `Subscription` static `#[Subscription]` impl with one stream per operation field (`commandSucceeded`, `operationSucceeded`, `operationFailed`, `error`, plus 90 typed channels). Streams are filtered views over `EventBus` broadcast.
-- `🌐 gql` — thin module exposing `pub type AppSchema = Schema<Query, Mutation, Subscription>` and `build_schema_for(rt)` calling `Schema::build(...)`. `sdl()` returns `schema.sdl()` (true compile-time SDL).
-- `🔌 wasm_bridge` — point at the new `AppSchema`; same `KitStoreHandle` API.
+- `📡️ subscription` — `Subscription` static `#[Subscription]` impl with one stream per operation field (`commandSucceeded`, `operationSucceeded`, `operationFailed`, `error`, plus 90 typed channels). Streams are filtered views over `EventBus` broadcast.
+- `🌐️ gql` — thin module exposing `pub type AppSchema = Schema<Query, Mutation, Subscription>` and `build_schema_for(rt)` calling `Schema::build(...)`. `sdl()` returns `schema.sdl()` (true compile-time SDL).
+- `🔌️ wasm_bridge` — point at the new `AppSchema`; same `KitStoreHandle` API.
 
 ## Key code anchors
 

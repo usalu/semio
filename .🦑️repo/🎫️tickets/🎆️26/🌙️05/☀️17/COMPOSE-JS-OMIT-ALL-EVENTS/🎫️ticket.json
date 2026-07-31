@@ -1,0 +1,9 @@
+{
+  "title": "Compose Js Omit All Events",
+  "emoji": "🚫️",
+  "status": "closed",
+  "description": "User: all events must be omitted — align compose/js (and wire if needed) so events are not emitted/selected on GraphQL subscription or bus.",
+  "summary": "Session subscription dispatch no longer emits a duplicate EventBus payload with kind operation; only commandSucceeded is emitted for GraphQL Subscription.operation matches. Golden schema Subscription block comments (# Events / # Commands) removed. Session docstring updated.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️68a7c69b91bf4f4da95ac1a969a49bcf"]
+}

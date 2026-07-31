@@ -106,4 +106,4 @@ Per the no-tech-mixing rule, `mit-bestand/bericht/zwischenbericht/zwischenberich
 
 ## Process
 
-Per repo workflow: open a new ticket (`.repo/🎫/26/07/08/...`) before editing, since no existing open ticket covers LaTeX table styling; close it with a summary and the full list of touched files once verified.
+Per repo workflow: open a new ticket (`.repo/🎫️/26/07/08/...`) before editing, since no existing open ticket covers LaTeX table styling; close it with a summary and the full list of touched files once verified.

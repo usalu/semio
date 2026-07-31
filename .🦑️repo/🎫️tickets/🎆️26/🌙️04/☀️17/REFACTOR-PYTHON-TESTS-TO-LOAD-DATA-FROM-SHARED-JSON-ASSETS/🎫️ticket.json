@@ -1,0 +1,8 @@
+{
+  "title": "Refactor Python Tests to Load Data From Shared Json Assets",
+  "status": "closed",
+  "description": "Refactor Python test code in compose/py/main.py to load hardcoded test data from shared JSON asset files in assets/compose/. All hardcoded GUIDs, design names, piece names, expected values, hash strings, glob patterns, expected counts must be loaded from asset files. Test behavior stays in Python code.",
+  "summary": "Refactored all 9 Python test areas in compose/py/main.py to load hardcoded test data from shared JSON asset files in assets/compose/. Created 3 new asset files (delete, copy-paste, export-design-model cases). All 83 tests pass.",
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️2197497771b04ee39d676e114d7095d2"]
+}

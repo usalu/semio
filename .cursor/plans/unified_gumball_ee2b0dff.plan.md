@@ -60,7 +60,7 @@ flowchart LR
 
 ## 1. New shared component in `ui/react/index.tsx`
 
-Add a `🔖UnifiedGumball` region near the scene-host exports.
+Add a `🔖️UnifiedGumball` region near the scene-host exports.
 
 Public surface:
 

@@ -1,0 +1,12 @@
+{
+  "title": "Implement ExportDesignModel in Go",
+  "emoji": "🔨️",
+  "status": "closed",
+  "description": "Implement the ExportDesignModel function in /workspaces/semio/compose/go/compose.go that exports a design's 3D model to GLB/glTF format. Uses BFS to compute world planes, parses GLB model files, and assembles output GLB with scene graph matching connection document.",
+  "summary": "Implemented ExportDesignModel function in compose.go that exports a design's 3D model to GLB/glTF format. Added ExportModelFormats map (.glb/.gltf), helper functions for plane-to-glTF matrix conversion, box placeholder mesh generation, base64 blob decoding, GLB mesh parsing with stride handling, and tag-based model selection. The main function performs BFS to compute world planes (reusing computeChildPlane/getConnector), builds scene graph matching connection document with relative transforms via matrix inversion, extracts mesh data per type (from GLB models or box fallback), and assembles the final GLB/glTF output with proper binary packing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/885"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["🔀️77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪️17734948449070804297348334319761820163"]
+}

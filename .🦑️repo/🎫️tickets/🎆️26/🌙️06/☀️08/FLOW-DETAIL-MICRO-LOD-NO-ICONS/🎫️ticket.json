@@ -1,0 +1,12 @@
+{
+  "title": "Flow Detail Micro Lod No Icons",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Remove icon display for detail and micro LOD in flow DAG rendering. Icons should only show at overview LOD.",
+  "summary": "Computation/function nodes (DagNodeKind::Computation) were still eligible for center-column LOD icons whenever shows_computation_layout is active (normal/detail/micro). Added DagHost::should_paint_node_lod_icon to skip icon paint for computation nodes at those tiers while keeping overview icon-only behavior. node_icon_visible remains overview-only. Extended dag_draw_lod_node_content_matrix with computation-specific assertions. Forced flow_core WASM rebuild (pkg was stale-skipped).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1608"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️db369b278dc54565a83c4ecf79b7cf74", "⚪️55127c183d364349b1c7f000f21e17a3"]
+}

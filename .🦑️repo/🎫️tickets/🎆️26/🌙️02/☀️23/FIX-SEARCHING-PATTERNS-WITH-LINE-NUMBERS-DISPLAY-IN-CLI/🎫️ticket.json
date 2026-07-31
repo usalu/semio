@@ -1,0 +1,12 @@
+{
+  "title": "Fix searching patterns with line numbers display in CLI",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The user wants searching patterns with line numbers to be displayed like `compose/js/sketchpad/Design.tsx#L532` for lines and `compose/js/sketchpad/Design.tsx#L532-L771` for ranges in the CLI output. Currently it outputs just the file path without the lines or uses JSON with startLine/endLine.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/659"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️b277c69c004c48e7bcd2dea994790bab", "⚪️6ed5c1ec2f9f4c1f87c224464f5d686a"]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Cite Typologie Tables as Typologien",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Zwischenbericht anhang/typologie.tex: The Typologie tables (SemioTableLong under Lineare Elemente, Flächige Elemente, etc.) currently repeat the section name as the table title (e.g. \"Lineare Elemente\") and are not registered/citable. Make the tables citable with keys (registered in listoftables with hierarchy keys like TZ.b) and title them \"Typologien\" instead of repeating the section name. Also register Grunddaten with a key. Root fix in print so SemioTableLong participates in the table register and labels store the hierarchy number for \\tableref.",
+  "summary": "Typologie tables in the Zwischenbericht appendix are now registered and citable with hierarchy keys (TZ.a, TZ.0.1.a, …) and titled \"Typologien\" instead of repeating the section name (Lineare Elemente, …).\n\nRoot print fixes:\n- SemioTableLong now registers as a real table (number + list-of-tables key + optional `key=` label) without opening a tcolorbox, so longtable page-break chrome stays intact.\n- Window register labels store the hierarchy key (e.g. TZ.0.1.a) in @currentlabel, so \\tableref and auto register labels match the chip.\n- Added `key=` on Table / SemioTableLong and \\tableref (parallel to \\appendixref).\n\nContent: typologie.tex titles are \"Typologien\" with keys tab:typologie-grunddaten and tab:typologien-{lineare,flaechige,knoten,rahmen}; intro cites them via \\tableref. Verified PDF: subsection \"Lineare Elemente TZ.0.1\" sits above table \"Typologien Tabelle: TZ.0.1.a\", and in-text refs render as Tabelle TZ.0.1.a–TZ.0.4.a.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2218"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️e68ebdbb338f4d93bc22f95deada0ef6"
+  ]
+}

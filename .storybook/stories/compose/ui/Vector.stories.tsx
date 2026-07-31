@@ -1,13 +1,13 @@
-// #region 🧲Header
-// 💻 compose/ui/.storybook/story/Vector.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/ui/.storybook/story/Vector.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Default story is uncontrolled.
 // Summary: Vector stories: Default, PartialSelectionAndDisplay.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Vector, type VectorValue } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
-// #region 🔤Vector
+// #region 🔤️Vector
 
 const meta = {
   title: "🏘️compose⚛️react/Vector",
@@ -49,4 +49,4 @@ export const PartialSelectionAndDisplay: Story = {
   },
 };
 
-// #endregion 🔤Vector
+// #endregion 🔤️Vector

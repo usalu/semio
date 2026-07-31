@@ -1,0 +1,51 @@
+{
+  "ticket": "26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES",
+  "plan": ".repo/🎫️/26/05/12/SKETCHPAD-FIELD-HOOKS-MIGRATION/field-only_kit_reads_refactor_09fc9816.plan.md",
+  "phases": [
+    {
+      "id": 0,
+      "name": "Foundation (GqlTransport, EventBus, worker, react bridges)",
+      "status": "done",
+      "notes": "Present on CQRS root `compose/js/index.ts` + `kit-store.worker.ts` + `compose/react/index.tsx`. Legacy host duplicated for kit-store consumers.",
+      "evidence_commands": ["rg GqlTransport EventBus compose/js/index.ts", "read compose/js/kit-store.worker.ts (GraphQL JSON worker)"]
+    },
+    {
+      "id": 1,
+      "name": "Per-entity field reads + ops in js/react vs target.schema.graphql",
+      "status": "partial",
+      "notes": "CQRS root has broad entity coverage + hooks; host entry restores pre-CQRS aggregate APIs for sketchpad. Full schema-1:1 parity and naming (`useKitName` vs `*Field`) remain incremental.",
+      "evidence_commands": ["rg \"^export function use\" compose/react/index.tsx | wc (manual)", "bun nx run @semio-tech/compose-js:test", "bun nx run @semio-tech/compose-react:test"]
+    },
+    {
+      "id": 2,
+      "name": "sketchpad/index.tsx — banned patterns / field-only hooks",
+      "status": "partial",
+      "notes": "Sketchpad still uses `@semio-tech/compose-react/host` (legacy kit registry, snapshots, scopes). Negative vitest still only checks direct `@semio-tech/compose-js` imports. True plan Phase 2 requires migrating call sites to CQRS root.",
+      "evidence_commands": ["rg \"@semio-tech/compose-react/host\" compose/sketchpad/index.tsx"]
+    },
+    {
+      "id": 3,
+      "name": "Deletion sweep (legacy exports)",
+      "status": "partial",
+      "notes": "Legacy exports moved to `@semio-tech/compose-react/host` + `@semio-tech/compose-js/legacy-host` instead of deleted, until sketchpad migration completes.",
+      "evidence_commands": ["n/a — intentional shim"]
+    },
+    {
+      "id": 4,
+      "name": "Validation CI (layers, tsc, vitest, sketchpad dev)",
+      "status": "done",
+      "notes": "Fixed workspace `depcruise` to use `npx --yes dependency-cruiser@16`. Extended `compose/sketchpad/tsconfig.json` so `npx tsc -p compose/sketchpad` includes node/vitest/rs-wasm types for pulled-in js sources.",
+      "evidence_commands": [
+        "bun nx run workspace:depcruise",
+        "npx tsc --noEmit -p compose/js/tsconfig.json",
+        "npx tsc --noEmit -p compose/react/tsconfig.json",
+        "npx tsc --noEmit -p compose/sketchpad/tsconfig.json",
+        "npx tsc --noEmit -p compose/ui/tsconfig.json",
+        "npx tsc --noEmit -p compose/algorithms/tsconfig.json",
+        "bun nx run @semio-tech/compose-js:test",
+        "bun nx run @semio-tech/compose-react:test",
+        "bun nx run @semio-tech/compose-sketchpad:dev → sketchpad-dev.txt (http://localhost:5176/)"
+      ]
+    }
+  ]
+}

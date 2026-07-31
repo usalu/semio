@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-sourcing-curate-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing curate app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+sourcing = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

@@ -1,0 +1,2648 @@
+diff --git a/.cursor/plans/map_vector_tile_labels_c099c62c.plan.md b/.cursor/plans/map_vector_tile_labels_c099c62c.plan.md
+index f2ca1a95d..f69a23992 100644
+--- a/.cursor/plans/map_vector_tile_labels_c099c62c.plan.md
++++ b/.cursor/plans/map_vector_tile_labels_c099c62c.plan.md
+@@ -19,7 +19,7 @@ todos:
+     status: completed
+   - id: verify
+     content: Run cargo tests and verify labels in map play across styles/zoom, then close ticket
+-    status: in_progress
++    status: completed
+ isProject: false
+ ---
+ 
+diff --git a/.cursor/plans/puzzle_5d_unified_tools_f87040c9.plan.md b/.cursor/plans/puzzle_5d_unified_tools_f87040c9.plan.md
+new file mode 100644
+index 000000000..601476c01
+--- /dev/null
++++ b/.cursor/plans/puzzle_5d_unified_tools_f87040c9.plan.md
+@@ -0,0 +1,92 @@
++---
++name: Puzzle 5d Unified Tools
++overview: Finish the combined puzzle 5d harness by adding full authoring-tool parity (select + brush + fill + the 2d/3d toolbars) that operates on the shared unified 5d model, so a single brush/fill action grows parts carrying both a 2d and 3d aspect and both surfaces update together.
++todos:
++  - id: ticket
++    content: Read repo://goals and open/reopen the repo-mcp ticket for puzzle 5d unified tools
++    status: completed
++  - id: phase1-core
++    content: "Add unified placement core to puzzle/5d/react: Puzzle5dBrushPlacement, synthesize2d/3d aspect helpers, applyBrushPlacementToModel, buildPuzzle5dFillSequence, Store.applyBrushPlacement + fill session; extend vitest block"
++    status: completed
++  - id: phase2-controller
++    content: "Extend Puzzle5dPlayShellController in puzzle/5d/play: activeTool, brush/fill settings + commands, merged full toolbar (2d+3d), tool/brush/fill engagement, host bridge ref, snapshot fields; extend vitest block"
++    status: completed
++  - id: phase3-hosts
++    content: Add 5d host bridge + chrome in framework renderer; wire Puzzle5d2dSurfaceHost/Puzzle5d3dSurfaceHost brush/fill props; extend FiveD/FiveD2d/FiveD3d to forward brush/fill to underlying canvases
++    status: completed
++  - id: phase4-slice-verify
++    content: Ensure vite 5d slice keeps both 2d+3d brush/fill host regions; run 5d play harness and confirm unified fill/brush at runtime; run nx tests
++    status: completed
++  - id: close
++    content: Close the repo-mcp ticket with summary and touched files
++    status: completed
++isProject: false
++---
++
++# Puzzle 5d Unified Tools
++
++## Goal
++
++A single brush/fill action grows the shared `V1` model with **unified parts** (each with both `puzzle2d` + `puzzle3d` aspects), so both surfaces fill at once. Full toolbar parity: 2d selection/create/redraw + 3d gumball relocate + brush/fill, all in the 5d shell.
++
++## Core design
++
++- Originating surface's native engine gives precise geometry for its own aspect; the **companion aspect is synthesized analytically** from the shared anchors (no second heavy engine pass, no meshes needed):
++  - 2d aspect: place new node at `sourceNode.center + (gap) * dir(sourceHandle.angle)`, handles from the part-kind catalog default.
++  - 3d aspect: pose new part so its mating vortex sits at the source vortex position with mirrored `direction` (vector math from `puzzle3d.position`/`direction`).
++- Fill uses the **3d engine as spatial authority** (reuses `buildBrushFillSequence`/`puzzle3dFillSessionRef`), synthesizing the 2d aspect per placement → guarantees 1:1 unified parts. Slider applies a prefix.
++- All mutations go through the unified `Store`; `project2d`/`project3d` already re-render both surfaces.
++
++```mermaid
++flowchart TB
++  brush2d["Brush on 2d (WASM payload)"] --> u["applyBrushPlacementToModel"]
++  brush3d["Brush on 3d (mesh payload)"] --> u
++  fill["Fill slider (3d-driven sequence)"] --> u
++  u --> store["5d Store: append unified Part + Tie"]
++  store --> p2["project2d"] --> c2["Puzzle2dCanvas"]
++  store --> p3["project3d"] --> c3["Puzzle3dCanvas"]
++```
++
++
++
++## Phase 1 - Unified placement core (`puzzle/5d/react/index.tsx`)
++
++New `//#region 🔖️Brush` in [puzzle/5d/react/index.tsx](puzzle/5d/react/index.tsx):
++
++- `Puzzle5dBrushPlacement` type: `{ partId, partKind, sourceAnchorFullId, aspect2d?: Puzzle2dBrushPlacePayload, aspect3d?: BrushPlacePayload }`.
++- `synthesizeFlatAspect(model, sourceAnchorFullId, partKind, catalogs)` and `synthesizeVolumeAspect(...)` - build the companion `NodeAspect`/`Puzzle3dPartAspect` + anchors analytically from the source part's shared anchors and the part-kind catalog.
++- `applyBrushPlacementToModel(model, placement)` - append ONE `PartV1` (both aspects, anchors with both aspects) + ONE `TieV1` (source anchor -> new mating anchor). Reuse the originating payload for its native aspect, synthesize the other.
++- `buildPuzzle5dFillSequence(model, opts)` - project3d, run the existing 3d `buildBrushFillSequence`, map each `BrushPlacePayload` -> `Puzzle5dBrushPlacement` (synthesize 2d), return ordered list.
++- `Store` additions: `applyBrushPlacement(placement)`, and a cached fill session (`prepareFill()`, `applyFillCount(n)`, `clearFill()`) mirroring the 3d play session pattern but at model level.
++- Extend the `import.meta.vitest` block: placement adds a part with both aspects; fill prefix of N adds N parts each with both `puzzle2d` and `puzzle3d`.
++
++## Phase 2 - 5d controller tool state (`puzzle/5d/play/index.ts`)
++
++In [puzzle/5d/play/index.ts](puzzle/5d/play/index.ts) `Puzzle5dPlayShellController`:
++
++- Add `activeTool: "select" | "brush" | "fill"`, brush settings (2d flush distance, 3d overlap budget, kind weights), `fillCount`, brush engagement possibles, and a `Puzzle5dPlayHostBridge` ref (`setHostBridge`).
++- `rebuildShellMode`: merge toolbar tools = 2d toolbar (selection method/mode/targets, create circle/rect, redraw) via the 2d builders + existing `PUZZLE_3D_GUMBALL_GROUPS` + brush/fill measures (flush distance, overlap budget, kind-weight distribution).
++- Window engagement: build tool ring (select/brush/fill), brush candidate possibles, and the fill-count slider for both windows (mirror `buildPuzzle3dPlayEngagement` shape).
++- New commands in `run`: `setActiveTool`, `addBrushPart`, `setFillCount`, `setBrushFlushDistance`, `setBrushOverlapBudget`, `setKindWeight`, `pickBrushCandidate`, plus 2d toolbar commands (selection/create/redraw) and brush/fill engagement plumbing; forward host-dependent ones via `hostBridge.runHostCommand`. Create commands append a unified part with catalog-default aspects.
++- Extend `getSnapshot()` with `activeTool`, brush settings, `fillCount`, engagement state. Extend the `import.meta.vitest` block (activate brush/fill via engagement submit; `addBrushPart` grows store parts; fill count grows parts).
++
++## Phase 3 - Host bridge + React surface hosts (`framework/product/playground/renderer/react/index.tsx`)
++
++In [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx):
++
++- Add a 5d chrome layer (analogous to `Puzzle2dPlayInner` + `Puzzle3dPlayEngagementPublisher`) that installs `Puzzle5dPlayHostBridge`, holds brush-renderer hooks + fill-session prep, and converts native brush/fill payloads into `store.applyBrushPlacement` / `store.applyFillCount`.
++- `Puzzle5d2dSurfaceHost`: pass `activeTool`, brush settings, `onBrushCandidates`, `onBrushPlace` into `FiveD` (2d). On 2d `onBrushPlace`, build `Puzzle5dBrushPlacement{aspect2d}` and apply.
++- `Puzzle5d3dSurfaceHost`: pass `brushActive`/`fillActive`/`onBrushPlace`/`onFillMeshesReady` + missing `onSelect` into `FiveD` (3d). On 3d `onBrushPlace`, build `Puzzle5dBrushPlacement{aspect3d}` and apply.
++- Extend `FiveDProps` and `FiveD2d`/`FiveD3d` in `puzzle/5d/react` to accept + forward brush/fill props to the underlying `Puzzle2dCanvas`/`Puzzle3dCanvas` (`installPuzzle3dPlayBrushHost` for 3d).
++
++## Phase 4 - Build slicing + verification
++
++- Confirm `stripPlaygroundRendererForPuzzleKind` in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) keeps BOTH 2d and 3d brush/fill host regions in the 5d slice (5d needs both); adjust the slice rules if they strip 2d/3d host code for the `5d` entry.
++- Run the 5d play harness (via existing `launch.json` config) and confirm at runtime (console-log verified) that one fill grows both surfaces and brush from either surface creates a unified part visible in both.
++- Run `nx` test targets for `puzzle/5d/react`, `puzzle/5d/play` and affected `framework` projects.
++
++## Workflow
++
++- Open/reopen the repo-mcp ticket and read `repo://goals` first; keep temp artifacts inside the ticket folder; close with a summary at the end.
++- Use regions/subregions; extend existing files only (no new files); no migrations/adapters; external libs stay behind interfaces.
++
+diff --git "a/.repo/\360\237\216\253/26/06/03/MAP-VECTOR-TILES/summary.md" "b/.repo/\360\237\216\253/26/06/03/MAP-VECTOR-TILES/summary.md"
+new file mode 100644
+index 000000000..adc35ef88
+--- /dev/null
++++ "b/.repo/\360\237\216\253/26/06/03/MAP-VECTOR-TILES/summary.md"
+@@ -0,0 +1,28 @@
++# Map Vector Tile Labels
++
++Fixed map labels not rendering and extended label support across all vector styles.
++
++## Root causes fixed
++
++1. **SVG text never painted** — `render_group` in `infinite/cavas/vello/lib.rs` dropped `usvg::Node::Text`. Now renders `text.flattened()` with stroke-before-fill for halo legibility.
++2. **Wrong font family** — bundled `MapLabelSans.ttf` registers as family `Anta` in fontdb. `append_label` now resolves the family from the loaded font.
++3. **Unclassified centroids** — demotile/OpenMapTiles country centroids use empty `class`; `place_label_visible` now treats `""` as country-band labels.
++
++## Features
++
++- Extracted `append_vector_tile_labels` in `gis/map/rs/lib.rs`; called after colored/figure-ground/inverted geometry passes, gated only by `vis.labels`.
++- Street labels (`transportation_name`) no longer require the roads geometry toggle.
++- Per-style default for Labels window toggle: Colored on, Figure-Ground and Inverted off (`MAP_VECTOR_STYLE_DEFAULT_LABELS` in play controller).
++
++## Tests
++
++- `infinite_cavas`: `append_label_renders_glyphs`
++- `gis_map`: place document, colored/figure-ground label scene growth, camera/tile fixture setup
++- `gis/map/play`: per-vector-style default labels visibility
++
++## Files
++
++- `infinite/cavas/vello/lib.rs`
++- `gis/map/rs/lib.rs`
++- `gis/map/react/index.tsx`
++- `gis/map/play/index.ts`
+diff --git "a/.repo/\360\237\216\253/26/06/06/PUZZLE-5D-UNIFIED-TOOLS/summary.md" "b/.repo/\360\237\216\253/26/06/06/PUZZLE-5D-UNIFIED-TOOLS/summary.md"
+new file mode 100644
+index 000000000..7224b6171
+--- /dev/null
++++ "b/.repo/\360\237\216\253/26/06/06/PUZZLE-5D-UNIFIED-TOOLS/summary.md"
+@@ -0,0 +1,33 @@
++# Puzzle 5d Unified Tools
++
++## Summary
++
++Finished the combined puzzle 5d harness with unified brush/fill authoring: one placement or fill prefix grows `PartV1` rows carrying both `puzzle2d` and `puzzle3d` aspects, so 2d and 3d surfaces update together from the shared `Store`.
++
++## Changes
++
++### Unified placement core (`puzzle/5d/react/index.tsx`)
++- `Puzzle5dBrushPlacement`, `applyBrushPlacementToModel`, `puzzle5dBrushPlacementFromFlat/Volume`
++- Companion aspect synthesis (flat from volume brush, volume from flat brush) with peer-part catalog fallbacks
++- `buildPuzzle5dFillSequence` (3d mesh-collision authority + synthesized 2d aspects)
++- `Store`: `applyBrushPlacement`, `prepareFillSession`, `applyFillCount`, `clearFill`
++- `FiveD` forwards `activeTool`, brush settings, and brush/fill canvas callbacks
++
++### Play controller (`puzzle/5d/play/index.ts`)
++- `Puzzle5dPlayHostBridge`, `activeTool`, brush/fill engagement (tool ring + fill slider)
++- Merged toolbar: 2d selection/create/redraw + 3d gumball + brush measures (flush + overlap)
++- Commands: `setActiveTool`, `addBrushPart`, `setFillCount`, brush settings, engagement plumbing
++
++### Framework renderer (`framework/product/playground/renderer/react/index.tsx` Puzzle5dPlayHost region)
++- `Puzzle5dPlayHostBridgeInstaller` wires controller ↔ canvas
++- `Puzzle5d2dSurfaceHost` / `Puzzle5d3dSurfaceHost` dispatch unified placements and fill session prep
++- 3d brush host rules via `installPuzzle3dPlayBrushHost`
++
++## Verification
++- `bun run vite build --config vite.config.ts` in `puzzle/5d/play` succeeds
++- Runtime brush commits log `[DEBUG] puzzle5d unified brush placement` from `Store.applyBrushPlacement`
++
++## Files touched
++- `puzzle/5d/react/index.tsx`
++- `puzzle/5d/play/index.ts`
++- `framework/product/playground/renderer/react/index.tsx`
+diff --git "a/.repo/\360\237\216\253/26/06/06/PUZZLE-5D-UNIFIED-TOOLS/ticket.json" "b/.repo/\360\237\216\253/26/06/06/PUZZLE-5D-UNIFIED-TOOLS/ticket.json"
+new file mode 100644
+index 000000000..be867c477
+--- /dev/null
++++ "b/.repo/\360\237\216\253/26/06/06/PUZZLE-5D-UNIFIED-TOOLS/ticket.json"
+@@ -0,0 +1,8 @@
++{
++  "title": "Puzzle 5d Unified Tools",
++  "emoji": "👯️",
++  "status": "closed",
++  "description": "Finish combined puzzle 5d harness with full authoring-tool parity: select, brush, fill, and merged 2d/3d toolbars operating on the shared unified model so one placement grows parts with both aspects.",
++  "goal": "🎯️puzzle5d",
++  "sessions": []
++}
+diff --git a/framework/product/platform/renderer/react/index.tsx b/framework/product/platform/renderer/react/index.tsx
+index ab83d542b..f83e3b51b 100644
+--- a/framework/product/platform/renderer/react/index.tsx
++++ b/framework/product/platform/renderer/react/index.tsx
+@@ -1159,7 +1159,7 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus,
+ 	}
+ }
+ 
+-function uiTreeContextMenuToTreeData(items: readonly UiTreeItemNode["contextMenu"]): TreeDataItem["contextMenu"] {
++function uiTreeContextMenuToTreeData(items: UiTreeItemNode["contextMenu"]): TreeDataItem["contextMenu"] {
+ 	if (!items?.length) {
+ 		return undefined;
+ 	}
+diff --git a/framework/product/playground/renderer/react/index.tsx b/framework/product/playground/renderer/react/index.tsx
+index a5c67d568..f5fca033c 100644
+--- a/framework/product/playground/renderer/react/index.tsx
++++ b/framework/product/playground/renderer/react/index.tsx
+@@ -422,7 +422,7 @@ function dispatchUiCommand(bus: CommandBus, descriptor: CommandDescriptor, patch
+   bus.dispatch(descriptor.controllerId, descriptor.command, { ...(descriptor.args as object | undefined), ...patch });
+ }
+ 
+-function uiTreeContextMenuToTreeData(items: readonly UiTreeItemNode["contextMenu"]): TreeDataItem["contextMenu"] {
++function uiTreeContextMenuToTreeData(items: UiTreeItemNode["contextMenu"]): TreeDataItem["contextMenu"] {
+   if (!items?.length) {
+     return undefined;
+   }
+@@ -1561,6 +1561,7 @@ import {
+   puzzle3dFillSessionRef,
+   PUZZLE_3D_FILL_COUNT_MAX,
+   subscribePuzzle3dFillSessionReady,
++  subscribePuzzle3dFillDistributionInvalidated,
+   getPuzzle3dFillSessionReadyEpoch,
+   parseKindCatalogs,
+   parseKindCompatibility,
+@@ -1991,11 +1992,20 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
+   }, [snap.activeTool, snap.fixture]);
+   const fillPrepareTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
+   const fillSessionPreparedRef = reactHostPort.useRef(false);
++  const [fillDistributionEpoch, setFillDistributionEpoch] = reactHostPort.useState(0);
+   reactHostPort.useEffect(() => {
+     if (snap.activeTool !== "fill") {
+       fillSessionPreparedRef.current = false;
+     }
+   }, [snap.activeTool]);
++  reactHostPort.useEffect(
++    () =>
++      subscribePuzzle3dFillDistributionInvalidated(() => {
++        fillSessionPreparedRef.current = false;
++        setFillDistributionEpoch((epoch) => epoch + 1);
++      }),
++    [],
++  );
+   const fillToleranceRef = reactHostPort.useRef(snap.brushPlacementOverlapBudget);
+   reactHostPort.useEffect(() => {
+     if (fillToleranceRef.current === snap.brushPlacementOverlapBudget) {
+@@ -2031,7 +2041,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
+       return;
+     }
+     onFillMeshesReady();
+-  }, [onFillMeshesReady, snap.activeTool, snap.brushPlacementOverlapBudget]);
++  }, [fillDistributionEpoch, onFillMeshesReady, snap.activeTool, snap.brushPlacementOverlapBudget]);
+   reactHostPort.useEffect(
+     () => () => {
+       if (fillPrepareTimerRef.current !== null) {
+@@ -2157,7 +2167,16 @@ export function bootPuzzle3dPlay(playground: Playground, rootId = "root"): void
+ 
+ //#region 🔖️Puzzle5dPlayHost
+ // #region 🔌️Adapters
+-import { FiveD, StoreProvider } from "@puzzle/5d/react";
++import {
++  FiveD,
++  StoreProvider,
++  useStore as usePuzzle5dStore,
++  buildPuzzle5dFillSequence,
++  project2dKindCatalogs,
++  puzzle5dBrushPlacementFromFlat,
++  puzzle5dBrushPlacementFromVolume,
++  type Store as Puzzle5dStore,
++} from "@puzzle/5d/react";
+ import type { Playground } from "@framework/playground/core";
+ import {
+   PUZZLE_5D_PLAY_APP_ID,
+@@ -2171,12 +2190,25 @@ import {
+   PUZZLE_5D_PLAY_DOCUMENT_TAB_ID,
+   Puzzle5dPlayShellController,
+   Puzzle5dStoreBridge,
++  type Puzzle5dPlayHostBridge,
+   buildPuzzle5d2dDeclarativeBody,
+   buildPuzzle5dPlayDocumentSections,
+   buildPuzzle5dPlayRuntime,
+   buildPuzzle5d3dDeclarativeBody,
+   type Puzzle5dPlaySnapshot,
+ } from "@puzzle/5d/play";
++import {
++  puzzle2dActiveRenderer,
++  puzzle2dNodeKindOverlayLabel,
++  type Puzzle2dBrushCandidatesPayload,
++  type Puzzle2dDrawLodKind,
++  type Puzzle2dSelectionMethod,
++  type Puzzle2dSelectionMode,
++  type Puzzle2dSelectionTargets,
++} from "@puzzle/2d/react";
++import { installPuzzle3dPlayBrushHost, puzzle3dBrushMeshRootForFill } from "@puzzle/3d/play";
++import { puzzle3dBrushEngagementSourceRef } from "@puzzle/3d/react";
++import { sceneHostPort } from "@ui/react";
+ // #endregion 🔌️Adapters
+ 
+ //#region 🔖️Snapshot
+@@ -2192,6 +2224,128 @@ function usePuzzle5dPlaySnapshot(): { readonly controller: Puzzle5dPlayShellCont
+ }
+ //#endregion 🔖️Snapshot
+ 
++//#region 🔖️HostBridge
++function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dPlayShellController; readonly store: Puzzle5dStore }): null {
++  const { controller, store } = props;
++  const selectionMethodRef = reactHostPort.useRef<Puzzle2dSelectionMethod>("rectangle");
++  const selectionModeRef = reactHostPort.useRef<Puzzle2dSelectionMode>("default");
++  const selectionTargetsRef = reactHostPort.useRef<Puzzle2dSelectionTargets>({ nodes: true, edges: true, handles: true });
++  const gridSnapRef = reactHostPort.useRef(true);
++  const redrawPlayingRef = reactHostPort.useRef(false);
++  const fillSeedRef = reactHostPort.useRef(1);
++
++  reactHostPort.useEffect(() => {
++    installPuzzle3dPlayBrushHost(store.read().meta);
++  }, [store]);
++
++  reactHostPort.useEffect(() => {
++    const bridge: Puzzle5dPlayHostBridge = {
++      getToolbarState: () => ({
++        puzzle2dActiveTool: controller.getActiveTool(),
++        puzzle2dBrushFlushDistance: controller.getSnapshot().brushFlushDistance,
++        puzzle2dSelectionMethod: selectionMethodRef.current,
++        puzzle2dSelectionMode: selectionModeRef.current,
++        puzzle2dSelectionTargets: selectionTargetsRef.current,
++        puzzle2dGridSnapEnabled: gridSnapRef.current,
++        puzzle2dRedrawPlaying: redrawPlayingRef.current,
++      }),
++      runHostCommand: (command, args) => {
++        switch (command) {
++          case "setActiveTool": {
++            const tool = (args as { tool?: string }).tool;
++            const prev = (args as { prevTool?: string }).prevTool;
++            if (prev === "fill" && tool !== "fill") {
++              store.clearFill();
++            }
++            if (tool === "fill" && prev !== "fill") {
++              fillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
++            }
++            break;
++          }
++          case "setBrushFlushDistance": {
++            const distance = Number((args as { distance?: number }).distance);
++            if (Number.isFinite(distance)) {
++              puzzle2dActiveRenderer()?.setBrushFlushDistance(distance);
++            }
++            break;
++          }
++          case "setBrushOverlapBudget": {
++            break;
++          }
++          case "pickBrushCandidate": {
++            const index = Number((args as { index?: number }).index);
++            if (Number.isFinite(index)) {
++              puzzle2dActiveRenderer()?.setBrushCandidateIndex(index);
++            }
++            break;
++          }
++          case "engagementPossibleSelect": {
++            const possibleId = (args as { possibleId?: string }).possibleId ?? "";
++            const brushMatch = possibleId.match(/^puzzle(?:2d|3d|5d)\.brush\.(.+)\.(\d+)$/);
++            if (brushMatch) {
++              const index = Number(brushMatch[2]);
++              if (Number.isFinite(index)) {
++                puzzle2dActiveRenderer()?.setBrushCandidateIndex(index);
++                puzzle3dBrushEngagementSourceRef.current.pickCandidate(index);
++              }
++            }
++            break;
++          }
++          case "setSelectionMethod": {
++            const method = (args as { method?: Puzzle2dSelectionMethod }).method;
++            if (method) selectionMethodRef.current = method;
++            break;
++          }
++          case "setSelectionMode": {
++            const mode = (args as { mode?: Puzzle2dSelectionMode }).mode;
++            if (mode) selectionModeRef.current = mode;
++            break;
++          }
++          case "toggleSelectionTarget": {
++            const kind = (args as { kind?: keyof Puzzle2dSelectionTargets }).kind;
++            if (kind) {
++              selectionTargetsRef.current = { ...selectionTargetsRef.current, [kind]: !selectionTargetsRef.current[kind] };
++            }
++            break;
++          }
++          case "toggleGridSnap": {
++            gridSnapRef.current = !gridSnapRef.current;
++            break;
++          }
++          case "toggleRedrawPlaying": {
++            redrawPlayingRef.current = !redrawPlayingRef.current;
++            break;
++          }
++          case "clearSelection": {
++            controller.run("set2dSelection", { ids: [] });
++            controller.run("set3dSelection", { objectIds: [] });
++            store.setSelection({ partIds: [], anchorIds: [] });
++            break;
++          }
++          default:
++            break;
++        }
++      },
++    };
++    controller.setHostBridge(bridge);
++    return () => controller.setHostBridge(null);
++  }, [controller, store]);
++
++  return null;
++}
++
++function puzzle5dBrushCandidateRows(payload: Puzzle2dBrushCandidatesPayload, kindCatalogs: ReturnType<typeof project2dKindCatalogs>): { readonly id: string; readonly label: string }[] {
++  return payload.candidates.map((kindId, index) => ({
++    id: `puzzle5d.brush.${kindId}.${index}`,
++    label: puzzle2dNodeKindOverlayLabel(kindId, kindCatalogs ?? undefined),
++  }));
++}
++
++function usePuzzle5dPlayStore(): Puzzle5dStore {
++  return usePuzzle5dStore();
++}
++//#endregion 🔖️HostBridge
++
+ //#region 🔖️DetailsPanel
+ function Puzzle5dPlayStatusPanel(): React.ReactElement {
+   const { snapshot } = usePuzzle5dPlaySnapshot();
+@@ -2228,6 +2382,12 @@ function Puzzle5dPlayStatusPanel(): React.ReactElement {
+           2d {snapshot.proximity2d} · 3d {snapshot.proximity3d}
+         </dd>
+       </div>
++      <div>
++        <dt className="text-muted-foreground font-medium">Tool</dt>
++        <dd>
++          {snapshot.activeTool} · fill {snapshot.fillCount}
++        </dd>
++      </div>
+     </dl>
+   );
+ }
+@@ -2264,19 +2424,59 @@ class Puzzle5dPlayStatusPanelDefinition extends PureSidePanelTabDefinition {
+ //#region 🔖️Surfaces
+ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceNode }): React.ReactElement {
+   const { controller, snapshot } = usePuzzle5dPlaySnapshot();
+-  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_2D_SURFACE_ID || node.paneId !== PUZZLE_5D_PLAY_2D_WINDOW_ID || !controller || !snapshot?.fixture2d || !snapshot.camera2d) {
++  const store = usePuzzle5dPlayStore();
++  const bindingValid =
++    node.controllerId === PUZZLE_5D_PLAY_CONTROLLER_ID &&
++    node.surfaceId === PUZZLE_5D_PLAY_2D_SURFACE_ID &&
++    node.paneId === PUZZLE_5D_PLAY_2D_WINDOW_ID &&
++    Boolean(controller && snapshot?.fixture2d);
++  const flatCatalogs = reactHostPort.useMemo(() => project2dKindCatalogs(store.read().kindCatalogs), [store, snapshot?.manifestLabel]);
++  const controllerRef = reactHostPort.useRef(controller);
++  const storeRef = reactHostPort.useRef(store);
++  const activeToolRef = reactHostPort.useRef(snapshot?.activeTool ?? "select");
++  controllerRef.current = controller;
++  storeRef.current = store;
++  activeToolRef.current = snapshot?.activeTool ?? "select";
++  const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => {
++    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dLodTag", { lod });
++  }, []);
++  const onSelect = reactHostPort.useCallback((snap: { readonly ids: readonly string[] }) => {
++    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: snap.ids });
++  }, []);
++  const onConnect = reactHostPort.useCallback(() => {
++    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dConnect");
++  }, []);
++  const onProximityConnect = reactHostPort.useCallback(() => {
++    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dProximity");
++  }, []);
++  const onBrushPlace = reactHostPort.useCallback((payload: Parameters<typeof puzzle5dBrushPlacementFromFlat>[0]) => {
++    if (storeRef.current.applyBrushPlacement(puzzle5dBrushPlacementFromFlat(payload))) {
++      controllerRef.current?.setBrushEngagementPossibles([]);
++    }
++  }, []);
++  const onBrushCandidates = reactHostPort.useCallback((payload: Puzzle2dBrushCandidatesPayload) => {
++    if (activeToolRef.current !== "brush") {
++      controllerRef.current?.setBrushEngagementPossibles([]);
++      return;
++    }
++    controllerRef.current?.setBrushEngagementPossibles(puzzle5dBrushCandidateRows(payload, flatCatalogs));
++  }, [flatCatalogs]);
++  if (!bindingValid || !controller || !snapshot) {
+     return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 2d binding</div>;
+   }
+   return (
+     <FiveD
+       mode="2d"
+       instanceId="play-2d"
++      activeTool={snapshot.activeTool}
++      brushFlushDistance={snapshot.brushFlushDistance}
+       puzzle2d={{
+-        camera: snapshot.camera2d,
+-        onLodChange: (lod) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dLodTag", { lod }),
+-        onSelect: (snap) => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: snap.ids }),
+-        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dConnect"),
+-        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dProximity"),
++        onLodChange,
++        onSelect,
++        onConnect,
++        onProximityConnect,
++        onBrushPlace,
++        onBrushCandidates,
+         ...snapshot.lod2dProps,
+       }}
+     />
+@@ -2285,23 +2485,76 @@ function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceN
+ 
+ function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
+   const { controller, snapshot } = usePuzzle5dPlaySnapshot();
+-  if (node.controllerId !== PUZZLE_5D_PLAY_CONTROLLER_ID || node.surfaceId !== PUZZLE_5D_PLAY_3D_SURFACE_ID || !controller || !snapshot?.fixture3d || !snapshot.camera3d || !snapshot.fixture2d) {
++  const store = usePuzzle5dPlayStore();
++  const modelPartCount = reactHostPort.useSyncExternalStore(store.subscribe, () => store.read().parts.length, () => store.read().parts.length);
++  const fillSeedRef = reactHostPort.useRef(1);
++  const bindingValid =
++    node.controllerId === PUZZLE_5D_PLAY_CONTROLLER_ID &&
++    node.surfaceId === PUZZLE_5D_PLAY_3D_SURFACE_ID &&
++    Boolean(controller && snapshot?.fixture3d && snapshot.fixture2d);
++  const controllerRef = reactHostPort.useRef(controller);
++  const storeRef = reactHostPort.useRef(store);
++  const brushOverlapBudgetRef = reactHostPort.useRef(snapshot?.brushOverlapBudget ?? 0);
++  controllerRef.current = controller;
++  storeRef.current = store;
++  brushOverlapBudgetRef.current = snapshot?.brushOverlapBudget ?? 0;
++  reactHostPort.useEffect(() => {
++    if (!bindingValid) return;
++    const urls = [...new Set(store.read().parts.flatMap((part) => (part.puzzle3d ? [part.puzzle3d.meshUrl] : [])))];
++    for (const url of urls) sceneHostPort.drei.useGLTF.preload(url);
++  }, [bindingValid, modelPartCount, store]);
++  reactHostPort.useEffect(() => {
++    if (!bindingValid || snapshot?.activeTool !== "fill") return;
++    fillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
++  }, [bindingValid, snapshot?.activeTool]);
++  const onSelect = reactHostPort.useCallback((selection: { readonly objectIds: readonly string[] }) => {
++    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: selection.objectIds });
++  }, []);
++  const onConnect = reactHostPort.useCallback(() => {
++    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dConnect");
++  }, []);
++  const onProximityConnect = reactHostPort.useCallback(() => {
++    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dProximity");
++  }, []);
++  const onBrushPlace = reactHostPort.useCallback((payload: Parameters<typeof puzzle5dBrushPlacementFromVolume>[0]) => {
++    if (storeRef.current.applyBrushPlacement(puzzle5dBrushPlacementFromVolume(payload))) {
++      controllerRef.current?.setBrushEngagementPossibles([]);
++    }
++  }, []);
++  const onFillMeshesReady = reactHostPort.useCallback(() => {
++    const activeStore = storeRef.current;
++    const activeController = controllerRef.current;
++    const model = activeStore.read();
++    activeStore.setFillBuildDone(false);
++    const sequence = buildPuzzle5dFillSequence({
++      model,
++      seed: fillSeedRef.current,
++      overlapBudget: brushOverlapBudgetRef.current,
++      meshRootForUrl: puzzle3dBrushMeshRootForFill,
++    });
++    activeStore.prepareFillSession(sequence, model, fillSeedRef.current);
++    activeStore.setFillBuildDone(true);
++    if (sequence.length > 0) {
++      activeController?.run("setFillCount", { count: 1 });
++    }
++  }, []);
++  if (!bindingValid || !controller || !snapshot?.fixture3d) {
+     return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 3d binding</div>;
+   }
+-  const meshUrls = reactHostPort.useMemo(() => [...new Set(snapshot.fixture3d.objects.map((object) => object.meshUrl))], [snapshot.fixture3d]);
+-  reactHostPort.useEffect(() => {
+-    for (const url of meshUrls) sceneHostPort.drei.useGLTF.preload(url);
+-  }, [meshUrls]);
+   return (
+     <FiveD
+       mode="3d"
+       instanceId="play-3d"
++      activeTool={snapshot.activeTool}
++      brushOverlapBudget={snapshot.brushOverlapBudget}
+       gumballConfig={snapshot.gumballConfig}
+       puzzle3d={{
+         ...snapshot.lod3dProps,
+-        camera: snapshot.camera3d ?? snapshot.fixture3d.camera,
+-        onConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dConnect"),
+-        onProximityConnect: () => controller.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dProximity"),
++        onSelect,
++        onConnect,
++        onProximityConnect,
++        onBrushPlace,
++        onFillMeshesReady,
+       }}
+     />
+   );
+@@ -2355,7 +2608,12 @@ function Puzzle5dPlayChrome({ runtime }: { readonly runtime: Platform }): React.
+   }
+   const puzzle5dBridge = controller.getStore(PUZZLE_5D_PLAY_STORE_ID) as Puzzle5dStoreBridge | undefined;
+   const puzzle5dStore = puzzle5dBridge?.inner ?? controller.puzzle5dStore;
+-  return <StoreProvider store={puzzle5dStore}>{shell}</StoreProvider>;
++  return (
++    <StoreProvider store={puzzle5dStore}>
++      <Puzzle5dPlayHostBridgeInstaller controller={controller} store={puzzle5dStore} />
++      {shell}
++    </StoreProvider>
++  );
+ }
+ 
+ /** @emoji 🚀️ Mounts puzzle 5d play chrome for a {@link Playground}. */
+diff --git a/gis/map/play/index.ts b/gis/map/play/index.ts
+index 3dccbba3f..6b236393c 100644
+--- a/gis/map/play/index.ts
++++ b/gis/map/play/index.ts
+@@ -885,6 +885,19 @@ if (import.meta.vitest) {
+       expect(layersWorld.children.find((row) => row.id === "gis-map-layer-weight-roads")).toBeUndefined();
+       expect(layersStreet.children.find((row) => row.id === "gis-map-layer-weight-roads")?.kind).toBe("slider");
+     });
++
++    it("applies per-vector-style default labels visibility", () => {
++      const runtime = new Platform({ id: "test" });
++      const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify());
++      expect(ctrl.getSnapshot().vectorStyle).toBe("colored");
++      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(true);
++      ctrl.run("setVectorStyle", { style: "figureGround" });
++      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(false);
++      ctrl.run("setVectorStyle", { style: "invertedFigure" });
++      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(false);
++      ctrl.run("setVectorStyle", { style: "colored" });
++      expect(ctrl.getSnapshot().layerVisibility.labels).toBe(true);
++    });
+   });
+ 
+   describe("MapPlayController fixtures", () => {
+diff --git a/gis/map/rs/lib.rs b/gis/map/rs/lib.rs
+index 4a3936c33..13e39caf5 100644
+--- a/gis/map/rs/lib.rs
++++ b/gis/map/rs/lib.rs
+@@ -3503,6 +3503,14 @@ mod tests {
+         host.set_camera(0.0, 0.0, hi);
+     }
+ 
++    fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32, ty: u32) {
++        zoom_host_to_representative_lod(host, lod_id);
++        let rect = super::projection::tile_world_rect(tz, tx, ty);
++        let cx = (rect.x0 + rect.x1) * 0.5;
++        let cy = (rect.y0 + rect.y1) * 0.5;
++        host.set_camera(cx, -cy, host.camera.zoom);
++    }
++
+     #[test]
+     fn place_label_visible_covers_admin_document() {
+         let v = super::vector_tiles::place_label_visible;
+@@ -3522,6 +3530,23 @@ mod tests {
+         assert!(v("neighbourhood", 0.05));
+     }
+ 
++    #[test]
++    fn label_camera_setup_intersects_fixture_tile() {
++        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
++            .join("../../../.repo/🎫️/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
++        let bytes = std::fs::read(path).expect("fixture pbf");
++        let mut host = super::MapHost::new();
++        host.set_size(800, 600, 1.0);
++        host.set_lod_mode("country");
++        zoom_host_over_tile(&mut host, "country", 5, 17, 11);
++        host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
++        let rect = super::projection::tile_world_rect(5, 17, 11);
++        let span = super::viewport_lon_span_degrees(&host.camera, &host.viewport);
++        assert!(host.tile_rect_intersects_viewport(rect), "tile must intersect (span={span})");
++        let scene = host.build_vector_scene();
++        assert!(!scene.encoding().is_empty(), "fixture tile should paint geometry (span={span})");
++    }
++
+     #[test]
+     fn figure_ground_labels_increase_scene_when_enabled() {
+         let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+@@ -3532,7 +3557,7 @@ mod tests {
+         host.set_render_mode("vector");
+         host.set_vector_style("figureGround");
+         host.set_lod_mode("country");
+-        zoom_host_to_representative_lod(&mut host, "country");
++        zoom_host_over_tile(&mut host, "country", 5, 17, 11);
+         host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
+         host.set_layer_visibility_from_json(r#"{"labels":false}"#)
+             .expect("labels off");
+@@ -3556,7 +3581,7 @@ mod tests {
+         host.set_render_mode("vector");
+         host.set_vector_style("colored");
+         host.set_lod_mode("country");
+-        zoom_host_to_representative_lod(&mut host, "country");
++        zoom_host_over_tile(&mut host, "country", 5, 17, 11);
+         host.upload_vector_tile(5, 17, 11, &bytes).expect("vector tile");
+         host.set_layer_visibility_from_json(r#"{"labels":false}"#)
+             .expect("labels off");
+diff --git a/puzzle/3d/play/index.ts b/puzzle/3d/play/index.ts
+index 0e10387fe..5f34d4c9d 100644
+--- a/puzzle/3d/play/index.ts
++++ b/puzzle/3d/play/index.ts
+@@ -418,6 +418,41 @@ function notifyPuzzle3dFillSessionReady(): void {
+   }
+ }
+ 
++let puzzle3dFillDistributionInvalidatedEpoch = 0;
++const puzzle3dFillDistributionInvalidatedListeners = new Set<() => void>();
++
++/** @emoji 🎚️ Subscribes when brush distribution weights invalidate the cached fill sequence. */
++export function subscribePuzzle3dFillDistributionInvalidated(listener: () => void): () => void {
++  puzzle3dFillDistributionInvalidatedListeners.add(listener);
++  return () => {
++    puzzle3dFillDistributionInvalidatedListeners.delete(listener);
++  };
++}
++
++/** @emoji 🎚️ Clears cached fill placements so the next fill prep uses current distribution weights. */
++export function invalidatePuzzle3dFillForDistributionChange(): void {
++  cancelPuzzle3dFillBuild();
++  const base = puzzle3dFillSessionRef.current.baseFixture;
++  puzzle3dFillSessionRef.current = {
++    baseFixture: base,
++    sequence: [],
++    appendedObjects: [],
++    appendedAttractions: [],
++    seed: 0,
++  };
++  puzzle3dFillBuildProgressRef.current = { count: 0, maxCount: PUZZLE_3D_FILL_COUNT_MAX, done: false };
++  notifyPuzzle3dFillSessionReady();
++  puzzle3dFillDistributionInvalidatedEpoch += 1;
++  for (const listener of puzzle3dFillDistributionInvalidatedListeners) {
++    listener();
++  }
++}
++
++/** @emoji 🎚️ Epoch bumped when distribution weights invalidate fill. */
++export function getPuzzle3dFillDistributionInvalidatedEpoch(): number {
++  return puzzle3dFillDistributionInvalidatedEpoch;
++}
++
+ function nextPuzzle3dFillSeed(): number {
+   return (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+ }
+@@ -2296,6 +2331,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
+         }
+         this.objectKindWeights = normalizeKindWeightGroup(this.objectKindWeights, kindId, next);
+         publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
++        invalidatePuzzle3dFillForDistributionChange();
+         this.syncShell();
+         return;
+       }
+@@ -2310,6 +2346,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
+         }
+         this.vortexKindWeights = normalizeKindWeightGroup(this.vortexKindWeights, kindId, next);
+         publishPuzzle3dBrushKindWeights(this.objectKindWeights, this.vortexKindWeights);
++        invalidatePuzzle3dFillForDistributionChange();
+         this.syncShell();
+         return;
+       }
+diff --git a/puzzle/3d/react/index.tsx b/puzzle/3d/react/index.tsx
+index f126abbd0..5dcd43925 100644
+--- a/puzzle/3d/react/index.tsx
++++ b/puzzle/3d/react/index.tsx
+@@ -4034,6 +4034,15 @@ function fillCandidateDiversityScore(
+   return 1_000 + Math.abs(candidate.sourceVortexIndex - targetVortexIndex) * 100;
+ }
+ 
++/** @emoji 🚫️ True when distribution allows a brush/fill candidate (object + source vortex weights). */
++export function brushCandidateAllowsSuggestion(
++  candidate: BrushCompatibleCandidate,
++  weights: Puzzle3dBrushKindWeights,
++  kindCatalogs: KindCatalogBundle | undefined,
++): boolean {
++  return brushCandidateSuggestionWeight(candidate, weights, kindCatalogs) > 0;
++}
++
+ /** @emoji 🪣️ Fill prefers cross-port mates (e.g. b-s → b-l) and distant connector indices on the same kind. */
+ function orderBrushFillCompatibleCandidates(
+   candidates: readonly BrushCompatibleCandidate[],
+@@ -4044,10 +4053,11 @@ function orderBrushFillCompatibleCandidates(
+   weights: Puzzle3dBrushKindWeights,
+   rng: BrushShuffleRng,
+ ): readonly BrushCompatibleCandidate[] {
++  const allowed = candidates.filter((candidate) => brushCandidateAllowsSuggestion(candidate, weights, kindCatalogs));
+   const target = targetVortexKind ?? "";
+   const cross: BrushCompatibleCandidate[] = [];
+   const same: BrushCompatibleCandidate[] = [];
+-  for (const candidate of candidates) {
++  for (const candidate of allowed) {
+     const sourceVk = catalogObjectKindById(kindCatalogs, candidate.objectKindId)?.vortices?.[candidate.sourceVortexIndex]?.vortexKind ?? "";
+     if (sourceVk !== target || brushStackMatePair(sourceVk, target)) {
+       cross.push(candidate);
+@@ -4658,11 +4668,24 @@ let puzzle3dPrecomputeSceneSyncTimer: ReturnType<typeof setTimeout> | null = nul
+ let puzzle3dPrecomputeSceneSyncInFlight: Promise<void> = Promise.resolve();
+ let puzzle3dPrecomputeSceneSyncKey = "";
+ 
++function puzzle3dBrushKindWeightsSyncKey(weights: Puzzle3dBrushKindWeights): string {
++  const objectEntries = Object.entries(weights.objectWeights)
++    .sort(([left], [right]) => left.localeCompare(right))
++    .map(([id, value]) => `${id}=${value.toFixed(6)}`)
++    .join(",");
++  const vortexEntries = Object.entries(weights.vortexWeights)
++    .sort(([left], [right]) => left.localeCompare(right))
++    .map(([id, value]) => `${id}=${value.toFixed(6)}`)
++    .join(";");
++  return `${objectEntries}|${vortexEntries}`;
++}
++
+ function puzzle3dPrecomputeSceneSyncKeyOf(input: Puzzle3dPrecomputeSceneInput): string {
+   const rules =
+     input.kindCompatibility ??
+     kindCompatibilityFromFixtureMeta(input.fixture.meta as Record<string, unknown> | undefined);
+-  return `${input.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}:${kindCompatibilitySyncKey(rules)}:${fixtureStateFingerprint(input.fixture)}`;
++  const weights = input.weights ?? puzzle3dBrushKindWeightsRef.current;
++  return `${input.overlapBudget ?? DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}:${kindCompatibilitySyncKey(rules)}:${fixtureStateFingerprint(input.fixture)}:${puzzle3dBrushKindWeightsSyncKey(weights)}`;
+ }
+ 
+ /** @emoji 🧵️ Awaits worker scene sync (overlap budget + fixture fingerprint). */
+@@ -12288,6 +12311,15 @@ if (import.meta.vitest) {
+       expect(brushTargetVortexAllowsSuggestion("c-t", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(false);
+       expect(brushTargetVortexAllowsSuggestion("c-b", { objectWeights: {}, vortexWeights: { "c-t": 0, "c-b": 1 } })).toBe(true);
+     });
++    it("brushCandidateAllowsSuggestion rejects zero object or source vortex weight", () => {
++      const catalogs: KindCatalogBundle = {
++        objects: [{ id: "Forest", meshUrl: "/f.glb", vortices: [{ vortexKind: "c-b", position: [0, 0, 0], direction: [0, 0, 1] }] }],
++      };
++      const candidate = { objectKindId: "Forest", sourceVortexIndex: 0 };
++      expect(brushCandidateAllowsSuggestion(candidate, { objectWeights: { Forest: 0 }, vortexWeights: { "c-b": 1 } }, catalogs)).toBe(false);
++      expect(brushCandidateAllowsSuggestion(candidate, { objectWeights: { Forest: 1 }, vortexWeights: { "c-b": 0 } }, catalogs)).toBe(false);
++      expect(brushCandidateAllowsSuggestion(candidate, { objectWeights: { Forest: 1 }, vortexWeights: { "c-b": 1 } }, catalogs)).toBe(true);
++    });
+     it("brushPreviewMeshFrameGroup applies GLB mesh frame rotation", () => {
+       const meshRoot = new Mesh(new BoxGeometry(1, 2, 3));
+       const frame = brushPreviewMeshFrameGroup(meshRoot);
+diff --git a/puzzle/3d/rs/lib.rs b/puzzle/3d/rs/lib.rs
+index 09db18fda..45972c979 100644
+--- a/puzzle/3d/rs/lib.rs
++++ b/puzzle/3d/rs/lib.rs
+@@ -880,6 +880,152 @@ fn enumerate_brush_fill_vortex_targets(fixture: &FixtureV1) -> Vec<BrushFillVort
+     out
+ }
+ 
++fn brush_kind_weight_value(weights: &HashMap<String, f64>, id: &str) -> f64 {
++    weights.get(id).copied().unwrap_or(1.0)
++}
++
++fn brush_candidate_suggestion_weight(
++    candidate: &BrushCompatibleCandidate,
++    weights: &BrushKindWeights,
++    catalogs: &KindCatalogBundle,
++) -> f64 {
++    let vortex_kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)
++        .and_then(|kind| kind.vortices.get(candidate.source_vortex_index))
++        .and_then(|template| template.vortex_kind.as_deref())
++        .unwrap_or("");
++    brush_kind_weight_value(&weights.object_weights, &candidate.object_kind_id)
++        * brush_kind_weight_value(&weights.vortex_weights, vortex_kind)
++}
++
++fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, weights: &BrushKindWeights) -> bool {
++    brush_kind_weight_value(&weights.vortex_weights, vortex_kind.unwrap_or("")) > 0.0
++}
++
++fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
++    brush_kind_weight_value(&weights.vortex_weights, target.vortex_kind.as_deref().unwrap_or(""))
++}
++
++fn weighted_sample_without_replacement<T, F>(items: &[T], weight_of: F, rng_state: &mut u32) -> Vec<T>
++where
++    T: Clone,
++    F: Fn(&T) -> f64,
++{
++    let eligible: Vec<T> = items.iter().filter(|item| weight_of(item) > 0.0).cloned().collect();
++    if eligible.len() < 2 {
++        return eligible;
++    }
++    let mut remaining = eligible;
++    let mut out = Vec::new();
++    while !remaining.is_empty() {
++        let w_list: Vec<f64> = remaining.iter().map(&weight_of).collect();
++        let total: f64 = w_list.iter().sum();
++        if total <= 0.0 {
++            break;
++        }
++        let mut r = fill_rng(rng_state) * total;
++        let mut pick = remaining.len() - 1;
++        for (i, weight) in w_list.iter().enumerate() {
++            r -= weight;
++            if r <= 0.0 {
++                pick = i;
++                break;
++            }
++        }
++        out.push(remaining[pick].clone());
++        remaining.remove(pick);
++    }
++    out
++}
++
++fn fill_rng(rng_state: &mut u32) -> f64 {
++    *rng_state = rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
++    *rng_state as f64 / 4_294_967_296.0
++}
++
++fn weighted_order_fill_vortex_targets(
++    targets: &[BrushFillVortexTarget],
++    weights: &BrushKindWeights,
++    rng_state: &mut u32,
++) -> Vec<BrushFillVortexTarget> {
++    weighted_sample_without_replacement(targets, |target| fill_vortex_target_weight(target, weights), rng_state)
++}
++
++fn weighted_order_brush_compatible_candidates(
++    candidates: &[BrushCompatibleCandidate],
++    weights: &BrushKindWeights,
++    catalogs: &KindCatalogBundle,
++    rng_state: &mut u32,
++) -> Vec<BrushCompatibleCandidate> {
++    weighted_sample_without_replacement(
++        candidates,
++        |candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs),
++        rng_state,
++    )
++}
++
++fn fill_candidate_diversity_score(
++    candidate: &BrushCompatibleCandidate,
++    target_vortex_index: usize,
++    target_object_kind: Option<&str>,
++) -> i64 {
++    if target_object_kind != Some(candidate.object_kind_id.as_str()) {
++        return 0;
++    }
++    1000
++        + (candidate.source_vortex_index as i64 - target_vortex_index as i64)
++            .unsigned_abs() as i64
++            * 100
++}
++
++fn order_brush_fill_compatible_candidates(
++    candidates: &[BrushCompatibleCandidate],
++    target_vortex_kind: Option<&str>,
++    target_vortex_index: usize,
++    target_object_kind: Option<&str>,
++    catalogs: &KindCatalogBundle,
++    weights: &BrushKindWeights,
++    rng_state: &mut u32,
++) -> Vec<BrushCompatibleCandidate> {
++    let allowed: Vec<BrushCompatibleCandidate> = candidates
++        .iter()
++        .filter(|candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs) > 0.0)
++        .cloned()
++        .collect();
++    let target = target_vortex_kind.unwrap_or("");
++    let mut cross = Vec::new();
++    let mut same = Vec::new();
++    for candidate in allowed {
++        let source_vk = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)
++            .and_then(|kind| kind.vortices.get(candidate.source_vortex_index))
++            .and_then(|template| template.vortex_kind.as_deref())
++            .unwrap_or("");
++        if source_vk != target || brush_stack_mate_pair(source_vk, target) {
++            cross.push(candidate);
++        } else {
++            same.push(candidate);
++        }
++    }
++    cross.sort_by(|left, right| {
++        fill_candidate_diversity_score(right, target_vortex_index, target_object_kind)
++            .cmp(&fill_candidate_diversity_score(left, target_vortex_index, target_object_kind))
++            .then_with(|| left.object_kind_id.cmp(&right.object_kind_id))
++            .then_with(|| left.source_vortex_index.cmp(&right.source_vortex_index))
++    });
++    let mut same_sorted = same;
++    same_sorted.sort_by(|left, right| {
++        left.object_kind_id
++            .cmp(&right.object_kind_id)
++            .then_with(|| left.source_vortex_index.cmp(&right.source_vortex_index))
++    });
++    cross.extend(weighted_order_brush_compatible_candidates(
++        &same_sorted,
++        weights,
++        catalogs,
++        rng_state,
++    ));
++    cross
++}
++
+ fn brush_preview_from_candidate(
+     target_full_id: &str,
+     candidate: &BrushCompatibleCandidate,
+@@ -958,8 +1104,7 @@ impl FillBuilder {
+     }
+ 
+     fn rng(&mut self) -> f64 {
+-        self.rng_state = self.rng_state.wrapping_mul(1664525).wrapping_add(1013904223);
+-        self.rng_state as f64 / 4_294_967_296.0
++        fill_rng(&mut self.rng_state)
+     }
+ 
+     fn progress(&self) -> FillBuildProgress {
+@@ -1170,7 +1315,17 @@ impl Puzzle3dEngine {
+             object_kind: host.object_kind.clone(),
+             vortex_kind: vortex.vortex_kind.clone(),
+         };
++        if !brush_target_vortex_allows_suggestion(vortex.vortex_kind.as_deref(), &scene.weights) {
++            return BrushCollisionFreeResult {
++                free: vec![],
++                unknown_pending: false,
++            };
++        }
+         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
++        let compatible: Vec<BrushCompatibleCandidate> = compatible
++            .into_iter()
++            .filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0)
++            .collect();
+         self.brush_collision_free(target_full_id, &compatible, scene.overlap_budget)
+     }
+ 
+@@ -1219,15 +1374,37 @@ impl Puzzle3dEngine {
+             cables: vec![],
+         });
+         let overlap_budget = scene.overlap_budget;
++        let weights = scene.weights.clone();
++        let kind_compatibility = scene.kind_compatibility.clone();
++        let host_rules = scene.host_rules.clone();
+         let free_targets = enumerate_brush_fill_vortex_targets(&fill.fixture);
+         if free_targets.is_empty() {
+             fill.stalled = true;
+             return false;
+         }
+-        let seed_targets: Vec<_> = free_targets.iter().filter(|t| fill.seed_object_ids.contains(&t.object_id)).cloned().collect();
+-        let frontier_targets: Vec<_> = free_targets.iter().filter(|t| !fill.seed_object_ids.contains(&t.object_id)).cloned().collect();
+-        let ordered_targets: Vec<_> = seed_targets.into_iter().chain(frontier_targets).collect();
+-        let target_start = fill.sequence.len() % ordered_targets.len().max(1);
++        let seed_targets: Vec<_> = free_targets
++            .iter()
++            .filter(|t| fill.seed_object_ids.contains(&t.object_id))
++            .cloned()
++            .collect();
++        let frontier_targets: Vec<_> = free_targets
++            .iter()
++            .filter(|t| !fill.seed_object_ids.contains(&t.object_id))
++            .cloned()
++            .collect();
++        let ordered_targets: Vec<_> = weighted_order_fill_vortex_targets(&seed_targets, &weights, &mut fill.rng_state)
++            .into_iter()
++            .chain(weighted_order_fill_vortex_targets(
++                &frontier_targets,
++                &weights,
++                &mut fill.rng_state,
++            ))
++            .collect();
++        if ordered_targets.is_empty() {
++            fill.stalled = true;
++            return false;
++        }
++        let target_start = fill.sequence.len() % ordered_targets.len();
+         for target_offset in 0..ordered_targets.len() {
+             let target = &ordered_targets[(target_start + target_offset) % ordered_targets.len()];
+             let Some(host) = fill.fixture.objects.iter().find(|o| o.id == target.object_id) else {
+@@ -1249,12 +1426,26 @@ impl Puzzle3dEngine {
+             let compatible = fill
+                 .candidate_cache
+                 .entry(key)
+-                .or_insert_with(|| brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules))
++                .or_insert_with(|| {
++                    brush_compatible_candidates(&target_ctx, &catalogs, &kind_compatibility, &host_rules)
++                })
+                 .clone();
+             if compatible.is_empty() {
+                 continue;
+             }
+-            for candidate in &compatible {
++            let ordered_candidates = order_brush_fill_compatible_candidates(
++                &compatible,
++                target.vortex_kind.as_deref(),
++                target.vortex_index,
++                target.object_kind.as_deref(),
++                &catalogs,
++                &weights,
++                &mut fill.rng_state,
++            );
++            if ordered_candidates.is_empty() {
++                continue;
++            }
++            for candidate in &ordered_candidates {
+                 let Some(preview) = brush_preview_from_candidate(
+                     &target.full_id,
+                     candidate,
+@@ -1527,6 +1718,81 @@ mod tests {
+         assert!(!result.unknown_pending, "expected mesh-ready result");
+         assert_eq!(result.free.len(), 1, "expected one collision-free candidate");
+     }
++
++    #[test]
++    fn fill_distribution_excludes_zero_weight_vortices() {
++        let catalogs = KindCatalogBundle {
++            objects: vec![ObjectKind {
++                id: "Placed".to_string(),
++                mesh_url: Some("/test/placed.glb".to_string()),
++                scale: None,
++                vortices: vec![
++                    ObjectKindVortexTemplate {
++                        vortex_kind: Some("c-b".to_string()),
++                        position: [0.0, 0.0, 0.0],
++                        direction: Some([0.0, 0.0, 1.0]),
++                    },
++                    ObjectKindVortexTemplate {
++                        vortex_kind: Some("b-s".to_string()),
++                        position: [0.0, 0.0, 0.0],
++                        direction: Some([0.0, 0.0, 1.0]),
++                    },
++                ],
++            }],
++            vortices: vec![
++                VortexKindCatalog { id: "c-b".to_string(), default_cable_kind: None },
++                VortexKindCatalog { id: "c-t".to_string(), default_cable_kind: None },
++                VortexKindCatalog { id: "b-s".to_string(), default_cable_kind: None },
++            ],
++            cables: vec![CableKindCatalog { id: "cable.link".to_string(), default_attraction_kind: None }],
++        };
++        let candidates = vec![
++            BrushCompatibleCandidate {
++                object_kind_id: "Placed".to_string(),
++                source_vortex_index: 0,
++            },
++            BrushCompatibleCandidate {
++                object_kind_id: "Placed".to_string(),
++                source_vortex_index: 1,
++            },
++        ];
++        let mut weights = BrushKindWeights::default();
++        weights.vortex_weights.insert("c-b".to_string(), 0.0);
++        weights.vortex_weights.insert("c-t".to_string(), 0.0);
++        weights.vortex_weights.insert("b-s".to_string(), 1.0);
++        weights.object_weights.insert("Placed".to_string(), 1.0);
++        let mut rng = 7u32;
++        let ordered = order_brush_fill_compatible_candidates(
++            &candidates,
++            Some("b-s"),
++            1,
++            Some("Host"),
++            &catalogs,
++            &weights,
++            &mut rng,
++        );
++        assert_eq!(ordered.len(), 1);
++        assert_eq!(ordered[0].source_vortex_index, 1);
++        let targets = vec![
++            BrushFillVortexTarget {
++                full_id: "host:v0".to_string(),
++                object_id: "host".to_string(),
++                object_kind: Some("Host".to_string()),
++                vortex_kind: Some("c-t".to_string()),
++                vortex_index: 0,
++            },
++            BrushFillVortexTarget {
++                full_id: "host:v1".to_string(),
++                object_id: "host".to_string(),
++                object_kind: Some("Host".to_string()),
++                vortex_kind: Some("b-s".to_string()),
++                vortex_index: 1,
++            },
++        ];
++        let target_ordered = weighted_order_fill_vortex_targets(&targets, &weights, &mut rng);
++        assert_eq!(target_ordered.len(), 1);
++        assert_eq!(target_ordered[0].vortex_kind.as_deref(), Some("b-s"));
++    }
+ }
+ 
+ #[cfg(not(target_arch = "wasm32"))]
+diff --git a/puzzle/5d/play/index.ts b/puzzle/5d/play/index.ts
+index 8696c28db..b4543886d 100644
+--- a/puzzle/5d/play/index.ts
++++ b/puzzle/5d/play/index.ts
+@@ -31,9 +31,23 @@ import {
+   enforcePlaygroundWindowEngagementInput,
+ } from "@framework/playground/core";
+ 
+-import { buildPuzzle2dPlayDocumentSections } from "../../2d/play/index.ts";
++import { buildPuzzle2dPlayDocumentSections, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+ import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
+-import { PUZZLE_2D_LOD_MODE_AUTOMATIC, puzzle2dLodAutomaticSelectLabel, puzzle2dLodCanvasProps, isPuzzle2dDrawLodKind, parsePuzzle2dFixtureV1, type Puzzle2dDrawLodKind, type Puzzle2dFixtureV1, type Puzzle2dLodModeKind, type CameraState } from "../../2d/react/index.tsx";
++import {
++  PUZZLE_2D_LOD_MODE_AUTOMATIC,
++  puzzle2dLodAutomaticSelectLabel,
++  puzzle2dLodCanvasProps,
++  isPuzzle2dDrawLodKind,
++  parsePuzzle2dFixtureV1,
++  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
++  type Puzzle2dDrawLodKind,
++  type Puzzle2dFixtureV1,
++  type Puzzle2dLodModeKind,
++  type CameraState,
++  type Puzzle2dSelectionMethod,
++  type Puzzle2dSelectionMode,
++  type Puzzle2dSelectionTargets,
++} from "../../2d/react/index.tsx";
+ import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
+ import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
+ import { buildPuzzle3dPlayDocumentTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+@@ -47,8 +61,27 @@ import {
+   puzzle3dLodCanvasProps,
+   sliderValueFromLod,
+   type FixtureV1 as Puzzle3dFixtureV1,
++  DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
++  BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
++  BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
+ } from "../../3d/react/index.tsx";
+-import { createStore, parseV1, project2d, project3d, compose5d, sharedKindsFromMetas, type Store as Puzzle5dStore, type StoreSnapshot as Puzzle5dStoreSnapshot, type V1 as Puzzle5dV1 } from "../react/index.tsx";
++import {
++  createStore,
++  parseV1,
++  project2d,
++  project3d,
++  compose5d,
++  sharedKindsFromMetas,
++  PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID,
++  PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID,
++  PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID,
++  PUZZLE_5D_FILL_COUNT_MAX,
++  type Puzzle5dActiveTool,
++  type Puzzle5dBrushPlacement,
++  type Store as Puzzle5dStore,
++  type StoreSnapshot as Puzzle5dStoreSnapshot,
++  type V1 as Puzzle5dV1,
++} from "../react/index.tsx";
+ import nakagin5dJson from "../fixture/nakagin-capsule-tower.5d.json";
+ 
+ //#region 🔖️Ids
+@@ -73,6 +106,16 @@ const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap",
+ function puzzle5dPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+   return { controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, command, args: args as never };
+ }
++
++const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN = 0;
++const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX = 160;
++const PUZZLE_5D_BRUSH_FLUSH_DISTANCE_STEP = 4;
++
++/** @emoji 🔗️ React host bridge: toolbar snapshot + commands that need canvas/fixture context. */
++export interface Puzzle5dPlayHostBridge {
++  getToolbarState(): Puzzle2dPlayToolbarState;
++  runHostCommand(command: string, args?: unknown): void;
++}
+ //#endregion 🔖️Ids
+ 
+ //#region 🔖️Puzzle5dPlayDocument
+@@ -151,6 +194,11 @@ export interface Puzzle5dPlaySnapshot {
+   readonly connect3d: number;
+   readonly proximity2d: number;
+   readonly proximity3d: number;
++  readonly activeTool: Puzzle5dActiveTool;
++  readonly brushFlushDistance: number;
++  readonly brushOverlapBudget: number;
++  readonly fillCount: number;
++  readonly fillBuildDone: boolean;
+ }
+ 
+ function loadNakagin5dModel(): Puzzle5dV1 {
+@@ -218,31 +266,145 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
+     [PUZZLE_5D_PLAY_2D_WINDOW_ID]: "",
+     [PUZZLE_5D_PLAY_3D_WINDOW_ID]: "",
+   };
++  private hostBridge: Puzzle5dPlayHostBridge | null = null;
++  private activeTool: Puzzle5dActiveTool = "select";
++  private brushFlushDistance = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX;
++  private brushOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
++  private brushEngagementPossibles: { readonly id: string; readonly label: string }[] = [];
++  private puzzle2dSelectionMethod: Puzzle2dSelectionMethod = "rectangle";
++  private puzzle2dSelectionMode: Puzzle2dSelectionMode = "default";
++  private puzzle2dSelectionTargets: Puzzle2dSelectionTargets = { nodes: true, edges: true, handles: true };
++  private puzzle2dGridSnapEnabled = true;
++  private puzzle2dRedrawPlaying = false;
++
++  private lastStoreShellModel: Puzzle5dV1 | null = null;
++  private lastStoreShellSelectionKey = "";
++  private lastStoreShellFillCount = 0;
++  private lastStoreShellFillBuildDone = true;
+ 
+   constructor(commandBus: CommandBus, hostNotify: () => void) {
+     super(PUZZLE_5D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+     this.puzzle5dStoreBridge = new Puzzle5dStoreBridge(this.puzzle5dStore);
+     this.provideStore(PUZZLE_5D_PLAY_STORE_ID, this.puzzle5dStoreBridge);
+-    this.puzzle5dStore.subscribe(() => this.emit());
++    this.puzzle5dStore.subscribe(() => this.notifyStoreShellIfNeeded());
++    this.rebuildShellMode();
++  }
++
++  private notifyStoreShellIfNeeded(): void {
++    const snap = this.puzzle5dStore.getSnapshot();
++    const selectionKey = `${snap.selection.partIds.join("\u0001")}\u0002${snap.selection.anchorIds.join("\u0001")}`;
++    if (
++      this.lastStoreShellModel === snap.model &&
++      this.lastStoreShellSelectionKey === selectionKey &&
++      this.lastStoreShellFillCount === snap.fillCount &&
++      this.lastStoreShellFillBuildDone === snap.fillBuildDone
++    ) {
++      return;
++    }
++    this.lastStoreShellModel = snap.model;
++    this.lastStoreShellSelectionKey = selectionKey;
++    this.lastStoreShellFillCount = snap.fillCount;
++    this.lastStoreShellFillBuildDone = snap.fillBuildDone;
++    this.emit();
++  }
++
++  setHostBridge(bridge: Puzzle5dPlayHostBridge | null): void {
++    this.hostBridge = bridge;
+     this.rebuildShellMode();
+   }
+ 
++  getActiveTool(): Puzzle5dActiveTool {
++    return this.activeTool;
++  }
++
++  setBrushEngagementPossibles(rows: readonly { readonly id: string; readonly label: string }[]): void {
++    const next = [...rows];
++    if (next.length === this.brushEngagementPossibles.length && next.every((row, index) => row.id === this.brushEngagementPossibles[index]?.id)) {
++      return;
++    }
++    this.brushEngagementPossibles = next;
++    this.rebuildShellMode();
++    this.emit();
++  }
++
++  private toolbarState(): Puzzle2dPlayToolbarState {
++    return (
++      this.hostBridge?.getToolbarState() ?? {
++        puzzle2dActiveTool: this.activeTool,
++        puzzle2dBrushFlushDistance: this.brushFlushDistance,
++        puzzle2dSelectionMethod: this.puzzle2dSelectionMethod,
++        puzzle2dSelectionMode: this.puzzle2dSelectionMode,
++        puzzle2dSelectionTargets: this.puzzle2dSelectionTargets,
++        puzzle2dGridSnapEnabled: this.puzzle2dGridSnapEnabled,
++        puzzle2dRedrawPlaying: this.puzzle2dRedrawPlaying,
++      }
++    );
++  }
++
++  private setPlayActiveTool(tool: Puzzle5dActiveTool): void {
++    const prev = this.activeTool;
++    if (prev === tool) return;
++    this.activeTool = tool;
++    if (tool !== "brush") {
++      this.brushEngagementPossibles = [];
++    }
++    this.hostBridge?.runHostCommand("setActiveTool", { tool, prevTool: prev });
++    this.rebuildShellMode();
++    this.emit();
++  }
++
+   private rebuildShellMode(): void {
+     const relocateTools: ToolItem[] = PUZZLE_3D_GUMBALL_GROUPS.map(({ key, label, iconId }, order) => ({
+       id: `puzzle5d.gumball.${key}`,
+       kind: "toggle" as const,
+       iconId,
+       text: label,
+-      order,
++      order: order + 100,
+       pressed: this.gumballConfig[key] !== false,
+       controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID,
+       command: "setGumballConfigToggle",
+       args: { key },
+     }));
+-    this.mainMode.tools = { actions: relocateTools };
++    const flatTools = buildPuzzle2dPlayToolbarTools(this.toolbarState(), PUZZLE_5D_PLAY_CONTROLLER_ID);
++    this.mainMode.tools = {
++      selection: flatTools.selection,
++      view: flatTools.view,
++      create: flatTools.create,
++      actions: [...(flatTools.actions ?? []), ...relocateTools],
++    };
+     this.mainMode.windowKinds = this.getWindowKinds();
+   }
+ 
++  private brushMeasuresGroup(windowId: string): WindowMeasure {
++    return {
++      kind: "group",
++      id: `${windowId}-brush`,
++      label: "Brush",
++      children: [
++        {
++          kind: "slider",
++          id: `${windowId}-brush-flush-distance`,
++          label: `Flush ${this.brushFlushDistance.toFixed(0)}`,
++          value: this.brushFlushDistance,
++          min: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN,
++          max: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX,
++          step: PUZZLE_5D_BRUSH_FLUSH_DISTANCE_STEP,
++          onChange: puzzle5dPlayCmd("setBrushFlushDistance"),
++        },
++        {
++          kind: "slider",
++          id: `${windowId}-brush-overlap-budget`,
++          label: `Overlap ${this.brushOverlapBudget.toFixed(2)} m³`,
++          value: this.brushOverlapBudget,
++          min: 0,
++          max: BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
++          step: BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
++          onChange: puzzle5dPlayCmd("setBrushOverlapBudget"),
++        },
++      ],
++    };
++  }
++
+   private lod2dMeasure(): WindowMeasure {
+     return {
+       kind: "select",
+@@ -285,22 +447,84 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
+   }
+ 
+   private windowEngagementFor(windowId: string): WindowEngagement {
++    const toolPossibles =
++      this.activeTool === "brush" && this.brushEngagementPossibles.length > 0
++        ? this.brushEngagementPossibles.map((row) => ({
++            id: row.id,
++            label: row.label,
++            command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: row.id }),
++          }))
++        : [
++            { id: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID }) },
++            { id: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID }) },
++            { id: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID }) },
++          ];
++    const storeSnap = this.puzzle5dStore.getSnapshot();
++    const fillSliderMax = storeSnap.fillBuildDone ? PUZZLE_5D_FILL_COUNT_MAX : Math.max(storeSnap.fillCount, 1);
++    const control =
++      this.activeTool === "fill"
++        ? {
++            kind: "slider" as const,
++            id: "puzzle5d-fill-count",
++            label: `Fill ${storeSnap.fillCount}`,
++            value: Math.min(storeSnap.fillCount, fillSliderMax),
++            min: 0,
++            max: fillSliderMax,
++            step: 1,
++            onChange: puzzle5dPlayCmd("engagementControlChange", { windowId }),
++          }
++        : {
++            kind: "ring" as const,
++            id: "puzzle5d-command-ring",
++            label: "Command",
++            value:
++              this.activeTool === "brush"
++                ? PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID
++                : this.activeTool === "fill"
++                  ? PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID
++                  : PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID,
++            options: toolPossibles.map((row) => ({ id: row.id, label: row.label })),
++            onSelect: puzzle5dPlayCmd("engagementControlSelect", { windowId }),
++          };
+     return {
++      sessionActive: this.activeTool === "brush" || this.activeTool === "fill",
+       input: {
+         id: "engagement-input",
+         value: this.engagementInputByWindow[windowId] ?? "",
+-        placeholder: "Command",
++        placeholder: this.activeTool === "fill" ? "Fill" : this.activeTool === "brush" ? "Brush" : "Command",
+         onChange: puzzle5dPlayCmd("engagementInput", { windowId }),
+         onSubmit: puzzle5dPlayCmd("engagementSubmit", { windowId }),
+         onAbort: puzzle5dPlayCmd("engagementAbort", { windowId }),
+       },
++      control,
++      possibleEngagements: toolPossibles,
+     };
+   }
+ 
+   getWindowKinds(): readonly WindowKindRuntime[] {
+     const windowKinds = [
+-      new WindowKindRuntime(PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_2D_WINDOW_LABEL, PUZZLE_5D_PLAY_2D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`, label: "LOD", children: [this.lod2dMeasure()] }], this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID)),
+-      new WindowKindRuntime(PUZZLE_5D_PLAY_3D_WINDOW_ID, PUZZLE_5D_PLAY_3D_WINDOW_LABEL, PUZZLE_5D_PLAY_3D_BODY_KEY, undefined, [{ kind: "group", id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-lod`, label: "LOD", children: this.lod3dMeasures() }], this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID)),
++      new WindowKindRuntime(
++        PUZZLE_5D_PLAY_2D_WINDOW_ID,
++        PUZZLE_5D_PLAY_2D_WINDOW_LABEL,
++        PUZZLE_5D_PLAY_2D_BODY_KEY,
++        undefined,
++        [
++          { kind: "group", id: `${PUZZLE_5D_PLAY_2D_WINDOW_ID}-lod`, label: "LOD", children: [this.lod2dMeasure()] },
++          this.brushMeasuresGroup(PUZZLE_5D_PLAY_2D_WINDOW_ID),
++        ],
++        this.windowEngagementFor(PUZZLE_5D_PLAY_2D_WINDOW_ID),
++      ),
++      new WindowKindRuntime(
++        PUZZLE_5D_PLAY_3D_WINDOW_ID,
++        PUZZLE_5D_PLAY_3D_WINDOW_LABEL,
++        PUZZLE_5D_PLAY_3D_BODY_KEY,
++        undefined,
++        [
++          { kind: "group", id: `${PUZZLE_5D_PLAY_3D_WINDOW_ID}-lod`, label: "LOD", children: this.lod3dMeasures() },
++          this.brushMeasuresGroup(PUZZLE_5D_PLAY_3D_WINDOW_ID),
++        ],
++        this.windowEngagementFor(PUZZLE_5D_PLAY_3D_WINDOW_ID),
++      ),
+     ];
+     for (const windowKind of windowKinds) {
+       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 5D play window "${windowKind.id}"`);
+@@ -318,6 +542,9 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
+     this.puzzle5dStore.replaceModel(model);
+     this.selected2d = new Set();
+     this.selected3d = null;
++    this.activeTool = "select";
++    this.brushEngagementPossibles = [];
++    this.hostBridge?.runHostCommand("setActiveTool", { tool: "select", prevTool: "select" });
+     const snap = this.puzzle5dStore.read();
+     this.camera2d = { ...snap.camera2d };
+     this.camera3d = { ...snap.camera3d };
+@@ -426,6 +653,106 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
+       case "note3dProximity":
+         this.proximity3d += 1;
+         break;
++      case "setActiveTool": {
++        const tool = (args as { tool?: Puzzle5dActiveTool }).tool;
++        if (tool === "select" || tool === "brush" || tool === "fill") {
++          this.setPlayActiveTool(tool);
++        } else {
++          changed = false;
++        }
++        break;
++      }
++      case "addBrushPart": {
++        const placement = args as Puzzle5dBrushPlacement;
++        if (!placement?.partKind) {
++          changed = false;
++          break;
++        }
++        if (this.puzzle5dStore.applyBrushPlacement(placement)) {
++          this.emit();
++        }
++        changed = false;
++        break;
++      }
++      case "setFillCount": {
++        const count = Number((args as { count?: number }).count);
++        if (!Number.isFinite(count)) {
++          changed = false;
++          break;
++        }
++        this.puzzle5dStore.applyFillCount(count);
++        this.rebuildShellMode();
++        this.emit();
++        changed = false;
++        break;
++      }
++      case "setBrushFlushDistance": {
++        const distance = Number((args as { value?: number }).value);
++        if (Number.isFinite(distance)) {
++          this.brushFlushDistance = Math.max(PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MIN, Math.min(PUZZLE_5D_BRUSH_FLUSH_DISTANCE_MAX, distance));
++          this.hostBridge?.runHostCommand("setBrushFlushDistance", { distance: this.brushFlushDistance });
++        } else {
++          changed = false;
++        }
++        break;
++      }
++      case "setBrushOverlapBudget": {
++        const value = Number((args as { value?: number }).value);
++        if (Number.isFinite(value)) {
++          this.brushOverlapBudget = Math.max(0, Math.min(BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX, value));
++          this.hostBridge?.runHostCommand("setBrushOverlapBudget", { value: this.brushOverlapBudget });
++        } else {
++          changed = false;
++        }
++        break;
++      }
++      case "pickBrushCandidate": {
++        this.hostBridge?.runHostCommand(command, args);
++        changed = false;
++        break;
++      }
++      case "engagementPossibleSelect": {
++        const { possibleId, windowId } = args as { possibleId?: string; windowId?: string };
++        if (!possibleId) {
++          changed = false;
++          break;
++        }
++        if (possibleId === PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID) {
++          this.setPlayActiveTool("brush");
++        } else if (possibleId === PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID) {
++          this.setPlayActiveTool("fill");
++        } else if (possibleId === PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID) {
++          this.setPlayActiveTool("select");
++        } else if (possibleId.startsWith("puzzle5d.brush.") || possibleId.startsWith("puzzle2d.brush.") || possibleId.startsWith("puzzle3d.brush.")) {
++          this.hostBridge?.runHostCommand(command, args);
++        } else {
++          this.hostBridge?.runHostCommand(command, args);
++        }
++        if (windowId && windowId in this.engagementInputByWindow) {
++          this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: "" };
++        }
++        changed = false;
++        break;
++      }
++      case "engagementControlChange": {
++        if (this.activeTool === "fill") {
++          const value = Number((args as { value?: number }).value);
++          if (Number.isFinite(value)) {
++            this.puzzle5dStore.applyFillCount(value);
++            this.rebuildShellMode();
++            this.emit();
++          }
++        } else {
++          this.hostBridge?.runHostCommand(command, args);
++        }
++        changed = false;
++        break;
++      }
++      case "engagementControlSelect":
++      case "engagementControlCommit":
++        this.hostBridge?.runHostCommand(command, args);
++        changed = false;
++        break;
+       case "engagementInput": {
+         const { windowId, value } = args as { windowId?: string; value?: string };
+         if (!windowId || !(windowId in this.engagementInputByWindow)) {
+@@ -435,17 +762,57 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
+         this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: String(value ?? "") };
+         break;
+       }
+-      case "engagementSubmit":
++      case "engagementSubmit": {
++        const { windowId, value } = args as { windowId?: string; value?: string };
++        if (!windowId || !(windowId in this.engagementInputByWindow)) {
++          changed = false;
++          break;
++        }
++        const token = String(value ?? this.engagementInputByWindow[windowId] ?? "")
++          .trim()
++          .toLowerCase();
++        if (token === "brush") this.setPlayActiveTool("brush");
++        else if (token === "fill") this.setPlayActiveTool("fill");
++        else if (token === "select") this.setPlayActiveTool("select");
++        else this.hostBridge?.runHostCommand(command, args);
++        this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: "" };
++        changed = false;
++        break;
++      }
+       case "engagementAbort": {
+         const { windowId } = args as { windowId?: string };
+         if (!windowId || !(windowId in this.engagementInputByWindow)) {
+           changed = false;
+           break;
+         }
++        if (this.activeTool === "brush" || this.activeTool === "fill") {
++          this.setPlayActiveTool("select");
++        }
++        this.hostBridge?.runHostCommand(command, args);
+         this.engagementInputByWindow = { ...this.engagementInputByWindow, [windowId]: "" };
++        changed = false;
+         break;
+       }
+       default:
++        if (
++          command === "setSelectionMethod" ||
++          command === "setSelectionMode" ||
++          command === "toggleSelectionTarget" ||
++          command === "clearSelection" ||
++          command === "selectAllSelection" ||
++          command === "toggleGridSnap" ||
++          command === "appendCircle" ||
++          command === "appendRectangle" ||
++          command === "toggleRedrawPlaying" ||
++          command === "redrawHandlesOnce" ||
++          command === "setBrushKindWeights" ||
++          command === "setNodeKindWeight" ||
++          command === "setHandleKindWeight" ||
++          command === "setObjectKindWeight" ||
++          command === "setVortexKindWeight"
++        ) {
++          this.hostBridge?.runHostCommand(command, args);
++        }
+         changed = false;
+         break;
+     }
+@@ -484,6 +851,11 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
+       connect3d: this.connect3d,
+       proximity2d: this.proximity2d,
+       proximity3d: this.proximity3d,
++      activeTool: this.activeTool,
++      brushFlushDistance: this.brushFlushDistance,
++      brushOverlapBudget: this.brushOverlapBudget,
++      fillCount: this.puzzle5dStore.getSnapshot().fillCount,
++      fillBuildDone: this.puzzle5dStore.getSnapshot().fillBuildDone,
+     };
+   }
+ }
+@@ -602,6 +974,41 @@ if (import.meta.vitest) {
+       });
+       expect(sk.kindCompatibility?.length).toBeGreaterThan(0);
+     });
++    it("activates brush via engagement submit", () => {
++      const runtime = buildPuzzle5dPlayRuntime();
++      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
++      expect(controller).toBeTruthy();
++      controller.run("engagementSubmit", { windowId: PUZZLE_5D_PLAY_2D_WINDOW_ID, value: "Brush" });
++      expect(controller.getActiveTool()).toBe("brush");
++    });
++
++    it("addBrushPart grows unified store parts when placement is valid", () => {
++      const runtime = buildPuzzle5dPlayRuntime();
++      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
++      const host = controller.puzzle5dStore.read().parts[0];
++      const hostAnchor = host?.anchors[0]?.id;
++      if (!host?.id || !hostAnchor) return;
++      const peerKind = controller.puzzle5dStore.read().parts.find((part) => part.partKind && part.id !== host.id)?.partKind;
++      if (!peerKind) return;
++      const before = controller.puzzle5dStore.read().parts.length;
++      controller.run("addBrushPart", {
++        partKind: peerKind,
++        sourceAnchorFullId: `${host.id}:${hostAnchor}`,
++        aspect3d: {
++          targetVortexFullId: `${host.id}:${hostAnchor}`,
++          objectKindId: peerKind,
++          sourceVortexIndex: 0,
++          origin: [2, 0, 0],
++          orientation: [0, 0, 0, 1],
++          objectId: "brush-test-part",
++        },
++      });
++      expect(controller.puzzle5dStore.read().parts.length).toBeGreaterThan(before);
++      const placed = controller.puzzle5dStore.read().parts.find((part) => part.id === "brush-test-part");
++      expect(placed?.puzzle2d).toBeTruthy();
++      expect(placed?.puzzle3d).toBeTruthy();
++    });
++
+     it("builds declarative 2d and 3d canvas-only bodies", () => {
+       const wb = buildPuzzle5dPlayRuntime();
+       const body2d = buildPuzzle5d2dDeclarativeBody({
+diff --git a/puzzle/5d/react/index.tsx b/puzzle/5d/react/index.tsx
+index e1d17cc1b..50cf41c46 100644
+--- a/puzzle/5d/react/index.tsx
++++ b/puzzle/5d/react/index.tsx
+@@ -29,6 +29,11 @@ import {
+   type HandleKind as Puzzle2dHandleKind,
+   type NodeKind as Puzzle2dNodeKind,
+   type WireKind as Puzzle2dWireKind,
++  type Puzzle2dActiveTool,
++  type Puzzle2dBrushPlacePayload,
++  DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX,
++  DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
++  puzzle2dFixtureHandlesFromNodeKind,
+ } from "@puzzle/2d/react";
+ import {
+   ObjectStateProvider as Puzzle3dPartStateProvider,
+@@ -51,7 +56,16 @@ import {
+   type SelectionSnapshot as Puzzle3dSelectionSnapshot,
+   type VortexKind as Puzzle3dGripKind,
+   type CanvasProps as Puzzle3dCanvasProps,
++  type BrushPlacePayload,
++  type Puzzle3dBrushKindWeights,
++  buildBrushFillSequence,
++  brushPlacementUsesHostOrientation,
++  computeBrushPlacementPose,
++  resolveObjectKindMeshUrl,
++  vortexWorldCadFromObject,
++  PUZZLE_3D_FILL_COUNT_MAX,
+ } from "../../3d/react/index.tsx";
++import type { Object3D } from "three";
+ // #endregion 🔌️Adapters
+ 
+ //#region 🔖️PairedPolicy
+@@ -461,17 +475,426 @@ export function project3d(model: V1): Puzzle3dFixtureV1 {
+ }
+ //#endregion 🔖️Model
+ 
++//#region 🔖️Brush
++export type Puzzle5dActiveTool = Puzzle2dActiveTool;
++
++export const PUZZLE_5D_FILL_COUNT_MAX = PUZZLE_3D_FILL_COUNT_MAX;
++
++export const PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID = "puzzle5d.tool.brush";
++export const PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle5d.tool.select";
++export const PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID = "puzzle5d.tool.fill";
++
++/** @emoji 🖌️ One unified brush placement growing a {@link PartV1} with both flat and volume aspects. */
++export interface Puzzle5dBrushPlacement {
++  readonly partId?: string;
++  readonly partKind: string;
++  readonly sourceAnchorFullId: string;
++  readonly aspect2d?: Puzzle2dBrushPlacePayload;
++  readonly aspect3d?: BrushPlacePayload;
++  readonly tieId?: string;
++}
++
++/** @emoji 🪣️ Cached fill prefix session at unified model level. */
++export interface Puzzle5dFillSession {
++  readonly baseModel: V1;
++  readonly sequence: readonly Puzzle5dBrushPlacement[];
++  readonly seed: number;
++}
++
++export type Puzzle5dBrushPlacementApplyResult =
++  | { readonly kind: "unchanged" }
++  | { readonly kind: "placed"; readonly model: V1; readonly partId: string; readonly tieId: string };
++
++function cloneModel(model: V1): V1 {
++  return JSON.parse(JSON.stringify(model)) as V1;
++}
++
++function partById(model: V1, partId: string): PartV1 | undefined {
++  return model.parts.find((row) => row.id === partId);
++}
++
++function peerPartForKind(model: V1, partKind: string): PartV1 | undefined {
++  return model.parts.find((row) => row.partKind === partKind && row.puzzle2d && row.puzzle3d);
++}
++
++function objectKind3d(catalogs: KindCatalogBundle | undefined, partKind: string): Puzzle3dPartKind | undefined {
++  return project3dKindCatalogs(catalogs)?.objects?.find((row) => row.id === partKind);
++}
++
++function volumeTemplatesForPartKind(model: V1, partKind: string, catalogs: KindCatalogBundle | undefined): NonNullable<Puzzle3dPartKind["vortices"]> | undefined {
++  const fromCatalog = objectKind3d(catalogs, partKind)?.vortices;
++  if (fromCatalog?.length) return fromCatalog;
++  const peer = peerPartForKind(model, partKind);
++  if (!peer) return undefined;
++  const templates = peer.anchors
++    .filter((anchor) => anchor.puzzle3d)
++    .map((anchor) => ({
++      vortexKind: anchor.anchorKind,
++      position: anchor.puzzle3d!.position,
++      ...(anchor.puzzle3d!.direction ? { direction: anchor.puzzle3d!.direction } : {}),
++      ...(anchor.puzzle3d!.radius !== undefined ? { radius: anchor.puzzle3d!.radius } : {}),
++    }));
++  return templates.length ? templates : undefined;
++}
++
++function anchorLocalIdFromIndex(index: number): string {
++  return `v${index}`;
++}
++
++function slugAnchorLocalId(kind: string): string {
++  const slug = kind.trim().replace(/\s+/g, "-").toLowerCase();
++  return slug.length > 0 ? slug.slice(0, 48) : "link";
++}
++
++function flatTemplatesFromObjectKind(kind: Puzzle3dPartKind | undefined): readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[] {
++  const count = Math.max(kind?.vortices?.length ?? 0, 1);
++  return Array.from({ length: count }, (_, index) => ({
++    angle: flatHandleConnectorAngle(index, count),
++    handleKind: kind?.vortices?.[index]?.vortexKind ?? BUILTIN_PORT_HANDLE_KIND,
++    radius: 3,
++  }));
++}
++
++function buildAnchorsUnified(
++  partId: string,
++  partKind: string,
++  catalogs: KindCatalogBundle | undefined,
++  flatTemplates?: readonly { readonly angle: number; readonly handleKind: string; readonly radius?: number }[],
++  volumeTemplates?: Puzzle3dPartKind["vortices"],
++): AnchorV1[] {
++  const kind3d = objectKind3d(catalogs, partKind);
++  const vortices = volumeTemplates ?? kind3d?.vortices ?? [];
++  const flat = flatTemplates ?? flatTemplatesFromObjectKind(kind3d);
++  const count = Math.max(vortices.length, flat.length, 1);
++  const anchors: AnchorV1[] = [];
++  for (let index = 0; index < count; index += 1) {
++    const vortex = vortices[index];
++    const handle = flat[index] ?? flat[0];
++    const localId = vortex?.vortexKind ? slugAnchorLocalId(vortex.vortexKind) : anchorLocalIdFromIndex(index);
++    anchors.push({
++      id: localId,
++      anchorKind: vortex?.vortexKind ?? handle?.handleKind ?? BUILTIN_PORT_HANDLE_KIND,
++      ...(handle
++        ? {
++            puzzle2d: {
++              angle: handle.angle,
++              anchorKind: handle.handleKind,
++              ...(handle.radius !== undefined ? { radius: handle.radius } : {}),
++            },
++          }
++        : {}),
++      ...(vortex
++        ? {
++            puzzle3d: {
++              position: vortex.position,
++              ...(vortex.direction ? { direction: vortex.direction } : {}),
++              ...(vortex.radius !== undefined ? { radius: vortex.radius } : {}),
++              ...(vortex.vortexKind ? { label: vortex.vortexKind } : {}),
++            },
++          }
++        : {}),
++    });
++  }
++  return anchors;
++}
++
++function mergeAnchorsFlatAndVolume(
++  volumeAnchors: readonly AnchorV1[],
++  flatHandles: readonly { readonly id: string; readonly angle: number; readonly handleKind: string; readonly radius?: number }[],
++): AnchorV1[] {
++  const count = Math.max(volumeAnchors.length, flatHandles.length);
++  const out: AnchorV1[] = [];
++  for (let index = 0; index < count; index += 1) {
++    const volume = volumeAnchors[index];
++    const flat = flatHandles[index];
++    const localId = volume?.id ?? parseAnchorFullId(flat?.id ?? "")?.anchorId ?? anchorLocalIdFromIndex(index);
++    out.push({
++      id: localId,
++      anchorKind: volume?.anchorKind ?? flat?.handleKind ?? BUILTIN_PORT_HANDLE_KIND,
++      ...(flat
++        ? {
++            puzzle2d: {
++              angle: flat.angle,
++              anchorKind: flat.handleKind,
++              ...(flat.radius !== undefined ? { radius: flat.radius } : {}),
++            },
++          }
++        : volume?.puzzle2d
++          ? { puzzle2d: volume.puzzle2d }
++          : {}),
++      ...(volume?.puzzle3d ? { puzzle3d: volume.puzzle3d } : {}),
++    });
++  }
++  return out;
++}
++
++function volumeAnchorIndexOnPart(part: PartV1, anchorLocalId: string): number {
++  return part.anchors.filter((anchor) => anchor.puzzle3d).findIndex((anchor) => anchor.id === anchorLocalId);
++}
++
++function synthesizeVolumeAspectFromFlat(
++  model: V1,
++  payload: Puzzle2dBrushPlacePayload,
++  partKind: string,
++  catalogs: KindCatalogBundle | undefined,
++): { readonly aspect: Puzzle3dPartAspect; readonly anchors: AnchorV1[] } | null {
++  const parsed = parseAnchorFullId(payload.sourceHandleId);
++  if (!parsed) return null;
++  const sourcePart = partById(model, parsed.partId);
++  if (!sourcePart?.puzzle3d) return null;
++  const fixture3d = project3d(model);
++  const hostObject = fixture3d.objects.find((row) => row.id === parsed.partId);
++  if (!hostObject) return null;
++  const volumeIndex = volumeAnchorIndexOnPart(sourcePart, parsed.anchorId);
++  if (volumeIndex < 0) return null;
++  const world = vortexWorldCadFromObject(hostObject, volumeIndex);
++  if (!world) return null;
++  const cat3d = project3dKindCatalogs(catalogs);
++  const kind = objectKind3d(catalogs, partKind);
++  const templates = volumeTemplatesForPartKind(model, partKind, catalogs);
++  const template = templates?.[payload.targetHandleIndex];
++  const meshUrl = resolveObjectKindMeshUrl(partKind, cat3d, fixture3d) ?? peerPartForKind(model, partKind)?.puzzle3d?.meshUrl;
++  if (!meshUrl || !template) return null;
++  const targetAnchor = sourcePart.anchors.find((anchor) => anchor.id === parsed.anchorId);
++  const sourceVk = template.vortexKind ?? "";
++  const targetVk = targetAnchor?.anchorKind ?? "";
++  const useHostOrientation = brushPlacementUsesHostOrientation(
++    { objectId: parsed.partId, objectKind: sourcePart.partKind, vortexKind: targetVk },
++    sourceVk,
++    partKind,
++  );
++  const pose = computeBrushPlacementPose({
++    sourceLocalPosition: template.position,
++    sourceLocalDirection: template.direction ?? [0, 0, -1],
++    ...(kind?.scale !== undefined ? { scale: kind.scale } : {}),
++    targetWorldPositionCad: world.position,
++    targetWorldDirectionCad: world.direction,
++    ...(hostObject.orientation ? { referenceOrientationCad: hostObject.orientation } : {}),
++    useHostOrientation,
++  });
++  const anchors = buildAnchorsUnified("", partKind, catalogs, payload.handles, templates);
++  return {
++    aspect: {
++      origin: pose.origin,
++      orientation: pose.orientation,
++      meshUrl,
++      ...(kind?.scale !== undefined ? { scale: kind.scale } : {}),
++      ...(kind?.label ?? kind?.name ? { label: kind.label ?? kind.name } : {}),
++    },
++    anchors,
++  };
++}
++
++function synthesizeVolumeAspectFromBrushPayload(
++  model: V1,
++  payload: BrushPlacePayload,
++  partKind: string,
++  catalogs: KindCatalogBundle | undefined,
++): { readonly aspect: Puzzle3dPartAspect; readonly anchors: AnchorV1[] } | null {
++  const cat3d = project3dKindCatalogs(catalogs);
++  const kind = objectKind3d(catalogs, partKind);
++  const meshUrl = resolveObjectKindMeshUrl(partKind, cat3d, project3d(model));
++  if (!meshUrl) return null;
++  const templates = volumeTemplatesForPartKind(model, partKind, catalogs);
++  const anchors = buildAnchorsUnified("", partKind, catalogs, undefined, templates);
++  return {
++    aspect: {
++      origin: payload.origin,
++      orientation: payload.orientation,
++      meshUrl,
++      ...(payload.scale !== undefined ? { scale: payload.scale } : kind?.scale !== undefined ? { scale: kind.scale } : {}),
++      label: kind?.label ?? kind?.name ?? partKind,
++    },
++    anchors,
++  };
++}
++
++function synthesizeFlatAspectFromVolume(model: V1, payload: BrushPlacePayload, partKind: string): NodeAspect | null {
++  const parsed = parseAnchorFullId(payload.targetVortexFullId);
++  if (!parsed) return null;
++  const sourcePart = partById(model, parsed.partId);
++  if (!sourcePart?.puzzle2d) return null;
++  const sourceAnchor = sourcePart.anchors.find((anchor) => anchor.id === parsed.anchorId);
++  const angle = sourceAnchor?.puzzle2d?.angle ?? flatHandleConnectorAngle(0, 1);
++  const gap = DEFAULT_PUZZLE_2D_BRUSH_FLUSH_DISTANCE_PX / 2;
++  const x = sourcePart.puzzle2d.x + gap * Math.cos(angle);
++  const y = sourcePart.puzzle2d.y + gap * Math.sin(angle);
++  const peer = peerPartForKind(model, partKind);
++  const iconKind = peer?.puzzle2d?.iconKind;
++  if ((peer?.puzzle2d?.shape ?? "rectangle") === "rectangle") {
++    return {
++      x,
++      y,
++      shape: "rectangle",
++      width: peer?.puzzle2d?.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
++      height: peer?.puzzle2d?.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
++      ...(iconKind ? { iconKind } : {}),
++    };
++  }
++  return {
++    x,
++    y,
++    shape: "circle",
++    radius: peer?.puzzle2d?.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
++    ...(iconKind ? { iconKind } : {}),
++  };
++}
++
++/** @emoji 🖌️ Builds a unified placement from a flat WASM brush payload. */
++export function puzzle5dBrushPlacementFromFlat(payload: Puzzle2dBrushPlacePayload): Puzzle5dBrushPlacement {
++  return {
++    partKind: payload.nodeKind,
++    sourceAnchorFullId: payload.sourceHandleId,
++    aspect2d: payload,
++    ...(payload.nodeId ? { partId: payload.nodeId } : {}),
++  };
++}
++
++/** @emoji 🖌️ Builds a unified placement from a volume brush payload. */
++export function puzzle5dBrushPlacementFromVolume(payload: BrushPlacePayload): Puzzle5dBrushPlacement {
++  return {
++    partKind: payload.objectKindId,
++    sourceAnchorFullId: payload.targetVortexFullId,
++    aspect3d: payload,
++    ...(payload.objectId ? { partId: payload.objectId } : {}),
++  };
++}
++
++/** @emoji 🖌️ Appends one unified part and tie from a brush placement. */
++export function applyBrushPlacementToModel(model: V1, placement: Puzzle5dBrushPlacement): Puzzle5dBrushPlacementApplyResult {
++  const partId =
++    placement.partId?.trim() ||
++    placement.aspect2d?.nodeId?.trim() ||
++    placement.aspect3d?.objectId?.trim() ||
++    `puzzle5d.brush.${crypto.randomUUID()}`;
++  const partKind = placement.partKind;
++  const catalogs = model.kindCatalogs;
++  let puzzle2d: NodeAspect | undefined;
++  let puzzle3d: Puzzle3dPartAspect | undefined;
++  let anchors: AnchorV1[];
++  let tieSource = "";
++  let tieTarget = "";
++
++  if (placement.aspect2d) {
++    const payload = placement.aspect2d;
++    const flatHandles = puzzle2dFixtureHandlesFromNodeKind(partId, payload.handles);
++    const targetHandle = flatHandles[payload.targetHandleIndex];
++    if (!targetHandle) return { kind: "unchanged" };
++    tieSource = payload.sourceHandleId;
++    tieTarget = targetHandle.id;
++    const iconKind = payload.iconKind;
++    puzzle2d =
++      payload.shape === "rectangle"
++        ? {
++            x: payload.x,
++            y: payload.y,
++            shape: "rectangle",
++            width: payload.width ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
++            height: payload.height ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
++            ...(iconKind ? { iconKind } : {}),
++          }
++        : {
++            x: payload.x,
++            y: payload.y,
++            shape: "circle",
++            radius: payload.radius ?? DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX / 2,
++            ...(iconKind ? { iconKind } : {}),
++          };
++    const volume = synthesizeVolumeAspectFromFlat(model, payload, partKind, catalogs);
++    if (!volume) return { kind: "unchanged" };
++    puzzle3d = volume.aspect;
++    anchors = mergeAnchorsFlatAndVolume(volume.anchors, flatHandles);
++  } else if (placement.aspect3d) {
++    const payload = placement.aspect3d;
++    const volume = synthesizeVolumeAspectFromBrushPayload(model, payload, partKind, catalogs);
++    if (!volume) return { kind: "unchanged" };
++    puzzle3d = volume.aspect;
++    anchors = volume.anchors;
++    const matingLocal = anchors[payload.sourceVortexIndex]?.id;
++    if (!matingLocal) return { kind: "unchanged" };
++    tieSource = anchorFullId(partId, matingLocal);
++    tieTarget = payload.targetVortexFullId;
++    const flat = synthesizeFlatAspectFromVolume(model, payload, partKind);
++    if (!flat) return { kind: "unchanged" };
++    puzzle2d = flat;
++  } else {
++    return { kind: "unchanged" };
++  }
++
++  if (model.parts.some((row) => row.id === partId)) return { kind: "unchanged" };
++  if (model.ties.some((tie) => tie.source === tieSource && tie.target === tieTarget)) return { kind: "unchanged" };
++
++  const tieId = placement.tieId?.trim() || `puzzle5d.brush.tie.${crypto.randomUUID()}`;
++  const part: PartV1 = {
++    id: partId,
++    partKind,
++    puzzle2d,
++    puzzle3d,
++    anchors,
++  };
++  return {
++    kind: "placed",
++    model: {
++      ...model,
++      parts: [...model.parts, part],
++      ties: [...model.ties, { id: tieId, source: tieSource, target: tieTarget }],
++    },
++    partId,
++    tieId,
++  };
++}
++
++/** @emoji 🪣️ Applies an ordered brush prefix onto a base unified model. */
++export function applyFillPlacementsToModel(base: V1, placements: readonly Puzzle5dBrushPlacement[]): V1 {
++  let next = base;
++  for (const placement of placements) {
++    const result = applyBrushPlacementToModel(next, placement);
++    if (result.kind === "placed") {
++      next = result.model;
++    }
++  }
++  return next;
++}
++
++/** @emoji 🪣️ Volume-authoritative fill sequence mapped to unified placements (2d aspects synthesized). */
++export function buildPuzzle5dFillSequence(args: {
++  readonly model: V1;
++  readonly seed: number;
++  readonly maxCount?: number;
++  readonly overlapBudget?: number;
++  readonly meshRootForUrl: (meshUrl: string) => Object3D | null | undefined;
++  readonly weights?: Puzzle3dBrushKindWeights;
++}): readonly Puzzle5dBrushPlacement[] {
++  const fixture3d = project3d(args.model);
++  const cat3d = project3dKindCatalogs(args.model.kindCatalogs);
++  const payloads = buildBrushFillSequence({
++    baseFixture: fixture3d,
++    seed: args.seed,
++    maxCount: args.maxCount,
++    overlapBudget: args.overlapBudget,
++    meshRootForUrl: args.meshRootForUrl,
++    kindCatalogs: cat3d,
++    kindCompatibility: args.model.kindCompatibility,
++    ...(args.weights ? { weights: args.weights } : {}),
++  });
++  return payloads.map((payload) => puzzle5dBrushPlacementFromVolume(payload));
++}
++//#endregion 🔖️Brush
++
+ //#region 🔖️Store
+ export interface StoreSnapshot {
+   readonly model: V1;
+   readonly selection: SelectionSnapshot;
+   readonly connectSession: ConnectSession | null;
+   readonly cameras: Readonly<Record<string, { readonly "2d": Puzzle2dCameraState; readonly "3d": Puzzle3dFixtureV1["camera"] }>>;
++  readonly fillCount: number;
++  readonly fillBuildDone: boolean;
+ }
+ 
+ export class Store {
+   private listeners = new Set<() => void>();
+   private snapshot: StoreSnapshot;
++  private fillSession: Puzzle5dFillSession | null = null;
+ 
+   constructor(model: V1) {
+     this.snapshot = {
+@@ -479,6 +902,8 @@ export class Store {
+       selection: { partIds: [], anchorIds: [] },
+       connectSession: null,
+       cameras: {},
++      fillCount: 0,
++      fillBuildDone: true,
+     };
+   }
+ 
+@@ -512,30 +937,54 @@ export class Store {
+   }
+ 
+   set2dCamera(instanceId: string, camera: Puzzle2dCameraState): void {
+-    const prev = this.snapshot.cameras[instanceId];
++    const prev = this.snapshot.cameras[instanceId]?.["2d"] ?? this.snapshot.model.camera2d;
++    if (prev.x === camera.x && prev.y === camera.y && prev.zoom === camera.zoom) {
++      return;
++    }
++    const prevEntry = this.snapshot.cameras[instanceId];
+     this.setSnapshot({
+       ...this.snapshot,
+-      model: { ...this.snapshot.model, camera2d: camera },
+       cameras: {
+         ...this.snapshot.cameras,
+-        [instanceId]: { "2d": camera, "3d": prev?.["3d"] ?? this.snapshot.model.camera3d },
++        [instanceId]: { "2d": camera, "3d": prevEntry?.["3d"] ?? this.snapshot.model.camera3d },
+       },
+     });
+   }
+ 
+   set3dCamera(instanceId: string, camera: Puzzle3dFixtureV1["camera"]): void {
+-    const prev = this.snapshot.cameras[instanceId];
++    const prev = this.snapshot.cameras[instanceId]?.["3d"] ?? this.snapshot.model.camera3d;
++    if (
++      prev.position[0] === camera.position[0] &&
++      prev.position[1] === camera.position[1] &&
++      prev.position[2] === camera.position[2] &&
++      prev.target[0] === camera.target[0] &&
++      prev.target[1] === camera.target[1] &&
++      prev.target[2] === camera.target[2] &&
++      prev.zoom === camera.zoom &&
++      prev.projection === camera.projection
++    ) {
++      return;
++    }
++    const prevEntry = this.snapshot.cameras[instanceId];
+     this.setSnapshot({
+       ...this.snapshot,
+-      model: { ...this.snapshot.model, camera3d: camera },
+       cameras: {
+         ...this.snapshot.cameras,
+-        [instanceId]: { "2d": prev?.["2d"] ?? this.snapshot.model.camera2d, "3d": camera },
++        [instanceId]: { "2d": prevEntry?.["2d"] ?? this.snapshot.model.camera2d, "3d": camera },
+       },
+     });
+   }
+ 
+   setSelection(selection: SelectionSnapshot): void {
++    const prev = this.snapshot.selection;
++    if (
++      prev.partIds.length === selection.partIds.length &&
++      prev.anchorIds.length === selection.anchorIds.length &&
++      prev.partIds.every((id, index) => id === selection.partIds[index]) &&
++      prev.anchorIds.every((id, index) => id === selection.anchorIds[index])
++    ) {
++      return;
++    }
+     this.setSnapshot({ ...this.snapshot, selection });
+   }
+ 
+@@ -587,11 +1036,64 @@ export class Store {
+   }
+ 
+   replaceModel(model: V1): void {
++    this.fillSession = null;
+     this.setSnapshot({
+       ...this.snapshot,
+       model,
+       connectSession: null,
++      fillCount: 0,
++      fillBuildDone: true,
++    });
++  }
++
++  getFillSession(): Puzzle5dFillSession | null {
++    return this.fillSession;
++  }
++
++  /** @emoji 🪣️ Captures a fill prefix session against the current or supplied base model. */
++  prepareFillSession(sequence: readonly Puzzle5dBrushPlacement[], baseModel?: V1, seed = 0): void {
++    this.fillSession = {
++      baseModel: cloneModel(baseModel ?? this.snapshot.model),
++      sequence,
++      seed,
++    };
++    this.setSnapshot({ ...this.snapshot, fillCount: 0, fillBuildDone: true });
++  }
++
++  /** @emoji 🖌️ Commits one unified brush placement and clears any active fill session. */
++  applyBrushPlacement(placement: Puzzle5dBrushPlacement): boolean {
++    const result = applyBrushPlacementToModel(this.snapshot.model, placement);
++    if (result.kind !== "placed") return false;
++    console.log("[DEBUG] puzzle5d unified brush placement", result.partId, "parts", result.model.parts.length);
++    this.fillSession = null;
++    this.setSnapshot({ ...this.snapshot, model: result.model, connectSession: null, fillCount: 0, fillBuildDone: true });
++    return true;
++  }
++
++  /** @emoji 🪣️ Applies a fill prefix count from the cached session onto the store model. */
++  applyFillCount(count: number): void {
++    if (!this.fillSession) return;
++    const clamped = Math.max(0, Math.min(PUZZLE_5D_FILL_COUNT_MAX, Math.round(count)));
++    const next = applyFillPlacementsToModel(this.fillSession.baseModel, this.fillSession.sequence.slice(0, clamped));
++    this.setSnapshot({ ...this.snapshot, model: next, connectSession: null, fillCount: clamped, fillBuildDone: true });
++  }
++
++  setFillBuildDone(done: boolean): void {
++    if (this.snapshot.fillBuildDone === done) return;
++    this.setSnapshot({ ...this.snapshot, fillBuildDone: done });
++  }
++
++  /** @emoji 🪣️ Restores the model captured at fill-session start and clears fill state. */
++  clearFill(): void {
++    if (!this.fillSession) return;
++    this.setSnapshot({
++      ...this.snapshot,
++      model: cloneModel(this.fillSession.baseModel),
++      connectSession: null,
++      fillCount: 0,
++      fillBuildDone: true,
+     });
++    this.fillSession = null;
+   }
+ }
+ 
+@@ -645,6 +1147,10 @@ export interface FiveDProps {
+   readonly liveForceGraph?: boolean;
+   /** @emoji 🔗️ Flat graph port model; WIRES surfaces use `normal` (node-id edges, no handles). */
+   readonly graphPortMode?: Puzzle2dCanvasProps["graphPortMode"];
++  /** @emoji 🖌️ Shared authoring tool for both surfaces (`select` | `brush` | `fill`). */
++  readonly activeTool?: Puzzle5dActiveTool;
++  readonly brushFlushDistance?: number;
++  readonly brushOverlapBudget?: number;
+   /** 2d surface overrides; LOD uses discrete tiers unless `automaticLod` is set on the canvas. */
+   readonly puzzle2d?: Omit<Puzzle2dCanvasProps, "children">;
+   /** 3d surface overrides; LOD is continuous/camera-driven — not the flat six-tier scale. */
+@@ -792,15 +1298,24 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
+     onProximityConnect: onProximityConnectHost,
+     onDrag: onDragHost,
+     onDragEnd: onDragEndHost,
++    onBrushPlace: onBrushPlaceHost,
++    onBrushCandidates: onBrushCandidatesHost,
++    activeTool: activeToolHost,
++    brushFlushDistance: brushFlushDistanceHost,
+     graphPortMode: puzzle2dGraphPortMode,
+     ...rest2d
+   } = extra2d;
++  const activeTool = props.activeTool ?? activeToolHost ?? "select";
++  const brushFlushDistance = props.brushFlushDistance ?? brushFlushDistanceHost;
+   const graphPortMode = props.graphPortMode ?? puzzle2dGraphPortMode;
+   const linkSession = fiveDLinkSessionFromStore(snap.connectSession);
+   const liveForceGraph = props.liveForceGraph === true;
+   const draggingNodeIdRef = reactHostPort.useRef<string | null>(null);
+   const storeRef = reactHostPort.useRef(store);
+   storeRef.current = store;
++  const onCamera = reactHostPort.useCallback((c: Puzzle2dCameraState) => {
++    storeRef.current.set2dCamera(props.instanceId, c);
++  }, [props.instanceId]);
+ 
+   reactHostPort.useEffect(() => {
+     if (!liveForceGraph || fixture2d.nodes.length === 0) return;
+@@ -824,7 +1339,7 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
+         kindCatalogs={project2dKindCatalogs(snap.model.kindCatalogs)}
+         kindCompatibility={snap.model.kindCompatibility}
+         linkSession={linkSession}
+-        onCamera={(c) => store.set2dCamera(props.instanceId, c)}
++        onCamera={onCamera}
+         onConnect={(p) => {
+           store.applyTie(p.source, p.target);
+           onConnectHost?.(p);
+@@ -886,6 +1401,10 @@ const FiveD2d = reactHostPort.memo(function FiveD2d(props: FiveDProps) {
+           store.setSelection({ partIds: s.ids, anchorIds: [] });
+           onSelectHost?.(s);
+         }}
++        activeTool={activeTool}
++        {...(brushFlushDistance !== undefined ? { brushFlushDistance } : {})}
++        {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
++        {...(onBrushCandidatesHost ? { onBrushCandidates: onBrushCandidatesHost } : {})}
+         {...rest2d}
+       >
+         {markers}
+@@ -907,13 +1426,27 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
+     onRelocate: onRelocateHost,
+     onAttractionCompatibleObjects: onAttractionCompatibleObjectsHost,
+     onAttractionTargetRing: onAttractionTargetRingHost,
++    onBrushPlace: onBrushPlaceHost,
++    onFillMeshesReady: onFillMeshesReadyHost,
++    brushActive: brushActiveHost,
++    fillActive: fillActiveHost,
++    brushPlacementOverlapBudget: brushOverlapHost,
+     ...rest3d
+   } = extra3d;
++  const activeTool = props.activeTool ?? "select";
++  const brushActive = brushActiveHost ?? activeTool === "brush";
++  const fillActive = fillActiveHost ?? activeTool === "fill";
++  const brushPlacementOverlapBudget = brushOverlapHost ?? props.brushOverlapBudget;
+   const camera = store.get3dCamera(props.instanceId);
+   const selectedObjectId = snap.selection.partIds[0] ?? null;
+   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
+   const onRelocate = usePuzzle3dPartRelocate();
+   const onConnect = usePuzzle3dPartConnect();
++  const storeRef = reactHostPort.useRef(store);
++  storeRef.current = store;
++  const onCamera = reactHostPort.useCallback((c: Puzzle3dFixtureV1["camera"]) => {
++    storeRef.current.set3dCamera(props.instanceId, c);
++  }, [props.instanceId]);
+   return (
+     <Puzzle3dCanvas
+       camera={rest3d.camera ?? camera}
+@@ -926,7 +1459,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
+       kindCatalogs={project3dKindCatalogs(snap.model.kindCatalogs)}
+       kindCompatibility={snap.model.kindCompatibility as Puzzle3dKindCompatEntry[] | undefined}
+       gumballConfig={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG}
+-      onCamera={(c) => store.set3dCamera(props.instanceId, c)}
++      onCamera={onCamera}
+       onConnect={(p) => {
+         onConnect?.(p);
+         onConnectHost?.(p);
+@@ -986,6 +1519,11 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
+         store.setSelection({ partIds: [...s.objectIds], anchorIds: [...s.vortexIds] });
+         onSelectHost?.(s);
+       }}
++      brushActive={brushActive}
++      fillActive={fillActive}
++      {...(brushPlacementOverlapBudget !== undefined ? { brushPlacementOverlapBudget } : {})}
++      {...(onBrushPlaceHost ? { onBrushPlace: onBrushPlaceHost } : {})}
++      {...(onFillMeshesReadyHost ? { onFillMeshesReady: onFillMeshesReadyHost } : {})}
+       {...rest3d}
+     >
+       <Puzzle3dParts selectedObjectId={selectedObjectId} relocate={props.gumballConfig ?? DEFAULT_GUMBALL_CONFIG} />
+@@ -1730,6 +2268,145 @@ if (import.meta.vitest) {
+     });
+   });
+ 
++  describe("applyBrushPlacementToModel", () => {
++    const brushHostModel = (): V1 => ({
++      schema: "puzzle.5d/v1",
++      domain: "architecture",
++      camera2d: { x: 0, y: 0, zoom: 1 },
++      camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
++      parts: [
++        {
++          id: "host",
++          partKind: "Host",
++          puzzle2d: { x: 0, y: 0, shape: "rectangle", width: 40, height: 40 },
++          puzzle3d: { origin: [0, 0, 0], meshUrl: "/meshes/host.glb", orientation: [0, 0, 0, 1] },
++          anchors: [
++            {
++              id: "port",
++              anchorKind: "port",
++              puzzle2d: { angle: 0, anchorKind: "port" },
++              puzzle3d: { position: [1, 0, 0], direction: [-1, 0, 0] },
++            },
++          ],
++        },
++        {
++          id: "peer",
++          partKind: "Capsule",
++          puzzle2d: { x: 100, y: 0, shape: "rectangle", width: 40, height: 40 },
++          puzzle3d: { origin: [10, 0, 0], meshUrl: "/meshes/capsule.glb", orientation: [0, 0, 0, 1] },
++          anchors: [
++            {
++              id: "mate",
++              anchorKind: "port",
++              puzzle2d: { angle: Math.PI, anchorKind: "port" },
++              puzzle3d: { position: [-1, 0, 0], direction: [1, 0, 0] },
++            },
++          ],
++        },
++      ],
++      ties: [],
++    });
++
++    it("appends a unified part with both aspects from a volume brush payload", () => {
++      const model = brushHostModel();
++      const result = applyBrushPlacementToModel(
++        model,
++        puzzle5dBrushPlacementFromVolume({
++          targetVortexFullId: "host:port",
++          objectKindId: "Capsule",
++          sourceVortexIndex: 0,
++          origin: [2, 0, 0],
++          orientation: [0, 0, 0, 1],
++        }),
++      );
++      expect(result.kind).toBe("placed");
++      if (result.kind !== "placed") return;
++      const placed = result.model.parts.find((part) => part.id === result.partId);
++      expect(placed?.puzzle2d).toBeTruthy();
++      expect(placed?.puzzle3d).toBeTruthy();
++      expect(result.model.ties.some((tie) => tie.source.endsWith(":mate") || tie.source.includes("Capsule"))).toBe(true);
++    });
++
++    it("appends a unified part with both aspects from a flat brush payload", () => {
++      const model = brushHostModel();
++      const result = applyBrushPlacementToModel(
++        model,
++        puzzle5dBrushPlacementFromFlat({
++          nodeKind: "Capsule",
++          shape: "rectangle",
++          sourceHandleId: "host:port",
++          targetHandleIndex: 0,
++          x: 80,
++          y: 0,
++          handles: [{ angle: Math.PI, handleKind: "port" }],
++        }),
++      );
++      expect(result.kind).toBe("placed");
++      if (result.kind !== "placed") return;
++      const placed = result.model.parts.find((part) => part.id === result.partId);
++      expect(placed?.puzzle2d?.x).toBe(80);
++      expect(placed?.puzzle3d?.meshUrl).toBe("/meshes/capsule.glb");
++    });
++  });
++
++  describe("Store fill session", () => {
++    it("applies fill prefix with unified parts", () => {
++      const store = createStore({
++        schema: "puzzle.5d/v1",
++        domain: "architecture",
++        camera2d: { x: 0, y: 0, zoom: 1 },
++        camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
++        parts: [
++          {
++            id: "host",
++            partKind: "Host",
++            puzzle2d: { x: 0, y: 0, shape: "rectangle", width: 40, height: 40 },
++            puzzle3d: { origin: [0, 0, 0], meshUrl: "/meshes/host.glb", orientation: [0, 0, 0, 1] },
++            anchors: [
++              {
++                id: "port",
++                anchorKind: "port",
++                puzzle2d: { angle: 0, anchorKind: "port" },
++                puzzle3d: { position: [1, 0, 0], direction: [-1, 0, 0] },
++              },
++            ],
++          },
++          {
++            id: "peer",
++            partKind: "Capsule",
++            puzzle2d: { x: 100, y: 0, shape: "rectangle", width: 40, height: 40 },
++            puzzle3d: { origin: [10, 0, 0], meshUrl: "/meshes/capsule.glb", orientation: [0, 0, 0, 1] },
++            anchors: [
++              {
++                id: "mate",
++                anchorKind: "port",
++                puzzle2d: { angle: Math.PI, anchorKind: "port" },
++                puzzle3d: { position: [-1, 0, 0], direction: [1, 0, 0] },
++              },
++            ],
++          },
++        ],
++        ties: [],
++      });
++      const sequence = [
++        puzzle5dBrushPlacementFromVolume({
++          targetVortexFullId: "host:port",
++          objectKindId: "Capsule",
++          sourceVortexIndex: 0,
++          origin: [2, 0, 0],
++          orientation: [0, 0, 0, 1],
++          objectId: "fill-1",
++        }),
++      ];
++      store.prepareFillSession(sequence);
++      store.applyFillCount(1);
++      expect(store.read().parts).toHaveLength(3);
++      const added = store.read().parts.find((part) => part.id === "fill-1");
++      expect(added?.puzzle2d).toBeTruthy();
++      expect(added?.puzzle3d).toBeTruthy();
++    });
++  });
++
+   describe("fiveDApplyLiveForceGraphStep", () => {
+     it("updates flat node centers for linked normal-graph nodes", () => {
+       const store = createStore(
+diff --git a/ui/react/index.tsx b/ui/react/index.tsx
+index d30ef9b71..1e019e4e6 100644
+--- a/ui/react/index.tsx
++++ b/ui/react/index.tsx
+@@ -12596,6 +12596,12 @@ export function shouldDismissEmptyWindowEngagement(
+   return true;
+ }
+ 
++/** @emoji ✅️ True when Space/Enter should pick the active filtered {@link EngagementPossible} instead of submitting the raw draft. */
++export function shouldActivateEngagementPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
++  if (!filteredCount) return false;
++  return showPossiblesList || Boolean(draft.trim());
++}
++
+ /** @emoji ␣️ Applies Space on an engagement command line (step submit vs repeat-last when idle). */
+ export function applyEngagementSpaceAction(input: EngagementInput, draft: string, sessionActive: boolean): boolean {
+   if (input.disabled) return false;
+@@ -12945,13 +12951,13 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
+                     }
+                     if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                       event.preventDefault();
+-                      if (showPossiblesList && activatePossible()) return;
++                      if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
+                       applyEngagementSpaceAction(input!, draft, sessionActive);
+                       return;
+                     }
+                     if (event.key === "Enter") {
+                       event.preventDefault();
+-                      if (showPossiblesList && activatePossible()) return;
++                      if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
+                       input!.onSubmit?.(draft);
+                     }
+                   }}
+@@ -19153,6 +19159,40 @@ if (import.meta.vitest) {
+       expect(engagementActiveInlineCompletion("Sp", [sphere], 0)).toEqual({ prefix: "Sp", suffix: "here" });
+     });
+ 
++    it("shouldActivateEngagementPossibleOnConfirm accepts typed draft or expanded list", () => {
++      expect(shouldActivateEngagementPossibleOnConfirm("", false, 2)).toBe(false);
++      expect(shouldActivateEngagementPossibleOnConfirm("", true, 2)).toBe(true);
++      expect(shouldActivateEngagementPossibleOnConfirm("f", false, 2)).toBe(true);
++      expect(shouldActivateEngagementPossibleOnConfirm("f", false, 0)).toBe(false);
++    });
++
++    it("Engagement Space and Enter activate inline suggestion without opening possibles list", async () => {
++      const scrollIntoView = Element.prototype.scrollIntoView;
++      Element.prototype.scrollIntoView = () => undefined;
++      const selected: string[] = [];
++      render(
++        <Engagement
++          active
++          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
++          possibleEngagements={[
++            { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
++            { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
++            { id: "puzzle3d.tool.fill", label: "Fill", detail: "f", onSelect: () => selected.push("puzzle3d.tool.fill") },
++          ]}
++        />,
++      );
++      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.commandPlaceholder);
++      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
++      fireEvent.change(field, { target: { value: "f" } });
++      await waitFor(() => expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ill"));
++      fireEvent.keyDown(field, { key: " " });
++      await waitFor(() => expect(selected).toEqual(["puzzle3d.tool.fill"]));
++      fireEvent.change(field, { target: { value: "Sp" } });
++      fireEvent.keyDown(field, { key: "Enter" });
++      await waitFor(() => expect(selected).toEqual(["puzzle3d.tool.fill", "primitive.sphere"]));
++      Element.prototype.scrollIntoView = scrollIntoView;
++    });
++
+     it("Engagement shows inline completion while typing and possibles list only on chevron", async () => {
+       const scrollIntoView = Element.prototype.scrollIntoView;
+       Element.prototype.scrollIntoView = () => undefined;

@@ -1,0 +1,17 @@
+{
+  "title": "Uniform Product Panel and Tab Layout",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Standardize every product onto one shell layout: Workbench (Document default + Catalogue), Details (Inspection default), Settings (Mode default + App + General), and fill every Inspection tree with fully-wired editable input controls bound to the live selection.",
+  "summary": "Standardized every product onto uniform shell panels: Workbench (Document default + Catalogue), Details (Inspection default with fully wired editable inputs), Settings (Mode default + App + General). Framework foundation: canonical FRAMEWORK_PANEL_TAB_* constants, SettingsHostApi extended with theme/app identity, createFrameworkSettingsPanelTabs split into Mode/App/General tabs, appSettingsBodyKey for product settings in App tab, theme persistence (readStoredUiChromeTheme/writeStoredUiChromeTheme), PlaygroundView settings-kind tab merge. Products updated: puzzle 2d/3d/5d, wires, CAD play, presentation, flow, procedural, DAG, map, shooting, sketchpad (PlatformView), CODA (ProductShell). Tests: puzzle 5d play 15/15, presentation 9/9, flow vitest 32/32, dag 10/10, map 15/15, shooting 8/8.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1744"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "b4f9fb0a",
+    "local": "uniform_product_panel_layout_b4f9fb0a.plan.md"
+  },
+  "sessions": ["⚪️7e361b0d8e12446f9ad8f8dcfe4c39d4"]
+}

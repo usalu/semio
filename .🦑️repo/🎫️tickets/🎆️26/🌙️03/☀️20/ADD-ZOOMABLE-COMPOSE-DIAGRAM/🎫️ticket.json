@@ -1,0 +1,12 @@
+{
+  "title": "Add Zoomable Compose Diagram",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Make the compose/ui Diagram component zoomable while preserving the current minimal mini-map rendering, diff coloring, selection, and click callbacks. Add local viewport behavior suitable for a small diagram preview and verify compose/ui type-check and Storybook build after the change.",
+  "summary": "Added cursor-centered wheel zoom and double-click reset to the compose/ui Diagram component while preserving the existing minimal rendering, diff coloring, selection, and click callbacks. Re-verified compose/ui type-check and Storybook build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/984"
+  },
+  "goal": "🎯️elements",
+  "sessions": ["⚪️432dc00961ef41199f71590c9aa6ab4c"]
+}

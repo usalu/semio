@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/ui-uncovered-components-stories.spec.ts
+// #region 🧲️Header
+// 💻️ .storybook/ui-uncovered-components-stories.spec.ts
 // Specs: End-to-end smoke coverage for the "ui" scope's newly authored stories covering the previously-uncovered
 // barrel exports BasicChatPanel, CanvasPickMenu/useCanvasPickInteraction, ContextMenu/ContextMenuController,
 // DragHandle (DragAndDrop), Field, FileTree, Geometry, HistoryTable, IconSelector, IconShotFrame/iconShotFrameStyle/
@@ -8,7 +8,7 @@
 // root plus zero page/console errors — no visual/pixel assertions, this is boot-health coverage, not per-component
 // behavior testing (each component's own barrel-level unit tests already cover behavior).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { expect, test, type Page } from "@playwright/test";
 

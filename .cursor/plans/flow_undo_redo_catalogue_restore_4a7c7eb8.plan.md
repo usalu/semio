@@ -43,7 +43,7 @@ The same audit plan also flags an "async eval-bridge/worker path" gap (`set_eval
 
 - Make `begin_change` `pub fn begin_change(&mut self)` (currently private) so the plugin can snapshot single-shot mutations that don't already call it internally (`move_widget`).
 - Split `replace_fixture`'s body into a private helper taking a `reset_history: bool` flag; keep `pub fn replace_fixture(...)` (full reset, used for `setDocument`/initial load) and add `pub fn set_fixture_preserving_history(&mut self, fixture: FlowFixture)` (same effect minus the history wipe) for patch-style mutations.
-- Add `pub fn flow_operator_catalogue_json() -> String`: builds `CatalogueSection`s (already `pub`, see `#region 🔖Catalogue`) grouped by `OperatorInfo.module` from the same `flow_registry()` used by `evaluate_internal` (core/math/text/logic/dictionary/list/brep/draw/bim), mapping each operator to a `CatalogueItem { kind: "neuron", neuronKind: Some(info.id), name: info.name, abbreviation: info.abbreviation, icon: info.icon, summary: info.summary, .. }`.
+- Add `pub fn flow_operator_catalogue_json() -> String`: builds `CatalogueSection`s (already `pub`, see `#region 🔖️Catalogue`) grouped by `OperatorInfo.module` from the same `flow_registry()` used by `evaluate_internal` (core/math/text/logic/dictionary/list/brep/draw/bim), mapping each operator to a `CatalogueItem { kind: "neuron", neuronKind: Some(info.id), name: info.name, abbreviation: info.abbreviation, icon: info.icon, summary: info.summary, .. }`.
 
 ### [flow/plugin/rs/lib.rs](flow/plugin/rs/lib.rs)
 
@@ -58,5 +58,5 @@ The same audit plan also flags an "async eval-bridge/worker path" gap (`set_eval
 ## Verification
 
 - `cargo test -p flow_core -p flow-plugin`.
-- Rebuild the flow plugin WASM bundle (existing `bun ./script.ts wasm` flow used earlier in this session).
-- Re-run the flow entry in `.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts` and its react counterpart in `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts`, confirming: catalogue panel shows module-grouped operator sections (not just Inputs/Outputs/Contract), Ctrl+Z/Ctrl+Shift+Z undoes/redoes add/connect/delete/move/rename/patch actions, and repeated undo across several distinct actions restores each prior state in order.
+- Rebuild the flow plugin WASM bundle (existing `bun ./📜️script.ts wasm` flow used earlier in this session).
+- Re-run the flow entry in `.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts` and its react counterpart in `.repo/🎫️/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts`, confirming: catalogue panel shows module-grouped operator sections (not just Inputs/Outputs/Contract), Ctrl+Z/Ctrl+Shift+Z undoes/redoes add/connect/delete/move/rename/patch actions, and repeated undo across several distinct actions restores each prior state in order.

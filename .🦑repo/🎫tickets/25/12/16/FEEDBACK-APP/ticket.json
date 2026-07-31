@@ -1,7 +1,0 @@
-{
-  "title": "Create Feedback app for bug reports and feature ideas",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Complete Feedback app implementation including German translations, global footer action, documentation, and Playwright tests",
-  "goal": "🎯r2602🎯updateddocs🎯updateddevdocs🎯updatedagentsmd"
-}

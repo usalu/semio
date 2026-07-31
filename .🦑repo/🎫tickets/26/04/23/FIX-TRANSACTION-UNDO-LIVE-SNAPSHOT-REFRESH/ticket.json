@@ -1,9 +1,0 @@
-{
-  "title": "Fix Transaction Undo Live Snapshot Refresh",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Investigate compose/algorithms transaction undo behavior where starting a session, creating a draft, starting a transaction, applying multiple kit changes, and then undoing within the transaction reverts the last kit change internally but refreshing the live snapshot still shows the new value. Fix the source behavior in compose/algorithms and extend existing tests to cover the regression. Validate the fix with focused tests.",
-  "summary": "Traced the stale live snapshot repro from compose/algorithms into the store layers. Added a focused Rust VCS regression proving transaction undo already updates the live snapshot correctly in compose/rs. Fixed the actual algorithms-side issue in SnapshotViewer by cloning loaded snapshot/theKit/materialized/VCS DTOs before storing them in React state so manual refreshes always produce a fresh state reference and rerender after transaction undo. Added embedded Vitest coverage in SnapshotViewer and validated it with a focused jsdom Vitest run.",
-  "goal": "🎯r2603",
-  "sessions": ["⚪163fb88439ae49cd953742aea0f93241"]
-}

@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/stories/styling/ThemeRoundtrip.stories.tsx
-// Specs: Interactive `parseUiTheme` ⇄ `serializeUiTheme` round-trip demo — edit theme JSON in a textarea, see it parsed, resolved into swatches, and re-serialized.
+// #region 🧲️Header
+// 💻️ .storybook/stories/styling/ThemeRoundtrip.stories.tsx
+// Specs: Interactive `parseUiTheme` ⇄️ `serializeUiTheme` round-trip demo — edit theme JSON in a textarea, see it parsed, resolved into swatches, and re-serialized.
 // Summary: `parseUiTheme` resolves every paint once (surfacing unknown token refs immediately per its docstring), so the story's `try/catch` around `JSON.parse` + `parseUiTheme` doubles as a live validator; `serializeUiTheme` re-renders canonical JSON so a dev can confirm the round-trip is lossless (`JSON.parse(serializeUiTheme(parseUiTheme(x))) ≍ x`, per the `theme.ts` vitest suite this mirrors).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useMemo, useState, type ReactElement } from "react";
@@ -11,22 +11,22 @@ import { useMemo, useState, type ReactElement } from "react";
 import { parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, builtinUiThemes, type ThemeAppearanceName, type ThemePaletteGroup, type UiTheme } from "@semio-tech/ui-styling";
 import { galleryCardStyle, galleryPageStyle, SwatchGrid } from "../../styling/index.tsx";
 
-//#region 🔖Fixtures
+//#region 🔖️Fixtures
 const PALETTE_GROUPS: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome"];
 const APPEARANCES: readonly ThemeAppearanceName[] = ["light", "dark"];
 
-/** @emoji 💥 `semioTheme()` with one board paint pointed at a token that doesn't exist in `colors` — demonstrates `parseUiTheme` throwing loudly instead of silently rendering a broken color. */
+/** @emoji 💥️ `semioTheme()` with one board paint pointed at a token that doesn't exist in `colors` — demonstrates `parseUiTheme` throwing loudly instead of silently rendering a broken color. */
 function brokenThemeJson(): string {
   const theme = structuredClone(semioTheme()) as UiTheme;
   const broken: UiTheme = { ...theme, appearances: { ...theme.appearances, light: { ...theme.appearances.light, board: { ...theme.appearances.light.board, labelFill: { token: "not-a-real-token" } } } } };
   return JSON.stringify(broken, null, 2);
 }
-//#endregion 🔖Fixtures
+//#endregion 🔖️Fixtures
 
-//#region 🔖ParseResult
+//#region 🔖️ParseResult
 type ParseResult = { readonly theme: UiTheme; readonly error?: undefined } | { readonly theme?: undefined; readonly error: string };
 
-/** @emoji 🔎 `JSON.parse` + `parseUiTheme` in one guarded step — either yields a validated `UiTheme` or the exact message `parseUiTheme` throws (missing palette group, unknown token ref, wrong field type, …). */
+/** @emoji 🔎️ `JSON.parse` + `parseUiTheme` in one guarded step — either yields a validated `UiTheme` or the exact message `parseUiTheme` throws (missing palette group, unknown token ref, wrong field type, …). */
 function tryParseThemeJson(text: string): ParseResult {
   try {
     return { theme: parseUiTheme(JSON.parse(text)) };
@@ -34,9 +34,9 @@ function tryParseThemeJson(text: string): ParseResult {
     return { error: error instanceof Error ? error.message : String(error) };
   }
 }
-//#endregion 🔖ParseResult
+//#endregion 🔖️ParseResult
 
-//#region 🔖RoundtripHost
+//#region 🔖️RoundtripHost
 function ThemeRoundtripHost({ initialJson }: { readonly initialJson: string }): ReactElement {
   const [text, setText] = useState(initialJson);
   const result = useMemo(() => tryParseThemeJson(text), [text]);
@@ -108,10 +108,10 @@ function ThemeRoundtripHost({ initialJson }: { readonly initialJson: string }): 
     </div>
   );
 }
-//#endregion 🔖RoundtripHost
+//#endregion 🔖️RoundtripHost
 
 const meta = {
-  title: "🎨styling/ThemeRoundtrip",
+  title: "🎨️styling/ThemeRoundtrip",
   component: ThemeRoundtripHost,
   parameters: {
     layout: "fullscreen",
@@ -123,7 +123,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-//#region 🔖Stories
+//#region 🔖️Stories
 export const SemioTheme: Story = {
   args: {
     initialJson: serializeUiTheme(semioTheme()),
@@ -141,4 +141,4 @@ export const BrokenTokenReference: Story = {
     initialJson: brokenThemeJson(),
   },
 };
-//#endregion 🔖Stories
+//#endregion 🔖️Stories

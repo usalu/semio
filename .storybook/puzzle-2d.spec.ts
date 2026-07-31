@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/puzzle-2d.spec.ts
+// #region 🧲️Header
+// 💻️ .storybook/puzzle-2d.spec.ts
 // Specs: End-to-end checks for the framework renderer's puzzle 2d board host inside the aggregated Storybook static build.
 // Summary: Drives the WASM `BoardSession` through real pointer/wheel/keyboard input and asserts against the story's `puzzle2d-board-debug` readout (selection/camera/utility/counts) — GPU pixels are not asserted, only the CPU-side session state the debug readout reflects.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
@@ -26,7 +26,7 @@ async function readPuzzle2dDebug(debug: Locator): Promise<Puzzle2dBoardDebug> {
   return JSON.parse(text) as Puzzle2dBoardDebug;
 }
 
-/** @emoji 📐 Canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across board renderers — used to click a known fixture node by its world position. */
+/** @emoji 📐️ Canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across board renderers — used to click a known fixture node by its world position. */
 function worldToClientPoint(box: Box, camera: Puzzle2dBoardDebug["camera"], world: { readonly x: number; readonly y: number }): { readonly clientX: number; readonly clientY: number } {
   return {
     clientX: box.x + (world.x - camera.x) * camera.zoom + box.width / 2,

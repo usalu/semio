@@ -1,0 +1,11 @@
+{
+  "title": "Strip Compose Coda Playwright Mcp Entries From Agent Configs",
+  "status": "closed",
+  "description": "Compose engine MCP server fails to start because the top-level .mcp.json, .vscode/mcp.json, .codex/config.toml and .kiro/settings/mcp.json only register the repo server on HEAD. Kinan's earlier \"Fix Mcp Tooling For All Agents\" branch added compose/coda/playwright-test entries but never merged into HEAD. Restore the four-server config across all agent config files so Claude Code, VS Code, Codex and Kiro all start the compose engine MCP via `uv --directory compose/engine run main.py --mcp-stdio`. Verify the engine actually responds to initialize and tools/list over stdio.",
+  "summary": "Per dev direction (\"Dont add additional mcp servers such as playwright, compose and coda\"), aligned all agent MCP configs to only register the `repo` server. Removed stale `compose`, `coda`, `playwright-test` entries from .cursor/mcp.json and .windsurf/mcp.json; pruned `mcpServers.playwright-test|compose|coda` and the matching `@compose`/`@coda`/`@playwright-test` allowedTools from .kiro/agents/compose.json. .mcp.json, .vscode/mcp.json, .codex/config.toml, .kiro/settings/mcp.json already contained only `repo`. Confirmed the compose engine still launches fine via `uv --directory compose/engine run main.py --mcp-stdio` and responds to MCP initialize/tools-list (kept for npm `mcp:inspector`), but is no longer registered as a standalone MCP server in any agent config.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1338"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomcp",
+  "sessions": ["⚪️14b33fc829ef48e689739e421350a236"]
+}

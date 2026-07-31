@@ -1,0 +1,11 @@
+{
+  "title": "Fix Paste Target Design And Regenerate All Tests",
+  "status": "closed",
+  "description": "Fix the paste target design to be the second storey (t_f1_b_c1 subtree with 88 pieces) instead of the full NCT (190 pieces). Regenerate diff JSONs, update all language tests (C#, TS, Go, Rust, Python), fix Storybook story to be one story with two diff outputs.",
+  "summary": "ComposeDiagram showOrigin: replaced symmetric crosshair with origin dot + unit rays (u from 0→1 at v=0, v 0→1 as diagramY -1), labels u/v past tips; resolveComposeDiagramUnitAxisTips + vitest. compose/ui/index.tsx only; 232 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1299"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️4d30fa042d5345abbc794ebf43e7227e"]
+}

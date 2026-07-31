@@ -120,11 +120,11 @@ Create `[norm/plugin/rs/](norm/plugin/rs/)` following `[fem/plugin/rs](fem/plugi
   - Windows: inputs (form/table), results (`CheckReport` as block list / table), standard Document/Catalogue/Inspection panels
   - `semio_plugin!` registers all 13 create_* factories
 
-Register workspace member in root `[Cargo.toml](Cargo.toml)`. Add launch entries next to `🧪test📏norm` for program tests / playground variants (same grouping/naming as other plugins).
+Register workspace member in root `[Cargo.toml](Cargo.toml)`. Add launch entries next to `🧪️test📏️norm` for program tests / playground variants (same grouping/naming as other plugins).
 
 ## 4. Ticket and goal
 
-- Goal: `**🎯Norm**` (`[.repo/🎯/NORM/goal.json](.repo/🎯/NORM/goal.json)`).
+- Goal: `**🎯️Norm**` (`[.repo/🎯️/NORM/goal.json](.repo/🎯️/NORM/goal.json)`).
 - On execute: `ticket_open` (or reopen if a matching open ticket exists) titled e.g. "Norm Plugin And Per-Family Apps"; bind this plan id; keep temps under the ticket folder.
 - Do **not** reopen/close the goal.
 

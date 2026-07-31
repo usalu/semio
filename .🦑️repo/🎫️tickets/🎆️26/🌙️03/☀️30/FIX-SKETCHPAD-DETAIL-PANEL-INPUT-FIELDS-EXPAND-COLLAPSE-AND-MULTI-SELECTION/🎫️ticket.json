@@ -1,0 +1,12 @@
+{
+  "title": "Fix Sketchpad Detail Panel Input Fields Expand Collapse and Multi-Selection",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix sketchpad details panel input fields: single-line collapsed with ellipsis by default, expand on click/focus, collapse on blur. Handle multi-selection mixed state, consistent spacing, no overlaps.",
+  "summary": "Updated shared labeled detail fields to render as measured single-line collapsed displays with word-boundary ellipsis, expanding back to the real input/textarea on focus. Tightened sketchpad detail-panel sizing rules so collapsed textareas stay one row and expanded textareas do not overlap adjacent fields. Added regression coverage for the truncation helper and detail-panel description-field layout transitions. Verification: `npm test --workspace elements/ui` passed (9 tests). Targeted sketchpad Playwright Design run collected and executed but failed before the new assertions because the page crashed during existing app initialization while navigating to `http://127.0.0.1:5173/`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1167"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️f21c3d98df1e403ea9537c3538249845", "⚪️3fee2e0ec7d64cf2b7a6a1b0ba2c1538"]
+}

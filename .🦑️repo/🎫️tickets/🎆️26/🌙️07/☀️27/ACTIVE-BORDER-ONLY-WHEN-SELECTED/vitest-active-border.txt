@@ -1,0 +1,196 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+----------------------------x---------------------------------------------------------------------------------------------------------------------------------------------·-·---··-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------·x-----------------------------------------
+
+⎯ Failed Tests 2 ⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > UIIntroduction appearance > introduction step activates on click then returns to normal after a background click
+AssertionError: expected null to be 'true' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html[39m
+  [33mdata-introduction-active[39m=[32m"true"[39m
+[36m>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"ui-veil z-tutorial fixed inset-0 pointer-events-auto"[39m
+        [33mdata-level[39m=[32m"dialog"[39m
+      [36m/>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex min-h-0 min-w-0 flex-col overflow-visible text-foreground pointer-events-auto fixed z-tutorial max-w-sm bg-transparent"[39m
+        [33mdata-level[39m=[32m"dialog"[39m
+        [33mdata-slot[39m=[32m"introduction-info-box"[39m
+        [33mdata-window-silhouette[39m=[32m"true"[39m
+        [33mstyle[39m=[32m"top: 384px; left: 512px; z-index: calc(var(--z-tutorial) + 2);"[39m
+      [36m>[39m
+        [36m<svg[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"pointer-events-none absolute inset-0 z-[40] overflow-visible"[39m
+          [33mdata-kind[39m=[32m"normal"[39m
+          [33mdata-slot[39m=[32m"window-chrome-silhouette-border"[39m
+          [33mdata-window-silhouette-border[39m=[32m"true"[39m
+          [33mheight[39m=[32m"160"[39m
+          [33mviewBox[39m=[32m"0 0 320 160"[39m
+          [33mwidth[39m=[32m"320"[39m
+        [36m>[39m
+          [36m<path[39m
+            [33mclass[39m=[32m"window-silhouette-border window-silhouette-border-normal"[39m
+            [33md[39m=[32m"M1,1 H319 V159 H1 Z"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mstroke[39m=[32m"var(--border-normal-color)"[39m
+            [33mstroke-linejoin[39m=[32m"miter"[39m
+            [33mvector-effect[39m=[32m"non-scaling-stroke"[39m
+          [36m/>[39m
+        [36m</svg>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent"[39m
+          [33mdata-dim[39m=[32m"true"[39m
+          [33mdata-slot[39m=[32m"window-chrome-cap"[39m
+          [33mdata-ui-reveal-region[39m=[32m"window-cap"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex min-h-medium min-w-0 shrink items-stretch relative z-[2] border-0 ui-glass"[39m
+            [33mdata-dock[39m=[32m"top"[39m
+            [33mdata-slot[39m=[32m"window-chrome-chip-cap"[39m
+            [33mdata-window-silhouette-chip[39m=[32m"true"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"group flex max-w-[12rem] cursor-pointer items-center px-single text-xs text-element select-none transition-colors hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill hover:not-data-[handle-hovered=true]:text-emphasized relative z-30 box-border min-h-medium shrink-0 border bg-transparent !border-normal"[39m
+              [33mdata-hover-scope[39m=[32m"true"[39m
+              [33mdata-slot[39m=[32m"introduction-info-box-chip"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"min-w-0 flex-1 truncate text-sm font-medium"[39m
+              [36m>[39m
+                [0mWelcome[0m
+              [36m</span>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex shrink-0 items-center justify-center"[39m
+                [33mdata-slot[39m=[32m"introduction-info-box-drag"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"inline-flex shrink-0 cursor-grab touch-none items-center justify-center transition-colors hover:text-emphasized active:cursor-grabbing text-muted-foreground"[39m
+                  [33mdata-slot[39m=[32m"drag-handle"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"inline-flex shrink-0 items-center justify-center [&>svg]:size-full"[39m
+                    [33mdata-icon[39m=[32m"grip-vertical"[39m
+                    [33mdata-icon-kind[39m=[32m"catalog"[39m
+                    [33mstyle[39m=[32m"width: calc(3.75 * var(--ui-spacing)); height: calc(3.75 * var(--ui-spacing));"[39m
+                  [36m>[39m
+                    [36m<svg[39m
+                      [33mfill[39m=[32m"none"[39m
+                      [33mstroke[39m=[32m"currentColor"[39m
+                      [33mstroke-linecap[39m=[32m"round"[39m
+                      [33mstroke-linejoin[39m=[32m"round"[39m
+                      [33mstroke-width[39m=[32m"2"[39m
+                      [33mviewBox[39m=[32m"0 0 24 24"[39m
+                      [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                    [36m>[39m
+                      [0m
+  [0m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"9"[39m
+                        [33mcy[39m=[32m"12"[39m
+                        [33mr[39m=[32m"1"[39m
+                      [36m/>[39m
+                      [0m
+  [0m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"9"[39m
+                        [33mcy[39m=[32m"5"[39m
+                        [33mr[39m=[32m"1"[39m
+                      [36m/>[39m
+                      [0m
+  [0m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"9"[39m
+                        [33mcy[39m=[32m"19"[39m
+                        [33mr[39m=[32m"1"[39m
+                      [36m/>[39m
+                      [0m
+  [0m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"15"[39m
+                        [33mcy[39m=[32m"12"[39m
+                        [33mr[39m=[32m"1"[39m
+                      [36m/>[39m
+                      [0m
+  [0m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"15"[39m
+                        [33mcy[39m=[32m"5"[39m
+                        [33mr[39m=[32m"1"[39m
+                      [36m/>[39m
+                      [0m
+  [0m
+                      [36m<circle[39m
+                        [33mcx[39m=[32m"15"[39m
+                        [33mcy[39m=[32m"19"[39m
+                        [33mr[39m=[32m"1"[39m
+                      [36m/>[39m
+                      [0m
+[0m
+                    [36m</svg>[39m
+                  [36m</span>[39m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"pointer-events-none relative min-h-medium min-w-0 flex-1 border-0 bg-transparent"[39m
+            [33mdata-slot[39m=[32m"window-chrome-gap"[39m
+            [33mdata-window-silhouette-gap[39m=[32m"true"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"relative z-[2] flex shrink-0 items-stretch border-0 text-e...
+
+- Expected:
+"true"
+
++ Received:
+null
+
+ ❯️ index.tsx:28948:53
+    28946|         fireEvent.pointerDown(stack.querySelector('[data-slot="window-…
+    28947|         await waitFor(() => {
+    28948|           expect(stack.getAttribute("data-active")).toBe("true");
+       |                                                     ^
+    28949|           expect(border()?.getAttribute("data-kind")).toBe("active");
+    28950|         });
+ ❯️ runWithExpensiveErrorDiagnosticsDisabled ../../../node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯️ checkCallback ../../../node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯️ Timeout.checkRealTimersCallback ../../../node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯[1/2]⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > control chrome > activating a surface clears its introduced stamps so the active stroke can win
+AssertionError: expected 'normal' to be 'introduced' // Object.is equality
+
+Expected: "introduced"
+Received: "normal"
+
+ ❯️ index.tsx:36929:107
+    36927|       scroll.setAttribute("data-introduced", "true");
+    36928|       expect(resolveWindowSilhouetteBorderKind(stack.querySelector('[d…
+    36929|       expect(stack.querySelector('[data-slot="mode-dock-silhouette-bor…
+       |                                                                                                           ^
+    36930|       fireEvent.pointerDown(stack.querySelector('[data-slot="mode-dock…
+    36931|       await waitFor(() => {
+
+⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed | 465 skipped (472)
+   Start at  18:58:55
+   Duration  10.74s (transform 3.36s, setup 508ms, import 7.54s, tests 1.37s, environment 809ms)
+

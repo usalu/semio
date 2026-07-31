@@ -1,0 +1,9 @@
+{
+  "title": "Compose Design Split Layout Always For Mcp",
+  "emoji": "✂️",
+  "status": "closed",
+  "description": "ComposeDesign collapsed to single-column diagram when hasPlanes false even on correct surface. Added splitLayout auto|always, pure composeDesignGridTemplateColumns + composeDesignShowSceneColumn, McpDesignViewer passes always. Tests assert two columns never 1fr when always.",
+  "summary": "Root cause of full-width diagram in design-viewer: ComposeDesign used hasPlanes to hide the scene column and grid 1fr, so users saw diagram-only even when McpDesignViewer mounted ComposeDesign. Added ComposeDesignSplitLayout (auto|always), pure composeDesignGridTemplateColumns + composeDesignShowSceneColumn (unit-tested: always+no planes =\u003e two columns not 1fr), data-compose-design-columns on root. McpDesignViewer passes splitLayout=always for design surface. vitest 179/179 passed.",
+  "goal": "🎯️designapp",
+  "sessions": ["⚪️226b6f6d96f246d6a9704b59dedbea37"]
+}

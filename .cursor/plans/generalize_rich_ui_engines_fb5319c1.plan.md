@@ -119,8 +119,8 @@ Delete now-dead app JS made obsolete by Rust-side evaluation/LSP: `flow/worker.t
 ## Phase 7 — Verify (no-regression gate)
 
 - `cargo test` for `framework_graph`, `framework_editor`, all touched plugins; `cargo check` clean for the wgpu renderer.
-- React renderer vitest suite; `bun install` clean; `bun ./script.ts build` for `framework/product/os/dev`.
-- Re-run the e2e playground suite (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) for all playgrounds on both renderers; capture screenshots into the ticket folder and compare against the existing baseline set; runtime-confirm interactions (hover, selection, marquee, spotlight, context menu, editing) with `[DEBUG]`-prefixed logs, then remove them.
+- React renderer vitest suite; `bun install` clean; `bun ./📜️script.ts build` for `framework/product/os/dev`.
+- Re-run the e2e playground suite (`.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) for all playgrounds on both renderers; capture screenshots into the ticket folder and compare against the existing baseline set; runtime-confirm interactions (hover, selection, marquee, spotlight, context menu, editing) with `[DEBUG]`-prefixed logs, then remove them.
 - Close the ticket with summary and file list.
 
 ## Key risks to preserve explicitly

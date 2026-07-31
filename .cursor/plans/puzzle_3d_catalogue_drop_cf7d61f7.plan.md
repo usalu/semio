@@ -54,7 +54,7 @@ flowchart LR
 
 ## Ticket / goal
 
-- Goal: **Running Sketchpad** (`🎯r2602🎯runningsketchpad`)
+- Goal: **Running Sketchpad** (`🎯️r2602🎯️runningsketchpad`)
 - Open a **new** ticket (selection overhaul ticket is a different task)
 - Scope: **Puzzle 3D only** (5D uses `addPartKind` / `partKind` — out of scope unless asked)
 - Temporary notes/logs only under the ticket folder
@@ -115,7 +115,7 @@ Extend existing files only:
 - `[framework/renderer/react/components/world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx)` — drop bridge, preview ghost, raycast/snap
 - `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)` — enrich `drag_data`, tests
 - `[framework/renderer/react/index.test.ts](framework/renderer/react/index.test.ts)` — host unit tests
-- Ticket folder under `.repo/🎫/…` for notes
+- Ticket folder under `.repo/🎫️/…` for notes
 
 ## Explicit non-goals
 

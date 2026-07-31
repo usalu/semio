@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 2d Deselect Performance",
+  "emoji": "⚡️",
+  "status": "closed",
+  "description": "Puzzle 3D Selection Performance Refactor",
+  "summary": "Made puzzle 2d background deselect fast by (1) Tree per-row selection via TreeSelectionStore + useSyncExternalStore so document rows no longer all re-render on selection change, (2) WASM world_content_cache uses neutral geometry with selection/preselect/hover painted as O(selected) overlay without bumping content_scene_generation on selection setters, (3) stable Puzzle2dPlayCanvasSelectionContext so triptych pane canvases skip React re-render on selection-only updates. Tests: ui/react (91), puzzle/2d/rs cargo (88), puzzle/2d/react (112).",
+  "goal": "🎯️compose",
+  "sessions": ["⚪️e62a8f60381942afa82985be8e252a49", "⚪️2ea609acdab8448d872b5f19bfc4732c", "⚪️f279206acff741df930e7c392f49eb0c", "⚪️55be60c1530d499a82349f31f01af2e9"]
+}

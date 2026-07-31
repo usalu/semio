@@ -642,7 +642,7 @@ type AlternativeEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` minimal variant).
+@emoji 🌐️ SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` minimal variant).
 """
 interface Artifact {
 	id: ID!
@@ -795,7 +795,7 @@ type AuthorModificationsEdge {
 }
 
 """
-@emoji 🧷 Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
+@emoji 🧷️ Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
 """
 interface Backbone {
 	id: ID!
@@ -807,7 +807,7 @@ interface Backbone {
 }
 
 """
-@emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
+@emoji 🌐️ SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
 """
 interface BackboneCommand {
 	detach: Response!
@@ -821,7 +821,7 @@ type BackboneCommandConnection {
 }
 
 """
-@emoji 🪢 SDL `BackboneCommandEdge` / `BackboneCommandConnection`.
+@emoji 🪢️ SDL `BackboneCommandEdge` / `BackboneCommandConnection`.
 """
 type BackboneCommandEdge {
 	cursor: String!
@@ -835,7 +835,7 @@ type BackboneConnection {
 }
 
 """
-@emoji 🪢 Golden `BackboneEdge` / `BackboneConnection` relay shells.
+@emoji 🪢️ Golden `BackboneEdge` / `BackboneConnection` relay shells.
 """
 type BackboneEdge {
 	cursor: String!
@@ -843,7 +843,7 @@ type BackboneEdge {
 }
 
 """
-@emoji 🛜 Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
+@emoji 🛜️ Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
 """
 enum BackboneStatus {
 	OFFLINE
@@ -942,11 +942,11 @@ type Change implements StrongEntity {
 	description: String!
 	origin: String!
 	"""
-	@emoji 🔗 Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
+	@emoji 🔗️ Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
 	"""
 	forwardOperationRecordIds: [ID!]!
 	"""
-	@emoji 🔗 Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
+	@emoji 🔗️ Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
 	"""
 	backwardOperationRecordIds: [ID!]!
 }
@@ -1067,19 +1067,19 @@ type Checkpoint implements Entity & StrongEntity {
 	timestamp: Timestamp
 	authors: AuthorConnection!
 	"""
-	@emoji 🔗 SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
+	@emoji 🔗️ SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
 	"""
 	parent: Checkpoint
 	"""
-	@emoji 🔗 SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
+	@emoji 🔗️ SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
 	"""
 	ancestors: [Checkpoint!]!
 	"""
-	@emoji 🌱 SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
+	@emoji 🌱️ SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
 	"""
 	initial: Kit
 	"""
-	@emoji 📦 SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
+	@emoji 📦️ SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
 	"""
 	kit: Kit
 	changes: ChangeConnection!
@@ -1257,19 +1257,19 @@ type Connection implements Entity & FileSystemNode & StrongEntity {
 	"""
 	hasSides: [Side!]!
 	"""
-	@emoji 🪢 Pieces referenced by the parent and child sides.
+	@emoji 🪢️ Pieces referenced by the parent and child sides.
 	"""
 	referencesPieces: PieceConnection!
 	"""
-	@emoji ⚓ Connectors referenced by the parent and child sides.
+	@emoji ⚓️ Connectors referenced by the parent and child sides.
 	"""
 	referencesConnectors: ConnectorConnection!
 	"""
-	@emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
+	@emoji 🪢️ Pieces referenced transitively through nested design blueprints on both sides.
 	"""
 	referencesPiecesTransitive: PieceConnection!
 	"""
-	@emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
+	@emoji ⚓️ Connectors referenced transitively on kinds reachable from both sides.
 	"""
 	referencesConnectorsTransitive: ConnectorConnection!
 }
@@ -1422,7 +1422,7 @@ type ConnectorOperationEdge {
 }
 
 """
-@emoji 📍 WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
+@emoji 📍️ WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
 """
 type Coordinate implements Entity & Node & WeakEntity {
 	id: ID!
@@ -2177,29 +2177,29 @@ type Design implements Entity & Node & FileSystemNode & StrongEntity {
 	createdAt: Timestamp
 	updatedAt: Timestamp
 	"""
-	@emoji 🪢 Pieces owned directly by this design.
+	@emoji 🪢️ Pieces owned directly by this design.
 	"""
 	hasPieces: PieceConnection!
 	piece(id: ID!): Piece
 	"""
-	@emoji 🔗 Connections owned directly by this design.
+	@emoji 🔗️ Connections owned directly by this design.
 	"""
 	hasConnections: ConnectionConnection!
 	connection(id: ID!): Connection
 	"""
-	@emoji 🎨 Layers owned directly by this design.
+	@emoji 🎨️ Layers owned directly by this design.
 	"""
 	hasLayers: LayerConnection!
 	"""
-	@emoji 👥 Groups owned directly by this design.
+	@emoji 👥️ Groups owned directly by this design.
 	"""
 	hasGroups: GroupConnection!
 	"""
-	@emoji 🪢 Pieces in this design and nested design blueprints (transitive).
+	@emoji 🪢️ Pieces in this design and nested design blueprints (transitive).
 	"""
 	hasPiecesTransitive: PieceConnection!
 	"""
-	@emoji 🔗 Connections in this design and nested design blueprints (transitive).
+	@emoji 🔗️ Connections in this design and nested design blueprints (transitive).
 	"""
 	hasConnectionsTransitive: ConnectionConnection!
 	authors: AuthorConnection!
@@ -2209,47 +2209,47 @@ type Design implements Entity & Node & FileSystemNode & StrongEntity {
 	stats: StatConnection!
 	qualitySum(qualityId: ID!): Float!
 	"""
-	@emoji 🧰 Kinds referenced by this design's pieces (one hop over blueprints).
+	@emoji 🧰️ Kinds referenced by this design's pieces (one hop over blueprints).
 	"""
 	referencesTypes: TypeConnection!
 	"""
-	@emoji 🏘 Designs referenced by this design's pieces (one hop over blueprints).
+	@emoji 🏘️ Designs referenced by this design's pieces (one hop over blueprints).
 	"""
 	referencesDesigns: DesignConnection!
 	"""
-	@emoji 📄 Files referenced via kind blueprints on this design's pieces (one hop).
+	@emoji 📄️ Files referenced via kind blueprints on this design's pieces (one hop).
 	"""
 	referencesFiles: FileConnection!
 	"""
-	@emoji 💾 Representations on kind blueprints referenced by this design's pieces (one hop).
+	@emoji 💾️ Representations on kind blueprints referenced by this design's pieces (one hop).
 	"""
 	referencesRepresentations: RepresentationConnection!
 	"""
-	@emoji 💾 Representations on kinds referenced transitively through nested design blueprints.
+	@emoji 💾️ Representations on kinds referenced transitively through nested design blueprints.
 	"""
 	referencesRepresentationsTransitive: RepresentationConnection!
 	"""
-	@emoji 🧰 Kinds referenced transitively through nested design blueprints.
+	@emoji 🧰️ Kinds referenced transitively through nested design blueprints.
 	"""
 	referencesTypesTransitive: TypeConnection!
 	"""
-	@emoji 🏘 Designs referenced transitively through nested design blueprints.
+	@emoji 🏘️ Designs referenced transitively through nested design blueprints.
 	"""
 	referencesDesignsTransitive: DesignConnection!
 	"""
-	@emoji 📄 Files referenced transitively through nested design and kind blueprints.
+	@emoji 📄️ Files referenced transitively through nested design and kind blueprints.
 	"""
 	referencesFilesTransitive: FileConnection!
 	"""
-	@emoji 🪢 Pieces in the owner kit whose blueprint is this design.
+	@emoji 🪢️ Pieces in the owner kit whose blueprint is this design.
 	"""
 	referencedBy: PieceConnection!
 	"""
-	@emoji 🏘 Designs with a direct piece blueprinting this design.
+	@emoji 🏘️ Designs with a direct piece blueprinting this design.
 	"""
 	referencedByDesigns: DesignConnection!
 	"""
-	@emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+	@emoji 🏘️ Designs that reference this design transitively through nested design blueprints.
 	"""
 	referencedByDesignsTransitive: DesignConnection!
 }
@@ -2326,7 +2326,7 @@ type DesignOperationEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Diff` — hash-backed diff projection (`EmptyDiff` shell plus future `VectorDiff`, …).
+@emoji 🌐️ SDL `interface Diff` — hash-backed diff projection (`EmptyDiff` shell plus future `VectorDiff`, …).
 """
 interface Diff {
 	id: ID!
@@ -2342,7 +2342,7 @@ type DiffConnection {
 }
 
 """
-@emoji 🪢 SDL `DiffEdge` / `DiffConnection` — relay over [`GqlDiffInterface`].
+@emoji 🪢️ SDL `DiffEdge` / `DiffConnection` — relay over [`GqlDiffInterface`].
 """
 type DiffEdge {
 	cursor: String!
@@ -2350,7 +2350,7 @@ type DiffEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` minimal variant).
+@emoji 🌐️ SDL `interface Document` — preview-capable artifact (`EmptyDocument` minimal variant).
 """
 interface Document {
 	id: ID!
@@ -2467,7 +2467,7 @@ type EditEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
+@emoji 🌐️ SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
 """
 interface Entity {
 	id: ID!
@@ -2477,7 +2477,7 @@ interface Entity {
 }
 
 """
-@emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
+@emoji 🌐️ SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
 """
 interface EntityConnection {
 	pageInfo: PageInfo!
@@ -2499,7 +2499,7 @@ type Error {
 }
 
 """
-@emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
+@emoji 🌐️ SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
 """
 interface Event {
 	id: ID!
@@ -2511,7 +2511,7 @@ interface Event {
 }
 
 """
-@emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
+@emoji 🧷️ Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
 """
 type Family implements Entity & FileSystemNode {
 	id: ID!
@@ -2598,23 +2598,23 @@ type File implements Entity & FileSystemNode {
 	quality(id: ID!): Quality
 	attribute(id: ID!): Attribute
 	"""
-	@emoji 💾 Representations that reference this file.
+	@emoji 💾️ Representations that reference this file.
 	"""
 	hasRepresentations: RepresentationConnection!
 	"""
-	@emoji 🧰 Kinds that own a representation referencing this file.
+	@emoji 🧰️ Kinds that own a representation referencing this file.
 	"""
 	referencesTypes: TypeConnection!
 	"""
-	@emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+	@emoji 🏘️ Designs with a direct piece blueprinting a kind that references this file.
 	"""
 	referencesDesigns: DesignConnection!
 	"""
-	@emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
+	@emoji 🧰️ Kinds that reference this file (kinds do not nest; same as direct).
 	"""
 	referencesTypesTransitive: TypeConnection!
 	"""
-	@emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+	@emoji 🏘️ Designs that reference this file transitively through kinds and nested designs.
 	"""
 	referencesDesignsTransitive: DesignConnection!
 }
@@ -2712,7 +2712,7 @@ type FileModificationsEdge {
 }
 
 """
-@emoji 📁 SDL `interface FileSystemNode` — constrained kit virtual file system projection.
+@emoji 📁️ SDL `interface FileSystemNode` — constrained kit virtual file system projection.
 """
 interface FileSystemNode {
 	id: ID!
@@ -2741,7 +2741,7 @@ type FileSystemNodeEdge {
 }
 
 """
-@emoji 📁 SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
+@emoji 📁️ SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
 """
 enum FileSystemNodeKind {
 	KIT
@@ -2828,12 +2828,12 @@ type Folder implements Entity & FileSystemNode {
 	families: FamilyConnection!
 	type(id: ID!): Type
 	"""
-	@emoji 🧰 Kinds in this folder.
+	@emoji 🧰️ Kinds in this folder.
 	"""
 	hasTypes: TypeConnection!
 	design(id: ID!): Design
 	"""
-	@emoji 🏘 Designs in this folder.
+	@emoji 🏘️ Designs in this folder.
 	"""
 	hasDesigns: DesignConnection!
 }
@@ -2996,7 +2996,7 @@ type IdResult implements Result {
 }
 
 """
-@emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
+@emoji 🌐️ SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
 """
 interface Input {
 	id: ID!
@@ -3012,7 +3012,7 @@ type InputConnection {
 }
 
 """
-@emoji 🪢 SDL `InputEdge` / `InputConnection` — relay over [`PubInputInterface`].
+@emoji 🪢️ SDL `InputEdge` / `InputConnection` — relay over [`PubInputInterface`].
 """
 type InputEdge {
 	cursor: String!
@@ -3039,24 +3039,24 @@ type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	version: String
 	design(id: ID!): Design
 	"""
-	@emoji 🏘 Designs contained in this kit.
+	@emoji 🏘️ Designs contained in this kit.
 	"""
 	hasDesigns: DesignConnection!
 	type(id: ID!): Type
 	"""
-	@emoji 🧰 Kinds contained in this kit.
+	@emoji 🧰️ Kinds contained in this kit.
 	"""
 	hasTypes: TypeConnection!
 	"""
-	@emoji 📄 Kit-root VFS files only (excludes folder-placed and representation backing blobs).
+	@emoji 📄️ Kit-root VFS files only (excludes folder-placed and representation backing blobs).
 	"""
 	hasFiles: FileConnection!
 	"""
-	@emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
+	@emoji 📁️ Kit-root folders only (no {@code parent_folder_id}).
 	"""
 	hasFolders: FolderConnection!
 	"""
-	@emoji 👪 Kit-root families only (not placed in a folder).
+	@emoji 👪️ Kit-root families only (not placed in a folder).
 	"""
 	hasFamilies: FamilyConnection!
 	"""
@@ -3064,19 +3064,19 @@ type Kit implements Entity & Node & FileSystemNode & StrongEntity {
 	"""
 	hasTypologies: TypologyConnection!
 	"""
-	@emoji 🪢 All pieces across designs, expanding nested design blueprints.
+	@emoji 🪢️ All pieces across designs, expanding nested design blueprints.
 	"""
 	hasPiecesTransitive: PieceConnection!
 	"""
-	@emoji 🔗 All connections across designs, expanding nested design blueprints.
+	@emoji 🔗️ All connections across designs, expanding nested design blueprints.
 	"""
 	hasConnectionsTransitive: ConnectionConnection!
 	"""
-	@emoji 🧰 All kinds referenced across designs, expanding nested design blueprints.
+	@emoji 🧰️ All kinds referenced across designs, expanding nested design blueprints.
 	"""
 	hasTypesTransitive: TypeConnection!
 	"""
-	@emoji 🏘 All designs referenced across designs, expanding nested design blueprints.
+	@emoji 🏘️ All designs referenced across designs, expanding nested design blueprints.
 	"""
 	hasDesignsTransitive: DesignConnection!
 	typology(id: ID!): Typology
@@ -3270,7 +3270,7 @@ type LocalProviderCommandEdge {
 }
 
 """
-@emoji 🌍 WeakEntity shell for [`Location`] (SDL `Location`).
+@emoji 🌍️ WeakEntity shell for [`Location`] (SDL `Location`).
 """
 type Location implements Entity & Node & WeakEntity {
 	id: ID!
@@ -3315,7 +3315,7 @@ type LocationEdge implements EntityEdge {
 }
 
 """
-@emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
+@emoji 🌍️ Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
 """
 input LocationInput {
 	longitude: Float!
@@ -3366,7 +3366,7 @@ type LocationModificationsEdge {
 }
 
 """
-@emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
+@emoji 🌐️ SDL `interface Modification` — `before` / `diff` / `after` triple shell.
 """
 interface Modification {
 	id: ID!
@@ -3385,7 +3385,7 @@ type ModificationConnection {
 }
 
 """
-@emoji 🪢 SDL `ModificationEdge` / `ModificationConnection` — relay over [`GqlModificationInterface`].
+@emoji 🪢️ SDL `ModificationEdge` / `ModificationConnection` — relay over [`GqlModificationInterface`].
 """
 type ModificationEdge {
 	cursor: String!
@@ -3602,7 +3602,7 @@ type OffsetModificationsEdge {
 }
 
 """
-🪄 GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
+🪄️ GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
 """
 interface Operation implements StrongEntity {
 	id: ID!
@@ -3639,7 +3639,7 @@ type PageInfoConnection implements EntityConnection {
 }
 
 """
-@emoji 🪢 Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
+@emoji 🪢️ Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
 """
 type PageInfoEdge {
 	cursor: String!
@@ -3653,35 +3653,35 @@ type Piece implements Entity & Node & FileSystemNode & StrongEntity {
 	owns: EntityConnection
 	blueprint: Entity!
 	"""
-	@emoji 🧰 Kind blueprint when this piece instances a kind.
+	@emoji 🧰️ Kind blueprint when this piece instances a kind.
 	"""
 	isType: Type
 	"""
-	@emoji 🏘 Design blueprint when this piece instances a nested design.
+	@emoji 🏘️ Design blueprint when this piece instances a nested design.
 	"""
 	isDesign: Design
 	"""
-	@emoji 🧰 Kinds reachable transitively through nested design blueprints on this piece.
+	@emoji 🧰️ Kinds reachable transitively through nested design blueprints on this piece.
 	"""
 	isTypesTransitive: TypeConnection!
 	"""
-	@emoji 🏘 Designs reachable transitively through nested design blueprints on this piece.
+	@emoji 🏘️ Designs reachable transitively through nested design blueprints on this piece.
 	"""
 	isDesignsTransitive: DesignConnection!
 	"""
-	@emoji 🪢 Direct child pieces in the piece tree.
+	@emoji 🪢️ Direct child pieces in the piece tree.
 	"""
 	hasPieces: PieceConnection!
 	"""
-	@emoji 🔗 Direct child connections in the piece tree.
+	@emoji 🔗️ Direct child connections in the piece tree.
 	"""
 	hasConnections: ConnectionConnection!
 	"""
-	@emoji 🪢 All descendant pieces in the piece tree.
+	@emoji 🪢️ All descendant pieces in the piece tree.
 	"""
 	hasPiecesTransitive: PieceConnection!
 	"""
-	@emoji 🔗 All descendant connections in the piece tree.
+	@emoji 🔗️ All descendant connections in the piece tree.
 	"""
 	hasConnectionsTransitive: ConnectionConnection!
 	name: String
@@ -4214,7 +4214,7 @@ type Prop {
 	unit: String
 	hash: String!
 	"""
-	@emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
+	@emoji 🔎️ SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
 	"""
 	attribute(id: ID!): Attribute
 }
@@ -4302,7 +4302,7 @@ type ProviderCommandConnection {
 }
 
 """
-@emoji 🪢 SDL `ProviderCommandEdge` / `ProviderCommandConnection`.
+@emoji 🪢️ SDL `ProviderCommandEdge` / `ProviderCommandConnection`.
 """
 type ProviderCommandEdge {
 	cursor: String!
@@ -4316,7 +4316,7 @@ type ProviderConnection {
 }
 
 """
-@emoji 🪢 SDL `ProviderEdge` / `ProviderConnection`.
+@emoji 🪢️ SDL `ProviderEdge` / `ProviderConnection`.
 """
 type ProviderEdge {
 	cursor: String!
@@ -4412,19 +4412,19 @@ type QualityOperationEdge {
 
 type Query {
 	"""
-	@emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
+	@emoji 🔎️ Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
 	"""
 	node(id: ID!): Node
 	"""
-	@emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
+	@emoji 🔎️ Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
 	"""
 	entity(hash: ID!): Entity
 	"""
-	@emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
+	@emoji 🧭️ First active [`crate::vcs::Session`] on this runtime.
 	"""
 	session: Session!
 	"""
-	@emoji 🏪 Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
+	@emoji 🏪️ Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
 	"""
 	store: Store!
 }
@@ -4975,23 +4975,23 @@ type Representation implements Entity & FileSystemNode & StrongEntity {
 	quality(id: ID!): Quality
 	attribute(id: ID!): Attribute
 	"""
-	@emoji 🪢 Pieces whose blueprint is this representation's owner kind.
+	@emoji 🪢️ Pieces whose blueprint is this representation's owner kind.
 	"""
 	referencedBy: PieceConnection!
 	"""
-	@emoji 🧰 Owner kind of this representation.
+	@emoji 🧰️ Owner kind of this representation.
 	"""
 	hasTypes: TypeConnection!
 	"""
-	@emoji 📄 File linked from this representation.
+	@emoji 📄️ File linked from this representation.
 	"""
 	referencesFiles: FileConnection!
 	"""
-	@emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+	@emoji 🏘️ Designs with a direct piece blueprinting this representation's owner kind.
 	"""
 	referencedByDesigns: DesignConnection!
 	"""
-	@emoji 🏘 Designs that reference this representation's owner kind transitively.
+	@emoji 🏘️ Designs that reference this representation's owner kind transitively.
 	"""
 	referencedByDesignsTransitive: DesignConnection!
 }
@@ -5053,7 +5053,7 @@ type RepresentationModificationsEdge {
 }
 
 """
-@emoji 📬 GraphQL `interface Response` — mutation return surface (`CommandResponse` today; operations later).
+@emoji 📬️ GraphQL `interface Response` — mutation return surface (`CommandResponse` today; operations later).
 """
 interface Response {
 	id: ID!
@@ -5066,7 +5066,7 @@ interface Response {
 }
 
 """
-@emoji 📦 GraphQL `interface Result` — success payloads for `Response.result`.
+@emoji 📦️ GraphQL `interface Result` — success payloads for `Response.result`.
 """
 interface Result {
 	id: ID!
@@ -5076,7 +5076,7 @@ interface Result {
 }
 
 """
-@emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
+@emoji 🌐️ SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
 """
 interface RichStrongEntity {
 	id: ID!
@@ -5097,7 +5097,7 @@ type Session implements Entity & Node & StrongEntity {
 	owner: Entity
 	owns: EntityConnection
 	"""
-	@emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
+	@emoji 🌐️ Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
 	"""
 	alternatives: AlternativeConnection!
 	alternative(id: ID!): Alternative
@@ -5143,27 +5143,27 @@ type Side implements StrongEntity {
 	owner: Entity
 	owns: EntityConnection
 	"""
-	@emoji 🪢 Piece referenced by this connection end.
+	@emoji 🪢️ Piece referenced by this connection end.
 	"""
 	referencesPiece: Piece!
 	"""
-	@emoji 🔘 Port referenced by this connection end.
+	@emoji 🔘️ Port referenced by this connection end.
 	"""
 	referencesPort: Port
 	"""
-	@emoji 🪢 Nested design piece referenced by this connection end.
+	@emoji 🪢️ Nested design piece referenced by this connection end.
 	"""
 	referencesDesignPiece: Piece
 	"""
-	@emoji ⚓ Connector referenced by this connection end.
+	@emoji ⚓️ Connector referenced by this connection end.
 	"""
 	referencesConnector: Connector
 	"""
-	@emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
+	@emoji 🧰️ Kinds reachable over the referenced piece, expanding nested design blueprints.
 	"""
 	referencesTypesTransitive: TypeConnection!
 	"""
-	@emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive).
+	@emoji ⚓️ Connectors on kinds reachable over the referenced piece (transitive).
 	"""
 	referencesConnectorsTransitive: ConnectorConnection!
 }
@@ -5232,7 +5232,7 @@ type Stat {
 	description: String
 	hash: String!
 	"""
-	@emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
+	@emoji 🔎️ SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
 	"""
 	attribute(id: ID!): Attribute
 }
@@ -5295,11 +5295,11 @@ type StatModificationsEdge {
 
 type Store {
 	"""
-	@emoji 🌐 Writable in-progress graph head.
+	@emoji 🌐️ Writable in-progress graph head.
 	"""
 	wip: Graph!
 	"""
-	@emoji 🧾 Authoritative graph head when available.
+	@emoji 🧾️ Authoritative graph head when available.
 	"""
 	authoritative: Graph
 	"""
@@ -5339,7 +5339,7 @@ type StoreEdge {
 }
 
 """
-@emoji 🌐 SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
+@emoji 🌐️ SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
 """
 interface StrongEntity {
 	id: ID!
@@ -5350,11 +5350,11 @@ interface StrongEntity {
 
 type Subscription {
 	"""
-	@emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
+	@emoji 📡️ Golden `Subscription.session` — live mirror of [`Query::session`].
 	"""
 	session: Session!
 	"""
-	@emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
+	@emoji 📡️ Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
 	"""
 	operation: Operation!
 }
@@ -5481,35 +5481,35 @@ type Type implements Entity & FileSystemNode & StrongEntity {
 	created: Timestamp
 	updated: Timestamp
 	"""
-	@emoji ⚓ Connectors owned directly by this kind.
+	@emoji ⚓️ Connectors owned directly by this kind.
 	"""
 	hasConnectors: ConnectorConnection!
 	"""
-	@emoji 🔘 Ports owned directly by this kind.
+	@emoji 🔘️ Ports owned directly by this kind.
 	"""
 	hasPorts: PortConnection!
 	port(id: ID!): Port
 	connector(id: ID!): Connector
 	"""
-	@emoji 💾 Representations owned directly by this kind.
+	@emoji 💾️ Representations owned directly by this kind.
 	"""
 	hasRepresentations: RepresentationConnection!
 	representation(id: ID!): Representation
 	bestRepresentation(tagIds: [ID!]!): Representation
 	"""
-	@emoji 📄 Files referenced indirectly via representations on this kind.
+	@emoji 📄️ Files referenced indirectly via representations on this kind.
 	"""
 	referencesFiles: FileConnection!
 	"""
-	@emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+	@emoji 🪢️ Pieces in the owner kit whose blueprint is this kind.
 	"""
 	referencedBy: PieceConnection!
 	"""
-	@emoji 🏘 Designs with a direct piece blueprinting this kind.
+	@emoji 🏘️ Designs with a direct piece blueprinting this kind.
 	"""
 	referencedByDesigns: DesignConnection!
 	"""
-	@emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+	@emoji 🏘️ Designs that reference this kind transitively through nested design blueprints.
 	"""
 	referencedByDesignsTransitive: DesignConnection!
 	authors: AuthorConnection!
@@ -5609,11 +5609,11 @@ type Typology implements Entity & FileSystemNode {
 	icon: String
 	folderId: ID
 	"""
-	@emoji 🧰 Kinds owned by this typology.
+	@emoji 🧰️ Kinds owned by this typology.
 	"""
 	hasTypes: TypeConnection!
 	"""
-	@emoji 🏘 Designs owned by this typology.
+	@emoji 🏘️ Designs owned by this typology.
 	"""
 	hasDesigns: DesignConnection!
 }
@@ -6167,7 +6167,7 @@ enum VersionKind {
 }
 
 """
-@emoji 🌐 SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
+@emoji 🌐️ SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
 """
 interface WeakEntity {
 	id: ID!

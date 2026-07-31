@@ -3,7 +3,7 @@ name: Framework Core Abstraction
 overview: Extract the shared, render-independent primitives and runtime shell duplicated between the platform and playground product cores into a new @semio-tech/framework-core package, have both products specialize it, and fix the in-progress framework/product restructure wiring (workspaces, symlinks, stale paths) so all three cores install, typecheck and test green.
 todos:
  - id: ticket
-   content: Open ticket .repo/🎫/26/05/30/FRAMEWORK-CORE-ABSTRACTION (goal AI-OPTIMIZED-REPO) on disk per convention
+   content: Open ticket .repo/🎫️/26/05/30/FRAMEWORK-CORE-ABSTRACTION (goal AI-OPTIMIZED-REPO) on disk per convention
    status: completed
  - id: scaffold-core
    content: Create framework/core package.json, project.json, script.ts, vitest.config.ts (name @semio-tech/framework-core, depth-2 relative paths)
@@ -18,7 +18,7 @@ todos:
    content: Refactor @semio-tech/framework-playground-core to re-export from @semio-tech/framework-core, specialize WindowKindRuntime (engagement) and playground nodes/controllers; keep playground-specific tests
    status: completed
  - id: core-tests
-   content: Extend the in-source 🧪Tests region in framework/core/index.ts to cover layout factories, toolbar merge, mergeById, CommandBus, ObservableCell
+   content: Extend the in-source 🧪️Tests region in framework/core/index.ts to cover layout factories, toolbar merge, mergeById, CommandBus, ObservableCell
    status: completed
  - id: wiring
    content: Fix root workspaces, stale project.json/script.ts/package.json/vitest paths, add @semio-tech/framework-core deps, prune unused playground React deps, register launch.json entries
@@ -43,7 +43,7 @@ isProject: false
 
 Both core files are already React/DOM-free; React lives only in `renderer/react/*`. The move into `framework/product/...` is mid-flight and inconsistent: root [package.json](package.json) `workspaces` still list `framework/platform/...`, the `node_modules/@framework` symlinks are broken, and moved files carry stale relative paths.
 
-Per [AGENTS.md](AGENTS.md): work inside one ticket, structure with `//#region` blocks, extend the in-source `🧪Tests` regions (no new test files), keep everything render-independent, no legacy/back-compat. `AGENTS.md` files must not be edited (the empty `framework/core/AGENTS.md` stays as-is). The `repo` MCP is not connected in this session, so the ticket is created on disk following convention: `.repo/🎫/26/05/30/FRAMEWORK-CORE-ABSTRACTION/` under goal `AI-OPTIMIZED-REPO`.
+Per [AGENTS.md](AGENTS.md): work inside one ticket, structure with `//#region` blocks, extend the in-source `🧪️Tests` regions (no new test files), keep everything render-independent, no legacy/back-compat. `AGENTS.md` files must not be edited (the empty `framework/core/AGENTS.md` stays as-is). The `repo` MCP is not connected in this session, so the ticket is created on disk following convention: `.repo/🎫️/26/05/30/FRAMEWORK-CORE-ABSTRACTION/` under goal `AI-OPTIMIZED-REPO`.
 
 ## Target dependency shape
 

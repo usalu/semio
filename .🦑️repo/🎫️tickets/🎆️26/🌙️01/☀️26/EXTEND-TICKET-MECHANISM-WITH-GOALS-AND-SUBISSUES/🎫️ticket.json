@@ -1,0 +1,10 @@
+{
+  "title": "Extend Ticket Mechanism With Goals And Subissues",
+  "emoji": "📐️",
+  "status": "closed",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/219"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoticketmechanism"
+}

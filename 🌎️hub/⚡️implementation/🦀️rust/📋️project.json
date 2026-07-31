@@ -1,0 +1,56 @@
+{
+  "name": "os-hub",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "targets": {
+    "setup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts setup"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive"
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🌎️hub/⚡️implementation/🦀️rust",
+        "command": "bun ./📜️script.ts dev"
+      }
+    }
+  }
+}

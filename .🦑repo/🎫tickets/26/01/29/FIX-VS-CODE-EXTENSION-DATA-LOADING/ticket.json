@@ -1,8 +1,0 @@
-{
-  "title": "Fix VS Code Extension Data Loading",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Fix failures in codebase, ticket, and contributor loading in VS Code extension",
-  "summary": "Bulk close",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
-}

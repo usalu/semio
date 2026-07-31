@@ -69,7 +69,7 @@ flowchart TD
 
 ## Phase 1 — Extend the canonical build/tooling registry (`repo/lib/js`)
 
-In `[repo/lib/js/index.ts](repo/lib/js/index.ts)`, within the existing `//#region 🔌PlaygroundDevPorts` region:
+In `[repo/lib/js/index.ts](repo/lib/js/index.ts)`, within the existing `//#region 🔌️PlaygroundDevPorts` region:
 
 - Replace the flat `PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec>` with a richer `PLAYGROUND_TECHNOLOGIES: Record<PlaygroundHostKind, PlaygroundTechnologySpec>` where `PlaygroundTechnologySpec` extends today's `{dev, test?, env}` with:
   - `folderRoot`: repo-relative folder (e.g. `"puzzle/2d"`, `"trinity/jack"`)

@@ -1,8 +1,0 @@
-{
-  "title": "Update Resource Links In Readme",
-  "emoji": "📝",
-  "status": "closed",
-  "description": "The links for resources are out of date in the README. Find stale resource links and update them to current valid targets.",
-  "summary": "Updated stale README resource links to current repo paths; verified all local markdown link targets resolve.",
-  "goal": "🎯r2602🎯updateddocs🎯updateddevdocs🎯updatedreadmemd"
-}

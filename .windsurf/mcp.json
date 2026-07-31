@@ -9,37 +9,37 @@
     "neo4j-compose": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "compose"],
+      "args": ["📜️script.ts", "dev", "mcp", "neo4j", "compose"],
       "disabled": false
     },
     "neo4j-elements": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "elements"],
+      "args": ["📜️script.ts", "dev", "mcp", "neo4j", "elements"],
       "disabled": false
     },
     "neo4j-coda": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "coda"],
+      "args": ["📜️script.ts", "dev", "mcp", "neo4j", "coda"],
       "disabled": false
     },
     "neo4j-reuse": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "reuse"],
+      "args": ["📜️script.ts", "dev", "mcp", "neo4j", "reuse"],
       "disabled": false
     },
     "neo4j-metabolism": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j", "metabolism"],
+      "args": ["📜️script.ts", "dev", "mcp", "neo4j", "metabolism"],
       "disabled": false
     },
     "neo4j-extra": {
       "type": "stdio",
       "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "neo4j"],
+      "args": ["📜️script.ts", "dev", "mcp", "neo4j"],
       "disabled": false,
       "env": {
         "NEO4J_DATABASE": "${env:NEO4J_EXTRA_GRAPH_DATABASE}"

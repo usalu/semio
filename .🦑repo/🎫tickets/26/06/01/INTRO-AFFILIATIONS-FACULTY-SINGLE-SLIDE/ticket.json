@@ -1,9 +1,0 @@
-{
-  "title": "Intro Affiliations Faculty Single Slide",
-  "emoji": "📽",
-  "status": "closed",
-  "description": "Combine intro affiliations-1 bridge and affiliations-1 into one slide; fix wrong author highlight on Fakultät slide.",
-  "summary": "Skipped the morph bridge between intro authors (plain) and affiliations-1 by extending morphBridgeDirect. Slide #/0/6 is now the Fakultät slide; the duplicate bridge slide with wrong author highlight is removed.",
-  "goal": "🎯runningsketchpad",
-  "sessions": ["⚪4c8dd88df1f94c85a09eb776ad457fdc"]
-}

@@ -10,7 +10,7 @@ const esbuild = require("esbuild");
 const runEmbeddedTests = process.env.COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS === "1";
 const repoRoot = resolvePath(__dirname, "../../../../../");
 
-/** @emoji 🔀 Playwright Node loader aliases (subset of sketchpad `⚙️vite.config.ts`). */
+/** @emoji 🔀️ Playwright Node loader aliases (subset of sketchpad `⚙️vite.config.ts`). */
 const RESOLVE_ALIASES = [
   ["@semio-tech/compose-js", resolvePath(__dirname, "../../js/index.ts")],
   ["@semio-tech/compose-rs-wasm", resolvePath(__dirname, "../../rs/pkg/compose.js")],

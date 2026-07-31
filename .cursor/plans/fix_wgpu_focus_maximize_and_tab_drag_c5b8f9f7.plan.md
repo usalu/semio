@@ -64,7 +64,7 @@ Because this arm reports "handled" without doing anything, the caller returns im
    - Click Focus on a window in a multi-pane layout (e.g. `s` studio with multiple windows docked) and confirm it now fills the entire dock/canvas area, then Unfocus restores the original split layout.
    - Drag a window's tab label to reorder within a stack, to another stack, and to a split-drop-zone edge; confirm the tab moves and the layout updates, matching the already-implemented `dock.apply_drop` semantics.
    - Confirm plain tab clicks (no drag) still activate/select the tab.
-4. Re-run the wgpu E2E smoke (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) for `s` and `forms` to confirm no regressions.
+4. Re-run the wgpu E2E smoke (`.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) for `s` and `forms` to confirm no regressions.
    </plan>
    <todos>
    <todo id="fix-focus-bounds" content="Fix DockState::register_hits, stack_body_rects, stack_tab_bar_rects in dock.rs to use full bounds instead of solve_node_bounds for the maximized stack"/>

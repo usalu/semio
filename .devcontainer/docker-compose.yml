@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-# #region 🔖Compose
+# #region 🔖️Compose
 # Dev stack: a single workspace app container. Neo4j 5 Community runs inside `compose` and publishes localhost Bolt/HTTP ports.
 name: compose
 services:
@@ -25,4 +25,4 @@ services:
       - "127.0.0.1:7474:7474"
       - "127.0.0.1:7687:7687"
     command: ["sleep", "infinity"]
-# #endregion 🔖Compose
+# #endregion 🔖️Compose

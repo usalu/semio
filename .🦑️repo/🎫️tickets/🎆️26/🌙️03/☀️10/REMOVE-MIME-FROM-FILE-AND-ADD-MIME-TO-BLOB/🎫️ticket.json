@@ -1,0 +1,12 @@
+{
+  "title": "Remove Mime from File and Add Mime to Blob",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Remove the mime field from file and ensure all blobs have proper mime information. Update all programming languages (Go, TypeScript, Python, C#, Rust) and UIs (sketchpad, grasshopper). Update schemas, tests, and examples.",
+  "summary": "Removed mime field from File/FileDiff across Go, TypeScript, Python, C#, Rust, Grasshopper. Ensured blobs encode proper MIME via filename extension. Updated SQLite schema and JSON assets. All tests pass (Go 100%, TS 10/10, Python 9/9, Rust 8/9 with 1 pre-existing failure, C# builds 0 errors).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/822"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms",
+  "sessions": ["🔀️5c0ab8b008efbe1510e11efe66a0fd119419a013⚪️17731714003765018135765194539217426713"]
+}

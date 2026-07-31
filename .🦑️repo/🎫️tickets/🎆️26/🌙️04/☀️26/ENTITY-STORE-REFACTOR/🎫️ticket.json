@@ -1,0 +1,8 @@
+{
+  "title": "Entity Store Refactor",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Single ownership for computed kit reads: PieceStore/DesignStore/TypeStore + KitStore catalog helpers; React hooks use kitStoreFromKitStoreClient + ComposeKitLiveReadStore + useSyncExternalStore.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": []
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Enforce Transactions Everywhere And Fix Diff Display",
+  "status": "closed",
+  "description": "Audit every UI element in compose/sketchpad/index.tsx to ensure only transactions and commands are used for state changes. No direct state mutations allowed. Then fix the diagram and design to display the current squashed diff from the active transaction (same approach as compose/ui).",
+  "summary": "Enforced diffed design/kit hooks across all Design App components and fixed Quality App togglePanel bypass.\n\nChanges to compose/sketchpad/index.tsx:\n\n1. DesignDiagram: Changed useDesign() → useDiffedDesign() so diagram renders transaction previews.\n2. useDesignAppSelectAll: Changed useDesign() → useDiffedDesign() so select all includes transaction-added pieces.\n3. DesignAppFooter: Changed useDesign() → useDiffedDesign() so footer reflects transaction state.\n4. DesignSectionForm: Changed useDesign() → useDiffedDesign() so design detail panel shows diffed data.\n5. PiecesSectionForm: Changed useDesign() → useDiffedDesign() and useKit() → useDiffedKit().\n6. ConnectorSectionForm: Changed useDesign() → useDiffedDesign() and useKit() → useDiffedKit().\n7. ModelDesign: Changed useDesign() → useDiffedDesign() so 3D scene renders transaction preview.\n8. DesignWindowApp: Changed useDesign() → useDiffedDesign() so main app layout uses diffed data.\n9. QualityApp togglePanel: Added compose.qualityApp.setPanelVisibility command. Changed store.change() to store.execute().\n\nLeft useDesign() in Navigation and LayoutWrapper (top-level, outside DesignScope). Build verified.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1337"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️994c96d1ff1a4c738312118b2e19cc73"]
+}

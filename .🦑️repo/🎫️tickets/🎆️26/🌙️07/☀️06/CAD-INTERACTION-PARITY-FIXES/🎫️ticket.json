@@ -1,0 +1,17 @@
+{
+  "title": "CAD Interaction Parity Fixes",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Restore CAD premigration feature set inside wgpu/Rust plugin stack per plan cad_wgpu_premigration_parity_85c19a7c.",
+  "summary": "Implemented full CAD interaction parity plan (9e8371d5): generalized live command preview for all two-point-height and base-height interactions; registered cadFixtureVitePlugin so reference images serve in dev; wired WorldReferenceLayer hover/select/opacity through world-3d-host; added setHover and worldPick handlers with bidirectional Document tree selected/highlighted id sync; fixed primitive-level selection storage and inspector; added requestFileOpen handling in React os-shell; removed forest-example transformation static bypass; added rotation/orientation inspector field with multi-selection mixed-value test.\n\nVerification: cad-plugin wasm32-wasip2 release build + jco transpile OK; framework-renderer-react 27/27 tests pass; new lib.rs unit tests for forest live transformation, world pick, document tree sync, and mixed inspector. Manual browser checklist documented in verify-log.md (dev server was not running during close).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1841"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "9e8371d5",
+    "local": "cad_interaction_parity_fixes_9e8371d5.plan.md"
+  },
+  "sessions": ["⚪️0736e59e8ef248e1a2fe33651ec5f4e9", "⚪️2f92f2ecccf24e39889ad62f01f6761c", "⚪️df13dd787def4e3cb276eb12bb7a8bea", "⚪️a1dafdef07c248e1a42ebf41108d2128", "⚪️af2a6ad6185c441ab354c47db6109559"]
+}

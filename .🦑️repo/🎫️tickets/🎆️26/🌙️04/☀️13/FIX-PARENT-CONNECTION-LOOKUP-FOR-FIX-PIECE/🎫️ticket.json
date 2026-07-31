@@ -1,0 +1,8 @@
+{
+  "title": "Fix Parent Connection Lookup For Fix Piece",
+  "status": "closed",
+  "description": "Fix Piece no-op: findParentConnectionForPieceInDesign passed parent piece id into findConnectionInDesign which expects a connection guid. Align design app transaction hook with sketchpadStore.designApp fallback.",
+  "summary": "Fixed findParentConnectionForPieceInDesign to select the incident connection whose other endpoint is parentPieceId (metadata parent is a piece guid, not a connection guid). useDesignAppTransaction now falls back to sketchpadStore.designApp(kitScope, designScope) when useDesignStore is null. Added vitest in compose/js for Nakagin child+fixPieceInDesign. Files: compose/js/index.ts, compose/sketchpad/index.tsx.",
+  "goal": "🎯️sketchpadfeatures",
+  "finished": "2026-04-13T00:00:00.000Z"
+}

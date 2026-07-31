@@ -1,9 +1,0 @@
-{
-  "title": "Create Kit App Tutorial",
-  "emoji": "🆕",
-  "status": "closed",
-  "summary": "Created a comprehensive detailed tutorial for the Kit application architecture, explaining the separation of Y.js (collaborative notepad) and XState (interaction rulebook). Fixed missing documentation links in README.md and updated AGENTS.md with SRS and codebase details.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/211"
-  }
-}

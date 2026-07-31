@@ -1,7 +1,0 @@
-{
-  "title": "VSCODE-VIOLATION-DIAGNOSTICS",
-  "emoji": "💻",
-  "status": "closed",
-  "description": "The vscode extension should show the breach diagnostics of every open file and rerun the targeted analyze command when saved again.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
-}

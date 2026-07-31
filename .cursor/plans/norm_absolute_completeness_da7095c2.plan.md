@@ -24,9 +24,9 @@ isProject: false
 
 ## Context
 
-Ticket [`26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE`](.repo/🎫/26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE/) closed with a checklist marked done, but an audit against the gate in [`norm_feature_complete_73be55cf.plan.md`](.repo/🎫/26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE/norm_feature_complete_73be55cf.plan.md) still finds: simplified models, thin wrappers, parts present but unused by `evaluate()`, weak `!checks.is_empty()` tests, EN 1993 part-number confusion, and FEM only in EN 1992.
+Ticket [`26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE`](.repo/🎫️/26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE/) closed with a checklist marked done, but an audit against the gate in [`norm_feature_complete_73be55cf.plan.md`](.repo/🎫️/26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE/norm_feature_complete_73be55cf.plan.md) still finds: simplified models, thin wrappers, parts present but unused by `evaluate()`, weak `!checks.is_empty()` tests, EN 1993 part-number confusion, and FEM only in EN 1992.
 
-Goal: **`🎯Norm`**. Reopen that ticket (same task). Keep temps under the ticket folder. Run all cargo tests with `CARGO_TARGET_DIR=/tmp/semio-norm-target-fc2` to avoid workspace locks.
+Goal: **`🎯️Norm`**. Reopen that ticket (same task). Keep temps under the ticket folder. Run all cargo tests with `CARGO_TARGET_DIR=/tmp/semio-norm-target-fc2` to avoid workspace locks.
 
 ## Completeness gate (unchanged)
 
@@ -59,7 +59,7 @@ flowchart LR
 ### 0. Ticket + checklist reset
 
 - `ticket_reopen` on `26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE`
-- Rewrite [`part-checklist.md`](.repo/🎫/26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE/part-checklist.md) to **incomplete** with per-part rows (gate items), not crate-level “done”
+- Rewrite [`part-checklist.md`](.repo/🎫️/26/07/18/NORM-TECHNOLOGY-ABSOLUTELY-FEATURE-COMPLETE/part-checklist.md) to **incomplete** with per-part rows (gate items), not crate-level “done”
 - Track progress only in the ticket folder
 
 ### 1. Energy families

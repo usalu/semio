@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/algorithm/.storybook/story/CopyAndPaste.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/algorithm/.storybook/story/CopyAndPaste.stories.tsx
 // Specs: Copy/paste proxies via shared story hooks and kit runners.
 // Summary: IPO copy/paste — source selection, target preview, paste diff/output.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Design, PasteDesignAnchoringKind } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -175,7 +175,7 @@ function CopyAndPasteFrame({ mode }: { mode: CopyPasteStoryMode }) {
 }
 
 const meta = {
-  title: "🏘️compose🧪algorithms/CopyAndPaste",
+  title: "🏘️compose🧪️algorithms/CopyAndPaste",
   component: CopyAndPasteFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

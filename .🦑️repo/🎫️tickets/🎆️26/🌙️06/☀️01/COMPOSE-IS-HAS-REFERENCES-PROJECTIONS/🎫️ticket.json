@@ -1,0 +1,9 @@
+{
+  "title": "Compose Is Has References Projections",
+  "emoji": "🪢️",
+  "status": "closed",
+  "description": "Unify is/has/references/referencedBy projection verbs with Transitive variants on Rust canonical model, GraphQL schema, and TypeScript client.",
+  "summary": "Completed is/has/references/referencedBy projection unification end-to-end. Rust: canonical impl accessors on Piece, Side, Connection, Design, Type, Kit, File, Folder, Representation, Typology; GraphQL thin *_field wrappers; kit scans compose entity projections; final cleanup routes transitive BFS through has_*/is_* (no parallel raw-store projection paths). Regenerated schema.graphql; aligned schema.golden.graphql projection names. TypeScript: accessor specs, VFS relay, sketchpad kit read, dev algorithms. Tests: 60/60 cargo test --lib, 18/18 vitest (COMPOSE_JS_RUN_EMBEDDED_TESTS=1).",
+  "goal": "🎯️compose",
+  "sessions": ["⚪️73044d99cc6b4c299090ff4c23413d00"]
+}

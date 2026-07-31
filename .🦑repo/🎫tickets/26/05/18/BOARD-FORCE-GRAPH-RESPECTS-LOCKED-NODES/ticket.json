@@ -1,9 +1,0 @@
-{
-  "title": "Board Force Graph Respects Locked Nodes",
-  "emoji": "📌",
-  "status": "closed",
-  "description": "Force graph layout must pin locked fixture nodes: no position/velocity updates on redraw; still participate in edges/repulsion as fixed bodies.",
-  "summary": "Force graph layout now treats `lockedNodeIds` as pinned bodies: initial positions are preserved, jitter skips them, and each integration step zeroes forces then re-applies pin constraints after velocity integration. `RedrawFixtureOptions` accepts top-level `lockedNodeIds` merged into `ForceGraphLayoutOptions`. TypeScript `BoardRedrawLayoutOptions` / `BoardForceGraphLayoutOptions` expose `lockedNodeIds`; `layoutBoardFixtureRedrawNodes` passes them through JSON. Play redraw snapshots and `boardPlayRedrawLayoutOpts` thread filtered graph node ids from `lockedIds`. Added Rust tests (`force_graph_pins_locked_node_positions`, `redraw_force_graph_top_level_locked_node_ids_pins`) and Vitest `keeps locked node coordinates fixed on force redraw`. Verified `cargo test -p elements_board locked` and `bunx vitest run` after `wasm-pack` rebuild so `rs/pkg` matches the native implementation.",
-  "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": ["⚪2172c7ec8783427a86f52c7889923e0e"]
-}

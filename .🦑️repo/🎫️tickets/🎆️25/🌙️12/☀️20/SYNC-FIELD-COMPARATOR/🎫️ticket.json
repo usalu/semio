@@ -1,0 +1,7 @@
+{
+  "title": "Add optional comparator parameter to useSyncField and useSyncFields for custom equality checks",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Add optional comparator parameter to useSyncField and useSyncFields to allow custom equality checks instead of JSON.stringify",
+  "goal": "🎯️aioptimizedrepo"
+}

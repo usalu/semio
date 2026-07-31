@@ -1,12 +1,12 @@
-// #region 🧲Header
+// #region 🧲️Header
 // .storybook/story/elements/ui/Mode.stories.tsx
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { Mode, createEvenWindowLayout, reactHostPort } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 // `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping
 // a `<Window>` (level="window"), both of which already fill `ui-surface`/`ui-glass` — this stays

@@ -1,0 +1,24 @@
+^DPID=$!
+sleep 1.5
+# dump a few bytes then quit via sending q to the pty through kill isn't easy; kill the script child
+kill $PID 2>/dev/null
+wait $PID 2>/dev/null
+python3 - <<'PY'
+from pathlib import Path
+import re
+raw = Path(".repo/🎫️/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/dashboard-script.raw").read_bytes()
+text = raw.decode("utf-8", errors="replace")
+plain = re.sub(r"\x1b\[[0-9;?]*[ -/]*[@-~]", "", text)
+plain = re.sub(r"\x1b\][^\x07\x1b]*(?:\x07|\x1b\\\\)", "", plain)
+plain = re.sub(r"\x1b.", "", plain)
+Path(".repo/🎫️/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/dashboard-script.plain.txt").write_text(plain)
+print("bytes", len(raw))
+print("plain snippet:")
+print(repr(plain[:1500]))
+needles = ["dev", "build", "Plugin", "React", "Wgpu", "Examples", "interactive TUI"]
+print({n: (n.lower() in plain.lower()) for n in needles})
+ok = len(raw) > 200 and "interactive TUI dashboard" not in plain
+print("OK", ok)
+raise SystemExit(0 if ok else 1)
+PY
+[?1049h[?25l[?1002h[?1006h[?2004h[2J[?2004l[?1006l[?1002l[?25h[?1049l[0m

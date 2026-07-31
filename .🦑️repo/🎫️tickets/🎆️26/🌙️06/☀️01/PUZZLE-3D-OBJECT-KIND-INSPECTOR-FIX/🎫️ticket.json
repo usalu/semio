@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 3d Object Kind Inspector Fix",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix puzzle3d: switching object kind in the details inspector does nothing. patchFixture does not notify on appearance-only changes; ObjectStateProvider only syncPoses; objectKind patch must update meshUrl.",
+  "summary": "Fixed puzzle3d inspector object-kind changes doing nothing: patchFixture now notifies on appearance fingerprint changes (label/kind/mesh/vortex fields), patchPuzzle3dObjects resolves meshUrl from kind catalogs via applyObjectKindToFixtureObject, and ObjectStateProvider syncs appearance to the viewport store. Tests added for controller patch, applyObjectKindToFixtureObject, and ObjectStore syncAppearance.",
+  "goal": "🎯️compose🎯️ui",
+  "sessions": ["⚪️d8daf600c8f14a15b90e21c5bba4ee9b"]
+}

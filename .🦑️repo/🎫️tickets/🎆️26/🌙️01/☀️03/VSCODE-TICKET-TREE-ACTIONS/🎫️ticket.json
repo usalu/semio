@@ -1,0 +1,7 @@
+{
+  "title": "VSCODE-TICKET-TREE-ACTIONS",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "\"vscode extension: Remove Open Ticket button from tickets. Instead add reopen and close icons and execute the command once pressed. Remove status emoji from ticket. Add commit tree item. Just show description on ticket tree item hover.\"",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repovscodeextension"
+}

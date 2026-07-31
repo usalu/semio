@@ -1,0 +1,12 @@
+{
+  "title": "Full Diff Ladders on All Entities in Target Schema",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Add Modification through DiffsConnection ladder for every Entity in target.schema.graphql; merge Modification/Diff/Diffs unions and aggregate EntityEdge/EntityConnection/OwnerEntity; rename AttributesDiff to AttributeDiffs for naming consistency.",
+  "summary": "Added mechanical Modification→DiffsConnection ladders for weak primitives (Vector/Point/Coordinate/Offset), catalog strong entities (Family through Group), Piece (with PieceModification restored after PieceConnection; Connection ladder anchored in Piece region), Side, Design, Kit, and VCS entities (Change through Conflict). Mapped shared regions: Type→Connector/Representation/Type, Piece→Connection, VCS→versioning entities. Renamed AttributesDiff→AttributeDiffs (+ Edge/Connection/Owner unions). Merged Modification, DiffOwned, DiffsOwned, AggregateEntityEdge, EntityConnection, OwnerEntity, OwnedEntityConnection. Restored Subscription stub types Command/Error. Generator script lives under ticket folder; graphql-core build_ast_schema + cargo test compose/rs pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1402"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️a0363e4133994705be3f1698b365b395"]
+}

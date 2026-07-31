@@ -1,0 +1,14 @@
+{
+  "title": "Dissolve Compose Into S Via Puzzle 5d And New Block Plugin",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Dissolve the standalone `compose` technology into the `s` plugin OS. Compose's design app becomes the puzzle 5d app; compose's type app becomes the 3d app of a brand-new `s/plugin/block` plugin (2d/3d/5d single-definition editors: NodeKind/ObjectKind/PartKind). Cross-cutting compose features (copy/paste, drag/move, import/export, undo/redo, terminology) are integrated into OS mechanisms (vcs, store, dsl, pack, protocol, plugin SDK commands). Compose itself stays in the repo untouched for now (deleted later by the user) — the goal is that nothing outside /compose depends on it anymore and all its functionality is reachable through s. Full plan at /Users/ueli/.claude/plans/compose-should-disappear-and-delightful-treasure.md: Wave 0 fixes plugin-registry scanner + constitutional-crate gate + stale asset/launch paths; Wave 1 builds the 22-crate block plugin; Wave 2 adds an OS clipboard mechanism (copy/cut/paste actions injected like history actions); Wave 3 brings puzzle 5d to parity with compose's design app (fastener transform params, translate/paste/cluster ops, editable inspector, media import/export); Wave 4 migrates fixtures/assets; Wave 5 extracts remaining outside-compose references and leaves a deletion-day checklist.",
+  "summary": "Implemented Waves 0-3 of the compose-to-s dissolution plan (see /Users/ueli/.claude/plans/compose-should-disappear-and-delightful-treasure.md for full detail), plus verified Wave 4/5 progress. Wave 0: fixed the constitutional-crates gate for manifest/artifact/rs bundles and stale asset paths; registry regenerated (34 plugins, 53 playgrounds). Wave 1: built the entire new s/plugin/block plugin (22 constitutional crates, 2d/3d/5d single-kind-definition editors), fully registered and tested (43 tests). Wave 2: added a new OS clipboard mechanism to the framework core (ActionKind::Clipboard, injected copy/cut/paste actions, DocumentApp trait hooks, VcsDocumentApp interception); 109 tests, zero regressions; host bridge (WIT/browser/wgpu) explicitly deferred. Wave 3: puzzle 5d fastener transform params, editable inspector, copy/paste/translate engine functions ported from compose's algorithms, real clipboard wiring with end-to-end tests, a compose-design-to-puzzle5d JSON converter wired as an action; flatten/mesh-postback/full-kit-import explicitly deferred. Wave 4/5: verified two planned cleanups were actually unsafe (compose fixture/asset still in use) and skipped them; removed the vestigial compose-js dependency from the vscode extension. Full cargo check --workspace is green with zero regressions across every touched crate's test suite.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2382"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️ba9c49dd6f2148b9a92bdc0e35566fa2"
+  ]
+}

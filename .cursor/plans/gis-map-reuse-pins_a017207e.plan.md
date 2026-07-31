@@ -67,9 +67,9 @@ Add a `FixtureScript` (registered as `fixture`) that reads `../fixture/reuse.gra
 
 ### 2. WASM: rich pins + selection (`gis/map/rs/lib.rs`)
 
-- Extend `PositionData` (region `🔖MapContent`) with `#[serde(default)]` `source_url: Option<String>`, `icon: Option<String>`, `kind: Option<String>`, `name: Option<String>`.
+- Extend `PositionData` (region `🔖️MapContent`) with `#[serde(default)]` `source_url: Option<String>`, `icon: Option<String>`, `kind: Option<String>`, `name: Option<String>`.
 - Color pin fill by `kind` (donor vs receiver) in `append_positions` using existing theme accents.
-- Add screen-space pin hit-test in `pointer_up_screen` (`🔖WasmSession` + `MapHost`): when the pointer did not pan (click), find the nearest pin within a radius and `push_event("selectPosition", {"id":...})`, else `push_event("selectPosition", {"id":null})`.
+- Add screen-space pin hit-test in `pointer_up_screen` (`🔖️WasmSession` + `MapHost`): when the pointer did not pan (click), find the nearest pin within a radius and `push_event("selectPosition", {"id":...})`, else `push_event("selectPosition", {"id":null})`.
 - Add wasm API `positionScreenJson(id)` returning `{x,y}` (logical px) or `null`, using `projection::lonlat_to_world` + `map_viewport::world_to_screen`, so the React popup can anchor and follow the camera.
 - Extend the `#region Tests` (selection event on click, `positionScreenJson` round-trip, `source_url`/`icon` parse).
 
@@ -78,13 +78,13 @@ Add a `FixtureScript` (registered as `fixture`) that reads `../fixture/reuse.gra
 - Extend `MapPositionProps` with `name?`, `icon?`, `sourceUrl?`, `kind?`; update `mapDescriptorToJson` to serialize `source_url`/`icon`/`kind`/`name`.
 - `MapRenderer`: add `selectedPositionScreen(id)` wrapper over `positionScreenJson`; expose drained events.
 - `MapCanvas`: in the render loop consume `drainEvents()`, track `selectedId`; render an absolutely-positioned popup `<div>` anchored at the projected screen coords (updated each frame via a ref + style mutation to avoid re-render storms) showing `<Icon icon={...}/>` + `name` + `<a href={sourceUrl} target="_blank" rel="noreferrer">`. Clicking empty space clears selection.
-- Extend the `🧪Tests` region (descriptor serializes new fields; selection state).
+- Extend the `🧪️Tests` region (descriptor serializes new fields; selection state).
 
 ### 4. Play host wiring
 
 - `[gis/map/play/index.ts](gis/map/play/index.ts)`: import the converted fixture JSON, add a `parseGisMapFixture` + types, expose `GIS_MAP_PLAY_FIXTURE_OPTIONS` and a default fixture, and surface positions/routes through controller state (mirror puzzle2d's `getFixtureCatalog`/`setActiveFixture`). Provide the active descriptor to the surface host.
 - `MapPlayPaneSurfaceHost` in `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)`: replace the hardcoded Zürich/Bern demo with `<Position>`/`<Route>` mapped from the active fixture (name/icon/sourceUrl/kind passed through).
-- Extend the play `🧪Tests` (fixture parse + catalog options).
+- Extend the play `🧪️Tests` (fixture parse + catalog options).
 
 ### 5. Validate
 

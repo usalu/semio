@@ -1,9 +1,0 @@
-{
-  "title": "Fix Interactive Disposition Resize",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Resizing interactive dispositions only drags them. Fix resize handles, flow-layout resize rendering, chrome positioning with display:contents, and group resize dx/dy.",
-  "summary": "Fixed projektetage resize handles that appeared to only drag or do nothing.\n\nRoot cause: reveal.js nests slide sections; the inner interactive section has offsetHeight 0, so clientToSectionFraction and measureDispositionBoundsInSection saw zero height and resize deltas were always 0.\n\nFix: slideCoordinateRoot + slideLayoutBounds walk to the parent stack with real layout size; dispositionPlacementContainer, clientToSectionFraction, measurement, flowPixelOffsetToSectionRect, and sectionVisualScale use them. Wired interactiveDispositionContentScale on flow resizes for uniform zoom without text reflow. Tests: nested zero-height fraction mapping + flow SE resize regression. 51 renderer tests pass; verified on :6050 title slide.",
-  "goal": "🎯framework",
-  "sessions": ["⚪ec68fa46ca124c61a5ed820483f067e6"]
-}

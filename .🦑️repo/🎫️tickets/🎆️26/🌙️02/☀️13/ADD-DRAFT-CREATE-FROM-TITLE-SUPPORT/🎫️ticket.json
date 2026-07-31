@@ -1,0 +1,8 @@
+{
+  "title": "Add Draft Create From Title Support",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Change draft creation to accept a title (like tickets/goals) instead of a raw slug. Update CLI, MCP, GraphQL, and add VSCode commands for draft create/delete.",
+  "summary": "Changed draft creation to accept a title (consistent with tickets/goals) instead of a raw slug. Added VSCode commands for draft create/delete.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repodraftmechanism"
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Contain Toolbar Inside Footer",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Make the shared footer toolbar always fit inside the footer's height and stay centered (instead of overflowing above it) for every UI, by scoping the toolbar height to the footer height in CSS.",
+  "summary": "Scoped footer toolbar height to match the footer bar and capped toolbar max-height so it stays centered inside the footer instead of overflowing above it. Applies to all UIs via shared Footer component.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1756"
+  },
+  "goal": "🎯️ui🎯️styling",
+  "plan": {
+    "client": "cursor",
+    "id": "74217422",
+    "local": "contain_toolbar_in_footer_74217422.plan.md"
+  },
+  "sessions": ["⚪️2035effe409044a29f761dad892dfad8"]
+}

@@ -1,0 +1,433 @@
+{
+  "title": "Detail Panel Migration Analysis",
+  "status": "closed",
+  "prompt": "Read old and new detail panel implementations and document gaps",
+  "summary": "Completed comprehensive analysis of old vs new detail panel implementations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/705"
+  },
+  "goal": "COMPOSE",
+  "started": "2026-02-26T11:56:10.802608987Z",
+  "finished": "2026-02-26T11:57:04.55453864Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-26 11:56:10",
+        "finished": "2026-02-26 11:57:04"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "4010dc93d7897058f4e2aff2168723f9ccefb118",
+      "prompt": "Read old and new detail panel implementations and document gaps",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 277,
+                "removed": 327
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx",
+              "lines": {
+                "added": 66,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx",
+              "lines": {
+                "added": 53,
+                "removed": 30
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App",
+              "lines": {
+                "added": 51,
+                "removed": 44
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Commands",
+              "lines": {
+                "added": 3,
+                "removed": 34
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Config",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 171,
+                "removed": 172
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 7,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Scene",
+              "lines": {
+                "added": 1,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Components#Action Hooks",
+              "lines": {
+                "added": 3,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details",
+              "lines": {
+                "added": 40,
+                "removed": 60
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Types",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Apps#Navbar",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad Components",
+              "lines": {
+                "added": 65,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Aggregation Components#Tree",
+              "lines": {
+                "added": 21,
+                "removed": 14
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Base Components",
+              "lines": {
+                "added": 5,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Input Components#Slider",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Input Components#Stepper",
+              "lines": {
+                "added": 6,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Panel Components#SidePanel",
+              "lines": {
+                "added": 16,
+                "removed": 4
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App#Settings§DesignSettingsContent",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 51,
+                "removed": 43
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 0,
+                "removed": 44
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Commands§commands",
+              "lines": {
+                "added": 3,
+                "removed": 34
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Commands§commands",
+              "lines": {
+                "added": 0,
+                "removed": 34
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Config§config",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Hover Intent Context§HoverIntentContextValue",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPiece",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Scene§ModelPieceProps",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details§ConnectorSection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details§DesignSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details§DesignSectionForm",
+              "lines": {
+                "added": 5,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details§PiecesSectionForm",
+              "lines": {
+                "added": 9,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details§PiecesSectionForm",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionFields",
+              "lines": {
+                "added": 0,
+                "removed": 24
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Panels#Details§SingleConnectionFields",
+              "lines": {
+                "added": 6,
+                "removed": 12
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Types§DesignAppWindowKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Types§DesignAppWindowKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Apps#Sketchpad Components§LayoutWrapper",
+              "lines": {
+                "added": 65,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§KitStore",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§KitStore",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YIdMap",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YIdMap",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YKit",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YKit",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YKitVal",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YKitVal",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YKits",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Sketchpad.tsx#Store#Kit§YKits",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Panel Components#SidePanel§SidePanel",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Panel Components#SidePanel§SidePanel",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/elements.tsx#Panel Components#SidePanel§SidePanelProps",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

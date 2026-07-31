@@ -1,7 +1,0 @@
-{
-  "title": "VSCODE-FIX-COMMAND",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "\"Fix the VSCode fix command that fails with: Failed to fix breach: Error: Command failed: c:\\\\git\\\\compose.tech\\\\compose\\\\bin\\\\repo.exe fix js/compose/playwright.config.ts. Also enable individual breach fixing.\"",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
-}

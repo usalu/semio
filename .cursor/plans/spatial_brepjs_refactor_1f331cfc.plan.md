@@ -59,9 +59,9 @@ isProject: false
 
 Single-file, regions:
 
-- `🌐BrepjsWorker` — Worker entry. Imported via `new Worker(new URL("./index.ts?worker_entry", import.meta.url), { type: "module" })`. Vite picks this up; vitest stub via `?worker_entry` query like brepjs playground.
-- `📨WorkerProtocol` — message kinds: `init`, `init-done/progress/error`, `tessellate { id, cellSpec, tolerance }`, `tessellate-result { id, mesh: MeshTransfer }`, `cancel`, `dispose-cell`. Mirrors `workerProtocol.ts` field shape.
-- `🧊MeshTransfer` — replaces `MeshPreview`. Shape:
+- `🌐️BrepjsWorker` — Worker entry. Imported via `new Worker(new URL("./index.ts?worker_entry", import.meta.url), { type: "module" })`. Vite picks this up; vitest stub via `?worker_entry` query like brepjs playground.
+- `📨️WorkerProtocol` — message kinds: `init`, `init-done/progress/error`, `tessellate { id, cellSpec, tolerance }`, `tessellate-result { id, mesh: MeshTransfer }`, `cancel`, `dispose-cell`. Mirrors `workerProtocol.ts` field shape.
+- `🧊️MeshTransfer` — replaces `MeshPreview`. Shape:
 
 ```ts
 type MeshTransfer = {
@@ -78,9 +78,9 @@ type MeshTransfer = {
 
 Re-export this from `@spatial/js-core` and remove `MeshPreview`.
 
-- `🔌BrepjsKernel` (worker-side) — converts received `cellSpec` to `ValidSolid` using the existing builder logic (`topoWireToOrientedFace`, `extrudeTopoWire`, `cellSolidToBrep`, …). Every helper uses `using scope = new DisposalScope()` and registers intermediate handles. Exposed kernel operations `tessellate`, `cellSolid`, `executeCommandDiff`, `offsetFace`, … move into the worker. The main-thread `BrepjsKernel` class becomes a thin client that posts messages and returns Promises (the `SpatialKernel` interface in `@spatial/js-core` is already async).
+- `🔌️BrepjsKernel` (worker-side) — converts received `cellSpec` to `ValidSolid` using the existing builder logic (`topoWireToOrientedFace`, `extrudeTopoWire`, `cellSolidToBrep`, …). Every helper uses `using scope = new DisposalScope()` and registers intermediate handles. Exposed kernel operations `tessellate`, `cellSolid`, `executeCommandDiff`, `offsetFace`, … move into the worker. The main-thread `BrepjsKernel` class becomes a thin client that posts messages and returns Promises (the `SpatialKernel` interface in `@spatial/js-core` is already async).
 - `♻️Cache` — content-key cache `(topologyHash + tolerance) → MeshTransfer` like `codeCache`. LRU cap. On `dispose-cell`, drop entries.
-- `🧮PreciseSpatialKernelMath` stays main-thread (pure math, no WASM). `R3FPreviewKernel` move to renderer file (it belongs to the R3F host).
+- `🧮️PreciseSpatialKernelMath` stays main-thread (pure math, no WASM). `R3FPreviewKernel` move to renderer file (it belongs to the R3F host).
 
 Memory rules applied throughout:
 
@@ -92,10 +92,10 @@ Memory rules applied throughout:
 
 Edit-in-place, regions reorganized to:
 
-- `📥Imports` (drop `MeshPreview`, add `MeshTransfer`).
-- `⚡PreviewKernel` — keeps `R3FPreviewKernel`.
-- `🎬WorkerClient` — `useTessellation(cellRef, tolerance)` hook: subscribes to the kernel worker, debounces requests via `requestAnimationFrame`, returns `MeshTransfer | null`. Disposes prior `BufferGeometry` on swap.
-- `🧊CommittedMesh` — rewritten to use `MeshTransfer`:
+- `📥️Imports` (drop `MeshPreview`, add `MeshTransfer`).
+- `⚡️PreviewKernel` — keeps `R3FPreviewKernel`.
+- `🎬️WorkerClient` — `useTessellation(cellRef, tolerance)` hook: subscribes to the kernel worker, debounces requests via `requestAnimationFrame`, returns `MeshTransfer | null`. Disposes prior `BufferGeometry` on swap.
+- `🧊️CommittedMesh` — rewritten to use `MeshTransfer`:
 
 ```tsx
 const geo = new THREE.BufferGeometry();
@@ -107,11 +107,11 @@ for (const g of data.faceGroups) geo.addGroup(g.start, g.count, 0);
 
 With `polygonOffset` (per [threejs-integration.md](temp/brepjs/doc/threejs-integration.md)). `useEffect` cleanup calls `geo.dispose()`.
 
-- `🧲EdgeOverlay` — new `LineSegments` from `data.edges` (replaces ad-hoc wireframe).
-- `🧲TopologyTargets` — picking now uses `event.faceIndex` + binary search on `faceGroups` to map → `faceId` → topology, instead of one raycast mesh per target. Keeps `raycast={raycastNone}` on visuals.
-- `🪩Canvas` — `frameloop="demand"` + `Invalidator` (camera-moved check) + `AutoFit` modeled on playground.
-- `🪩Repl` — adapt to async `useTessellation`. Pending requests show a low-tolerance preview; final mesh swaps in on resolve.
-- `🧪Tests` — extend existing tests in this file (no new files). Cover: (1) `MeshTransfer` deserialization, (2) `faceGroups` → `faceId` mapping, (3) cache invalidation on `dispose-cell`, (4) no orphan `BufferGeometry` after unmount (count via `THREE.BufferGeometry` ctor spy).
+- `🧲️EdgeOverlay` — new `LineSegments` from `data.edges` (replaces ad-hoc wireframe).
+- `🧲️TopologyTargets` — picking now uses `event.faceIndex` + binary search on `faceGroups` to map → `faceId` → topology, instead of one raycast mesh per target. Keeps `raycast={raycastNone}` on visuals.
+- `🪩️Canvas` — `frameloop="demand"` + `Invalidator` (camera-moved check) + `AutoFit` modeled on playground.
+- `🪩️Repl` — adapt to async `useTessellation`. Pending requests show a low-tolerance preview; final mesh swaps in on resolve.
+- `🧪️Tests` — extend existing tests in this file (no new files). Cover: (1) `MeshTransfer` deserialization, (2) `faceGroups` → `faceId` mapping, (3) cache invalidation on `dispose-cell`, (4) no orphan `BufferGeometry` after unmount (count via `THREE.BufferGeometry` ctor spy).
 
 ## Phase 3 — Core types ([spatial/js/core/index.ts](spatial/js/core/index.ts))
 

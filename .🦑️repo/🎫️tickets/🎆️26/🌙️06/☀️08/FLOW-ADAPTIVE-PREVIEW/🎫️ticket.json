@@ -1,0 +1,9 @@
+{
+  "title": "Adaptive Flow Preview",
+  "emoji": "👁️",
+  "status": "closed",
+  "description": "Replace ad-hoc single-string flow preview with content-adaptive rectangle: number/text sized to value, images as native Vello pixels, fallback interactive foldable JSON tree. Add image input widget.",
+  "summary": "Replaced ad-hoc `format_dictionary_preview` string flattening with typed `DagPreviewContent` (scalar/image/tree) on `DagNodeKind::Preview`, content-driven node sizing, native Vello image painting via `icon_paint_cache`, and canvas-native recursive JSON tree with click-to-expand rows. Added `Widget::InputImage` / `DagNodeKind::Image`, `setImageSrc` WASM API, catalogue entry, and flow react double-click file picker. Preview fold state persists in `expanded` on widget and DAG node.",
+  "goal": "🎯️flow",
+  "sessions": []
+}

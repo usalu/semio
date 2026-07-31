@@ -1,0 +1,12 @@
+{
+  "title": "Remove Allowed From Event Payload",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Remove allowed field from hook event JSON; allowed decision should only be in response, event is lifecycle info only.",
+  "summary": "Removed allowed from hook log event payload so permission decision lives only in response.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/722"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️17721943405448013567100332843076229519"]
+}

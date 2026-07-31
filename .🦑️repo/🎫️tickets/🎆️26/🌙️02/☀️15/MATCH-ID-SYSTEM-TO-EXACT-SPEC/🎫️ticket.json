@@ -1,0 +1,9 @@
+{
+  "title": "Match ID System to Exact Spec",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Update all entity IDs to exactly match the provided spec with collection IDs (non-empty), time document, interaction format, breach format. Add comprehensive tests for all entity types.",
+  "summary": "Bulk close",
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo",
+  "sessions": ["⚪️1a1a212aee684a078bc08dfcca485927"]
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Rename FindReplaceableTypesAndDesigns to FindReplaceableTypesInDesigns",
+  "status": "closed",
+  "description": "Rename FindReplaceableTypesAndDesigns to FindReplaceableTypesInDesigns across all languages (Go, Rust, Python, TypeScript, C#) including tests, storybook stories, and fix the algorithm implementation to match the spec.",
+  "summary": "Renamed FindReplaceableTypesAndDesigns to FindReplaceableTypesInDesigns across all 5 languages (Go, Rust, Python, TypeScript, C#), tests, storybook stories file, and AGENTS.md. All 31 tests pass (6 Go, 6 Rust, 6 Python, 7 TypeScript, 6 C#).",
+  "goal": "🎯️algorithms",
+  "sessions": ["⚪️fb1358e0888e4298ba8912f232101808"]
+}

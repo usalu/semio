@@ -1,0 +1,17 @@
+{
+  "title": "Repo-wide Version Suffix And Legacy Code Cleanup",
+  "emoji": "🧹️",
+  "status": "closed",
+  "description": "Remove all versioned/legacy/migration code across the monorepo: delete dead legacy-format bridges, migrate fixtures off old shapes, strip V1 suffix from types and /v1 from schema strings.",
+  "summary": "Fixed sequence canvas usability issues reported after DAG abstraction: (1) Completed flow-style catalogue drag-drop parity in sequence/react — ghost step preview via setGhostStep/clearGhostStep WASM, pointer palette drag, drag-over client sync, preview/escape bridges, window pointerup drop commit. (2) Hid triangle execution port text labels (prev/next) in dag label overlay so node names dominate. (3) Repaint triangle execution handles after node bodies so pins stay visible at Normal LOD. All sequence_core, mathematical_graph_port_directed_dag, dag-react, and sequence-react tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1791"
+  },
+  "goal": "🎯️framework🎯️platform",
+  "plan": {
+    "client": "cursor",
+    "id": "61c28b6b",
+    "local": "repo-wide_version_suffix_cleanup_61c28b6b.plan.md"
+  },
+  "sessions": ["⚪️1fe5935cfb19410e92b1ff70ca2e84c4"]
+}

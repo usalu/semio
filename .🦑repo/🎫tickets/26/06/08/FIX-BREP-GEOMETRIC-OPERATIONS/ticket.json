@@ -1,9 +1,0 @@
-{
-  "title": "Fix Brep Geometric Operations",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Rework brepjs@18 kernel adapter: unwrap Result types, fix API signatures, honor extrude direction, expose missing neuron parameters.",
-  "summary": "Fixed cut/intersect and most solid ops by unwrapping brepjs Result values and matching brepjs@18 signatures. Extrude now uses sketchExtrude/extrude with direction vectors instead of Z-only profile shortcuts. Transforms convert radians to degrees and use correct rotate/mirror argument order. Added neuron ports for axis, plane, center, direction on rotate/revolve/mirror/scale/draft/slice/patterns. Extended kernel and procedural tests for cut, non-Z extrude, rotate, mirror.",
-  "goal": "🎯procedural",
-  "files": ["geometry/brep/js/index.ts", "procedural/react/index.tsx"]
-}

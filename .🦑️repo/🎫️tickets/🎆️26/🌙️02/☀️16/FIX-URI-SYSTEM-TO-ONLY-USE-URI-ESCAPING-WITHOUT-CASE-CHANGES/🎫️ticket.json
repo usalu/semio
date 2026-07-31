@@ -1,0 +1,11 @@
+{
+  "title": "Fix Uri System to Only Use Uri Escaping Without Case Changes",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "URIs should only be URI-escaped (percent encoding) and must NOT contain any modifications such as case changing. Fix PathToUriPath, PathFromUriPath, SectionIdValueToUriPath, DefinitionIdValueToUriPath, StatuteIdToUriPath, StatuteUriPathToId, IdToUri, GetArtifactURI, and all related tests.",
+  "summary": "Fixed the URI system to only use URI-escaping (percent encoding) without any case changes, slugification, or other transformations. Updated PathToUriPath, SectionIdValueToUriPath, DefinitionIdValueToUriPath, StatuteUriPathToId, IdToUri, GetArtifactURI, UriToId, and all URI-related tests. All 13 URI tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/578"
+  },
+  "goal": "🎯️refactorurisystem"
+}

@@ -10069,7 +10069,7 @@ type Query {
 
 #region ScopedCommands
 
-# 🎬 Kit-changing operations resolve through command scopes:
+# 🎬️ Kit-changing operations resolve through command scopes:
 #     `session → store(id) → installProjection(json) | startAlternative | backbone | theKit | alternative(id)`,
 #     `session → start | end | login | logout`,
 #     then `theKit → startNewChange | unsavedChange(id) | save | createCheckpoint`,
@@ -10079,7 +10079,7 @@ type Mutation {
   session: SessionCommand!
 }
 
-# 🔴 Live subscription: mirrors `Query`. The server emits the resolved selection on subscribe
+# 🔴️ Live subscription: mirrors `Query`. The server emits the resolved selection on subscribe
 # and re-emits whenever any selected field changes (live-query). Selecting a single leaf scalar
 # limits emissions to updates of that scalar.
 type Subscription {

@@ -73,7 +73,7 @@ The existing [.cursor/plans/forms_premigration_parity_both_renderers_b3d29b3a.pl
 - wgpu `ExternalSlot` resolution (`resolve_external_slots_in_tree` at [framework/renderer/wgpu/rs/lib.rs:7571](framework/renderer/wgpu/rs/lib.rs), run before the sync widget-conversion fallback at line 4241) and React's `resolveExternalSlots` ([framework/core/js/index.ts:712](framework/core/js/index.ts)) are both implemented.
 - Generate mode is wired (`.mode("generate", "Generate")` + dedicated window kinds) in [flow/plugin/rs/lib.rs:1245-1266](flow/plugin/rs/lib.rs) and [procedural/plugin/rs/app_3d.rs:1406-1450](procedural/plugin/rs/app_3d.rs) (and `app_2d.rs`), backed by `flow_fixture_to_form_spec`/`apply_generation_values_to_fixture` in `flow_core::forms_bridge`.
 
-Actual verification to run (native `cargo test`/`cargo check` for these plugin crates is a pre-existing, unrelated, already-documented blocker — `plugin_exports!` needs `wasm32`+`p2` and can't link `component_export_anchor` natively, per `.repo/🎫/26/07/09/GIS-2D-MAP-PARITY-RESTORE/verify-log.md` and others — so this is not something to fix here):
+Actual verification to run (native `cargo test`/`cargo check` for these plugin crates is a pre-existing, unrelated, already-documented blocker — `plugin_exports!` needs `wasm32`+`p2` and can't link `component_export_anchor` natively, per `.repo/🎫️/26/07/09/GIS-2D-MAP-PARITY-RESTORE/verify-log.md` and others — so this is not something to fix here):
 
 1. `cargo build --target wasm32-wasip2 --release` (or the `bun nx run <pkg>:wasm` equivalent) for `forms-plugin`, `forms-module-procedural`, `flow-plugin`, `procedural2d-plugin`/`procedural3d-plugin` (whatever their nx package names are), confirming no compile regressions from the two fixes above.
 2. Boot the React dev host, open Forms fresh, confirm with `[DEBUG]` console logs:
@@ -82,7 +82,7 @@ Actual verification to run (native `cargo test`/`cargo check` for these plugin c
    - Switching to `default`/"Contact" and `onboarding` examples still renders every question kind correctly (no regression from changing the default seed).
 3. Repeat the same manual pass against the wgpu shell (`framework/product/os/hub`) for React/wgpu parity.
 4. Exercise Generate mode in `flow`, `procedural/2d`, `procedural/3d`: add/rename/remove a generation, confirm the generated `FormSpec` form renders and the preview (text for flow, canvas-2d/world-3d for procedural) updates per-generation.
-5. Update the existing plan's todo statuses (or note discrepancies) and, per repo rules, reopen ticket `2026/07/08/forms-blueprint-try-module-preview` (currently closed, exact same scope/goal `🎯forms🎯formstechnology`) via `ticket_reopen` before starting, then close it again with a full touched-files summary once verification passes.
+5. Update the existing plan's todo statuses (or note discrepancies) and, per repo rules, reopen ticket `2026/07/08/forms-blueprint-try-module-preview` (currently closed, exact same scope/goal `🎯️forms🎯️formstechnology`) via `ticket_reopen` before starting, then close it again with a full touched-files summary once verification passes.
 
 ## Files to touch
 

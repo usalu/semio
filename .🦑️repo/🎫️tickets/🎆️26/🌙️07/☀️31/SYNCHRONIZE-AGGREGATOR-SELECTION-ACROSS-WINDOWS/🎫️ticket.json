@@ -1,0 +1,14 @@
+{
+  "title": "Synchronize Aggregator Selection Across Windows",
+  "emoji": "🔄️",
+  "status": "closed",
+  "description": "Aggregator: selection changes must synchronize live between all windows (for example Top and Perspective). Diagnose the cross-window selection propagation path, fix the root cause without making per-window view options shared, extend existing tests, and verify runtime behavior.",
+  "summary": "Fixed Aggregator live selection synchronization by publishing each active World3d marquee preview through a controller-scoped external store and rendering that preview in sibling windows while preserving per-window camera and view options. Added ownership-safe cleanup so idle panes cannot cancel an active gesture, plus focused regression coverage. Verified in the running Aggregator that a held marquee in Top highlights the matching object in Perspective before pointer-up, with no browser console errors. Focused Vitest remains blocked before test collection by the existing Puzzle 2D WASM output-name mismatch; renderer lint remains blocked by its existing reference to the old index.tsx filename.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2401"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️54c73e680d004ee5aca7435a51d5f886"
+  ]
+}

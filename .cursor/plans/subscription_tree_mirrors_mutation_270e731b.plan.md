@@ -18,7 +18,7 @@ todos:
    content: Run `parse` + `buildSchema` to confirm `parse OK` / `build OK`, and check rg counts for the dropped fields.
    status: pending
  - id: ticket_update
-   content: Update .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md with the subscription refactor problem, change set, and verification.
+   content: Update .repo/🎫️/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md with the subscription refactor problem, change set, and verification.
    status: pending
 isProject: false
 ---
@@ -142,4 +142,4 @@ The new form lets clients narrow to one specific draft / transaction / design / 
 - `rg "^type \w+ScopedSubscriptionInput\b" compose/graphql/target.schema.graphql` → 11 types (Session, Draft, Transaction, Kit, Tag, Concept, Quality, Type, Port, Connector, Design, Piece, Pieces minus the four pure-event scopes — adjust count after writing).
 - `rg "^  (createdTags|createdConcepts|createdQualities|createdTypes|createdPorts|addedConnectors|createdDesigns|addedAttributesTo|addedChildPiecesWith|addedHangingChildPiecesWith)" compose/graphql/target.schema.graphql` → 0 matches.
 - Every leaf field on every `*ScopedSubscriptionInput` returns a `Created*!`/`Renamed*!`/`Updated*!`/`Added*!`/`Removed*!`/`Deleted*!`/`Dragged*!`/`Moved*!`/`Fixed*!`/`Changed*!`/`Flattened*!`/`Started*!`/`Ended*!` concrete `Operation` type (no unions, no abstract types).
-- Update [.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md](.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md) with a new problem entry (#9) and corresponding change/verification entries.
+- Update [.repo/🎫️/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md](.repo/🎫️/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md) with a new problem entry (#9) and corresponding change/verification entries.

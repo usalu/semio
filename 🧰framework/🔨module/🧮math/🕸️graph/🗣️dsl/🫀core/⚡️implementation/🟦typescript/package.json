@@ -1,9 +1,0 @@
-{
-  "name": "@semio-tech/graph-dsl-core",
-  "private": true,
-  "type": "module",
-  "main": "./index.ts",
-  "exports": {
-    ".": "./📦.ts"
-  }
-}

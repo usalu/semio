@@ -1,0 +1,8 @@
+{
+  "title": "Add Kit Artifact Selector UI",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Add a new Compose UI component for selecting kit artifacts (designs, types, ports) supporting partial/full controlled/uncontrolled modes and partial/full select constraints. Wire it into the compose engine MCP app so start_working_in_design opens the MCP app rendering this selector.",
+  "summary": "Added `KitArtifactSelect` to compose/ui with Compose-standard controllable data+selection and group enable constraints. Extended the engine MCP app payload to include kit artifacts and updated the MCP app UI to render the selector. Refactored `start_working_in_design` to open the MCP app directly and adjusted engine tests accordingly.",
+  "goal": "🎯️r26-03"
+}

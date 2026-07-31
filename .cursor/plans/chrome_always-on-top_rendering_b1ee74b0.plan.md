@@ -45,7 +45,7 @@ Net effect: navbar and footer have no structural protection at all, so any progr
 Introduce a single helper that all "must render after every window body" chrome goes through, mirroring the existing (working) left/right panel pattern, instead of leaving each chrome function to decide for itself which `DrawList` to use:
 
 ```rust
-/// 🛡 Chrome content must always win over window bodies; route it to the
+/// 🛡️ Chrome content must always win over window bodies; route it to the
 /// overlay compositing phase (guaranteed last) whenever one is available.
 fn chrome_sink<'a>(draw: &'a mut DrawList, overlay: &'a mut Option<&'a mut DrawList>) -> &'a mut DrawList {
     overlay.as_deref_mut().unwrap_or(draw)
@@ -68,11 +68,11 @@ This does not change navbar/footer's visual style (they stay plain opaque solids
 4. Spot check a handful of other plugins with different component kinds (world-3d, canvas-2d, text-editor, gis-map — all of which also call `push_raster_quad`, see `framework/renderer/wgpu/rs/lib.rs:3310-3314, 3570-3574, 5307-5308, 5610-5611`) to make sure nothing regresses.
 5. `cargo test` for `ui/wgpu` and `framework/renderer/wgpu` crates (DrawList/glass region unit tests already exist there).
 6. If the Flow window's cap/border is still visually different from Preview's after the chrome_sink fix (i.e. a second, independent bug), drill into `render_stack`'s cap-rendering for that specific stack/path — but do not pre-emptively rewrite dock layout logic without confirming this with a live screenshot first, since `paint_chrome` renders every stack in `self.dock.root` uniformly today with no code path that special-cases single-tab stacks for border/cap suppression.
-7. Update `.repo/🎫/26/07/07/PLAYGROUND-CHROME-RELIABILITY/verify-log.md` with root cause, fix, and before/after screenshots; reopen/close the ticket per repo MCP workflow with the full list of touched files.
+7. Update `.repo/🎫️/26/07/07/PLAYGROUND-CHROME-RELIABILITY/verify-log.md` with root cause, fix, and before/after screenshots; reopen/close the ticket per repo MCP workflow with the full list of touched files.
 
 ## Files to change
 
 - [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs): add `chrome_sink` helper; update `render_chrome` (navbar/footer calls), `render_main_window` (`paint_chrome` call), `render_window_measures_rail`, `render_window_engagement_rail`.
-- `.repo/🎫/26/07/07/PLAYGROUND-CHROME-RELIABILITY/verify-log.md`: document this follow-up regression + fix.
+- `.repo/🎫️/26/07/07/PLAYGROUND-CHROME-RELIABILITY/verify-log.md`: document this follow-up regression + fix.
 
 No changes are needed to `ui/wgpu/rs/lib.rs` (the compositing primitives — `DrawList`, `push_glass`, `render_overlay`, `draw_raster_layers` — are already correct; the bug is purely in which list `framework/renderer/wgpu` chooses to draw chrome onto), and no `AppDefinition`/`AppBuilder`/`PanelGroup` changes are needed this time (that hardening from the earlier fix already stands on its own).

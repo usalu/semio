@@ -3,8 +3,8 @@
   "projectType": "application",
   "name": "@semio-tech/compose-desktop",
   "version": "2.0.0-alpha",
-  "description": "A sketchpad for compose 🧩",
-  "main": ".vite/build/🟨main.js",
+  "description": "A sketchpad for compose 🧩️",
+  "main": ".vite/build/🟨️main.js",
   "dependencies": {
     "@electron/fuses": "^2.0.0",
     "@semio-tech/ui-react": "workspace:*",

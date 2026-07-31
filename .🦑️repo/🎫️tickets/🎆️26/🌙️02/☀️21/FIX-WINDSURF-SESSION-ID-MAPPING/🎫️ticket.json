@@ -1,0 +1,11 @@
+{
+  "title": "Fix Windsurf Session ID Mapping",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Windsurf uses trajectory_id as session id. Modify the hook parsing logic so that trajectory_id is mapped to the session property of the hook event.",
+  "summary": "Added trajectory_id and trajectoryId to extractSessionIDFromInput to fix Windsurf session mapping",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/643"
+  },
+  "goal": "🎯️aioptimizedrepo"
+}

@@ -76,7 +76,7 @@ Adopt the existing puzzle3d path for all apps:
 
 For each app (draw, note, writer, forms, raster, flow, gis-2d, procedural-2d/3d, shooting, trinity, puzzle-2d/3d/5d, presentation, sequence, layout, imperative, lowpoly, vcs, cad, s, dag, wires):
 
-- Move genuinely app-specific React (canvas surface hosts, custom orchestration/contexts for puzzle2d/trinity/s, `mountChrome`) into a `//#region 🔖PlayHost` in the app's react `index.tsx`; export `xxxAppRenderer` from there.
+- Move genuinely app-specific React (canvas surface hosts, custom orchestration/contexts for puzzle2d/trinity/s, `mountChrome`) into a `//#region 🔖️PlayHost` in the app's react `index.tsx`; export `xxxAppRenderer` from there.
 - Move panel trees/tab specs and instance-host callbacks to core per Parts 2–4.
 - Update `semio.app` manifest with `rendererPackage`/`rendererExport`; delete `play-host.tsx` and the `./play` export.
 - Heavy apps (puzzle2d ~3k lines, s, trinity, presentation) keep their orchestration code but relocated into their react index region — no separate host file, no framework special-case.
@@ -88,4 +88,4 @@ For each app (draw, note, writer, forms, raster, flow, gis-2d, procedural-2d/3d,
 
 ## Work tracking
 
-Continue in the `APP-ISOLATION-ENFORCED-BOUNDARIES` ticket (`.repo/🎫/26/07/03/`).
+Continue in the `APP-ISOLATION-ENFORCED-BOUNDARIES` ticket (`.repo/🎫️/26/07/03/`).

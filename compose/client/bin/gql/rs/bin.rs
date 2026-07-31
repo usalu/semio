@@ -1,6 +1,6 @@
-//! 🏪 `compose-gql`: HTTP GraphQL sidecar over native [`compose::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
+//! 🏪️ `compose-gql`: HTTP GraphQL sidecar over native [`compose::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
 
-//#region 🏪State
+//#region 🏪️State
 
 use std::io;
 use std::net::SocketAddr;
@@ -59,7 +59,7 @@ mod errors {
 use errors::StoreError;
 
 //#endregion
-//#region 🏪Install
+//#region 🏪️Install
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -146,7 +146,7 @@ async fn post_install(State(state): State<Arc<AppState>>, Json(body): Json<Insta
 }
 
 //#endregion
-//#region 🏪Graphql
+//#region 🏪️Graphql
 
 fn graphql_error(status: StatusCode, msg: impl std::fmt::Display) -> Response {
     (
@@ -184,7 +184,7 @@ fn is_mutation_request(body: &str) -> Result<bool, StoreError> {
     Ok(false)
 }
 
-/// @emoji 🌐 GraphQL-over-HTTP POST: JSON body `query`, optional `variables`, optional `operationName` (same contract as `compose::gql::graphql_request_from_json_str`).
+/// @emoji 🌐️ GraphQL-over-HTTP POST: JSON body `query`, optional `variables`, optional `operationName` (same contract as `compose::gql::graphql_request_from_json_str`).
 async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl IntoResponse {
     let (rt, installed): (Arc<ParentStore>, bool) = {
         let l = state.runtime.lock().await;
@@ -227,7 +227,7 @@ async fn post_shutdown() -> StatusCode {
 }
 
 //#endregion
-//#region 🏪Serve
+//#region 🏪️Serve
 
 async fn build_state() -> AppState {
     let preview = ParentStore::spawn().await;
@@ -260,15 +260,15 @@ async fn serve(listener: TcpListener, app: Router) {
         let _ = std::io::stdout().lock().flush();
     }
     let base = format!("http://127.0.0.1:{}", actual_port);
-    tracing::info!(target: "compose_gql", "┌ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
-    tracing::info!(target: "compose_gql", "└ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
+    tracing::info!(target: "compose_gql", "┌️ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
+    tracing::info!(target: "compose_gql", "└️ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
 
     if let Err(e) = axum::serve(listener, app.into_make_service()).with_graceful_shutdown(shutdown_signal()).await {
         tracing::error!(target: "compose_gql", "server: {e}");
     }
 }
 
-/// 🌐 Axum + GraphQL; binds `0.0.0.0` on `COMPOSE_GQL_PORT` (default `4000`).
+/// 🌐️ Axum + GraphQL; binds `0.0.0.0` on `COMPOSE_GQL_PORT` (default `4000`).
 async fn run() -> Result<(), StoreError> {
     let port: u16 = std::env::var("COMPOSE_GQL_PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(4000);
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("a u16 port always parses into a valid 0.0.0.0:<port> socket addr");
@@ -301,7 +301,7 @@ async fn main() -> std::process::ExitCode {
 }
 
 //#endregion
-//#region 🏪Tests
+//#region 🏪️Tests
 
 #[cfg(test)]
 mod tests {
@@ -609,7 +609,7 @@ mod tests {
         Ok(())
     }
 
-    /// @emoji 🧪 Full catalog E2E: in-process GraphQL + backbone replay, then live compose-gql HTTP sidecar steps.
+    /// @emoji 🧪️ Full catalog E2E: in-process GraphQL + backbone replay, then live compose-gql HTTP sidecar steps.
     #[tokio::test]
     async fn comprehensive_fixture_end_to_end() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let Some(path) = comprehensive_fixture_path() else {

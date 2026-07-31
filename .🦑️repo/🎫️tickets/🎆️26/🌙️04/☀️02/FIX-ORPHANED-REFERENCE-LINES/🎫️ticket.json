@@ -1,0 +1,12 @@
+{
+  "title": "Fix Orphaned Reference Lines",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix syntax errors caused by orphaned reference lines with emojis after removing docstring comments. The script needs to remove both the docstring line and the following reference line that contains emojis.",
+  "summary": "Attempted to fix orphaned reference lines with emojis that were causing syntax errors after removing docstring comments. However, the automated fixes broke the file structure by removing too many lines, causing indentation errors and broken dictionaries. The files need to be properly restored and fixed more carefully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1264"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️b5342034990c4f488c929f36c3705daf"]
+}

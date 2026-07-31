@@ -1,7 +1,0 @@
-{
-  "title": "Extend code hook to detect and strip multi-line comments",
-  "emoji": "📐",
-  "status": "closed",
-  "description": "The code analysis and fixing hook doesnt identify and delete multi-line comments. Extend them.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
-}

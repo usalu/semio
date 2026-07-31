@@ -1,0 +1,11 @@
+{
+  "title": "Cursor Compose MCP Visible",
+  "status": "closed",
+  "description": "Fix .cursor/mcp.json and post-attach sync so compose MCP appears; stdio type + absolute paths.",
+  "summary": "Cursor MCP: added stdio type + post-attach writes .cursor/mcp.json with absolutized paths (same as Kiro). Source .mcp.json includes playwright stdio type.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1316"
+  },
+  "goal": "🎯️enginemcp",
+  "sessions": ["⚪️4e52d0699c8c4b6bb2e7dd1c8f5ff61d"]
+}

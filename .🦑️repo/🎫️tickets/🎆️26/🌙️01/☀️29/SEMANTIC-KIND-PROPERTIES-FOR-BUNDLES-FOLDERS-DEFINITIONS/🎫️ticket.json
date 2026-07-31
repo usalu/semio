@@ -1,0 +1,11 @@
+{
+  "title": "Semantic Kind Properties for Bundles Folders Definitions",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Expand bundle, folder, definition to have semantic kind properties. Add filtering by kind, time, contributor, policy, and breach-kind dimensions. Update VS Code extension filter tree.",
+  "summary": "Implemented semantic kind properties for Bundle (library/schema/binary/ui/site/assets), Folder (organization/required), and Definition (implementation/interface/constant). Added filtering by all new kind dimensions. Updated VS Code FilterProvider with hierarchical filter tree for bundle kinds, folder kinds, and definition kinds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/273"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repodefinitionmechanism"
+}

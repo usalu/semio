@@ -1,7 +1,0 @@
-{
-  "title": "Restructure sketchpad tests to one test per app with parent initialization",
-  "emoji": "🏗️",
-  "status": "closed",
-  "description": "Restructure sketchpad tests to one test per app with parent initialization",
-  "goal": "🎯r2602🎯runningsketchpad"
-}

@@ -1,7 +1,0 @@
-{
-  "title": "Fix hover and selection state overfetching for performance",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Fix hover and selection state overfetching for performance",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
-}

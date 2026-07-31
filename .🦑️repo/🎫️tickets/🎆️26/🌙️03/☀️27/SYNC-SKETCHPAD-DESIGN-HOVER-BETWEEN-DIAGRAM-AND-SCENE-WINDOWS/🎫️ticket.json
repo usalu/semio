@@ -1,0 +1,12 @@
+{
+  "title": "Sync Sketchpad Design Hover Between Diagram and Scene Windows",
+  "emoji": "📊️",
+  "status": "closed",
+  "description": "Make design-app hover use a single canonical source so diagram and scene windows stay synchronized. Fix the current non-visible hover regression and validate the shared hover flow.",
+  "summary": "Unified design-app hover around the actor-backed hover state so diagram and scene windows stay synchronized. HoverPiecesProvider now reads actor hover directly, diagram render-data sync consumes raw hover snapshots, and the embedded Design regression verifies both actor-driven and diagram-driven hover updates.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1119"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️493af69037264dc992859e983dcf788a"]
+}

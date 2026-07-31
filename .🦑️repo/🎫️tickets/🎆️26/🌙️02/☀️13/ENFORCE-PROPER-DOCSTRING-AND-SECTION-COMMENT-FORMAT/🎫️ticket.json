@@ -1,0 +1,11 @@
+{
+  "title": "Enforce Proper Docstring and Section Comment Format",
+  "emoji": "💬️",
+  "status": "closed",
+  "description": "Add a new statute to enforce native docstring format (JSDoc for TS/JS, triple-quoted for Python, /// for C#/Rust, // for Go) for all definitions. Convert all existing // line-comment definition docs to native docstring format. Exempt definition docstrings from the JSDoc/block comment ban. Fix all files.",
+  "summary": "Implemented Python triple-quote docstring detection, autofix (create/merge), DefinitionDocLines marking, and DefMissingIdentification for Python. Fixed 635 breachs across Python/TS/C# files to 0. Added 3 new tests, updated 1 test. All 49 policy tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/553"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism"
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Move Play Fixture Dropdown To Right Of App Name",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "The dropdown of the fixture should not be central in the navbar but on the right of the app name on the right.",
+  "summary": "Moved the playground fixture selection dropdown from the center of the navbar to the left side, immediately to the right of the app name, matching user request.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1779"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️45b461cc6bc6494988150d8c8428fb29"]
+}

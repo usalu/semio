@@ -35,7 +35,7 @@ In [print/tex/semio-window.sty](print/tex/semio-window.sty) (around lines 1999-2
 
 `\footskip` is set to the full footer-bar reserve (~24.8pt) but `\geometry{bottom=...}` sets the bottom margin to a single spacing unit (~2.2pt), **without `includefoot`**. Per the `geometry` package, `height := textheight` by default — `headheight+headsep` and `footskip` are excluded from the page-height balance unless `includehead`/`includefoot` are set (confirmed via the package docs and build log verbose output: `\textheight=771.725pt` while `\paperheight - top - bottom` already accounts for the whole page, i.e. `\footskip` isn't subtracted at all).
 
-Consequences, confirmed in the already-rendered `report.pdf` (see `.repo/🎫/26/07/08/PRINT-UNIFORM-BLOCK-SPACING/report-p4-spacing.png` and `report-p5-spacing.png`, and `print/dist/report.log` verbose geometry block):
+Consequences, confirmed in the already-rendered `report.pdf` (see `.repo/🎫️/26/07/08/PRINT-UNIFORM-BLOCK-SPACING/report-p4-spacing.png` and `report-p5-spacing.png`, and `print/dist/report.log` verbose geometry block):
 
 - **Footer invisible**: without `includefoot`, the footer floats _below_ the last text line by `\footskip` (~24.8pt) _inside_ the `bottom` margin band, but that band is only ~2.2pt — the footer bar's bottom edge lands ~22.6pt past the physical page edge and is clipped/off-page.
 - **Content overflows / "doesn't break properly"**: `\textheight` is computed as `paperheight - top - bottom` only, ignoring both the header and footer reserve, so pages are packed with text almost edge-to-edge (visible in `report-p4-spacing.png`, a TOC page whose rows run to the very bottom with no footer).
@@ -78,5 +78,5 @@ Consolidate the geometry setup into one explicit call using `includehead,include
 
 ## Process notes
 
-- Work will happen inside a new ticket (e.g. `PRINT-FOOTER-VISIBILITY`) under goal `🎯r2602`, per repo workflow — verification artifacts (rasters, logs) go into the ticket folder.
+- Work will happen inside a new ticket (e.g. `PRINT-FOOTER-VISIBILITY`) under goal `🎯️r2602`, per repo workflow — verification artifacts (rasters, logs) go into the ticket folder.
 - No other files need to change; `semio-components.sty`'s unrelated `\newgeometry{...}` (cover-page override) is untouched.

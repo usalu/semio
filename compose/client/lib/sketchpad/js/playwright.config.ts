@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,20 +6,20 @@
 
 // Playwright end-to-end test configuration for the JavaScript workspace.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🪄Playwright Configuration
+// #region 🪄️Playwright Configuration
 // Configures Playwright for end-to-end browser tests against the sketchpad dev server.
 // MUST use a single worker to avoid port conflicts.
 // Uses esbuild-based ESM loader hook (pw-loader.mjs) to handle CSS stubs, TypeScript
 // type stripping, Vite import.meta.glob stubs, and JSON imports without type attributes.
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { register } from "node:module";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 register(pathToFileURL(resolve(__dirname, "pw-loader.mjs")), pathToFileURL(__dirname));
@@ -75,4 +75,4 @@ export default defineConfig({
   },
 });
 
-// #endregion 🪄Playwright Configuration
+// #endregion 🪄️Playwright Configuration

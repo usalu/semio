@@ -47,7 +47,7 @@ That said, this catalog step is a real (if narrow) isolation gap: `generatePlugi
 
 ### 3. Add automated isolation guardrails (extend existing lint, no new files)
 
-Extend `PluginCapabilityLintScript` in [`framework/product/os/dev/script.ts`](framework/product/os/dev/script.ts) (already runs via `bun ./script.ts verify` and already walks `cargo metadata` for plugin crates):
+Extend `PluginCapabilityLintScript` in [`framework/product/os/dev/script.ts`](framework/product/os/dev/script.ts) (already runs via `bun ./📜️script.ts verify` and already walks `cargo metadata` for plugin crates):
 
 - **No cross-plugin dependency**: fail if any `*/plugin/rs` package lists another plugin crate's package name as a direct dependency (cross-checked against the generated registry's `packageName` set, excluding itself).
 - **No host-mode awareness**: fail if any plugin crate's `lib.rs`/module sources reference host/session concepts like `SEMIO_PLUGIN`, `PLAYGROUND_APP_KIND`, `studioMode`, `pluginFilter` — this locks in the already-clean "apps registered once, host-agnostic" property (verified 0 current matches) as an enforced invariant rather than convention.
@@ -67,5 +67,5 @@ The old pre-consolidation playground product directory no longer exists (host lo
 ## Verification
 
 - Re-run `bun run dev:puzzle:3d` and confirm the new `[DEBUG] program build scope: puzzle (1/22 known plugins)` line appears and only `puzzle-plugin` compiles.
-- Run `bun ./script.ts program lint` (via `framework/product/os/dev`) to confirm the new cross-plugin-dependency and host-awareness checks pass on the current (clean) codebase.
+- Run `bun ./📜️script.ts program lint` (via `framework/product/os/dev`) to confirm the new cross-plugin-dependency and host-awareness checks pass on the current (clean) codebase.
 - Run the repaired `repo/lib/js/index.test.ts` test and confirm it passes against the current renderer host files.

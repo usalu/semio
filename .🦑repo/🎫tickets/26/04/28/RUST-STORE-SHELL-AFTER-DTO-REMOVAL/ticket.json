@@ -1,8 +1,0 @@
-{
-  "title": "Rust Store Shell After Dto Removal",
-  "emoji": "🦀",
-  "status": "open",
-  "description": "Fix compose/rs compilation and tests while shallow/metadata/full DTOs are removed; keep only *Store structs with new(); kit import() deferred.",
-  "goal": "🎯aioptimizedrepo🎯singlefilerepo",
-  "sessions": ["⚪31fe631f165f4a35b65a7b31091faa5f"]
-}

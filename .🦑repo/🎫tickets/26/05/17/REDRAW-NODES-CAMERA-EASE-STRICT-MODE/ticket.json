@@ -1,9 +1,0 @@
-{
-  "title": "Redraw Nodes Camera Ease Strict Mode",
-  "emoji": "📷",
-  "status": "closed",
-  "description": "Fix one-shot Redraw nodes camera: preserve fixture.camera on layout patch; arm camera RAF ease via nodesRedrawCameraEaseTick state (Strict Mode safe) instead of pending boolean cleared before RAF; layout effect deps only tick; separate effect cancels nodes RAF when cameraDisplayOverrideByPane set; cancel nodes RAF on play start and post-play ease start.",
-  "summary": "Redraw nodes: keep prev fixture camera on WASM layout merge. After patch, bump nodesRedrawCameraEaseTick so a useLayoutEffect (deps only that tick) eases boardPlayPaneCamerasBaseline from the pre-commit shell cameras toward triptychCamerasFromFixture(fixtureRef) over 1.8s (hold first third). Avoids Strict Mode killing the ease by not using a boolean cleared before RAF. Separate useEffect cancels nodes RAF when display override is active; play start and post-play ease still cancel nodes RAF.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪ae4dad1502004ddd8a1e8f1452ddcfad"]
-}

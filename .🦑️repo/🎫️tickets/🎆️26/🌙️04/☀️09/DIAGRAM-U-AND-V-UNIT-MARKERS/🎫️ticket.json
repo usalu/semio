@@ -1,0 +1,8 @@
+{
+  "title": "Diagram U And V Unit Markers",
+  "status": "closed",
+  "description": "Extend ComposeDiagram origin overlay: draw u and v axis ticks of length 1 (diagram u from 0→1, v via diagramY 0→-1); labels optional; respect showOrigin; vitest for resolve helper if needed.",
+  "summary": "ComposeDiagram showOrigin: origin dot + unit rays (piece u 0→1 at v=0; v 0→1 via diagramY -1), u/v labels beyond tips; resolveComposeDiagramUnitAxisTips + vitest. 232 tests pass.",
+  "goal": "🎯️uipolish",
+  "sessions": ["⚪️dc472e1d73274bad8d1e7b308a6e725f"]
+}

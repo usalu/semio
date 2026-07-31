@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-animate-present-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Animate present app — headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+present = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/⚡️implementation/🦀️rust", package = "semio-s-app-animate-present" }
+animate_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "animate_core" }
+animate_video = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "animate_video" }
+vcs = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
+semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

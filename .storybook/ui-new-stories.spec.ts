@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/ui-new-stories.spec.ts
+// #region 🧲️Header
+// 💻️ .storybook/ui-new-stories.spec.ts
 // Specs: End-to-end smoke coverage for the "ui" scope's newly authored stories (MobilePanel, PanelTabBar/PanelChromeTabBar, Scene, SelectionMarquee, Shell*Panel/Dialog, Skeletons, SortableTreeItems, UIDialog, UIIntroduction, UnifiedGumball, NavbarExampleSelect, ActionDropdown, Providers).
 // Summary: Drives each story id through the aggregated Storybook static build's `iframe.html` and asserts a mounted root plus zero page/console errors — no visual/pixel assertions, this is boot-health coverage, not per-component behavior testing (each component's own barrel-level unit tests already cover behavior).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { expect, test, type Page } from "@playwright/test";
 

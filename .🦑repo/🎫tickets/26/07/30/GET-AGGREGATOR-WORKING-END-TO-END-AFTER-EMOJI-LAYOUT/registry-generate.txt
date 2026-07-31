@@ -1,1 +1,0 @@
-plugin registry catalog refreshed (34 plugin crates, 53 playgrounds) -> /Users/ueli/Documents/semio/🧰/🛍️/💻/🔨/plugin/⚡️/🟦/registry/generated

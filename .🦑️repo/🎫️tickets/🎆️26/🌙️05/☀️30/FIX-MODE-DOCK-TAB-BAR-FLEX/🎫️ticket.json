@@ -1,0 +1,9 @@
+{
+  "title": "Fix Mode Dock Tab Bar Flex",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Active tab steals remaining tab bar width. Tab bar should keep all tabs grouped on the left, flexible empty gap in the middle, maximize/fullscreen control pinned on the right. Body chrome may still span active tab + gap.",
+  "summary": "Multi-tab mode dock tab bar used a grid that split tabs around the active tab, so trailing tabs sat between the flex gap and maximize control and the active column could absorb spare width. Replaced with one max-content column per tab, then minmax(0,1fr) gap, then controls; body chrome still spans active tab through gap. All 62 @semio-tech/ui-react tests pass.",
+  "goal": "🎯️ui",
+  "sessions": ["⚪️bef73919e282424ca645296285a5dcc7"]
+}

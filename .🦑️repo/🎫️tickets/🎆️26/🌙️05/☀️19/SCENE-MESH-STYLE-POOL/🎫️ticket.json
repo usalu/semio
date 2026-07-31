@@ -1,0 +1,12 @@
+{
+  "title": "Scene Mesh Style Pool",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Expand the elements scene mesh pool by more styles (original, neutral, hovered, selected, highlighted, disabled) using element styling tokens aligned with board bundles. Add style prop to SceneMesh and wire through all features.",
+  "summary": "Expanded the scene GLTF pool with refcounted styled templates per meshUrl and SceneMeshStyleKind (original, neutral, hovered, selected, highlighted, disabled), resolving colors from Elements CSS tokens aligned with board chrome. Added SceneMesh with a style prop, resolveSceneMeshStyle for interaction precedence, and wired styles through SceneObject (hover/selection/link highlight), placeholder meshes, vortex GLB/fallback handles, ties, and attractions. Fixed per-instance clone(true) for pooled templates and removed invalid R3F data-* on Three groups. Vitest (21) and Playwright scene suite (6) pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1444"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️401b270b94704f1b9102521f9a495179"]
+}

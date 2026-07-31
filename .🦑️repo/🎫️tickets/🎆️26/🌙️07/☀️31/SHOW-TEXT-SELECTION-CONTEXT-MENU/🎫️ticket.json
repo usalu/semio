@@ -1,0 +1,14 @@
+{
+  "title": "Show Text Selection Context Menu",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "When text is selected in the UI, show the text context menu (copy to clipboard, cut, paste, select all) with platform shortcuts such as Ctrl+C / ⌘️C. Native browser menus are globally suppressed, so selected selectable text currently has no copy affordance on right-click.",
+  "dates": {
+    "due": "2026-07-31"
+  },
+  "llm": "opus-4-7",
+  "client": "cursor-chat",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [],
+  "summary": "Added a global TextSelectionContextMenuHost so right-clicking a DOM text selection opens Cut/Copy/Paste/Select all with platform shortcuts (⌘️C / Ctrl+C). Mounted in the OS shell and Storybook surface host. Native menus stay suppressed. Also fixed ui-styling/ui-react package exports to local paths so vitest resolves workspace packages. ContextMenu vitest: 16 passed."
+}

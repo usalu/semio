@@ -1,0 +1,9 @@
+{
+  "title": "Curve Move Body Stuck",
+  "emoji": "〰",
+  "status": "closed",
+  "description": "When selecting a curve (edge) and moving it, only endpoints move but the NURBS body stays stuck. Fix transform/move and gumball to translate all poles on selected edges, not only endpoint vertices.",
+  "summary": "Moving a selected curve only updated endpoint vertices; NURBS interior poles stayed fixed so the curve body looked stuck. Added collectTargetEdges and selectionTargetsPointTransformDiff to translate/rotate/scale all poles on topology-selected edges (edge/wire/face/…), while vertex-only picks still move a single endpoint. Wired transform.move, rotate/scale actions, and gumball commit through the shared path; selectionTargetsCenter includes nurbs poles for correct gumball pivot. Tests cover full-edge vs vertex-only moves.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️359e4f4c7e6241f6a93997fce86c17ec"]
+}

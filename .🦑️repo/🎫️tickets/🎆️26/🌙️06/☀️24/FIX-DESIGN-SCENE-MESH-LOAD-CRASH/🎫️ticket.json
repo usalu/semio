@@ -1,0 +1,12 @@
+{
+  "title": "Fix Design Scene Mesh Load Crash",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Nakagin Capsule Tower design at localhost:5173 shows no pieces. Fix split kit assembly to load type/ and design/ sidecar directories.",
+  "summary": "Design scene no longer crashes when GLB fetch fails during a Vite restart: MeshBody falls back to PlaceholderMesh via MeshLoadErrorBoundary instead of uncaught useGLTF errors killing the WebGL canvas.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1735"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️apps🎯️designapp",
+  "sessions": ["⚪️fe320d66ae0f4c0a97e20e45565e20a8", "⚪️d17b7e56c39e4cfa88304adce8105256"]
+}

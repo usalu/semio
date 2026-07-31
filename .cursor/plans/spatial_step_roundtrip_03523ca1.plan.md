@@ -6,7 +6,7 @@ todos:
    content: Open ticket spatial-step-roundtrip via repo MCP after listing goals
    status: completed
  - id: core-step
-   content: "Add 🪜StepRoundtrip region to spatial/js/core/index.ts: writer helpers, AttributeStore.entries(), ModelJson metadata field"
+   content: "Add 🪜️StepRoundtrip region to spatial/js/core/index.ts: writer helpers, AttributeStore.entries(), ModelJson metadata field"
    status: completed
  - id: kernel-export
    content: Implement exportModelSpaceToStep / exportModelToStep in spatial/js/kernel-brepjs/index.ts using brepjs exportSTEPConfigured with id-rewriting and six-pillar mapping
@@ -71,11 +71,11 @@ flowchart LR
     R -->|rebuild| MS2[ModelSpace round-tripped]
 ```
 
-Implementation lives entirely in [`spatial/js/kernel-brepjs/index.ts`](spatial/js/kernel-brepjs/index.ts) (per the rule against new files). Pure utilities (entity numbering, escaping, attribute serialization that doesn't need brepjs) go into [`spatial/js/core/index.ts`](spatial/js/core/index.ts) inside a new `// #region 🪜StepRoundtrip` block.
+Implementation lives entirely in [`spatial/js/kernel-brepjs/index.ts`](spatial/js/kernel-brepjs/index.ts) (per the rule against new files). Pure utilities (entity numbering, escaping, attribute serialization that doesn't need brepjs) go into [`spatial/js/core/index.ts`](spatial/js/core/index.ts) inside a new `// #region 🪜️StepRoundtrip` block.
 
 ## Key code additions
 
-In `core/index.ts` (new `#region 🪜StepRoundtrip`):
+In `core/index.ts` (new `#region 🪜️StepRoundtrip`):
 
 - `stepEscape(s: string): string` and `stepNumber(n: number): string` helpers.
 - `class StepEntityWriter` with `next(): number` and `emit(id, line)`.
@@ -83,7 +83,7 @@ In `core/index.ts` (new `#region 🪜StepRoundtrip`):
 - Extend `AttributeStore` with `entries(): Iterable<[id, Record<string, unknown>]>` so the writer can iterate it (currently `byId` is private).
 - Extend `ModelJson` / `ModelSpaceJson` with optional `metadata` so JSON IO is also lossless (parallel benefit; same shape consumed by STEP writer).
 
-In `kernel-brepjs/index.ts` (new `#region 🪜StepRoundtrip`):
+In `kernel-brepjs/index.ts` (new `#region 🪜️StepRoundtrip`):
 
 - `exportModelSpaceToStep(space: ModelSpace, kernel: BrepjsKernel): string` — walks `space.models`, emits the AP242 header, writes the six-pillar entities, embeds per-solid brepjs STEP chunks via `exportSTEPConfigured({ schema: 'AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF' })` with id-rewriting (renumber lines so each chunk shares the file's `StepEntityWriter` counter).
 - `importStepToModelSpace(stepText: string, kernel: BrepjsKernel): ModelSpace` — uses brepjs `importSTEP` to recover `ValidSolid` per `MANIFOLD_SOLID_BREP`, then rebuilds the kernel geometry buckets from the brepjs topology iterators we already use (`iterTopo`, `getFaces`, `getEdges`, `getVertices`) so resulting `Model` matches what a JSON load would produce.

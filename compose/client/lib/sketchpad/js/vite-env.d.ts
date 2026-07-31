@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,7 +6,7 @@
 
 // Vite client type declarations for the JavaScript workspace.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🖼️Declarations
 // Ambient module declarations for non-standard import types.

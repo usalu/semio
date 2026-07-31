@@ -1,0 +1,26 @@
+$ bun ./script.ts dev sourcing
+$ bun ./script.ts nx run @semio-tech/framework-os-dev:dev
+
+> nx run @semio-tech/framework-os-dev:dev
+
+> bun ./script.ts dev
+
+plugin registry catalog refreshed (33 plugin crates, 50 playgrounds) -> /Users/ueli/Documents/semio/framework/plugin/registry/generated
+[framework/surface/node-graph/rs] pkg/framework_surface_node_graph_bg.wasm up to date → skipping wasm-pack build
+[framework/editor/rs] pkg/framework_editor_bg.wasm up to date → skipping wasm-pack build
+9:35:14 PM [vite] (client) Re-optimizing dependencies because lockfile has changed
+
+  VITE v7.3.3  ready in 846 ms
+
+  ➜️  Local:   http://127.0.0.1:6081/
+9:36:31 PM [vite] ../../../plugin/registry/generated/plugins.ts changed, restarting server...
+9:36:31 PM [vite] ../../../plugin/registry/generated/playgrounds.ts changed, restarting server...
+9:36:33 PM [vite] server restarted.
+9:38:03 PM [vite] ../../../plugin/registry/generated/plugins.ts changed, restarting server...
+9:38:03 PM [vite] ../../../plugin/registry/generated/playgrounds.ts changed, restarting server...
+9:38:04 PM [vite] server restarted.
+9:38:21 PM [vite] ../../../plugin/registry/generated/plugins.ts changed, restarting server...
+9:38:21 PM [vite] ../../../plugin/registry/generated/playgrounds.ts changed, restarting server...
+9:38:23 PM [vite] server restarted.
+[BABEL] Note: The code generator has deoptimised the styling of /Users/ueli/Documents/semio/framework/renderer/react/index.tsx as it exceeds the max of 500KB.
+[BABEL] Note: The code generator has deoptimised the styling of /Users/ueli/Documents/semio/ui/js/react/index.tsx as it exceeds the max of 500KB.

@@ -1,0 +1,12 @@
+{
+  "title": "Replace Native System Dropdowns With Semio Select",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Some dropdowns in the product show native OS/browser dropdowns instead of semio's own Select UI component. This shouldn't happen — all dropdowns must always render semio UI.\n\nScope (confirmed via codebase search):\n- framework/renderer/react/os-shell.tsx: 6 native `\u003cselect\u003e` elements in the Settings panel (appearance, layout, expertise, language, terminology, theme) at lines ~4367, 4380, 4395, 4406, 4416, 4586.\n- cad/renderer/js/index.tsx: 4 native `\u003cselect\u003e` elements (model definition picker, transfer-from picker, transfer-to picker, enum attribute-definition field editor) at lines ~5986, 6018, 6041, 6293.\n\nReplace each with semio's own `Select`/`SelectTrigger`/`SelectValue`/`SelectContent`/`SelectItem` component (defined in ui/js/react/index.tsx:7125-7321, Radix-based), preserving current option lists, dynamic options, ids, and onChange/value wiring.\n\nNative `\u003cinput type=\"color\"\u003e` usages are out of scope (expected native color picker). Storybook-only demo files are out of scope for this ticket.",
+  "summary": "Replaced 6 native `\u003cselect\u003e` elements in framework/renderer/react/os-shell.tsx (Settings panel: appearance, layout, expertise, language, terminology, theme) and 4 in cad/renderer/js/index.tsx (model definition picker, transfer-from/to pickers, enum attribute-definition field editor) with semio's own Select/SelectTrigger/SelectValue/SelectContent/SelectItem component. Added a sentinel value for the enum field's \"no value\" option since Radix Select disallows empty-string item values, and local reset-key state for the transfer pickers (which act as one-shot action menus rather than persistent selections). Verified live in the browser via HMR: Settings \u003e Appearance now opens semio's styled popup (not the OS dropdown), and selecting an option correctly updates state and live-switches the app theme. tsc --noEmit shows no new errors introduced (cad file error count dropped from 82 to 78 by fixing the missing `id` props; os-shell.tsx error count unchanged, consistent with the existing pre-existing `Select` usage pattern in the file).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1935"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️944ca3401227409396f5f8991a99d0c2"]
+}

@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,13 +6,13 @@
 
 // Vitest configuration for the compose domain workspace.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import path from "path";
 import { defineConfig } from "vitest/config";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 const composeWasmBg = path.resolve(__dirname, "../rs/pkg/compose_bg.wasm");
 
@@ -21,7 +21,7 @@ const composeWasmBg = path.resolve(__dirname, "../rs/pkg/compose_bg.wasm");
 export default defineConfig({
   resolve: {
     alias: {
-      // 🧷 Direct file alias — survives `wasm-pack build --no-pack` regenerating `pkg/`.
+      // 🧷️ Direct file alias — survives `wasm-pack build --no-pack` regenerating `pkg/`.
       "@semio-tech/compose-rs-wasm": path.resolve(__dirname, "../rs/pkg/compose.js"),
     },
   },

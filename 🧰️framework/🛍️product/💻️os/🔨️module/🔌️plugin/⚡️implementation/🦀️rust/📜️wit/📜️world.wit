@@ -1,0 +1,196 @@
+package semio:framework;
+
+interface types {
+  record plugin-manifest-json {
+    json: string,
+  }
+
+  // 🚧️ B5 attempted a real pack-`Shape::Value` binary flip of these 4 records (matching the plan's
+  // Decision-1 invocation-wrapper binarization), but reverted: `framework/product/os/dev/script.ts`'s
+  // `pluginApiSource()` hand-written JS glue constructs these records directly (`{ json: actionJson }`
+  // etc.) to call into the wasm component, and a correct fix needs a real pack-document JS/wasm codec
+  // (pack_core's spec-driven document format, not a simple LEB128 twin like the other wire codecs) —
+  // out of scope to rush. Left as JSON-string records; re-attempt once a JS-callable
+  // `store::pack_rt::encode_json_value`/`decode_json_value` exists (e.g. via a wasm export), so
+  // `os/dev/script.ts` can build real bytes instead of a hand-rolled TLV encoder.
+  record action-invocation-json {
+    json: string,
+  }
+
+  record command-invocation-json {
+    json: string,
+  }
+
+  record invocation-context-json {
+    json: string,
+  }
+
+  record invocation-response-json {
+    json: string,
+  }
+
+  record window-input-json {
+    json: string,
+  }
+
+  record window-output-json {
+    json: string,
+  }
+
+  record ui-refresh-request-json {
+    json: string,
+  }
+
+  record ui-refresh-response-json {
+    json: string,
+  }
+
+  record migrate-document-input {
+    from-version: string,
+    to-version: string,
+    data: list<u8>,
+  }
+
+  record migrate-document-output {
+    data: list<u8>,
+  }
+
+  /// 📜️ Text-DSL counterpart of the `-json` document wire — the whole document as `dsl` (the printed
+  /// initial-projection text) plus `ops` (the full op-log text), mirroring `vcs::DocumentTextFiles`
+  /// (the canonical two-file text representation used by `FolderTextStorage`/`print_document_text`/
+  /// `parse_document_text` everywhere else in this codebase, rather than an ad hoc single-string
+  /// concatenation).
+  record document-text-files {
+    dsl: string,
+    ops: string,
+  }
+
+  /// 📦️ Binary counterpart of `document-text-files`: `pack` is the encoded initial projection and
+  /// `spr` the encoded op log — both AUTHORITATIVE (pack container bytes); `ops` stays a TEXT
+  /// logging mirror of the same history, format-invariant — mirroring `store::DocumentPackFiles`.
+  record document-pack-files {
+    pack: list<u8>,
+    spr: list<u8>,
+    ops: string,
+  }
+
+  /// 🎞️ Payload crossing the plugin ABI on one declared workflow port (`consume-media`/
+  /// `produce-media`). `descriptor-json` is a JSON object `{ edgeId?, portId?, kindId?, mediaType?,
+  /// wire, blobHash? }` — `mediaType` mirrors `framework/core/rs/lib.rs`'s `MediaType` (`{class,
+  /// form}`), `wire` mirrors its `MediaWireFormat` (`{kind:"document",schema}` or
+  /// `{kind:"binary",format}`). `data` carries the artifact's raw bytes (UTF-8 document JSON for a
+  /// `document` wire) and is empty when `descriptor-json.blobHash` is set instead — the payload
+  /// already lives in the host's blob store (see `write-blob`/`read-blob` on the `host` interface).
+  record media-artifact {
+    descriptor-json: string,
+    data: list<u8>,
+  }
+
+  variant plugin-error {
+    message(string),
+  }
+}
+
+interface plugin {
+  use types.{
+    plugin-manifest-json,
+    action-invocation-json,
+    command-invocation-json,
+    invocation-context-json,
+    invocation-response-json,
+    window-input-json,
+    window-output-json,
+    ui-refresh-request-json,
+    ui-refresh-response-json,
+    migrate-document-input,
+    migrate-document-output,
+    document-text-files,
+    document-pack-files,
+    media-artifact,
+    plugin-error,
+  };
+
+  manifest: func() -> plugin-manifest-json;
+  instantiate-app: func(app-id: string, instance-id: string) -> result<u32, plugin-error>;
+  handle-action: func(
+    instance-id: u32,
+    action: action-invocation-json,
+    context: invocation-context-json,
+  ) -> result<invocation-response-json, plugin-error>;
+  /// 🎛️ Dispatches a scoped command (os/plugin/app/mode — never window-level; see `ActionDescriptor`
+  /// for window-level verbs) through the same operation-emitting pipeline as `handle-action`.
+  handle-command: func(
+    instance-id: u32,
+    command: command-invocation-json,
+    context: invocation-context-json,
+  ) -> result<invocation-response-json, plugin-error>;
+  update-window: func(
+    instance-id: u32,
+    input: window-input-json,
+  ) -> result<window-output-json, plugin-error>;
+  /// 🐢️ Batched, hash-conditional refresh: one call replaces the old per-section `list-tools` /
+  /// `window-engagements` / `window-measures` / `app-labels` (+ per-window `update-window`) round
+  /// trips. The request lists every window/panel/utilities/engagements/measures/labels section the host
+  /// wants, each with the content hash the host already holds (or none, on first fetch); the response
+  /// omits the payload for any section whose hash still matches, so an unchanged window body or panel
+  /// costs one small hash-compare instead of a full re-render + re-serialize + re-parse.
+  refresh-ui: func(
+    instance-id: u32,
+    request: ui-refresh-request-json,
+  ) -> result<ui-refresh-response-json, plugin-error>;
+  /// 📦️ `data` (both directions) is pack-container bytes going forward (see `document-pack-files`) —
+  /// the WIT signature itself is unchanged (`list<u8>` both ways) so no other func needed updating.
+  migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
+  /// 📦️ `operations` is `protocol::encode_envelopes` bytes (a binary `OperationEnvelope` array).
+  apply-operations: func(instance-id: u32, operations: list<u8>) -> result<_, plugin-error>;
+  /// 📜️ Text-DSL counterpart of `apply-operations`: one already-authored operation per non-blank line
+  /// (op-text grammar, `vcs::OpText::parse_op`/`print_op`) instead of a binary `OperationEnvelope` array.
+  apply-operations-text: func(instance-id: u32, operations-text: string) -> result<_, plugin-error>;
+  /// 📜️ Text-DSL counterpart of `read-app-document-pack`.
+  read-app-document-text: func(instance-id: u32) -> result<document-text-files, plugin-error>;
+  /// 📜️ Text-DSL counterpart of `load-app-document-pack`.
+  load-app-document-text: func(instance-id: u32, document-text: document-text-files) -> result<_, plugin-error>;
+  /// 📦️ Pack counterpart of `read-app-document-text`.
+  read-app-document-pack: func(instance-id: u32) -> result<document-pack-files, plugin-error>;
+  /// 📦️ Pack counterpart of `load-app-document-text`.
+  load-app-document-pack: func(instance-id: u32, document-pack: document-pack-files) -> result<_, plugin-error>;
+  attach-backbone: func(instance-id: u32, uri: string) -> result<_, plugin-error>;
+  detach-backbone: func(instance-id: u32) -> result<_, plugin-error>;
+  /// 🔌️ Delivers a typed media artifact to a plugin instance's declared input port — the WIT-level
+  /// counterpart of the plugin SDK's `PluginApp::consume_media`. Every `PluginApp` gets a default
+  /// (whole-document passthrough for a matching `document` wire); apps whose input isn't simply their
+  /// own document override the SDK method directly.
+  consume-media: func(instance-id: u32, port-id: string, artifact: media-artifact) -> result<_, plugin-error>;
+  /// 🎬️ Requests a typed media artifact from a plugin instance's declared output port — the WIT-level
+  /// counterpart of `PluginApp::produce_media`. Optional override point: most apps' "media output" is
+  /// just their document (the host can instead call `read-app-document-pack` and transcode server-side), so
+  /// this only matters for apps whose output isn't simply their raw document (computed/derived
+  /// outputs). `request-json` is reserved for future parameterized requests and currently ignored by
+  /// the SDK default.
+  produce-media: func(instance-id: u32, port-id: string, request-json: string) -> result<media-artifact, plugin-error>;
+  /// 🩹️ Clears the plugin's single-flight instance guard after a wasm trap skipped `Drop`. Hosts
+  /// must only call this between serialized top-level calls — never while another call is in flight.
+  clear-instance-guard: func();
+}
+
+interface host {
+  log: func(level: string, message: string);
+  now-ms: func() -> s64;
+  read-document: func(handle: u64) -> result<string, string>;
+  write-document: func(handle: u64, payload-json: string) -> result<_, string>;
+  open-window: func(kind: string, params-json: string) -> result<u64, string>;
+  invoke-action: func(target: string, invocation-json: string) -> result<string, string>;
+  read-asset: func(handle: u64) -> result<list<u8>, string>;
+  network-fetch: func(origin: string, path: string) -> result<list<u8>, string>;
+  write-blob: func(data: list<u8>, media-type: string) -> result<string, string>;
+  read-blob: func(hash: string) -> result<list<u8>, string>;
+  /// 📦️ `message` is a `store::encode_backbone_message` blob (a binary `BackboneMessage`).
+  backbone-send: func(uri: string, message: list<u8>) -> result<_, string>;
+  backbone-poll: func(uri: string) -> result<list<list<u8>>, string>;
+  backbone-status: func(uri: string) -> result<string, string>;
+}
+
+world plugin-world {
+  import host;
+  export plugin;
+}

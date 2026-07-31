@@ -1,0 +1,14 @@
+{
+  "title": "Disable Vertex Percentages When Object Kind Is Zero",
+  "emoji": "🚫️",
+  "status": "closed",
+  "description": "In puzzle 3D fill options: when an object kind percentage is set to 0, all vertex percentages for that kind must be disabled because anything times 0 is 0. Vertex percentage controls should be visually and interactively disabled while the object kind weight is 0.",
+  "summary": "When an object-kind distribution weight is 0, vortex percentage sliders under that kind are disabled (joint contribution is always 0). Added optional WindowMeasure::Slider.disabled, emit it from puzzle3d_joint_vortex_measures, ignore setVortexKindWeight for zeroed object kinds, and wire disabled through React Slider and wgpu render_slider. Verified with zero_object_kind_weight_disables_joint_vortex_sliders and window_measure golden serialization.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2307"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️9060401c4e6c438d8ad5b579774ed4a1"
+  ]
+}

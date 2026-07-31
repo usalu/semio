@@ -1,0 +1,12 @@
+{
+  "title": "Active State Uses Primary Not Hover Fill",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Hover effect must never be permanent. Active toolbar categories should use primary background with emphasized text, not hover fill.",
+  "summary": "Separated transient hover from persistent active state. Hover stays border-gray fill + emphasized text (hover:/focus: only). Active/on/selected uses primary fill + emphasized text via interactiveOnClass, interactiveActiveFillClass, and updated navbar/footer/toolbar CSS. Menu selected rows, dock tabs, side panel tabs, and app nav active items restored to bg-active-base.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1574"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient",
+  "sessions": ["⚪️2c0f62f17c1f4813ba58cff65bcdeda7"]
+}

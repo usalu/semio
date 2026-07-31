@@ -111,4 +111,4 @@ readonly sidePanelBodies?: Readonly<Record<string, SidePanelBodyFactory>>;
 
 ## Work tracking
 
-Reopen the `APP-ISOLATION-ENFORCED-BOUNDARIES` ticket (`.repo/🎫/26/07/03/`); all temp scripts/logs go into its folder.
+Reopen the `APP-ISOLATION-ENFORCED-BOUNDARIES` ticket (`.repo/🎫️/26/07/03/`); all temp scripts/logs go into its folder.

@@ -1,0 +1,14 @@
+{
+  "title": "Layout Canvas2d Scene Consolidation Audit (D3)",
+  "emoji": "🎥️",
+  "status": "closed",
+  "description": "D3: Replace layout's bespoke PointerCamera/CanvasScene with the shared build_canvas_2d_scene primitive. Audit layout/plugin/rs/lib.rs's 🔖️CanvasScene and 🔖️PointerCamera regions, delete any local camera/scene types, route rendering through semio_framework_plugin's build_canvas_2d_scene/Canvas2dScene (matching draw/procedural's call pattern), preserve pan/zoom/pointer behavior, and flag anything the shared primitive can't express.",
+  "summary": "Audited layout/plugin/rs/lib.rs's CanvasScene and PointerCamera regions for D3 (replace bespoke PointerCamera/CanvasScene with shared build_canvas_2d_scene). Found the CanvasScene-to-build_canvas_2d_scene migration was already complete and correct (render_blueprint/render_preview already call semio_framework_plugin::build_canvas_2d_scene with a Canvas2dScene{camera_x,camera_y,zoom,layers_json} literal, matching the call pattern used by draw/plugin and procedural/plugin exactly). No hand-rolled local Canvas2dScene-equivalent struct or camera type existed in the plugin (LayoutCamera is layout_rs's legitimate document-state type, mirroring draw::DrawCamera). Removed one genuinely dead function, camera_for_surface (defined, never called). Left screen_to_world_for_surface/hit_test_at/pointer_args/surface_is_blueprint in place: there is no shared SDK primitive for Canvas2d pointer-to-world conversion or hit-testing (framework_plugin only exposes World3d camera helpers); every Canvas2d app (draw's canvas_point_to_world, procedural, layout) hand-rolls this per document schema, so this is the established pattern, not something to consolidate further.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2106"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️bb2d51f20d5d4f479f5c7238e9f7206f"
+  ]
+}

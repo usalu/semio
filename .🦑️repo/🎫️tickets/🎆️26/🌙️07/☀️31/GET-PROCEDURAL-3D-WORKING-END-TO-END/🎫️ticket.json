@@ -1,0 +1,13 @@
+{
+  "title": "Get Procedural 3D Working End to End",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Get procedural 3d working end to end. Currently the canvas shows after a second an error: Render error: session.clearGhostWidget is not a function",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2403"
+  },
+  "goal": "🎯︎r2602🎯︎runningsketchpad",
+  "sessions": [
+    "⚪fa27f60ad79f4faf9d633e4c476e912a"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Fix Missing Sketchpad Export and App Configs",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The compose/sketchpad/index.tsx file is missing the exported Sketchpad component, appRegistry instance, and app config objects (homeConfig, designConfig, kitConfig, typeConfig, qualityConfig, docsConfig, feedbackConfig) that consumers (play, vscode, desktop, docs sites) import from @semio-tech/compose-sketchpad. This causes a runtime SyntaxError: \"does not provide an export named 'Sketchpad'\".",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1217"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️92e7ddbcecda47eabb673a01c9fe6dbb"]
+}

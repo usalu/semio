@@ -1,0 +1,9 @@
+{
+  "title": "Board Node And Handle Icons Multikind",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "Board nodes and handles: iconKind supports emoji (emoji:), Typst (typst:) via typst+typst-svg, SVG via vello_svg, raster data URLs (image:/data:). Align crate on vello_svg's vello 0.7. Extend TS/React fixture types and Vitest.",
+  "summary": "Board node and handle iconKind now covers Typst (typst:), emoji (emoji:), inline SVG, metabolism catalog ids, and raster data URLs; Rust uses vello_svg + typst-svg with Vello 0.7 wgpu stack enabled for WASM. WASM BoardSession updated for wgpu 27 (Surface::get_current_texture Result + public surface.configure on outdated). TypeScript: fixture Vitest for handle iconKind; play markers pass iconKind to Handle; Node iconKind docstrings widened. Validated: cargo test -p elements_board, cargo check --target wasm32-unknown-unknown, nx @elements/board:test (wasm-pack + Vitest).",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️b88ade8bef734d5eaa60945ba0e93790"]
+}

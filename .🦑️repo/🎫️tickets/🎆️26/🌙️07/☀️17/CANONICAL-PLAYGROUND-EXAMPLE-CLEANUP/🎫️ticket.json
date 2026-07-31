@@ -1,0 +1,14 @@
+{
+  "title": "Canonical Playground Example Cleanup",
+  "emoji": "🧹️",
+  "status": "closed",
+  "description": "Remove duplicate playground example entries (empty example vs navbar No example). Canonical: navbar No example sentinel maps to empty exampleId; remove redundant .example(\"empty\") manifest entries and ActionArgOption empty options; normalize __none__ in os-shell; update plugin handlers and tests.",
+  "summary": "Canonical playground example selection: navbar \"No example\" is the sole blank-state entry (maps to empty exampleId). Added normalizePlaygroundExampleId in ui-react to map __none__ and legacy \"empty\" ids to \"\". NavbarExampleSelect filters manifest \"empty\" rows and normalizes on change. Removed duplicate .example(\"empty\", ...) manifest entries from writer, puzzle (2d/3d/5d), draw, note, forms, mindmap, raster; removed cad \"default\" example that duplicated the blank state. Removed ActionArgOption::new(\"empty\", ...) from writer, process, puzzle 2d, gis, shooting, note, cad. Updated setActiveExample handlers to treat only empty exampleId as blank (forms, sourcing, raster handler added). Cleaned example_labels overlays. Tests updated to use exampleId: \"\" instead of \"empty\".",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2023"
+  },
+  "goal": "🎯️r2602🎯️updateddocs🎯️updatedexamples",
+  "sessions": [
+    "⚪️ffa51b10223540daa40d8880e93d4fbf"
+  ]
+}

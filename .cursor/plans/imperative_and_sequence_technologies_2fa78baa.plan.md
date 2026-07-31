@@ -85,40 +85,40 @@ Both exist to **trigger side effects in a consistent, ordered sequence** (contra
 
 ```
 imperative/
-├── AGENTS.md                     # philosophy doc, mirrors neural/AGENTS.md
-├── engine/                       # imperative_engine (pure Rust, like neural/engine)
-│   ├── Cargo.toml
-│   ├── AGENTS.md
-│   └── lib.rs                    # Path, Step, Executor, EffectLogEntry, compile_to_text
-├── module/
-│   └── core/                     # imperative_module_core (pure Rust, no wasm)
-│       ├── Cargo.toml
-│       └── lib.rs                # LogPrint, StateSet, StateIncrement, WaitDelay + register()
-├── core/                         # imperative_core (Rust+wasm) + TS
-│   ├── Cargo.toml
-│   ├── lib.rs                    # ImperativeSession (#[wasm_bindgen])
-│   ├── index.ts                  # thin TS: types, VCS doc handler, performImperativeEffects()
-│   ├── package.json / project.json / script.ts
-├── react/                        # step-list UI pieces
-│   ├── index.tsx
-│   └── package.json / project.json / script.ts / vitest.config.ts
-└── play/                         # PlaygroundImperative (step-list editor, no canvas)
-    ├── index.ts / index.html / globals.css
-    └── package.json / project.json / script.ts / vite.config.ts / vitest.config.ts
+├️─️ AGENTS.md                     # philosophy doc, mirrors neural/AGENTS.md
+├️─️ engine/                       # imperative_engine (pure Rust, like neural/engine)
+│️   ├️─️ Cargo.toml
+│️   ├️─️ AGENTS.md
+│️   └️─️ lib.rs                    # Path, Step, Executor, EffectLogEntry, compile_to_text
+├️─️ module/
+│️   └️─️ core/                     # imperative_module_core (pure Rust, no wasm)
+│️       ├️─️ Cargo.toml
+│️       └️─️ lib.rs                # LogPrint, StateSet, StateIncrement, WaitDelay + register()
+├️─️ core/                         # imperative_core (Rust+wasm) + TS
+│️   ├️─️ Cargo.toml
+│️   ├️─️ lib.rs                    # ImperativeSession (#[wasm_bindgen])
+│️   ├️─️ index.ts                  # thin TS: types, VCS doc handler, performImperativeEffects()
+│️   ├️─️ package.json / project.json / script.ts
+├️─️ react/                        # step-list UI pieces
+│️   ├️─️ index.tsx
+│️   └️─️ package.json / project.json / script.ts / vitest.config.ts
+└️─️ play/                         # PlaygroundImperative (step-list editor, no canvas)
+    ├️─️ index.ts / index.html / globals.css
+    └️─️ package.json / project.json / script.ts / vite.config.ts / vitest.config.ts
 
 sequence/
-├── AGENTS.md                     # mirrors flow/AGENTS.md
-├── core/                         # sequence_core (Rust+wasm) + TS
-│   ├── Cargo.toml
-│   ├── lib.rs                    # SequenceFixture, SequenceHost (wraps DagHost), SequenceSession
-│   ├── index.ts
-│   ├── package.json / project.json / script.ts
-├── react/                        # SequenceCanvas
-│   ├── index.tsx
-│   └── package.json / project.json / script.ts / vitest.config.ts
-└── play/                         # PlaygroundSequence (canvas + catalogue + compiled-text panel)
-    ├── index.ts / index.html / globals.css
-    └── package.json / project.json / script.ts / vite.config.ts / vitest.config.ts
+├️─️ AGENTS.md                     # mirrors flow/AGENTS.md
+├️─️ core/                         # sequence_core (Rust+wasm) + TS
+│️   ├️─️ Cargo.toml
+│️   ├️─️ lib.rs                    # SequenceFixture, SequenceHost (wraps DagHost), SequenceSession
+│️   ├️─️ index.ts
+│️   ├️─️ package.json / project.json / script.ts
+├️─️ react/                        # SequenceCanvas
+│️   ├️─️ index.tsx
+│️   └️─️ package.json / project.json / script.ts / vitest.config.ts
+└️─️ play/                         # PlaygroundSequence (canvas + catalogue + compiled-text panel)
+    ├️─️ index.ts / index.html / globals.css
+    └️─️ package.json / project.json / script.ts / vite.config.ts / vitest.config.ts
 ```
 
 ## `imperative/engine` (Rust, depends on `neural_engine` for `Dictionary`/`Registry`/`Operation`)
@@ -218,10 +218,10 @@ Small subset of `FlowCanvas` ([flow/react/index.tsx:2885](flow/react/index.tsx))
 ## Root wiring
 
 - `**Cargo.toml**` workspace `members`: add `"imperative/engine"`, `"imperative/module/core"`, `"imperative/core"`, `"sequence/core"`.
-- `**package.json**` `workspaces`: add `"imperative/core"`, `"imperative/react"`, `"imperative/play"`, `"sequence/core"`, `"sequence/react"`, `"sequence/play"`. `scripts`: add `"dev:imperative": "bun ./script.ts dev imperative"`, `"dev:sequence": "bun ./script.ts dev sequence"`.
+- `**package.json**` `workspaces`: add `"imperative/core"`, `"imperative/react"`, `"imperative/play"`, `"sequence/core"`, `"sequence/react"`, `"sequence/play"`. `scripts`: add `"dev:imperative": "bun ./📜️script.ts dev imperative"`, `"dev:sequence": "bun ./📜️script.ts dev sequence"`.
 - `**script.ts**` `dev` dispatch: add `if (segments[0] === "imperative") { runCmd(..., "@semio-tech/imperative-play:dev", ...) }` and the same for `sequence`, alongside the existing `flow`/`dag` branches ([script.ts:223](script.ts)).
-- `**.vscode/launch.json**`: add `🛠️dev⚙️imperative` (group `3_dev`, `IMPERATIVE_PLAY_PORT=6076`) and `🛠️dev📜sequence` (`SEQUENCE_PLAY_PORT=6077`) entries, following the exact shape of the `🛠️dev🌊flow` entry ([.vscode/launch.json:371](.vscode/launch.json)).
-- `**ui/styling/vite-elements-assets.ts**`: extend `PlaygroundRendererPuzzleKind` union with `"imperative" | "sequence"` ([ui/styling/vite-elements-assets.ts:436](ui/styling/vite-elements-assets.ts)), add boot-subpath and host-marker entries (`//#region 🔖ImperativePlayHost` / `//#region 🔖SequencePlayHost`).
+- `**.vscode/launch.json**`: add `🛠️dev⚙️imperative` (group `3_dev`, `IMPERATIVE_PLAY_PORT=6076`) and `🛠️dev📜️sequence` (`SEQUENCE_PLAY_PORT=6077`) entries, following the exact shape of the `🛠️dev🌊️flow` entry ([.vscode/launch.json:371](.vscode/launch.json)).
+- `**ui/styling/vite-elements-assets.ts**`: extend `PlaygroundRendererPuzzleKind` union with `"imperative" | "sequence"` ([ui/styling/vite-elements-assets.ts:436](ui/styling/vite-elements-assets.ts)), add boot-subpath and host-marker entries (`//#region 🔖️ImperativePlayHost` / `//#region 🔖️SequencePlayHost`).
 - `**framework/product/playground/renderer/react/index.tsx**`: add the two new host regions (registering surface hosts + `bootImperativePlay`/`bootSequencePlay`), extend the surface-type switch and the fixture-preview switch with `case "imperative"` / `case "sequence"` (mirroring the existing `flow`/`dag` cases).
 - `**framework/product/playground/renderer/react/package.json**`: add `"./imperative"` and `"./sequence"` export subpaths plus `@semio-tech/imperative-play`, `@semio-tech/imperative-react`, `@semio-tech/sequence-play`, `@semio-tech/sequence-react` dependencies.
 - Per-package `project.json`/`package.json`/`script.ts` follow the flow/dag template exactly (`wasm` target for Rust+wasm crates, `dev`/`build`/`test`/`validate` for play apps, `test` only for react packages) — all commands routed through each package's own `script.ts`.

@@ -32,7 +32,7 @@ isProject: false
 
 Fold every consolidatable multi-file unit into one physical source file per package, matching the existing single-file style in `[mathematical/fuzzy/rs/lib.rs](mathematical/fuzzy/rs/lib.rs)`, `[vcs/rs/lib.rs](vcs/rs/lib.rs)`, and `[lowpoly/core/rs/lib.rs](lowpoly/core/rs/lib.rs)`. **No intentional behavior or public-API path changes** — only physical layout + section consistency.
 
-Goal: `🎯aioptimizedrepo🎯singlefilerepo` (open a new ticket; past consolidation tickets are closed).
+Goal: `🎯️aioptimizedrepo🎯️singlefilerepo` (open a new ticket; past consolidation tickets are closed).
 
 ## In scope (must consolidate)
 
@@ -70,24 +70,24 @@ Order: **number → polynomial → cas → entropy → wfc → brep** (leaves fi
 1. For each `src/foo.rs` currently loaded via `#[path]`, **inline as the same module** inside `lib.rs`:
 
 ```rust
-// #region 🔖Foo
+// #region 🔖️Foo
 pub mod foo {
     // exact former file body (adjust only crate-relative paths if needed)
 }
-// #endregion 🔖Foo
+// #endregion 🔖️Foo
 ```
 
 1. Preserve visibility (`pub mod` / `pub(crate) mod` / private `mod`) and existing `pub use` reexports so paths like `mathematical_wfc::ids::NodeId` keep working.
 2. Prefer MCP `[file_integrate](project-0-semio-repo)` at named region boundaries; put any temp logs/helpers only under the ticket folder.
 3. Delete emptied `src/*.rs` (and empty `src/` dirs). Do not leave dual copies.
-4. Normalize region markers while touching files: `// #region 🔖Name` / `// #endregion 🔖Name` (emoji + spaced `#region`), matching fuzzy/vcs — **cosmetic only**.
+4. Normalize region markers while touching files: `// #region 🔖️Name` / `// #endregion 🔖️Name` (emoji + spaced `#region`), matching fuzzy/vcs — **cosmetic only**.
 5. Keep module docstrings and item emoji docstrings; do not rewrite algorithms, signatures, or test assertions except where paths/imports must adjust for inlining.
 6. **BREP strategy change:** stop the open ticket’s “additive `src/*.rs` forever” layout; all further native kernel work goes into the single `[kernel/3d/brep/rs/lib.rs](kernel/3d/brep/rs/lib.rs)`. Functional Flip plan is unchanged — only file layout.
 
 ```mermaid
 flowchart LR
   srcMods["src/*.rs modules"] --> inlineMods["inline mod blocks in lib.rs"]
-  inlineMods --> regions["#region 🔖 markers"]
+  inlineMods --> regions["#region 🔖️ markers"]
   regions --> deleteSrc["delete src/*.rs"]
   deleteSrc --> test["cargo test -p crate"]
 ```

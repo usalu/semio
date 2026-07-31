@@ -1,0 +1,12 @@
+{
+  "title": "Create Nakgin Capsule Tower Diff Design Asset",
+  "emoji": "🆕️",
+  "status": "closed",
+  "description": "Create a new asset called nakgin-capsule-tower.diff.design.compose.json with comprehensive diff operations on the Nakagin Capsule Tower design. Integrate it into the metabolism kit diffs and storybook stories.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1147"
+  },
+  "goal": "🎯️elements",
+  "sessions": ["⚪️920693deee0a453c90def4fd252ac797"]
+}

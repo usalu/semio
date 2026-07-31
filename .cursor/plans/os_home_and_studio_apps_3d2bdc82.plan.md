@@ -55,7 +55,7 @@ flowchart LR
 
 ## 1. Studio catalog primitives — `framework/product/os/core`
 
-In [framework/product/os/core/js/index.ts](framework/product/os/core/js/index.ts) (new region `🔖OsStudioCatalog`, next to the existing `OsStorageVirtualFileSystemController` at line ~1838):
+In [framework/product/os/core/js/index.ts](framework/product/os/core/js/index.ts) (new region `🔖️OsStudioCatalog`, next to the existing `OsStorageVirtualFileSystemController` at line ~1838):
 
 - `listOsStudioCatalogEntries()`: enumerate the dev backbone namespace (`localStorage` keys `s:backbone:dev://studio/*`), parse each stored `OsDocument` for `id`, `name`, node/app counts, and last-operation timestamp.
 - `createOsStudio(name)`: `createEmptyOsDocument(id, name)` + attach `DevJsonBackbone` at `dev://studio/{id}` + sync. Returns the id.
@@ -65,11 +65,11 @@ In [framework/product/os/core/js/index.ts](framework/product/os/core/js/index.ts
 ## 2. S shell: Home app + Studio app + routing — `s/core/js/index.ts`
 
 - **Rename the play app to the Studio app**: `S_PLAY_APP_ID` value becomes `"studio"`, label "Space" (constants/surface ids keep their names; greenfield, no aliases). `SPlayController` stays the studio controller.
-- **New `SHomeController`** (region `🔖SHome`): wraps `OsHomeVirtualFileSystemController`, exposes `run` commands `createStudio`, `importStudio`, `deleteStudio`, `openStudio`; mode toolbar buttons ("New Studio", "Import Studio") following `buildSPlayToolbarTools` style. Home `AppRuntime` has a single VFS window registered via `registerAppVirtualFileSystem` (same mechanism as `attachMediaGraphVirtualFileSystem`, line ~193).
+- **New `SHomeController`** (region `🔖️SHome`): wraps `OsHomeVirtualFileSystemController`, exposes `run` commands `createStudio`, `importStudio`, `deleteStudio`, `openStudio`; mode toolbar buttons ("New Studio", "Import Studio") following `buildSPlayToolbarTools` style. Home `AppRuntime` has a single VFS window registered via `registerAppVirtualFileSystem` (same mechanism as `attachMediaGraphVirtualFileSystem`, line ~193).
 - **Studio open/close on `SPlayController`**: add `openStudio(spaceId)` (load document from `DevJsonBackbone` at `dev://studio/{id}`, swap store via existing store-swap path used by fixture switching) and `goHome`.
 - **Routing**: set `platform.applyUri` on the S runtime — `/` activates the home app, `/spaces/{id}` activates the studio app and opens that studio; `platform.navigation` yields Home / Studio-name breadcrumb levels (mirror `applySketchpadUri` wiring at [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) line ~15974). Navigation from controllers goes through a `navigateTo(uri)` helper like sketchpad's shell controller.
 - **Boot**: `bootOsDev` no longer force-opens a document; it builds the runtime with both apps, seeds the demo studio at `dev://studio/default` when storage is empty (reuse `resolveOsBootStudioDocument` seeding so home isn't empty), and starts on `/`.
-- **Playground harness**: `sPlayAppDefinition` (fixture-driven `bun script.ts dev s`) keeps working — it boots the studio app directly with the example catalog; the examples contribution stays on the studio app only.
+- **Playground harness**: `sPlayAppDefinition` (fixture-driven `bun 📜️script.ts dev s`) keeps working — it boots the studio app directly with the example catalog; the examples contribution stays on the studio app only.
 - Register a `home` app in `S_SYSTEM_PROGRAM` ([s/core/js/internal.ts](s/core/js/internal.ts) line ~259) alongside the existing `studio` app (componentKind `virtualFileSystem`, sourceFormat `os.storage`); catalogue already filters `s.system` from spawnables.
 
 ## 3. History sync in the S chrome — `s/react/play-host.tsx` (+ os renderer)
@@ -86,7 +86,7 @@ In [framework/product/os/core/js/index.ts](framework/product/os/core/js/index.ts
 
 ## 5. Verification
 
-- Extend existing tests in `s/core/js/index.ts` (region `🧪Tests`): studio catalog list/create/delete round-trip, `applyUri` routing home ↔ studio, boot seeds demo studio.
+- Extend existing tests in `s/core/js/index.ts` (region `🧪️Tests`): studio catalog list/create/delete round-trip, `applyUri` routing home ↔ studio, boot seeds demo studio.
 - Run `s/core`, `os/core`, and sketchpad vitest suites.
 - Boot OS dev in the browser: confirm with `[DEBUG]` logs + interaction that home lists studios, "New Studio" creates and navigates to `/spaces/{id}`, media graph works there, browser back returns home, and spawning `compose.sketchpad` kit inside a studio still mounts sketchpad.
 

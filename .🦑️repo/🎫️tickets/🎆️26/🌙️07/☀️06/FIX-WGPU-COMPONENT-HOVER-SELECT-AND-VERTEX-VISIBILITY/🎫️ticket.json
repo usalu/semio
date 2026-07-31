@@ -1,0 +1,20 @@
+{
+  "title": "Fix WGPU Component Hover, Select, and Vertex Visibility",
+  "emoji": "🧊️",
+  "status": "closed",
+  "description": "Migrate the raw-wgpu OS/playground stack from browser-only wasm-bindgen/web-sys to winit windowing/input (native + web) and trunk build tooling, plus native hot-swappable plugin hosting.",
+  "summary": "Fixed WGPU component-level 3D interaction beyond mesh hover. Root causes for invisible vertices/faces: selection targets were never synced into World3dState, so vertex/edge target flags from lowpoly were ignored; append_component_overlays only drew highlight markers for already-selected/hovered ids, not base vertex points when vertex target is enabled (React parity). Fixes: sync selection targets + activeObjectId from selection JSON; draw base vertex jack markers when targets.vertex; show baseline wireframe when targets.edge; scope hover highlights to matching object+granularity; add translucent face overlays for hover/selection in face mode; remove temporary [DEBUG] instrumentation. Pointer coordinate scaling fix retained. cargo test infinite_world (9) + ui_wgpu (28) pass; renderer wasm rebuilt.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1836"
+  },
+  "goal": "🎯️framework🎯️playground",
+  "sessions": [
+    "⚪️c061613497df4c389f38aac5638e79a8",
+    "⚪️5dc496cf4fc145a9afebda9c9b92cf31",
+    "⚪️b6776fdb181646eda1165f32879ede70",
+    "⚪️444f52ed3b834611b02018904ffde898",
+    "⚪️cc8230bea7f34264af86efd5e0ec9722",
+    "⚪️93b9b42037da415389505da3e142cb1b",
+    "⚪️74fd1ad2f83b48b39364819fb5690044"
+  ]
+}

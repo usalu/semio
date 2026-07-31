@@ -1,0 +1,9 @@
+{
+  "title": "Tree Hover Flicker Fix",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Fix tree hover flicker: stale row onPointerLeave clears highlight after fast hover enter on another row; sync TreeHighlightStore before paint.",
+  "summary": "Fixed fast-hover flicker that made tree rows look selected: row onPointerLeave no longer clears semantic hover when relatedTarget is another tree row (stale leave after enter was resetting highlight); TreeHighlightStore now syncs in useLayoutEffect before paint. Test: shouldDispatchTreeRowPointerLeave. ui/react 98 tests pass.",
+  "goal": "🎯️compose",
+  "sessions": ["⚪️5abf8ec194aa4730a9fa0359f00e26ad"]
+}

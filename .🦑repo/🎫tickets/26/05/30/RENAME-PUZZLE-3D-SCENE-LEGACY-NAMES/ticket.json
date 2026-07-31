@@ -1,9 +1,0 @@
-{
-  "title": "Rename Puzzle 3D Scene Legacy Names",
-  "emoji": "🧩",
-  "status": "closed",
-  "description": "Rename legacy scene terminology in puzzle/3d play and related framework hosts to puzzle 3d naming (Puzzle3d*, puzzle-3d-*, puzzle.3d.*). Run tests.",
-  "summary": "Finished renaming legacy scene product terminology in puzzle 3D play/react, playground hosts, and related entrypoints. Public APIs now use Puzzle3d*, puzzle3d*, PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID, buildPuzzle3dWindowBody, registerUiPuzzle3dSurfaceHost, and data-puzzle3d-* hooks. Removed playground aliases buildScene3dWindowBody/UiScene3DHostSurfaceNode and legacy scene3d renderer branches. Updated 5d play LOD imports, CAD shell import, e2e test titles, and bootPuzzle3dPlay entry. Playground core vitest 5/5 and renderer vitest 13/13 pass; puzzle 3d play/react vitest still fail on pre-existing @semio-tech/framework-platform-core resolution in vite.",
-  "goal": "🎯cad",
-  "sessions": ["⚪a3e458e2b8ad4f668d65e67bc81a9b01"]
-}

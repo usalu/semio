@@ -50,15 +50,15 @@ Add a general "Display" left panel with two tabs: **Windows** (window kinds + dr
 
 ## 1. Core concepts (`framework/core/index.ts`)
 
-- In `#region 🔖Layout`, add optional `templateId` + `instanceId` to `WindowLayoutWindowNode` so a layout slot can pick a template and so multiple instances of one kind can coexist.
-- New `#region 🔖WindowTemplate`:
+- In `#region 🔖️Layout`, add optional `templateId` + `instanceId` to `WindowLayoutWindowNode` so a layout slot can pick a template and so multiple instances of one kind can coexist.
+- New `#region 🔖️WindowTemplate`:
   - `WindowTemplate { id; label; iconId?; controllerId?; command?; args? }` (the `command`/`args` are dispatched on the `CommandBus` when a window is created from the template, e.g. apply a camera preset).
-- New `#region 🔖NamedLayout`:
+- New `#region 🔖️NamedLayout`:
   - `NamedLayout { id; label; iconId?; layout: WindowLayout; origin: "builtin" | "user" }`.
   - Helpers `mergeNamedLayouts`, and a `createNamedLayout(...)` factory.
 - Extend `BaseWindowKindRuntime` (line ~661) with `readonly templates: readonly WindowTemplate[] = []`.
-- `#region 🔖SideTab`: change `PanelKind` to `"display" | "overview" | "workbench" | "details" | "settings" | "chat"`, and `LEFT_PANEL_KINDS = ["workbench", "display", "overview"]` (display adjacent to workbench). Update `PANEL_KINDS`/`panelSide` accordingly.
-- New `#region 🔖DisplayStore`: a render-neutral `StoragePort` interface (`get(key)/set(key,value)/remove(key)`) and a `NamedLayoutStore extends Store<NamedLayout[]>` that loads/saves user layouts per app id behind that port (no direct browser API in core — satisfies the "external libs behind an interface" rule).
+- `#region 🔖️SideTab`: change `PanelKind` to `"display" | "overview" | "workbench" | "details" | "settings" | "chat"`, and `LEFT_PANEL_KINDS = ["workbench", "display", "overview"]` (display adjacent to workbench). Update `PANEL_KINDS`/`panelSide` accordingly.
+- New `#region 🔖️DisplayStore`: a render-neutral `StoragePort` interface (`get(key)/set(key,value)/remove(key)`) and a `NamedLayoutStore extends Store<NamedLayout[]>` that loads/saves user layouts per app id behind that port (no direct browser API in core — satisfies the "external libs behind an interface" rule).
 
 ## 2. `@semio-tech/ui-react` `Mode` canvas (`ui/react/index.tsx`)
 

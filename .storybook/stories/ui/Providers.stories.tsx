@@ -1,14 +1,14 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/Providers.stories.tsx
+// 🥼️ .storybook/stories/ui/Providers.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import {
   createIconComponent,
   FlowProvider,
@@ -34,9 +34,9 @@ import {
 } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ReactNode } from "react";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// 🧬#region 🧬Providers
+// 🧬️#region 🧬️Providers
 // One doc-style file for every context provider in the barrel that isn't already exercised end-to-end by
 // a component-specific story (Panel/PanelChromeTabBar exercise PanelDockProvider indirectly; this file
 // probes each provider directly via its own exported hook so the contract itself is documented in isolation).
@@ -63,7 +63,7 @@ function ProbeShell({ title, children }: { readonly title: string; readonly chil
   );
 }
 
-// #region 👻GhostProvider
+// #region 👻️GhostProvider
 function GhostProbe() {
   const ghost = usePanelGhost();
   return (
@@ -91,9 +91,9 @@ export const Ghost: Story = {
     </ProbeShell>
   ),
 };
-// #endregion 👻GhostProvider
+// #endregion 👻️GhostProvider
 
-// #region 🔤InteractionProvider
+// #region 🔤️InteractionProvider
 function InteractionProbe() {
   const [active, setActive] = useState<string | undefined>(undefined);
   const commands = { setActiveInteraction: (_elementId?: string, interactionId?: string) => setActive(interactionId) };
@@ -117,7 +117,7 @@ export const Interaction: Story = {
     </ProbeShell>
   ),
 };
-// #endregion 🔤InteractionProvider
+// #endregion 🔤️InteractionProvider
 
 // #region 🎛️PanelDockProvider
 const Layers = createIconComponent("layers");
@@ -163,7 +163,7 @@ export const PanelDockStory: Story = {
 };
 // #endregion 🎛️PanelDockProvider
 
-// #region 🐹TransactionProvider
+// #region 🐹️TransactionProvider
 function TransactionProbe() {
   const transaction = useTransaction();
   const [log, setLog] = useState<string[]>([]);
@@ -204,9 +204,9 @@ export const Transaction: Story = {
     </ProbeShell>
   ),
 };
-// #endregion 🐹TransactionProvider
+// #endregion 🐹️TransactionProvider
 
-// #region 📜TreeStateProvider
+// #region 📜️TreeStateProvider
 function TreeStateProbe() {
   const { openStates, setOpenState } = useTreeState();
   return (
@@ -229,9 +229,9 @@ export const TreeState: Story = {
     </ProbeShell>
   ),
 };
-// #endregion 📜TreeStateProvider
+// #endregion 📜️TreeStateProvider
 
-// #region 🚗UiDriverProvider
+// #region 🚗️UiDriverProvider
 function UiDriverProbe() {
   const driver = useUiDriver();
   return (
@@ -258,9 +258,9 @@ export const Driver: Story = {
     </div>
   ),
 };
-// #endregion 🚗UiDriverProvider
+// #endregion 🚗️UiDriverProvider
 
-// #region 🧭FlowProvider
+// #region 🧭️FlowProvider
 function FlowProbe() {
   const flow = useFlow();
   return (
@@ -283,9 +283,9 @@ export const Flow: Story = {
     </ProbeShell>
   ),
 };
-// #endregion 🧭FlowProvider
+// #endregion 🧭️FlowProvider
 
-// #region 🪟LevelProvider
+// #region 🪟️LevelProvider
 function LevelProbe() {
   const level = useLevel();
   return <span className="text-xs">level: {level}</span>;
@@ -301,5 +301,5 @@ export const LevelStory: Story = {
     </ProbeShell>
   ),
 };
-// #endregion 🪟LevelProvider
-// #endregion 🧬Providers
+// #endregion 🪟️LevelProvider
+// #endregion 🧬️Providers

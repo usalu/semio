@@ -1,0 +1,17 @@
+{
+  "title": "Layout App System Integration",
+  "emoji": "📄️",
+  "status": "closed",
+  "description": "Wire Layout into workbench/catalogue/details/hover conventions: draggable Catalogue tab, selectable frame kinds in Document, editable Inspection panel, bidirectional hover between canvas and panels.",
+  "summary": "Integrated Layout into the app/workbench system: added document commands (add_page, add_frame, patch_page_props, patch_frame_props) with factories and undo support; added Catalogue workbench tab with draggable Page/Rect/Text/Image kinds; extended Document with selectable frame rows and catalogue drop handling; rewrote Inspection panel with editable fields for pages and frames; wired bidirectional hover between canvas, document, and catalogue via AppPointerFocusStore; added Rust/TS hover rendering with distinct hover stroke on blueprint canvas.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1808"
+  },
+  "goal": "🎯️framework🎯️product🎯️playground",
+  "plan": {
+    "client": "cursor",
+    "id": "c50f8957",
+    "local": "layout_app_system_integration_c50f8957.plan.md"
+  },
+  "sessions": ["⚪️da3a6d75847d4b19a813f0076518b4d7"]
+}

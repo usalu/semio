@@ -64,7 +64,7 @@ In [ui/asset/script.ts](ui/asset/script.ts):
 - Codegen entrypoints (`runGenerate` / `runGenerateAll`) only call `readVendoredSvgs(iconDir)` (rename to `readCatalogSvgs` for clarity).
 - Keep SVG normalization (rename `normalizeLucideSvg` → `normalizeCatalogSvg`) so regenerate still strips root width/height and enforces `stroke="currentColor"`.
 - Catalog ids = basenames of `ui/asset/icon/*.svg` (sorted). Fail if the folder is empty.
-- `writeVendoredReadme` lists ids from disk and documents that chrome icons are **in-repo SVGs** (historical Lucide ISC attribution only — no package name, no “do not edit by hand / change VENDORED_ICON_IDS” instruction). New workflow: edit or add SVGs under `icon/`, then run `bun ./script.ts generate all`.
+- `writeVendoredReadme` lists ids from disk and documents that chrome icons are **in-repo SVGs** (historical Lucide ISC attribution only — no package name, no “do not edit by hand / change VENDORED_ICON_IDS” instruction). New workflow: edit or add SVGs under `icon/`, then run `bun ./📜️script.ts generate all`.
 
 Update the module docstring and vitest cases to match the rename.
 
@@ -75,7 +75,7 @@ Update the module docstring and vitest cases to match the rename.
 
 ### 4. Verify
 
-- Run `bun ./script.ts generate all` in `ui/asset` (must succeed without `node_modules/lucide-static`).
+- Run `bun ./📜️script.ts generate all` in `ui/asset` (must succeed without `node_modules/lucide-static`).
 - Confirm generated bindings still match the 154 committed icons.
 - Confirm no remaining `lucide` / `lucide-static` / `lucide-react` dependency declarations or imports outside historical attribution text.
 

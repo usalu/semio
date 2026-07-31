@@ -100,4 +100,4 @@ A spring/force layout works regardless of cycles or multi-parent convergence (un
 
 ### Ticket workflow
 
-Work happens inside a `.repo/🎫` ticket per repo rules — check `repo://goals` and existing tickets (e.g. `IMPLEMENT-TRINITY-TECHNOLOGY`) for one to reopen before opening a new one, then close it with a summary listing every file touched.
+Work happens inside a `.repo/🎫️` ticket per repo rules — check `repo://goals` and existing tickets (e.g. `IMPLEMENT-TRINITY-TECHNOLOGY`) for one to reopen before opening a new one, then close it with a summary listing every file touched.

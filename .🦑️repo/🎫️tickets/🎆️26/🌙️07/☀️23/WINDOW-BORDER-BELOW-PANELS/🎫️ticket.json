@@ -1,0 +1,17 @@
+{
+  "title": "Window Border Below Panels",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "When a window is introduced/loading/waiting etc that produces a border effect such as in step 4 of aggregator then the border is not the rectangle of the body but it must flow over the complete window (including tabs, the cutout between left and right, right buttons, etc).\n\nASCII target silhouette:\n┌️─️┐️                    ┌️─️┐️\n│️           │️                    │️     │️\n│️           └️─️┘️     │️\n│️                                      │️\n└️─️┘️",
+  "summary": "Fixed window silhouette border painting above floating panels.\n\n**Cause:** `[data-slot=\"mode-dock-stack\"]` was only `relative` (no z-index). Layout keeps the canvas column without a stacking context so `[data-introduction-elevated]` can rise above the veil — so silhouette `z-[40]` competed in the same context as Panel (`zIndex: 20`) and won.\n\n**Fix:** Give the dock stack `z-window` (`--z-window` = 5) so it forms a stacking context below panels. Internal silhouette `z-[40]` still covers dock chrome but cannot escape above panels. Introduction elevation still overrides via `!important`.\n\n**Verified:** ui-react Mode/silhouette/intro vitest filters — passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2276"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️d108bffe51744c0a8d078f1a5edc879b",
+    "⚪️2ca5460fb7074451aa8d9e183d232e34",
+    "⚪️ba9e682bbcf849c1956f3b96b2dd9491",
+    "⚪️8b9daf26b5b745c78015abefff19d02e"
+  ]
+}

@@ -58,7 +58,7 @@ Expose to client via `define` in both [compose/client/lib/sketchpad/js/vite.conf
 "import.meta.env.COMPOSE_SKETCHPAD_PRELOAD_KITS": JSON.stringify(process.env.COMPOSE_SKETCHPAD_PRELOAD_KITS ?? ""),
 ```
 
-In `index.ts` `🔖KitHost` region, replace the metabolism-specific block (`SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH/URL`, `SKETCHPAD_DEV_FIXTURE_KIT_URL`, `SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL`, `ensureSketchpadDevFixtureKitLoaded`, `seedSketchpadDevFixtureKitIfEmpty`, hardcoded `metabolismKitId`) with generic helpers:
+In `index.ts` `🔖️KitHost` region, replace the metabolism-specific block (`SKETCHPAD_DEV_FIXTURE_METABOLISM_WIP_PATH/URL`, `SKETCHPAD_DEV_FIXTURE_KIT_URL`, `SKETCHPAD_DEV_FIXTURE_NAKAGIN_FILTERED_URL`, `ensureSketchpadDevFixtureKitLoaded`, `seedSketchpadDevFixtureKitIfEmpty`, hardcoded `metabolismKitId`) with generic helpers:
 
 - `sketchpadPreloadKitUrls(): string[]` parses `import.meta.env.COMPOSE_SKETCHPAD_PRELOAD_KITS`.
 - `preloadSketchpadKits(): Promise<void>` opens each URL via `openSketchpadKitFromImport(url, { kind: "fixture", navigate: false, assetBaseUrl: <dir of url> })`, skipping already-open kits.
@@ -107,8 +107,8 @@ In [.vscode/launch.json](.vscode/launch.json), add sibling configs next to the e
 }
 ```
 
-- `🛠️dev🏘️compose✍️sketchpad🧪metabolism` -> `bun nx dev @semio-tech/compose-sketchpad`
-- `🛠️dev🏘️compose✍️sketchpad🎛️play🧪metabolism` -> `bun nx run @semio-tech/compose-sketchpad-play:dev`
+- `🛠️dev🏘️compose✍️sketchpad🧪️metabolism` -> `bun nx dev @semio-tech/compose-sketchpad`
+- `🛠️dev🏘️compose✍️sketchpad🎛️play🧪️metabolism` -> `bun nx run @semio-tech/compose-sketchpad-play:dev`
 
 (Env is inherited by the nx -> vite child process and read in `vite.config` via `process.env`.)
 

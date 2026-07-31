@@ -1,0 +1,16 @@
+{
+  "title": "Introduction Step Introduced Border",
+  "emoji": "🎓️",
+  "status": "closed",
+  "description": "Introduction step info boxes should use the same highlighted pulsing border-thickness effect as introduced UI elements.",
+  "summary": "Introduction step info boxes now force WindowChrome silhouette borderKind=introduced so they share the highlighted pulsing thickness stroke with data-introduced UI targets. Extended appearance vitest for data-kind, stroke token, and window-silhouette-border-introduced class.",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [],
+  "files": [
+    "ui/js/react/index.tsx",
+    ".repo/🎫️/26/07/26/INTRODUCTION-STEP-INTRODUCED-BORDER/notes.md",
+    ".repo/🎫️/26/07/26/INTRODUCTION-STEP-INTRODUCED-BORDER/ticket.json",
+    ".repo/🎫️/26/07/26/INTRODUCTION-STEP-INTRODUCED-BORDER/vitest-intro-border.txt",
+    ".repo/🎫️/26/07/26/INTRODUCTION-STEP-INTRODUCED-BORDER/vitest-intro-border-path.txt"
+  ]
+}

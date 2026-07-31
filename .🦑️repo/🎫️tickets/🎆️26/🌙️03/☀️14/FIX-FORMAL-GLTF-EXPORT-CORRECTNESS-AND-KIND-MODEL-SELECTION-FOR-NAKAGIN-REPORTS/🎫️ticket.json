@@ -1,0 +1,12 @@
+{
+  "title": "Fix Formal GLTF Export Correctness And Kind Model Selection For Nakagin Reports",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Export the Nakagin Capsule Tower design model from the Metabolism kit to the compose assets folder using the export functionality from compose.ts. The Nakagin Capsule Tower design data exists in the Metabolism kit JSON file and needs to be extracted and exported as a model asset to the assets/models folder.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/888"
+  },
+  "goal": "🎯️assetmanagement",
+  "sessions": ["🔀️77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪️17735168215733661434762060316443877337", "⚪️14714eec58b94efb9371021374ebc0fa", "⚪️5d25bc62a8544d3c84f82df9fde56987"]
+}

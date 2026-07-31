@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/coda/CodaValidationTree.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/coda/CodaValidationTree.stories.tsx
 // Specs: Companion to `CodaTrees.stories.tsx` (read that file's header first) — same gap analysis, applied to
 // `ValidationTree` instead of `OntologyTree`. A CSF file may only have one default-exported `meta`, so the
 // two components get separate files even though they close the same coverage gap.
@@ -9,17 +9,17 @@
 // `DatatypeRestriction` at the instance (truth-annotated) level. This story evaluates the same
 // uncovered-kinds Wohnung expression against a real instance, mixing true/false/unknown truth per node.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ValidationReport } from "@semio-tech/coda-desktop/renderer";
 import { ValidationTree } from "@semio-tech/coda-desktop/renderer";
 import type { ComponentType, ReactNode } from "react";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// #region 🎨CodaThemeWrapper
-/** @emoji 🎨 Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/ValidationTree.stories.tsx`). */
+// #region 🎨️CodaThemeWrapper
+/** @emoji 🎨️ Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/ValidationTree.stories.tsx`). */
 const CodaThemeWrapper = ({ children }: { children: ReactNode }) => (
   <div
     style={{
@@ -43,7 +43,7 @@ const CodaThemeWrapper = ({ children }: { children: ReactNode }) => (
     {children}
   </div>
 );
-// #endregion 🎨CodaThemeWrapper
+// #endregion 🎨️CodaThemeWrapper
 
 // #region 🕳️UncoveredKindsReport
 /** @emoji 🕳️ Wohnung_7 evaluation: MinCardinality passes (2 ≥ 1), MaxCardinality passes (2 ≤ 4) — both get the
@@ -140,9 +140,9 @@ const uncoveredKindsReport: ValidationReport = {
 };
 // #endregion 🕳️UncoveredKindsReport
 
-// #region 🌳ValidationTreeStory
+// #region 🌳️ValidationTreeStory
 const meta = {
-  title: "🧠coda/ValidationTree",
+  title: "🧠️coda/ValidationTree",
   component: ValidationTree,
   parameters: { layout: "padded" },
   tags: ["autodocs"],
@@ -160,4 +160,4 @@ export const UncoveredKinds: Story = {
     defaultExpanded: true,
   },
 };
-// #endregion 🌳ValidationTreeStory
+// #endregion 🌳️ValidationTreeStory

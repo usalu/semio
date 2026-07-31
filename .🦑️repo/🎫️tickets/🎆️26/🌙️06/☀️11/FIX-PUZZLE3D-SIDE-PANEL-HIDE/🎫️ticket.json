@@ -1,0 +1,12 @@
+{
+  "title": "Fix Puzzle3d Side Panel Hide",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When hiding an object in puzzle3d side panel document, the 3d object stays visible. Root cause: ObjectStore.syncAppearanceFromFixture ignores hidden/locked flags; document panel cache not invalidated on appearance-only fixture patches.",
+  "summary": "Fixed puzzle3d hide/show from the document side panel not affecting the 3d viewport.\n\nRoot cause: `ObjectStore.syncAppearanceFromFixture` compared mesh/kind/vortex fields but ignored `hidden` and `locked`, so appearance-only fixture patches (which do not bump structure revision) never updated object records. Attractions were also not refreshed on appearance sync.\n\nFixes:\n- Compare and apply `hidden`/`locked` on objects; replace records wholesale so un-hide clears stale flags.\n- Sync `fixture.attractions` when appearance changes.\n- Invalidate document panel section cache in `patchFixture` when appearance fingerprint changes so eye icons and `isHidden` rows update without a structure revision bump.\n\nTests: new vitest coverage in `@semio-tech/puzzle-3d-react` and `@semio-tech/puzzle-3d-play` (75 play tests, 348 react tests pass).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1660"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️b498b8a5018948a5b142b37f7938cf3f"]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Handle Exterior Caps Behind Nodes",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Flow and puzzle 2d handles should always render behind nodes and only show the portion outside the node shape (e.g. half-circle caps on circular nodes).",
+  "summary": "Handles now render behind nodes as exterior semicircle caps (only the portion outside the node body). Shared geometry helpers build outward-facing fill/stroke paths. BoardHost paints handles before nodes and clips rim handles to exterior caps; indirect ring handles stay full circles. DAG flow paint paints handles before node bodies with the same caps. Updated puzzle 2d host tests for overlay fill path-tag behavior.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1590"
+  },
+  "goal": "🎯️ui🎯️theming",
+  "sessions": ["⚪️ed6dbd67cc6645bbb7cd2603fb463481", "⚪️a4dc374a3a8d4139bd563dbd63d41ad2"]
+}

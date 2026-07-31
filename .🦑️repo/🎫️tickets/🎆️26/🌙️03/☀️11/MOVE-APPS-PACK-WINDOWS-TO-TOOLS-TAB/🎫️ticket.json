@@ -1,0 +1,182 @@
+{
+  "title": "Move Apps Pack Windows to Tools Tab",
+  "status": "closed",
+  "prompt": "Move sketchpad all apps pack windows section from workbench into tools tab in left toggle panel.",
+  "summary": "Moved Design windows section from workbench to tools tab and extended existing Design Playwright assertions for tab-specific section placement; validated behavior via runtime logs with running dev server.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/842"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-11T14:09:16.063100239Z",
+  "finished": "2026-03-11T14:19:09.223125666Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-11 14:09:16",
+        "finished": "2026-03-11 14:19:09"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "67c69ca7d7ad7d60f3c098535b1d0b224025fcce",
+      "prompt": "Move sketchpad all apps pack windows section from workbench into tools tab in left toggle panel.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 230,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 158,
+                "removed": 17
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts",
+              "lines": {
+                "added": 102,
+                "removed": 13
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App",
+              "lines": {
+                "added": 30,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App#Settings",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 6,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 83,
+                "removed": 14
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Components",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Drag Propagation",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App#Settings§DesignSettingsContent",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 30,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App§App",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store§DesignStore",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store§areSameDesignApp",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store§hasSameDesignApp",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#App#Settings§DesignSettingsContent",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

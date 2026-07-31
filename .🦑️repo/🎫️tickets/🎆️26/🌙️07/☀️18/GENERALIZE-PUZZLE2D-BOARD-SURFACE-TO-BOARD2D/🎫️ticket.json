@@ -1,0 +1,14 @@
+{
+  "title": "Generalize Puzzle2dBoard Surface To Board2d",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Generalize the SurfaceKind::Puzzle2dBoard surface (wire \"puzzle2d-board\") into the generic Board2d surface (wire \"board-2d\") across ui/wgpu/rs/lib.rs, framework/core/js/index.ts, framework/renderer/react/ui-interpreter.tsx (+ host component), framework/renderer/wgpu/rs/lib.rs, and call sites in the owning puzzle plugin crate. The type/struct/enum-level rename was found already complete from an earlier pass; this ticket verifies that and completes the remaining field-level generalization (kind_catalogs_json -\u003e glyph_catalogs_json, kind_compatibility_json -\u003e placement_compatibility_json, brush_kind_weights_json -\u003e brush_weights_json on Board2dScene) after confirming the ghost/placement-suggestion logic is fully data-driven via BoardHost (infinite/board/port/directed/normal/rs), not puzzle-specific. Parent should be 26/07/17/GENERALIZE-APPS-ONTO-FRAMEWORK-PRIMITIVES but that id is not recognized by ticket_open; opening top-level, will note in close summary.",
+  "summary": "Verified the Puzzle2dBoard-\u003eBoard2d generalization is complete and self-consistent; no source changes needed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2066"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️e347c920031f4273bb64fb7acc3aedee"
+  ]
+}

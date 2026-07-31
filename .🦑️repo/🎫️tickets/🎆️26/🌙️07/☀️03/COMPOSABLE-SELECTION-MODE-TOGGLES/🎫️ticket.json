@@ -1,0 +1,12 @@
+{
+  "title": "Composable Selection Mode Toggles",
+  "emoji": "✨️",
+  "status": "closed",
+  "description": "Make lowpoly selection mode toggles (mesh, face, edge, vertex) composable instead of exclusive.",
+  "summary": "Reordered selection toggles in the lowpoly toolbar to: Mesh, Face, Edge, Vertex",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1818"
+  },
+  "goal": "🎯️lowpoly🎯️play",
+  "sessions": ["⚪️ed3afcc4afb34ea2a4ec352a6a1e8976", "⚪️00bd418524164db0b4bce6f94fc86185"]
+}

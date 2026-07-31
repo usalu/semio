@@ -1,9 +1,0 @@
-{
-  "title": "Curve Selection Control Points Visible",
-  "emoji": "✨",
-  "status": "closed",
-  "description": "When selecting a curve in CAD, control points should be visible in the viewport.",
-  "summary": "Curve edge/wire selection now shows NURBS poles for all nurbs curves (control-point and through/interpolate), not only `through: true`. Renamed helpers to `nurbsPolesFromEdge` / `geometryEntityNurbsPoles`; `SpatialPickTargetNode` renders spheres on select/hover. Added unit test for control-point curves.",
-  "goal": "🎯cad",
-  "sessions": ["⚪9997c82ad48341de9d2b552200d8cb25"]
-}

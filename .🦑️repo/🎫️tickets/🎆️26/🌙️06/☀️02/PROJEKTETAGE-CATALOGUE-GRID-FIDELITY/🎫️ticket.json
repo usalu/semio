@@ -1,0 +1,12 @@
+{
+  "title": "Projektetage Catalogue Grid Fidelity",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Bauteilkatalog tile grid looks different from the original bauteilbörse.png. Full catalogue figure must use the same stretch-to-frame rendering as split tiles, not object-fit cover on img.",
+  "summary": "Implemented general mosaic tiling via mosaicWindowedCoverVars: each grid cell is a window onto one cover of the mosaic frame (columns×100% auto on wide slides, not per-crop sprite zoom). Added overflowAxisPosition, PresentationSlideAspectContext, routed mosaic rest/grid through windowed cover regardless of morphTo; morph vars stay centered crop. Fixed figureCropBackgroundVars param naming (morphToFrame). Renderer 102 tests + core 43 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1523"
+  },
+  "goal": "🎯️presentation",
+  "sessions": ["⚪️8d2f8dfb897a46fd9d0a4ea692eb8d67", "⚪️b7bf829ae42d45bf8b0ce1bc1de5c831", "⚪️655e68c78d9042fbb1e1b17cb4050d14"]
+}

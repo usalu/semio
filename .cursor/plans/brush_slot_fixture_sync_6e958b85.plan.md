@@ -73,7 +73,7 @@ With edges correct, verify the mirror path. If the preview still does not show o
 
 - Extend the existing vitest block in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx): a regression test where an edge id is suppressed, the fixture still has it, and after `puzzle2dSyncFixtureDescriptorToAllAuthoringPeers` the scene regains the edge and the brush no longer offers that handle.
 - Add/extend a Rust test in [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) if the LOD/preview behavior changes.
-- Remove all `[DEBUG]` logs once confirmed. Run `bun ./script.ts test` in `puzzle/2d/react` and the Rust tests; rebuild WASM (`bun ./script.ts wasm` in `puzzle/2d/rs`).
+- Remove all `[DEBUG]` logs once confirmed. Run `bun ./📜️script.ts test` in `puzzle/2d/react` and the Rust tests; rebuild WASM (`bun ./📜️script.ts wasm` in `puzzle/2d/rs`).
 
 ## Notes
 

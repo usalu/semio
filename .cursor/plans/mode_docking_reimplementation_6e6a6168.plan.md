@@ -39,7 +39,7 @@ isProject: false
 
 Reimplement Golden Layout's functionality in pure React inside the elements `Mode` component. Scope (per user): tab stacks, splitter resize, drag-to-reorder tabs, drag-to-dock/split between regions, maximize/restore, close. Excluded: layout persistence (`onLayoutChange`) and native popout.
 
-All elements work stays in [elements/lib/react/core/index.tsx](elements/lib/react/core/index.tsx) (`🧭Mode` region), per the "edit existing files, use regions" rule.
+All elements work stays in [elements/lib/react/core/index.tsx](elements/lib/react/core/index.tsx) (`🧭️Mode` region), per the "edit existing files, use regions" rule.
 
 ## Architecture
 
@@ -61,7 +61,7 @@ The existing tree types already mirror Golden Layout (`row`/`column`/`stack`/`wi
 ## Core changes (`elements/lib/react/core/index.tsx`)
 
 - Extend types: add `activeId?: string` to `WindowLayoutStackNode` (per-stack active tab) and `title?: string` to `ModeWindowDescriptor` (tab label).
-- New `🧭Mode` subregions:
+- New `🧭️Mode` subregions:
   - Tree utils: `normalizeLayoutToStacks` (every window lives in a stack), `reconcileWindows` (add window ids present in `windows` but missing from layout, drop absent ones, collapse empty stacks/single-child axes), `removeWindowFromLayout`, `insertWindowAsTab(targetPath,index)`, `splitWithWindow(targetPath, side)`, `applyAxisSizes(path, {panelId:size})`.
   - `DockTabBar`: per-window tab (title from descriptor `title`/id, per-tab close `x`, active highlight, `pointerdown` to start drag) plus stack-right controls (maximize/restore). Clicking a tab sets stack `activeId` and calls `onActiveWindowChange`.
   - `DockStack`: renders `DockTabBar` + only the active tab's `Window` body; registers its DOM rect in a refs map keyed by node path for hit-testing.

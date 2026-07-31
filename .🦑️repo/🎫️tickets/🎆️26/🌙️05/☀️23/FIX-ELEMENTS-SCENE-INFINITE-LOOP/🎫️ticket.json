@@ -1,0 +1,11 @@
+{
+  "title": "Fix Elements Scene Infinite Loop",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "elements scene: The scene is stuck in an implicit infinite loop and is almost impossible to interact with. Investigate the elements scene runtime, fix the loop without adding legacy compatibility, validate with targeted tests or runtime checks, and close the ticket with touched files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1469"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️apps",
+  "sessions": ["⚪️22c9447faac4467883b111429d15ec1b"]
+}

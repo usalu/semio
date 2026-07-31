@@ -1,0 +1,14 @@
+{
+  "title": "Fix 3D Group Selection Styling",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix Puzzle 3D group-selection styling so objects in the newly forming selection render as active. Only objects that belonged to the previous selection and are absent from the new selection render as highlighted.",
+  "summary": "Corrected Puzzle 3D live group-selection preview styling so newly added and retained objects use the active selected paint, while only objects leaving the previous selection use the highlighted paint. Added regression coverage for added, retained, removed, neutral, and disabled states. Verified with the framework React renderer test target (179 passing), lint target, diff check, and a runtime state probe.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2167"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️bede2a9985e84eefaa94e02ac8688959"
+  ]
+}

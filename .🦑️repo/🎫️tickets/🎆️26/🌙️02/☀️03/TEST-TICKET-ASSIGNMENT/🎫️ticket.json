@@ -1,0 +1,11 @@
+{
+  "title": "Test Ticket Assignment",
+  "emoji": "🧪️",
+  "status": "closed",
+  "description": "Testing that the ticket is automatically assigned to the creator",
+  "summary": "Test completed - assignment works correctly",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/323"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoticketmechanism"
+}

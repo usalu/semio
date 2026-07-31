@@ -1,0 +1,12 @@
+{
+  "title": "Fix Headings Hierarchy in Zwischenbericht",
+  "emoji": "📝️",
+  "status": "closed",
+  "description": "Ensure that no chapters, sections, etc are skipping hierarchies in the zwischenbericht and zwischenbericht-dark files, specifically the forschungsfragen should be subsections (1.1.1 etc).",
+  "summary": "Corrected heading hierarchy skips in LaTeX report files by promoting nested paragraphs directly under sections/subsections to subsections/subsubsections and removing unnecessary SemioNest environments.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1987"
+  },
+  "goal": "🎯️r2602🎯️updateddocs",
+  "sessions": ["⚪️280886d955ee4cd68035ac88fef10c64"]
+}

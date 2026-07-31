@@ -1,0 +1,12 @@
+{
+  "title": "Fix Flow Selected Node Active Color",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Selected flow nodes are shown with a transparent/mixed version of active color. Use the same active (primary) color as everywhere else.",
+  "summary": "Selected flow nodes used `nodeFillSelected`, a 28% primary/background mix in board theme tokens, so the WASM canvas painted a washed-out fill while handles and strokes already used full primary. Changed `nodeFillSelected` to `{ \"token\": \"primary\" }` for light and dark themes and regenerated styling artifacts so flow (and puzzle2d) receive solid active color via `serializeGraphVelloThemePaletteJson`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1642"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️06d85d465ad24ce59a01424ee31054cd"]
+}

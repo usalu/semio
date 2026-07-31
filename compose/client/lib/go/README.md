@@ -4,4 +4,4 @@ Go library for compose domain representations and SQLite kit operations. All lib
 
 # Docs
 
-# 💯Requirements
+# 💯️Requirements

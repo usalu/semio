@@ -1,0 +1,12 @@
+{
+  "title": "Remove Fixture Leaks From Puzzle 3d Reference Code",
+  "emoji": "🧹️",
+  "status": "closed",
+  "description": "Remove hardcoded fixture-specific reference URLs and import tools from puzzle3d play code. References should only live in fixture JSON examples; code must work generically on references.",
+  "summary": "Removed hardcoded masterthesis and Rathaus Ahlen import toolbar buttons from puzzle3d play. importReference now uses WORLD_REFERENCE_DEFAULT_WIDTH with no fixture-specific locked default. Example references remain only in concrete-forest.3d.json; parse test uses a generic /example/reference.png URL. Play tests 74/74 pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1658"
+  },
+  "goal": "🎯️puzzle3d🎯️puzzle3dplay",
+  "sessions": ["⚪️1d257d91e00c4624b1cc2a24833f1a68"]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Window Celebrate Conic Gradient",
+  "emoji": "🎉️",
+  "status": "closed",
+  "description": "When windows are celebrating they are not showing the proper conic gradient as e.g. a button and instead they wrongly just switch the three colors. Fix the window silhouette celebrate ring so it matches the spinning three-color conic gradient used by [data-celebrated=true]::after on buttons and other elements, instead of the stroke color-cycle keyframes.",
+  "summary": "Fixed celebrating docked windows so their silhouette matches the button celebrate ring: a spinning three-color conic gradient with pulsing thickness, instead of cycling solid stroke colors. ModeDockStackSilhouetteBorder now paints celebrated via a masked foreignObject fill (same conic + celebrate-border-spin as [data-celebrated=true]::after); CSS dropped the solid color-cycle keyframes. Added a regression test asserting the conic fill/mask structure.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2313"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️b9a48c26e22646e183ada8cbd00924aa"
+  ]
+}

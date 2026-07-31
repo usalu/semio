@@ -1,0 +1,12 @@
+{
+  "title": "Procedural Edge Jump On Node Drag",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When moving procedural flow components (brep, vector, etc.) in the canvas, edges suddenly jump from input to output ports during drag due to proximity preview flipping between handle pairs.",
+  "summary": "Fixed procedural flow edges visually jumping between input and output ports while dragging wired components (brep, vector, etc.). Node-drag proximity preview now ignores handles on the dragged node that already participate in committed edges, so the preview no longer flips between the closest input/output pair as the node moves. Also stopped retargeting hover to the proximity target during drag, which caused channel highlight to jump. Added regression test `node_drag_proximity_skips_wired_handles_on_dragged_node`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1685"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️e9eea489cc9941118fc645ffa4f3ba89"]
+}

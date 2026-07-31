@@ -1,0 +1,12 @@
+{
+  "title": "Disable Default Browser Interactions in UI",
+  "emoji": "🚫️",
+  "status": "closed",
+  "description": "All default browser interaction inside ui should be disabled. e.g. the input of engagement is remembering inputs, etc.",
+  "summary": "Added centralized uiFormControlBrowserDefaultProps (autocomplete off, spellcheck off, mobile autocorrect/capitalize off, password-manager ignore hints) applied to Input, Textarea, CommandInput, and Stepper. Extended installElementsSurfaceBrowserDefaultSuppression with a focusin capture listener that applies the same defaults to any focused form control. Tests cover static markup attrs and focus-time application. All 135 @semio-tech/ui-react tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1536"
+  },
+  "goal": "🎯️ui",
+  "sessions": ["⚪️e26bcf856a1342579be26156fe4d7ef8"]
+}

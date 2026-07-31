@@ -1,0 +1,40 @@
+// #region 🔌️Adapters
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vite";
+import { uiAssetsVitePlugin, playgroundStaticSiteBuildOptions } from "../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
+// #endregion 🔌️Adapters
+
+const dir = dirname(fileURLToPath(import.meta.url));
+const bundleRoot = dir;
+const repoRoot = resolve(bundleRoot, "../../../../..");
+const uiAssetsRoot = resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/🖼️asset");
+const uiReact = resolve(repoRoot, "./🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx");
+const presentationCore = resolve(repoRoot, "./✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/⚡️implementation/🟦️typescript/📦️index.ts");
+const presentationRenderer = resolve(repoRoot, "./✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/📺️renderer/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx");
+const frameworkCore = resolve(repoRoot, "./🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts");
+
+export default defineConfig({
+  root: bundleRoot,
+  base: "./",
+  publicDir: resolve(bundleRoot, "public"),
+  plugins: [...uiAssetsVitePlugin(uiAssetsRoot), tailwindcss(), react()],
+  build: playgroundStaticSiteBuildOptions(),
+  server: {
+    fs: { allow: [repoRoot] },
+  },
+  resolve: {
+    alias: [
+      { find: "@semio-tech/ui-react", replacement: uiReact },
+      { find: "@semio-tech/animate-present-core", replacement: presentationCore },
+      { find: "@semio-tech/animate-present-renderer-react", replacement: presentationRenderer },
+      { find: "@semio-tech/framework-core", replacement: frameworkCore },
+      {
+        find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
+        replacement: resolve(dir, "📦️index.ts"),
+      },
+    ],
+  },
+});

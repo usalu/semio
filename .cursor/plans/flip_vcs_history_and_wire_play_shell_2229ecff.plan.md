@@ -18,7 +18,7 @@ isProject: false
 Mirror the `draw`/`forms` pattern exactly:
 
 1. **`framework/product/platform/core/index.ts`**: add `"vcs"` to `ComponentKind` and `CANVAS_COMPONENT_KINDS` (lines 307, 309); define `UiVcsHostSurfaceNode` (`type: "vcs"`, `componentKind: "vcs"`, `surfaceId`, `controllerId`, `view: "editor" | "history"`, optional `paneId`/`bindingId`); add `buildVcsWindowBody(surfaceId, controllerId, view, paneId?, bindingId?)` mirroring `buildDrawWindowBody`.
-2. **`framework/product/playground/renderer/react/index.tsx`**: new `//#region 🔖VcsPlayHost` with:
+2. **`framework/product/playground/renderer/react/index.tsx`**: new `//#region 🔖️VcsPlayHost` with:
    - `registerUiVcsSurfaceHost(surfaceId, Component)`
    - `VcsPlayEditorSurfaceHost` — the toolbar (Counter / Commit checkpoint / Undo / Redo / New alternative) and status line currently inlined in `vcs/play/index.tsx`
    - `VcsPlayHistorySurfaceHost` — renders the redesigned `HistoryTable` bound to the controller

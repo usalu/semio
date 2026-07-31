@@ -1,0 +1,18 @@
+[package]
+name = "semio-framework-os-kernel-pack-index"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format field index — path-to-byte-range segment for sub-document random access"
+
+
+[lints]
+workspace = true
+[lib]
+name = "pack_index"
+path = "../../../🔢️index/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+pack_core = { path = "../../../🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack-core" }
+pack_format = { path = "../../../📐️format/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack-format" }
+pack_value = { path = "../../../🔢️value/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack-value" }

@@ -1,0 +1,14 @@
+{
+  "title": "Puzzle 3D Per-Window Camera Isolation",
+  "emoji": "📷️",
+  "status": "closed",
+  "description": "In Puzzle 3D (and other world-3d hosts), orbiting/panning/zooming one window currently synchronizes the camera to every other window because World3dHost dispatches setCamera into shared document fixture cameraJson and uses that JSON as the orbit seedKey. Fix at the root in World3dHost: keep live orbit/projection camera local per host mount so windows do not synchronize; only adopt scene.cameraJson for intentional external updates (view preset, focus, example load). Do not mix technologies beyond the shared framework renderer fix.",
+  "summary": "Fixed shared camera sync across Puzzle 3D (and other world-3d) windows. World3dHost now owns live orbit/projection/zoom-to-selection camera per mount and no longer dispatches setCamera into the shared document on orbit; seed keys stay stable after detach so sibling windows are not reseeded. External scene.cameraJson changes (view preset, focus, example load) still reattach all viewports. Added mergeWorldViewportCamera / world3dViewportCameraSeedKey / shouldReattachWorldViewportCamera helpers and unit coverage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2188"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️1ec0ab581e43430d9ead787bb38dd892"
+  ]
+}

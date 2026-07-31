@@ -1,0 +1,12 @@
+{
+  "title": "Fix Print Compilation",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Fix print compilation for zwischenbericht mit bestand and all other broken parts.",
+  "summary": "Fixed print compilation failures for zwischenbericht mit bestand and all templates.\n\nRoot cause: `\\SemioTableRegisterRow` ran dot-counting and `\\dimen0` assignments outside `\\SemioTableRow`, breaking tabular context and causing `Misplaced \\noalign` in table of contents and register lists.\n\nFix: moved indent calculation into `\\semio@table@register@indent` inside the row cells.\n\nVerified: `bun ./📜️script.ts build zwischenbericht`, mit-bestand bericht build, and full `print:test` (12 template PDFs).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1888"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️190df1e08d4d4a949c0436bab5d259ab"]
+}

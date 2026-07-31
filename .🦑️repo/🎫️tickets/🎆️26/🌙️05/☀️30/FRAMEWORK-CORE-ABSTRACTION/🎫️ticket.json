@@ -1,0 +1,8 @@
+{
+  "title": "Framework Core Abstraction",
+  "status": "closed",
+  "description": "Extract render-independent shared primitives and runtime shell into @semio-tech/framework-core; platform and playground product cores specialize it; fix framework/product workspace wiring.",
+  "summary": "Fixed CAD/puzzle play window bodies showing \"Unsupported UiNode\": playground UiRenderer now routes cad, puzzle2d/3d/5d, and panel nodes through platform renderComponentHostSurface (registerSurfaceBinding). Legacy board/scene3d/table maps sync bindings to the platform registry. Exported renderComponentHostSurface from @semio-tech/framework-platform-renderer-react. Added vitest coverage (11 tests pass). Verified spatial play on fresh dev server (4 canvases, no unsupported nodes).",
+  "goal": "🎯️AI-OPTIMIZED-REPO",
+  "sessions": ["⚪️7e0b3fb994384893aea54f57289e30e4"]
+}

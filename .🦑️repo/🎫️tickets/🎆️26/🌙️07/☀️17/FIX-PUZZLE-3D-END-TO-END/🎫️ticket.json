@@ -1,0 +1,13 @@
+{
+  "title": "Fix Puzzle 3d End to End",
+  "emoji": "🧩️",
+  "status": "open",
+  "description": "Make puzzle 3d work end to end. Fix Vite import error for missing ink-canvas-host.tsx and any other blockers preventing puzzle 3d from loading in the OS dev shell.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2039"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️1f7d1c6a612a4839b0e8b23be7610239"
+  ]
+}

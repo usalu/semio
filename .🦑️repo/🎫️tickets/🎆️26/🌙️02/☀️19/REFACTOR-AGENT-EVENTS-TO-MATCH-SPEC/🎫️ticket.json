@@ -1,0 +1,11 @@
+{
+  "title": "Refactor Agent Events to Match Spec",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Refactor all agent hook events to match the new YAML spec: rename agent.starting→agent.started, agent.tool.code.searching→agent.tool.searching, add missing fields (llm, transcript, message, parent) to all event result types",
+  "summary": "Refactored all agent hook events to match spec: renamed agent.starting to agent.started and agent.tool.code.searching to agent.tool.searching, created HookResultAgentBase with shared fields (session, timestamp, client, llm, transcript, message, parent), updated all 12 agent result types, added extraction functions, fixed JSON tag shadowing, all tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/634"
+  },
+  "goal": "🎯️hooks🎯️agentevents"
+}

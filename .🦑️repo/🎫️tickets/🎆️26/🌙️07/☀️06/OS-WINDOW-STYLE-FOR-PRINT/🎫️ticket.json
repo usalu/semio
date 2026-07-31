@@ -1,0 +1,31 @@
+{
+  "title": "OS Window Style for Print",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Port OS window chrome styling into print LaTeX framework: chrome tokens, semio-window.sty, chapter/section auto-windowing.",
+  "summary": "Navbar and footer chrome now use page background (`chrome.base`) instead of window color (`chrome.window`), matching OS shell `bg-base` behavior.\n\nChanges:\n- `print/script.ts`: emit `semio-chrome-*-base` tokens from `chrome.base`.\n- `print/tex/semio-core.sty`: theme alias `semio-chrome-base`.\n- `print/tex/semio-window.sty`: navbar/footer bars and chips use `semio-chrome-base`.\n- `print/tex/semio-tokens.sty`: regenerated with base paint tokens.\n\nVerified: `bun ./📜️script.ts build zwischenbericht` succeeds for light and dark PDFs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1835"
+  },
+  "goal": "🎯️r2603",
+  "sessions": [
+    "⚪️9ee71a7606464c8089665caeaaed9b49",
+    "⚪️0f90c6a42f32447b8835685c45fd9c40",
+    "⚪️5bb97a9bb30e400ea30482bfd2bd7612",
+    "⚪️3f929d2db9f1453e8a14fb7e0e1e7bd3",
+    "⚪️11a6042a5cc24f2b9cbc6a16a62c52e9",
+    "⚪️b4fc5524305d4443b602443a71dbe7b9",
+    "⚪️fbf9522b1cde4a1588a43cbcb6aca076",
+    "⚪️970c600804854794a537f180c6104246",
+    "⚪️7129fc00328d40a3834b6fa24761bf4a",
+    "⚪️28833d3d37a34003bf59e87df86713f1",
+    "⚪️2f0b25e2cd4447a4bcaac21fcceff3fa",
+    "⚪️200493b429a54d82aaa88293045e3278",
+    "⚪️7d71e33d08b6453dbc3cbcfe87f19f2f",
+    "⚪️7289f7e64f0b4584bb94e344f17cf576",
+    "⚪️cc7d9a4ff6d84b5e9fd2c74542535a36",
+    "⚪️265cbc9364a04d74853538821a42fd36",
+    "⚪️0edb82825ddc49448231debfbdd8388e",
+    "⚪️e35b4501ff304aee9a668a3e3ea061e2"
+  ]
+}

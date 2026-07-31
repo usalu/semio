@@ -1,9 +1,0 @@
-{
-  "title": "Presentation Slide Url Sync",
-  "emoji": "🔗",
-  "status": "closed",
-  "description": "Presentation Slide Url Sync",
-  "summary": "URL bookmark values are now titleized human-readable labels with spaces and umlauts.\n\n- Intro template sets titleized bookmark names for en and de (e.g. de: Sequenz `Einführung`, Gedanke `Einleitung`, Folien `Titel`, `Universitäten`, `Lehrstühle`).\n- Projektetage media uses `Medien`, `Bauteilkatalog`, `Bauteilfokus`, `Bauteilbeschriftungen`, `Medienüberblick`.\n- English intro uses `Main`, `Introduction`, `Title`, `Universities`, etc.\n\nExample: `#/0/5?sequenz=Einführung\u0026gedanke=Einleitung\u0026folie=Universitäten`. All tests pass.",
-  "goal": "🎯framework🎯presentation",
-  "sessions": ["⚪d5b5c0521c67470d9c7f431214fcdc0e", "⚪36801a881b2744129bed97ee455db11d", "⚪fe11dd6b2dbf43ebbf67cff2af3f97c6", "⚪528bb134decd4c959aa17d6416db83c9", "⚪720dfcf8d63e479c91be46664450bd22"]
-}

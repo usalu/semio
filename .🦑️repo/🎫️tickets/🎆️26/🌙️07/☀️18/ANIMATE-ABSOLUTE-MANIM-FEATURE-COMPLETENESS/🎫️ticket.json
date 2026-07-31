@@ -1,0 +1,19 @@
+{
+  "title": "Animate Absolute Manim Feature Completeness",
+  "emoji": "🎬️",
+  "status": "closed",
+  "description": "Absolute Manim CE feature completeness: fix render blockers (point_ratio, Typst paths, frame hash), replace all 21 catalog stubs with real behavior, complete mobject/camera/3D catalogs, wire present-core scene bridge and video export. Use isolated CARGO_TARGET_DIR in ticket folder.",
+  "summary": "Completed absolute Manim CE feature parity for animate technology.\n\n**Render truth** — `point_ratio` path trimming in VSobject.paths(); Typst SVG→BezPath via usvg; frame hash includes transform/opacity/point_ratio; z-order painting.\n\n**Morph + animations** — Pointwise path interpolation; all 21 catalog stubs replaced with real apply behavior; added Shift, ApplyMethod, FocusOn, Blink, TracedPath, ChangeSpeed; fixed with_lag_ratio and scene introducer/remover lifecycle.\n\n**Mobject catalogs** — Ellipse, RegularPolygon, dashed paths, boolean ops, vector fields; DecimalNumber/Integer/Paragraph/Code; 2D Table/Matrix grid; FunctionGraph/ParametricFunction; labeled DiGraph; ThreeDVSobject as Sobject.\n\n**Cameras/scenes** — MovingCameraScene, ThreeDScene, ZoomedScene, VectorScene.\n\n**Video** — CLI (render/preview/flush-cache), preview_scene_window, SRT subtitles, cache LRU.\n\n**Present bridge** — compile_scene_to_assets, real player boot, React sceneHash embed, plugin exportVideoFromDeck.\n\n**Verification** — 80 Rust tests + animate-present TS tests passing (isolated CARGO_TARGET_DIR).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2053"
+  },
+  "goal": "🎯️animate",
+  "plan": {
+    "client": "cursor",
+    "id": "7dc7746f",
+    "local": "animate_absolute_parity_7dc7746f.plan.md"
+  },
+  "sessions": [
+    "⚪️f79f95279cfb4c05beef28b56f24a070"
+  ]
+}

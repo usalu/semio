@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle2d Zoom Performance",
+  "emoji": "🔍️",
+  "status": "closed",
+  "description": "Fix 15s+ zoom from small to big in puzzle 2d play",
+  "summary": "Zoom small→big was ~15s because each wheel frame repainted all text overlays, WASM rebuilt world_content_cache on every LOD band crossing, and setEffectiveLodForPane triggered runtime.notify() (full shell rebuild).\n\nFixes: skip paintTextOverlays during wheelZoomGestureActive + invalidate once at gesture end; pin draw LOD in WASM for wheel gestures; cache edges in world_content_cache; setEffectiveLodForPane uses notifyChrome only.\n\nTests: puzzle/2d/react 109, puzzle/2d/play 8.",
+  "goal": "🎯️compose",
+  "sessions": ["⚪️8ee7434c1c814932935ffd46d540c63e"]
+}

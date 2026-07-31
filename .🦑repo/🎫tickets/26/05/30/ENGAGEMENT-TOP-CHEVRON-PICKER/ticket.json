@@ -1,9 +1,0 @@
-{
-  "title": "Engagement Top Chevron Picker",
-  "emoji": "💬",
-  "status": "closed",
-  "description": "Engagement Top Chevron Picker",
-  "summary": "Window engagement overlay moved to top. Engagement possibleEngagements list is collapsed by default; a right chevron toggles the picker. Command row is input + chevron; status and option buttons follow below.",
-  "goal": "🎯refactoring",
-  "sessions": ["⚪4225c552d4b34cd4bea63da3d40e57ac"]
-}

@@ -1,0 +1,11 @@
+{
+  "title": "Board Redraw Graph And Handles",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Board: Redraw handles should always work regardless of whether Redraw layout was used. Rename the toolbar to Redraw with two buttons: Graph and Handles. Implement in existing files, validate behavior, and close with touched-file summary.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1437"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️9e2772f10bc44cd1aa588f55be1bbe75"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Spatial Selection Per Model And State",
-  "emoji": "🎫",
-  "status": "closed",
-  "description": "Replace adhoc flat selection arrays with per-model-definition renderer selection and per-interaction-state selection maps.",
-  "summary": "Introduced SpatialRendererSelectionByModel and SpatialInteractionSelectionByState. InteractionRepl and play host preserve selection when switching model definitions; interaction states keep isolated highlight slices synced from context.targets. Removed play selection clears on model switch and model revision. 23/23 @spatial/js-renderer-r3f tests pass.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": []
-}

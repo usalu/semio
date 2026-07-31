@@ -4,7 +4,7 @@
     {
       "name": "storybook",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["./📜script.ts", "dev", "storybook"],
+      "runtimeArgs": ["./📜️script.ts", "dev", "storybook"],
       "env": { "STORYBOOK_PORT": "6010", "STORYBOOK_EXACT_PORT": "1" },
       "port": 6010
     },

@@ -1,12 +1,12 @@
 {
-  "schema": "🎆26🌙06⬆️1",
+  "schema": "🎆️26🌙️06⬆️1",
   "wip": {
     "id": "…",
     "hash": "…",
     "initialKit": {
       "hash": "…",
       "name": "Metabolism",
-      "description": "🏗 Everything for metabolistic architecture.",
+      "description": "🏗️ Everything for metabolistic architecture.",
       "icon": "",
       "id": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
       "image": "",
@@ -198,7 +198,7 @@
                         "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
                         "hash": "…",
                         "name": "c0",
-                        "description": "🪠 The center of the east rectangular core (an elevator and a staircase around it).",
+                        "description": "🪠️ The center of the east rectangular core (an elevator and a staircase around it).",
                         "port": {
                           "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                           "hash": "…"
@@ -219,7 +219,7 @@
                         "id": "d25a91ed-b124-4e5b-8e7e-af832541c953",
                         "hash": "…",
                         "name": "c1",
-                        "description": "🧹 The center of the west rectangular core (an elevator and a staircase around it).",
+                        "description": "🧹️ The center of the west rectangular core (an elevator and a staircase around it).",
                         "port": {
                           "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                           "hash": "…"
@@ -451,9 +451,9 @@
                       }
                     ]
                   },
-                  "icon": "icons/🔣base.svg",
+                  "icon": "icons/🔣️base.svg",
                   "image": "images/🖼️base.png",
-                  "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
+                  "description": "🏠️ A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
                   "typology": {
                     "id": "typology-base"
                   }
@@ -640,7 +640,7 @@
     "initialKit": {
       "hash": "…",
       "name": "Metabolism",
-      "description": "🏗 Everything for metabolistic architecture.",
+      "description": "🏗️ Everything for metabolistic architecture.",
       "types": {
         "hash": "…",
         "items": [
@@ -818,7 +818,7 @@
                   "id": "c5465220-19ba-4443-8f1d-617c832dd13c",
                   "hash": "…",
                   "name": "c0",
-                  "description": "🪠 The center of the east rectangular core (an elevator and a staircase around it).",
+                  "description": "🪠️ The center of the east rectangular core (an elevator and a staircase around it).",
                   "port": {
                     "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                     "hash": "…"
@@ -839,7 +839,7 @@
                   "id": "d25a91ed-b124-4e5b-8e7e-af832541c953",
                   "hash": "…",
                   "name": "c1",
-                  "description": "🧹 The center of the west rectangular core (an elevator and a staircase around it).",
+                  "description": "🧹️ The center of the west rectangular core (an elevator and a staircase around it).",
                   "port": {
                     "id": "019ab243-21f3-7380-93c6-a04a8b137527",
                     "hash": "…"
@@ -1071,9 +1071,9 @@
                 }
               ]
             },
-            "icon": "icons/🔣base.svg",
+            "icon": "icons/🔣️base.svg",
             "image": "images/🖼️base.png",
-            "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms."
+            "description": "🏠️ A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms."
           }
         ]
       },

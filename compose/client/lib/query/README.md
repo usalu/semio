@@ -4,6 +4,6 @@ Cypher-inspired **architect** query language for compose. Parses `MATCH` / `WITH
 
 ## Commands
 
-- `bun ../../../📜script.ts query build` — release lib + wasm pkg
-- `bun ../../../📜script.ts query test` — `cargo test`
-- `bun ../../../📜script.ts query wasm` — wasm-pack only
+- `bun ../../../📜️script.ts query build` — release lib + wasm pkg
+- `bun ../../../📜️script.ts query test` — `cargo test`
+- `bun ../../../📜️script.ts query wasm` — wasm-pack only

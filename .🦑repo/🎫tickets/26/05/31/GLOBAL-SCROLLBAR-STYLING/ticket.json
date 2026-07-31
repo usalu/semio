@@ -1,9 +1,0 @@
-{
-  "title": "Global Scrollbar Styling",
-  "emoji": "🎨",
-  "status": "closed",
-  "description": "Style all scrollbars in the ui system — native overflow scrollbars and Radix ScrollArea custom scrollbars — using design tokens.",
-  "summary": "Added global scrollbar design tokens and CSS in ui/styling/js/ui.css for native overflow scrollbars (Firefox scrollbar-color, WebKit pseudo-elements) and Radix Scrollable thumbs via data-slot rules. Updated ScrollBar sizing to use --scrollbar-size and moved thumb colors to CSS. Extended repo/lib/js/src/index.test.ts to assert scrollbar rules exist.",
-  "goal": "🎯ui",
-  "sessions": ["⚪1fdfc060027142199dc84d62f4240fa6"]
-}

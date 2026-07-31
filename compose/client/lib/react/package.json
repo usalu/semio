@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "🧩 Minimal stub so workspace installs resolve; replace with real `@semio-tech/compose-react` bundle when restored.",
+  "description": "🧩️ Minimal stub so workspace installs resolve; replace with real `@semio-tech/compose-react` bundle when restored.",
   "exports": {
     ".": "./index.ts"
   },

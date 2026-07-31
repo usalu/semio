@@ -1,0 +1,9 @@
+{
+  "title": "Wire Bezier Free End Tangent Outward",
+  "emoji": "〰",
+  "status": "closed",
+  "description": "Fix compute_edge_bezier_points: when target_point equals target_center (free wire end), place far control on chord toward source so tangent at mouse points outward; mirror for degenerate source. Extend tests.",
+  "summary": "compute_edge_bezier_points: when source/target center equals anchor (free wire end), chord fallback now subtracts control arm so tip tangent follows drag outward instead of folding back toward source. Aligned nearest_link_snap_handle_world + handle pick/rect-selection LOD gates with direct-handle-link band (Normal|Detail|Micro) so normal-zoom link snap and tests work. Docstring + Rust/TS tests for chord alignment. wasm-pack + Vitest 61 passed; cargo test wire_bezier ok.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️5200b48ebda24766b99b66c5272caa83"]
+}

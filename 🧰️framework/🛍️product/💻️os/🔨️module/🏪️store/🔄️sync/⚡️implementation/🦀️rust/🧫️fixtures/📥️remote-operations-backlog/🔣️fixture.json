@@ -1,0 +1,13 @@
+{
+  "name": "remote-operations-backlog",
+  "schema": "demo/v1",
+  "documentId": "fixture-backlog",
+  "inbound": [
+    {
+      "kind": "externalEdits",
+      "opsFile": "🔧️01-external.ops"
+    }
+  ],
+  "expectedEvents": ["remoteOperations"],
+  "expectedEditIds": ["backlog-1#0", "backlog-2#0"]
+}

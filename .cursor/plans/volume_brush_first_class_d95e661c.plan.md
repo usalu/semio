@@ -34,7 +34,7 @@ Today target volumes are already persisted oriented boxes (`Puzzle3dTargetVolume
 - **Volume model stays oriented boxes** (origin / orientation / scale). No new volume-kind union. “Not only voxels” means volumes are general boxes you can select and freely transform; Volume Brush is one creation path that paints grid-aligned voxel boxes.
 - **Volume Brush is a window utility** (same tier as Brush / Transform), not a mode tool. Fill stays a mode tool and only fills.
 - **Voxel placement UX** (Alt+click, W/D/H dims, ground plane + preview) moves unchanged onto Volume Brush.
-- Goal for the ticket: `🎯r2602` (same as recent puzzle tool/utility tickets).
+- Goal for the ticket: `🎯️r2602` (same as recent puzzle tool/utility tickets).
 
 ```mermaid
 flowchart LR
@@ -102,7 +102,7 @@ Clarify in docs/comments near volume types: volumes are oriented boxes; Volume B
 
 ### 5. Ticket hygiene and verification
 
-- Open ticket via repo MCP (`ticket_open`) under `🎯r2602`, title like **First-Class Target Volumes and Volume Brush**.
+- Open ticket via repo MCP (`ticket_open`) under `🎯️r2602`, title like **First-Class Target Volumes and Volume Brush**.
 - Put any notes/logs under the ticket folder.
 - Extend existing tests in `puzzle/plugin/rs/lib.rs` (fill measures, utility registration, addTargetVolume, selection/context menu). Add coverage that Volume Brush options appear under window measures and Fill no longer includes edit-volumes.
 - Run targeted `cargo test -p puzzle-plugin` filters for fill/volume/brush; confirm React host still compiles for touched types.

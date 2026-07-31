@@ -1,0 +1,14 @@
+{
+  "title": "Norm EN 1990/1991 Feature Completeness",
+  "emoji": "⚖️",
+  "status": "closed",
+  "description": "Implement Norm feature completeness in norm/en/1990/rs/lib.rs and norm/en/1991/rs/lib.rs: expand design basis checks, check_full_actions, Document fields, numeric tests.",
+  "summary": "Expanded EN 1990 design basis to cover persistent, accidental, and seismic combination sets; evaluate() now runs persistent + accidental with reliability; removed dead LimitState line; added numeric accidental evaluate test. EN 1991 gained check_full_actions() across parts 1-1–1-7 and 2–4 with structural wind factor c_s·c_d, expanded Document fields, evaluate() wired to check_full_actions, and replaced weak e2e test with numeric assertions. All 16 unit tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2155"
+  },
+  "goal": "🎯️norm",
+  "sessions": [
+    "⚪️3bfd095739434f178ee8b199d5fcc5e7"
+  ]
+}

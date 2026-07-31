@@ -1,0 +1,11 @@
+{
+  "title": "Add Recherche Sequence to Projektetage",
+  "emoji": "🔍️",
+  "status": "open",
+  "description": "Add new sequence after Einführung called Recherche before Bauteilkatalog. Add four slides to Gedanke Schweiz with recherche-schweiz images.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1719"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️6d866f66583749f59c77ac7ae186db7d"]
+}

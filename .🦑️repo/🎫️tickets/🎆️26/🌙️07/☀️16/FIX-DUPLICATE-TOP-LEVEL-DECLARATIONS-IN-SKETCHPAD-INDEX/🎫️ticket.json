@@ -1,0 +1,12 @@
+{
+  "title": "Fix Duplicate Top-Level Declarations in Sketchpad Index",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "compose/client/lib/sketchpad/js/index.ts has duplicate top-level declarations: sketchpadTitleFromDocPath (~10906 and ~17429), sketchpadResolveMdxModuleKey (~10933 and ~17441, exported both times), sketchpadLoadMdxModule (~10966 and ~17451, exported both times), and sketchpadMdxTitle (duplicated around ~17462). This breaks `bunx vitest run index.ts` with esbuild \"already been declared\" / \"Multiple exports with the same name\" errors, even though tsc --noEmit passes. Compare both blocks, keep the more complete/current version, delete the duplicate, fix call sites, and verify vitest transform error is gone.",
+  "summary": "Removed the duplicate/broken top-level declarations in compose/client/lib/sketchpad/js/index.ts (~10905-10972): a stray sketchpadTitleFromDocPath, duplicate SketchpadDocPage/SketchpadDocSection/SketchpadMdxModule types, and self-recursive (infinite-loop) stub implementations of sketchpadResolveMdxModuleKey, sketchpadLoadMdxModule, and sketchpadMdxTitle. Kept the real, working implementations further down the file (~17380-17460, using import.meta.glob over MDX pages) plus the caching layer (sketchpadBuildDocsRegistry/sketchpadWarmDocsRegistry) that depends on them. Confirmed `bunx tsc --noEmit` passes and the esbuild \"already been declared\"/\"Multiple exports with the same name\" transform error under `bunx vitest run index.ts` is gone. A separate, pre-existing, unrelated issue surfaced afterward: vitest now fails because `@semio-tech/framework-platform-core` is symlinked in node_modules to `framework/product/platform/core`, a directory that doesn't exist anywhere in the repo (confirmed via git status/ls — not another session's in-progress work). Left unfixed as out of scope for this ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1998"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps/Design App",
+  "sessions": ["⚪️529a1c5968b34331a1c2d96d4aee2807"]
+}

@@ -31,7 +31,7 @@ Both FEM defaults are didactic L-frame + slab demos, not buildings:
 
 They are compile-time embedded in `[fem/plugin/rs/lib.rs](fem/plugin/rs/lib.rs)` via `include_str!` and loaded by `setActiveExample` → `SetDocument`. No program code changes are required beyond the example display label and fixture-coupled test assertions.
 
-Goal association (from `.repo/🎯`): `🎯r2602🎯updateddocs🎯updatedexamples`. Open a new ticket at implementation start (no open ticket covers this).
+Goal association (from `.repo/🎯️`): `🎯️r2602🎯️updateddocs🎯️updatedexamples`. Open a new ticket at implementation start (no open ticket covers this).
 
 ## Chosen building model
 
@@ -88,7 +88,7 @@ Elevation/section in the short span (x horizontal, y vertical), matching how the
 
 ## Verification
 
-- Run `cargo test -p fem_2d -p fem_3d -p fem-plugin` (or the existing `🧪test🏗️fem` launch target)
+- Run `cargo test -p fem_2d -p fem_3d -p fem-plugin` (or the existing `🧪️test🏗️fem` launch target)
 - Confirm both fixtures parse, solve `dead`/`live`/`uls`, produce non-empty nodal von Mises from floor continuum, and yield buckling factor > 1
 - Confirm program scene tests still find mesh edges / contours / `solid-sol1` / reaction labels
 

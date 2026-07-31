@@ -1,0 +1,11 @@
+{
+  "title": "Externalize Test Data to Assets for Cross Language Parity",
+  "status": "closed",
+  "description": "Make all test implementations functionally 100% equivalent across all 5 languages. All test inputs and expected outputs must come from shared JSON asset files. GUIDs, IDs, and hardcoded values must be moved to assets. Tests should be data-driven, not behavior-driven.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1343"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️77215e1a930941c5a34a443fc680228f"]
+}

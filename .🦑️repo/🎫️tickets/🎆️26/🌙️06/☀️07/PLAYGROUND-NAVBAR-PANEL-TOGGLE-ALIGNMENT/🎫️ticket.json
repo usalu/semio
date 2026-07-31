@@ -1,0 +1,12 @@
+{
+  "title": "Playground Navbar Panel Toggle Alignment",
+  "emoji": "🎛️",
+  "status": "closed",
+  "description": "All navbar toggles for panels should always be on the right e.g. in flow play etc they are not on the right such as in cad play. Centralize PanelToggleGroup and navbar fill spacer in ui.",
+  "summary": "Centralized playground navbar panel toggle alignment: exported `PanelToggleGroup`, `PanelToggleItem`, `navbarFillClassName`, and `navbarFillItem` from `@semio-tech/ui-react`. Platform renderer now uses the shared `PanelToggleGroup`. PlaygroundView always inserts a flex fill region (fixture center or `navbarFillItem`) before panel toggles so flow/dag/procedural plays match cad play right-aligned toggles. Added tests for navbar fill alignment and fixed playground SSR test fixtures.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1570"
+  },
+  "goal": "🎯️framework🎯️playground",
+  "sessions": ["⚪️3858ec95df7f4edbb6aab6bd3494d82d"]
+}

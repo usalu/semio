@@ -1,0 +1,11 @@
+{
+  "title": "End To End Store And Tests Green",
+  "emoji": "🔗️",
+  "status": "open",
+  "description": "Fix end-to-end: compose-store install validation (position.center), full Compose.Tests green, JS vitest installProjection, GH/store roundtrips.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1465"
+  },
+  "goal": "🎯️r2603🎯️runningnet",
+  "sessions": ["⚪️bbefd52fb2894b41a6c64a6543c3e5db"]
+}

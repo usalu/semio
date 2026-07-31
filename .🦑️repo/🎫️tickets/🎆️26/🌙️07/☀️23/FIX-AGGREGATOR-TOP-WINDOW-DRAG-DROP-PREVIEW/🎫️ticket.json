@@ -1,0 +1,14 @@
+{
+  "title": "Fix Aggregator Top Window Drag Drop Preview",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Aggregator: When drag and dropping an object to the top window the preview is wrong and not where the cursor intersects with the grid. Drag and drop only works correctly for the perspective view currently. Fix orthographic (Top) viewport ray/plane intersection so the placement preview tracks the cursor-grid intersection.",
+  "summary": "Fixed aggregator Top-window catalogue drag-drop preview: `raycastGroundPoint` always built a perspective ray from `camera.position`, so orthographic Top hits missed the cursor–grid intersection.\n\nAdded `worldRayFromNdc` (ortho: parallel near→far unproject; perspective: pinhole) with `isOrthographicCamera` duck-typing; wired it into `raycastGroundPoint` and `axisDragParam`. Vitest covers ortho Top center/offset and perspective center — all 225 framework-renderer-react tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2239"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [
+    "⚪️a35ab64ebe2741aab68d29145012afb0"
+  ]
+}

@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // .elements/ui/.storybook/story/elements/Ribbon.stories.tsx
 
@@ -9,14 +9,14 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { ButtonGroup, ButtonGroupItem, Ribbon, RibbonDivider, RibbonGroup, RibbonItem, RibbonZone, ToggleGroup, type RibbonRow } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
 
-// #region 🌙Ribbon
+// #region 🌙️Ribbon
 
 const Cloud = createIconComponent("cloud");
 const Eye = createIconComponent("eye");
@@ -212,7 +212,7 @@ type DemoUtilityNode =
   | { readonly id: string; readonly label: string; readonly icon: DemoUtilityLeaf["icon"]; readonly kind: "leaves"; readonly leaves: readonly DemoUtilityLeaf[] }
   | { readonly id: string; readonly label: string; readonly icon: DemoUtilityLeaf["icon"]; readonly kind: "group"; readonly children: readonly DemoUtilityNode[] };
 
-/** @emoji 🪟 Window-scoped categories only (selection / utilities) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history/sync don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
+/** @emoji 🪟️ Window-scoped categories only (selection / utilities) — what belongs in a window's own bottom-left panel. Mode-wide categories like actions/history/sync don't: they're shared across every window in the mode, so they live once in the footer instead (see {@link ModeWideFooterCategories}). */
 const WINDOW_CATEGORY_DEMO_TREE: readonly DemoUtilityNode[] = [
   {
     id: "selection",
@@ -377,4 +377,4 @@ export const ModeWideFooterCategories: Story = {
 
 // #endregion 🗂️RecursiveCategoryGroups
 
-// #endregion 🌙Ribbon
+// #endregion 🌙️Ribbon

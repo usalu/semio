@@ -1,0 +1,11 @@
+{
+  "title": "Fix Design Tsx and Kit Tsx Code Breachs",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix ALL code breachs in compose/js/sketchpad/Design.tsx (146 breachs) and compose/js/sketchpad/Kit.tsx (162 breachs). Add section summaries, definition summaries, and spec comments with RFC2119 keywords.",
+  "summary": "Fixed all 311 code breachs across Design.tsx (149-\u003e0) and Kit.tsx (162-\u003e0). Design.tsx: added 18 section summary comments with MUST keywords, 131 definition summary comments, 65 spec comments with RFC2119 keywords on exported functions/classes, and wrapped 3 orphan definitions (AppProps, DiagramWindow, SceneWindow) in a new Windows section. Kit.tsx: added 27 section summary comments with MUST keywords, 135 definition summary comments, and 100 spec comments with RFC2119 keywords on exported functions. Both files now report 0 breachs from the analyzer.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/532"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo🎯️consistentsections"
+}

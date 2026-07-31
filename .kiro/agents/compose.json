@@ -5,7 +5,7 @@
   "mcpServers": {
     "repo": {
       "command": "bun",
-      "args": ["./📜script.ts", "dev", "mcp", "stdio", "kiro"]
+      "args": ["./📜️script.ts", "dev", "mcp", "stdio", "kiro"]
     }
   },
   "tools": ["*"],
@@ -80,27 +80,27 @@
   // "hooks": {
   //   "agentSpawn": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook agentSpawn"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook agentSpawn"
   //     }
   //   ],
   //   "userPromptSubmit": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook userPromptSubmit"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook userPromptSubmit"
   //     }
   //   ],
   //   "preToolUse": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook preToolUse"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook preToolUse"
   //     }
   //   ],
   //   "postToolUse": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook postToolUse"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook postToolUse"
   //     }
   //   ],
   //   "stop": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook stop"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook stop"
   //     }
   //   ]
   // },

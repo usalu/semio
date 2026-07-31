@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/compose-3dm-ui",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/ui",
+        "command": "bun ./📜️script.ts dev --port 5174",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/ui",
+        "command": "vite build",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "@semio-tech/repo-coordinator",
+  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript",
+        "command": "go run .",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript",
+        "command": "go run .",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️product/🦑️repo/🔨️module/🖥️server/🎛️coordinator/⚡️implementation/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "title": "GraphQL Ownership And Connection Types",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Add ownership unions and Relay-style connection types to all entities in compose/graphql/target.schema.graphql; complete EntityConnection union.",
+  "summary": "Completed Connector ↔ Port alignment with target SDL: (1) target.schema.graphql — merged PortConnection / PortDiffConnection / PortDiffsConnection / PortModificationConnection into both EntityConnection aggregate unions (they previously skipped from Point→Position). Modification/DiffOwned/DiffsOwned/OwnerEntity/AggregateEntityEdge already included Port* variants. (2) compose/rs/lib.rs — added GraphQL Port object (id, hash, owner Type, code, label, order), Type.ports storage + port_by_id lookup; Connector exposes port: Port via port_id → owning Type instead of portId scalar; connection Side.port now references Weak\u003cPort\u003e (was Connector). Extended parses_target_schema to assert type Connector and type Port in emitted SDL. cargo test (compose crate) passes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1394"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️a862da7a14584bada8fe1c24efa7fec6"]
+}

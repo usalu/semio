@@ -7,7 +7,7 @@ isProject: false
 
 ## Context (current state)
 
-- The **platform** and **playground** React renderers import `lucide-react` directly; the **presentation** renderer uses Unicode glyphs (`↺`, `⤢`). See [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) (lucide import block ~118-143, `PANEL_KIND_LUCIDE`, `registerTabIcon`, `registerElementIcon`, `resolveTabIconNode`) and [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (duplicate `shellTabIcons`/`registerTabIcon`).
+- The **platform** and **playground** React renderers import `lucide-react` directly; the **presentation** renderer uses Unicode glyphs (`↺️`, `⤢`). See [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) (lucide import block ~118-143, `PANEL_KIND_LUCIDE`, `registerTabIcon`, `registerElementIcon`, `resolveTabIconNode`) and [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (duplicate `shellTabIcons`/`registerTabIcon`).
 - Core layers ([framework/core/index.ts](framework/core/index.ts)) carry opaque `iconId` strings (`ToolItem.iconId`, `SideTabSpec.iconId`, `FooterItem.iconId`); two **duplicate registries** resolve them in renderers, with inconsistent sizing (`size-tiny`, `size-small`, `size={16}`, `size-10`).
 - [ui/react/index.tsx](ui/react/index.tsx) imports lucide directly (`components.json` `iconLibrary: "lucide"`) and types props as `LucideIcon` (`ContextMenuItem.icon`, `Card.icon`, VFS map, `IconSelector`). [compose/asset/index.ts](compose/asset/index.ts) re-exports ~80 lucide symbols under compose names.
 - [ui/asset](ui/asset) is today only a static-asset folder (cursors/font/lists) served by `uiAssetsVitePlugin` in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts); it has no `package.json`/`project.json`/`script.ts`/`index.ts`.
@@ -36,18 +36,18 @@ flowchart TD
 
 ## 1. New `@semio-tech/ui-asset` package (source of truth + codegen)
 
-- Add [ui/asset/package.json](ui/asset/package.json) (`@semio-tech/ui-asset`, library, no lucide dep), [ui/asset/project.json](ui/asset/project.json) with `build`/`dev` targets calling `bun ./script.ts generate ...` (mirror [compose/asset/logo/project.json](compose/asset/logo/project.json)), and a single [ui/asset/script.ts](ui/asset/script.ts) using `BundleScript`/`ScriptRouter`/`runBundleScriptMain` from `repo/lib/js/index.ts` (mirror [compose/asset/logo/script.ts](compose/asset/logo/script.ts)).
+- Add [ui/asset/package.json](ui/asset/package.json) (`@semio-tech/ui-asset`, library, no lucide dep), [ui/asset/project.json](ui/asset/project.json) with `build`/`dev` targets calling `bun ./📜️script.ts generate ...` (mirror [compose/asset/logo/project.json](compose/asset/logo/project.json)), and a single [ui/asset/script.ts](ui/asset/script.ts) using `BundleScript`/`ScriptRouter`/`runBundleScriptMain` from `repo/lib/js/index.ts` (mirror [compose/asset/logo/script.ts](compose/asset/logo/script.ts)).
 - `script.ts generate {js|net|py|all}` reads `ui/asset/icon/*.svg`, normalizes (strip fixed width/height, force `stroke="currentColor"`/`fill` conventions), and writes into `ui/asset/icon/generated/`:
   - `icons.ts`: `export const ICONS = { ... } as const; export type IconName = keyof typeof ICONS;`
   - `Icons.cs`: static class with name constants + `IReadOnlyDictionary<string,string>`.
   - `icons.py`: `ICONS: dict[str,str]` + `IconName` literal.
 - Add [ui/asset/index.ts](ui/asset/index.ts) barrel re-exporting `ICONS`/`IconName` from generated JS.
 - Vendor SVGs into `ui/asset/icon/*.svg` for the union of icon names currently used (chrome roles + compose-named set). Add `ui/asset/README.md` listing every vendored-from-lucide icon and the lucide ISC attribution.
-- Register `@semio-tech/ui-asset` in root [package.json](package.json) `workspaces` and add a `📦build👤ui🏪assets` entry in [.vscode/launch.json](.vscode/launch.json) following the existing `4_build` group ordering/naming.
+- Register `@semio-tech/ui-asset` in root [package.json](package.json) `workspaces` and add a `📦️build👤️ui🏪️assets` entry in [.vscode/launch.json](.vscode/launch.json) following the existing `4_build` group ordering/naming.
 
 ## 2. `Icon` interface in `@semio-tech/ui-react` (library-agnostic primitive)
 
-In [ui/react/index.tsx](ui/react/index.tsx), add a `#region 🔖Icon`:
+In [ui/react/index.tsx](ui/react/index.tsx), add a `#region 🔖️Icon`:
 
 - `export type { IconName } from "@semio-tech/ui-asset"`.
 - `export type IconSource = IconName | { name: IconName } | { svg: string } | { url: string } | { node: React.ReactNode }` — the abstraction by which registrants "provide an asset or link to an existing one".
@@ -59,7 +59,7 @@ In [ui/react/index.tsx](ui/react/index.tsx), add a `#region 🔖Icon`:
 
 - In [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx): delete the lucide import block; replace `PANEL_KIND_LUCIDE` with `PANEL_KIND_ICON: Record<PanelKind, IconName>` (framework owns this mapping). Replace all inline lucide usages (navbar back/forward/up, search/find, footer minimize, toolbar category icons, window measure check) with `<Icon name=... size=...>` at consistent sizes. Unify the icon registry into one `registerIcon(iconId, IconSource)` / `resolveIcon(iconId)` mechanism (replacing `registerTabIcon`+`registerElementIcon`).
 - In [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): remove the duplicate `shellTabIcons`/`registerTabIcon`/lucide imports and consume the shared registry + `Icon`. Panel toggle icon strategy made consistent with platform (use first tab icon, falling back to framework default).
-- In [framework/product/presentation/renderer/react/index.tsx](framework/product/presentation/renderer/react/index.tsx): replace `↺`/`⤢` glyphs with `<Icon name="reset">` / `<Icon name="maximize">`.
+- In [framework/product/presentation/renderer/react/index.tsx](framework/product/presentation/renderer/react/index.tsx): replace `↺️`/`⤢` glyphs with `<Icon name="reset">` / `<Icon name="maximize">`.
 - Built-in chrome `iconId`s (e.g. `workbench`, `details`, `settings`, `chat`, `windows`, `overview`) resolve to framework defaults; consumer-registered tabs/tool/footer items must supply an `IconSource` via the registration API / `SidePanelTabConfig.icon` / `augmentPanelTabs`, otherwise a visible missing-icon placeholder is shown.
 - Sizing: route every framework icon through `Icon` size tokens; drop ad-hoc `size-tiny`/`size-small`/`size={16}`/`size-10`.
 - Remove `lucide-react` from [framework/product/platform/renderer/react/package.json](framework/product/platform/renderer/react/package.json) and [framework/product/playground/renderer/react/package.json](framework/product/playground/renderer/react/package.json).

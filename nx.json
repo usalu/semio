@@ -4,7 +4,7 @@
     "packageManager": "bun"
   },
   "useDaemonProcess": false,
-  "defaultBase": "⛳wip",
+  "defaultBase": "⛳️wip",
   "workspaceLayout": {
     "appsDir": "compose",
     "libsDir": "compose"
@@ -122,11 +122,11 @@
       "options": {}
     },
     {
-      "plugin": "./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/🟨nx-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🟨️nx-plugin.mjs",
       "options": {}
     },
     {
-      "plugin": "./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/🟨nx-emoji-project-plugin.mjs",
+      "plugin": "./🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🟨️nx-emoji-project-plugin.mjs",
       "options": {}
     }
   ]

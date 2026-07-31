@@ -62,7 +62,7 @@ flowchart LR
 
 ## Step 1: Renderer interface in `infinite_cavas`
 
-Add a `// #region 🔖Renderer` to [infinite/cavas/rs/lib.rs](infinite/cavas/rs/lib.rs) with repo-owned types (thin `#[repr(transparent)]` newtypes delegating to the backend, zero-cost):
+Add a `// #region 🔖️Renderer` to [infinite/cavas/rs/lib.rs](infinite/cavas/rs/lib.rs) with repo-owned types (thin `#[repr(transparent)]` newtypes delegating to the backend, zero-cost):
 
 - Geometry: `Point`, `Vec2`, `Affine`, `Rect`, `RoundedRect`, `Circle`, `Line`, `Arc`, `CubicBez` (with `eval`), `BezPath` (`move_to`/`line_to`/`quad_to`/`curve_to`/`close_path`/`push`), `PathEl`, `Stroke` (width, caps, dash pattern), `Cap` — covering the exact surface inventoried across consumers. Operators (`Affine * Affine`, `Point - Point`, `Affine::translate/scale/rotate`, `Vec2::hypot`) delegated.
 - Paint: `Color` (`new`, `from_rgba8`, `to_rgba8`, `components`, `multiply_alpha`), `FillRule` (NonZero/EvenOdd), `BlendMode` (all 16 Mix variants used by raster), `RasterImage` (replaces `Blob`/`ImageData`/`ImageFormat`/`ImageAlphaType`/`ImageBrush`).

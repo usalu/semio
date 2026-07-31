@@ -1,0 +1,8 @@
+{
+  "title": "Port Jacobian Move Pieces From Go To CSharp",
+  "status": "closed",
+  "description": "Port Jacobian-based MovePiecesInDesign from Go to C#",
+  "summary": "Ported Jacobian MovePiecesInDesign with double-precision helpers",
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️e850b40e05d84bd98070d38e233bbf80"]
+}

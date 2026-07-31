@@ -1,0 +1,14 @@
+{
+  "title": "Fix Aggregator Empty Windows Plugin Instance Busy",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Aggregator windows are empty. Error: [object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}. Diagnose and fix so Top + Perspective panes render content again.",
+  "summary": "Fixed empty Aggregator windows caused by a WASI P2 js-sys trap that poisoned the plugin instance guard.\n\n**Root cause:** `puzzle3d_now_ms()` called `js_sys::Date::now()` on all wasm32, including wasm32-wasip2. Boot `setActiveExample(concrete-forest)` → precompute → panic (`cannot call wasm-bindgen imported functions on non-wasm targets`) → trap left `InstanceGuard` set → every later refresh returned `plugin instance busy` (shown as jco `[object Object] (see error.payload)`).\n\n**Fix:** Gate `puzzle3d_now_ms` like the existing clock helpers (Instant on native/p2, Date only on wasm-bindgen web). Harden plugin runtime with UnsafeCell + WIT `clear-instance-guard` heal after traps, and teach JS busy detection to read jco `payload.val`. Filled new `WindowMeasure::Slider.reveal` fields so plugins compile.\n\n**Verified:** Playwright on :6023 — no busy/unreachable errors, Top+Perspective canvases with Abbau Aufbau content; vitest busy-detection/serialize tests passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2314"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [
+    "⚪️894c6d6e4478449a8dccd067ce42c6fe"
+  ]
+}

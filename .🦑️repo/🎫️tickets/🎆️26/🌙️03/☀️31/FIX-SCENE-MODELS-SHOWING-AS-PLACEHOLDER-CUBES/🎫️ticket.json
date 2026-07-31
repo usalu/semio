@@ -1,0 +1,9 @@
+{
+  "title": "Fix Scene Models Showing As Placeholder Cubes",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "In the MCP app scene, 3D models show as placeholder boxes instead of actual GLTF models. Root cause: `_strip_kit_blobs` in compose/engine/main.py removes `blob` from kit files but never sets a `url`, and `_mcp_app_file_blobs` dict is never populated even though the `/api/app/files/{file_guid}` endpoint exists to serve them. Fix `_strip_kit_blobs` to: store each file's blob in `_mcp_app_file_blobs[guid]`, replace `blob` with `url` = `http://127.0.0.1:{PORT}/api/app/files/{guid}` on the stripped kit file. Then rebuild dist/mcp-app.html.",
+  "summary": "Scene uses kit file.remote and readable URLs like sketchpad; GLTF loads refit drei Bounds; kind fallback by name; piece scale in matrix; Vitest runs embedded compose/js tests only when COMPOSE_JS_RUN_EMBEDDED_TESTS=1; MCP flatten and diagram use applyDesignDiff for real geometry while designWithDiff keeps diff styling.",
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️5fd7867af2a64f55a2bdb1450df06d7b", "⚪️9ab8eebe4279439e8cda25e038b413dc"]
+}

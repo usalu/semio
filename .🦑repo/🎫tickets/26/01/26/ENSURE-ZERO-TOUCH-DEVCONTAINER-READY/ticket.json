@@ -1,9 +1,0 @@
-{
-  "title": "Ensure Zero Touch Devcontainer Ready",
-  "emoji": "📋",
-  "status": "closed",
-  "summary": "Ensure zero-touch devcontainer readiness by fixing volume permissions in post-create and post-start scripts, automating extension installation in post-attach, and migrating play/docs to ESM for correct Vite resolution.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/208"
-  }
-}

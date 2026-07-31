@@ -1,0 +1,9 @@
+{
+  "title": "Fix Catalogue Tiles Morph To Labels",
+  "emoji": "📽️",
+  "status": "closed",
+  "description": "Bauteilarten (#/0/10) to Bauteilbeschriftungen (#/0/11): many-to-one tile morph. Only one element transitions; embodiment switches before position morph so text morphs instead of tiles. Fix settle/bridge ordering so all column tiles animate into labels.",
+  "summary": "Fixed Bauteilarten (slide 10) and catalogue-labels bridge (slide 11) showing blank.\n\n- Removed opaque overlay DispositionFrame on morphParticipant column anchors so focus tiles are visible.\n- arrangementWithVisibleMorphBridgeGhosts: bridge slides show column crop ghosts at rest instead of all-opacity-0.\n- PresentationInteractionContext.Provider in PresentationDeck (render was crashing).\n- CSS: display:contents on unpinned interactive wrappers; removed height:100% on positioned slides.\n\nVerified in browser: #/0/10 tiles, #/0/11 column crops, #/0/12 labels. Tests: core 43, renderer 30 passing.",
+  "goal": "🎯️framework",
+  "sessions": ["⚪️f5b72e5b3c3648ff890bcdecc391e9a5", "⚪️ea6fa8f66bfc4d7ebcf3f4a760572ef8"]
+}

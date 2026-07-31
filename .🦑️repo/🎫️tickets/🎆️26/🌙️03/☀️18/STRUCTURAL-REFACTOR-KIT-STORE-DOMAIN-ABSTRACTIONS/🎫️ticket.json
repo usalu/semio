@@ -1,0 +1,12 @@
+{
+  "title": "Structural Refactor Kit Store Domain Abstractions",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Implement the refactor plan from compose-refactor-plan-kit-store.md: Define KitStore interface in compose/js as storage-agnostic contract, inject kitStore into Sketchpad, move all provider implementations to compose/studio, remove all engine-specific imports from compose/sketchpad. This is a structural refactor, not a rename exercise.",
+  "summary": "Completed Phase 1 and Phase 2 of the KitStore structural refactor. Phase 1: Added KitStoreStatus, KitSyncState, KitStoreSnapshot types, KitStore interface, UndoableKitStore, BlobAssetStore, ObservablePathStore interfaces, InMemoryKitStore with command-stack undo/redo, 12 tests. Phase 2: Renamed KitStore class to CollaborativeKitStore (36 edits), Kit.tsx KitStore to KitAppStoreImpl (8 edits), CollaborativeKitStore implements KitStore interface, added kitStore prop to Sketchpad, wired through SketchpadScopeProvider to SketchpadStore constructor, SketchpadStore registers injected KitStore and forwards changes via getKitDiff, exported KitStore types from index.ts. Build clean, all 34 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/968"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️c07d65c49c054b72a3b40face362a9b2"]
+}

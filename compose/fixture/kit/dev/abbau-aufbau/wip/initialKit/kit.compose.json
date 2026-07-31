@@ -4,7 +4,7 @@
   "version": "r26.06-1",
   "createdAt": "2026-06-05T12:00:00.000Z",
   "updatedAt": "2026-06-05T12:00:00.000Z",
-  "description": "🏗 Hexagonal cut concrete forest kit for abbau-aufbau.",
+  "description": "🏗️ Hexagonal cut concrete forest kit for abbau-aufbau.",
   "unit": "m",
   "tags": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
@@ -38,7 +38,7 @@
     "items": [
       {
         "id": "019eaa01-4001-7000-8000-leftglb",
-        "name": "🧊hexagonal-cut-concrete-forest-left.glb",
+        "name": "🧊️hexagonal-cut-concrete-forest-left.glb",
         "folder": {
           "id": "019eaa01-3000-7000-8000-represent",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -49,7 +49,7 @@
       },
       {
         "id": "019eaa01-4002-7000-8000-left3dm",
-        "name": "📐hexagonal-cut-concrete-forest-left.3dm",
+        "name": "📐️hexagonal-cut-concrete-forest-left.3dm",
         "folder": {
           "id": "019eaa01-3000-7000-8000-represent",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -60,7 +60,7 @@
       },
       {
         "id": "019eaa01-4003-7000-8000-rightglb",
-        "name": "🧊hexagonal-cut-concrete-forest-right.glb",
+        "name": "🧊️hexagonal-cut-concrete-forest-right.glb",
         "folder": {
           "id": "019eaa01-3000-7000-8000-represent",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -71,7 +71,7 @@
       },
       {
         "id": "019eaa01-4004-7000-8000-right3dm",
-        "name": "📐hexagonal-cut-concrete-forest-right.3dm",
+        "name": "📐️hexagonal-cut-concrete-forest-right.3dm",
         "folder": {
           "id": "019eaa01-3000-7000-8000-represent",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"

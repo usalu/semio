@@ -1,0 +1,7 @@
+git ls-files outputs (excl .repo/🎫️): 0
+git check-ignore: plugin-modules, 🤖️generated, 🟨️boot.js — OK
+hand-written still tracked: eslint.config.mjs, .dependency-cruiser.cjs, vite-env.d.ts — OK
+codegen: framework-schema, ui-styling-tokens, ui-asset, semio-asset, graph-manifest, plugin-registry — OK
+plugin-registry:check — fresh
+cargo check -p semio-framework-schema — OK
+cargo check -p semio-framework-os-kernel-math-graph-manifest — OK

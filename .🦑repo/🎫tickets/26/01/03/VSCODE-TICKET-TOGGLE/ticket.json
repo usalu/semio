@@ -1,7 +1,0 @@
-{
-  "title": "VSCODE-TICKET-TOGGLE",
-  "emoji": "🎫",
-  "status": "closed",
-  "description": "When pressing close or reopen on ticket tree item in VSCode it opens a command instead of closing/reopening the clicked ticket.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repovscodeextension"
-}

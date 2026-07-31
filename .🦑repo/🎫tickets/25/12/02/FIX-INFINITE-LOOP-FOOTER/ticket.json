@@ -1,7 +1,0 @@
-{
-  "title": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp"
-}

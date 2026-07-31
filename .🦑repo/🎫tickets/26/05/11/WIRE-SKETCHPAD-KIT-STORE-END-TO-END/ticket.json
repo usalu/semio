@@ -1,9 +1,0 @@
-{
-  "title": "Wire Sketchpad Kit Store End To End",
-  "emoji": "🧭",
-  "status": "open",
-  "description": "Refactor CQRS event sourcing flow so sketchpad dev JSON kit opening initializes the RS-backed kit store end-to-end with three graphs, initial kit snapshot, initial checkpoint, and initial unsaved change on the kit. Renaming must start a semantic change and save it when complete. State must come only from compose/rs.",
-  "summary": "Aligned dev-kit JSON and public JS read scope with target-schema version changes: removed draft/transaction read-point exposure, kept fresh JSON bundles on savedChanges/unsavedChanges + edits, and verified RS schema/bundle tests plus JS/React/Sketchpad builds. RS: Graph.initialKit persisted once; Checkpoint uses parent/initial/kit (no frozenRoot); bundle checkpoints omit embedded kit JSON.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningkitapp",
-  "sessions": ["⚪b147371bb10149d3979e357fa9aa62dd", "⚪d3428b038018455f807b599a693b8bb7", "⚪88b6044fa6464d9ea4a47495941d9e48"]
-}

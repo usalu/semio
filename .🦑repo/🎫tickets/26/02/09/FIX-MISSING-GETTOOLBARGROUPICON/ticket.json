@@ -1,9 +1,0 @@
-{
-  "title": "Fix Missing getToolbarGroupIcon",
-  "emoji": "🔧",
-  "status": "closed",
-  "summary": "Fixed ReferenceError by hoisting getToolbarGroupIcon to top of Sketchpad.tsx. Removed ~170 lines of duplicated code that caused conflicting definitions. Cleaned up Playwright test toolbar.spec.ts.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/462"
-  }
-}

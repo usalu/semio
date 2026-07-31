@@ -1,0 +1,9 @@
+{
+  "title": "Metabolism Light Fixture Node And Handle Kind Ids",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Add nodeKind to every wip.initialKit.types.items entry and handleKind to every port (families[].ports.items and connector port refs) in assets/fixtures/metabolism.kit.light.compose.json so board semantic kinds can bind to kit fixtures.",
+  "summary": "Added stable board-aligned semantic ids: every wip.initialKit type has nodeKind compose.metabolism.light.node.\u003cid\u003e; every family port and every connector port ref has handleKind compose.metabolism.light.handle.\u003cportId\u003e. Neo4j seed persists Type.nodeKind and Port.handleKind. Rust contract test metabolism_light_fixture_kinds_for_types_and_ports plus ticket-local apply-node-handle-kinds.mjs for regeneration.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️b6edf8d3bae84194a3dbdf381148357d"]
+}

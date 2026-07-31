@@ -1,0 +1,12 @@
+{
+  "title": "Refactor Uri Mechanism To Repo Protocol",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Refactor the URI mechanism and all specs of all entities to be repo://{{entity-kind}}/{{id}} e.g. repo://definition/🏘️compose📚️go💻️compose🛠️inverseConnectorDiff",
+  "summary": "Refactored all entity URIs from old hierarchical abbreviated format (repo://p/u/compose, repo://y/25/m/02/d/04/tk/slug, etc.) to flat emoji-based format repo://{{entity-kind}}/{{id}} (e.g., repo://definition/🏘️compose📚️go💻️compose🛠️inverseConnectorDiff).\n\nGo CLI (main.go):\n- Rewrote IdToUri to detect entity kind from emoji prefix and build repo://kind/id URIs\n- Rewrote UriToId to extract ID from repo://kind/id format\n- Rewrote GetArtifactURI to use IdToUri\n- Updated all entity GetURI() methods\n- Updated all MCP resource templates and handlers\n- Updated all tree node URIs in BuildMonorepoTree\n- Fixed DetectEntityKindFromId: singular/plural disambiguation via singularOrPlural helper, contributor emoji ordering before file checks\n- Added path to definition tree node Data for VS Code navigation\n- Removed dead ticketNodeToData URI parsing code\n\nGo tests (main_test.go):\n- Updated ~50 TestArtifactIDAndURI cases, ~22 TestIdToUri cases, ~22 TestUriToId cases, 11 TestIdUriRoundTrip cases\n- Updated TestSectionHeaderIdAndUri, TestDefinitionHeaderIdAndUri, TestGetArtifactURI_Sessions/Session\n- Updated TestSessionIdToUri, TestSessionUriToId, TestSessionGetURI, TestToolGoalUri\n- Updated TestFormatHeader*, TestRenderMonorepoTree, TestRenderGoalTree, TestRenderSectionTree\n- All URI-related tests pass\n\nTypeScript (extension.ts):\n- Updated navigateToUri to use tree node cache Data (path, sha, github, slug, startLine, endLine) instead of parsing emoji IDs as filesystem paths\n- Simplified section/definition navigation to use node.Data.startLine/path directly\n- Removed dead findSectionByPath function\n- Added URI encoding for external URLs (GitHub contributor/checkpoint links)\n\nSPECS (SPECS.md):\n- Added URI Format specification section documenting the repo://kind/id format\n- Updated GetURI spec to reference new format",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1034"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️d13e994b609c4120a1677ff33b504619"]
+}

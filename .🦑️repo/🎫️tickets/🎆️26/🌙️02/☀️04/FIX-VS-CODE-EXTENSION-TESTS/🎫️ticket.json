@@ -1,0 +1,7 @@
+{
+  "title": "Fix VS Code Extension Tests",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Extend repo/vscode extension.test.ts to cover Monorepo/Filter sideview behavior; fix vscode-test SIGSEGV; ensure build+tests pass; update README.md and AGENTS.md.",
+  "summary": "Extended VS Code extension tests and stabilized headless test runner; aligned ticket interactions query; ensured build+tests pass."
+}

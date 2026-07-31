@@ -1,0 +1,12 @@
+{
+  "title": "Expand Nakagin Fixture for Full Jack Coverage",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Expand nakagin-capsule-tower.trinity.json for full Jack clause coverage; preset/example queries; tests; rewrite contract preserved.",
+  "summary": "Expanded nakagin-capsule-tower.trinity.json in place (9 nodes, 6 edges): enriched label/tier on existing pieces; added jack_orphan, jack_prune, jack_spare and t_f0_b_c1→jack_prune edge. Added tier to nakagin manifest and regenerated graph-manifest. Updated Jack default query and TRINITY_JACK_PLAY_EXAMPLE_QUERIES catalogue (8 examples via loadExampleQuery). Synced TrinityJackEditorSurfaceHost placeholder/fallback to TRINITY_JACK_PLAY_DEFAULT_QUERY. Fixed dispatch_trinity_graph_ops incremental validation so CREATE edge batches work in WASM session. Tests: trinity-jack-play 36 passed, trinity-rewrite-play 28 passed, trinity_jack 21 rust tests, trinity_rewrite 11 rust tests. Browser: Jack play on :6054 shows expanded graph, default query results, Example queries catalogue and Return Graph example.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1790"
+  },
+  "goal": "🎯️trinity",
+  "sessions": ["⚪️49847a2adea8406e89d1068d8ae14cfa"]
+}

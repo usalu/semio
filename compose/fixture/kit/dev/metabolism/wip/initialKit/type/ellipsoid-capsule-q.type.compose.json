@@ -162,7 +162,7 @@
           "y": -1,
           "z": 0
         },
-        "description": "🧪 The middle of the main entrance door of the upper entrance floor.",
+        "description": "🧪️ The middle of the main entrance door of the upper entrance floor.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -342,9 +342,9 @@
       }
     ]
   },
-  "icon": "icons/🔣ellipsoid-🔣capsule_q.svg",
+  "icon": "icons/🔣️ellipsoid-🔣️capsule_q.svg",
   "image": "images/ellipsoid-capsule_q.png",
-  "description": "🏡 An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
+  "description": "🏡️ An ellipsoid sleeping capsule for one person. It has the entrance on the  and has the view to the .",
   "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
     "items": [

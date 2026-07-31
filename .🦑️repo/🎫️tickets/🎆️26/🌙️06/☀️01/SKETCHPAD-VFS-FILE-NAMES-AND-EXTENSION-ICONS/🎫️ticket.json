@@ -1,0 +1,8 @@
+{
+  "title": "Sketchpad Vfs File Names And Extension Icons",
+  "emoji": "📄️",
+  "status": "open",
+  "description": "Fix kit file rows in sketchpad VFS: show file name without extension, pick per-extension lucide icons, wire row icon through platform model.",
+  "goal": "🎯️compose🎯️sketchpad",
+  "sessions": ["⚪️91965c305c60403faa5aead9c29cf897"]
+}

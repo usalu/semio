@@ -1,0 +1,12 @@
+{
+  "title": "Extend Nakagin Design with Tower Layers and IFC Spatial Document Export",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Extend the nakagin capsule tower design with a tower layer that has an attribute ifc.type:IfcBuilding. The tower layer has a sublayer for each storey with the number. Add attribute ifc.type: IfcBuildingStorey to each storey layer. Extend the ifc export to export IfcProject -\u003e IfcSite -\u003e IfcBuilding -\u003e IfcBuildingStorey using the layer attributes. For each type create IfcBuildingElementProxyType and for each piece create IfcBuildingElementProxy with local placement. Add the model representation of the type to the proxy type.",
+  "summary": "Extended the Nakagin Capsule Tower design with a tower layer document and enhanced the IFC export to use layer-based spatial document. Added 12 layers to the design JSON: 1 tower layer with ifc.type=IfcBuilding and 11 storey sublayers (tower/0 through tower/10) with ifc.type=IfcBuildingStorey. Modified both _export_ifc_from_dict and _export_ifc_from_entities to read layer attributes, create IfcBuilding and IfcBuildingStorey from layers, and assign pieces to the correct storey based on floor number extracted from piece names. Each type creates IfcBuildingElementProxyType with model mesh representation, and each piece creates IfcBuildingElementProxy with local placement assigned to its storey. Added Layer.attributes field to the Python model. Updated existing tests and added test_export_ifc_layer_spatial_document test. All 25 Python tests and 79 JS tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1022"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️6e1b3651da11437296f2ce8d2682ae8f"]
+}

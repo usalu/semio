@@ -1,0 +1,11 @@
+{
+  "title": "Fix Missing Projektetage Slide Assets",
+  "emoji": "🐛️",
+  "status": "open",
+  "description": "Some projektetage slides show broken images because public assets are missing on disk (katalog.png, import-verarbeitung.png staged in git but not present) or have macOS NFD unicode filenames (recherche-schweiz-überblick.png). Restore missing files and normalize filenames.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1723"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️29814ca5650343fbb12a63d9bb2e56f6"]
+}

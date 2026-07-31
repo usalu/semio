@@ -1,0 +1,12 @@
+{
+  "title": "Face Gumball Moves Whole Mesh",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Face gumball drag still moves whole mesh instead of selected face vertices.",
+  "summary": "Face gumball transforms now pass selection mode and ids directly into WASM translate/rotate/scale, atomically applying component selection before deforming vertices.\n\n- WASM API: translateSelection(mode, ids, …), rotateSelection(mode, ids, …), scaleSelection(mode, ids, …)\n- Gumball drag end passes React selectionMode + selectedIds to session transforms\n- Added normalizeLowpolySelectionMode (object → mesh) in controller and session bridge\n- Rebuilt WASM pkg",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1817"
+  },
+  "goal": "🎯️lowpoly🎯️play",
+  "sessions": ["⚪️5e14a1fa84be437e9b809a0ad3d43dea"]
+}

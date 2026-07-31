@@ -74,4 +74,4 @@ Extend the existing celebrate CSS contract test:
 
 ## Ticket
 
-Reopen [`CELEBRATE-CONIC-CONTENT-PAINT`](.repo/🎫/26/07/25/CELEBRATE-CONIC-CONTENT-PAINT/), keep notes in the ticket folder, close with summary + files. Goal remains `🎯r2602/🎯runningsketchpad`.
+Reopen [`CELEBRATE-CONIC-CONTENT-PAINT`](.repo/🎫️/26/07/25/CELEBRATE-CONIC-CONTENT-PAINT/), keep notes in the ticket folder, close with summary + files. Goal remains `🎯️r2602/🎯️runningsketchpad`.

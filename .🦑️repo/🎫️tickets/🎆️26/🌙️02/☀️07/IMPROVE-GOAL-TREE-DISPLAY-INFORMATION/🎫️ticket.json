@@ -1,0 +1,11 @@
+{
+  "title": "Improve Goal Tree Display Information",
+  "emoji": "🎯️",
+  "status": "closed",
+  "description": "Improve the goal tree command output to show more and better structured information including slug, status, creation date, due date, and description.",
+  "summary": "Improved goal tree display to show more information: status, createdAt (relative time), due date, and full description. Updated both text and markdown templates. Added `description` field to all three GraphQL query variants in the goal tree command. Fixed backwards-compatible parsing of the old `started`/`finished` flat fields in Interaction JSON unmarshalling so that `createdAt` resolves correctly for goals with legacy interaction format. Added Status and CreatedAt to the goal tree view model.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/436"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repogoalmechanism"
+}

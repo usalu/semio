@@ -1,0 +1,9 @@
+{
+  "title": "Fix useMemo ReferenceError in DiagramInner",
+  "emoji": "🔧️",
+  "status": "closed",
+  "summary": "Fixed ReferenceError: useMemo is not defined in DiagramInner",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/292"
+  }
+}

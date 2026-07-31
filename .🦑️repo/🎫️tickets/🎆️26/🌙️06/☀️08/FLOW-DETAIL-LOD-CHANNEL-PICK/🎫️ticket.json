@@ -1,0 +1,12 @@
+{
+  "title": "Flow Detail Lod Channel Pick",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "At detail LOD, input/output channel rows should be selectable and hoverable instead of the complete node body.",
+  "summary": "Channel row hover/selection fill now uses `dag_handle_body_fill` with full theme handle colors (same as rim handle caps), removing the custom low-alpha overlay tint.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1624"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️0e3c667e52bc4fdfb30a6fb655093825", "⚪️da8efdc00e3d4dfdba792830025958a5", "⚪️f6838b9cdddc4553affcb8409ba02e58", "⚪️94ebf81467de4b20a17999a34ffc37ed"]
+}

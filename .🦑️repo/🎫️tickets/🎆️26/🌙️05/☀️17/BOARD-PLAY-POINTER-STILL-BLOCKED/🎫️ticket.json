@@ -1,0 +1,9 @@
+{
+  "title": "Board Play Pointer Still Blocked",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Board play still has no canvas interaction after bubble-phase ContextMenuController fix. Find remaining blockers (capture listeners, overlays, eventSurface wiring).",
+  "summary": "Board stayed dead inside sketchpad because OriginDocumentListener registered document pointerdown in capture phase, which runs before the board eventSurface bubble listeners. Switched pointerdown to bubble (default third argument); left keydown/focusin on capture. Reverted experimental window-level board routing (elements board index.ts) after Vitest/jsdom issues; elements ContextMenuController bubble dismiss remains on branch.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️473eb9f5d5bd487cb138aecd54b50ed0"]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Fix Coda Desktop White Screen in Devcontainer",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Electron chrome-sandbox SUID binary not configured correctly in devcontainer causing FATAL crash. Fix permissions in post-create.sh and add ELECTRON_DISABLE_SANDBOX fallback in containerEnv.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/952"
+  },
+  "goal": "🎯️r2603🎯️runningnet",
+  "sessions": ["⚪️59b15f84d19549b3a44652875f6254e2", "⚪️94e2071ece2944539e7be5991321f0e0", "⚪️77707e9adef84a948223911c8062f8cd"]
+}

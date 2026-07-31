@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/puzzle-asset",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugin/🧩️puzzle/🔨️module/🖼️asset/⚡️implementation/🟦️typescript",
+        "command": "bun -e \"console.log('@semio-tech/puzzle-asset is a source-only workspace and does not require a build step.')\"",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

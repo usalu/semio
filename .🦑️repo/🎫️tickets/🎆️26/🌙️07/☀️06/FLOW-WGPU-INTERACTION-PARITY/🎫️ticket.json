@@ -1,0 +1,17 @@
+{
+  "title": "Flow Wgpu Interaction Parity",
+  "emoji": "🌊️",
+  "status": "closed",
+  "description": "Restore premigration flow node-graph rendering in wgpu: edges, handles, channels, labels, selection rectangle, LOD-adjusted content.",
+  "summary": "Restored full premigration Flow wgpu interaction parity: (1) compositor overlay pass draws label glyphs and selection marquee/bounds above raster quads via overlay_ui_instances + ui_overlay_pass; (2) wheel always zooms, ctrl_or_meta for macOS selection, Dag/Flow pan via middle-mouse/alt/space+drag, wheel-zoom LOD pin with 120ms debounce; (3) double-click note edit with keyboard forwarding and caret blink; (4) evaluate runs on wasm, camera-only fixture sync no longer wipes preview state, initial evaluate on graph mount; (5) catalogue rows draggable with application/x-flow-widget MIME, ghost widget follows cursor during tree drag over node-graph, drop dispatches addWidget at cursor world position. Added regression tests in dag, flow_core, flow_plugin, ui_wgpu. Rebuilt wgpu wasm bundle.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1840"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "8f462b96",
+    "local": "flow_wgpu_interaction_parity_8f462b96.plan.md"
+  },
+  "sessions": ["⚪️28a191d9d79a4a44827263eb0d470ce7", "⚪️3a85fd9312f942feb50170cb395a6a51"]
+}

@@ -112,7 +112,7 @@ Follow the large-engine pattern from [`animate/core/rs`](animate/core/rs): thin 
 energy/
   AGENTS.md
   engine/
-    project.json          # @semio-tech/energy-engine → bun ./script.ts test
+    project.json          # @semio-tech/energy-engine → bun ./📜️script.ts test
     script.ts
     rs/
       Cargo.toml          # energy_engine

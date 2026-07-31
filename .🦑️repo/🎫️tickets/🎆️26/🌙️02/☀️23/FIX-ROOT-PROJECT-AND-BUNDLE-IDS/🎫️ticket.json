@@ -1,0 +1,12 @@
+{
+  "title": "Fix Root Project And Bundle Ids",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix ID system to not include root project and bundle in folder and file IDs. Currently a path like `�️compose🏪️assets🌱️root🗃️repo🗃️some🗃️folder💻️filefixabletsx🔖️missingend` is generated instead of `🏘️compose🏪️assets🗃️some🗃️folder💻️filefixabletsx🔖️missingend`",
+  "summary": "Fixed definition IDs in hook events to use repo-relative paths. Bug was in resolveCodeBlockRefs: ParseDefinitions was called with absPath instead of normPath, causing definition IDs like 'workspaces/compose...' instead of proper relative IDs. Fixed by passing normPath to ParseDefinitions, removing unused absPath variable. Added TestTrackHookCodeEditedDefinitionIDsAreRepoRelative to verify fix. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/672"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient",
+  "sessions": ["⚪️17718685446307585711997147558349838918", "⚪️fe4ce050c50e4cb0bbc9f7b8ed5e3420", "⚪️a8b1592e5f8d40eca3414b52c0170499"]
+}

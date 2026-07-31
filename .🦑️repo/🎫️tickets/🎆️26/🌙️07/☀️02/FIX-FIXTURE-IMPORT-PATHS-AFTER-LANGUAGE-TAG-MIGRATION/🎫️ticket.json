@@ -1,0 +1,20 @@
+{
+  "title": "Fix Fixture Import Paths After Language-Tag Migration",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Insert a language/framework subdirectory (js, rs, py, go, cs) directly under every bundle's own implementation location repo-wide, so each bundle's source can later be rewritten in a different language without moving the bundle itself. Dismantle cad/js umbrella. Skip bundles already compliant (final segment is language tag). Split genuinely mixed-language bundles. Update all config surfaces.",
+  "summary": "Fixed compose/fixture/js/index.ts: the language-tag migration moved index.ts into a js/ subdirectory without updating its ~40 relative fixture-JSON imports, so every \"./X\" import pointed one level too high and broke the only automated consumer (@semio-tech/compose-algorithm) with \"Cannot find module\" and 0 tests executed. Changed every \"./X\" import to \"../X\" so they resolve to compose/fixture/X again. Running the suite then surfaced a real, previously-invisible bug in compose/dev/algorithm/js/index.ts: copyDesign/pasteDesign/previewDesignWithAppliedDiff (and their helpers __piecesOfPlain/__connectionsOfPlain/__pasteCoordinateOffset, plus the Design.pieces/connections getters) called the shared fixtureItemsOf() directly on plain arrays, which only unwraps {items:[...]} fixture nodes and silently returns [] for bare arrays — dropping all pieces/connections whenever a Design was constructed directly with array literals (as the embedded tests do). Added a local __itemsOf() helper (array-or-fixture-wrapped fallback) and routed all pieces/connections access through it. All 10 tests in the embedded vitest suite now pass (`cd compose/dev/algorithm \u0026\u0026 bun ./📜️script.ts test quick`), confirmed via actual run output, not just typecheck.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1805"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo",
+  "plan": {
+    "client": "cursor",
+    "id": "ad457a85",
+    "local": "language-tag_directories_ad457a85.plan.md"
+  },
+  "sessions": [
+    "⚪️4c34bfdf593a4138bd2bc4080187c906",
+    "⚪️634778a559984647916f707d7f857864"
+  ]
+}

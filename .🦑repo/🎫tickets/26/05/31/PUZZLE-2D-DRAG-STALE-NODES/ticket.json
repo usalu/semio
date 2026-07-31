@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle 2d Drag Stale Nodes",
-  "emoji": "🖱️",
-  "status": "closed",
-  "description": "While dragging nodes in puzzle 2d, only edges update visually; nodes/handles stay at cached positions until drag ends. Bump world content cache generation when node geometry changes during drag and setNodePositions.",
-  "summary": "Fixed puzzle 2d drag preview where only edges moved: world-content cache held nodes/handles at pre-drag positions while edges drew in a fresh screen-space pass each frame. `set_node_positions` and `DragNodes` pointer moves now call `bump_content_scene_generation()` when node x/y actually change. Added regression tests `board_host_node_drag_invalidates_cached_world_content` and extended `board_host_set_node_positions_updates_existing_nodes_only`. Rebuilt wasm; Rust and react vitest (98) pass.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪e9e90bd511b647a88af4c75dc95526d3"]
-}

@@ -1,0 +1,10 @@
+{
+  "title": "Enforce Strict ID and URI System",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Refactor ID and URI system to enforce uppercase slugs for URIs and human-readable IDs, updating Go repo and VS Code extension.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/324"
+  }
+}

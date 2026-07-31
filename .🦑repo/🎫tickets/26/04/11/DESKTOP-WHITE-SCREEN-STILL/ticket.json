@@ -1,8 +1,0 @@
-{
-  "title": "Desktop White Screen Still",
-  "status": "closed",
-  "description": "Investigate and fix Electron desktop blank renderer after sketchpad export fix.",
-  "summary": "Fixed Electron main startup: register all IPC before createWindow (removed ready race), call createWindow from whenReady after handlers. Dev opens detached DevTools. Sketchpad: replace null/empty loading UIs with visible dark placeholders; harden loadAppConfigs and hydrateInitialState with catch/finally so init cannot hang on IndexedDB or merge errors; AppRouter shows loading text and initialize() logs failures.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪98194b52793e4414b8665cc12f3ecf74"]
-}

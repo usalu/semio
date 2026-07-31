@@ -95,4 +95,4 @@ Add unit tests alongside existing `kernel_3d_scene` tests mirroring the r3f test
 
 ## Ticket
 
-Open a new ticket via repo MCP (`ticket_open`) under goal `🎯puzzle3d🎯puzzle3dplay` (same goal as the closed `UNIFY-CAD-AND-PUZZLE3D-INFINITE-WORLD` ticket this continues) titled "Wgpu Infinite World Chunking Pooling Lod Grid Parity", and do all work/temp files inside its ticket folder.
+Open a new ticket via repo MCP (`ticket_open`) under goal `🎯️puzzle3d🎯️puzzle3dplay` (same goal as the closed `UNIFY-CAD-AND-PUZZLE3D-INFINITE-WORLD` ticket this continues) titled "Wgpu Infinite World Chunking Pooling Lod Grid Parity", and do all work/temp files inside its ticket folder.

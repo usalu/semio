@@ -8,7 +8,7 @@ SQLite schema definitions for compose kit persistence.
 
 It mirrors the current Rust `KitFullDto` graph and stores ordered collections explicitly, so roundtrips do not rely on embedded JSON snapshots or unstable row ordering.
 
-# 💯Requirements
+# 💯️Requirements
 
 - Persist the full kit graph through relational tables.
 - Preserve vector ordering with explicit `ordinal` columns.

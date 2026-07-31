@@ -1,0 +1,8 @@
+{
+  "title": "Make Tree Item Labels Selectable as Text",
+  "status": "closed",
+  "description": "Tree item and section label spans have `select-none` inherited from the parent row div. Add `select-text` to all `data-slot=\"tree-label\"` spans in TreeSection and TreeItem so names in the diff tree are copyable. File: elements/ui/index.tsx",
+  "summary": "Fixed external-stub paste rematch: arePortsCompatible now treats identical port GUIDs as compatible so findMatchingConnector succeeds when remapping parent connectors on the same type. Clipboard sourceParentMap prefers edges whose parent is an external stub when multiple edges share the same connecting piece (JS/Go/Py/C#/Rs). Storybook default Nakagin selection omits t_f1 piece and t_f0→t_f1 link. Added vitest for t_f2→t_f1 remapping to target t_f1.",
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️09e9a9604eff4e93997b45320d76d285"]
+}

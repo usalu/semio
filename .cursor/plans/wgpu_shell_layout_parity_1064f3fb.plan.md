@@ -104,7 +104,7 @@ Replace the stub `render_palette` ([shell.rs](framework/renderer/wgpu/rs/shell.r
 
 1. `cargo test -p ui_wgpu -p semio-framework-renderer-wgpu` (extend existing test files with dock-layout unit tests: even-layout fallback, default_layout parsing, close-window collapse).
 2. Rebuild wasm `bun ./framework/renderer/wgpu/script.ts wasm`.
-3. Full 25-plugin E2E suite (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) — programs with multiple window kinds (flow, cad, s) now exercise the dock.
+3. Full 25-plugin E2E suite (`.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) — programs with multiple window kinds (flow, cad, s) now exercise the dock.
 4. Side-by-side screenshot comparison against the React shell (`?renderer=react` vs wgpu) for: navbar composition, window tab caps + U-frames, panel kind toggles, footer, search palette.
 
 ## Todos

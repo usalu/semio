@@ -77,7 +77,7 @@ interface ArtifactScope {
 
 ## Tile and Split templates (produce embodiments)
 
-New `#region 🔖Tile` / `#region 🔖Split` in core, replacing the old `splitFigureGrid`-returns-tiles mechanism:
+New `#region 🔖️Tile` / `#region 🔖️Split` in core, replacing the old `splitFigureGrid`-returns-tiles mechanism:
 
 - `tile(spec: { id; source: string; crop: DispositionPosition; alt?; }): FigureEmbodiment` — produces one cropped figure embodiment from a source image.
 - `split(spec: { keyPrefix; source; rows; columns; frame; gap? }): { embodiments: FigureEmbodiment[]; dispositions: Disposition[] }` — calls `tile` per cell to emit one embodiment + one positioned disposition per cell (so each tile is an ordinary participant/embodiment/disposition; reveal.js auto-animate keys off `participantId` as for any disposition). This is what `[Bauteilkatalog.ts](mit-bestand/präsentation/33.projektetage/slide/Hauptteil/Einführung/Medien/Bauteilkatalog.ts)` consumes.
@@ -111,7 +111,7 @@ In `[renderer/react/index.tsx](framework/product/presentation/renderer/react/ind
 
 ## Tests and validation (extend inline, no new files)
 
-- Core `🧪Tests`: scope resolution (nearest-wins across levels), `resolveArrangement(scope,…)`, `tile`/`split` output shape, migrated `intro`/`analogy`, unchanged slide counts/bookmarks. Update every existing test that constructs `Participant{embodiments}` or `Disposition` without `embodimentId`.
-- Renderer `🧪Tests`: drop split/tile/morph-participant DOM assertions; assert tiles render as positioned cropped figures; positioned dispositions and video/pdf still get `data-id`.
-- Deck `🧪Tests` in `[index.ts](mit-bestand/präsentation/33.projektetage/index.ts)`: catalogue produces N tile dispositions, columns morph focus→labels, kinds present.
+- Core `🧪️Tests`: scope resolution (nearest-wins across levels), `resolveArrangement(scope,…)`, `tile`/`split` output shape, migrated `intro`/`analogy`, unchanged slide counts/bookmarks. Update every existing test that constructs `Participant{embodiments}` or `Disposition` without `embodimentId`.
+- Renderer `🧪️Tests`: drop split/tile/morph-participant DOM assertions; assert tiles render as positioned cropped figures; positioned dispositions and video/pdf still get `data-id`.
+- Deck `🧪️Tests` in `[index.ts](mit-bestand/präsentation/33.projektetage/index.ts)`: catalogue produces N tile dispositions, columns morph focus→labels, kinds present.
 - Run `bun nx run @semio-tech/framework-presentation-core:test`, `@semio-tech/framework-presentation-renderer-react:test`, and the deck test config; run the projektetage dev server and confirm catalogue/split/morph render live via screenshot/CDP. Close the ticket with summary + touched files.

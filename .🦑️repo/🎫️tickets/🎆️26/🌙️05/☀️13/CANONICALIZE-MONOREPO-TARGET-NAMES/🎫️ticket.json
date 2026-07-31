@@ -1,0 +1,12 @@
+{
+  "title": "Canonicalize Monorepo Target Names",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Refactor the way scripts are handled across the compose monorepo so every script uses the NAME.script.ts convention and package.json / nx targets execute those scripts consistently with bun and nx. Migrate the complete monorepo to this style, update references, and validate the relevant build/test entrypoints.",
+  "summary": "Migrated active monorepo script references to the NAME.script.* convention across root/package Nx targets and in-file script invocations. Fixed stale repo client entrypoint paths from repo/mcp to repo/client/mcp, bound GOWORK where root-level Go execution is required, updated repo client help/tests accordingly, and validated the corrected repo client run/build flow plus focused repo client tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1416"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️sandboxedrepo🎯️zerotouchdevcontainer",
+  "sessions": ["⚪️63a6fcdc14604e7aa0c9ebc54fec9c01", "⚪️4e10123b00fa4ebfbea9c870319d5166"]
+}

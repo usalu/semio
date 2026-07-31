@@ -1,0 +1,3 @@
+Folders renamed again: ♻️ → ♻️mit-bestand (and peers ✏️s, 🌎️hub, 🧰️framework).
+Updated .gitmodules + module store/gitdir/worktree/.git/config to ♻️mit-bestand/recherche.
+Verified: git submodule status → ♻️mit-bestand/recherche (b8c2dede)

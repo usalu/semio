@@ -1,0 +1,9 @@
+{
+  "title": "Board Icon Fit Clip And Theme Colors",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "Fix board detail SVG icon rendering: center using usvg abs stroke bbox (not document size), uniform scale to fit inset, clip to node shape, remap near-black to node stroke and near-white to node fill with theme-aware cache keys and cache clear on theme JSON.",
+  "summary": "Detail LOD SVG icons now use usvg abs stroke (then fill, then viewBox) bounds for uniform scale and centering—fixes offset art in Inkscape exports. Icons draw inside a Vello clip matching the node inset circle/rect. Solid paints with RGB near black or near white map to the node stroke and fill theme colors (opacity via multiply_alpha). Icon vector cache keys include fg/bg rgba; cache clears on set_vello_theme_from_json. Added Rust smoke test for append_svg_str / append_svg_str_themed. wasm-pack release build succeeded; native cargo test still blocked by Windows wgpu-hal duplicate windows crates; Vitest 55 passed.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️8a0cbc86a5834559b1ee983add4896ba"]
+}

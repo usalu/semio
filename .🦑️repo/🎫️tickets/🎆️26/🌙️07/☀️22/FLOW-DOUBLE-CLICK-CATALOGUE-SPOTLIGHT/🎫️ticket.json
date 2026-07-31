@@ -1,0 +1,20 @@
+{
+  "title": "Flow Double-Click Catalogue Spotlight",
+  "emoji": "✨️",
+  "status": "closed",
+  "description": "Double-clicking empty flow canvas background opens an inline search at the cursor. Typing filters catalogue nodes; hovering a match (or the top match while typing) previews it as a highlighted ghost node on the canvas (same paint path as catalogue drag). Enter/click inserts the node at the double-click world point; Escape closes and clears the ghost.",
+  "summary": "Restored premigration flow spotlight catalogue listing: removed the 20-item cap from flowRankCatalogueSuggestions, added flowSpotlightSuggestionListScrollClass, and updated FlowSpotlight with chevron expand/collapse (collapsed shows top match; expanded shows full scrollable list; ArrowDown auto-expands). Added vitest coverage for uncapped ranking and scroll classes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2232"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "e5917a95",
+    "local": "flow_spotlight_all_nodes_e5917a95.plan.md"
+  },
+  "sessions": [
+    "⚪️694a5cc18ec44ec1bc570df86443f018",
+    "⚪️050fec1121c040dfa1669674ad1c8dda"
+  ]
+}

@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-raster"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Raster app — document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

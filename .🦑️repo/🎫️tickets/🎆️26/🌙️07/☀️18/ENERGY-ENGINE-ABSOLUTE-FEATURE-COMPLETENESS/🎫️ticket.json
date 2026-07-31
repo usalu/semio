@@ -1,0 +1,15 @@
+{
+  "title": "Energy Engine Absolute Feature Completeness",
+  "emoji": "⚡️",
+  "status": "closed",
+  "description": "Bring energy_engine from physics library to fully coupled EnergyPlus-class BEM: extend Model, rewrite kernel/sim coupling, fill catalog variants, verify with isolated cargo target.",
+  "summary": "Expanded DIN EN 16798 with parts 2,4,6,8,10-12,14,16, PMV simplified comfort, full OccupancyType ventilation table, na_de national annex, and l_aeq_db parameter on check_residential_environment (11 tests). Rewrote DIN V 18599 with real part_1–part_12 functions, from_building() coupling norm_din_4108 U-values and norm_din_en_16798 ventilation, sinusoidal climate for cooling degree hours, occupant-based DHW, and numeric Q_T/Q_V/Q_P assertions for 100 m² reference building (9 tests). Cargo.toml adds norm_din_4108 and norm_din_en_16798 dependencies.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2086"
+  },
+  "goal": "🎯️energy",
+  "sessions": [
+    "⚪️1bdf2e33720b49a4b202e52a1195c525",
+    "⚪️a393daede5b547a88d397680b6838d73"
+  ]
+}

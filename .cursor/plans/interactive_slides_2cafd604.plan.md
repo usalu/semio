@@ -6,7 +6,7 @@ todos:
    content: Open repo MCP ticket associated with the most appropriate goal (read repo://goals first)
    status: completed
  - id: helpers
-   content: "Add 🔖Interaction region: types + pure geometry helpers (intersect/contain, marquee rule+select, translate/resize, group bounding+scale, fullscreen toggle, client-to-fraction) in index.tsx"
+   content: "Add 🔖️Interaction region: types + pure geometry helpers (intersect/contain, marquee rule+select, translate/resize, group bounding+scale, fullscreen toggle, client-to-fraction) in index.tsx"
    status: completed
  - id: hook
    content: Add usePresentationInteraction hook with ephemeral selectedIds/transforms/fullscreenStash, reset on slideEpoch change
@@ -18,7 +18,7 @@ todos:
    content: Add InteractionLayer marquee overlay (crossing/window selection, empty-click deselect) and integrate into ArrangementSection
    status: completed
  - id: css
-   content: "Add 🔖Interaction CSS: hover/selected outlines, handles+cursors, marquee rect, fullscreen toggle button, user-select/touch-action/z-index"
+   content: "Add 🔖️Interaction CSS: hover/selected outlines, handles+cursors, marquee rect, fullscreen toggle button, user-select/touch-action/z-index"
    status: completed
  - id: tests
    content: Extend in-source vitest tests (pure geometry + DOM selection/fullscreen) and update the intro flow-canvas test; run the suite until green
@@ -59,7 +59,7 @@ flowchart TD
   slidechanged[reveal slidechanged / slideEpoch] --> reset[Clear selection + transforms]
 ```
 
-## index.tsx — new `#region 🔖Interaction`
+## index.tsx — new `#region 🔖️Interaction`
 
 1. Ephemeral types + pure geometry helpers (all unit-testable):
 
@@ -80,7 +80,7 @@ flowchart TD
 
 Wrap each placement in `InteractiveDisposition`, render the `InteractionLayer` as a section child, and pass the shared interaction state down. Keep the existing positioned-canvas vs flow-centered rendering intact.
 
-## globals.css — new `/* #region 🔖Interaction */`
+## globals.css — new `/* #region 🔖️Interaction */`
 
 Hover outline, selected outline, 8 handle dots with directional cursors, marquee rectangle (crossing vs window styling via a class), the small fullscreen toggle button, `user-select:none`/`touch-action:none`/`cursor:move` on interactive frames, and raised `z-index` for fullscreened/selected dispositions.
 

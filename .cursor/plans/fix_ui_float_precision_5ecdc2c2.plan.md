@@ -43,7 +43,7 @@ In [ui/react/index.tsx](ui/react/index.tsx), add an exported pure helper inside 
 
 ```ts
 //#region Number formatting
-/** 🔢 Strip IEEE-754 float artifacts for display without losing real precision. */
+/** 🔢️ Strip IEEE-754 float artifacts for display without losing real precision. */
 export function formatNumber(value: number | string): string {
  const n = typeof value === "string" ? Number(value) : value;
  if (typeof value === "string" && !Number.isFinite(n)) return value; // leave non-numeric text untouched

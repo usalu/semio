@@ -1,0 +1,97 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern Layout|Navbar|Footer|Mode dock|mode-body|shellFloor|continuous base|Canvas
+
+> bun ./script.ts test --testNamePattern "Layout|Navbar|Footer|Mode dock|mode-body|shellFloor|continuous base|Canvas"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯️ |@semio-tech/ui-react| index.tsx (470 tests | 1 failed | 453 skipped) 489ms
+     × dismisses on outside pointerdown 53ms
+
+⎯ Failed Tests 1 ⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > CanvasPickMenu > dismisses on outside pointerdown
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯️ index.tsx:30817:25
+    30815|     });
+    30816|
+    30817|     it("dismisses on outside pointerdown", async () => {
+       |                         ^
+    30818|       const onDismiss = vi.fn();
+    30819|       render(<CanvasPickMenu request={{ targets, client: { x: 10, y: 2…
+
+⎯[1/1]⎯
+
+⎯ Unhandled Errors ⎯
+
+Vitest caught 2 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯ Uncaught Exception ⎯
+TypeError: event.target?.closest is not a function. (In 'event.target?.closest('[data-slot="resizable-corner"]')', 'event.target?.closest' is undefined)
+ ❯️ index.tsx:14369:56
+    14367|     (event) => {
+    14368|       if (event.button !== 0) return;
+    14369|       const corner = (event.target as Element | null)?.closest<Resizab…
+       |                                                        ^
+    14370|       if (!corner) return;
+    14371|       const spec = readResizableJoinCornerSpec(corner);
+ ❯️ callTheUserObjectsOperation ../../../node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:29
+ ❯️ innerInvokeEventListeners ../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:24
+ ❯️ invokeEventListeners ../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:2
+ ❯️ _dispatch ../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:217:8
+ ❯️ index.tsx:30816:14
+
+This error originated in "index.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "dismisses on outside pointerdown". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯ Uncaught Exception ⎯
+TypeError: Failed to execute 'contains' on 'Node': parameter 1 is not of type 'Node'.
+ ❯️ <anonymous> ../../../node_modules/jsdom/lib/jsdom/living/generated/Node.js:25:26
+ ❯️ contains ../../../node_modules/jsdom/lib/jsdom/living/generated/Node.js:258:28
+ ❯️ onPointerDown index.tsx:1404:25
+    1402| }
+    1403|
+    1404| /** @emoji 🖼️ Raw vendored SVG markup for an icon name, or `undefined`…
+       |                         ^
+    1405| export function iconSvgMarkup(name: IconName): string {
+    1406|   return resolveCatalogIconSvg(name);
+ ❯️ callTheUserObjectsOperation ../../../node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30
+ ❯️ innerInvokeEventListeners ../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25
+ ❯️ invokeEventListeners ../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3
+ ❯️ _dispatch ../../../node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:217:9
+ ❯️ <anonymous> index.tsx:29094:27
+ ❯️ processTicksAndRejections native:7:39
+
+⎯
+Serialized Error: { originalLine: 21, originalColumn: 37 }
+This error originated in "index.tsx" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "dismisses on outside pointerdown". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 passed | 453 skipped (470)
+     Errors  2 errors
+   Start at  18:41:10
+   Duration  7.76s (transform 3.44s, setup 439ms, import 5.34s, tests 489ms, environment 908ms)
+
+Warning: command "bun ./script.ts test --testNamePattern "Layout|Navbar|Footer|Mode dock|mode-body|shellFloor|continuous base|Canvas"" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/ui-react failed
+
+Failed tasks:
+
+- @semio-tech/ui-react:test
+
+Hint: run the command with --verbose for more details.
+

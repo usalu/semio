@@ -1,10 +1,10 @@
-#region 📱Header
+#region 📱️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion 📱Header
+#endregion 📱️Header
 
 using Compose;
 using Compose.Store;
@@ -1595,7 +1595,7 @@ public class Tests
         }
     }
 
-    #region 🎬Hash
+    #region 🎬️Hash
     // Hash tests for Merkle hash functions.
 
     public class HashTests
@@ -1792,9 +1792,9 @@ public class Tests
         }
     }
 
-    #endregion 🎬Hash
+    #endregion 🎬️Hash
 
-    #region 🐙MaxChildren
+    #region 🐙️MaxChildren
 
     public class MaxChildrenTests
     {
@@ -1869,9 +1869,9 @@ public class Tests
         }
     }
 
-    #endregion 🐙MaxChildren
+    #endregion 🐙️MaxChildren
 
-    #region 🔍Find Replaceable Types In Designs Tests
+    #region 🔍️Find Replaceable Types In Designs Tests
 
     public class FindReplaceableTypesInDesignsTests
     {
@@ -2035,7 +2035,7 @@ public class Tests
         }
     }
 
-    #endregion 🔍Find Replaceable Types In Designs Tests
+    #endregion 🔍️Find Replaceable Types In Designs Tests
 
 }
 

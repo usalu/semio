@@ -38,14 +38,14 @@ Decisions confirmed: handcrafted editor (zero external deps), language services 
 
 File: [trinity/jack/core/lib.rs](trinity/jack/core/lib.rs)
 
-- Refactor the `🔖Lexer` region so `lex` records byte spans. Introduce a `TokenSpan { class: TokenClass, start: usize, end: usize }` and a `TokenClass` enum (`Keyword`, `Ident`, `Number`, `String`, `Operator`, `Punctuation`, `Error`), both `Serialize`. Keep the parser working by adapting it to consume `(Token, span)` (strip spans where unused). Use clean refactor (no parallel duplicate lexer).
+- Refactor the `🔖️Lexer` region so `lex` records byte spans. Introduce a `TokenSpan { class: TokenClass, start: usize, end: usize }` and a `TokenClass` enum (`Keyword`, `Ident`, `Number`, `String`, `Operator`, `Punctuation`, `Error`), both `Serialize`. Keep the parser working by adapting it to consume `(Token, span)` (strip spans where unused). Use clean refactor (no parallel duplicate lexer).
 - Add `pub fn tokenize(input: &str) -> Vec<TokenSpan>` that is total/non-failing (unterminated strings, unexpected chars become `String`/`Error` tokens) so it can highlight while typing.
-- Add a `🔖Language` region with `pub struct Completion { label, kind, detail, insert }` (Serialize) and `pub fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion>`. Context logic from tokens before the cursor:
+- Add a `🔖️Language` region with `pub struct Completion { label, kind, detail, insert }` (Serialize) and `pub fn complete(graph: &Graph, source: &str, cursor: usize) -> Vec<Completion>`. Context logic from tokens before the cursor:
   - Statement start / after a clause: clause keywords (`MATCH`, `WHERE`, `RETURN`, `CREATE`, `DELETE`, `SET`, `MERGE`), plus `AND`/`OR` inside WHERE.
   - After `:` in a node/edge pattern: node/edge kinds from the graph (distinct `node.kind`, `edge.kind`) and manifest kinds.
   - After `.`: property names = `id`, `name`, `kind` + union of property keys across `graph.nodes`.
   - Otherwise: variables already bound earlier in the query.
-- Extend the existing `🔖Tests` region with tokenize-span and completion tests (keywords, kinds, properties, variables). No new test files.
+- Extend the existing `🔖️Tests` region with tokenize-span and completion tests (keywords, kinds, properties, variables). No new test files.
 
 ## 2. Expose language services over WASM
 
@@ -54,13 +54,13 @@ File: [trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs)
 - Re-export `tokenize`/`complete`/`TokenSpan`/`Completion` from `trinity_jack` (near line 14).
 - On `TrinityHost` (impl near line 182): add `tokenize_jack_json(&self, source) -> String` and `complete_jack_json(&self, source, cursor) -> String` (serde to JSON), mirroring `run_jack_json` (line 256).
 - In `wasm_session` (near line 562): add `#[wasm_bindgen(js_name = tokenizeJackJson)]` and `#[wasm_bindgen(js_name = completeJackJson)]` bindings.
-- Rebuild the WASM pkg with the existing build (`bun ./script.ts wasm` in `trinity/rewrite/engine`, see [trinity/rewrite/engine/script.ts](trinity/rewrite/engine/script.ts)) so `pkg/trinity_rewrite.js` picks up the new methods. Add native host tests for the two json methods in the engine `tests` region.
+- Rebuild the WASM pkg with the existing build (`bun ./📜️script.ts wasm` in `trinity/rewrite/engine`, see [trinity/rewrite/engine/script.ts](trinity/rewrite/engine/script.ts)) so `pkg/trinity_rewrite.js` picks up the new methods. Add native host tests for the two json methods in the engine `tests` region.
 
 ## 3. React language bridge
 
 File: [trinity/react/index.tsx](trinity/react/index.tsx)
 
-- In the `🔖Fixture` region, add `TrinityJackToken { class, start, end }` and `TrinityJackCompletion { label, kind, detail, insert }` types, plus `tokenizeJackOnFixture(fixtureJson, source)` and `completeJackOnFixture(fixtureJson, source, cursor)` that mirror `runJackOnFixture` (line 84): new `TrinitySession`, `loadFixtureJson`, call the new WASM methods, `JSON.parse`. Export them. Add vitest cases in the `🧪Tests` region.
+- In the `🔖️Fixture` region, add `TrinityJackToken { class, start, end }` and `TrinityJackCompletion { label, kind, detail, insert }` types, plus `tokenizeJackOnFixture(fixtureJson, source)` and `completeJackOnFixture(fixtureJson, source, cursor)` that mirror `runJackOnFixture` (line 84): new `TrinitySession`, `loadFixtureJson`, call the new WASM methods, `JSON.parse`. Export them. Add vitest cases in the `🧪️Tests` region.
 
 ## 4. New generic framework `editor` component
 
@@ -70,7 +70,7 @@ File: [trinity/react/index.tsx](trinity/react/index.tsx)
 
 ### Handcrafted `CodeEditor` React primitive (language-agnostic)
 
-Add a `🔖CodeEditor` region in [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx). Props: `value`, `onChange`, `onSubmit`, `tokenize(text) => Token[]`, `complete(text, cursor) => Completion[]`. Implementation (classic overlay technique, no contenteditable):
+Add a `🔖️CodeEditor` region in [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx). Props: `value`, `onChange`, `onSubmit`, `tokenize(text) => Token[]`, `complete(text, cursor) => Completion[]`. Implementation (classic overlay technique, no contenteditable):
 
 - A transparent `<textarea>` layered over a highlight `<pre>` that renders tokenized spans with theme color classes; scroll positions kept in sync; a line-number gutter.
 - Autocomplete popup: on input/caret change call `complete`; render a floating list positioned at the caret (mirror-div coordinate measurement); Up/Down to move, Enter/Tab to accept (insert `insert`), Esc to dismiss.
@@ -87,7 +87,7 @@ File: [trinity/jack/play/index.ts](trinity/jack/play/index.ts)
 - Layout: hand-build a nested `WindowLayout` (row -> [stack(graph) size ~0.6, column -> [stack(editor) ~0.55, stack(results) ~0.45] size ~0.4]) instead of `createStackLayout`, following the nested tree shape used by `orbitViewArrangementToLayout` in [framework/product/playground/core/index.ts](framework/product/playground/core/index.ts).
 - Update the in-file vitest: assert the three window kinds/bodies and that `runJackQuery` fills results.
 
-File: [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (`🔖TrinityPlayHost`)
+File: [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (`🔖️TrinityPlayHost`)
 
 - Add `TrinityJackEditorSurfaceHost` rendering `<CodeEditor value={ctrl.getJackQuery()} onChange={(v)=>ctrl.run("setJackQuery",{value:v})} onSubmit={()=>ctrl.run("runJackQuery")} tokenize={(t)=>tokenizeJackOnFixture(ctrl.getFixtureJson(), t)} complete={(t,c)=>completeJackOnFixture(ctrl.getFixtureJson(), t, c)} />`.
 - Add `TrinityJackResultsSurfaceHost` that builds the table from `ctrl.getJackResultJson()` (columns/rows), following the existing table host/`renderBoundComponent` pattern.
@@ -101,5 +101,5 @@ File: [framework/product/playground/renderer/react/index.tsx](framework/product/
 
 ## Notes / conventions
 
-- Work inside the repo MCP ticket flow: read `repo://goals`, then open a new ticket (goal `🎯trinity`) since the prior trinity ticket is closed and this is a distinct task; keep any temp files inside the ticket folder.
+- Work inside the repo MCP ticket flow: read `repo://goals`, then open a new ticket (goal `🎯️trinity`) since the prior trinity ticket is closed and this is a distinct task; keep any temp files inside the ticket folder.
 - All new code goes into existing files using `#region`/`pub mod` structuring; no new script/test/example files; docstrings start with an emoji; external libs only behind interfaces (none added here).

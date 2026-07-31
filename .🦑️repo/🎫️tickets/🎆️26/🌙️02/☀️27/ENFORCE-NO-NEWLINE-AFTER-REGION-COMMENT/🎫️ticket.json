@@ -1,0 +1,12 @@
+{
+  "title": "Enforce No Newline After Region Comment",
+  "emoji": "💬️",
+  "status": "closed",
+  "description": "Add statute code/section/wrong-format/newline-after-region to enforce no blank lines between region start marker and region information comments. Implement breach detection for all languages (TS, Go, Python, C#, Rust, Ruby, etc.), implement autofix that removes blank lines, add tests.",
+  "summary": "Added statute code/section/wrong-format/newline-after-region to enforce no blank lines between region start marker and region information comments. Implemented breach detection for all languages (TS, Go, Python, C#, Rust). Implemented autofixable autofix that removes blank lines. Fixed FormatHeader to not emit blank lines after region start. Fixed pre-existing syntax error (missing closing brace in resolveCopilotEvent). Updated 4 fixed fixture files and 1 expected fixture file. Added 9 comprehensive test subtests covering detection for all 5 languages, no false positive, autofix for sections and header regions. All policy tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/716"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism",
+  "sessions": ["⚪️17721857810651871303765897644802955265"]
+}

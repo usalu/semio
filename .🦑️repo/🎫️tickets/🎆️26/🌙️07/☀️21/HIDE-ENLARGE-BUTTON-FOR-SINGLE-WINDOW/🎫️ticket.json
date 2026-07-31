@@ -1,0 +1,14 @@
+{
+  "title": "Hide Enlarge Button for Single Window",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "When there is only one window on the canvas, do not show the enlargen button.",
+  "summary": "Hid Mode's Focus/enlarge control when the canvas has only one window. ModeDockContext now exposes canMaximize from layout window count; the dock tab bar renders Focus only when canMaximize is true (and not on mobile). Stale maximized state clears when the last peer window disappears. Extended existing Mode tests; filtered vitest run passes for the new case and related Focus/maximize coverage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2202"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️94b21cb580444fe5a31dd79bf26d5b8d"
+  ]
+}

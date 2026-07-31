@@ -1,9 +1,0 @@
-{
-  "title": "Hide Catalog Vortices In Tree By Default",
-  "emoji": "🌀",
-  "status": "closed",
-  "description": "By default all vortices from the catalog should not be shown in the puzzle3d kinds tree.",
-  "summary": "Catalog vortices in the Puzzle 3D kinds tree are collapsed by default: object kinds with nested vortex templates use `defaultOpen: false`, and the top-level Vortices section starts closed. Users can expand rows to see vortex kind entries and object-kind template children.",
-  "goal": "🎯puzzle",
-  "sessions": ["⚪3897e28526fb474283f7a3086159337e"]
-}

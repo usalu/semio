@@ -23,7 +23,7 @@ interface Node {
 }
 
 """
-🔖GraphQL node exposing kit data.
+🔖️GraphQL node exposing kit data.
 """
 type Kit implements Node {
   uri: String!
@@ -44,7 +44,7 @@ type Kit implements Node {
 }
 
 """
-🌱GraphQL root mutation type exposing kit creation.
+🌱️GraphQL root mutation type exposing kit creation.
 Callers MUST provide a valid KitInput when creating kits.
 """
 type Mutation {
@@ -52,7 +52,7 @@ type Mutation {
 }
 
 """
-🔖GraphQL input node for kit mutations.
+🔖️GraphQL input node for kit mutations.
 """
 input KitInputNode {
   name: String!
@@ -72,7 +72,7 @@ input KitInputNode {
 }
 
 """
-🔖GraphQL input node for type mutations.
+🔖️GraphQL input node for type mutations.
 """
 input TypeInputNode {
   name: String!
@@ -95,7 +95,7 @@ input TypeInputNode {
 }
 
 """
-🔖GraphQL input node for location mutations.
+🔖️GraphQL input node for location mutations.
 """
 input LocationInputNode {
   longitude: Float!
@@ -104,7 +104,7 @@ input LocationInputNode {
 }
 
 """
-🔖GraphQL input node for representation mutations.
+🔖️GraphQL input node for representation mutations.
 """
 input RepresentationInputNode {
   url: String!
@@ -116,7 +116,7 @@ input RepresentationInputNode {
 }
 
 """
-🟪GraphQL input node for attribute mutations.
+🟪️GraphQL input node for attribute mutations.
 """
 input AttributeInputNode {
   name: String!
@@ -125,7 +125,7 @@ input AttributeInputNode {
 }
 
 """
-🔖GraphQL input node for connector mutations.
+🔖️GraphQL input node for connector mutations.
 """
 input ConnectorInputNode {
   id_: String = ""
@@ -141,7 +141,7 @@ input ConnectorInputNode {
 }
 
 """
-💚GraphQL input node for point mutations.
+💚️GraphQL input node for point mutations.
 """
 input PointInputNode {
   x: Float!
@@ -150,7 +150,7 @@ input PointInputNode {
 }
 
 """
-💗GraphQL input node for vector mutations.
+💗️GraphQL input node for vector mutations.
 """
 input VectorInputNode {
   x: Float!
@@ -159,7 +159,7 @@ input VectorInputNode {
 }
 
 """
-🔖GraphQL input node for prop mutations.
+🔖️GraphQL input node for prop mutations.
 """
 input PropInputNode {
   key: String!
@@ -168,7 +168,7 @@ input PropInputNode {
 }
 
 """
-🔖GraphQL input node for design mutations.
+🔖️GraphQL input node for design mutations.
 """
 input DesignInputNode {
   name: String!
@@ -190,7 +190,7 @@ input DesignInputNode {
 }
 
 """
-🔖GraphQL input node for piece mutations.
+🔖️GraphQL input node for piece mutations.
 """
 input PieceInputNode {
   id_: String = ""
@@ -203,7 +203,7 @@ input PieceInputNode {
 }
 
 """
-🔖GraphQL input node for plane mutations.
+🔖️GraphQL input node for plane mutations.
 """
 input PlaneInputNode {
   origin: PointInputNode!
@@ -212,7 +212,7 @@ input PlaneInputNode {
 }
 
 """
-🟤GraphQL input node for coordinate mutations.
+🟤️GraphQL input node for coordinate mutations.
 """
 input CoordinateInputNode {
   u: Float!
@@ -220,7 +220,7 @@ input CoordinateInputNode {
 }
 
 """
-🔖GraphQL input node for type id mutations.
+🔖️GraphQL input node for type id mutations.
 """
 input TypeIdInputNode {
   variant: String = ""
@@ -228,14 +228,14 @@ input TypeIdInputNode {
 }
 
 """
-🔖GraphQL input node for design id mutations.
+🔖️GraphQL input node for design id mutations.
 """
 input DesignIdInputNode {
   name: String!
 }
 
 """
-🔖GraphQL input node for connection mutations.
+🔖️GraphQL input node for connection mutations.
 """
 input ConnectionInputNode {
   description: String = ""
@@ -252,7 +252,7 @@ input ConnectionInputNode {
 }
 
 """
-🔖GraphQL input node for side mutations.
+🔖️GraphQL input node for side mutations.
 """
 input SideInputNode {
   piece: PieceIdInputNode!
@@ -261,21 +261,21 @@ input SideInputNode {
 }
 
 """
-🔖GraphQL input node for piece id mutations.
+🔖️GraphQL input node for piece id mutations.
 """
 input PieceIdInputNode {
   id_: String = ""
 }
 
 """
-🔖GraphQL input node for connector id mutations.
+🔖️GraphQL input node for connector id mutations.
 """
 input ConnectorIdInputNode {
   id_: String = ""
 }
 
 """
-🔖GraphQL input node for folder mutations.
+🔖️GraphQL input node for folder mutations.
 """
 input FolderInputNode {
   id: String!

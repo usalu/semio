@@ -1,0 +1,12 @@
+{
+  "title": "Fix Tree Indentation Lines Above Items",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Sometimes vertical indentation lines are not updated until the parent. On procedural catalogue transforms rotate tree item, tree items above don't show vertical indentation - vertical line is missing.",
+  "summary": "Fixed missing vertical indentation guides for tree items above a nested row: row hover/selection backgrounds now apply only on tree-row-content (gutter stays transparent), tree-guide z-index raised, and branch layout changes re-apply the hover path when sections expand or children update.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1648"
+  },
+  "goal": "🎯️ui🎯️react",
+  "sessions": ["⚪️e8e64d17542c46f599d7973401218514"]
+}

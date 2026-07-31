@@ -1,0 +1,9 @@
+{
+  "title": "Rename Document Tab to Document",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Rename document tab to Document everywhere and remove legacy references",
+  "summary": "Renamed hierarchy tab to Document everywhere leaving no legacy, and fixed a Go parser panic bug in comments scanner.",
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️1a4b9a64e5f84e978962bfb130447e6d"]
+}

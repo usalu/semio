@@ -36,24 +36,24 @@ isProject: false
 
 `presentation/AGENTS.md` names embodiments Figure, Video, Text, Pdf and a `Disposition` ("concrete positioned, styled embodiment") plus an Analogy template, but [framework/product/presentation/core/index.ts](framework/product/presentation/core/index.ts) only implements Text/Figure (+ Bullet/Authors/Affiliations) and a flat `ParticipantPlacement` (emphasis only). This work closes that gap (full reconciliation) and proves it live.
 
-Constraints: no AGENTS.md edits; extend existing files only (no new files); add code in `#region`s; `react-pdf`/`reveal.js` stay isolated in the renderer `🔌Adapters` boundary; verify with inline vitest + runtime logs/screenshots.
+Constraints: no AGENTS.md edits; extend existing files only (no new files); add code in `#region`s; `react-pdf`/`reveal.js` stay isolated in the renderer `🔌️Adapters` boundary; verify with inline vitest + runtime logs/screenshots.
 
 ## 1. Core model — [core/index.ts](framework/product/presentation/core/index.ts)
 
 - Add `VideoEmbodiment { kind: "video"; id?; src; poster?; autoplay?; loop?; muted?; controls? }` and `PdfEmbodiment { kind: "pdf"; id?; src; page?; alt? }`; extend the `Embodiment` union and the docstring header.
 - Rename `ParticipantPlacement` -> `Disposition`, made positioned/styled: keep `participantId`, `embodimentId?`, `emphasis`; add optional `position?: { x; y; width; height }` (0..1 slide fractions) and `style?: { opacity?: number; rotate?: number; scale?: number }`.
 - Rename `Arrangement.placements` -> `Arrangement.dispositions`; rename `ResolvedPlacement` -> `ResolvedDisposition` (carry through `position`/`style`); update `resolveArrangement` and the `active`/`muted` helpers in `intro`.
-- Add `analogy(spec)` template in a new `🔖Analogy` region: opinionated minimal shape `analogy({ id?, name?, source: { label; figure? }, target: { label; figure? } })` producing one morph thought (`source` arrangement -> `mapping` arrangement that morphs source into target via shared `data-id`s). Document the assumption since the AGENTS.md `## Analogy` section is empty.
-- Update inline `🧪Tests` for the rename, new embodiments, and `analogy` (slide count, morph ids, positioned disposition resolution).
+- Add `analogy(spec)` template in a new `🔖️Analogy` region: opinionated minimal shape `analogy({ id?, name?, source: { label; figure? }, target: { label; figure? } })` producing one morph thought (`source` arrangement -> `mapping` arrangement that morphs source into target via shared `data-id`s). Document the assumption since the AGENTS.md `## Analogy` section is empty.
+- Update inline `🧪️Tests` for the rename, new embodiments, and `analogy` (slide count, morph ids, positioned disposition resolution).
 
 ## 2. React renderer — [renderer/react/index.tsx](framework/product/presentation/renderer/react/index.tsx)
 
-- `🔌Adapters`: `import { Document, Page, pdfjs } from "react-pdf"` and set `pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString()` in this same module (react-pdf requirement).
+- `🔌️Adapters`: `import { Document, Page, pdfjs } from "react-pdf"` and set `pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString()` in this same module (react-pdf requirement).
 - Add `VideoMorphView` (`<div data-id><video .../></div>`, defaults: muted+playsInline; autoplay/loop/controls from embodiment) and `PdfMorphView` (`<div data-id><Document file={src}><Page pageNumber={page ?? 1} renderTextLayer={false} renderAnnotationLayer={false}/></Document></div>`). Both keep `data-id={anchorId}` on the wrapper so reveal.js auto-animates them.
 - Extend `MorphPlacementView` switch with `case "video"` / `case "pdf"` (keep exhaustive `never` check).
 - Apply Disposition positioning/style: a small wrapper that, when `position` is set, absolutely positions/sizes via `%` and applies `style` (opacity/rotate/scale) so auto-animate can morph rect/transform between arrangements; falls back to current centered flow otherwise.
 - Update renamed re-exports (`Disposition`, `ResolvedDisposition`, `analogy`) and `ArrangementSection` (`arrangement.dispositions`).
-- Extend inline `🧪Tests`: assert pdf wrapper (`.react-pdf__Document` container) and `<video>` render with `data-id`, positioned disposition gets absolute style, and morph `data-auto-animate` still tags every arrangement.
+- Extend inline `🧪️Tests`: assert pdf wrapper (`.react-pdf__Document` container) and `<video>` render with `data-id`, positioned disposition gets absolute style, and morph `data-auto-animate` still tags every arrangement.
 - Add jsdom polyfills react-pdf/pdfjs need on import (`DOMMatrix`, `Path2D`, `Promise.withResolvers`, `canvas.getContext` stub) to [vitest.setup.ts](framework/product/presentation/renderer/react/vitest.setup.ts).
 
 ## 3. Dependencies
@@ -72,7 +72,7 @@ Update its inline test for the new arrangement count. No vite.config change expe
 
 ## 5. Validate (repo rules)
 
-- Open repo MCP ticket (read `repo://goals`; reopen the existing presentation ticket if it matches, else `ticket_open` under `🎯framework`); keep temp logs in the ticket folder.
+- Open repo MCP ticket (read `repo://goals`; reopen the existing presentation ticket if it matches, else `ticket_open` under `🎯️framework`); keep temp logs in the ticket folder.
 - Run `bun nx run @semio-tech/framework-presentation-core:test` and `@semio-tech/framework-presentation-renderer-react:test`.
 - Run the projektetage dev server (port 6050) and confirm via screenshots/CDP that PDF page, video frame, and figure render and auto-animate (no horizontal fly-in regression); add `[DEBUG]` logs while checking, then remove.
 - `ticket_close` with summary + file list.

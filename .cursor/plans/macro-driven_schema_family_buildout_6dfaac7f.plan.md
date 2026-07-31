@@ -91,7 +91,7 @@ The May 13 update introduced a runtime / hosting layer that the previous lib.rs 
 - Current state: `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)` exposes a thin `entity_family!` (`SimpleObject` + `compute_entity_hash`) and an empty `register_entities!` that emits empty `SDL_FRAGMENT` constants. `sdl_registry::all_fragments` is a no-operation tail in `gql::sdl()`. Hand-written entity structs / `#[Object]` impls live across ~9k lines of `lib.rs`. No `XDiff` / `XModification` / `XModifications` / per-operation `XInput` types exist (`rg "struct (Vector|Tag|Piece)Diff"` matches zero).
 - Goal: `[compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql)` declares 963 types/interfaces/unions/inputs vs current 200 (805 missing). Per-entity 12-type ladder + per-operation 6-type ladder + 14 interfaces + several owner unions.
 - Match strictness: structural superset (every golden top-level declaration name present in the generated schema, with matching field set). Comments / regions / declaration ordering are not part of the spec — async-graphql's emitter chooses.
-- Existing ticket: `[.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/](.repo/🎫/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/)`. W0/W2 marked complete but `entity_family!` is still the thin shell — W0 must be redone with the code-first direction.
+- Existing ticket: `[.repo/🎫️/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/](.repo/🎫️/26/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR/)`. W0/W2 marked complete but `entity_family!` is still the thin shell — W0 must be redone with the code-first direction.
 
 ## Architecture
 
@@ -131,12 +131,12 @@ flowchart TD
 
 ## Decisions
 
-- Single source file: every macro and every invocation lives in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)` (workspace rule). Region markers `//#region 🧬 entity_dsl`, `//#region 🤖 W1` … `//#region 🤖 W8` partition the file so subagents edit non-overlapping ranges.
+- Single source file: every macro and every invocation lives in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)` (workspace rule). Region markers `//#region 🧬️ entity_dsl`, `//#region 🤖️ W1` … `//#region 🤖️ W8` partition the file so subagents edit non-overlapping ranges.
 - Macros emit Rust types only — `#[derive(SimpleObject)]`, `#[Object]`, `#[derive(InputObject)]`, `#[derive(async_graphql::Interface)]`, `#[derive(async_graphql::Union)]`. No string SDL anywhere.
 - `gql::sdl()` stays `build_schema().await.sdl()`. The SDL emitted by async-graphql is the byproduct.
 - `register_entities!` becomes the source of truth that auto-grows the Interface / Union enums covering every entity. `register_operations!` does the same for the Operation interface and Scope/Input enum families.
 - Drop the legacy thin macros (`entity_full_family!`, `entity_diffs!`, `entity_owner!`, current `entity_family!`), the `sdl_registry::HasSdlFragment` trait, and the existing hand-written entity / operation definitions in the same wave — no backwards compat (workspace rule).
-- Subagents share `lib.rs`; each W-region gets its own `//#region 🤖 W<N>` block plus an exclusive entity list, so they can run in parallel without conflict edits. Coordinator owns `entity_dsl` region + final integrate.
+- Subagents share `lib.rs`; each W-region gets its own `//#region 🤖️ W<N>` block plus an exclusive entity list, so they can run in parallel without conflict edits. Coordinator owns `entity_dsl` region + final integrate.
 
 ## Coordinator (this agent) — phase 1 setup
 
@@ -148,7 +148,7 @@ Acceptance: `cargo check -p compose` green, macro foundation usable by W1-W6 sub
   - Delete the empty-fragment `register_entities!` / `register_operations!` macros (lines 26-54) — they get rewritten to drive Interface/Union derivation, not fragment collection.
   - Delete any `push_all_fragments` / `push_operation_fragments` / `all_fragments` references throughout the file (mostly inside `gql::sdl`).
   - Confirm `gql::sdl()` reduces to `build_schema().await.sdl()` (already the case at line 11124).
-- In `//#region 🧬 entity_dsl` rewrite the macro suite (no `__sdl_*`, no `__build_sdl_fragment!`, no `HasSdlFragment`):
+- In `//#region 🧬️ entity_dsl` rewrite the macro suite (no `__sdl_*`, no `__build_sdl_fragment!`, no `HasSdlFragment`):
   - `entity_family!` emits: entity struct (RwLock fields) + Default + `new` / `new_with_id` / `compute_hash` / `compute_entity_hash` + `XOwnerSlot` enum + `#[derive(async_graphql::Union)] XOwnerUnion` + full `#[Object(name = "X")]` impl (id / hash / owner / typed_owner / ownerEntity / ownedEntities / one resolver per data field / one connection resolver per child collection) + `__entity_relay!(X)` (Edge/Connection as `SimpleObject`) + `__entity_diff!(X, …)` (`XDiff` `SimpleObject` with `Option<...>` fields + ComplexObject hash + Edge/Connection) + `__entity_modification!(X, …)` + `__entity_modifications!(X, …)`. The `kind:` field accepts `weak | strong | rich | artifact | document | event | workspace | backbone | provider`; the `__entity_diff!`/`__entity_modification!`/`__entity_modifications!` ladder is skipped for `kind: workspace | backbone | provider` (per golden, those don't have diff/modification trios — they're hosting-layer entities).
   - `entity_input!` emits: `#[derive(InputObject)] XInput` + async `into_x()` / sync `into_x_with_id()`.
   - `command_family!` (NEW — for command-only types like `SessionCommand`, `StoreCommand`, `AlternativeCommand`, `VersionCommand`, `UnsavedChangeCommand`, `FileBackboneCommand`, `WebsocketBackboneCommand`, `LocalProviderCommand`, `RemoteProviderCommand`): emits `X` struct + `#[Object(name = "X")]` impl with one async resolver per declared method (dispatching `Command::*` through `ParentStore`) + `XEdge` + `XConnection` (`SimpleObject`). No Diff/Modification ladder, no owner-slot enum, no `Default`. Methods are declared inline as `methods: [ rename(new_name: String) -> RenamedTag, … ]` mapping to `KitOperation::*` arms or to direct host-side actions (login, attach, …).
@@ -159,15 +159,15 @@ Acceptance: `cargo check -p compose` green, macro foundation usable by W1-W6 sub
   - `entity_interface_enums!` derives `Node` / `Entity` / `WeakEntity` / `StrongEntity` / `RichStrongEntity` / `Artifact` / `Document` / `Event` / `Workspace` / `Backbone` / `Provider` / `Input` / `Diff` / `Modification` / `Operation` / `EntityEdge` / `EntityConnection` (each `#[derive(async_graphql::Interface)]`). Each macro arm filters the roster by entity `kind:` to populate only the matching interface (e.g. `WeakEntity` only includes entities declared `kind: weak`; `Workspace` only includes `kind: workspace`; `Backbone` only includes `kind: backbone`; `Provider` only includes `kind: provider`).
   - `command_nav!` emits `XOperationNav` struct + `#[Object]` impl with one async resolver per declared method, dispatching `Command::ApplyKitOperation` through `ParentRuntime`. (Distinct from `command_family!` — `command_nav!` is for the per-artifact mutation entry points; `command_family!` is for the standalone `*Command` GraphQL types.)
   - `relay_collection!` for union-node connections (`Blueprint`, `OwnedEntity`, `OperationIface`).
-- Inject region markers: `//#region 🤖 W1` (geometry), `//#region 🤖 W2` (meta), `//#region 🤖 W3` (type-tree), `//#region 🤖 W4` (design-tree), `//#region 🤖 W5` (kit), `//#region 🤖 W6` (vcs), `//#region 🤖 W7` (operations), `//#region 🤖 W8` (command navs). These delimit each subagent's exclusive write range.
+- Inject region markers: `//#region 🤖️ W1` (geometry), `//#region 🤖️ W2` (meta), `//#region 🤖️ W3` (type-tree), `//#region 🤖️ W4` (design-tree), `//#region 🤖️ W5` (kit), `//#region 🤖️ W6` (vcs), `//#region 🤖️ W7` (operations), `//#region 🤖️ W8` (command navs). These delimit each subagent's exclusive write range.
 - Convert `Vector` (`kind: weak`) and `Tag` (`kind: artifact`) end-to-end as the canonical examples. Verify with a quick assertion test that `gql::sdl()` already contains `type VectorDiff implements Diff`, `type VectorModification implements Modification`, `type TagDiff implements Diff`, etc.
 
 ## Subagent dispatch — wave 2 (parallel)
 
 Each subagent gets the same prompt template, a different region marker, and an exclusive entity list. All run in parallel via the Task tool with `subagent_type=generalPurpose`, `run_in_background=true`. Shared rules:
 
-- Edit only `//#region 🤖 W<N>` and the immediate adjacent code that becomes dead after macro adoption (within that region).
-- Do not edit `//#region 🧬 entity_dsl` or other workers' regions.
+- Edit only `//#region 🤖️ W<N>` and the immediate adjacent code that becomes dead after macro adoption (within that region).
+- Do not edit `//#region 🧬️ entity_dsl` or other workers' regions.
 - For each entity in scope: emit one `entity_family! { name: X, kind: <weak|artifact|document|event|workspace>, owners: [...], owns: [...], fields: { ... }, hash_tag: "compose:<region>:X" }` block + one `entity_input! { name: X, fields: { ... } }` block. The macros derive every Rust type and resolver. Delete the matching legacy struct, `#[Object]` impl, hand-written `XEdge`/`XConnection`, and `compute_hash` block.
 - Run `cargo check -p compose` before finishing; report compile errors.
 
@@ -182,7 +182,7 @@ W-package contents (entities and their golden `kind`):
 
 Subagent prompt skeleton:
 
-> Reopen ticket `2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR`. Edit only `//#region 🤖 W<N>` in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`. For each entity `<entities>`, emit one `entity_family! { … }` and one `entity_input! { … }` invocation. The fields and `kind:` MUST match the entity's declaration in `[compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql)` (look up `type X implements …`). Use the canonical Vector/Tag examples in `//#region 🧬 entity_dsl` as templates. Delete the legacy hand-written struct, `#[Object]` impl, hand-written Edge/Connection, and compute_hash for that entity in the same region. Run `cargo check --manifest-path compose/client/lib/rs/Cargo.toml -p compose` and fix compile errors. Do not edit other workers' regions or the entity_dsl region. NEVER emit GraphQL SDL as a string. Return the converted entity list + cargo check result.
+> Reopen ticket `2026/05/11/MACRO-DRIVEN-ENTITY-FAMILY-REFACTOR`. Edit only `//#region 🤖️ W<N>` in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`. For each entity `<entities>`, emit one `entity_family! { … }` and one `entity_input! { … }` invocation. The fields and `kind:` MUST match the entity's declaration in `[compose/schema/graphql/schema.golden.graphql](compose/schema/graphql/schema.golden.graphql)` (look up `type X implements …`). Use the canonical Vector/Tag examples in `//#region 🧬️ entity_dsl` as templates. Delete the legacy hand-written struct, `#[Object]` impl, hand-written Edge/Connection, and compute_hash for that entity in the same region. Run `cargo check --manifest-path compose/client/lib/rs/Cargo.toml -p compose` and fix compile errors. Do not edit other workers' regions or the entity_dsl region. NEVER emit GraphQL SDL as a string. Return the converted entity list + cargo check result.
 
 ## Subagent dispatch — wave 3 (sequential after W1-W6)
 
@@ -196,11 +196,11 @@ W7 operations — depends on every entity already being macro-driven so `Scope::
 
 W8 command navs — depends on per-operation enums existing. Tasks:
 
-- In `//#region 🤖 W8`, replace the hand-written `KitOperationNav` / `TagOperationNav` / `ConceptOperationNav` / `QualityOperationNav` / `PortOperationNav` / `TypeOperationNav` / `ConnectorOperationNav` / `DesignOperationNav` / `PieceOperationNav` / `PiecesOperationNav` (lines 9499-9700+ in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`) with `command_nav! { … }` invocations driven by the operation roster.
+- In `//#region 🤖️ W8`, replace the hand-written `KitOperationNav` / `TagOperationNav` / `ConceptOperationNav` / `QualityOperationNav` / `PortOperationNav` / `TypeOperationNav` / `ConnectorOperationNav` / `DesignOperationNav` / `PieceOperationNav` / `PiecesOperationNav` (lines 9499-9700+ in `[compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs)`) with `command_nav! { … }` invocations driven by the operation roster.
 
 ## Subagent dispatch — wave 5 (sequential after W8)
 
-W9 runtime mechanisms — covers the May-13 hosting layer additions. One subagent owns this wave. Tasks (in `//#region 🤖 W9`):
+W9 runtime mechanisms — covers the May-13 hosting layer additions. One subagent owns this wave. Tasks (in `//#region 🤖️ W9`):
 
 - Emit the host-layer enums: `BackboneStatus { Offline, Reconnecting, Online }` (`#[derive(async_graphql::Enum)]`) and `VersionKind { InitialKit, Materialized }`.
 - Emit the host-layer entities via `entity_family!` with the new `kind:` values:

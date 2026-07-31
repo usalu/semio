@@ -1,0 +1,24 @@
+{
+  "title": "GraphQL Mutation Response Types",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Refactor compose/graphql mutations to return proper Response (ok, errors, result) instead of bare ID!, mapped to existing domain types. Update golden schema, Rust resolvers, generated schema.graphql, and compose/js client.",
+  "summary": "End-to-end GraphQL rs/js boundary verified: node graphql-e2e + storybook-kit-e2e PASS; Rust kit_store_comprehensive_fixture_all_scenarios PASS; js 13/13 and react 21/21 vitest PASS; sketchpad production build OK. Fixed Storybook composeWasm storeId parse. Fixed sketchpad Playwright cli path. Browser sketchpad-browser-e2e script added (run locally after sketchpad:build; agent Playwright launch timed out).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1458"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [
+    "⚪️2e88fcf3c9d641b3bf667ea66d0350d1",
+    "⚪️916802cb2bbd400fb03f3bcf58c4c260",
+    "⚪️c2cb475e56374473b35670f213ae18e8",
+    "⚪️8010a99e13ec4b46b55c04445bae0cf2",
+    "⚪️555b498288104b54a4a0bc0d22389417",
+    "⚪️63100a89325a41b2928f41a300fec017",
+    "⚪️8b4f48beea2f43f3b166ace7db981b08",
+    "⚪️2647fc734dd14a0586ec67940ac4fe7a",
+    "⚪️524bae6652e241d4be14b59c622a170a",
+    "⚪️85927d1ad7664d15a2e225a96abbb601",
+    "⚪️c44fe1094826436cb33cd33d56311116"
+  ]
+}

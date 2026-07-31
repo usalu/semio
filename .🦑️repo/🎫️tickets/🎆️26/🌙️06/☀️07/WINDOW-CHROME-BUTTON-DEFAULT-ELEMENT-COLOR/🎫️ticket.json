@@ -1,0 +1,12 @@
+{
+  "title": "Window Chrome Button Default Element Color",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "Window chrome buttons (close, maximize) should default to element gray, emphasize on hover only.",
+  "summary": "Window chrome close/maximize buttons default to element gray with hover-only emphasis. Added windowChromeControlButtonClass; applied to mode-dock-maximize/close; set text-element on windowControlsCap variants and windowMeasuresChromeActionClass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1576"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient",
+  "sessions": ["⚪️4b5397da5c694dc8babbad64e31297d9"]
+}

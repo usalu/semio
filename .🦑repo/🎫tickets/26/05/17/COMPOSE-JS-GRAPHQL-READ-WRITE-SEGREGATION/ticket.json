@@ -1,9 +1,0 @@
-{
-  "title": "Compose Js Graphql Read Write Segregation",
-  "emoji": "🔗",
-  "status": "closed",
-  "description": "Align compose/client/lib/js with schema.golden.graphql: Query for reads, Mutation for writes, Subscription for live operation stream. Add operation-kind assertions, split GqlTransport execute paths, unify Session mutation receipt tracking (Store backbone detach/sync). Extend embedded vitest in index.ts.",
-  "summary": "Enforced GraphQL read/write segregation aligned with schema.golden.graphql: wire-kind parsing/assertions; GqlTransport executeQueryJson, executeMutationJson, subscription-checked subscribeJson; Session readEnvelope vs mutateEnvelope, subscription via GqlTransport, mutationReceipt for command correlation; executeSessionReadGraphql vs executeSessionWriteGraphql for Store/Provider/Conflict. Vitest covers wire-kind parsing.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪6e6861224b844645a7b057a47950e16e"]
-}

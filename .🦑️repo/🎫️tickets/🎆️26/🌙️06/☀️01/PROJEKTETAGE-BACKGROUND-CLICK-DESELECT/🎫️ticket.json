@@ -1,0 +1,9 @@
+{
+  "title": "Projektetage Background Click Deselect",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When clicking in the background on projektetage interactive slides, selection is not cleared. Fix background click deselection.",
+  "summary": "Background clicks on projektetage interactive slides did not clear selection because the arrangement canvas sat above the interaction layer and intercepted pointer events. Slide background interaction (deselect and marquee) now runs on the arrangement section capture phase, skipping disposition targets. The canvas uses pointer-events: none with auto on child dispositions so empty canvas clicks reach the layer. Added a regression test for deselect via empty canvas click.",
+  "goal": "🎯️presentation",
+  "sessions": ["⚪️a2d181855107494d8a2533c090e79d07"]
+}

@@ -1,0 +1,26 @@
+[build]
+target = "🌐️index.html"
+dist = "../../product/os/dev/renderer-modules/wgpu"
+public_url = "/"
+
+[watch]
+watch = ["rs", "js", "🌐️index.html", "../../product/os/dev/plugin-modules"]
+
+[serve]
+addresses = ["127.0.0.1"]
+open = false
+
+[[proxy]]
+backend = "http://127.0.0.1:6141/osm/"
+
+[[proxy]]
+backend = "http://127.0.0.1:6141/vt/"
+
+[[proxy]]
+backend = "http://127.0.0.1:6141/mesh/"
+
+[[proxy]]
+backend = "http://127.0.0.1:6141/infinite-fixture/"
+
+[[proxy]]
+backend = "http://127.0.0.1:6141/cad-fixture/"

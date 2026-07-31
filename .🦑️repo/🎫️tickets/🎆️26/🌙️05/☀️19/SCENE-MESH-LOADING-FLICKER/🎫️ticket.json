@@ -1,0 +1,12 @@
+{
+  "title": "Scene Mesh Loading Flicker",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Scene play flickers infinitely between Loading meshes and rendered GLBs. Fix GLTF pool release clearing cache on chunk unmount and stabilize chunk visibility.",
+  "summary": "Fixed infinite scene loading flicker: chunk culling was unmounting SceneObject trees, sceneGltfPoolRelease called useGLTF.clear and invalidated the drei cache, and the outer Suspense showed Loading meshes again. Stopped auto-clearing GLTF cache on pool release (added sceneGltfPoolClear for explicit teardown), and keep chunk groups mounted with visible toggled instead of conditional unmount. Added e2e regression test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1439"
+  },
+  "goal": "🎯️r2602🎯️apps",
+  "sessions": ["⚪️61ee9947fa96491fba3b375dae5c9a1a"]
+}

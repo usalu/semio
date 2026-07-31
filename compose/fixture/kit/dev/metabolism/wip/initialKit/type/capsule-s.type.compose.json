@@ -158,7 +158,7 @@
           "y": 0,
           "z": 0
         },
-        "description": "🛢 The middle of the main entrance door of the upper entrance floor.",
+        "description": "🛢️ The middle of the main entrance door of the upper entrance floor.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -338,9 +338,9 @@
       }
     ]
   },
-  "icon": "icons/🔣capsule_🔣s.svg",
+  "icon": "icons/🔣️capsule_🔣️s.svg",
   "image": "images/capsule_s.png",
-  "description": "🏪 An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
+  "description": "🏪️ An apartment capsule for one person. It has the entrance on the side and has the view to the side.",
   "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
     "items": [

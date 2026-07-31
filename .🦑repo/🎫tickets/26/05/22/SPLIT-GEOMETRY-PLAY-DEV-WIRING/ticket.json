@@ -1,9 +1,0 @@
-{
-  "title": "Split Geometry Play Dev Wiring",
-  "emoji": "🎫",
-  "status": "open",
-  "description": "Create geometry wasm bindings surface for Topologic, add R3F React components for Topology/Vertex/Edge/Wire/Face/Shell/Cell/CellComplex/Cluster, add comprehensive topology fixture JSON using all kinds, and add geometry playground with same UI shell pattern and transform gumball selection for each kind.",
-  "summary": "Added a new @elements/geometry package with a Topologic browser binding facade in geometry/wasm, fixture-driven R3F components for all Topologic core kinds in geometry/react, a comprehensive all-kinds topology fixture, and a UI-based geometry play app with kind/entity selection plus transform gumball editing. Validated with geometry package build and Vitest.",
-  "goal": "🎯elements🎯client",
-  "sessions": ["⚪5e435ad82bc64b5e886393040cfa818e", "⚪4cca682b0f9b47c483d7365f062ef975"]
-}

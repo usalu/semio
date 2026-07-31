@@ -1,0 +1,13 @@
+{
+  "title": "NetworkX Parity for Mathematical Graph Crates",
+  "emoji": "🕸️",
+  "status": "open",
+  "description": "Umbrella ticket coordinating the multi-wave effort to bring mathematical/* graph and algebra crates to NetworkX 3.6.1 feature parity, per the approved plan at /Users/ueli/.claude/plans/the-mathematical-crates-must-happy-globe.md. Scope: expand mathematical_graph (core Storage/traits/views/errors), mathematical_algebra (sparse/eigen/solvers), add mathematical_random, implement the four per-kind facade crates (normal_undirected/directed, port_undirected, port_directed_normal), and ~22 algorithm-domain crates (traversal, components, dag, cycles, paths, operators, coloring, generate, io, structure, cliques, clustering, matching, bipartite, trees, planarity, flow, centrality, distance, similarity, isomorphism, connectivity, community, approximation, spectral, generate_random), plus drawing-layout expansion. This ticket hosts the wave ledger; per-work-package sub-tickets are opened as children.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2124"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️4c8591c5d5e340ad8f85da615543d657"
+  ]
+}

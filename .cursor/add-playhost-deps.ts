@@ -35,10 +35,10 @@ for (const dir of TARGETS) {
   const pkgPath = join(REPO, dir, "package.json");
   if (!existsSync(indexPath) || !existsSync(pkgPath)) continue;
   const content = readFileSync(indexPath, "utf8");
-  const start = content.lastIndexOf("//#region 🔖");
+  const start = content.lastIndexOf("//#region 🔖️");
   const playHostStart = content.indexOf("PlayHost", start);
   if (playHostStart < 0) continue;
-  const regionStart = content.lastIndexOf("//#region 🔖", playHostStart);
+  const regionStart = content.lastIndexOf("//#region 🔖️", playHostStart);
   const region = content.slice(regionStart);
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
   const ownName = pkg.name as string;

@@ -45,7 +45,7 @@ isProject: false
 
 ## Locked decisions
 
-- Reopen ticket `26/07/18/ENERGY-TECHNOLOGY-FULL-BEM-ENGINE` under goal `🎯energy`.
+- Reopen ticket `26/07/18/ENERGY-TECHNOLOGY-FULL-BEM-ENGINE` under goal `🎯️energy`.
 - Stay in single crate `energy_engine`; extend existing `src/*.rs` modules (regions), no new crates / no IDF.
 - Use isolated `CARGO_TARGET_DIR` under the ticket folder for all cargo invokes — never wait on the shared workspace lock.
 - Completeness gate: every feature-tree leaf is either a wired public API with real physics exercised through `Engine::run` (or a focused harness that the run path uses) plus tests — not dead library code.
@@ -137,7 +137,7 @@ Extend existing inline tests (no new test files):
 Verify with:
 
 ```bash
-CARGO_TARGET_DIR=".repo/🎫/26/07/18/ENERGY-TECHNOLOGY-FULL-BEM-ENGINE/target" \
+CARGO_TARGET_DIR=".repo/🎫️/26/07/18/ENERGY-TECHNOLOGY-FULL-BEM-ENGINE/target" \
   cargo test -p energy_engine
 ```
 

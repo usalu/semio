@@ -1,9 +1,0 @@
-{
-  "title": "Port Color Strategy for Compatibility",
-  "emoji": "🔌",
-  "status": "closed",
-  "summary": "Reapplied and strengthened visible port color strategy across Kit/Type/Design, fixed PortId editing paths, and ensured per-port identity colors remain visible without explicit compatibility links.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/334"
-  }
-}

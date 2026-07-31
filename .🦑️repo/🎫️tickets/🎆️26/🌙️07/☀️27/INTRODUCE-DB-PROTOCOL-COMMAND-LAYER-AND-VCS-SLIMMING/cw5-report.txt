@@ -1,0 +1,231 @@
+CW5 — Wire v2 client integration — report
+==========================================
+
+Scope: wire framework/sync (native + wasm client-side sync actor) to speak protocol_wire's binary
+ClientFrame/ServerFrame instead of the old JSON HubClientFrame/HubServerFrame from framework/core;
+update framework/sync/worker/rs and backbone-worker.ts; add binary wire fixtures shared between
+Rust cargo tests and TS vitest tests. Hub server side stays JSON-only until CW6 (expected, not
+fixed here).
+
+Pre-flight note (shared-file re-read, as instructed)
+------------------------------------------------------
+Re-read framework/sync/rs/lib.rs, framework/sync/worker/rs/lib.rs, and backbone-worker.ts fresh
+before editing. All three matched exactly what the ticket/plan described (JSON HubClientFrame/
+HubServerFrame usage, untouched since CW3) — no unexpected concurrent edits found in these three
+files, so I extended/rewrote them directly rather than reconciling with someone else's in-flight
+work.
+
+One shared file DID have a genuine, unrelated, very-recent concurrent-session bug that blocked my
+wasm32 verification — see "Unplanned fix outside framework/sync" below.
+
+Files touched
+-------------
+- framework/sync/rs/Cargo.toml — added `protocol = { path = "../../../protocol/rs" }` dependency
+  (the facade crate; `vcs` already depends on it the same way).
+- framework/sync/rs/lib.rs — the core rewrite (see "New frame-handling flow" below). Net new:
+  a `🔖️WireBridge` region (to_wire_envelope/from_wire_envelope/rollback_envelope/presence_to_json/
+  presence_from_json/now_ms/actor_seed/next_timestamp), `DocumentActorMsg::PublishPreview`,
+  `DocumentEvent::{Preview, CommandOutcome}`, `CommandAckOutcome`, `SyncSession::publish_preview`,
+  a full native_actor Hub-region rewrite (Hello/Welcome/Commands/Ack/Preview/Presence/CreditGrant/
+  Error, binary WS frames, batch-based pending tracking, Ack-driven rollback/replace), the matching
+  wasm_actor rewrite (web_sys binary WebSocket frames), the MockHub test harness rewritten to speak
+  real binary protocol_wire frames, plus new tests (see "Tests added").
+- framework/sync/worker/rs/lib.rs — NOT modified. It forwards `DocumentActorMsg`/`DocumentEvent`
+  generically via serde (`WorkerRequest::Send { message: DocumentActorMsg }`), so the new
+  `PublishPreview`/`Preview`/`CommandOutcome` variants flow through automatically. Confirmed by
+  building + testing this crate for both native and wasm32 targets (all green).
+- framework/product/os/core/js/index.ts — replaced the `HubClientFrame`/`HubServerFrame` TS mirrors
+  with `ClientFrame`/`ServerFrame`/`WireOperationEnvelope`/`WireFrontierSummary`/`WireBootstrap`/
+  `WireApplyOutcome`/`WireAckStage`/`WireLane` (byte-for-byte externally-tagged mirrors of
+  `protocol_wire`'s actual Rust shapes — snake_case field names, not camelCase, since these cross
+  the binary codec, not the postMessage boundary) plus `encodeClientFrame`/`decodeClientFrame`/
+  `encodeServerFrame`/`decodeServerFrame` (a TS twin of `protocol_wire`'s `lane:u8 + varint-u64 len +
+  JSON body` codec — see protocol_wire's own doc comment for why the wire body is JSON, not a
+  hand-rolled binary layout; the TS codec mirrors that same deviation). Extended `DocumentActorMsg`/
+  `DocumentEvent` with `publishPreview`/`preview`/`commandOutcome`, added `CommandAckOutcome`.
+- framework/product/os/core/js/backbone-worker.ts — the TS fallback actor (used when the WASM
+  module can't load, e.g. vitest/node) rewritten to speak the binary wire protocol: new
+  `🔖️WireBridge` region (actorSeed/nextWireTimestamp/toWireEnvelope/fromWireEnvelope/
+  rollbackEnvelope/placeholderPayloadHash — TS twins of the Rust actor's identically-named
+  functions), `connectHub` now opens the WebSocket in `binaryType = "arraybuffer"` mode and sends/
+  receives via `encodeClientFrame`/`decodeServerFrame`, `handleHubFrame` rewritten for the new
+  `ServerFrame` shape, `relayOperationsToHub`/`handleAck` added (batch tracking + Ack-driven
+  rollback/replace, mirroring the Rust actor), `handleLocalMsg` updated (`localSnapshot` no longer
+  pushes to the hub — see "Deferred" below — new `publishPreview` case added). Added inline
+  `import.meta.vitest` tests (this repo's in-source-testing convention — no new test files).
+- framework/product/os/core/js/vitest.config.ts — added `backbone-worker.ts` to `include`/
+  `coverage.include`/`includeSource` so its new inline tests actually run.
+- framework/sync/fixtures/wire/*.bin (new) — `client-hello.bin`, `client-commands.bin`,
+  `server-welcome.bin`, `server-ack.bin`: canonical wire-frame byte fixtures, generated and
+  round-trip-verified by a new Rust test (`wire_fixtures_stay_byte_identical_across_rust_and_ts` in
+  framework/sync/rs/lib.rs) and decoded + re-encoded byte-identically by a new TS vitest test in
+  backbone-worker.ts (reads the same committed bytes, decodes with the TS codec, re-encodes, diffs
+  against the original bytes) — this is the actual Rust<->TS wire-format proof, not just a shape
+  assertion.
+
+Unplanned fix outside framework/sync
+-------------------------------------
+`vcs/rs/lib.rs` (last touched today by a concurrent session, commit 8f6db11da3 "🚩️363") had
+`use semio_framework_hash::hash_bytes;` gated `#[cfg(not(target_arch = "wasm32"))]`, but
+`operation_envelope_from_edit` (NOT wasm32-gated) calls `hash_bytes` unconditionally — this broke
+the wasm32 build of every crate depending on `vcs`, including `framework/sync`, before I touched
+anything. `semio-framework-hash` is an unconditional dependency in vcs/rs/Cargo.toml (pure blake3,
+no OS dependency, and other call sites already build fine for wasm32), so the cfg-gate on the
+*import* was simply wrong for this newer call site — the one remaining native-only use
+(`impl BlobStore for FolderSqliteStorage`, sqlite-backed) is already separately
+`#[cfg(not(target_arch = "wasm32"))]`-gated on its own impl block. Fix: made the import
+unconditional, with an inline comment explaining why. This is additive/non-conflicting (loosens an
+overly-narrow gate, doesn't touch anyone's in-flight logic) and unblocked my own wasm32 verify step
+for this wave; flagging it here per the shared-file protocol rather than silently absorbing it.
+Verified `cargo build -p vcs` still succeeds natively after the change.
+
+New frame-handling flow
+------------------------
+- **Wire bridge**: this actor's internal `semio_framework_core::OperationEnvelope` (what
+  `vcs::DocumentVcsStore`/`ChannelBackbone` speak — UNCHANGED, out of this wave's scope) is
+  converted to/from `protocol_causal::OperationEnvelope` (what `protocol_wire::ClientFrame::
+  Commands`/`ServerFrame::Commands` carry) only at the wire boundary, via `to_wire_envelope`/
+  `from_wire_envelope`. `ActorId`/`DocumentId`/`OperationId` are literally the same type on both
+  sides (`semio_framework_core` re-exports them from `protocol_core` verbatim), so only
+  `schema_version`/`payload_hash` (recomputed on receipt, same as the existing
+  `operation_envelope_from_stored_edit` already does for external folder edits) and
+  `inverse.{target_operation,base_version,dependencies,undo_policy}` (no wire counterpart —
+  `protocol_causal::InverseOperation` is deliberately simpler) need real bridging; this actor's
+  diff payloads are always edit-shaped JSON (carrying their own `sequenceNumber`/`backwards`), so
+  the recovery is lossless in practice, mirroring the pre-existing folder-edit-reconstruction
+  pattern.
+- **Connect**: `try_connect_hub`/`WasmActor::connect` send `ClientFrame::Hello{wire_version:1,
+  protocol_version:1, schema, pack_schema_hash:[0;32] (placeholder — see Deferred), actor, token,
+  resume_token, frontier}` as a binary WS frame on `Lane::Command`.
+- **Outbound ops**: `relay_operations_to_hub` assigns a `batch_id`, converts envelopes via
+  `to_wire_envelope` (stamping a fresh `HybridLogicalTimestamp` from a per-actor HLC seed +
+  logical counter), tracks `pending_batches: HashMap<batch_id, Vec<local envelope>>`, sends
+  `ClientFrame::Commands{batch_id, envelopes}`.
+- **Inbound ops**: `ServerFrame::Commands{envelopes, origin, frontier}` — if `origin != self.actor`,
+  converts via `from_wire_envelope` and delivers as `DocumentEvent::RemoteOperations` (unchanged
+  event shape).
+- **Ack handling** (`handle_ack`, new): `ServerFrame::Ack{batch_id, stages, frontier}` —
+  `AckStage::Applied{outcome}` resolves the tracked batch: `Accepted` just emits
+  `DocumentEvent::CommandOutcome{Accepted}`; `Rejected`/`Transformed` both first roll back the
+  speculative local head by replaying each sent envelope's own precomputed `inverse` as a synthetic
+  remote operation (`rollback_envelope` — this actor is schema-agnostic/Value-typed end to end, so
+  it can't call into `protocol_command`'s generic typed-inverse trait machinery; replaying the
+  envelope's own already-computed `InverseOperation` through the existing `ingest_remote` path
+  achieves the same effect); `Transformed` then additionally delivers the hub's replacement
+  envelope as a normal `RemoteOperations` event.
+- **hub_version -> Frontier**: `hub_version: i64` replaced by `server_frontier: Option<
+  protocol::RuntimeFrontierSummary>`, updated from every frame that carries one
+  (`Welcome.server_frontier`/`Commands.frontier`/`Ack.frontier`); `resume_token: Option<String>`
+  tracked from `Welcome.resume_token` and echoed on the next `Hello`.
+- **Preview lane**: new `SyncSession::publish_preview`/`DocumentActorMsg::PublishPreview` ->
+  `ClientFrame::PreviewPublish` on `Lane::Preview`; `ServerFrame::Preview` (filtered by
+  `actor != self.actor`) -> `DocumentEvent::Preview`.
+- **Presence**: `PresencePeer` <-> `serde_json::Value` via `presence_to_json`/`presence_from_json`
+  (the wire's `ClientFrame::Presence{peer: Value}`/`ServerFrame::Presence{peers: Vec<Value>}` are
+  schema-erased; this actor's typed `PresencePeer` is serialized/deserialized at that boundary).
+- **TS fallback** (backbone-worker.ts, used only when the WASM module is unavailable): mirrors the
+  Rust flow exactly using the new `encodeClientFrame`/`decodeServerFrame` TS codec and
+  `toWireEnvelope`/`fromWireEnvelope`/`rollbackEnvelope` TS twins. The production browser path
+  (Rust WASM `BackboneWorkerHost`) owns its own `web_sys::WebSocket` internally and never routes
+  raw frame bytes through `backbone-worker.ts`'s JS at all — that file is purely a loader in that
+  path (per the plan: "worker + backbone-worker.ts treat frames as opaque bytes" applies to this
+  TS fallback, where frame *bodies* stay JSON.parse'd `unknown`/opaque payloads even though the
+  envelope/frame *shape* is typed).
+
+Deferred (expected/documented, not bugs)
+------------------------------------------
+- **Hub server is JSON-only until CW6**: nothing in this wave talks to a real hub — all Rust tests
+  run against an in-process `MockHub` that speaks real binary `protocol_wire` frames (rewritten this
+  wave), and the TS fixture test only decodes committed bytes. End-to-end wire compatibility against
+  the actual `os-hub`/`compose-hub` binaries is not real until CW6 rebuilds them; that's this wave's
+  explicit boundary, not something left broken.
+- **No client -> hub whole-envelope snapshot push**: `protocol_wire::ClientFrame` has no
+  snapshot-put variant (only causally-ordered `Commands`; the hub -> client snapshot direction is
+  `Bootstrap::Snapshot`/`SnapshotChunk`/`SnapshotDone`, download-only). `DocumentActorMsg::
+  LocalSnapshot` still persists to the folder binding; the old hub relay
+  (`HubClientFrame::PutEnvelope`) has no wire-v2 equivalent and is dropped, documented inline in
+  both the Rust actor (`drain_and_relay`) and the TS fallback (`handleLocalMsg`). How CW6's rebuilt
+  hub reconstructs structural snapshots (presumably by replaying `Commands` batches) is a hub-side
+  concern, not this wave's.
+- **`Bootstrap::Snapshot`/`SnapshotChunk`/`SnapshotDone`**: accepted and ignored — no client-side
+  pack decoder wired into `framework/sync` this wave (db/pack integration is a CW6+ hub-rebuild
+  concern). A reconnecting client currently only catches up via a hub's follow-up `Commands` frame
+  (which is what the rewritten `MockHub` does, mirroring `db_sync`'s `handle_hello` ->
+  `decide_bootstrap` -> `commands_server_frame` shape from the CW4 report).
+- **`pack_schema_hash`**: sent as `[0u8; 32]` placeholder (both Rust and TS) — no client-side schema
+  pack hashing wired this wave; never validated since the hub is JSON-only until CW6 anyway.
+- **`ServerFrame::CreditGrant`**: accepted and ignored — no client-side credit-based backpressure
+  implemented (scope was frame plumbing, not congestion control).
+- **`payloadHash` in the TS fallback's reconstructed `OperationEnvelope`**: a non-cryptographic
+  FNV-1a-style placeholder (`placeholderPayloadHash`), not a real blake3 hash — confirmed via grep
+  that this field is never actually read/verified anywhere in the JS side (it's carried only for
+  shape compatibility with the postMessage `OperationEnvelope` type), so adding a real blake3 JS
+  dependency just to fill it wasn't justified. The Rust side (native + wasm) does compute a real
+  hash via `semio_framework_hash::hash_bytes`.
+
+Tests added
+-----------
+Rust (framework/sync/rs/lib.rs):
+- `wire_bridge_round_trips_identity_and_diff_through_protocol_causal` — pure `to_wire_envelope`/
+  `from_wire_envelope` round-trip.
+- `rollback_envelope_synthesizes_an_undo_from_the_original_inverse` — pure `rollback_envelope` check.
+- `wire_fixtures_stay_byte_identical_across_rust_and_ts` — generates + verifies the 4 committed
+  `.bin` fixtures.
+- `command_outcome_accepted_fires_after_hub_ack` (actor test) — real actor + MockHub round trip,
+  confirms `ServerFrame::Ack` actually reaches `DocumentEvent::CommandOutcome`.
+- `publish_preview_round_trips_through_hub` (actor test) — two real actors + MockHub, confirms
+  `publish_preview` -> `PreviewPublish` -> hub fan-out -> `ServerFrame::Preview` ->
+  `DocumentEvent::Preview` on the other peer.
+- Rewrote `MockHub`/`mock_hub_connection` to speak real binary `ClientFrame`/`ServerFrame` (was
+  JSON `HubClientFrame`/`HubServerFrame`) — all 3 pre-existing hub-integration tests
+  (`two_hosts_converge_through_hub`, `reconnect_since_catch_up_replays_backlog`,
+  `detach_drains_pending_outbound_operations`) now exercise the real binary protocol and still pass.
+
+TS (backbone-worker.ts, inline `import.meta.vitest`):
+- `toWireEnvelope`/`fromWireEnvelope` round trip.
+- `rollbackEnvelope` inverse-replay check.
+- `encodeClientFrame`/`decodeClientFrame` round trip on a hand-built `Hello` frame.
+- Decodes the 4 Rust-generated `.bin` fixtures, asserts key fields, then re-encodes the decoded
+  value and diffs it against the original file bytes byte-for-byte (the actual cross-language wire
+  compatibility proof, not just a shape assertion).
+
+Build/test results
+-------------------
+- `cargo build -p semio-framework-sync -p semio-framework-sync-worker` — native: PASS (clean, only
+  pre-existing warnings unrelated to this wave's code, e.g. `pendingOperations` non-snake-case field
+  and a few `unnecessary_qualification`s that predate this diff).
+- `cargo build -p semio-framework-sync -p semio-framework-sync-worker --target wasm32-unknown-unknown`
+  — PASS (after the `vcs` fix above; failed before it with an unrelated pre-existing error).
+- `cargo test -p semio-framework-sync -p semio-framework-sync-worker` — PASS, 14/14 tests green
+  (13 pre-existing/updated + 1 new fixture test on the lib side, plus the actor tests listed above;
+  0 tests in the worker crate, as before).
+- `cargo clippy -p semio-framework-sync --all-targets` — clean on all code touched this wave (fixed
+  the handful of `map(...).unwrap_or(...)` clippy findings introduced by my own new code; the
+  remaining warnings in this file are all pre-existing lines I never touched).
+- `cargo build -p vcs` (native) — PASS, sanity-checked after the wasm32 import-gate fix.
+- TS: `bun ./script.ts test` in `framework/product/os/core` (the project's own nx `test` target,
+  wrapping `runVitest` — exactly the "relevant script.ts/package.json test target" the wave
+  instructions asked me to find and run) — PASS, 38/38 tests green across `index.ts` +
+  `backbone-worker.ts` (the runner executes each in-source suite twice — pre-existing behavior of
+  this config, unrelated to my change; 19 unique tests * 2 = 38).
+- TS typecheck: `bunx tsc --noEmit --project tsconfig.json --skipLibCheck` against the whole
+  workspace surfaces exactly ONE error inside `backbone-worker.ts`, at line ~543 in
+  `putCachedBlob`'s `fetch(..., { body: bytes })` call (`Uint8Array` vs `BodyInit`) — confirmed via
+  `git diff` that this function is untouched by this wave's diff (0 lines changed), so it's a
+  pre-existing type-strictness issue, not something CW5 introduced. All of my own new/changed code
+  (the whole `WireBridge` region, `Hub` region, `Lifecycle` changes) produced zero new tsc errors.
+  Also note: a raw `bunx vitest run` (bypassing the repo's own `script.ts`/nx runner) fails on
+  `backbone-worker.ts` with `ReferenceError: self is not defined` — this is a Node-vs-Bun global
+  difference (Bun provides Web-standard globals like `self`; the repo's sanctioned runner
+  (`bun ./script.ts test`) runs under the Bun runtime and passes cleanly; plain `vitest`/Node does
+  not have `self` and was never the intended way to run these tests).
+
+Files (created/updated) for ticket_close
+------------------------------------------
+Updated: framework/sync/rs/Cargo.toml, framework/sync/rs/lib.rs,
+framework/product/os/core/js/index.ts, framework/product/os/core/js/backbone-worker.ts,
+framework/product/os/core/js/vitest.config.ts, vcs/rs/lib.rs (unplanned fix, see above).
+Created: framework/sync/fixtures/wire/client-hello.bin, client-commands.bin, server-welcome.bin,
+server-ack.bin, and this report file.
+Not modified: framework/sync/worker/rs/lib.rs (no change needed — confirmed by name, not by
+omission).

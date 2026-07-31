@@ -1,0 +1,14 @@
+{
+  "title": "CAD Document Tree Name and Kind Labels",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "In the CAD document tree show the name for tree items and as second gray label show the kind (e.g. primary U2, secondary gray Unterzug).",
+  "summary": "CAD document tree object items now show the object name as the primary label and the localized typology kind as the muted secondary description (e.g. \"U2\" + \"Beam\" / \"Balken\"). Extended typology_label to accept dynamic typology ids and covered the behavior with document_tree_shows_name_with_kind_as_secondary_label (EN + DE).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2251"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️designapp",
+  "sessions": [
+    "⚪️1a2803fa155d4f78863cf5e187a1649c"
+  ]
+}

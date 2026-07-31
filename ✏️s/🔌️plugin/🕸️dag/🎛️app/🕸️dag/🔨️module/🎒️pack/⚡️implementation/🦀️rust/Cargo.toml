@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-dag-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DAG app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dag = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/⚡️implementation/🦀️rust", package = "semio-s-app-dag" }
+pack = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+dag_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-dag-dsl" }

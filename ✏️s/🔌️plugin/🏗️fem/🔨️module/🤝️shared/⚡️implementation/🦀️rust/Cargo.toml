@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-plugin-fem-shared"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "FEM plugin - helpers shared by the 2D and 3D apps' ui crates (non-constitutional)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🤝️shared/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+fem_core = { path = "../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "fem_core" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+serde_json = "1.0.140"

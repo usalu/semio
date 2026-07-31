@@ -1,0 +1,12 @@
+{
+  "title": "Revert Design Changes Keep Kit Node Sizing",
+  "emoji": "🧰️",
+  "status": "closed",
+  "description": "Revert Design diagram dynamic node sizing changes. Keep only Kit app changes: smaller KIT_DIAGRAM_NODE_SCALE and optimized kitDefaultDiagramForceSettings.",
+  "summary": "Reverted all Design diagram changes (computeDesignNodeSize, dynamic node sizing in PieceNodeInner/DesignNodeInner, modified ConnectorHandleProps/getConnectorPositionStyle, Design defaultDiagramForceSettings). Kept only Kit app changes: KIT_DIAGRAM_NODE_SCALE reduced from 2 to 1.2 (base ~60px nodes), and kitDefaultDiagramForceSettings optimized (chargeStrength: -300, linkDistance: 100, collideRadius: COLLIDE_RADIUS*1.2, centerStrength: 0.1). All 105 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1204"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️58b2a9d2051e41b995ed9452909ef7ca"]
+}

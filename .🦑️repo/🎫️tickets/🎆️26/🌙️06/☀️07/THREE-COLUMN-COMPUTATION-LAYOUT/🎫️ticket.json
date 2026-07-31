@@ -1,0 +1,12 @@
+{
+  "title": "Three Column Computation Layout",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Computation nodes should be three columns (input rows | vertical name | output rows), not a full grid with horizontal channel dividers.",
+  "summary": "Cleared spurious horizontal artifacts in the computation name column: repaint an opaque center-column fill after port labels to mask halo/wire bleed, keep only vertical section dividers, and render the node title as stacked vertical glyphs instead of a rotated horizontal label box.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1558"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️67156ed2c1b14d04ac8f908c944c7a10", "⚪️32472cd68212443a844b5d7b41ee9251"]
+}

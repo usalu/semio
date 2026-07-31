@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-trinity-rewrite-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Rewrite app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+rewrite_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+rewrite = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite" }
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "trinity_ram" }

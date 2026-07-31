@@ -1,6 +1,0 @@
-22 |   const key = ;
-                   ^
-error: Unexpected ;
-    at /Users/ueli/Documents/semio/.🦑repo/🎫tickets/26/07/31/GET-AGGREGATOR-WORKING-END-TO-END-AFTER-COMPOUND-EMOJI-LAYOUT/probe-404s.mjs:22:15
-
-Bun v1.3.14 (macOS arm64)

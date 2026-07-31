@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: AGPL-3.0-only
-#region 🔖Neo4jLocalCheck
+#region 🔖️Neo4jLocalCheck
 # 🗄️Legacy helper that now verifies the single compose devcontainer's local Neo4j ports; post-start owns startup.
 set -u
 
@@ -27,9 +27,9 @@ main() {
     echo "⚠️ Local Neo4j is not accepting Bolt connections on :7687 yet."
     exit 0
   fi
-  echo "✅ Local Neo4j is accepting Bolt connections on :7687."
+  echo "✅️ Local Neo4j is accepting Bolt connections on :7687."
   exit 0
 }
 
 main "$@"
-#endregion 🔖Neo4jLocalCheck
+#endregion 🔖️Neo4jLocalCheck

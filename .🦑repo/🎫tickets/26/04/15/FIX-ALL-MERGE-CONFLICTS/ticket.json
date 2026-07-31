@@ -1,8 +1,0 @@
-{
-  "title": "Fix All Merge Conflicts",
-  "status": "closed",
-  "description": "Fix all merge conflict markers across the repository and ensure everything compiles/runs. Conflicts exist in: .codex/config.toml, .repo/prompts/kinan.md, compose/go/main.go, compose/go/main_test.go, compose/js/index.ts, compose/net/Compose/Compose.cs, compose/rs/lib.rs, compose/sites/play/vite.config.ts, compose/sketchpad/index.tsx, compose/sketchpad/vite.config.ts, compose/ui/index.tsx, assets/compose/metabolism/.compose/kit.db",
-  "summary": "Fixed sketchpad Kit app table runtime error by deriving filteredKitFileGuids from filteredKitFiles before folder rows render. Added focused in-file coverage for the filtered file GUID lookup. Also fixed collaborative folder kit file upload dispatch so wrapper stores only use JSON blob embedding when the inner store supports it; folder stores now write dropped files. Verified targeted Playwright regressions pass, sketchpad production build passes, and the running local page no longer reports the filteredKitFileGuids ReferenceError.",
-  "goal": "🎯none",
-  "sessions": ["⚪21297fda1cd44861b7c289e78d6d61ee", "⚪36765915403c4f97b5912c7ffd3e8057", "⚪e5a1b426f9f34e8fb642305580a1bc59", "⚪7f2826e3435348b98e65be492ac5fb26"]
-}

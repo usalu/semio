@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/NodeGraphHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/NodeGraphHost.stories.tsx
 // Specs: Host the framework renderer's `NodeGraphHost` against real prebuilt WASM engines — the workflow
 // `GraphSession` (`framework/surface/node-graph/rs`) for the default DAG variant, and the `FlowSession`
 // (`flow/core/rs`) for the flow-graph variant `isFlowGraphScene`/`fixtureJson` routes to.
@@ -7,7 +7,7 @@
 // `NodeGraphHost`'s active branch needs so the `withWasm` decorator gates first paint until that engine's
 // wasm-bindgen module has booted.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useState, type ReactElement } from "react";
@@ -28,7 +28,7 @@ const WORKFLOW_SCENE: NodeGraphScene = {
   findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Workflow" }]),
 };
 
-/** 🌊 A `FlowFixture`-shaped `fixtureJson` (mirrors `FlowFixture::default()` in `flow/core/rs/lib.rs`) — its presence alone routes `NodeGraphHost` to `FlowGraphCanvasHost`/`createFlowSession` (see `isFlowGraphScene`). */
+/** 🌊️ A `FlowFixture`-shaped `fixtureJson` (mirrors `FlowFixture::default()` in `flow/core/rs/lib.rs`) — its presence alone routes `NodeGraphHost` to `FlowGraphCanvasHost`/`createFlowSession` (see `isFlowGraphScene`). */
 const FLOW_FIXTURE_JSON = JSON.stringify({
   schema: "flow.fixture",
   camera: { x: 0, y: 0, zoom: 1 },
@@ -78,7 +78,7 @@ function NodeGraphStoryHost({ scene, controllerId, surfaceId }: { readonly scene
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/NodeGraphHost",
+  title: "🛠️framework🔌️hosts/NodeGraphHost",
   component: NodeGraphStoryHost,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -94,7 +94,7 @@ export const Workflow: Story = {
   parameters: { wasm: ["node-graph"] },
 };
 
-/** 🌊 Flow engine — `FlowGraphCanvasHost` against the real `flow_core` `FlowSession`, routed by `capabilitiesJson.engine === "flow"` (`isFlowGraphScene`). */
+/** 🌊️ Flow engine — `FlowGraphCanvasHost` against the real `flow_core` `FlowSession`, routed by `capabilitiesJson.engine === "flow"` (`isFlowGraphScene`). */
 export const FlowGraph: Story = {
   args: { scene: FLOW_GRAPH_SCENE, controllerId: "flow-play", surfaceId: "flow.play.canvas" },
   parameters: { wasm: ["flow"] },

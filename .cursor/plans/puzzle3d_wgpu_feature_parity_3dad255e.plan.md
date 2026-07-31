@@ -57,11 +57,11 @@ isProject: false
 
 ## Scope decision (confirmed with user)
 
-"Premigration" = the archived PlayCanvas puzzle3d renderer (`.repo/🎫/26/06/25/PUZZLE-3D-MESH-HOVER-STYLE/play-canvas-before.txt`), not the current React `world-3d-host.tsx` (which already dropped these features). This is a genuinely large feature-parity effort, not a small bug fix. Work is organized in phases; Phase 0 is a hard blocker for everything else.
+"Premigration" = the archived PlayCanvas puzzle3d renderer (`.repo/🎫️/26/06/25/PUZZLE-3D-MESH-HOVER-STYLE/play-canvas-before.txt`), not the current React `world-3d-host.tsx` (which already dropped these features). This is a genuinely large feature-parity effort, not a small bug fix. Work is organized in phases; Phase 0 is a hard blocker for everything else.
 
 ## Phase 0 — Fix the empty viewport (blocking bug, do first)
 
-Root cause, verified independently: `frustum_planes()` in [ui/wgpu/rs/scene3d.rs](ui/wgpu/rs/scene3d.rs) (around line 406) extracts frustum planes with transposed row/column indices against the column-major `Mat4` (`cols[col][row]`, confirmed by `transform_point` at line 119-123). For row `r`, the correct plane component at index `c` is `m[c][r]`, not `m[r][c]` as currently written. This produces mathematically wrong plane equations, which the per-instance frustum cull in [framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs) line 254-288 then uses to discard the only object in the scene, leaving `culled_draws` empty — an empty scene pass, hence the black viewport (matches the screenshot in `.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/screenshot-puzzle3d.png`). The existing test `frustum_contains_origin_box` (scene3d.rs test module) passes only because it uses a symmetric huge box under a symmetric default camera, which happens to survive the transposed formula — it does not catch this class of bug.
+Root cause, verified independently: `frustum_planes()` in [ui/wgpu/rs/scene3d.rs](ui/wgpu/rs/scene3d.rs) (around line 406) extracts frustum planes with transposed row/column indices against the column-major `Mat4` (`cols[col][row]`, confirmed by `transform_point` at line 119-123). For row `r`, the correct plane component at index `c` is `m[c][r]`, not `m[r][c]` as currently written. This produces mathematically wrong plane equations, which the per-instance frustum cull in [framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs) line 254-288 then uses to discard the only object in the scene, leaving `culled_draws` empty — an empty scene pass, hence the black viewport (matches the screenshot in `.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/screenshot-puzzle3d.png`). The existing test `frustum_contains_origin_box` (scene3d.rs test module) passes only because it uses a symmetric huge box under a symmetric default camera, which happens to survive the transposed formula — it does not catch this class of bug.
 
 Fixes, all in `ui/wgpu/rs`:
 
@@ -70,7 +70,7 @@ Fixes, all in `ui/wgpu/rs`:
 3. **`build_layer_batches`** (`ui/wgpu/rs/draw.rs` line 772-775) — currently skips a layer if it has no UI/vector content, silently dropping any `ScenePass3d` whose `layer_index` points at that layer. Include layers that are referenced by any `draw.scene_passes[..].layer_index` even when `ui_instances`/`vector_vertices` are empty, so 3D content never depends on an incidental background quad being pushed first.
 4. **`apply_glb_bytes`** (`framework/renderer/wgpu/rs/world3d.rs` line 588-597) — uses `format!("url:{url}")` as the mesh id, but every other call site (`world3d_mesh_id_from_url`, `framework/plugin/rs/world3d_host.rs` line 27-36) uses `mesh:{slug}`. Fix so fetched GLBs actually bind to their instances (currently dead on arrival for any mesh using a real URL).
 
-Verify: `cargo test -p ui_wgpu`, WASM rebuild, then the existing `.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --plugin puzzle3d` (and `puzzle5d`, `lowpoly` for regression) should show real geometry, not just a colored background.
+Verify: `cargo test -p ui_wgpu`, WASM rebuild, then the existing `.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --plugin puzzle3d` (and `puzzle5d`, `lowpoly` for regression) should show real geometry, not just a colored background.
 
 ## Phase 1 — Data plumbing: fixture → scene payload
 
@@ -117,5 +117,5 @@ All in `framework/renderer/wgpu/rs/world3d.rs`:
 ## Verification plan
 
 - `cargo test -p ui_wgpu` and `cargo test -p semio-framework-renderer-wgpu` after each phase.
-- WASM rebuild (`bun ./framework/renderer/wgpu/script.ts wasm`) + `.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --plugin puzzle3d` for visual regression, plus a manual browser check (via the `cursor-ide-browser` MCP tools) confirming: object renders, vortex markers visible at both concrete-forest vortex positions, reference plane toggle-able (once implemented), brush tool shows a ghost preview and places on click, dragging an object near a compatible vortex creates a visible attraction line.
+- WASM rebuild (`bun ./framework/renderer/wgpu/script.ts wasm`) + `.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --plugin puzzle3d` for visual regression, plus a manual browser check (via the `cursor-ide-browser` MCP tools) confirming: object renders, vortex markers visible at both concrete-forest vortex positions, reference plane toggle-able (once implemented), brush tool shows a ghost preview and places on click, dragging an object near a compatible vortex creates a visible attraction line.
 - Re-run `puzzle5d` and `lowpoly` E2E smoke (they share the same wgpu world3d path) to catch regressions from the shared-pipeline changes.

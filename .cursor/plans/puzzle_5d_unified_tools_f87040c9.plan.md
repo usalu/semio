@@ -49,7 +49,7 @@ flowchart TB
 
 ## Phase 1 - Unified placement core (`puzzle/5d/react/index.tsx`)
 
-New `//#region 🔖Brush` in [puzzle/5d/react/index.tsx](puzzle/5d/react/index.tsx):
+New `//#region 🔖️Brush` in [puzzle/5d/react/index.tsx](puzzle/5d/react/index.tsx):
 
 - `Puzzle5dBrushPlacement` type: `{ partId, partKind, sourceAnchorFullId, aspect2d?: Puzzle2dBrushPlacePayload, aspect3d?: BrushPlacePayload }`.
 - `synthesizeFlatAspect(model, sourceAnchorFullId, partKind, catalogs)` and `synthesizeVolumeAspect(...)` - build the companion `NodeAspect`/`Puzzle3dPartAspect` + anchors analytically from the source part's shared anchors and the part-kind catalog.

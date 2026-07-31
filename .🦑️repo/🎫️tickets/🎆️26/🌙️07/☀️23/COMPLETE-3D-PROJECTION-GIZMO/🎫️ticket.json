@@ -1,0 +1,37 @@
+{
+  "title": "Complete 3D Projection Gizmo",
+  "emoji": "🧭️",
+  "status": "closed",
+  "description": "Rebuild the ad-hoc corner orbit gizmo into a complete projection navigation control: face/corner/center cube emitting WorldProjectionSpec, plus a family switcher exposing every taxonomy kind, with fixed snap pipeline so all transitions land correctly.",
+  "summary": "Fixed a regression from the projection-matrix-morph work: the ortho→persp and persp→persp-fov-change branches added to worldProjectionTransitionPose computed a new dolly-zoomed eye position, which broke the pre-existing invariant that mode-only projection switches never move the camera — causing the reported \"camera resets and flies fore/back\" whenever the user clicked into/out of Curvilinear. Removed both branches and their helper functions (worldProjectionMatchedPerspectiveDistance, worldProjectionFovCompensatedDistance); only the persp→ortho zoom-matching case remains (changes zoom, never position). The projection-matrix interpolation itself (perspective↔orthographic morph, oblique shear, curvilinear ramp) is untouched and still smooth. infinite/world/r3f tests 172/172 green, framework/renderer/react 252/252 green.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2280"
+  },
+  "goal": "🎯️r2602",
+  "plan": {
+    "client": "cursor",
+    "id": "a2f2c1fb",
+    "local": "3d_projection_gizmo_a2f2c1fb.plan.md"
+  },
+  "sessions": [
+    "⚪️f5ce97dc25714a098ac99d105700b3a1",
+    "⚪️fa519edefae7436988ef152813aac1b4",
+    "⚪️68cc108de32e4d61b7e9543bdbe88c5a",
+    "⚪️b1c9e81b24d94eba982d5591402326d4",
+    "⚪️e85bf85736844656a1b868bec30e5464",
+    "⚪️5fedf2c6ebfa48b493fdf7dcdbdf782d",
+    "⚪️f907e9c5f67748ee81f0cccd049f0f8e",
+    "⚪️85d9eb2e76d74d7693f6d26613817b83",
+    "⚪️79b7007d388744848a81042ba58646bd",
+    "⚪️726a68b8c0f34dc1923642ec630eefce",
+    "⚪️1af1a12b2d7d47898815f75d90c28a7f",
+    "⚪️8ab199be3c944fbc96c216fc985cf9e6",
+    "⚪️2471a1dd62184568b591d4d792620c5c",
+    "⚪️5439eb56d3884badab5dfe3bba4826fa",
+    "⚪️87e2d4fb9eb7442e8d2fd673f6c772c1",
+    "⚪️d2a6c0c4596b49b996696276c78ed82a",
+    "⚪️75650e0d1edc4817997f49a0d40a14a0",
+    "⚪️22025f4f923945e191ed4852517b7f6d",
+    "⚪️7855d336b2b8456ca133791780e7ce0e"
+  ]
+}

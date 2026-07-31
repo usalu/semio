@@ -1,0 +1,8 @@
+{
+  "title": "Rs Control Plane Without Serde Outside Kit Backbone",
+  "emoji": "🦀️",
+  "status": "open",
+  "description": "Remove serde/serde_json usage from compose/rs outside kit_backbone (DevBackbone): GraphQL-native structs only, no JSON hydration paths in the main graph.",
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo",
+  "sessions": ["⚪️80ad0ade858c46e89556266fdab326b6"]
+}

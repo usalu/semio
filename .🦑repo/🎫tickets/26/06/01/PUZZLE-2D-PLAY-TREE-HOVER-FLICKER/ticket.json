@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle 2d Play Tree Hover Flicker",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Fix puzzle 2d play document tree items flashing hover→selected→unselected when pointer leaves rows while only hovering.",
-  "summary": "Fixed puzzle 2d play document hover flicker: Tree `highlightedIds` rows now use `bg-hover-base` instead of sharing selection `bg-active-base`, and row pointer-leave no longer clears hover when moving into nested branch content.",
-  "goal": "🎯framework",
-  "sessions": ["⚪2290e2595623410290dc159d4795330f"]
-}

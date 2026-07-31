@@ -1,0 +1,12 @@
+{
+  "title": "Format README links",
+  "emoji": "📝️",
+  "status": "closed",
+  "description": "Update READMEs with Technologies and bundles lists",
+  "summary": "Formatted bundles listing to use links",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1009"
+  },
+  "goal": "🎯️updatereadmes",
+  "sessions": ["⚪️02d568fd760c43a69cd2a439be66eab2", "⚪️caef203c82bb44ef97f79e6d34229e18"]
+}

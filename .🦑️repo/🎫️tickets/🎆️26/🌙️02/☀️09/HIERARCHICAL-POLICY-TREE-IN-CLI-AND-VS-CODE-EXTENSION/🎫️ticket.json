@@ -1,0 +1,11 @@
+{
+  "title": "Hierarchical Policy Tree in CLI and VS Code Extension",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "All trees of policies are currently flat but it should be in the same tree as the id of the statute. Both in repo cli and repo vscode extension. The policy list command shows flat policies without statutes. There is no policy tree command. Need to add policy tree command to CLI and ensure VS Code extension shows the same hierarchical structure.",
+  "summary": "Added hierarchical `policy tree` command to CLI, MCP tool `policy_tree`, and VS Code extension command `compose.policyTree`. The CLI `policy tree` renders policies with statutes as nested children in both markdown and text formats. The VS Code extension sidebar already rendered statutes hierarchically under policies. Added `EmojiBreach` constant to fix a pre-existing build error. Added test `TestPolicyTreeCommand`. Updated AGENTS.md SRS and README.md documentation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/447"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism"
+}

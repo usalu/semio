@@ -1,0 +1,12 @@
+{
+  "title": "Fix Dirty Dependency Propagation on Delete",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Clicking flow canvas background triggers computing animation on all nodes. Gate evaluate/persist on pointer up to tree changes only; fix fixtureJson prop effect resetting lastEvalFixtureRef on presentational-only updates.",
+  "summary": "Deleting a downstream node no longer flashes computing chrome on upstream parents. The fixtureJson prop effect stopped nulling lastEvalFixtureRef on tree changes (which forced structural full-graph animation). flowTreeDirtyNeuronIds now also marks surviving downstream targets when a widget is removed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1644"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️b0b453ff8da34fa6ac8a930c9c2288e7", "⚪️e60b824754324a04a18e2444debcea72"]
+}

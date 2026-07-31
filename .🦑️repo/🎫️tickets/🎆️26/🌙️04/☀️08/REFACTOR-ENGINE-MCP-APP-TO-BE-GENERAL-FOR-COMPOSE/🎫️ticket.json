@@ -1,0 +1,8 @@
+{
+  "title": "Refactor Engine MCP App to Be General for Compose",
+  "status": "closed",
+  "description": "Refactor the compose engine MCP app so that kit, design, design-diagram, and design-scene are all equal top-level views instead of the current design-centered approach. The MCP app should be general for compose, not centered around designs.",
+  "summary": "Fixed TestChange/Metabolism failure in compose/go caused by emoji descriptions added to metabolism.kit.compose.json without updating the corresponding diff fixtures. Synced emoji descriptions to metabolism.kit.diffed.compose.json (162 descriptions), regenerated metabolism.kit.diff.compose.json and metabolism.kit.diff.inverted.compose.json from computed values. Removed debug logging from main_test.go. All 23 compose/go tests and all repo/cli tests now pass.",
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️28ac3013b43144c081d745f569146bb1"]
+}

@@ -55,7 +55,7 @@ Both `Stately` and `Brepjs` must be replaceable; core depends on neither.
 
 ## 1. Add `StateEngine` abstraction in [spatial/js/core/index.ts](spatial/js/core/index.ts)
 
-In a new `🎭StateEngine` region, just before `🏭Factory`:
+In a new `🎭️StateEngine` region, just before `🏭️Factory`:
 
 - Export `StateEngineSendResult = { ok: boolean; transient?: boolean }`.
 - Export interface `StateEngine` mirroring the public surface of the current inline runner: `getState(): string`, `getContext(): Record<string, unknown>`, `reset(): void`, `restore(state, context): void`, `send(event: FactoryEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult>`.
@@ -65,7 +65,7 @@ In a new `🎭StateEngine` region, just before `🏭Factory`:
 
 ## 2. Make `FactoryRuntime` engine-agnostic
 
-In the `🏭Factory` region of [spatial/js/core/index.ts](spatial/js/core/index.ts):
+In the `🏭️Factory` region of [spatial/js/core/index.ts](spatial/js/core/index.ts):
 
 - Extend `FactoryRuntimeOptions` with `readonly stateEngine?: StateEngineProvider`.
 - In `FactoryRuntime`'s constructor, replace `this.sm = new StatechartRuntime(spec)` with `this.sm = (opts.stateEngine ?? pureTsStateEngineProvider).create(spec)` typed as `StateEngine`.
@@ -107,7 +107,7 @@ This guarantees the play app exercises `BrepjsKernel` + `StatelyStateEngine` end
 ## 5. Cross-cutting
 
 - Add `@spatial/js-machine-stately` to the workspace package list / root [spatial/js/package.json](spatial/js/package.json).
-- Update the core's `🧪Tests` region with a parity test (`pure-ts` vs `stately` providers produce identical `FactorySnapshot.state` and `context` after the canonical box sequence). Per workspace rules this goes into the existing test region — no new test files.
+- Update the core's `🧪️Tests` region with a parity test (`pure-ts` vs `stately` providers produce identical `FactorySnapshot.state` and `context` after the canonical box sequence). Per workspace rules this goes into the existing test region — no new test files.
 - Run `bun nx run-many -t test` for `@spatial/js-core`, `@spatial/js-kernel-brepjs`, `@spatial/js-machine-stately`, then load the play app to confirm runtime behaviour with `[DEBUG]` logs (already present on `snapshot`).
 
 ## What stays unchanged

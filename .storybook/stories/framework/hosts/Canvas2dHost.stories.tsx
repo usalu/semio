@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/Canvas2dHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/Canvas2dHost.stories.tsx
 // Specs: Host the framework renderer's `Canvas2dHost` with zero WASM engine — its `sessionFactory` builds a
 // `JsonLayersCanvasSession`, a pure-`CanvasRenderingContext2D` implementation of `GraphWasmSession`
 // (`@semio-tech/infinite-cavas-react-renderer`'s generic canvas host), so no `cdylib` session is involved.
@@ -7,7 +7,7 @@
 // setup; wheel-zoom/middle-drag-pan already round-trip for real inside `JsonLayersCanvasSession` itself, so the
 // story-local reducer only needs to fold the debounced `setCamera` dispatch back into `cameraX`/`cameraY`/`zoom`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
@@ -22,7 +22,7 @@ type StoryCanvas2dState = { readonly camera: StoryCamera; readonly layers: reado
 //#endregion StoryTypes
 
 //#region Fixtures
-/** 🟦🟠 Two bounds-based node boxes (rect + circle) plus a dashed "wire" line — exercises `drawBoundsLayer`'s rect/circle branches and the `x0`/`y0`/`x1`/`y1` line branch in `JsonLayersCanvasSession.renderFrame`. */
+/** 🟦️🟠️ Two bounds-based node boxes (rect + circle) plus a dashed "wire" line — exercises `drawBoundsLayer`'s rect/circle branches and the `x0`/`y0`/`x1`/`y1` line branch in `JsonLayersCanvasSession.renderFrame`. */
 const STORY_LAYERS: readonly StoryLayer[] = [
   { id: "node-alpha", kind: "box", role: "node", name: "Alpha", x: -140, y: -50, width: 140, height: 70, color: "#38bdf8", selected: false },
   { id: "node-beta", kind: "circle", role: "node", name: "Beta", x: 40, y: 30, width: 96, height: 96, color: "#f97316", selected: true },
@@ -31,7 +31,7 @@ const STORY_LAYERS: readonly StoryLayer[] = [
 //#endregion Fixtures
 
 //#region Reducer
-/** @emoji 🎥 Story-local mirror of the `setCamera` handling a real host app performs against `Canvas2dHost`'s debounced camera-sync dispatch (`framework/os/renderer/js/react/index.tsx`'s `CAMERA_SYNC_DEBOUNCE_MS`). */
+/** @emoji 🎥️ Story-local mirror of the `setCamera` handling a real host app performs against `Canvas2dHost`'s debounced camera-sync dispatch (`framework/os/renderer/js/react/index.tsx`'s `CAMERA_SYNC_DEBOUNCE_MS`). */
 function reduceStoryCanvas2dAction(state: StoryCanvas2dState, descriptor: ActionDescriptor): StoryCanvas2dState {
   if (descriptor.action !== "setCamera") return state;
   const camera = (descriptor.args as { readonly camera?: StoryCamera } | undefined)?.camera;
@@ -77,7 +77,7 @@ function Canvas2dStoryHost({ initialLayers }: { readonly initialLayers: readonly
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/Canvas2dHost",
+  title: "🛠️framework🔌️hosts/Canvas2dHost",
   component: Canvas2dStoryHost,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

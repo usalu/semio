@@ -1,0 +1,9 @@
+{
+  "title": "Fix Spatial Play Render Loop",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix React infinite loop in SpatialPlayModelSpaceProvider from uncached AppPointerFocusStore getSnapshot; remove ineffective frame-ancestors CSP meta from cad play index.html.",
+  "summary": "Fixed CadPlayModelSpaceProvider React infinite loop: AppPointerFocusStore now caches getSnapshot and only notifies when selection/hover/source actually change. Removed redundant publish on unchanged setHoverFromSource. Added stable-snapshot unit test. @semio-tech/framework-core (17) and @semio-tech/cad-js-renderer (50) tests pass.",
+  "goal": "🎯️cad",
+  "sessions": ["⚪️f595b9109e234f4b934d2499b5ee753d"]
+}

@@ -1,0 +1,8 @@
+{
+  "title": "Fix Kit App Folder Row Creation",
+  "status": "closed",
+  "description": "Investigate and fix the compose sketchpad kit app bug where creating new folders does not produce rows in the table. Trace create-folder flow, table row derivation, and any filtering/state sync gaps. Refactor existing code directly, extend existing tests only, verify behavior with targeted test execution, and close the ticket with affected files.",
+  "summary": "Bulk close",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningkitapp",
+  "sessions": ["⚪️797f6228fe61441785f2e78838ee7fbb", "⚪️1a0dff480f094726a729ecc992119d61"]
+}

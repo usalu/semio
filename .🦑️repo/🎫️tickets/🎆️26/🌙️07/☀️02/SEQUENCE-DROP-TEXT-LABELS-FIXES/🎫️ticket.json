@@ -1,0 +1,17 @@
+{
+  "title": "Sequence Drop Text Labels Fixes",
+  "emoji": "📜️",
+  "status": "closed",
+  "description": "Fix destructive reload in Sequence WASM host (replace_fixture, next_serial), canonicalize fixture JSON comparison in React, give text module into-scope-write parity with math/logic, extend is_function_kind for text.*, update TS catalogue.",
+  "summary": "Added Flow-parity double-click spotlight on Sequence canvas: searchable imperative catalogue popup at click position, live ghost step preview while navigating suggestions, Enter/click to commit via addStepDropped. Control steps still collapse/expand on double-click. Includes sequenceRankCatalogueSuggestions helper and vitest coverage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1794"
+  },
+  "goal": "🎯️framework🎯️platform",
+  "plan": {
+    "client": "cursor",
+    "id": "21801f43",
+    "local": "sequ_21801f43.plan.md"
+  },
+  "sessions": ["⚪️089b2a4bc7e04002a97a7578b4c42ed9", "⚪️8c90d7acd0c94914a32ec44b04404741"]
+}

@@ -1,7 +1,0 @@
-{
-  "title": "Fix sketchpad state machine wildcard event handling",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Fix apps not working after wildcard refactor - state not changing",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
-}

@@ -9,7 +9,7 @@
     {
       "name": "base",
       "hidden": true,
-      "binaryDir": "${sourceDir}/.🦑repo/⚡cache/cmake/${presetName}",
+      "binaryDir": "${sourceDir}/.🦑️repo/⚡️cache/cmake/${presetName}",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_CXX_STANDARD": "23",

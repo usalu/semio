@@ -1,17 +1,17 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/IconShotFrame.stories.tsx
+// 🥼️ .storybook/stories/ui/IconShotFrame.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { clipIconSvgMarkupToEllipse, IconShotFrame, iconShotFrameStyle } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-// 🖼️#region 🔖IconShotFrame
+// 🖼️#region 🔖️IconShotFrame
 const meta = {
   title: "🖱️ui⚛️react/IconShotFrame",
   component: IconShotFrame,
@@ -73,9 +73,9 @@ export const LandscapeNoBadge: Story = {
   ),
 };
 
-// #endregion 🔖IconShotFrame
+// #endregion 🔖️IconShotFrame
 
-// #region ⭕clipIconSvgMarkupToEllipse
+// #region ⭕️clipIconSvgMarkupToEllipse
 const sampleSvgMarkup = `<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" fill="var(--accent)"/><rect x="10" y="10" width="100" height="100" fill="var(--accent-secondary)"/></svg>`;
 const clippedSvgMarkup = clipIconSvgMarkupToEllipse(sampleSvgMarkup, 120, 120);
 
@@ -96,7 +96,7 @@ export const ClipIconSvgMarkupToEllipseStory: Story = {
   ),
 };
 
-// #endregion ⭕clipIconSvgMarkupToEllipse
+// #endregion ⭕️clipIconSvgMarkupToEllipse
 
 // #region 🖼️iconShotFrameStyle
 export const IconShotFrameStyleStory: Story = {

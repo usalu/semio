@@ -1,0 +1,11 @@
+{
+  "title": "Refactor Typescript Tests to Load Data From Shared Asset Files",
+  "status": "closed",
+  "description": "Refactor the TypeScript test code in compose/js/index.ts to load hardcoded test data from shared JSON asset files instead of embedding data inline. Tests are embedded in the module (Vitest). All hardcoded GUIDs, design names, piece names, expected values, hash strings, glob patterns, expected counts should be loaded from asset files like hash.cases.compose.json, quality-sum.cases.compose.json, design-with-diff.cases.compose.json, filter-kit.cases.compose.json, find-replaceable-types.cases.compose.json, flatten.cases.compose.json, synthetic-find-replaceable.kit.compose.json.",
+  "summary": "Refactored all TypeScript embedded tests in compose/js/index.ts to load hardcoded test data from shared JSON asset files instead of inline values.\n\nChanges made:\n1. Added 8 new barrel exports to assets/index.ts: HashCases, QualitySumCases, DesignWithDiffCases, FilterKitCases, FindReplaceableTypesCases, FlattenCases, SyntheticFindReplaceableKit, ExportDesignModelCases\n2. Added corresponding imports in the test section of compose/js/index.ts\n3. Refactored Hash tests to use hashCases for expected hash values, kitDiffHash JSON, and design name lookups\n4. Refactored QualitySum test from single hardcoded test to data-driven loop over qualitySumCases\n5. Refactored DesignWithDiff test to read expected piece/connection counts from asset\n6. Refactored FilterKit/Glob tests to data-driven loop over globCases from asset\n7. Refactored Flatten tests to data-driven loop over FlattenCases\n8. Refactored FindReplaceableTypes tests (synthetic, boundary, all 6 named individual cases) to use asset data\n9. Refactored ExportDesignModel test to use ExportDesignModelCases for design name\n10. Refactored both Kit/Filter/Design test blocks to use FilterKitCases for design name lookup\n\nAll 217 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1346"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️90351e200b604632b458131fb425a816"]
+}

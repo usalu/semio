@@ -1,7 +1,0 @@
-{
-  "title": "REPO-SIMPLIFY-ARCHITECTURE",
-  "emoji": "📂",
-  "status": "closed",
-  "description": "\"Refactor repo script architecture: simplify to non-interactive JSON-output commands, move interactivity to VSCode extension with QuickPick wizards\"",
-  "goal": "🎯aioptimizedrepo"
-}

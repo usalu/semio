@@ -1,0 +1,142 @@
+CW7 report — architect_program (architect/program/rs/lib.rs)
+================================================================
+
+STATUS: build ok, test ok (181/181 passed, 0 warnings in this crate).
+  cargo build -p architect_program  -> Finished, 0 errors, 0 warnings for architect_program
+  cargo test  -p architect_program  -> test result: ok. 181 passed; 0 failed; 0 ignored
+
+Cargo.toml: unchanged — `protocol` was already a direct dependency (from an earlier
+CW3 sweep). No dependency edit needed.
+
+WHAT CHANGED
+------------
+
+1. CollectionOperation::Add / Move shape migration (the ticket's core ask)
+   - 77 `CollectionOperation::Add { index, item }` construction sites rewritten to
+     `CollectionOperation::Add { id, item, at: index }` (id newly added, index->at
+     verbatim rename).
+   - 1 `CollectionOperation::Move { id, to_index }` site rewritten to
+     `Move { id, to: to_index }` (pure rename).
+   - id source per site (per instructions step 2, mirroring how Remove/Move/Patch on
+     the same collection already obtain a TId):
+     - 61 test sites + the 9 `mod template::apply_template` sites + the 2
+       Stakeholders-specific sites: every item type in this crate's registers is
+       `#[derive(dsl::DslRecord)]` with a `header: EntityHeader { id: EntityId, .. }`
+       field (`impl_identified_header!` macro already keys `Identified::id()` off
+       `.header.id`), so `id: item.header.id.clone()` (captured before `item` moves
+       into the same struct-literal, which Rust evaluates left-to-right, so writing
+       `id` first is sound). In `mod template`, the id was already generated fresh
+       per entity via `let id = EntityId::new_serial("template-entity");` before
+       `EntityHeader::new(id.clone(), ..)` — reused verbatim as `id: id.clone()`,
+       preserving the exact existing generation logic per instructions step 2.
+     - The one `Traces`/`TraceLink` site: `TraceLink` has no `header`, just a bare
+       `id: EntityId` field (`impl protocol::Identified<EntityId> for TraceLink {
+       fn id(&self) -> &EntityId { &self.id } }`) — used `link.id.clone()`.
+
+2. Import/impl surface switched from vcs:: to protocol:: for the CollectionOperation
+   family and the Operation/OperationDiff/OpText trio (per steps 6-7):
+   - `mod operations`: `use vcs::{apply_collection_operation, invert_collection_operation,
+     CollectionOperation, Operation, OperationDiff, Patchable};` -> `use protocol::{..}`
+     (same six names, same module).
+   - `mod operations::tests`: `use vcs::OpText;` -> `use protocol::OpText;`.
+   - `mod registers`: `use vcs::{Identified, Patchable};` -> `use protocol::{Identified,
+     Patchable};` (covers `impl_identified_header!`/`impl_patchable!` macro-generated
+     impls plus the two hand-written `impl Identified<EntityId> for
+     ProjectDefinition/Governance`).
+   - `mod template`: `use vcs::CollectionOperation;` -> `use protocol::CollectionOperation;`.
+   - `mod kernel`: `impl vcs::Identified<EntityId> for TraceLink` -> `impl
+     protocol::Identified<EntityId> for TraceLink` (inline-qualified, no import).
+   - `impl vcs::OpText for ProgramOperation` -> `impl protocol::OpText for
+     ProgramOperation`.
+   - Left untouched (out of scope, confirmed still correct): `vcs::TextError`/
+     `vcs::TextSpan` (OpText's error type — `vcs::TextError` is itself `pub use
+     dsl_core::TextError`, i.e. the identical type `protocol::OpText`'s
+     `parse_op` signature requires, so no behavior change either way — instructions
+     restrict the swap to the Operation/OperationDiff/OpText trio only, so left
+     qualified as `vcs::`), `vcs::test_support::*` (round-trip test helpers, still
+     live in vcs, out of scope), `vcs::DocumentDsl` (unrelated trait, not part of
+     this migration).
+
+3. SIGNIFICANT DEVIATION DISCOVERED AND HANDLED — protocol::Patchable is NOT a pure
+   namespace move of vcs::Patchable, contrary to the instructions doc's step 6
+   wording ("Identified/Patchable/CollectionDiff/ItemPatch... moved to protocol too
+   per the same shape freeze"). Verified directly against protocol/command/rs/lib.rs:
+
+     vcs::Patchable (old):      fn apply_patch(&mut self, patch: &TPatch) -> TPatch;
+     protocol::Patchable (new): fn apply_patch(&mut self, patch: &TPatch);
+                                 fn diff_patch(&self, other: &Self) -> Option<TPatch>;
+
+   `Identified`, `ItemPatch`, and `CollectionDiff` ARE pure shape-identical moves
+   (verified field-for-field) — only `Patchable` differs. This is not optional to
+   ignore: `protocol::apply_collection_operation`/`invert_collection_operation`'s own
+   trait bound is `TItem: Identified<TId> + Clone + Patchable<TPatch>` resolved
+   against protocol_command's own traits (not vcs's, which are separate, unrelated
+   trait definitions despite the identical name) — so calling the protocol:: free
+   functions at all is impossible unless every item type in this crate implements
+   protocol::Patchable specifically. There is no partial-migration path here.
+
+   Given the mechanical centralization of this crate's patch logic (one `PatchRow`
+   helper trait + one `impl_patchable!` macro driving all 67 register
+   Patchable impls, plus 2 hand-written impls for TraceLink and ProgramMeta), the
+   migration was done in full rather than left half-broken:
+     - `PatchRow::patch_row(&mut self, patch: &Option<T>, inverse: &mut Option<T>)`
+       split into `apply_row(&mut self, patch: &Option<T>)` (mutate only) and
+       `diff_row(&self, other: &Self, out: &mut Option<T>)` (always snapshots
+       `other`'s value into `out`, unconditionally — not gated on inequality).
+     - `impl_patchable!` macro regenerated: `apply_patch` now calls `apply_row` per
+       field (no return); new `diff_patch(&self, other) -> Option<$patch>` calls
+       `diff_row` per field and always returns `Some(patch)` (a full-snapshot patch
+       of every field, not a minimal diff — see correctness note below).
+     - 2 manual impls (`TraceLink`/`TraceLinkPatch`, `ProgramMeta`/`ProgramMetaPatch`)
+       hand-rewritten to the same apply/diff split, same full-snapshot semantics.
+     - `invert_program_operation`'s 3 non-collection call sites (UpdateMeta,
+       UpdateProject, UpdateGovernance) that relied on the old `apply_patch` return
+       value were rewritten: capture `prior = program.X.clone()`, mutate a `probe`
+       clone with `apply_patch`, then `probe.diff_patch(&prior)` for the inverse.
+     - 65 register-level test round-trips (`let inverse = item.apply_patch(&patch);
+       ... item.apply_patch(&inverse);`) mechanically rewritten to
+       `item.apply_patch(&patch); let inverse =
+       item.diff_patch(&original).expect(...); ... item.apply_patch(&inverse);` —
+       safe because every one of these 65 tests already captured `let original =
+       item.clone();` immediately before constructing the patch (verified via grep,
+       exactly 65/65/65 matches for the three patterns before editing).
+
+   CORRECTNESS NOTE (behavior-preserving, not a regression): `diff_row`/`diff_patch`
+   use a full-snapshot strategy (always copy `other`'s field value) rather than a
+   minimal inequality-gated diff. This was deliberate: for entity fields that are
+   themselves `Option<T>` (patch field type also bare `Option<T>`, not
+   `Option<Option<T>>`), the patch representation has no way to express "clear this
+   field to None" — `apply_row`'s `Option<T>` impl only ever sets `Some(value)`,
+   never `None`, whether the value came from a real diff or a full snapshot. This
+   exact limitation already existed in the OLD vcs::Patchable-based
+   `patch_row`/inverse-capture mechanism (traced through by hand: a field that goes
+   None -> Some via a patch produces an "inverse" that is itself None, which the old
+   `apply_patch`'s `if let Some(value) = patch` then silently no-ops on, i.e. undo
+   already failed to restore None before this migration). The new diff_patch does
+   not fix or worsen this pre-existing gap — it reproduces it faithfully. All 181
+   tests (including every `*_patch_round_trips` test, which patches every field with
+   a `Some(..)` value, never introducing new Nones) pass, confirming no regression
+   inside this crate's own coverage.
+
+4. CROSS-CRATE RIPPLE — discovered, NOT fixed (out of ownership scope, per instructions
+   step 9 / ownership discipline):
+   `architect/plugin/rs` (a separate crate in this SAME CW7 wave's assignment list)
+   depends on `architect_program` and directly constructs/matches
+   `ProgramOperation::X(CollectionOperation::Add { index, item })` at 6+ call sites
+   (grepped: lib.rs lines 629, 636, 677, 1564, 1589, and at least one more, still
+   using the OLD `index`/no-`id` shape as of this writing). This crate's own file
+   docstring at operations::ProgramOperation (region 🔖️OpText, "architect-plugin
+   construction/match site already keyed on ProgramOperation::X(CollectionOperation::
+   Y{..}) (21+ call sites...)") independently corroborates this dependency surface.
+   Since `ProgramOperation`'s collection variants now wrap `protocol::CollectionOperation`
+   (new shape), `architect/plugin/rs` will fail to compile against this change until
+   it applies its own equivalent Add/Move migration — which is that crate's own
+   assigned CW7 job (it is in the 17-crate list), not touched here.
+
+FILES TOUCHED
+-------------
+  /Users/ueli/Documents/semio/architect/program/rs/lib.rs   (only file changed)
+  /Users/ueli/Documents/semio/architect/program/rs/Cargo.toml  (inspected only, no
+    change — protocol dependency already present)
+
+No other files touched. No git commands run.

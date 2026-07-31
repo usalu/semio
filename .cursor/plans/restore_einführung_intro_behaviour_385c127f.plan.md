@@ -51,4 +51,4 @@ The intro `data-id` elements, section `data-auto-animate-id`, and `autoAnimateId
 
 ## Repo workflow
 
-- Read `repo://goals`, then open (or reopen) a ticket via the repo MCP under `🎯presentation` for this fix; keep any temp/log files inside the ticket folder.
+- Read `repo://goals`, then open (or reopen) a ticket via the repo MCP under `🎯️presentation` for this fix; keep any temp/log files inside the ticket folder.

@@ -1,0 +1,12 @@
+{
+  "title": "Add Hidden Board Visibility Semantics",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Board: add a new hidden property for nodes, edges, and handles. Hidden nodes/handles must not be connectable via direct, proximity, or indirect connect. Redraw/layout must only operate on visible inputs so hidden nodes are not updated and hidden edges do not produce forces. Implement in the shared board stack and extend existing tests without creating new test files.",
+  "summary": "Added board hidden-visibility semantics across the shared TypeScript and Rust/WASM board stack. Nodes, handles, and edges now accept hidden flags, hidden fixture input is normalized from hidden/visible, live connect/hit/draw logic excludes hidden nodes and handles, redraw/layout ignores hidden nodes and hidden-edge inputs, and existing board tests were extended to cover hidden parsing, redraw, proximity connect, and indirect connect.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1424"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️489b601dcbf44ac99aa3473bf927f3e9"]
+}

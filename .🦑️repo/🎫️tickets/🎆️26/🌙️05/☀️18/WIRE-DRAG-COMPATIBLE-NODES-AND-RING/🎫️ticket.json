@@ -1,0 +1,12 @@
+{
+  "title": "Wire Drag Compatible Nodes And Ring",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "When a wire/link is active: highlight all compatible target nodes with secondary color; on hover show indirect handle ring with only compatible handles; emit board events.",
+  "summary": "Active link wire (LinkDragSnap / LinkTargetNode) highlights every compatible target node with indirect secondary fill/stroke. Hovering a compatible target with multiple free handles shows a ghost ring of only link-compatible handles; sole-handle targets stay implicit. Removed source-node ring during drag. New WASM events linkCompatibleNodes and linkTargetRing (cleared on wire end); wired through BoardRenderer and BoardCanvas props onLinkCompatibleNodes / onLinkTargetRing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1430"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️dac3946413e142ddb07694fdfc3b921c"]
+}

@@ -1,4 +1,4 @@
-# #region 🧲Header
+# #region 🧲️Header
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -13,10 +13,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# #endregion 🧲Header
+# #endregion 🧲️Header
 
 
-# #region 🔌Adapters
+# #region 🔌️Adapters
 # Standard library, third-party and framework imports.
 from __future__ import annotations
 
@@ -77,7 +77,7 @@ from queue import SimpleQueue
 import pytransform3d.rotations
 
 
-# #endregion 🔌Adapters
+# #endregion 🔌️Adapters
 
 # #region store
 _DEFAULT_EXE = "compose-exe" if sys.platform == "win32" else "compose-gql"
@@ -305,9 +305,9 @@ def load_kit_via_io(
         child.wait(timeout=5)
 # #endregion store
 
-# #region 🔌Ports
+# #region 🔌️Ports
 class JsonCodecPort(typing.Protocol):
-    """📜 JSON encode/decode port (stdlib json implements in domain helpers)."""
+    """📜️ JSON encode/decode port (stdlib json implements in domain helpers)."""
 
     def loads(self, data: str) -> typing.Any: ...
 
@@ -315,13 +315,13 @@ class JsonCodecPort(typing.Protocol):
 
 
 class GraphQlSchemaPort(typing.Protocol):
-    """📜 GraphQL schema host port (graphene in 🔌Adapters implements)."""
+    """📜️ GraphQL schema host port (graphene in 🔌️Adapters implements)."""
 
     def object_type(self, name: str, **fields: typing.Any) -> typing.Any: ...
 
 
 class _StdlibJsonCodec:
-    """📜 stdlib json adapter for {@link JsonCodecPort}."""
+    """📜️ stdlib json adapter for {@link JsonCodecPort}."""
 
     def loads(self, data: str) -> typing.Any:
         return json.loads(data)
@@ -331,54 +331,54 @@ class _StdlibJsonCodec:
 
 
 json_codec: JsonCodecPort = _StdlibJsonCodec()
-# #endregion 🔌Ports
+# #endregion 🔌️Ports
 
-# #region 🧩PydanticCompatibility
+# #region 🧩️PydanticCompatibility
 class _ComposeBaseRepresentation(pydantic.BaseModel):
-    """🧩Pydantic base exposing compose representation aliases."""
+    """🧩️Pydantic base exposing compose representation aliases."""
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs: typing.Any) -> None:
-        """🧩Expose representation field metadata after pydantic builds fields."""
+        """🧩️Expose representation field metadata after pydantic builds fields."""
         super().__pydantic_init_subclass__(**kwargs)
         cls.representation_fields = cls.model_fields
 
     @classmethod
     def representation_validate(cls, value: typing.Any) -> typing.Any:
-        """🧩Validate a value through pydantic's current model API."""
+        """🧩️Validate a value through pydantic's current model API."""
         return cls.model_validate(value)
 
     @classmethod
     def representation_validate_json(cls, value: str | bytes | bytearray) -> typing.Any:
-        """🧩Validate JSON through pydantic's current model API."""
+        """🧩️Validate JSON through pydantic's current model API."""
         return cls.model_validate_json(value)
 
     def representation_dump(
         self, *args: typing.Any, **kwargs: typing.Any
     ) -> dict[str, typing.Any]:
-        """🧩Dump a representation through pydantic's current model API."""
+        """🧩️Dump a representation through pydantic's current model API."""
         return self.model_dump(*args, **kwargs)
 
     def representation_copy(
         self, *args: typing.Any, **kwargs: typing.Any
     ) -> typing.Any:
-        """🧩Copy a representation through pydantic's current model API."""
+        """🧩️Copy a representation through pydantic's current model API."""
         return self.model_copy(*args, **kwargs)
 
 
 pydantic.BaseRepresentation = _ComposeBaseRepresentation
-# #endregion 🧩PydanticCompatibility
+# #endregion 🧩️PydanticCompatibility
 
 
-# #region 📝Type Hints
+# #region 📝️Type Hints
 # Custom type hint aliases used throughout the module.
 
 RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
-"""🔁 A recursive any list is either any or a list where the items are recursive any list."""
+"""🔁️ A recursive any list is either any or a list where the items are recursive any list."""
 
-# #endregion 📝Type Hints
+# #endregion 📝️Type Hints
 
 
 # #region 🎞️Constants
@@ -458,46 +458,46 @@ ENVS = {key: value for key, value in os.environ.items() if key.startswith("COMPO
 # #endregion 🎞️Constants
 
 
-# #region 📦Utilities
+# #region 📦️Utilities
 # General-purpose utility functions for encoding, formatting and transformation.
 
 
 def encode(value: str) -> str:
-    """🔷ᗒ Encode a string to be url safe."""
+    """🔷️ᗒ Encode a string to be url safe."""
     return urllib.parse.quote(value, safe="")
 
 
 def decode(value: str) -> str:
-    """🔶ᗕ Decode a url safe string."""
+    """🔶️ᗕ Decode a url safe string."""
     return urllib.parse.unquote(value)
 
 
 def encodeList(items: list[str]) -> str:
-    """🔹Encode a list of strings into a comma-separated URL-safe string."""
+    """🔹️Encode a list of strings into a comma-separated URL-safe string."""
     return ",".join([encode(t) for t in items])
 
 
 def decodeList(encodedList: str) -> list[str]:
-    """🔸Decode a comma-separated URL-safe string into a list of strings."""
+    """🔸️Decode a comma-separated URL-safe string into a list of strings."""
     return [decode(t) for t in encodedList.split(",")]
 
 
 def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
-    """🆔 Encode a `RecursiveAnyList` to a url encoded string."""
+    """🆔️ Encode a `RecursiveAnyList` to a url encoded string."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return encode(",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList]))
 
 
 def create_id(recursiveAnyList: RecursiveAnyList) -> str:
-    """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
+    """🆔️ Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return ",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList])
 
 
 def pretty(number: float) -> str:
-    """🦋 Pretty print a floating point number."""
+    """🦋️ Pretty print a floating point number."""
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
@@ -520,7 +520,7 @@ def changeValues(
 
 
 def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) -> None:
-    """🔺Recursively transform all keys in nested dicts and lists."""
+    """🔺️Recursively transform all keys in nested dicts and lists."""
     if isinstance(c, dict):
         for k in list(c.keys()):
             newKey = func(k)
@@ -535,19 +535,19 @@ def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) 
 
 
 def normalizeAngle(angle: float) -> float:
-    """🔃 Normalize an angle to be greater or equal to 0 and smaller than 360 degrees."""
+    """🔃️ Normalize an angle to be greater or equal to 0 and smaller than 360 degrees."""
     return (angle % 360 + 360) % 360
 
 
-# #endregion 📦Utilities
+# #endregion 📦️Utilities
 
 
-# #region 📰Logging
+# #region 📰️Logging
 # Module-level logger configuration.
 
 logger = loguru.logger
 
-# #endregion 📰Logging
+# #endregion 📰️Logging
 
 
 # #region ⚠️Exceptions
@@ -555,153 +555,153 @@ logger = loguru.logger
 
 
 class Error(Exception, abc.ABC):
-    """❗ The base for all exceptions."""
+    """❗️ The base for all exceptions."""
 
     def __str__(self):
-        return "❗ " + self.__class__.__name__
+        return "❗️ " + self.__class__.__name__
 
 
 class ServerError(Error, abc.ABC):
-    """🖥 The base for all server errors."""
+    """🖥️ The base for all server errors."""
 
 
 class ClientError(Error, abc.ABC):
-    """👩‍💼 The base for all client errors."""
+    """👩️‍💼️ The base for all client errors."""
 
 
 class CodeUnreachable(ServerError):
     """🛤️Exception for code paths that should never be reached."""
 
     def __str__(self):
-        return "🤷 This code should be unreachable."
+        return "🤷️ This code should be unreachable."
 
 
 class FeatureNotYetSupported(ServerError):
-    """🔻Exception for unimplemented features."""
+    """🔻️Exception for unimplemented features."""
 
     def __str__(self):
-        return "🔜 This feature is not yet supported."
+        return "🔜️ This feature is not yet supported."
 
 
 class RemoteKitsNotYetSupported(FeatureNotYetSupported):
-    """⬛Exception for unsupported remote kit access."""
+    """⬛️Exception for unsupported remote kit access."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
-        return "🔜 Remote kits are not yet supported."
+        return "🔜️ Remote kits are not yet supported."
 
 
 class AuthenticationError(ClientError):
-    """🔐 Base error for authentication failures."""
+    """🔐️ Base error for authentication failures."""
 
     def __str__(self):
-        return "🔐 Authentication failed."
+        return "🔐️ Authentication failed."
 
 
 class InvalidAuthToken(AuthenticationError):
-    """🔑 The auth token is invalid or expired."""
+    """🔑️ The auth token is invalid or expired."""
 
     def __init__(self, serverUrl: str) -> None:
         self.serverUrl = serverUrl
 
     def __str__(self):
-        return f"🔑 The auth token for server ({self.serverUrl}) is invalid or expired."
+        return f"🔑️ The auth token for server ({self.serverUrl}) is invalid or expired."
 
 
 class AuthTokenNotFound(AuthenticationError):
-    """🔑 No auth token found for the server."""
+    """🔑️ No auth token found for the server."""
 
     def __init__(self, serverUrl: str) -> None:
         self.serverUrl = serverUrl
 
     def __str__(self):
         return (
-            f"🔑 No auth token found for server ({self.serverUrl}). Call login first."
+            f"🔑️ No auth token found for server ({self.serverUrl}). Call login first."
         )
 
 
 class ServerUnreachable(ClientError):
-    """🌐 The remote server is not reachable."""
+    """🌐️ The remote server is not reachable."""
 
     def __init__(self, serverUrl: str) -> None:
         self.serverUrl = serverUrl
 
     def __str__(self):
-        return f"🌐 The remote server ({self.serverUrl}) is not reachable."
+        return f"🌐️ The remote server ({self.serverUrl}) is not reachable."
 
 
 class RemoteKitUriNotValid(ClientError):
-    """🌐 The remote kit URI is not valid."""
+    """🌐️ The remote kit URI is not valid."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
-        return f"🌐 The remote kit URI ({self.uri}) is not valid. Expected format: http(s)://server/api/kits/encodedKitUri"
+        return f"🌐️ The remote kit URI ({self.uri}) is not valid. Expected format: http(s)://server/api/kits/encodedKitUri"
 
 
 class NotFound(ClientError, abc.ABC):
-    """🔍 The base for not found errors."""
+    """🔍️ The base for not found errors."""
 
 
 class SpecificationError(ClientError, abc.ABC):
-    """📋 The base for all specification errors."""
+    """📋️ The base for all specification errors."""
 
 
 class NoParentAssigned(SpecificationError, abc.ABC):
-    """👪 The base for all no parent assigned errors."""
+    """👪️ The base for all no parent assigned errors."""
 
 
 class NoTypeOrDesignAssigned(NoParentAssigned):
-    """📖No Type Or Design Assigned definition."""
+    """📖️No Type Or Design Assigned definition."""
 
     def __str__(self):
-        return "👪 The entity has no parent type or design assigned."
+        return "👪️ The entity has no parent type or design assigned."
 
 
 class NoRepresentationOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(
     NoParentAssigned
 ):
-    """🔌No Representation Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition."""
+    """🔌️No Representation Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition."""
 
     def __str__(self):
-        return "👪 The entity has no parent representation, connector, type, piece, connection, design, kit or folder assigned."
+        return "👪️ The entity has no parent representation, connector, type, piece, connection, design, kit or folder assigned."
 
 
 class AlreadyExists(SpecificationError, abc.ABC):
-    """♊ The entity already exists in the """
+    """♊️ The entity already exists in the """
 
 
 class Compose(pydantic.BaseRepresentation):
     """ℹ Metadata about the database."""
 
     release: str = pydantic.Field(default=RELEASE)
-    """🍾 The current release of compose."""
+    """🍾️ The current release of compose."""
     engine: str = pydantic.Field(default=VERSION)
     """⚙️The version of the engine that created this database."""
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
-    """⌚ The time when the database was created."""
+    """⌚️ The time when the database was created."""
 
 
 # #endregion ⚠️Exceptions
 
 
-# #region 🎲Representationing
+# #region 🎲️Representationing
 
-# #region 🐻Primitives
+# #region 🐻️Primitives
 # Abstract base classes for representations, fields, ids, inputs, outputs and entities.
 
 
 class SRepresentation(pydantic.BaseRepresentation, abc.ABC):
-    """⚪ The base for representations."""
+    """⚪️ The base for representations."""
 
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     @classmethod
     def parse(cls, input: str | dict | typing.Any | None) -> "SRepresentation":
-        """⚒ Parse the entity from an input."""
+        """⚒️ Parse the entity from an input."""
         if input is None:
             return cls()
         if isinstance(input, str):
@@ -709,7 +709,7 @@ class SRepresentation(pydantic.BaseRepresentation, abc.ABC):
         return cls.representation_validate(input)
 
     def dump(self) -> "Output":
-        """📦Dump the entity to a dictionary."""
+        """📦️Dump the entity to a dictionary."""
         return self.representation_dump()
 
 
@@ -717,101 +717,101 @@ BaseRepresentation = SRepresentation
 
 
 class Field(SRepresentation, abc.ABC):
-    """🎫 The base for a field of a representation."""
+    """🎫️ The base for a field of a representation."""
 
 
 class RealField(Field, abc.ABC):
-    """🧑 The base for a real field of a representation. No lie."""
+    """🧑️ The base for a real field of a representation. No lie."""
 
 
 class MaskedField(Field, abc.ABC):
-    """🎭 The base for a mask of a field of a representation. WYSIWYG but don't expect it to be there."""
+    """🎭️ The base for a mask of a field of a representation. WYSIWYG but don't expect it to be there."""
 
 
 class Base(SRepresentation, abc.ABC):
-    """👥 The base for representations."""
+    """👥️ The base for representations."""
 
 
 class Id(Base, abc.ABC):
-    """🪪 The base for ids. All fields that identify the entity here."""
+    """🪪️ The base for ids. All fields that identify the entity here."""
 
 
 class Props(Base, abc.ABC):
-    """🎫 The base for props. All fields except input-only, output-only or child entities."""
+    """🎫️ The base for props. All fields except input-only, output-only or child entities."""
 
 
 class Input(Base, abc.ABC):
-    """↘ The base for inputs. All fields that are required to create the entity."""
+    """↘️ The base for inputs. All fields that are required to create the entity."""
 
 
 class Context(Base, abc.ABC):
-    """📑 The base for contexts. All fields that are required to understand the entity by an llm."""
+    """📑️ The base for contexts. All fields that are required to understand the entity by an llm."""
 
 
 class Output(Base, abc.ABC):
-    """↗ The base for outputs. All fields that are returned when the entity is fetched."""
+    """↗️ The base for outputs. All fields that are returned when the entity is fetched."""
 
 
 class Prediction(Base, abc.ABC):
-    """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
+    """🔮️ The base for predictions. All fields that are required to predict the entity by a llm."""
 
 
 class Entity(SRepresentation, abc.ABC):
-    """▢ The base for entities. All fields and behavior of the entity."""
+    """▢️ The base for entities. All fields and behavior of the entity."""
 
     PLURAL: typing.ClassVar[str]
-    """🔢 The plural of the singular of the entity name."""
+    """🔢️ The plural of the singular of the entity name."""
 
     def parent_entity(self) -> typing.Optional["Entity"]:
-        """👪 The parent entity of the entity."""
+        """👪️ The parent entity of the entity."""
         return None
 
     # TODO: Automatic derive from Id representation.
     @abc.abstractmethod
     def idMembers(self) -> RecursiveAnyList:
-        """🪪 The members that form the id of the entity within its parent."""
+        """🪪️ The members that form the id of the entity within its parent."""
 
     def id(self) -> str:
-        """🆔 The id of the entity within its parent."""
+        """🆔️ The id of the entity within its parent."""
         return create_id(self.idMembers())
 
     def id(self) -> str:
-        """🆔 A Globally Unique Identifier (ID) of the entity."""
+        """🆔️ A Globally Unique Identifier (ID) of the entity."""
         localId = f"{self.__class__.PLURAL.lower()}/{self.id()}"
         parent = self.parent_entity()
         parentId = f"{parent.id()}/" if parent is not None else ""
         return parentId + localId
 
     def clientId(self) -> str:
-        """🆔 The client id of the entity."""
+        """🆔️ The client id of the entity."""
         return self.id()
 
     # TODO: Automatic emptying.
 
     def empty(self) -> "Entity":
-        """🪣 Empty all props and children of the entity."""
+        """🪣️ Empty all props and children of the entity."""
         return self.__class__()
 
     # TODO: Automatic updating based on props.
 
     def update(self, other: "Entity") -> "Entity":
-        """🔄 Update the props of the entity."""
+        """🔄️ Update the props of the entity."""
         return self
 
 
 class Table(SRepresentation, abc.ABC):
-    """▦ The base for tables. All resources that are stored in the database."""
+    """▦️ The base for tables. All resources that are stored in the database."""
 
 
 class TableEntity(Entity, Table, abc.ABC):
-    """▢ The base for table entities."""
+    """▢️ The base for table entities."""
 
-    """📛 The lowercase name of the table in the database."""
+    """📛️ The lowercase name of the table in the database."""
 
 
-# #endregion 🐻Primitives
+# #endregion 🐻️Primitives
 
-# #region 🎬Graphql
+# #region 🎬️Graphql
 # GraphQL node base classes for pydantic, sqlalchemy and relay integration.
 
 
@@ -860,7 +860,7 @@ class RelayNode(graphene.relay.Node):
 
 
 class TableNode(graphene_pydantic.PydanticObjectType):
-    """📊A base class for all nodes that are a table in the database.
+    """📊️A base class for all nodes that are a table in the database.
     It automatically excludes the fields that are defined in the table.
     Resolvers to all @properties are added.
     Child relationships are by default included.
@@ -887,7 +887,7 @@ class TableNode(graphene_pydantic.PydanticObjectType):
 
 
 class TableEntityNode(TableNode):
-    """🌿A base class for all nodes that are a table in the database and are entities.
+    """🌿️A base class for all nodes that are a table in the database and are entities.
     It automatically complies to the Relay Node interface.
     """
 
@@ -907,19 +907,19 @@ class TableEntityNode(TableNode):
         super().__init_subclass_with_meta__(representation=representation, **options)
 
 
-# #endregion 🎬Graphql
+# #endregion 🎬️Graphql
 
-# #endregion 🎲Representationing
+# #endregion 🎲️Representationing
 
 
 # #region 🖥️Weak Entities
 
-# #region 📺Coordinate
+# #region 📺️Coordinate
 # Coordinate primitive for three-dimensional values.
 
 
 class Coordinate(SRepresentation):
-    """🔵Three-dimensional coordinate with x, y and z values."""
+    """🔵️Three-dimensional coordinate with x, y and z values."""
 
     u: float = pydantic.Field()
     v: float = pydantic.Field()
@@ -932,44 +932,44 @@ class Coordinate(SRepresentation):
 
 
 class CoordinateInput(Coordinate, Input):
-    """🔴Input fields for creating or updating a coordinate."""
+    """🔴️Input fields for creating or updating a coordinate."""
 
     pass
 
 
 class CoordinateContext(Coordinate, Context):
-    """🟠Context fields for understanding a coordinate by an LLM."""
+    """🟠️Context fields for understanding a coordinate by an LLM."""
 
     pass
 
 
 class CoordinateOutput(Coordinate, Output):
-    """🟡Output fields returned when fetching a coordinate."""
+    """🟡️Output fields returned when fetching a coordinate."""
 
     pass
 
 
 class CoordinatePrediction(Coordinate, Prediction):
-    """🟢Prediction fields for LLM-based coordinate inference."""
+    """🟢️Prediction fields for LLM-based coordinate inference."""
 
     pass
 
 
 class CoordinateNode(Node):
-    """🟣GraphQL node exposing coordinate data."""
+    """🟣️GraphQL node exposing coordinate data."""
 
     class Meta:
         representation = Coordinate
 
 
 class CoordinateInputNode(InputNode):
-    """🟤GraphQL input node for coordinate mutations."""
+    """🟤️GraphQL input node for coordinate mutations."""
 
     class Meta:
         representation = CoordinateInput
 
 
-# #endregion 📺Coordinate
+# #endregion 📺️Coordinate
 
 
 # #region ✖️Point
@@ -977,7 +977,7 @@ class CoordinateInputNode(InputNode):
 
 
 class Point(SRepresentation):
-    """⚫Point in 3D space with x, y and z coordinates."""
+    """⚫️Point in 3D space with x, y and z coordinates."""
 
     x: float = pydantic.Field()
     y: float = pydantic.Field()
@@ -991,38 +991,38 @@ class Point(SRepresentation):
 
 
 class PointInput(Point, Input):
-    """🩵Input fields for creating or updating a point."""
+    """🩵️Input fields for creating or updating a point."""
 
     pass
 
 
 class PointContext(Point, Context):
-    """🩶Context fields for understanding a point by an LLM."""
+    """🩶️Context fields for understanding a point by an LLM."""
 
     pass
 
 
 class PointOutput(Point, Output):
-    """🩷Output fields returned when fetching a point."""
+    """🩷️Output fields returned when fetching a point."""
 
     pass
 
 
 class PointPrediction(Point, Prediction):
-    """💜Prediction fields for LLM-based point inference."""
+    """💜️Prediction fields for LLM-based point inference."""
 
     pass
 
 
 class PointNode(Node):
-    """💙GraphQL node exposing point data."""
+    """💙️GraphQL node exposing point data."""
 
     class Meta:
         representation = Point
 
 
 class PointInputNode(InputNode):
-    """💚GraphQL input node for point mutations."""
+    """💚️GraphQL input node for point mutations."""
 
     class Meta:
         representation = PointInput
@@ -1036,7 +1036,7 @@ class PointInputNode(InputNode):
 
 
 class Vector(SRepresentation):
-    """💛Direction vector in 3D space with x, y and z components."""
+    """💛️Direction vector in 3D space with x, y and z components."""
 
     x: float = pydantic.Field()
     y: float = pydantic.Field()
@@ -1050,7 +1050,7 @@ class Vector(SRepresentation):
 
 
 class VectorInput(Vector, Input):
-    """🧡Input fields for creating or updating a vector."""
+    """🧡️Input fields for creating or updating a vector."""
 
     pass
 
@@ -1062,26 +1062,26 @@ class VectorContext(Vector, Context):
 
 
 class VectorOutput(Vector, Output):
-    """🤍Output fields returned when fetching a vector."""
+    """🤍️Output fields returned when fetching a vector."""
 
     pass
 
 
 class VectorPrediction(Vector, Prediction):
-    """🖤Prediction fields for LLM-based vector inference."""
+    """🖤️Prediction fields for LLM-based vector inference."""
 
     pass
 
 
 class VectorNode(Node):
-    """🤎GraphQL node exposing vector data."""
+    """🤎️GraphQL node exposing vector data."""
 
     class Meta:
         representation = Vector
 
 
 class VectorInputNode(InputNode):
-    """💗GraphQL input node for vector mutations."""
+    """💗️GraphQL input node for vector mutations."""
 
     class Meta:
         representation = VectorInput
@@ -1090,30 +1090,30 @@ class VectorInputNode(InputNode):
 # #endregion ↗️Vector
 
 
-# #region ◻️Plane
+# #region ◻Plane
 # Plane primitive representing an oriented coordinate frame in 3D space.
 
 
 class PlaneOriginField(MaskedField, abc.ABC):
-    """💖Field mixin for the origin of a plane."""
+    """💖️Field mixin for the origin of a plane."""
 
     origin: Point = pydantic.Field()
 
 
 class PlaneXAxisField(MaskedField, abc.ABC):
-    """💝Field mixin for the x axis of a plane."""
+    """💝️Field mixin for the x axis of a plane."""
 
     xAxis: Vector = pydantic.Field()
 
 
 class PlaneYAxisField(MaskedField, abc.ABC):
-    """💘Field mixin for the y axis of a plane."""
+    """💘️Field mixin for the y axis of a plane."""
 
     yAxis: Vector = pydantic.Field()
 
 
 class PlaneInput(Input):
-    """💕Input fields for creating or updating a plane."""
+    """💕️Input fields for creating or updating a plane."""
 
     origin: PointInput = pydantic.Field()
     xAxis: VectorInput = pydantic.Field()
@@ -1121,7 +1121,7 @@ class PlaneInput(Input):
 
 
 class PlaneContext(Context):
-    """🔖Context fields for understanding a plane by an LLM."""
+    """🔖️Context fields for understanding a plane by an LLM."""
 
     origin: PointContext = pydantic.Field()
     xAxis: VectorContext = pydantic.Field()
@@ -1129,13 +1129,13 @@ class PlaneContext(Context):
 
 
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
-    """🔖Output fields returned when fetching a plane."""
+    """🔖️Output fields returned when fetching a plane."""
 
     pass
 
 
 class Plane(Table):
-    """🔖Oriented coordinate frame in 3D space with origin and axes."""
+    """🔖️Oriented coordinate frame in 3D space with origin and axes."""
 
     @property
     def origin(self) -> Point:
@@ -1211,42 +1211,42 @@ class Plane(Table):
 
 
 class PlaneInputNode(InputNode):
-    """🔖GraphQL input node for plane mutations."""
+    """🔖️GraphQL input node for plane mutations."""
 
     class Meta:
         representation = PlaneInput
 
 
-# #endregion ◻️Plane
+# #endregion ◻Plane
 
 
 # #endregion 🖥️Weak Entities
 
 
-# #region 💎Attribute
+# #region 💎️Attribute
 # Attribute entity with key-value pairs and definitions.
 
 
 class AttributeKeyField(RealField, abc.ABC):
-    """⬜Field mixin for the key of a attribute."""
+    """⬜️Field mixin for the key of a attribute."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class AttributeValueField(RealField, abc.ABC):
-    """🟥Field mixin for the value of a attribute."""
+    """🟥️Field mixin for the value of a attribute."""
 
     value: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class AttributeDefinitionField(RealField, abc.ABC):
-    """🟧Field mixin for the definition of a attribute."""
+    """🟧️Field mixin for the definition of a attribute."""
 
     definition: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class AttributeId(AttributeKeyField, Id):
-    """💻Identity fields for uniquely identifying a attribute."""
+    """💻️Identity fields for uniquely identifying a attribute."""
 
     pass
 
@@ -1254,7 +1254,7 @@ class AttributeId(AttributeKeyField, Id):
 class AttributeProps(
     AttributeDefinitionField, AttributeValueField, AttributeKeyField, Props
 ):
-    """🟨Property fields for a attribute."""
+    """🟨️Property fields for a attribute."""
 
     pass
 
@@ -1262,13 +1262,13 @@ class AttributeProps(
 class AttributeInput(
     AttributeDefinitionField, AttributeValueField, AttributeKeyField, Input
 ):
-    """📝Input fields for creating or updating a attribute."""
+    """📝️Input fields for creating or updating a attribute."""
 
     pass
 
 
 class AttributeContext(AttributeValueField, AttributeKeyField, Context):
-    """🟩Context fields for understanding a attribute by an LLM."""
+    """🟩️Context fields for understanding a attribute by an LLM."""
 
     pass
 
@@ -1276,7 +1276,7 @@ class AttributeContext(AttributeValueField, AttributeKeyField, Context):
 class AttributeOutput(
     AttributeDefinitionField, AttributeValueField, AttributeKeyField, Output
 ):
-    """🟦Output fields returned when fetching a attribute."""
+    """🟦️Output fields returned when fetching a attribute."""
 
     pass
 
@@ -1359,45 +1359,45 @@ class Attribute(
 
 
 class AttributeInputNode(InputNode):
-    """🟪GraphQL input node for attribute mutations."""
+    """🟪️GraphQL input node for attribute mutations."""
 
     class Meta:
         representation = AttributeInput
 
 
-# #endregion 💎Attribute
+# #endregion 💎️Attribute
 
 
-# #region 📍Location
+# #region 📍️Location
 # Location entity for geographic coordinates with longitude, latitude and altitude.
 
 
 class LocationIdField(RealField, abc.ABC):
-    """🔖Field mixin for the id of a location."""
+    """🔖️Field mixin for the id of a location."""
 
     id: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class LocationLongitudeField(RealField, abc.ABC):
-    """🐙Field mixin for the longitude of a location."""
+    """🐙️Field mixin for the longitude of a location."""
 
     longitude: float = pydantic.Field()
 
 
 class LocationLatitudeField(RealField, abc.ABC):
-    """🔖Field mixin for the latitude of a location."""
+    """🔖️Field mixin for the latitude of a location."""
 
     latitude: float = pydantic.Field()
 
 
 class LocationAltitudeField(RealField, abc.ABC):
-    """🔖Field mixin for the altitude of a location."""
+    """🔖️Field mixin for the altitude of a location."""
 
     altitude: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class LocationId(LocationIdField, Id):
-    """🔖Identity fields for uniquely identifying a location."""
+    """🔖️Identity fields for uniquely identifying a location."""
 
     pass
 
@@ -1418,7 +1418,7 @@ class Location(
 class LocationInput(
     LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Input
 ):
-    """🔖Input fields for creating or updating a location."""
+    """🔖️Input fields for creating or updating a location."""
 
     pass
 
@@ -1426,7 +1426,7 @@ class LocationInput(
 class LocationOutput(
     LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Output
 ):
-    """🔖Output fields returned when fetching a location."""
+    """🔖️Output fields returned when fetching a location."""
 
     pass
 
@@ -1434,7 +1434,7 @@ class LocationOutput(
 class LocationContext(
     LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Context
 ):
-    """🔖Context fields for understanding a location by an LLM."""
+    """🔖️Context fields for understanding a location by an LLM."""
 
     pass
 
@@ -1442,26 +1442,26 @@ class LocationContext(
 class LocationPrediction(
     LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Prediction
 ):
-    """🔖Prediction fields for LLM-based location inference."""
+    """🔖️Prediction fields for LLM-based location inference."""
 
     pass
 
 
 class LocationNode(Node):
-    """🔖GraphQL node exposing location data."""
+    """🔖️GraphQL node exposing location data."""
 
     class Meta:
         representation = LocationOutput
 
 
 class LocationInputNode(InputNode):
-    """🔖GraphQL input node for location mutations."""
+    """🔖️GraphQL input node for location mutations."""
 
     class Meta:
         representation = LocationInput
 
 
-# #endregion 📍Location
+# #endregion 📍️Location
 
 
 # #region ✍️Author
@@ -1475,37 +1475,37 @@ class AuthorNameField(RealField, abc.ABC):
 
 
 class AuthorEmailField(RealField, abc.ABC):
-    """🔖Field mixin for the email of a author."""
+    """🔖️Field mixin for the email of a author."""
 
     email: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class AuthorRankField(RealField, abc.ABC):
-    """🔖Field mixin for the rank of a author."""
+    """🔖️Field mixin for the rank of a author."""
 
     rank: int = pydantic.Field(default=0)
 
 
 class AuthorId(AuthorEmailField, Id):
-    """🔖Identity fields for uniquely identifying a author."""
+    """🔖️Identity fields for uniquely identifying a author."""
 
     pass
 
 
 class AuthorProps(AuthorEmailField, AuthorNameField, Props):
-    """🔖Property fields for a author."""
+    """🔖️Property fields for a author."""
 
     pass
 
 
 class AuthorInput(AuthorEmailField, AuthorNameField, Input):
-    """🔖Input fields for creating or updating a author."""
+    """🔖️Input fields for creating or updating a author."""
 
     pass
 
 
 class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
-    """🔖Output fields returned when fetching a author."""
+    """🔖️Output fields returned when fetching a author."""
 
     pass
 
@@ -1531,7 +1531,7 @@ class Author(
 
 
 class AuthorInputNode(InputNode):
-    """🔖GraphQL input node for author mutations."""
+    """🔖️GraphQL input node for author mutations."""
 
     class Meta:
         representation = AuthorInput
@@ -1540,18 +1540,18 @@ class AuthorInputNode(InputNode):
 # #endregion ✍️Author
 
 
-# #region 🔥ArtifactAuthor
+# #region 🔥️ArtifactAuthor
 # Artifact-author association entity linking artifacts to authors by email.
 
 
 class ArtifactAuthorEmailField(RealField, abc.ABC):
-    """🏺Field mixin for the email of a artifact author."""
+    """🏺️Field mixin for the email of a artifact author."""
 
     author_email: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
-    """🔗Association entity linking an artifact to an author by email."""
+    """🔗️Association entity linking an artifact to an author by email."""
 
     PLURAL = "artifact_authors"
 
@@ -1569,27 +1569,27 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity):
         ]
 
 
-# #endregion 🔥ArtifactAuthor
+# #endregion 🔥️ArtifactAuthor
 
 
-# #region 📄File
+# #region 📄️File
 # File entity for managing binary assets with metadata and hashing.
 
 
 class FileIdField(RealField, abc.ABC):
-    """📄Field mixin for the id of a file."""
+    """📄️Field mixin for the id of a file."""
 
     id: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class FileNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a file."""
+    """🔖️Field mixin for the name of a file."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class FileRemoteField(RealField, abc.ABC):
-    """🔖Field mixin for the remote of a file."""
+    """🔖️Field mixin for the remote of a file."""
 
     remote: typing.Optional[str] = pydantic.Field(
         default=None, max_length=URL_LENGTH_LIMIT
@@ -1597,7 +1597,7 @@ class FileRemoteField(RealField, abc.ABC):
 
 
 class FileFolderField(RealField, abc.ABC):
-    """📁Field mixin for the folder of a file."""
+    """📁️Field mixin for the folder of a file."""
 
     folder: typing.Optional[str] = pydantic.Field(
         default=None, max_length=URL_LENGTH_LIMIT
@@ -1605,13 +1605,13 @@ class FileFolderField(RealField, abc.ABC):
 
 
 class FileSizeField(RealField, abc.ABC):
-    """🔖Field mixin for the size of a file."""
+    """🔖️Field mixin for the size of a file."""
 
     size: typing.Optional[int] = pydantic.Field(default=None)
 
 
 class FileHashField(RealField, abc.ABC):
-    """🔖Field mixin for the hash of a file."""
+    """🔖️Field mixin for the hash of a file."""
 
     hash: typing.Optional[str] = pydantic.Field(
         default=None, max_length=NAME_LENGTH_LIMIT
@@ -1619,19 +1619,19 @@ class FileHashField(RealField, abc.ABC):
 
 
 class FileBlobField(RealField, abc.ABC):
-    """🔖Field mixin for the blob of a file."""
+    """🔖️Field mixin for the blob of a file."""
 
     blob: typing.Optional[str] = pydantic.Field(default=None)
 
 
 class FileCreatedAtField(RealField, abc.ABC):
-    """🆕Field mixin for the created at of a file."""
+    """🆕️Field mixin for the created at of a file."""
 
     createdAt: datetime.datetime = pydantic.Field()
 
 
 class FileCreatedByField(RealField, abc.ABC):
-    """🔖Field mixin for the created by of a file."""
+    """🔖️Field mixin for the created by of a file."""
 
     createdBy: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -1639,13 +1639,13 @@ class FileCreatedByField(RealField, abc.ABC):
 
 
 class FileUpdatedAtField(RealField, abc.ABC):
-    """🔁Field mixin for the updated at of a file."""
+    """🔁️Field mixin for the updated at of a file."""
 
     updatedAt: datetime.datetime = pydantic.Field()
 
 
 class FileUpdatedByField(RealField, abc.ABC):
-    """🔖Field mixin for the updated by of a file."""
+    """🔖️Field mixin for the updated by of a file."""
 
     updatedBy: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -1653,7 +1653,7 @@ class FileUpdatedByField(RealField, abc.ABC):
 
 
 class FileId(FileIdField, Id):
-    """🔖Identity fields for uniquely identifying a file."""
+    """🔖️Identity fields for uniquely identifying a file."""
 
     pass
 
@@ -1697,7 +1697,7 @@ class FileInput(
 
 
 class FileContext(FileNameField, FileIdField, Context):
-    """🔖Context fields for understanding a file by an LLM."""
+    """🔖️Context fields for understanding a file by an LLM."""
 
     pass
 
@@ -1749,33 +1749,33 @@ class File(
 
 
 class FileInputNode(InputNode):
-    """🔖GraphQL input node for file mutations."""
+    """🔖️GraphQL input node for file mutations."""
 
     class Meta:
         representation = FileInput
 
 
-# #endregion 📄File
+# #endregion 📄️File
 
 
-# #region 📁Folder
+# #region 📁️Folder
 # Folder entity for hierarchical organization of kit content.
 
 
 class FolderIdField(RealField, abc.ABC):
-    """🔖Field mixin for the id of a folder."""
+    """🔖️Field mixin for the id of a folder."""
 
     id: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class FolderNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a folder."""
+    """🔖️Field mixin for the name of a folder."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class FolderParentField(RealField, abc.ABC):
-    """🔖Field mixin for the parent of a folder."""
+    """🔖️Field mixin for the parent of a folder."""
 
     parent: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -1783,19 +1783,19 @@ class FolderParentField(RealField, abc.ABC):
 
 
 class FolderDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a folder."""
+    """🔖️Field mixin for the description of a folder."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class FolderCreatedAtField(RealField, abc.ABC):
-    """🔖Field mixin for the created at of a folder."""
+    """🔖️Field mixin for the created at of a folder."""
 
     createdAt: datetime.datetime = pydantic.Field()
 
 
 class FolderCreatedByField(RealField, abc.ABC):
-    """🔖Field mixin for the created by of a folder."""
+    """🔖️Field mixin for the created by of a folder."""
 
     createdBy: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -1803,13 +1803,13 @@ class FolderCreatedByField(RealField, abc.ABC):
 
 
 class FolderUpdatedAtField(RealField, abc.ABC):
-    """🔖Field mixin for the updated at of a folder."""
+    """🔖️Field mixin for the updated at of a folder."""
 
     updatedAt: datetime.datetime = pydantic.Field()
 
 
 class FolderUpdatedByField(RealField, abc.ABC):
-    """🔖Field mixin for the updated by of a folder."""
+    """🔖️Field mixin for the updated by of a folder."""
 
     updatedBy: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -1817,7 +1817,7 @@ class FolderUpdatedByField(RealField, abc.ABC):
 
 
 class FolderId(FolderIdField, Id):
-    """🔖Identity fields for uniquely identifying a folder."""
+    """🔖️Identity fields for uniquely identifying a folder."""
 
     pass
 
@@ -1855,7 +1855,7 @@ class FolderInput(
 
 
 class FolderContext(FolderNameField, FolderIdField, Context):
-    """🔖Context fields for understanding a folder by an LLM."""
+    """🔖️Context fields for understanding a folder by an LLM."""
 
     pass
 
@@ -1944,57 +1944,57 @@ class Folder(
 
 
 class FolderInputNode(InputNode):
-    """🔖GraphQL input node for folder mutations."""
+    """🔖️GraphQL input node for folder mutations."""
 
     class Meta:
         representation = FolderInput
 
 
-# #endregion 📁Folder
+# #endregion 📁️Folder
 
 
-# #region 📏Benchmark
+# #region 📏️Benchmark
 # Benchmark entity for defining performance metrics with min-max bounds.
 
 
 class BenchmarkNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a benchmark."""
+    """🔖️Field mixin for the name of a benchmark."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class BenchmarkIconField(RealField, abc.ABC):
-    """🔖Field mixin for the icon of a benchmark."""
+    """🔖️Field mixin for the icon of a benchmark."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class BenchmarkMinField(RealField, abc.ABC):
-    """🔖Field mixin for the min of a benchmark."""
+    """🔖️Field mixin for the min of a benchmark."""
 
     min: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class BenchmarkMinExcludedField(RealField, abc.ABC):
-    """🔖Field mixin for the min excluded of a benchmark."""
+    """🔖️Field mixin for the min excluded of a benchmark."""
 
     min_excluded: bool = pydantic.Field(default=False)
 
 
 class BenchmarkMaxField(RealField, abc.ABC):
-    """🔖Field mixin for the max of a benchmark."""
+    """🔖️Field mixin for the max of a benchmark."""
 
     max: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class BenchmarkMaxExcludedField(RealField, abc.ABC):
-    """🔖Field mixin for the max excluded of a benchmark."""
+    """🔖️Field mixin for the max excluded of a benchmark."""
 
     max_excluded: bool = pydantic.Field(default=False)
 
 
 class BenchmarkId(BenchmarkNameField, Id):
-    """🔖Identity fields for uniquely identifying a benchmark."""
+    """🔖️Identity fields for uniquely identifying a benchmark."""
 
     pass
 
@@ -2181,99 +2181,99 @@ def benchmark_main():
     _bench("Validation/Metabolism", test_validate_metabolism)
 
 
-# #endregion 📏Benchmark
+# #endregion 📏️Benchmark
 
 
-# #region 🔬Quality
+# #region 🔬️Quality
 # Quality entity for defining measurable properties with units and constraints.
 
 
 class QualityKeyField(RealField, abc.ABC):
-    """🔖Field mixin for the key of a quality."""
+    """🔖️Field mixin for the key of a quality."""
 
     key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a quality."""
+    """🔖️Field mixin for the name of a quality."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a quality."""
+    """🔖️Field mixin for the description of a quality."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class QualityUriField(RealField, abc.ABC):
-    """🔖Field mixin for the uri of a quality."""
+    """🔖️Field mixin for the uri of a quality."""
 
     uri: str = pydantic.Field(default="", max_length=URI_LENGTH_LIMIT)
 
 
 class QualityScalableField(RealField, abc.ABC):
-    """🔖Field mixin for the scalable of a quality."""
+    """🔖️Field mixin for the scalable of a quality."""
 
     scalable: bool = pydantic.Field(default=False)
 
 
 class QualityKindField(RealField, abc.ABC):
-    """🔖Field mixin for the kind of a quality."""
+    """🔖️Field mixin for the kind of a quality."""
 
     kind: int = pydantic.Field(default=0)
 
 
 class QualitySiField(RealField, abc.ABC):
-    """🔖Field mixin for the si of a quality."""
+    """🔖️Field mixin for the si of a quality."""
 
     si: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityImperialField(RealField, abc.ABC):
-    """🔖Field mixin for the imperial of a quality."""
+    """🔖️Field mixin for the imperial of a quality."""
 
     imperial: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class QualityMinField(RealField, abc.ABC):
-    """🔖Field mixin for the min of a quality."""
+    """🔖️Field mixin for the min of a quality."""
 
     min: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class QualityMinExcludedField(RealField, abc.ABC):
-    """🔖Field mixin for the min excluded of a quality."""
+    """🔖️Field mixin for the min excluded of a quality."""
 
     min_excluded: bool = pydantic.Field(default=True)
 
 
 class QualityMaxField(RealField, abc.ABC):
-    """🔖Field mixin for the max of a quality."""
+    """🔖️Field mixin for the max of a quality."""
 
     max: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class QualityMaxExcludedField(RealField, abc.ABC):
-    """🔖Field mixin for the max excluded of a quality."""
+    """🔖️Field mixin for the max excluded of a quality."""
 
     max_excluded: bool = pydantic.Field(default=True)
 
 
 class QualityDefaultField(RealField, abc.ABC):
-    """🔖Field mixin for the default of a quality."""
+    """🔖️Field mixin for the default of a quality."""
 
     default: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class QualityFormulaField(RealField, abc.ABC):
-    """🔖Field mixin for the formula of a quality."""
+    """🔖️Field mixin for the formula of a quality."""
 
     formula: str = pydantic.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
 
 
 class QualityFolderField(RealField, abc.ABC):
-    """🔖Field mixin for the folder of a quality."""
+    """🔖️Field mixin for the folder of a quality."""
 
     folder: typing.Optional[str] = pydantic.Field(
         default=None, max_length=NAME_LENGTH_LIMIT
@@ -2281,7 +2281,7 @@ class QualityFolderField(RealField, abc.ABC):
 
 
 class QualityIconField(RealField, abc.ABC):
-    """🔖Field mixin for the icon of a quality."""
+    """🔖️Field mixin for the icon of a quality."""
 
     icon: typing.Optional[str] = pydantic.Field(
         default=None, max_length=URL_LENGTH_LIMIT
@@ -2289,7 +2289,7 @@ class QualityIconField(RealField, abc.ABC):
 
 
 class QualityImageField(RealField, abc.ABC):
-    """🔖Field mixin for the image of a quality."""
+    """🔖️Field mixin for the image of a quality."""
 
     image: typing.Optional[str] = pydantic.Field(
         default=None, max_length=URL_LENGTH_LIMIT
@@ -2297,7 +2297,7 @@ class QualityImageField(RealField, abc.ABC):
 
 
 class QualityUnitField(RealField, abc.ABC):
-    """🔖Field mixin for the unit of a quality."""
+    """🔖️Field mixin for the unit of a quality."""
 
     unit: typing.Optional[str] = pydantic.Field(
         default=None, max_length=NAME_LENGTH_LIMIT
@@ -2305,19 +2305,19 @@ class QualityUnitField(RealField, abc.ABC):
 
 
 class QualityCreatedField(RealField, abc.ABC):
-    """🔖Field mixin for the created of a quality."""
+    """🔖️Field mixin for the created of a quality."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class QualityUpdatedField(RealField, abc.ABC):
-    """🔖Field mixin for the updated of a quality."""
+    """🔖️Field mixin for the updated of a quality."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class QualityId(QualityKeyField, Id):
-    """🔖Identity fields for uniquely identifying a quality."""
+    """🔖️Identity fields for uniquely identifying a quality."""
 
     pass
 
@@ -2377,7 +2377,7 @@ class QualityInput(
 class QualityContext(
     QualityDescriptionField, QualityNameField, QualityKeyField, Context
 ):
-    """🔖Context fields for understanding a quality by an LLM."""
+    """🔖️Context fields for understanding a quality by an LLM."""
 
     pass
 
@@ -2442,21 +2442,21 @@ class Quality(
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# #endregion 🔬Quality
+# #endregion 🔬️Quality
 
 
-# #region ⚓Port
+# #region ⚓️Port
 # Port entity for defining connection interfaces on types.
 
 
 class PortNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a port."""
+    """🔖️Field mixin for the name of a port."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class PortDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a port."""
+    """🔖️Field mixin for the description of a port."""
 
     description: typing.Optional[str] = pydantic.Field(
         default=None, max_length=DESCRIPTION_LENGTH_LIMIT
@@ -2464,7 +2464,7 @@ class PortDescriptionField(RealField, abc.ABC):
 
 
 class PortIconField(RealField, abc.ABC):
-    """🔖Field mixin for the icon of a port."""
+    """🔖️Field mixin for the icon of a port."""
 
     icon: typing.Optional[str] = pydantic.Field(
         default=None, max_length=URL_LENGTH_LIMIT
@@ -2472,19 +2472,19 @@ class PortIconField(RealField, abc.ABC):
 
 
 class PortMaxChildrenField(RealField, abc.ABC):
-    """🔖Field mixin for the max children of a port."""
+    """🔖️Field mixin for the max children of a port."""
 
     maxChildren: int = pydantic.Field(default=1, ge=0)
 
 
 class PortCompatiblePortsField(MaskedField, abc.ABC):
-    """🔖Field mixin for the compatible ports of a port."""
+    """🔖️Field mixin for the compatible ports of a port."""
 
     compatiblePorts: list[str] = pydantic.Field(default_factory=list)
 
 
 class PortId(PortNameField, Id):
-    """🔖Identity fields for uniquely identifying a port."""
+    """🔖️Identity fields for uniquely identifying a port."""
 
     pass
 
@@ -2497,7 +2497,7 @@ class PortProps(
     PortNameField,
     Props,
 ):
-    """🔖Property fields for a port."""
+    """🔖️Property fields for a port."""
 
     pass
 
@@ -2510,7 +2510,7 @@ class PortInput(
     PortNameField,
     Input,
 ):
-    """🔖Input fields for creating or updating a port."""
+    """🔖️Input fields for creating or updating a port."""
 
     attributes: list[AttributeInput] = pydantic.Field(default_factory=list)
 
@@ -2523,7 +2523,7 @@ class PortOutput(
     PortNameField,
     Output,
 ):
-    """🔖Output fields returned when fetching a port."""
+    """🔖️Output fields returned when fetching a port."""
 
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
@@ -2535,7 +2535,7 @@ class Port(
     PortNameField,
     TableEntity,
 ):
-    """🔖Port entity defining a named connection interface on a type."""
+    """🔖️Port entity defining a named connection interface on a type."""
 
     PLURAL = "ports"
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
@@ -2545,51 +2545,51 @@ class Port(
 
 
 class PortInputNode(InputNode):
-    """🔖GraphQL input node for port mutations."""
+    """🔖️GraphQL input node for port mutations."""
 
     class Meta:
         representation = PortInput
 
 
-# #endregion ⚓Port
+# #endregion ⚓️Port
 
 
-# #region 📊Prop
+# #region 📊️Prop
 # Prop entity for key-value property pairs with units.
 
 
 class PropKeyField(RealField, abc.ABC):
-    """🔖Field mixin for the key of a prop."""
+    """🔖️Field mixin for the key of a prop."""
 
     key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class PropValueField(RealField, abc.ABC):
-    """🔖Field mixin for the value of a prop."""
+    """🔖️Field mixin for the value of a prop."""
 
     value: str = pydantic.Field(max_length=VALUE_LENGTH_LIMIT)
 
 
 class PropUnitField(RealField, abc.ABC):
-    """🔖Field mixin for the unit of a prop."""
+    """🔖️Field mixin for the unit of a prop."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class PropCreatedField(RealField, abc.ABC):
-    """🔖Field mixin for the created of a prop."""
+    """🔖️Field mixin for the created of a prop."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class PropUpdatedField(RealField, abc.ABC):
-    """🔖Field mixin for the updated of a prop."""
+    """🔖️Field mixin for the updated of a prop."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class PropId(PropKeyField, Id):
-    """🔖Identity fields for uniquely identifying a prop."""
+    """🔖️Identity fields for uniquely identifying a prop."""
 
     pass
 
@@ -2608,7 +2608,7 @@ class PropProps(
 
 
 class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
-    """🔖Input fields for creating or updating a prop."""
+    """🔖️Input fields for creating or updating a prop."""
 
     pass
 
@@ -2681,13 +2681,13 @@ class Prop(
 
 
 class PropInputNode(InputNode):
-    """🔖GraphQL input node for prop mutations."""
+    """🔖️GraphQL input node for prop mutations."""
 
     class Meta:
         representation = PropInput
 
 
-# #endregion 📊Prop
+# #endregion 📊️Prop
 
 
 # #region 🏷️Tag
@@ -2701,13 +2701,13 @@ class TagIdField(RealField, abc.ABC):
 
 
 class TagNameField(RealField, abc.ABC):
-    """🟫Field mixin for the name of a tag."""
+    """🟫️Field mixin for the name of a tag."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class TagDescriptionField(RealField, abc.ABC):
-    """💠Field mixin for the description of a tag."""
+    """💠️Field mixin for the description of a tag."""
 
     description: typing.Optional[str] = pydantic.Field(
         default=None, max_length=DESCRIPTION_LENGTH_LIMIT
@@ -2723,13 +2723,13 @@ class TagIconField(RealField, abc.ABC):
 
 
 class TagOrderField(RealField, abc.ABC):
-    """🔳Field mixin for the order of a tag."""
+    """🔳️Field mixin for the order of a tag."""
 
     order: int = pydantic.Field(default=0)
 
 
 class TagId(TagIdField, Id):
-    """🔲Identity fields for uniquely identifying a tag."""
+    """🔲️Identity fields for uniquely identifying a tag."""
 
     pass
 
@@ -2748,7 +2748,7 @@ class Tag(
 # #endregion 🏷️Tag
 
 
-# #region 💡Concept
+# #region 💡️Concept
 # Concept entity for semantic grouping of design elements.
 
 
@@ -2781,13 +2781,13 @@ class ConceptIconField(RealField, abc.ABC):
 
 
 class ConceptOrderField(RealField, abc.ABC):
-    """◻️Field mixin for the order of a concept."""
+    """◻Field mixin for the order of a concept."""
 
     order: int = pydantic.Field(default=0)
 
 
 class ConceptId(ConceptIdField, Id):
-    """◼️Identity fields for uniquely identifying a concept."""
+    """◼Identity fields for uniquely identifying a concept."""
 
     pass
 
@@ -2803,15 +2803,15 @@ class Concept(
     """Concept entity for semantic grouping with name, icon and order."""
 
 
-# #endregion 💡Concept
+# #endregion 💡️Concept
 
 
-# #region 🗿Representation
+# #region 🗿️Representation
 # Representation entity for 3D geometry representations linked to files.
 
 
 class RepresentationNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a representation."""
+    """🔖️Field mixin for the name of a representation."""
 
     name: typing.Optional[str] = pydantic.Field(
         default=None, max_length=NAME_LENGTH_LIMIT
@@ -2819,31 +2819,31 @@ class RepresentationNameField(RealField, abc.ABC):
 
 
 class RepresentationUrlField(RealField, abc.ABC):
-    """🔖Field mixin for the url of a representation."""
+    """🔖️Field mixin for the url of a representation."""
 
     url: str = pydantic.Field(max_length=URL_LENGTH_LIMIT)
 
 
 class RepresentationFileField(RealField, abc.ABC):
-    """🔖Field mixin for the file of a representation."""
+    """🔖️Field mixin for the file of a representation."""
 
     file: str = pydantic.Field(max_length=ID_LENGTH_LIMIT)
 
 
 class RepresentationDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a representation."""
+    """🔖️Field mixin for the description of a representation."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class RepresentationTagsField(MaskedField, abc.ABC):
-    """🔖Field mixin for the tags of a representation."""
+    """🔖️Field mixin for the tags of a representation."""
 
     tags: list[str] = pydantic.Field(default_factory=list)
 
 
 class RepresentationId(RepresentationTagsField, Id):
-    """🔖Identity fields for uniquely identifying a representation."""
+    """🔖️Identity fields for uniquely identifying a representation."""
 
     pass
 
@@ -2880,7 +2880,7 @@ class RepresentationContext(
     RepresentationNameField,
     Context,
 ):
-    """🔖Context fields for understanding a representation by an LLM."""
+    """🔖️Context fields for understanding a representation by an LLM."""
 
     attributes: list[AttributeContext] = pydantic.Field(default_factory=list)
 
@@ -2967,103 +2967,103 @@ class Representation(
 
 
 class NoRepresentationAssigned(NoParentAssigned):
-    """🔖No Representation Assigned definition."""
+    """🔖️No Representation Assigned definition."""
 
     def __str__(self):
         return " The entity has no parent representation assigned."
 
 
 class RepresentationInputNode(InputNode):
-    """🔖GraphQL input node for representation mutations."""
+    """🔖️GraphQL input node for representation mutations."""
 
     class Meta:
         representation = RepresentationInput
 
 
-# #endregion 🗿Representation
+# #endregion 🗿️Representation
 
 
-# #region 🔌Connector
+# #region 🔌️Connector
 
-# #region 🪙CompatiblePort
+# #region 🪙️CompatiblePort
 # Compatible port entity for specifying allowed port pairings on connectors.
 
 
 class CompatiblePortNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a compatible port."""
+    """🔖️Field mixin for the name of a compatible port."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class CompatiblePortOrderField(RealField, abc.ABC):
-    """🔖Field mixin for the order of a compatible port."""
+    """🔖️Field mixin for the order of a compatible port."""
 
     order: int = pydantic.Field()
 
 
 class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table):
-    """🔖Compatible port entity specifying an allowed port pairing."""
+    """🔖️Compatible port entity specifying an allowed port pairing."""
 
 
-# #endregion 🪙CompatiblePort
+# #endregion 🪙️CompatiblePort
 
 
 class ConnectorIdField(MaskedField, abc.ABC):
-    """🔖Field mixin for the id of a connector."""
+    """🔖️Field mixin for the id of a connector."""
 
     id_: str = pydantic.Field(default="", max_length=ID_LENGTH_LIMIT)
 
 
 class ConnectorDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a connector."""
+    """🔖️Field mixin for the description of a connector."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class ConnectorMandatoryField(RealField, abc.ABC):
-    """🔖Field mixin for the mandatory of a connector."""
+    """🔖️Field mixin for the mandatory of a connector."""
 
     is_mandatory: bool = pydantic.Field(default=False)
 
 
 class ConnectorMaxChildrenField(RealField, abc.ABC):
-    """🔖Field mixin for the max children of a connector."""
+    """🔖️Field mixin for the max children of a connector."""
 
     maxChildren: int = pydantic.Field(default=1, ge=0)
 
 
 class ConnectorPortField(RealField, abc.ABC):
-    """🔖Field mixin for the port of a connector."""
+    """🔖️Field mixin for the port of a connector."""
 
     port: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class ConnectorCompatiblePortsField(MaskedField, abc.ABC):
-    """🔖Field mixin for the compatible ports of a connector."""
+    """🔖️Field mixin for the compatible ports of a connector."""
 
     compatiblePorts: list[str] = pydantic.Field(default_factory=list)
 
 
 class ConnectorPointField(MaskedField, abc.ABC):
-    """🔖Field mixin for the point of a connector."""
+    """🔖️Field mixin for the point of a connector."""
 
     point: Point = pydantic.Field()
 
 
 class ConnectorDirectionField(MaskedField, abc.ABC):
-    """🔖Field mixin for the direction of a connector."""
+    """🔖️Field mixin for the direction of a connector."""
 
     direction: Vector = pydantic.Field()
 
 
 class ConnectorTField(RealField, abc.ABC):
-    """🔖Field mixin for the t of a connector."""
+    """🔖️Field mixin for the t of a connector."""
 
     t: float = pydantic.Field(default=0.0)
 
 
 class ConnectorId(ConnectorIdField, Id):
-    """🔖Identity fields for uniquely identifying a connector."""
+    """🔖️Identity fields for uniquely identifying a connector."""
 
     pass
 
@@ -3252,7 +3252,7 @@ class Connector(
 
 
 class ConnectorNotFound(NotFound):
-    """🔖Exception for a connector not found on a type."""
+    """🔖️Exception for a connector not found on a type."""
 
     def __init__(self, parent: "Type", id: "ConnectorId") -> None:
         self.parent = parent
@@ -3264,52 +3264,52 @@ class ConnectorNotFound(NotFound):
 
 
 class ConnectorInputNode(InputNode):
-    """🔖GraphQL input node for connector mutations."""
+    """🔖️GraphQL input node for connector mutations."""
 
     class Meta:
         representation = ConnectorInput
 
 
 class ConnectorIdInputNode(InputNode):
-    """🔖GraphQL input node for connector id mutations."""
+    """🔖️GraphQL input node for connector id mutations."""
 
     class Meta:
         representation = ConnectorId
 
 
-# #endregion 🔌Connector
+# #endregion 🔌️Connector
 
 
-# #region 🧱Type
+# #region 🧱️Type
 # Type entity for defining reusable parametric building blocks.
 
 
 class TypeNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a type."""
+    """🔖️Field mixin for the name of a type."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a type."""
+    """🔖️Field mixin for the description of a type."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class TypeIconField(RealField, abc.ABC):
-    """🔖Field mixin for the icon of a type."""
+    """🔖️Field mixin for the icon of a type."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeImageField(RealField, abc.ABC):
-    """🔖Field mixin for the image of a type."""
+    """🔖️Field mixin for the image of a type."""
 
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class TypeParentField(RealField, abc.ABC):
-    """🔖Field mixin for the parent of a type."""
+    """🔖️Field mixin for the parent of a type."""
 
     parent: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -3317,7 +3317,7 @@ class TypeParentField(RealField, abc.ABC):
 
 
 class TypeFamiliesField(RealField, abc.ABC):
-    """🔖Field mixin for the families of a type."""
+    """🔖️Field mixin for the families of a type."""
 
     families: list[str] = pydantic.Field(default_factory=list)
 
@@ -3375,13 +3375,13 @@ class Typology(
 
 
 class TypeIsAbstractField(RealField, abc.ABC):
-    """🔖Field mixin for the is abstract of a type."""
+    """🔖️Field mixin for the is abstract of a type."""
 
     is_abstract: bool = pydantic.Field(default=False)
 
 
 class TypeFolderField(RealField, abc.ABC):
-    """🔖Field mixin for the folder of a type."""
+    """🔖️Field mixin for the folder of a type."""
 
     folder: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -3389,61 +3389,61 @@ class TypeFolderField(RealField, abc.ABC):
 
 
 class TypeStockField(RealField, abc.ABC):
-    """🔖Field mixin for the stock of a type."""
+    """🔖️Field mixin for the stock of a type."""
 
     stock: int = pydantic.Field(default=2147483647)
 
 
 class TypeVariantField(RealField, abc.ABC):
-    """🔖Field mixin for the variant of a type."""
+    """🔖️Field mixin for the variant of a type."""
 
     variant: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeVirtualField(RealField, abc.ABC):
-    """🔖Field mixin for the virtual of a type."""
+    """🔖️Field mixin for the virtual of a type."""
 
     is_virtual: bool = pydantic.Field(default=False)
 
 
 class TypeScalableField(RealField, abc.ABC):
-    """🔖Field mixin for the scalable of a type."""
+    """🔖️Field mixin for the scalable of a type."""
 
     can_scale: bool = pydantic.Field(default=True)
 
 
 class TypeMirrborableField(RealField, abc.ABC):
-    """🔖Field mixin for the mirrborable of a type."""
+    """🔖️Field mixin for the mirrborable of a type."""
 
     can_mirror: bool = pydantic.Field(default=True)
 
 
 class TypeUnitField(RealField, abc.ABC):
-    """🔖Field mixin for the unit of a type."""
+    """🔖️Field mixin for the unit of a type."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class TypeLocationField(MaskedField, abc.ABC):
-    """🔖Field mixin for the location of a type."""
+    """🔖️Field mixin for the location of a type."""
 
     location: typing.Optional[Location] = pydantic.Field(default=None)
 
 
 class TypeCreatedField(RealField, abc.ABC):
-    """🔖Field mixin for the created of a type."""
+    """🔖️Field mixin for the created of a type."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class TypeUpdatedField(RealField, abc.ABC):
-    """🔖Field mixin for the updated of a type."""
+    """🔖️Field mixin for the updated of a type."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class TypeId(TypeNameField, TypeVariantField, Id):
-    """🔖Identity fields for uniquely identifying a type."""
+    """🔖️Identity fields for uniquely identifying a type."""
 
     pass
 
@@ -3744,7 +3744,7 @@ class Type(
 
 
 class TypeNotFound(NotFound):
-    """🔖Exception for a type not found in the kit."""
+    """🔖️Exception for a type not found in the kit."""
 
     def __init__(self, id: "TypeId") -> None:
         self.id = id
@@ -3755,14 +3755,14 @@ class TypeNotFound(NotFound):
 
 
 class NoTypeAssigned(NoParentAssigned):
-    """🔖No Type Assigned definition."""
+    """🔖️No Type Assigned definition."""
 
     def __str__(self):
         return " The entity has no parent type assigned."
 
 
 class TypeHasNotAllUsedConnectors(SpecificationError):
-    """🔖Type Has Not All Used Connectors definition."""
+    """🔖️Type Has Not All Used Connectors definition."""
 
     def __init__(self, missingConnectors: set[str]) -> None:
         self.missingConnectors = missingConnectors
@@ -3772,58 +3772,58 @@ class TypeHasNotAllUsedConnectors(SpecificationError):
 
 
 class TypeInputNode(InputNode):
-    """🔖GraphQL input node for type mutations."""
+    """🔖️GraphQL input node for type mutations."""
 
     class Meta:
         representation = TypeInput
 
 
 class TypeIdInputNode(InputNode):
-    """🔖GraphQL input node for type id mutations."""
+    """🔖️GraphQL input node for type id mutations."""
 
     class Meta:
         representation = TypeId
 
 
-# #endregion 🧱Type
+# #endregion 🧱️Type
 
 
-# #region 🎨Layer
+# #region 🎨️Layer
 # Layer entity for organizing design elements into visibility groups.
 
 
 class LayerNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a layer."""
+    """🔖️Field mixin for the name of a layer."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class LayerDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a layer."""
+    """🔖️Field mixin for the description of a layer."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class LayerColorField(RealField, abc.ABC):
-    """🎨Field mixin for the color of a layer."""
+    """🎨️Field mixin for the color of a layer."""
 
     color: str = pydantic.Field(default="", max_length=7)
 
 
 class LayerIsHiddenField(RealField, abc.ABC):
-    """🔖Field mixin for the is hidden of a layer."""
+    """🔖️Field mixin for the is hidden of a layer."""
 
     is_hidden: bool = pydantic.Field(default=False)
 
 
 class LayerIsLockedField(RealField, abc.ABC):
-    """🔖Field mixin for the is locked of a layer."""
+    """🔖️Field mixin for the is locked of a layer."""
 
     is_locked: bool = pydantic.Field(default=False)
 
 
 class LayerId(LayerNameField, Id):
-    """🔖Identity fields for uniquely identifying a layer."""
+    """🔖️Identity fields for uniquely identifying a layer."""
 
     pass
 
@@ -3881,15 +3881,15 @@ class Layer(
     attributes: list[Attribute] = pydantic.Field(default_factory=list)
 
 
-# #endregion 🎨Layer
+# #endregion 🎨️Layer
 
 
-# #region 🧩Piece
+# #region 🧩️Piece
 # Piece entity for placed instances of types within a design.
 
 
 class PieceIdField(MaskedField, abc.ABC):
-    """🔖Field mixin for the id of a piece."""
+    """🔖️Field mixin for the id of a piece."""
 
     id_: str = pydantic.Field(
         default="",
@@ -3898,67 +3898,67 @@ class PieceIdField(MaskedField, abc.ABC):
 
 
 class PieceDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a piece."""
+    """🔖️Field mixin for the description of a piece."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class PieceTypeField(MaskedField, abc.ABC):
-    """🔖Field mixin for the type of a piece."""
+    """🔖️Field mixin for the type of a piece."""
 
     type: typing.Optional[TypeId] = pydantic.Field(default=None)
 
 
 class PieceDesignField(MaskedField, abc.ABC):
-    """🔖Field mixin for the design of a piece."""
+    """🔖️Field mixin for the design of a piece."""
 
     designPiece: typing.Optional["DesignId"] = pydantic.Field(default=None)
 
 
 class PiecePlaneField(MaskedField, abc.ABC):
-    """🔖Field mixin for the plane of a piece."""
+    """🔖️Field mixin for the plane of a piece."""
 
     plane: typing.Optional[Plane] = pydantic.Field(default=None)
 
 
 class PieceCenterField(MaskedField, abc.ABC):
-    """🔖Field mixin for the center of a piece."""
+    """🔖️Field mixin for the center of a piece."""
 
     center: typing.Optional[Coordinate] = pydantic.Field(default=None)
 
 
 class PieceScaleField(RealField, abc.ABC):
-    """🔖Field mixin for the scale of a piece."""
+    """🔖️Field mixin for the scale of a piece."""
 
     scale: float = pydantic.Field(default=1.0)
 
 
 class PieceMirrorPlaneField(MaskedField, abc.ABC):
-    """🔖Field mixin for the mirror plane of a piece."""
+    """🔖️Field mixin for the mirror plane of a piece."""
 
     mirrorPlane: typing.Optional[Plane] = pydantic.Field(default=None)
 
 
 class PieceHiddenField(RealField, abc.ABC):
-    """🔖Field mixin for the hidden of a piece."""
+    """🔖️Field mixin for the hidden of a piece."""
 
     is_hidden: bool = pydantic.Field(default=False)
 
 
 class PieceLockedField(RealField, abc.ABC):
-    """🔖Field mixin for the locked of a piece."""
+    """🔖️Field mixin for the locked of a piece."""
 
     is_locked: bool = pydantic.Field(default=False)
 
 
 class PieceColorField(RealField, abc.ABC):
-    """🔖Field mixin for the color of a piece."""
+    """🔖️Field mixin for the color of a piece."""
 
     color: str = pydantic.Field(default="", max_length=7)
 
 
 class PieceId(PieceIdField, Id):
-    """🔖Identity fields for uniquely identifying a piece."""
+    """🔖️Identity fields for uniquely identifying a piece."""
 
     pass
 
@@ -3980,7 +3980,7 @@ class PieceProps(
 class PieceInput(
     PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input
 ):
-    """🔖Input fields for creating or updating a piece."""
+    """🔖️Input fields for creating or updating a piece."""
 
     plane: typing.Optional[PlaneInput] = pydantic.Field(default=None)
     center: typing.Optional[CoordinateInput] = pydantic.Field(default=None)
@@ -3990,7 +3990,7 @@ class PieceInput(
 class PieceContext(
     PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context
 ):
-    """🔖Context fields for understanding a piece by an LLM."""
+    """🔖️Context fields for understanding a piece by an LLM."""
 
     plane: typing.Optional[PlaneContext] = pydantic.Field(default=None)
     center: typing.Optional[CoordinateContext] = pydantic.Field(default=None)
@@ -4000,7 +4000,7 @@ class PieceContext(
 class PieceOutput(
     PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output
 ):
-    """🔖Output fields returned when fetching a piece."""
+    """🔖️Output fields returned when fetching a piece."""
 
     plane: typing.Optional[PlaneOutput] = pydantic.Field(default=None)
     center: typing.Optional[CoordinateOutput] = pydantic.Field(default=None)
@@ -4010,7 +4010,7 @@ class PieceOutput(
 class PiecePrediction(
     PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction
 ):
-    """🔖Prediction fields for LLM-based piece inference."""
+    """🔖️Prediction fields for LLM-based piece inference."""
 
     pass
 
@@ -4142,7 +4142,7 @@ class Piece(
 
 
 class PieceInputNode(InputNode):
-    """🔖GraphQL input node for piece mutations."""
+    """🔖️GraphQL input node for piece mutations."""
 
     class Meta:
         representation = PieceInput
@@ -4153,77 +4153,77 @@ class PieceInputNode(InputNode):
 
 
 class PieceIdInputNode(InputNode):
-    """🔖GraphQL input node for piece id mutations."""
+    """🔖️GraphQL input node for piece id mutations."""
 
     class Meta:
         representation = PieceId
 
 
-# #endregion 🧩Piece
+# #endregion 🧩️Piece
 
 
-# #region 👥Group
+# #region 👥️Group
 # Group entity for named collections of pieces in a design.
 
 
 class GroupNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a group."""
+    """🔖️Field mixin for the name of a group."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class GroupDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a group."""
+    """🔖️Field mixin for the description of a group."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class GroupColorField(RealField, abc.ABC):
-    """🔖Field mixin for the color of a group."""
+    """🔖️Field mixin for the color of a group."""
 
     color: str = pydantic.Field(default="", max_length=7)
 
 
 class GroupId(GroupNameField, Id):
-    """🔖Identity fields for uniquely identifying a group."""
+    """🔖️Identity fields for uniquely identifying a group."""
 
     pass
 
 
 class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
-    """🔖Property fields for a group."""
+    """🔖️Property fields for a group."""
 
     pass
 
 
 class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
-    """🔖Input fields for creating or updating a group."""
+    """🔖️Input fields for creating or updating a group."""
 
     pass
 
 
 class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
-    """🔖Output fields returned when fetching a group."""
+    """🔖️Output fields returned when fetching a group."""
 
     pieces: list["PieceOutput"] = pydantic.Field(default_factory=list)
     attributes: list[AttributeOutput] = pydantic.Field(default_factory=list)
 
 
 class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity):
-    """🔖Group entity for named collections of pieces."""
+    """🔖️Group entity for named collections of pieces."""
 
     PLURAL = "groups"
 
 
-# #endregion 👥Group
+# #endregion 👥️Group
 
 
-# #region ↔️Side
+# #region ↔Side
 # Side primitive for identifying a specific connector on a specific piece.
 
 
 class Side(BaseRepresentation):
-    """🔖Side primitive identifying a specific connector on a specific piece."""
+    """🔖️Side primitive identifying a specific connector on a specific piece."""
 
     piece: PieceId = pydantic.Field()
     designPiece: typing.Optional[PieceId] = pydantic.Field(default=None)
@@ -4260,31 +4260,31 @@ class Side(BaseRepresentation):
 
 
 class SideInput(Side, Input):
-    """🔖Input fields for creating or updating a side."""
+    """🔖️Input fields for creating or updating a side."""
 
     pass
 
 
 class SideContext(Side, Context):
-    """🔖Context fields for understanding a side by an LLM."""
+    """🔖️Context fields for understanding a side by an LLM."""
 
     pass
 
 
 class SideOutput(Side, Output):
-    """🔖Output fields returned when fetching a side."""
+    """🔖️Output fields returned when fetching a side."""
 
     pass
 
 
 class SidePrediction(Side, Prediction):
-    """🔖Prediction fields for LLM-based side inference."""
+    """🔖️Prediction fields for LLM-based side inference."""
 
     pass
 
 
 class SideNode(Node):
-    """🔖GraphQL node exposing side data."""
+    """🔖️GraphQL node exposing side data."""
 
     class Meta:
         representation = Side
@@ -4306,7 +4306,7 @@ class SideNode(Node):
 
 
 class SideInputNode(InputNode):
-    """🔖GraphQL input node for side mutations."""
+    """🔖️GraphQL input node for side mutations."""
 
     class Meta:
         representation = SideInput
@@ -4318,81 +4318,81 @@ class SideInputNode(InputNode):
     connector = ConnectorIdInputNode()
 
 
-# #endregion ↔️Side
+# #endregion ↔Side
 
 
-# #region 🔗Connection
+# #region 🔗️Connection
 # Connection entity for linking two pieces through their connectors.
 
 
 class ConnectionConnectedField(MaskedField, abc.ABC):
-    """🔖Field mixin for the connected of a connection."""
+    """🔖️Field mixin for the connected of a connection."""
 
     parent: Side = pydantic.Field()
 
 
 class ConnectionConnectingField(MaskedField, abc.ABC):
-    """🔖Field mixin for the connecting of a connection."""
+    """🔖️Field mixin for the connecting of a connection."""
 
     child: Side = pydantic.Field()
 
 
 class ConnectionDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a connection."""
+    """🔖️Field mixin for the description of a connection."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class ConnectionGapField(RealField, abc.ABC):
-    """🔖Field mixin for the gap of a connection."""
+    """🔖️Field mixin for the gap of a connection."""
 
     gap: float = pydantic.Field(default=0)
 
 
 class ConnectionShiftField(RealField, abc.ABC):
-    """🔖Field mixin for the shift of a connection."""
+    """🔖️Field mixin for the shift of a connection."""
 
     shift: float = pydantic.Field(default=0)
 
 
 class ConnectionRiseField(MaskedField, abc.ABC):
-    """🔖Field mixin for the rise of a connection."""
+    """🔖️Field mixin for the rise of a connection."""
 
     rise: float = pydantic.Field(default=0)
 
 
 class ConnectionRotationField(RealField, abc.ABC):
-    """🔖Field mixin for the rotation of a connection."""
+    """🔖️Field mixin for the rotation of a connection."""
 
     rotation: float = pydantic.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionTurnField(RealField, abc.ABC):
-    """🔖Field mixin for the turn of a connection."""
+    """🔖️Field mixin for the turn of a connection."""
 
     turn: float = pydantic.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionTiltField(RealField, abc.ABC):
-    """🔖Field mixin for the tilt of a connection."""
+    """🔖️Field mixin for the tilt of a connection."""
 
     tilt: float = pydantic.Field(ge=0, lt=360, default=0)
 
 
 class ConnectionUField(RealField, abc.ABC):
-    """🔖Field mixin for the u of a connection."""
+    """🔖️Field mixin for the u of a connection."""
 
     u: float = pydantic.Field(default=0)
 
 
 class ConnectionVField(RealField, abc.ABC):
-    """🔖Field mixin for the v of a connection."""
+    """🔖️Field mixin for the v of a connection."""
 
     v: float = pydantic.Field(default=0)
 
 
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
-    """🔖Identity fields for uniquely identifying a connection."""
+    """🔖️Identity fields for uniquely identifying a connection."""
 
     pass
 
@@ -4714,69 +4714,69 @@ class Connection(
 
 
 class ConnectionInputNode(InputNode):
-    """🔖GraphQL input node for connection mutations."""
+    """🔖️GraphQL input node for connection mutations."""
 
     class Meta:
         representation = ConnectionInput
 
 
-# #endregion 🔗Connection
+# #endregion 🔗️Connection
 
 
-# #region 📈Stat
+# #region 📈️Stat
 # Stat entity for recording computed statistics with bounds.
 
 
 class StatKeyField(RealField, abc.ABC):
-    """🔖Field mixin for the key of a stat."""
+    """🔖️Field mixin for the key of a stat."""
 
     key: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class StatUnitField(RealField, abc.ABC):
-    """🔖Field mixin for the unit of a stat."""
+    """🔖️Field mixin for the unit of a stat."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class StatMinField(RealField, abc.ABC):
-    """🔖Field mixin for the min of a stat."""
+    """🔖️Field mixin for the min of a stat."""
 
     min: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class StatMinExcludedField(RealField, abc.ABC):
-    """🔖Field mixin for the min excluded of a stat."""
+    """🔖️Field mixin for the min excluded of a stat."""
 
     min_excluded: bool = pydantic.Field(default=False)
 
 
 class StatMaxField(RealField, abc.ABC):
-    """🔖Field mixin for the max of a stat."""
+    """🔖️Field mixin for the max of a stat."""
 
     max: typing.Optional[float] = pydantic.Field(default=None)
 
 
 class StatMaxExcludedField(RealField, abc.ABC):
-    """🔖Field mixin for the max excluded of a stat."""
+    """🔖️Field mixin for the max excluded of a stat."""
 
     max_excluded: bool = pydantic.Field(default=False)
 
 
 class StatCreatedField(RealField, abc.ABC):
-    """🔖Field mixin for the created of a stat."""
+    """🔖️Field mixin for the created of a stat."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class StatUpdatedField(RealField, abc.ABC):
-    """🔖Field mixin for the updated of a stat."""
+    """🔖️Field mixin for the updated of a stat."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class StatId(StatKeyField, Id):
-    """🔖Identity fields for uniquely identifying a stat."""
+    """🔖️Identity fields for uniquely identifying a stat."""
 
     pass
 
@@ -4843,39 +4843,39 @@ class Stat(
     PLURAL = "stats"
 
 
-# #endregion 📈Stat
+# #endregion 📈️Stat
 
 
-# #region 📐Design
+# #region 📐️Design
 # Design entity for composing pieces and connections into assemblies.
 
 
 class DesignNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a design."""
+    """🔖️Field mixin for the name of a design."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a design."""
+    """🔖️Field mixin for the description of a design."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class DesignIconField(RealField, abc.ABC):
-    """🔖Field mixin for the icon of a design."""
+    """🔖️Field mixin for the icon of a design."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignImageField(RealField, abc.ABC):
-    """🔖Field mixin for the image of a design."""
+    """🔖️Field mixin for the image of a design."""
 
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class DesignParentField(RealField, abc.ABC):
-    """🔖Field mixin for the parent of a design."""
+    """🔖️Field mixin for the parent of a design."""
 
     parent: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -4883,7 +4883,7 @@ class DesignParentField(RealField, abc.ABC):
 
 
 class DesignFamiliesField(RealField, abc.ABC):
-    """🔖Field mixin for the families of a design."""
+    """🔖️Field mixin for the families of a design."""
 
     families: list[str] = pydantic.Field(default_factory=list)
 
@@ -4895,13 +4895,13 @@ class DesignTypologyField(RealField, abc.ABC):
 
 
 class DesignIsAbstractField(RealField, abc.ABC):
-    """🔖Field mixin for the is abstract of a design."""
+    """🔖️Field mixin for the is abstract of a design."""
 
     is_abstract: bool = pydantic.Field(default=False)
 
 
 class DesignFolderField(RealField, abc.ABC):
-    """🔖Field mixin for the folder of a design."""
+    """🔖️Field mixin for the folder of a design."""
 
     folder: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -4909,7 +4909,7 @@ class DesignFolderField(RealField, abc.ABC):
 
 
 class DesignActiveLayerField(RealField, abc.ABC):
-    """🔖Field mixin for the active layer of a design."""
+    """🔖️Field mixin for the active layer of a design."""
 
     activeLayer: typing.Optional[str] = pydantic.Field(
         default=None, max_length=ID_LENGTH_LIMIT
@@ -4917,43 +4917,43 @@ class DesignActiveLayerField(RealField, abc.ABC):
 
 
 class DesignLocationField(MaskedField, abc.ABC):
-    """🔖Field mixin for the location of a design."""
+    """🔖️Field mixin for the location of a design."""
 
     location: typing.Optional[Location] = pydantic.Field(default=None)
 
 
 class DesignUnitField(RealField, abc.ABC):
-    """🔖Field mixin for the unit of a design."""
+    """🔖️Field mixin for the unit of a design."""
 
     unit: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class DesignScalableField(RealField, abc.ABC):
-    """🔖Field mixin for the scalable of a design."""
+    """🔖️Field mixin for the scalable of a design."""
 
     can_scale: bool = pydantic.Field(default=True)
 
 
 class DesignMirrorableField(RealField, abc.ABC):
-    """🔖Field mixin for the mirrorable of a design."""
+    """🔖️Field mixin for the mirrorable of a design."""
 
     can_mirror: bool = pydantic.Field(default=True)
 
 
 class DesignCreatedField(RealField, abc.ABC):
-    """🔖Field mixin for the created of a design."""
+    """🔖️Field mixin for the created of a design."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class DesignUpdatedField(RealField, abc.ABC):
-    """🔖Field mixin for the updated of a design."""
+    """🔖️Field mixin for the updated of a design."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class DesignId(DesignNameField, Id):
-    """🔖Identity fields for uniquely identifying a design."""
+    """🔖️Identity fields for uniquely identifying a design."""
 
     pass
 
@@ -5047,7 +5047,7 @@ class DesignOutput(
 
 
 class DesignPrediction(DesignDescriptionField, Prediction):
-    """🔖Prediction fields for LLM-based design inference."""
+    """🔖️Prediction fields for LLM-based design inference."""
 
     pass
 
@@ -5230,39 +5230,39 @@ class Design(
 
 
 class NoDesignAssigned(NoParentAssigned):
-    """🔖No Design Assigned definition."""
+    """🔖️No Design Assigned definition."""
 
     def __str__(self):
-        return "👪 The entity has no parent design assigned."
+        return "👪️ The entity has no parent design assigned."
 
 
 class DesignInputNode(InputNode):
-    """🔖GraphQL input node for design mutations."""
+    """🔖️GraphQL input node for design mutations."""
 
     class Meta:
         representation = DesignInput
 
 
 class DesignIdInputNode(InputNode):
-    """🔖GraphQL input node for design id mutations."""
+    """🔖️GraphQL input node for design id mutations."""
 
     class Meta:
         representation = DesignId
 
 
-# #endregion 📐Design
+# #endregion 📐️Design
 
 
 # #region ⏱️Kit
 # Kit entity for packaging types, designs, qualities and metadata.
 
 
-# #region 🧬KitKind
+# #region 🧬️KitKind
 # KitKind discriminates the five persistence/transport forms of a Kit.
 
 
 class KitKind(str, enum.Enum):
-    """🔖Discriminator for the five kit persistence/transport forms.
+    """🔖️Discriminator for the five kit persistence/transport forms.
 
     Specs: Exactly five kit kinds exist:
     - DEV: Self-contained JSON file for development
@@ -5281,35 +5281,35 @@ class KitKind(str, enum.Enum):
 
 ALL_KIT_KINDS: list[KitKind] = list(KitKind)
 
-# #endregion 🧬KitKind
+# #endregion 🧬️KitKind
 
 
 class KitUriField(RealField, abc.ABC):
-    """🔖Field mixin for the uri of a kit."""
+    """🔖️Field mixin for the uri of a kit."""
 
     uri: str = pydantic.Field(max_length=URI_LENGTH_LIMIT)
 
 
 class KitNameField(RealField, abc.ABC):
-    """🔖Field mixin for the name of a kit."""
+    """🔖️Field mixin for the name of a kit."""
 
     name: str = pydantic.Field(max_length=NAME_LENGTH_LIMIT)
 
 
 class KitDescriptionField(RealField, abc.ABC):
-    """🔖Field mixin for the description of a kit."""
+    """🔖️Field mixin for the description of a kit."""
 
     description: str = pydantic.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 
 class KitIconField(RealField, abc.ABC):
-    """🔖Field mixin for the icon of a kit."""
+    """🔖️Field mixin for the icon of a kit."""
 
     icon: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitImageField(RealField, abc.ABC):
-    """🔖Field mixin for the image of a kit."""
+    """🔖️Field mixin for the image of a kit."""
 
     image: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
@@ -5321,43 +5321,43 @@ class KitPreviewField(RealField, abc.ABC):
 
 
 class KitVersionField(RealField, abc.ABC):
-    """📌Field mixin for the version of a kit."""
+    """📌️Field mixin for the version of a kit."""
 
     version: str = pydantic.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 
 class KitRemoteField(RealField, abc.ABC):
-    """🔖Field mixin for the remote of a kit."""
+    """🔖️Field mixin for the remote of a kit."""
 
     remote: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitHomepageField(RealField, abc.ABC):
-    """🔖Field mixin for the homepage of a kit."""
+    """🔖️Field mixin for the homepage of a kit."""
 
     homepage: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitLicenseField(RealField, abc.ABC):
-    """🔖Field mixin for the license of a kit."""
+    """🔖️Field mixin for the license of a kit."""
 
     license: str = pydantic.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 
 class KitCreatedField(RealField, abc.ABC):
-    """🔖Field mixin for the created of a kit."""
+    """🔖️Field mixin for the created of a kit."""
 
     created: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class KitUpdatedField(RealField, abc.ABC):
-    """🔖Field mixin for the updated of a kit."""
+    """🔖️Field mixin for the updated of a kit."""
 
     updated: datetime.datetime = pydantic.Field(default_factory=datetime.datetime.now)
 
 
 class KitId(KitUriField, Id):
-    """🔖Identity fields for uniquely identifying a kit."""
+    """🔖️Identity fields for uniquely identifying a kit."""
 
     pass
 
@@ -5404,7 +5404,7 @@ class KitInput(
 
 
 class KitContext(KitDescriptionField, KitNameField, Context):
-    """🔖Context fields for understanding a kit by an LLM."""
+    """🔖️Context fields for understanding a kit by an LLM."""
 
     pass
 
@@ -5441,7 +5441,7 @@ class KitOutput(
 
 @dataclasses.dataclass
 class KitGraphChange:
-    """🔄Bidirectional kit graph mutation with validation snapshot (TypeScript KitChange parity)."""
+    """🔄️Bidirectional kit graph mutation with validation snapshot (TypeScript KitChange parity)."""
 
     forward: dict
     backward: dict
@@ -5658,7 +5658,7 @@ class Kit(
     def id(self) -> str:
         return self.id()
 
-    # #region 📻Design Family Helpers
+    # #region 📻️Design Family Helpers
     # Helper functions for querying design hierarchies and families.
 
     def find_design_by_id(self, design_id: str) -> "Design":
@@ -5681,7 +5681,7 @@ class Kit(
 
     @staticmethod
     def _entity_family_ids(entity: typing.Any) -> set[str]:
-        """🔖Returns normalized family IDs for a type/design entity."""
+        """🔖️Returns normalized family IDs for a type/design entity."""
         ids: set[str] = set()
         for ref in getattr(entity, "families", None) or []:
             if isinstance(ref, str) and ref:
@@ -5695,14 +5695,14 @@ class Kit(
         return ids
 
     def get_primitive_design(self, design_id: str) -> "Design":
-        """🔖Returns a stable representative design for a non-hierarchical family group."""
+        """🔖️Returns a stable representative design for a non-hierarchical family group."""
         family = self.get_design_family(design_id)
         if len(family) == 0:
             return self.find_design_by_id(design_id)
         return sorted(family, key=lambda d: d.id)[0]
 
     def get_design_family(self, design_id: str) -> list["Design"]:
-        """🔖Gets all designs that share at least one family ID with the given design."""
+        """🔖️Gets all designs that share at least one family ID with the given design."""
         design = self.find_design_by_id(design_id)
         family_ids = self._entity_family_ids(design)
         return [
@@ -5710,7 +5710,7 @@ class Kit(
         ]
 
     def are_designs_in_same_family(self, design_id_a: str, design_id_b: str) -> bool:
-        """🔖Checks whether two designs share at least one family ID."""
+        """🔖️Checks whether two designs share at least one family ID."""
         a = self.find_design_by_id(design_id_a)
         b = self.find_design_by_id(design_id_b)
         return len(self._entity_family_ids(a) & self._entity_family_ids(b)) > 0
@@ -5718,11 +5718,11 @@ class Kit(
     def can_use_design_as_piece(
         self, container_design_id: str, piece_design_id: str
     ) -> bool:
-        """🔖Returns true if a design piece does not belong to the same family set."""
+        """🔖️Returns true if a design piece does not belong to the same family set."""
         return not self.are_designs_in_same_family(container_design_id, piece_design_id)
 
     def find_same_family_design_pieces(self, design_id: str) -> list["Piece"]:
-        """🔖Returns pieces that reference designs sharing at least one family ID."""
+        """🔖️Returns pieces that reference designs sharing at least one family ID."""
         design = self.find_design_by_id(design_id)
         return [
             p
@@ -5733,16 +5733,16 @@ class Kit(
         ]
 
     def get_design_siblings(self, design_id: str) -> list["Design"]:
-        """🔖Returns all other designs in the same non-hierarchical family set."""
+        """🔖️Returns all other designs in the same non-hierarchical family set."""
         return [d for d in self.get_design_family(design_id) if d.id != design_id]
 
     def get_design_children(self, design_id: str) -> list["Design"]:
-        """🔖Design families are non-hierarchical, so direct children are always empty."""
+        """🔖️Design families are non-hierarchical, so direct children are always empty."""
         return []
 
-    # #endregion 📻Design Family Helpers
+    # #endregion 📻️Design Family Helpers
 
-    # #region 🧊Type Family Helpers
+    # #region 🧊️Type Family Helpers
     # Helper functions for querying type hierarchies and families.
 
     def find_type_by_id(self, type_id: str) -> "Type":
@@ -5764,14 +5764,14 @@ class Kit(
         raise ValueError(f"Type {type_id} not found in kit {self.name}")
 
     def get_primitive_type(self, type_id: str) -> "Type":
-        """🔖Returns a stable representative type for a non-hierarchical family group."""
+        """🔖️Returns a stable representative type for a non-hierarchical family group."""
         family = self.get_type_family(type_id)
         if len(family) == 0:
             return self.find_type_by_id(type_id)
         return sorted(family, key=lambda t: t.id)[0]
 
     def get_type_family(self, type_id: str) -> list["Type"]:
-        """🔖Gets all types that share at least one family ID with the given type."""
+        """🔖️Gets all types that share at least one family ID with the given type."""
         type_ = self.find_type_by_id(type_id)
         family_ids = self._entity_family_ids(type_)
         return [
@@ -5779,33 +5779,33 @@ class Kit(
         ]
 
     def are_types_in_same_family(self, type_id_a: str, type_id_b: str) -> bool:
-        """🔖Checks whether two types share at least one family ID."""
+        """🔖️Checks whether two types share at least one family ID."""
         a = self.find_type_by_id(type_id_a)
         b = self.find_type_by_id(type_id_b)
         return len(self._entity_family_ids(a) & self._entity_family_ids(b)) > 0
 
     def get_type_siblings(self, type_id: str) -> list["Type"]:
-        """🔖Returns all other types in the same non-hierarchical family set."""
+        """🔖️Returns all other types in the same non-hierarchical family set."""
         return [t for t in self.get_type_family(type_id) if t.id != type_id]
 
     def get_type_children(self, type_id: str) -> list["Type"]:
-        """🔖Type families are non-hierarchical, so direct children are always empty."""
+        """🔖️Type families are non-hierarchical, so direct children are always empty."""
         return []
 
-    # #endregion 🧊Type Family Helpers
+    # #endregion 🧊️Type Family Helpers
 
-    # #region 🔍Kit Finders
+    # #region 🔍️Kit Finders
     # Helper functions for querying entities in kits.
 
     def find_port_in_kit(self, port_id: str) -> "Port":
-        """🔖Finds a port by ID in the kit."""
+        """🔖️Finds a port by ID in the kit."""
         for port in self.ports or []:
             if port.id == port_id:
                 return port
         raise ValueError(f"Port {port_id} not found in kit {self.name}")
 
     def find_piece_in_design(self, design_id: str, piece_id: str) -> "Piece":
-        """🔖Finds a piece by ID in a design."""
+        """🔖️Finds a piece by ID in a design."""
         design = self.find_design_by_id(design_id)
         for piece in design.pieces or []:
             if piece.id == piece_id:
@@ -5815,7 +5815,7 @@ class Kit(
     def find_connection_in_design(
         self, design_id: str, connection_id: str
     ) -> "Connection":
-        """🔖Finds a connection by ID in a design."""
+        """🔖️Finds a connection by ID in a design."""
         design = self.find_design_by_id(design_id)
         for connection in design.connections or []:
             if connection.id == connection_id:
@@ -5825,7 +5825,7 @@ class Kit(
     def find_piece_connections_in_design(
         self, design_id: str, piece_id: str
     ) -> list["Connection"]:
-        """🔖Finds all connections involving a piece in a design."""
+        """🔖️Finds all connections involving a piece in a design."""
         design = self.find_design_by_id(design_id)
         return [
             c
@@ -5834,14 +5834,14 @@ class Kit(
         ]
 
     def find_piece_type_in_design(self, design_id: str, piece_id: str) -> "Type":
-        """🔖Gets the type of a piece in a design."""
+        """🔖️Gets the type of a piece in a design."""
         piece = self.find_piece_in_design(design_id, piece_id)
         if not piece.type or not piece.type.id:
             raise ValueError(f"Piece {piece_id} has no type")
         return self.find_type_by_id(piece.type.id)
 
     def find_connector_in_type(self, type_id: str, connector_id: str) -> "Connector":
-        """🔖Finds a connector by ID in a type."""
+        """🔖️Finds a connector by ID in a type."""
         type_ = self.find_type_by_id(type_id)
         for connector in type_.connectors or []:
             if connector.id == connector_id:
@@ -5851,7 +5851,7 @@ class Kit(
     def find_connector_for_piece_in_connection(
         self, type_id: str, connection: "Connection", piece_id: str
     ) -> typing.Optional["Connector"]:
-        """🔖Gets the connector used by a piece in a connection."""
+        """🔖️Gets the connector used by a piece in a connection."""
         if connection.parent.piece.id == piece_id:
             connector_id = (
                 connection.parent.connector.id
@@ -5871,7 +5871,7 @@ class Kit(
     def find_used_connectors_by_piece_in_design(
         self, design_id: str, piece_id: str
     ) -> list["Connector"]:
-        """🔖Returns all connectors of a piece that are used in connections."""
+        """🔖️Returns all connectors of a piece that are used in connections."""
         piece = self.find_piece_in_design(design_id, piece_id)
         if not piece.type or not piece.type.id:
             return []
@@ -6007,16 +6007,16 @@ class Kit(
                 result.append(replacement_type)
         return result
 
-    # #endregion 🔍Kit Finders
+    # #endregion 🔍️Kit Finders
 
-    # #region 🎠Filter
+    # #region 🎠️Filter
     # Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
     @staticmethod
     def _select_best_representation_filter(
         representations: list, resolved_tag_ids: list[str]
     ):
-        """🧹Selects the best representation based on tag matching using Jaccard similarity."""
+        """🧹️Selects the best representation based on tag matching using Jaccard similarity."""
         if not representations:
             return None
         if not resolved_tag_ids:
@@ -6046,7 +6046,7 @@ class Kit(
     def _matches_glob_filter(
         name: str, glob_filter: typing.Optional[dict] = None
     ) -> bool:
-        """🧩Checks if a name passes a glob filter with include/exclude patterns."""
+        """🧩️Checks if a name passes a glob filter with include/exclude patterns."""
         if glob_filter is None:
             return True
         include = glob_filter.get("include") or []
@@ -6060,7 +6060,7 @@ class Kit(
         return True
 
     def filter_kit(self: "Kit", filter_spec: dict) -> "Kit":
-        """🔖General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.
+        """🔖️General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.
         When design_id is set, first performs transitive design-scoped subset extraction.
         Glob filters (include/exclude patterns on names) are applied to each entity kind afterwards.
         """
@@ -6151,7 +6151,7 @@ class Kit(
     def _filter_kit_by_design(
         self: "Kit", design_id: str, tags: typing.Optional[list[str]] = None
     ) -> "Kit":
-        """🔖Filters a kit to only include entities related to a specific design.
+        """🔖️Filters a kit to only include entities related to a specific design.
         Removes types not used by pieces, designs not the target, ports not used by connectors of used types,
         files not used by selected representations, tags/concepts only if referenced, and selects one representation per type based on tags.
         """
@@ -6299,14 +6299,14 @@ class Kit(
 
         return result
 
-    # #endregion 🎠Filter
+    # #endregion 🎠️Filter
 
-    # #region 🔄Kit graph mutations (TypeScript Kit parity)
+    # #region 🔄️Kit graph mutations (TypeScript Kit parity)
 
     def set_backbone(
         self: "Kit", backbone: typing.Callable[..., typing.Any] | None
     ) -> None:
-        """📎Attach optional backbone notified after committed graph changes."""
+        """📎️Attach optional backbone notified after committed graph changes."""
         self._backbone = backbone
 
     def set_strict_mode(self: "Kit", strict: bool) -> None:
@@ -6448,16 +6448,16 @@ class Kit(
         self._flatten_merkle[design_id] = cache
         return rep
 
-    # #endregion 🔄Kit graph mutations (TypeScript Kit parity)
+    # #endregion 🔄️Kit graph mutations (TypeScript Kit parity)
 
 
 # #endregion ⏱️Kit
 
 
-# #region 🔑Meta And Shallow
+# #region 🔑️Meta And Shallow
 # Meta And Shallow Types MUST provide lightweight entity representations.
 
-# #region 🎼Sub-entity Meta
+# #region 🎼️Sub-entity Meta
 
 AttributeMeta = typing.TypedDict(
     "AttributeMeta",
@@ -6690,7 +6690,7 @@ ConnectionMeta = typing.TypedDict(
 )
 """ConnectionMeta is Connection without attributes."""
 
-# #endregion 🎼Sub-entity Meta
+# #endregion 🎼️Sub-entity Meta
 
 # #region 🕰️Main Entity Meta
 
@@ -6756,7 +6756,7 @@ KitMeta = typing.TypedDict(
 
 # #endregion 🕰️Main Entity Meta
 
-# #region 🐻Shallow
+# #region 🐻️Shallow
 
 TypeShallow = typing.TypedDict(
     "TypeShallow",
@@ -6843,18 +6843,18 @@ KitShallow = typing.TypedDict(
 )
 """KitShallow is Kit with list fields replaced by Meta item lists."""
 
-# #endregion 🐻Shallow
+# #endregion 🐻️Shallow
 
-# #region 📎Meta And Shallow Conversions
+# #region 📎️Meta And Shallow Conversions
 
 
 def _strip_none(d: dict) -> dict:
-    """➖Remove keys with None values from a dict."""
+    """➖️Remove keys with None values from a dict."""
     return {k: v for k, v in d.items() if v is not None}
 
 
 def _extract_scalar_fields(d: dict, keys: list[str]) -> dict:
-    """🔖Extract only specified keys from a dict, skipping missing keys."""
+    """🔖️Extract only specified keys from a dict, skipping missing keys."""
     return {k: d[k] for k in keys if k in d}
 
 
@@ -6992,109 +6992,109 @@ _KIT_META_KEYS = [
 
 
 def attributeToMeta(d: dict) -> AttributeMeta:
-    """🔖Convert an attribute dict to AttributeMeta."""
+    """🔖️Convert an attribute dict to AttributeMeta."""
     return _extract_scalar_fields(d, _ATTRIBUTE_META_KEYS)
 
 
 def tagToMeta(d: dict) -> TagMeta:
-    """🔖Convert a tag dict to TagMeta."""
+    """🔖️Convert a tag dict to TagMeta."""
     return _extract_scalar_fields(d, _TAG_META_KEYS)
 
 
 def conceptToMeta(d: dict) -> ConceptMeta:
-    """🔖Convert a concept dict to ConceptMeta."""
+    """🔖️Convert a concept dict to ConceptMeta."""
     return _extract_scalar_fields(d, _CONCEPT_META_KEYS)
 
 
 def statToMeta(d: dict) -> StatMeta:
-    """🔖Convert a stat dict to StatMeta."""
+    """🔖️Convert a stat dict to StatMeta."""
     return _extract_scalar_fields(d, _STAT_META_KEYS)
 
 
 def propToMeta(d: dict) -> PropMeta:
-    """🔖Convert a prop dict to PropMeta (without attributes)."""
+    """🔖️Convert a prop dict to PropMeta (without attributes)."""
     return _extract_scalar_fields(d, _PROP_META_KEYS)
 
 
 def authorToMeta(d: dict) -> AuthorMeta:
-    """🔖Convert an author dict to AuthorMeta (without attributes)."""
+    """🔖️Convert an author dict to AuthorMeta (without attributes)."""
     return _extract_scalar_fields(d, _AUTHOR_META_KEYS)
 
 
 def fileToMeta(d: dict) -> FileMeta:
-    """🔖Convert a file dict to FileMeta (without blob)."""
+    """🔖️Convert a file dict to FileMeta (without blob)."""
     return _extract_scalar_fields(d, _FILE_META_KEYS)
 
 
 def folderToMeta(d: dict) -> FolderMeta:
-    """🔖Convert a folder dict to FolderMeta (without attributes)."""
+    """🔖️Convert a folder dict to FolderMeta (without attributes)."""
     return _extract_scalar_fields(d, _FOLDER_META_KEYS)
 
 
 def qualityToMeta(d: dict) -> QualityMeta:
-    """🔖Convert a quality dict to QualityMeta (without benchmarks and attributes)."""
+    """🔖️Convert a quality dict to QualityMeta (without benchmarks and attributes)."""
     return _extract_scalar_fields(d, _QUALITY_META_KEYS)
 
 
 def portToMeta(d: dict) -> PortMeta:
-    """🔖Convert a port dict to PortMeta (without attributes)."""
+    """🔖️Convert a port dict to PortMeta (without attributes)."""
     return _extract_scalar_fields(d, _PORT_META_KEYS)
 
 
 def representationToMeta(d: dict) -> RepresentationMeta:
-    """🔖Convert a representation dict to RepresentationMeta (without tags and attributes)."""
+    """🔖️Convert a representation dict to RepresentationMeta (without tags and attributes)."""
     return _extract_scalar_fields(d, _REPRESENTATION_META_KEYS)
 
 
 def connectorToMeta(d: dict) -> ConnectorMeta:
-    """🔖Convert a connector dict to ConnectorMeta (without props and attributes)."""
+    """🔖️Convert a connector dict to ConnectorMeta (without props and attributes)."""
     return _extract_scalar_fields(d, _CONNECTOR_META_KEYS)
 
 
 def layerToMeta(d: dict) -> LayerMeta:
-    """🔖Convert a layer dict to LayerMeta (without attributes)."""
+    """🔖️Convert a layer dict to LayerMeta (without attributes)."""
     return _extract_scalar_fields(d, _LAYER_META_KEYS)
 
 
 def pieceToMeta(d: dict) -> PieceMeta:
-    """🔖Convert a piece dict to PieceMeta (without props and attributes)."""
+    """🔖️Convert a piece dict to PieceMeta (without props and attributes)."""
     return _extract_scalar_fields(d, _PIECE_META_KEYS)
 
 
 def groupToMeta(d: dict) -> GroupMeta:
-    """🔖Convert a group dict to GroupMeta (without pieces and attributes)."""
+    """🔖️Convert a group dict to GroupMeta (without pieces and attributes)."""
     return _extract_scalar_fields(d, _GROUP_META_KEYS)
 
 
 def connectionToMeta(d: dict) -> ConnectionMeta:
-    """🔖Convert a connection dict to ConnectionMeta (without attributes)."""
+    """🔖️Convert a connection dict to ConnectionMeta (without attributes)."""
     return _extract_scalar_fields(d, _CONNECTION_META_KEYS)
 
 
 def typeToMeta(d: dict) -> TypeMeta:
-    """🔖Convert a type dict to TypeMeta (scalar fields only)."""
+    """🔖️Convert a type dict to TypeMeta (scalar fields only)."""
     return _extract_scalar_fields(d, _TYPE_META_KEYS)
 
 
 def designToMeta(d: dict) -> DesignMeta:
-    """🔖Convert a design dict to DesignMeta (scalar fields only)."""
+    """🔖️Convert a design dict to DesignMeta (scalar fields only)."""
     return _extract_scalar_fields(d, _DESIGN_META_KEYS)
 
 
 def kitToMeta(d: dict) -> KitMeta:
-    """🔖Convert a kit dict to KitMeta (scalar fields only)."""
+    """🔖️Convert a kit dict to KitMeta (scalar fields only)."""
     return _extract_scalar_fields(d, _KIT_META_KEYS)
 
 
 def _convert_list(items: list | None, converter: typing.Callable) -> list | None:
-    """⚡Convert a list of dicts using a converter function, returning None for empty/missing lists."""
+    """⚡️Convert a list of dicts using a converter function, returning None for empty/missing lists."""
     if not items:
         return None
     return [converter(item) for item in items]
 
 
 def typeToShallow(d: dict) -> TypeShallow:
-    """🔖Convert a type dict to TypeShallow (list fields replaced by Meta items)."""
+    """🔖️Convert a type dict to TypeShallow (list fields replaced by Meta items)."""
     result = _extract_scalar_fields(d, _TYPE_META_KEYS)
     concepts = _convert_list(
         d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c)
@@ -7122,7 +7122,7 @@ def typeToShallow(d: dict) -> TypeShallow:
 
 
 def designToShallow(d: dict) -> DesignShallow:
-    """🔖Convert a design dict to DesignShallow (list fields replaced by Meta items)."""
+    """🔖️Convert a design dict to DesignShallow (list fields replaced by Meta items)."""
     result = _extract_scalar_fields(d, _DESIGN_META_KEYS)
     concepts = _convert_list(
         d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c)
@@ -7159,7 +7159,7 @@ def designToShallow(d: dict) -> DesignShallow:
 
 
 def kitToShallow(d: dict) -> KitShallow:
-    """🔖Convert a kit dict to KitShallow (list fields replaced by Meta items)."""
+    """🔖️Convert a kit dict to KitShallow (list fields replaced by Meta items)."""
     result = _extract_scalar_fields(d, _KIT_META_KEYS)
     concepts = _convert_list(
         d.get("concepts"), lambda c: c if isinstance(c, str) else conceptToMeta(c)
@@ -7198,9 +7198,9 @@ def kitToShallow(d: dict) -> KitShallow:
     return result
 
 
-# #endregion 📎Meta And Shallow Conversions
+# #endregion 📎️Meta And Shallow Conversions
 
-# #endregion 🔑Meta And Shallow
+# #endregion 🔑️Meta And Shallow
 
 
 # #region 🖥️Hash
@@ -7209,7 +7209,7 @@ def kitToShallow(d: dict) -> KitShallow:
 
 # #region 🌩️HashWriter
 def _format_number_for_hash(n) -> str:
-    """🔢Format number to match JavaScript Number.toString() behavior.
+    """🔢️Format number to match JavaScript Number.toString() behavior.
     Integers (including floats with no fractional part) are formatted without decimal point.
     """
     if isinstance(n, int):
@@ -7220,14 +7220,14 @@ def _format_number_for_hash(n) -> str:
 
 
 def _ref_id(ref) -> str:
-    """🔖Extract id from a reference (dict with 'id' key or plain string)."""
+    """🔖️Extract id from a reference (dict with 'id' key or plain string)."""
     if isinstance(ref, dict):
         return ref["id"]
     return ref
 
 
 class HashWriter:
-    """🔖Feeds structured data into a SHA-256 hasher for deterministic hashing.
+    """🔖️Feeds structured data into a SHA-256 hasher for deterministic hashing.
     Uses length-prefixed strings and type tags for unambiguous encoding.
     """
 
@@ -7267,9 +7267,9 @@ class HashWriter:
 # #endregion 🌩️HashWriter
 
 
-# #region 🎵Hash Value Types
+# #region 🎵️Hash Value Types
 def hash_coordinate(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Coordinate value."""
+    """🔖️Computes SHA-256 hash of a Coordinate value."""
     w = HashWriter()
     w.writeString("Coordinate")
     w.writeString("u")
@@ -7280,7 +7280,7 @@ def hash_coordinate(c: dict) -> str:
 
 
 def hash_vec(v: dict) -> str:
-    """🔖Computes SHA-256 hash of a Vec value."""
+    """🔖️Computes SHA-256 hash of a Vec value."""
     w = HashWriter()
     w.writeString("Vec")
     w.writeString("u")
@@ -7291,7 +7291,7 @@ def hash_vec(v: dict) -> str:
 
 
 def hash_point(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Point value."""
+    """🔖️Computes SHA-256 hash of a Point value."""
     w = HashWriter()
     w.writeString("Point")
     w.writeString("x")
@@ -7304,7 +7304,7 @@ def hash_point(p: dict) -> str:
 
 
 def hash_vector(v: dict) -> str:
-    """🔖Computes SHA-256 hash of a Vector value."""
+    """🔖️Computes SHA-256 hash of a Vector value."""
     w = HashWriter()
     w.writeString("Vector")
     w.writeString("x")
@@ -7317,7 +7317,7 @@ def hash_vector(v: dict) -> str:
 
 
 def hash_plane(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Plane value."""
+    """🔖️Computes SHA-256 hash of a Plane value."""
     w = HashWriter()
     w.writeString("Plane")
     w.writeString("origin")
@@ -7330,7 +7330,7 @@ def hash_plane(p: dict) -> str:
 
 
 def hash_camera(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Camera value."""
+    """🔖️Computes SHA-256 hash of a Camera value."""
     w = HashWriter()
     w.writeString("Camera")
     w.writeString("forward")
@@ -7342,12 +7342,12 @@ def hash_camera(c: dict) -> str:
     return w.digest()
 
 
-# #endregion 🎵Hash Value Types
+# #endregion 🎵️Hash Value Types
 
 
-# #region 🎩Hash Entities
+# #region 🎩️Hash Entities
 def hash_attribute(a: dict) -> str:
-    """🔖Computes SHA-256 hash of an Attribute entity."""
+    """🔖️Computes SHA-256 hash of an Attribute entity."""
     w = HashWriter()
     w.writeString("Attribute")
     if a.get("definition") is not None:
@@ -7364,7 +7364,7 @@ def hash_attribute(a: dict) -> str:
 
 
 def hash_location(l: dict) -> str:
-    """🔖Computes SHA-256 hash of a Location entity."""
+    """🔖️Computes SHA-256 hash of a Location entity."""
     w = HashWriter()
     w.writeString("Location")
     if l.get("altitude") is not None:
@@ -7384,7 +7384,7 @@ def hash_location(l: dict) -> str:
 
 
 def hash_author(a: dict) -> str:
-    """🔖Computes SHA-256 hash of an Author entity."""
+    """🔖️Computes SHA-256 hash of an Author entity."""
     w = HashWriter()
     w.writeString("Author")
     attrs = a.get("attributes")
@@ -7403,7 +7403,7 @@ def hash_author(a: dict) -> str:
 
 
 def hash_file(f: dict) -> str:
-    """🔖Computes SHA-256 hash of a File entity."""
+    """🔖️Computes SHA-256 hash of a File entity."""
     w = HashWriter()
     w.writeString("File")
     if f.get("blob") is not None:
@@ -7429,7 +7429,7 @@ def hash_file(f: dict) -> str:
 
 
 def hash_folder(f: dict) -> str:
-    """🔖Computes SHA-256 hash of a Folder entity."""
+    """🔖️Computes SHA-256 hash of a Folder entity."""
     w = HashWriter()
     w.writeString("Folder")
     attrs = f.get("attributes")
@@ -7450,7 +7450,7 @@ def hash_folder(f: dict) -> str:
 
 
 def hash_benchmark(b: dict) -> str:
-    """🔖Computes SHA-256 hash of a Benchmark entity."""
+    """🔖️Computes SHA-256 hash of a Benchmark entity."""
     w = HashWriter()
     w.writeString("Benchmark")
     attrs = b.get("attributes")
@@ -7480,7 +7480,7 @@ def hash_benchmark(b: dict) -> str:
 
 
 def hash_quality(q: dict) -> str:
-    """🔖Computes SHA-256 hash of a Quality entity."""
+    """🔖️Computes SHA-256 hash of a Quality entity."""
     w = HashWriter()
     w.writeString("Quality")
     benchmarks = q.get("benchmarks")
@@ -7542,7 +7542,7 @@ def hash_quality(q: dict) -> str:
 
 
 def hash_port(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Port entity."""
+    """🔖️Computes SHA-256 hash of a Port entity."""
     w = HashWriter()
     w.writeString("Port")
     attrs = p.get("attributes")
@@ -7567,7 +7567,7 @@ def hash_port(p: dict) -> str:
 
 
 def hash_prop(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Prop entity."""
+    """🔖️Computes SHA-256 hash of a Prop entity."""
     w = HashWriter()
     w.writeString("Prop")
     attrs = p.get("attributes")
@@ -7587,7 +7587,7 @@ def hash_prop(p: dict) -> str:
 
 
 def hash_tag(t: dict) -> str:
-    """🔖Computes SHA-256 hash of a Tag entity."""
+    """🔖️Computes SHA-256 hash of a Tag entity."""
     w = HashWriter()
     w.writeString("Tag")
     attrs = t.get("attributes")
@@ -7608,7 +7608,7 @@ def hash_tag(t: dict) -> str:
 
 
 def hash_concept(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Concept entity."""
+    """🔖️Computes SHA-256 hash of a Concept entity."""
     w = HashWriter()
     w.writeString("Concept")
     attrs = c.get("attributes")
@@ -7629,7 +7629,7 @@ def hash_concept(c: dict) -> str:
 
 
 def hash_representation(m: dict) -> str:
-    """🔖Computes SHA-256 hash of a Representation entity."""
+    """🔖️Computes SHA-256 hash of a Representation entity."""
     w = HashWriter()
     w.writeString("Representation")
     attrs = m.get("attributes")
@@ -7654,7 +7654,7 @@ def hash_representation(m: dict) -> str:
 
 
 def hash_connector(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Connector entity."""
+    """🔖️Computes SHA-256 hash of a Connector entity."""
     w = HashWriter()
     w.writeString("Connector")
     attrs = c.get("attributes")
@@ -7689,7 +7689,7 @@ def hash_connector(c: dict) -> str:
 
 
 def hash_type(t: dict) -> str:
-    """🔖Computes SHA-256 hash of a Type entity."""
+    """🔖️Computes SHA-256 hash of a Type entity."""
     w = HashWriter()
     w.writeString("Type")
     attrs = t.get("attributes")
@@ -7754,7 +7754,7 @@ def hash_type(t: dict) -> str:
 
 
 def hash_layer(l: dict) -> str:
-    """🔖Computes SHA-256 hash of a Layer entity."""
+    """🔖️Computes SHA-256 hash of a Layer entity."""
     w = HashWriter()
     w.writeString("Layer")
     attrs = l.get("attributes")
@@ -7781,7 +7781,7 @@ def hash_layer(l: dict) -> str:
 
 
 def hash_stat(s: dict) -> str:
-    """🔖Computes SHA-256 hash of a Stat entity."""
+    """🔖️Computes SHA-256 hash of a Stat entity."""
     w = HashWriter()
     w.writeString("Stat")
     w.writeString("id")
@@ -7807,7 +7807,7 @@ def hash_stat(s: dict) -> str:
 
 
 def hash_group(g: dict) -> str:
-    """🔖Computes SHA-256 hash of a Group entity."""
+    """🔖️Computes SHA-256 hash of a Group entity."""
     w = HashWriter()
     w.writeString("Group")
     attrs = g.get("attributes")
@@ -7831,7 +7831,7 @@ def hash_group(g: dict) -> str:
 
 
 def hash_side(s: dict) -> str:
-    """🔖Computes SHA-256 hash of a Side value."""
+    """🔖️Computes SHA-256 hash of a Side value."""
     w = HashWriter()
     w.writeString("Side")
     if s.get("connector") is not None:
@@ -7846,7 +7846,7 @@ def hash_side(s: dict) -> str:
 
 
 def hash_connection(c: dict) -> str:
-    """🔖Computes SHA-256 hash of a Connection entity."""
+    """🔖️Computes SHA-256 hash of a Connection entity."""
     w = HashWriter()
     w.writeString("Connection")
     attrs = c.get("attributes")
@@ -7890,7 +7890,7 @@ def hash_connection(c: dict) -> str:
 
 
 def hash_piece(p: dict) -> str:
-    """🔖Computes SHA-256 hash of a Piece entity."""
+    """🔖️Computes SHA-256 hash of a Piece entity."""
     w = HashWriter()
     w.writeString("Piece")
     attrs = p.get("attributes")
@@ -7941,7 +7941,7 @@ def hash_piece(p: dict) -> str:
 
 
 def hash_design(d: dict) -> str:
-    """🔖Computes SHA-256 hash of a Design entity (Merkle tree)."""
+    """🔖️Computes SHA-256 hash of a Design entity (Merkle tree)."""
     w = HashWriter()
     w.writeString("Design")
     if d.get("activeLayer") is not None:
@@ -8021,7 +8021,7 @@ def hash_design(d: dict) -> str:
 
 
 def hash_kit(k: dict) -> str:
-    """🔖Computes SHA-256 Merkle hash of a Kit entity."""
+    """🔖️Computes SHA-256 Merkle hash of a Kit entity."""
     w = HashWriter()
     w.writeString("Kit")
     attrs = k.get("attributes")
@@ -8094,9 +8094,9 @@ def hash_kit(k: dict) -> str:
     return w.digest()
 
 
-# #endregion 🎩Hash Entities
+# #endregion 🎩️Hash Entities
 
-# #region 🔗Hash Diffs
+# #region 🔗️Hash Diffs
 # Deterministic SHA-256 Merkle hash functions for all diff types.
 # Diffs are plain dicts; field presence in dict = field was changed.
 # If a field is present with None value → write field name + writeBool(false) as null marker.
@@ -8710,19 +8710,19 @@ def hash_kit_diff(d: dict) -> str:
     return w.digest()
 
 
-# #endregion 🔗Hash Diffs
+# #endregion 🔗️Hash Diffs
 
 # #endregion 🖥️Hash
 
 
-# #region 🎪Kit Operations
+# #region 🎪️Kit Operations
 # Dict-based pure functions for kit operations exposed via MCP.
 
 
 def findAttributeValueDict(
     entity: dict, name: str, defaultValue: typing.Any = ...
 ) -> typing.Optional[str]:
-    """🔖Finds an attribute value on an entity by key.
+    """🔖️Finds an attribute value on an entity by key.
     Returns default if not found, raises ValueError if no default provided.
     """
     attributes = entity.get("attributes") or []
@@ -8742,7 +8742,7 @@ def findAttributeValueDict(
 
 
 def _findDesignInKitDict(kit: dict, design_id: str) -> dict:
-    """🔖Finds a design by ID in a kit dict."""
+    """🔖️Finds a design by ID in a kit dict."""
     for d in kit.get("designs", []):
         if d.get("id") == design_id:
             return d
@@ -8750,7 +8750,7 @@ def _findDesignInKitDict(kit: dict, design_id: str) -> dict:
 
 
 def _findTypeInKitDict(kit: dict, type_id: str) -> dict:
-    """🔖Finds a type by ID in a kit dict."""
+    """🔖️Finds a type by ID in a kit dict."""
     for t in kit.get("types", []):
         if t.get("id") == type_id:
             return t
@@ -8758,7 +8758,7 @@ def _findTypeInKitDict(kit: dict, type_id: str) -> dict:
 
 
 def _findPieceInDesignDict(design: dict, piece_id: str) -> dict:
-    """🔖Finds a piece by ID in a design dict."""
+    """🔖️Finds a piece by ID in a design dict."""
     for p in design.get("pieces", []):
         if p.get("id") == piece_id:
             return p
@@ -8766,7 +8766,7 @@ def _findPieceInDesignDict(design: dict, piece_id: str) -> dict:
 
 
 def _findPieceConnectionsInDesignDict(design: dict, piece_id: str) -> list[dict]:
-    """🔖Finds all connections involving a piece in a design dict."""
+    """🔖️Finds all connections involving a piece in a design dict."""
     return [
         c
         for c in design.get("connections", [])
@@ -8776,7 +8776,7 @@ def _findPieceConnectionsInDesignDict(design: dict, piece_id: str) -> list[dict]
 
 
 def _findConnectorInTypeDict(type_dict: dict, connector_id: str) -> dict:
-    """🔖Finds a connector by ID in a type dict."""
+    """🔖️Finds a connector by ID in a type dict."""
     for c in type_dict.get("connectors", []):
         if c.get("id") == connector_id:
             return c
@@ -8784,7 +8784,7 @@ def _findConnectorInTypeDict(type_dict: dict, connector_id: str) -> dict:
 
 
 def _applyDesignDiffDict(target: dict, diff: dict) -> None:
-    """🔖Applies a design diff to a design dict in-place."""
+    """🔖️Applies a design diff to a design dict in-place."""
     pieces_diff = diff.get("pieces")
     if pieces_diff:
         pieces = target.get("pieces", [])
@@ -8841,7 +8841,7 @@ def _applyDesignDiffDict(target: dict, diff: dict) -> None:
 
 
 def piecesMetadataDict(kit: dict, design_id: str) -> dict:
-    """🔖Returns metadata for all pieces in a design.
+    """🔖️Returns metadata for all pieces in a design.
     Each entry contains plane, center, fixedPieceId, parentPieceId, depth, and path.
     """
     design = _findDesignInKitDict(kit, design_id)
@@ -8864,7 +8864,7 @@ def piecesMetadataDict(kit: dict, design_id: str) -> dict:
     return result
 
 
-# #region 🎡Clustering
+# #region 🎡️Clustering
 # Functions for clustering and expanding design pieces.
 
 
@@ -8961,7 +8961,7 @@ def replaceClusterWithDesignDict(
 def getClusterableGroupsDict(
     design: dict, selected_piece_ids: list[str]
 ) -> list[list[str]]:
-    """🔖Returns clusterable groups of selected pieces using DFS on connection graph."""
+    """🔖️Returns clusterable groups of selected pieces using DFS on connection graph."""
     if len(selected_piece_ids) < 2:
         return []
     adjacency: dict[str, set[str]] = {}
@@ -8998,7 +8998,7 @@ def getClusterableGroupsDict(
 
 
 def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
-    """🔖Recursively expands design references (designPiece) by inlining their pieces and connections."""
+    """🔖️Recursively expands design references (designPiece) by inlining their pieces and connections."""
     import copy
 
     connections = design.get("connections", [])
@@ -9050,14 +9050,14 @@ def expandDesignPiecesDict(design: dict, kit: dict) -> dict:
     return expanded
 
 
-# #endregion 🎡Clustering
+# #endregion 🎡️Clustering
 
-# #region 📍Kit Query Helpers Dict
+# #region 📍️Kit Query Helpers Dict
 # Dict-based kit query helper functions.
 
 
 def getPrimitiveDesignDict(kit: dict, design_id: str) -> dict:
-    """🌱Gets the primitive (root) design of a design family."""
+    """🌱️Gets the primitive (root) design of a design family."""
     current = _findDesignInKitDict(kit, design_id)
     while current.get("parent", {}).get("id"):
         current = _findDesignInKitDict(kit, current["parent"]["id"])
@@ -9065,7 +9065,7 @@ def getPrimitiveDesignDict(kit: dict, design_id: str) -> dict:
 
 
 def getDesignFamilyDict(kit: dict, design_id: str) -> list[dict]:
-    """🌳Gets all designs in a design family (the entire tree)."""
+    """🌳️Gets all designs in a design family (the entire tree)."""
     primitive = getPrimitiveDesignDict(kit, design_id)
     family: list[dict] = []
 
@@ -9085,7 +9085,7 @@ def getDesignFamilyDict(kit: dict, design_id: str) -> list[dict]:
 
 
 def getDesignSiblingsDict(kit: dict, design_id: str) -> list[dict]:
-    """🔖Returns all designs with the same parent, excluding self."""
+    """🔖️Returns all designs with the same parent, excluding self."""
     design = _findDesignInKitDict(kit, design_id)
     parent_id = design.get("parent", {}).get("id")
     return [
@@ -9096,14 +9096,14 @@ def getDesignSiblingsDict(kit: dict, design_id: str) -> list[dict]:
 
 
 def getDesignChildrenDict(kit: dict, design_id: str) -> list[dict]:
-    """🔖Returns all direct children of a design."""
+    """🔖️Returns all direct children of a design."""
     return [
         d for d in kit.get("designs", []) if d.get("parent", {}).get("id") == design_id
     ]
 
 
 def areDesignsInSameFamilyDict(kit: dict, design_id_a: str, design_id_b: str) -> bool:
-    """🔖Checks if two designs share the same primitive ancestor."""
+    """🔖️Checks if two designs share the same primitive ancestor."""
     return getPrimitiveDesignDict(kit, design_id_a).get("id") == getPrimitiveDesignDict(
         kit, design_id_b
     ).get("id")
@@ -9112,12 +9112,12 @@ def areDesignsInSameFamilyDict(kit: dict, design_id_a: str, design_id_b: str) ->
 def canUseDesignAsPieceDict(
     kit: dict, container_design_id: str, piece_design_id: str
 ) -> bool:
-    """🔖Returns true if a design can be used as a piece (must NOT be in same family)."""
+    """🔖️Returns true if a design can be used as a piece (must NOT be in same family)."""
     return not areDesignsInSameFamilyDict(kit, container_design_id, piece_design_id)
 
 
 def findSameFamilyDesignPiecesDict(kit: dict, design_id: str) -> list[dict]:
-    """🔖Returns all pieces in a design that reference designs from the same family."""
+    """🔖️Returns all pieces in a design that reference designs from the same family."""
     design = _findDesignInKitDict(kit, design_id)
     return [
         p
@@ -9128,7 +9128,7 @@ def findSameFamilyDesignPiecesDict(kit: dict, design_id: str) -> list[dict]:
 
 
 def getPrimitiveTypeDict(kit: dict, type_id: str) -> dict:
-    """🔖Gets the primitive (root) type of a type family."""
+    """🔖️Gets the primitive (root) type of a type family."""
     current = _findTypeInKitDict(kit, type_id)
     while current.get("parent", {}).get("id"):
         current = _findTypeInKitDict(kit, current["parent"]["id"])
@@ -9136,7 +9136,7 @@ def getPrimitiveTypeDict(kit: dict, type_id: str) -> dict:
 
 
 def getTypeFamilyDict(kit: dict, type_id: str) -> list[dict]:
-    """🔖Gets all types in a type family (the entire tree)."""
+    """🔖️Gets all types in a type family (the entire tree)."""
     primitive = getPrimitiveTypeDict(kit, type_id)
     family: list[dict] = []
 
@@ -9156,7 +9156,7 @@ def getTypeFamilyDict(kit: dict, type_id: str) -> list[dict]:
 
 
 def getTypeSiblingsDict(kit: dict, type_id: str) -> list[dict]:
-    """🔖Returns all types with the same parent, excluding self."""
+    """🔖️Returns all types with the same parent, excluding self."""
     type_ = _findTypeInKitDict(kit, type_id)
     parent_id = type_.get("parent", {}).get("id")
     return [
@@ -9167,19 +9167,19 @@ def getTypeSiblingsDict(kit: dict, type_id: str) -> list[dict]:
 
 
 def getTypeChildrenDict(kit: dict, type_id: str) -> list[dict]:
-    """🔖Returns all direct children of a type."""
+    """🔖️Returns all direct children of a type."""
     return [t for t in kit.get("types", []) if t.get("parent", {}).get("id") == type_id]
 
 
 def areTypesInSameFamilyDict(kit: dict, type_id_a: str, type_id_b: str) -> bool:
-    """🔖Checks if two types share the same primitive ancestor."""
+    """🔖️Checks if two types share the same primitive ancestor."""
     return getPrimitiveTypeDict(kit, type_id_a).get("id") == getPrimitiveTypeDict(
         kit, type_id_b
     ).get("id")
 
 
 def findPieceTypeInDesignDict(kit: dict, design_id: str, piece_id: str) -> dict:
-    """🔖Gets the type of a piece in a design."""
+    """🔖️Gets the type of a piece in a design."""
     design = _findDesignInKitDict(kit, design_id)
     piece = _findPieceInDesignDict(design, piece_id)
     type_ref = piece.get("type", {})
@@ -9191,7 +9191,7 @@ def findPieceTypeInDesignDict(kit: dict, design_id: str, piece_id: str) -> dict:
 def findUsedConnectorsByPieceInDesignDict(
     kit: dict, design_id: str, piece_id: str
 ) -> list[dict]:
-    """🔖Returns all connectors of a piece that are used in connections."""
+    """🔖️Returns all connectors of a piece that are used in connections."""
     design = _findDesignInKitDict(kit, design_id)
     piece = _findPieceInDesignDict(design, piece_id)
     type_ref = piece.get("type", {})
@@ -9431,7 +9431,7 @@ def findReplaceableTypesInDesignsForPiecesInDesignDict(
 
 
 def sumQualityInDesignDict(kit: dict, design_id: str, quality_id: str) -> float:
-    """🔖Sums up the values of a quality across all pieces in a design.
+    """🔖️Sums up the values of a quality across all pieces in a design.
     For each piece, uses the piece-level prop if present, otherwise falls back to the type-level prop.
     """
     design = _findDesignInKitDict(kit, design_id)
@@ -9467,9 +9467,9 @@ def sumQualityInDesignDict(kit: dict, design_id: str, quality_id: str) -> float:
     return total
 
 
-# #endregion 📍Kit Query Helpers Dict
+# #endregion 📍️Kit Query Helpers Dict
 
-# #endregion 🎪Kit Operations
+# #endregion 🎪️Kit Operations
 
 
 # #region 🎗️Kit Diff Operations
@@ -9477,19 +9477,19 @@ def sumQualityInDesignDict(kit: dict, design_id: str, quality_id: str) -> float:
 
 
 def _normalizeValue(value: typing.Any) -> typing.Any:
-    """🔖Normalize empty values to None for comparison."""
+    """🔖️Normalize empty values to None for comparison."""
     if value is None or value == "" or value == []:
         return None
     return value
 
 
 def _normalizeBoolean(value: bool | None) -> bool | None:
-    """🔘Normalize boolean: True stays True, False/None become None."""
+    """🔘️Normalize boolean: True stays True, False/None become None."""
     return True if value else None
 
 
 def _normalizeArray(arr: list | None) -> list:
-    """📚Normalize None or single item to list."""
+    """📚️Normalize None or single item to list."""
     if arr is None:
         return []
     if not isinstance(arr, list):
@@ -9500,7 +9500,7 @@ def _normalizeArray(arr: list | None) -> list:
 def areAttributesEqualDict(
     a: list | None, b: list | None, strict: bool = False
 ) -> bool:
-    """🔖Check whether two attribute dictionaries are equal."""
+    """🔖️Check whether two attribute dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9526,7 +9526,7 @@ def areAttributesEqualDict(
 
 
 def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two prop dictionaries are equal."""
+    """🔖️Check whether two prop dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9556,7 +9556,7 @@ def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 def areConnectorsEqualDict(
     a: list | None, b: list | None, strict: bool = False
 ) -> bool:
-    """🔖Check whether two port dictionaries are equal."""
+    """🔖️Check whether two port dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9616,7 +9616,7 @@ def areConnectorsEqualDict(
 def areRepresentationsEqualDict(
     a: list | None, b: list | None, strict: bool = False
 ) -> bool:
-    """🔖Check whether two representation dictionaries are equal."""
+    """🔖️Check whether two representation dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9661,7 +9661,7 @@ def areRepresentationsEqualDict(
 
 
 def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two type dictionaries are equal."""
+    """🔖️Check whether two type dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9754,7 +9754,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 
 def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two piece dictionaries are equal."""
+    """🔖️Check whether two piece dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9842,7 +9842,7 @@ def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
 
 
 def _getIdFromRef(ref: typing.Any) -> str | None:
-    """🧲Extract id from either a string (Input format) or dict with id (Output format)."""
+    """🧲️Extract id from either a string (Input format) or dict with id (Output format)."""
     if ref is None:
         return None
     if isinstance(ref, dict):
@@ -9851,7 +9851,7 @@ def _getIdFromRef(ref: typing.Any) -> str | None:
 
 
 def _floatEqual(a, b, epsilon=1e-9):
-    """🔖Compare two float values with epsilon tolerance."""
+    """🔖️Compare two float values with epsilon tolerance."""
     if a is None and b is None:
         return True
     if a is None or b is None:
@@ -9864,7 +9864,7 @@ def _floatEqual(a, b, epsilon=1e-9):
 def areConnectionsEqualDict(
     a: list | None, b: list | None, strict: bool = False
 ) -> bool:
-    """🔖Check whether two connection dictionaries are equal."""
+    """🔖️Check whether two connection dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9935,7 +9935,7 @@ def areConnectionsEqualDict(
 
 
 def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two design dictionaries are equal."""
+    """🔖️Check whether two design dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -9998,7 +9998,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two port dictionaries are equal."""
+    """🔖️Check whether two port dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -10026,7 +10026,7 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 
 def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two quality dictionaries are equal."""
+    """🔖️Check whether two quality dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -10052,7 +10052,7 @@ def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) 
 
 
 def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two file dictionaries are equal."""
+    """🔖️Check whether two file dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -10072,7 +10072,7 @@ def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 
 def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two folder dictionaries are equal."""
+    """🔖️Check whether two folder dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -10096,7 +10096,7 @@ def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 
 def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two author dictionaries are equal."""
+    """🔖️Check whether two author dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -10124,7 +10124,7 @@ def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 
 def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two concept dictionaries are equal."""
+    """🔖️Check whether two concept dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -10152,7 +10152,7 @@ def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -
 
 
 def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
-    """🔖Check whether two tag dictionaries are equal."""
+    """🔖️Check whether two tag dictionaries are equal."""
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
     if len(arrA) != len(arrB):
@@ -10178,7 +10178,7 @@ def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bo
 
 
 def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
-    """🔖Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
+    """🔖️Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
     Args:
     a: First kit dict
     b: Second kit dict
@@ -10316,7 +10316,7 @@ def _applyCollectionDiff(
 
 
 def _getTypeDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two type dicts."""
+    """🔖️Get diff between two type dicts."""
     diff: dict = {}
     for key in ["name", "description", "icon", "image", "folder", "unit", "stock"]:
         if _normalizeValue(before.get(key)) != _normalizeValue(after.get(key)):
@@ -10386,7 +10386,7 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
 
 
 def _applyTypeDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a type dict in-place."""
+    """🔖️Apply diff to a type dict in-place."""
     for key in [
         "name",
         "description",
@@ -10432,7 +10432,7 @@ def _applyTypeDiff(target: dict, diff: dict) -> None:
 
 
 def _getConnectorDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two connector dicts."""
+    """🔖️Get diff between two connector dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -10485,7 +10485,7 @@ def _getConnectorDiff(before: dict, after: dict) -> dict:
 
 
 def _applyConnectorDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a connector dict in-place."""
+    """🔖️Apply diff to a connector dict in-place."""
     for key in ["name", "description", "t", "mandatory"]:
         if key in diff:
             target[key] = diff[key]
@@ -10518,7 +10518,7 @@ def _applyConnectorDiff(target: dict, diff: dict) -> None:
 
 
 def _getRepresentationDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two representation dicts."""
+    """🔖️Get diff between two representation dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -10557,7 +10557,7 @@ def _getRepresentationDiff(before: dict, after: dict) -> dict:
 
 
 def _applyRepresentationDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a representation dict in-place."""
+    """🔖️Apply diff to a representation dict in-place."""
     for key in ["name", "description"]:
         if key in diff:
             target[key] = diff[key]
@@ -10572,7 +10572,7 @@ def _applyRepresentationDiff(target: dict, diff: dict) -> None:
 
 
 def _getDesignDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two design dicts."""
+    """🔖️Get diff between two design dicts."""
     diff: dict = {}
     for key in [
         "name",
@@ -10648,7 +10648,7 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
 
 
 def _applyDesignDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a design dict in-place."""
+    """🔖️Apply diff to a design dict in-place."""
     for key in [
         "name",
         "variant",
@@ -10691,7 +10691,7 @@ def _applyDesignDiff(target: dict, diff: dict) -> None:
 
 
 def designWithDiffDict(base: dict, diff: dict) -> dict:
-    """🔖Create a mixed design applying diff changes and annotating with diff status.
+    """🔖️Create a mixed design applying diff changes and annotating with diff status.
     Annotate each with a compose.diffStatus attribute (unchanged/modified/removed/added).
     Updated entities are applied (new positions/values) and marked as modified.
     Removed entities are kept in place marked as removed.
@@ -10731,7 +10731,7 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
             base_plane = _dict_piece_plane(pc)
             base_center = _dict_piece_center(pc)
             _applyPieceDiff(pc, updated_piece_map[pc["id"]])
-            # 📌Preserve base geometry so modified pieces stay in place and only get recolored.
+            # 📌️Preserve base geometry so modified pieces stay in place and only get recolored.
             if base_plane is not None or base_center is not None:
                 pc["pose"] = {"plane": base_plane, "center": base_center}
             elif "pose" in pc:
@@ -10782,7 +10782,7 @@ def designWithDiffDict(base: dict, diff: dict) -> dict:
 
 
 def _getPieceDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two piece dicts."""
+    """🔖️Get diff between two piece dicts."""
     diff: dict = {}
     if _normalizeValue(before.get("name")) != _normalizeValue(after.get("name")):
         diff["name"] = after.get("name")
@@ -10826,7 +10826,7 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
 
 
 def _applyPieceDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a piece dict in-place."""
+    """🔖️Apply diff to a piece dict in-place."""
     for key in [
         "name",
         "description",
@@ -10849,7 +10849,7 @@ def _applyPieceDiff(target: dict, diff: dict) -> None:
 
 
 def _getConnectionDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two connection dicts."""
+    """🔖️Get diff between two connection dicts."""
     diff: dict = {}
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         bVal = before.get(key, 0) or 0
@@ -10874,7 +10874,7 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
 
 
 def _applyConnectionDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a connection dict in-place."""
+    """🔖️Apply diff to a connection dict in-place."""
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in diff:
             target[key] = (target.get(key, 0) or 0) + (diff[key] or 0)
@@ -10891,7 +10891,7 @@ def _applyConnectionDiff(target: dict, diff: dict) -> None:
 
 
 def _getTagDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two tag dicts."""
+    """🔖️Get diff between two tag dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10910,7 +10910,7 @@ def _getTagDiff(before: dict, after: dict) -> dict:
 
 
 def _applyTagDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a tag dict in-place."""
+    """🔖️Apply diff to a tag dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
             target[key] = diff[key]
@@ -10921,7 +10921,7 @@ def _applyTagDiff(target: dict, diff: dict) -> None:
 
 
 def _getConceptDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two concept dicts."""
+    """🔖️Get diff between two concept dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10940,7 +10940,7 @@ def _getConceptDiff(before: dict, after: dict) -> dict:
 
 
 def _applyConceptDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a concept dict in-place."""
+    """🔖️Apply diff to a concept dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
             target[key] = diff[key]
@@ -10951,7 +10951,7 @@ def _applyConceptDiff(target: dict, diff: dict) -> None:
 
 
 def _getPortDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two port dicts."""
+    """🔖️Get diff between two port dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -10982,7 +10982,7 @@ def _getPortDiff(before: dict, after: dict) -> dict:
 
 
 def _applyPortDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a port dict in-place."""
+    """🔖️Apply diff to a port dict in-place."""
     for key in ["name", "description", "icon"]:
         if key in diff:
             target[key] = diff[key]
@@ -10995,7 +10995,7 @@ def _applyPortDiff(target: dict, diff: dict) -> None:
 
 
 def _getFileDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two file dicts."""
+    """🔖️Get diff between two file dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -11032,7 +11032,7 @@ def _getFileDiff(before: dict, after: dict) -> dict:
 
 
 def _applyFileDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a file dict in-place."""
+    """🔖️Apply diff to a file dict in-place."""
     for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in diff:
             target[key] = diff[key]
@@ -11045,7 +11045,7 @@ def _applyFileDiff(target: dict, diff: dict) -> None:
 
 
 def _getFolderDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two folder dicts."""
+    """🔖️Get diff between two folder dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -11062,7 +11062,7 @@ def _getFolderDiff(before: dict, after: dict) -> dict:
 
 
 def _applyFolderDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a folder dict in-place."""
+    """🔖️Apply diff to a folder dict in-place."""
     for key in ["name", "description"]:
         if key in diff:
             target[key] = diff[key]
@@ -11073,7 +11073,7 @@ def _applyFolderDiff(target: dict, diff: dict) -> None:
 
 
 def _getQualityDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two quality dicts."""
+    """🔖️Get diff between two quality dicts."""
     diff: dict = {}
     if before.get("key") != after.get("key"):
         diff["key"] = after.get("key")
@@ -11125,7 +11125,7 @@ def _getQualityDiff(before: dict, after: dict) -> dict:
 
 
 def _applyQualityDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to a quality dict in-place."""
+    """🔖️Apply diff to a quality dict in-place."""
     for key in [
         "key",
         "name",
@@ -11150,7 +11150,7 @@ def _applyQualityDiff(target: dict, diff: dict) -> None:
 
 
 def _getAuthorDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two author dicts."""
+    """🔖️Get diff between two author dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -11165,7 +11165,7 @@ def _getAuthorDiff(before: dict, after: dict) -> dict:
 
 
 def _applyAuthorDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to an author dict in-place."""
+    """🔖️Apply diff to an author dict in-place."""
     for key in ["name", "email"]:
         if key in diff:
             target[key] = diff[key]
@@ -11176,7 +11176,7 @@ def _applyAuthorDiff(target: dict, diff: dict) -> None:
 
 
 def _getAttributeDiff(before: dict, after: dict) -> dict:
-    """🔖Get diff between two attribute dicts - used for individual attribute update diffs."""
+    """🔖️Get diff between two attribute dicts - used for individual attribute update diffs."""
     diff: dict = {}
     if _normalizeValue(before.get("key")) != _normalizeValue(after.get("key")):
         diff["key"] = after.get("key")
@@ -11190,14 +11190,14 @@ def _getAttributeDiff(before: dict, after: dict) -> dict:
 
 
 def _applyAttributeDiff(target: dict, diff: dict) -> None:
-    """🔖Apply diff to an attribute dict in-place."""
+    """🔖️Apply diff to an attribute dict in-place."""
     for key in ["key", "value", "definition"]:
         if key in diff:
             target[key] = diff[key]
 
 
 def _getAttributesDiff(before: list, after: list) -> dict:
-    """🔖Get diff for attributes collection - uses ID for identification with EntityId format."""
+    """🔖️Get diff for attributes collection - uses ID for identification with EntityId format."""
     diff: dict = {}
     beforeIds = {a.get("id") for a in before}
     afterIds = {a.get("id") for a in after}
@@ -11222,7 +11222,7 @@ def _getAttributesDiff(before: list, after: list) -> dict:
 
 
 def _applyAttributesDiff(items: list, diff: dict | None) -> None:
-    """🔖Apply diff to attributes collection in-place - uses ID for identification with EntityId format."""
+    """🔖️Apply diff to attributes collection in-place - uses ID for identification with EntityId format."""
     if not diff:
         return
     if diff.get("removed"):
@@ -11243,7 +11243,7 @@ def _applyAttributesDiff(items: list, diff: dict | None) -> None:
 
 
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of attributes collection diff - uses ID with EntityId format."""
+    """🔖️Compute inverse of attributes collection diff - uses ID with EntityId format."""
     inverse: dict = {}
 
     removedIds = [
@@ -11289,7 +11289,7 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
 
 
 def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of an attribute diff."""
+    """🔖️Compute inverse of an attribute diff."""
     inverse: dict = {}
     for key in ["key", "value", "definition"]:
         if key in appliedDiff:
@@ -11298,7 +11298,7 @@ def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def getKitDiffDict(before: dict, after: dict) -> dict:
-    """🔖Compute the diff between two kit dicts."""
+    """🔖️Compute the diff between two kit dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
@@ -11701,7 +11701,7 @@ def validate_kit_diff_dict(kit: dict, diff: dict, heal: bool) -> dict:
 
 
 def applyKitDiffDict(target: dict, diff: dict) -> None:
-    """🔖Apply a diff to a kit dict in-place."""
+    """🔖️Apply a diff to a kit dict in-place."""
     for key in [
         "name",
         "version",
@@ -11792,7 +11792,7 @@ def _inverseCollectionDiff(
 
 
 def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a type diff."""
+    """🔖️Compute inverse of a type diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -11836,7 +11836,7 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a connector diff."""
+    """🔖️Compute inverse of a connector diff."""
     inverse: dict = {}
     for key in ["name", "description", "t", "mandatory"]:
         if key in appliedDiff:
@@ -11865,7 +11865,7 @@ def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseRepresentationDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a representation diff."""
+    """🔖️Compute inverse of a representation diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
         if key in appliedDiff:
@@ -11882,7 +11882,7 @@ def _inverseRepresentationDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a connection diff (negate numeric deltas)."""
+    """🔖️Compute inverse of a connection diff (negate numeric deltas)."""
     inverse: dict = {}
     for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "u", "v"]:
         if key in appliedDiff:
@@ -11901,7 +11901,7 @@ def _inverseConnectionDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a design diff."""
+    """🔖️Compute inverse of a design diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -11947,7 +11947,7 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a piece diff."""
+    """🔖️Compute inverse of a piece diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -11972,7 +11972,7 @@ def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a tag diff."""
+    """🔖️Compute inverse of a tag diff."""
     inverse: dict = {}
     for key in ["name", "description", "icon"]:
         if key in appliedDiff:
@@ -11985,7 +11985,7 @@ def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a concept diff."""
+    """🔖️Compute inverse of a concept diff."""
     inverse: dict = {}
     for key in ["name", "description", "icon"]:
         if key in appliedDiff:
@@ -11998,7 +11998,7 @@ def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of an port diff."""
+    """🔖️Compute inverse of an port diff."""
     inverse: dict = {}
     for key in ["name", "description", "icon"]:
         if key in appliedDiff:
@@ -12013,7 +12013,7 @@ def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a file diff."""
+    """🔖️Compute inverse of a file diff."""
     inverse: dict = {}
     for key in ["name", "description", "remote", "size", "hash", "blob"]:
         if key in appliedDiff:
@@ -12028,7 +12028,7 @@ def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a folder diff."""
+    """🔖️Compute inverse of a folder diff."""
     inverse: dict = {}
     for key in ["name", "description"]:
         if key in appliedDiff:
@@ -12041,7 +12041,7 @@ def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of a quality diff."""
+    """🔖️Compute inverse of a quality diff."""
     inverse: dict = {}
     for key in [
         "key",
@@ -12068,7 +12068,7 @@ def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute inverse of an author diff."""
+    """🔖️Compute inverse of an author diff."""
     inverse: dict = {}
     for key in ["name", "email"]:
         if key in appliedDiff:
@@ -12081,7 +12081,7 @@ def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
 
 
 def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
-    """🔖Compute the inverse of a kit diff."""
+    """🔖️Compute the inverse of a kit diff."""
     inverse: dict = {}
     for key in [
         "name",
@@ -12242,7 +12242,7 @@ def commit_kit_graph_change(
 
 @dataclasses.dataclass
 class Change:
-    """💿Change holds the data fields for a Change record."""
+    """💿️Change holds the data fields for a Change record."""
 
     forward: dict
     backward: dict
@@ -12253,7 +12253,7 @@ class Change:
 
 
 def changeToDict(change: Change) -> dict:
-    """🔖changeToDict performs the changeToDict operation."""
+    """🔖️changeToDict performs the changeToDict operation."""
     result: dict = {"forward": change.forward, "backward": change.backward}
     if change.author is not None:
         result["author"] = change.author
@@ -12268,146 +12268,146 @@ def changeToDict(change: Change) -> dict:
 
 @dataclasses.dataclass
 class AttributeChange(Change):
-    """🔖AttributeChange holds the data fields for a AttributeChange record."""
+    """🔖️AttributeChange holds the data fields for a AttributeChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class AuthorChange(Change):
-    """🔖AuthorChange holds the data fields for a AuthorChange record."""
+    """🔖️AuthorChange holds the data fields for a AuthorChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class FileChange(Change):
-    """🔖FileChange holds the data fields for a FileChange record."""
+    """🔖️FileChange holds the data fields for a FileChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class FolderChange(Change):
-    """🔖FolderChange holds the data fields for a FolderChange record."""
+    """🔖️FolderChange holds the data fields for a FolderChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class QualityChange(Change):
-    """🔖QualityChange holds the data fields for a QualityChange record."""
+    """🔖️QualityChange holds the data fields for a QualityChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class PortChange(Change):
-    """🔖PortChange holds the data fields for a PortChange record."""
+    """🔖️PortChange holds the data fields for a PortChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class PropChange(Change):
-    """🔖PropChange holds the data fields for a PropChange record."""
+    """🔖️PropChange holds the data fields for a PropChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class TagChange(Change):
-    """🔖TagChange holds the data fields for a TagChange record."""
+    """🔖️TagChange holds the data fields for a TagChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class ConceptChange(Change):
-    """🔖ConceptChange holds the data fields for a ConceptChange record."""
+    """🔖️ConceptChange holds the data fields for a ConceptChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class RepresentationChange(Change):
-    """🔖RepresentationChange holds the data fields for a RepresentationChange record."""
+    """🔖️RepresentationChange holds the data fields for a RepresentationChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class ConnectorChange(Change):
-    """🔖ConnectorChange holds the data fields for a ConnectorChange record."""
+    """🔖️ConnectorChange holds the data fields for a ConnectorChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class TypeChange(Change):
-    """🔖TypeChange holds the data fields for a TypeChange record."""
+    """🔖️TypeChange holds the data fields for a TypeChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class LayerChange(Change):
-    """🔖LayerChange holds the data fields for a LayerChange record."""
+    """🔖️LayerChange holds the data fields for a LayerChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class PieceChange(Change):
-    """🔖PieceChange holds the data fields for a PieceChange record."""
+    """🔖️PieceChange holds the data fields for a PieceChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class GroupChange(Change):
-    """🔖GroupChange holds the data fields for a GroupChange record."""
+    """🔖️GroupChange holds the data fields for a GroupChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class ConnectionChange(Change):
-    """🔖ConnectionChange holds the data fields for a ConnectionChange record."""
+    """🔖️ConnectionChange holds the data fields for a ConnectionChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class StatChange(Change):
-    """🔖StatChange holds the data fields for a StatChange record."""
+    """🔖️StatChange holds the data fields for a StatChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class DesignChange(Change):
-    """🔖DesignChange holds the data fields for a DesignChange record."""
+    """🔖️DesignChange holds the data fields for a DesignChange record."""
 
     pass
 
 
 @dataclasses.dataclass
 class KitChange(Change):
-    """🔖KitChange holds the data fields for a KitChange record."""
+    """🔖️KitChange holds the data fields for a KitChange record."""
 
     pass
 
 
-# #region 📋Copy Paste Design
-# 📋Copy Paste Design provides copy and paste functionality for designs.
+# #region 📋️Copy Paste Design
+# 📋️Copy Paste Design provides copy and paste functionality for designs.
 # Specs: CopyDesign extracts selected pieces and connections. PasteDesign inserts them into a target design.
 
 
 def copyDesignDict(
     kit: dict, design: dict, pieceIds: list[str], connectionIds: list[str]
 ) -> dict:
-    """📋Extracts selected pieces and connections from a design into a new Design dict.
+    """📋️Extracts selected pieces and connections from a design into a new Design dict.
     Specs: Selected pieces are classified as internal-fixed, internal-connected, or parent-piece-exclusive parent-connection-inclusive.
     Internal pieces are copied as-is. Pp-excl-pc-incl pieces get compose.center and compose.plane attributes.
     Non-internal connections include their external pieces marked with compose.piece.origin = "external" and compose.center.
@@ -12542,7 +12542,7 @@ def pasteDesignDict(
     anchoring: str,
     coordinate: typing.Optional[dict] = None,
 ) -> dict:
-    """📋Pastes a copied design into a target design, returning a DesignDiff dict.
+    """📋️Pastes a copied design into a target design, returning a DesignDiff dict.
     Specs: Anchoring determines the reference point within the bounding rectangle of the source.
     Fixed pieces get -anchor offset applied to center; if coordinate is given, +coordinate offset is also applied.
     Connected pieces with non-external parents are added as-is.
@@ -12933,13 +12933,13 @@ def pasteDesignDict(
     return diff
 
 
-# #endregion 📋Copy Paste Design
+# #endregion 📋️Copy Paste Design
 
 
 def deletePiecesAndConnectionsInDesignDict(
     kit: dict, design: dict, pieceIds: list[str], connectionIds: list[str]
 ) -> dict:
-    """🔖Deletes pieces and connections from a design dict, returning a canonical ComposeReport with DesignDiff.
+    """🔖️Deletes pieces and connections from a design dict, returning a canonical ComposeReport with DesignDiff.
     Removes stale connections referencing deleted pieces.
     Updates pieces that become fixed (parent connection removed) with flat plane and center from the flattened design.
     """
@@ -13077,7 +13077,7 @@ def getKitChange(
 
 
 def _extractUpdateId(update: dict, entityKeys: list[str]) -> str:
-    """📍Extract id from an updated entry which might use EntityId format or old id format."""
+    """📍️Extract id from an updated entry which might use EntityId format or old id format."""
     for key in entityKeys:
         if key in update and isinstance(update[key], dict):
             return update[key].get("id", "")
@@ -13094,7 +13094,7 @@ _CONNECTION_OPTIONAL_NUMERIC_KEYS = frozenset(
 
 
 def _expandConnectionEntityDict(d: dict) -> dict:
-    """🔖Full connection snapshots may omit numeric fields when zero; golden fixtures often spell them out."""
+    """🔖️Full connection snapshots may omit numeric fields when zero; golden fixtures often spell them out."""
     if not isinstance(d, dict):
         return d
     if "parent" not in d or "child" not in d:
@@ -13107,7 +13107,7 @@ def _expandConnectionEntityDict(d: dict) -> dict:
 
 
 def _expandSparseNumericDict(d: dict) -> dict:
-    """🔖Make sparse xyz / uv dicts comparable to fully populated ones (missing axis ≡ 0)."""
+    """🔖️Make sparse xyz / uv dicts comparable to fully populated ones (missing axis ≡ 0)."""
     keys = set(d.keys())
     if keys and keys <= _VECTOR3_KEYS:
         if not all(isinstance(d.get(k), (int, float)) for k in keys):
@@ -13125,7 +13125,7 @@ def _expandSparseNumericDict(d: dict) -> dict:
 
 
 def _areDiffDictsEqual(a: dict, b: dict) -> bool:
-    """🔖Deep equality check for diff dicts with float epsilon tolerance."""
+    """🔖️Deep equality check for diff dicts with float epsilon tolerance."""
     if a is b:
         return True
     if type(a) != type(b):
@@ -13157,7 +13157,7 @@ def _areDiffDictsEqual(a: dict, b: dict) -> bool:
 
 
 def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
-    """🔖Deep equality check for kit diffs."""
+    """🔖️Deep equality check for kit diffs."""
     keys = [
         "name",
         "version",
@@ -13225,33 +13225,33 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 # #endregion 🎗️Kit Diff Operations
 
 
-# #region 🧭Moved Graphene Nodes
+# #region 🧭️Moved Graphene Nodes
 # Graphene node definitions moved here due to forward-reference resolution order.
 
 
 class AttributeNode(TableEntityNode):
-    """🔖GraphQL node exposing attribute data."""
+    """🔖️GraphQL node exposing attribute data."""
 
     class Meta:
         representation = Attribute
 
 
 class PlaneNode(TableNode):
-    """🔖GraphQL node exposing plane data."""
+    """🔖️GraphQL node exposing plane data."""
 
     class Meta:
         representation = Plane
 
 
 class AuthorNode(TableEntityNode):
-    """🔖GraphQL node exposing author data."""
+    """🔖️GraphQL node exposing author data."""
 
     class Meta:
         representation = Author
 
 
 class RepresentationNode(TableEntityNode):
-    """🔖GraphQL node exposing representation data."""
+    """🔖️GraphQL node exposing representation data."""
 
     class Meta:
         representation = Representation
@@ -13259,7 +13259,7 @@ class RepresentationNode(TableEntityNode):
 
 
 class ConnectorNode(TableEntityNode):
-    """🔖GraphQL node exposing connector data."""
+    """🔖️GraphQL node exposing connector data."""
 
     class Meta:
         representation = Connector
@@ -13272,14 +13272,14 @@ class ConnectorNode(TableEntityNode):
 
 
 class TypeNode(TableEntityNode):
-    """🔖GraphQL node exposing type data."""
+    """🔖️GraphQL node exposing type data."""
 
     class Meta:
         representation = Type
 
 
 class PieceNode(TableEntityNode):
-    """🔖GraphQL node exposing piece data."""
+    """🔖️GraphQL node exposing piece data."""
 
     class Meta:
         representation = Piece
@@ -13292,7 +13292,7 @@ class PieceNode(TableEntityNode):
 
 
 class ConnectionNode(TableEntityNode):
-    """🔖GraphQL node exposing connection data."""
+    """🔖️GraphQL node exposing connection data."""
 
     class Meta:
         representation = Connection
@@ -13314,20 +13314,20 @@ class ConnectionNode(TableEntityNode):
 
 
 class DesignNode(TableEntityNode):
-    """🔖GraphQL node exposing design data."""
+    """🔖️GraphQL node exposing design data."""
 
     class Meta:
         representation = Design
 
 
 class KitNotFound(NotFound):
-    """🚚endregion 🧭Moved Graphene Nodes"""
+    """🚚️endregion 🧭️Moved Graphene Nodes"""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
-        return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
+        return f"🔍️ Couldn't find an local or remote kit under uri:\n {self.uri}."
 
 
 class NoKitToDelete(KitNotFound):
@@ -13337,89 +13337,89 @@ class NoKitToDelete(KitNotFound):
         self.uri = uri
 
     def __str__(self):
-        return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
+        return f"🔍️ Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
 
 
 class KitZipDoesNotContainComposeFolder(KitNotFound):
-    """🔖Kit Zip Does Not Contain Compose Folder definition."""
+    """🔖️Kit Zip Does Not Contain Compose Folder definition."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
-        return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
+        return f"🔍️ The remote zip kit ({self.uri}) is not a valid kit."
 
 
 class OnlyRemoteKitsCanBeCached(ClientError):
-    """💾Only Remote Kits Can Be Cached definition."""
+    """💾️Only Remote Kits Can Be Cached definition."""
 
     def __init__(self, nonRemoteUri: str) -> None:
         self.nonRemoteUri = nonRemoteUri
 
     def __str__(self):
-        return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
+        return f"🔍️ Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
 
 
 class KitUriNotValid(ClientError, abc.ABC):
-    """🆔 The base for all kit uri not valid errors."""
+    """🆔️ The base for all kit uri not valid errors."""
 
 
 class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
-    """📂 The base for all local kit uri not valid errors."""
+    """📂️ The base for all local kit uri not valid errors."""
 
 
 class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
-    """🔖Local Kit Uri Is Not Absolute definition."""
+    """🔖️Local Kit Uri Is Not Absolute definition."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
+        return f"📂️ The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
 
 
 class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
-    """🔖Local Kit Uri Is Not Directory definition."""
+    """🔖️Local Kit Uri Is Not Directory definition."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
-        return f"📂 The local kit uri ({self.uri}) is not a directory."
+        return f"📂️ The local kit uri ({self.uri}) is not a directory."
 
 
 class NoKitAssigned(NoParentAssigned):
-    """🔖No Kit Assigned definition."""
+    """🔖️No Kit Assigned definition."""
 
     def __str__(self):
-        return "👪 The entity has no parent kit assigned."
+        return "👪️ The entity has no parent kit assigned."
 
 
 class KitAlreadyExists(AlreadyExists, abc.ABC):
-    """🔖Exception for attempting to create a kit that already exists."""
+    """🔖️Exception for attempting to create a kit that already exists."""
 
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self) -> str:
-        return f"♊ A kit under uri ({self.uri}) already exists."
+        return f"♊️ A kit under uri ({self.uri}) already exists."
 
 
 class KitInputNode(InputNode):
-    """🔖GraphQL input node for kit mutations."""
+    """🔖️GraphQL input node for kit mutations."""
 
     class Meta:
         representation = KitInput
 
 
 class KitNode(TableEntityNode):
-    """🔖GraphQL node exposing kit data."""
+    """🔖️GraphQL node exposing kit data."""
 
     class Meta:
         representation = Kit
 
 
-# #endregion 🧭Moved Graphene Nodes
+# #endregion 🧭️Moved Graphene Nodes
 
 
 # #region 🛡️Validation
@@ -13428,7 +13428,7 @@ class KitNode(TableEntityNode):
 
 @dataclasses.dataclass
 class ValidationFix:
-    """🔧A proposed fix for a validation problem with a title and diff."""
+    """🔧️A proposed fix for a validation problem with a title and diff."""
 
     title: str
     diff: dict
@@ -13439,7 +13439,7 @@ class ValidationFix:
 
 @dataclasses.dataclass
 class Problem:
-    """🔒A validation problem with a constraint identifier and message."""
+    """🔒️A validation problem with a constraint identifier and message."""
 
     constraintId: str
     message: str
@@ -13459,7 +13459,7 @@ class Problem:
 
 @dataclasses.dataclass
 class ValidationResult:
-    """🔖A validation result aggregating problems and fixes for an entity."""
+    """🔖️A validation result aggregating problems and fixes for an entity."""
 
     problems: list[Problem]
 
@@ -13477,7 +13477,7 @@ class ValidationResult:
 
 
 def _isId(s: str) -> bool:
-    """🔖_isId performs the _isId operation."""
+    """🔖️_isId performs the _isId operation."""
     import re
 
     return bool(
@@ -13490,7 +13490,7 @@ def _isId(s: str) -> bool:
 
 
 def _normalizeIds(obj: typing.Any) -> typing.Any:
-    """🔖_normalizeIds performs the _normalizeIds operation."""
+    """🔖️_normalizeIds performs the _normalizeIds operation."""
     if obj is None:
         return obj
     if isinstance(obj, str) and _isId(obj):
@@ -13532,7 +13532,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
 
 
 def parseValidationResult(jsonStr: str) -> ValidationResult:
-    """🔬Parse a validation result from a dictionary representation."""
+    """🔬️Parse a validation result from a dictionary representation."""
     data = json_codec.loads(jsonStr)
     problems = []
     for i in data["problems"]:
@@ -13552,7 +13552,7 @@ def parseValidationResult(jsonStr: str) -> ValidationResult:
 
 
 def validateIdUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all IDs within a collection are unique."""
+    """🔖️Validate that all IDs within a collection are unique."""
     problems: list[Problem] = []
     seen: dict[str, str] = {}
 
@@ -13590,7 +13590,7 @@ def validateIdUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all type names within a kit are unique."""
+    """🔖️Validate that all type names within a kit are unique."""
     problems: list[Problem] = []
     byParent: dict[str | None, list[Type]] = {}
     for t in kit.types or []:
@@ -13619,7 +13619,7 @@ def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all design names within a kit are unique."""
+    """🔖️Validate that all design names within a kit are unique."""
     problems: list[Problem] = []
     byParent: dict[str | None, list[Design]] = {}
     for d in kit.designs or []:
@@ -13648,7 +13648,7 @@ def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all piece names within a design are unique."""
+    """🔖️Validate that all piece names within a design are unique."""
     problems: list[Problem] = []
     for design in kit.designs or []:
         names: dict[str, list[Piece]] = {}
@@ -13672,7 +13672,7 @@ def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all port names within a type are unique."""
+    """🔖️Validate that all port names within a type are unique."""
     problems: list[Problem] = []
     for t in kit.types or []:
         names: dict[str, list[Connector]] = {}
@@ -13696,7 +13696,7 @@ def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateRepresentationNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all representation names within a type are unique."""
+    """🔖️Validate that all representation names within a type are unique."""
     problems: list[Problem] = []
     for t in kit.types or []:
         names: dict[str, list[Representation]] = {}
@@ -13720,7 +13720,7 @@ def validateRepresentationNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all quality names within a kit are unique."""
+    """🔖️Validate that all quality names within a kit are unique."""
     problems: list[Problem] = []
     names: dict[str, list[Quality]] = {}
     for q in kit.qualities or []:
@@ -13742,7 +13742,7 @@ def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all file names within a kit are unique."""
+    """🔖️Validate that all file names within a kit are unique."""
     problems: list[Problem] = []
     names: dict[str, list[File]] = {}
     for f in kit.files_ or []:
@@ -13764,7 +13764,7 @@ def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all folder names within a kit are unique."""
+    """🔖️Validate that all folder names within a kit are unique."""
     problems: list[Problem] = []
     byParent: dict[str | None, list[Folder]] = {}
     for fo in kit.folders_ or []:
@@ -13793,7 +13793,7 @@ def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
-    """🔖Validate that all layer paths within a design are unique."""
+    """🔖️Validate that all layer paths within a design are unique."""
     problems: list[Problem] = []
     for design in kit.designs or []:
         paths: dict[str, list[Layer]] = {}
@@ -13816,7 +13816,7 @@ def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
 
 
 def validateKit(kit: Kit) -> ValidationResult:
-    """🔖Validate a kit entity against all constraint rules."""
+    """🔖️Validate a kit entity against all constraint rules."""
     problems: list[Problem] = []
     problems.extend(validateIdUniqueness(kit))
     problems.extend(validateTypeNameUniqueness(kit))
@@ -13830,29 +13830,29 @@ def validateKit(kit: Kit) -> ValidationResult:
     return ValidationResult(problems=problems)
 
 
-# #region 📧Dict-based Validation
+# #region 📧️Dict-based Validation
 # Dictionary-based validation functions for kit data integrity.
 
 
 def _makeFix(title: str, diff: dict) -> ValidationFix:
-    """🔖_makeFix performs the _makeFix operation."""
+    """🔖️_makeFix performs the _makeFix operation."""
     return ValidationFix(title=title, diff=diff)
 
 
 def _deepCopy(obj: typing.Any) -> typing.Any:
-    """🔖_deepCopy performs the _deepCopy operation."""
+    """🔖️_deepCopy performs the _deepCopy operation."""
     return json_codec.loads(json_codec.dumps(obj))
 
 
 def _newId() -> str:
-    """🔖_newId performs the _newId operation."""
+    """🔖️_newId performs the _newId operation."""
     import uuid
 
     return str(uuid.uuid4())
 
 
 def validateKitDict(kit: dict) -> ValidationResult:
-    """🔖Validate a kit dictionary against all constraint rules."""
+    """🔖️Validate a kit dictionary against all constraint rules."""
     problems: list[Problem] = []
     seen: dict[str, str] = {}
     seenEntities: dict[str, dict] = {}
@@ -14298,9 +14298,9 @@ def validateKitDict(kit: dict) -> ValidationResult:
     return ValidationResult(problems=problems)
 
 
-# #endregion 📧Dict-based Validation
+# #endregion 📧️Dict-based Validation
 
-# #region 🕌Graph Operations
+# #region 🕌️Graph Operations
 # Graph construction and traversal for piece connectivity analysis.
 
 
@@ -14329,7 +14329,7 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
 
 
 def findFixedPieces(design: Design | dict) -> list[str]:
-    """🔖Find all pieces that are fixed in the design hierarchy."""
+    """🔖️Find all pieces that are fixed in the design hierarchy."""
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     result = []
     for p in pieces:
@@ -14353,18 +14353,18 @@ def findFixedPieces(design: Design | dict) -> list[str]:
 
 
 def getConnectedComponents(design: Design | dict) -> list[set[str]]:
-    """🔖Get connected components of the piece graph."""
+    """🔖️Get connected components of the piece graph."""
     G = buildPieceGraph(design)
 
 
 def getPieceHierarchy(design: Design | dict, rootId: str) -> dict[str, int]:
-    """🍃Get the hierarchical ordering of pieces from root to leaf."""
+    """🍃️Get the hierarchical ordering of pieces from root to leaf."""
     G = buildPieceGraph(design)
     if rootId not in G:
         return {}
 
 
-# #endregion 🕌Graph Operations
+# #endregion 🕌️Graph Operations
 
 # #endregion 🛡️Validation
 
@@ -14374,7 +14374,7 @@ def getPieceHierarchy(design: Design | dict, rootId: str) -> dict[str, int]:
 
 
 def getTypeById(kit: dict, id: str) -> dict | None:
-    """🔖Look up a type by its ID within a kit dictionary."""
+    """🔖️Look up a type by its ID within a kit dictionary."""
     for t in kit.get("types", []):
         if t.get("id") == id:
             return t
@@ -14388,7 +14388,7 @@ def getConnectorFromType(
     *,
     types_by_id: dict[str, dict] | None = None,
 ) -> dict | None:
-    """🔖Look up a connector by name from a type dictionary."""
+    """🔖️Look up a connector by name from a type dictionary."""
 
     def _resolve_type(id: str) -> dict | None:
         if types_by_id is not None:
@@ -14424,7 +14424,7 @@ def getConnectorFromType(
 
 
 def planeToMatrixDict(plane: dict) -> numpy.ndarray:
-    """🔖Convert a plane dictionary to a 4x4 transformation matrix."""
+    """🔖️Convert a plane dictionary to a 4x4 transformation matrix."""
     origin = numpy.array(
         [plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]]
     )
@@ -14441,7 +14441,7 @@ def planeToMatrixDict(plane: dict) -> numpy.ndarray:
 
 
 def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
-    """🔖Convert a 4x4 transformation matrix to a plane dictionary."""
+    """🔖️Convert a 4x4 transformation matrix to a plane dictionary."""
     origin = matrix[:3, 3]
     xAxis = matrix[:3, 0]
     yAxis = matrix[:3, 1]
@@ -14455,7 +14455,7 @@ def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
 def quaternionFromUnitVectorsDict(
     vFrom: numpy.ndarray, vTo: numpy.ndarray
 ) -> numpy.ndarray:
-    """🔖Compute a quaternion rotating one unit vector onto another."""
+    """🔖️Compute a quaternion rotating one unit vector onto another."""
     r = numpy.dot(vFrom, vTo) + 1
     if r < 0.000001:
         if abs(vFrom[0]) > abs(vFrom[2]):
@@ -14469,14 +14469,14 @@ def quaternionFromUnitVectorsDict(
 
 
 def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """🔖Compute a quaternion from an axis-angle representation."""
+    """🔖️Compute a quaternion from an axis-angle representation."""
     halfAngle = angle / 2
     s = numpy.sin(halfAngle)
     return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
 
 
 def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
-    """🔖Convert a quaternion to a 3x3 rotation matrix."""
+    """🔖️Convert a quaternion to a 3x3 rotation matrix."""
     x, y, z, w = q
     x2, y2, z2 = x + x, y + y, z + z
     xx, xy, xz = x * x2, x * y2, x * z2
@@ -14496,12 +14496,12 @@ def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
 
 
 def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
-    """🔖Create a 4x4 rotation matrix around an arbitrary axis."""
+    """🔖️Create a 4x4 rotation matrix around an arbitrary axis."""
     return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
 
 
 def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
-    """🔖Create a 4x4 translation matrix from a displacement vector."""
+    """🔖️Create a 4x4 translation matrix from a displacement vector."""
     m = numpy.eye(4)
     m[0, 3] = x
     m[1, 3] = y
@@ -14510,7 +14510,7 @@ def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
 
 
 def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
-    """🔖Apply a 4x4 matrix to a 3D vector dictionary."""
+    """🔖️Apply a 4x4 matrix to a 3D vector dictionary."""
     return numpy.array(
         [
             m[0, 0] * v[0] + m[0, 1] * v[1] + m[0, 2] * v[2],
@@ -14523,7 +14523,7 @@ def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
 def computeChildPlaneDict(
     parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict
 ) -> dict:
-    """🔖Compute the world-space plane of a child piece from parent and local planes."""
+    """🔖️Compute the world-space plane of a child piece from parent and local planes."""
     parentMatrix = planeToMatrixDict(parentPlane)
     parentPoint = numpy.array(
         [
@@ -14642,7 +14642,7 @@ def computeChildPlaneDict(
 
 
 def flattenDesignDict(kit: dict, designId: str) -> dict:
-    """🔖Flatten a nested design hierarchy into a single flat coordinate space."""
+    """🔖️Flatten a nested design hierarchy into a single flat coordinate space."""
     design = next((d for d in kit.get("designs", []) if d.get("id") == designId), None)
     if design is None:
         raise ValueError(f"Design {designId} not found")
@@ -14835,9 +14835,9 @@ def flattenDesignDict(kit: dict, designId: str) -> dict:
     }
 
 
-# #region 🎯ComposeReport
+# #region 🎯️ComposeReport
 def _compose_report_ok(diff, warnings=None, infos=None):
-    """📋Successful compose algorithm payload (tool-friendly JSON)."""
+    """📋️Successful compose algorithm payload (tool-friendly JSON)."""
     return {
         "ok": True,
         "diff": diff,
@@ -14848,12 +14848,12 @@ def _compose_report_ok(diff, warnings=None, infos=None):
 
 
 def _compose_report_err(errors: list):
-    """📋Failed compose algorithm payload."""
+    """📋️Failed compose algorithm payload."""
     return {"ok": False, "diff": None, "warnings": [], "infos": [], "errors": errors}
 
 
 def flattenDesignReportDict(kit: dict, designId: str) -> dict:
-    """📋Canonical flatten report matching TypeScript flattenDesign (forward/backward + notes)."""
+    """📋️Canonical flatten report matching TypeScript flattenDesign (forward/backward + notes)."""
     import copy
 
     design = next((d for d in kit.get("designs", []) if d.get("id") == designId), None)
@@ -14887,15 +14887,15 @@ def flattenDesignReportDict(kit: dict, designId: str) -> dict:
     return _compose_report_ok({"forward": forward, "backward": backward}, [], [])
 
 
-# #endregion 🎯ComposeReport
+# #endregion 🎯️ComposeReport
 
 
-# #region 🌳Flatten Merkle Hashes
+# #region 🌳️Flatten Merkle Hashes
 # Per-piece merkle hashes for plane and center computations so subsequent flatten calls can skip unchanged chains.
 
 
 def _hash_plane_root(id: str, plane: dict | None) -> str:
-    """🌱Root plane hash includes only the piece id and its fixed plane components (identity when absent)."""
+    """🌱️Root plane hash includes only the piece id and its fixed plane components (identity when absent)."""
     w = HashWriter()
     if plane is None:
         w.writeString("plane.root.identity")
@@ -14921,7 +14921,7 @@ def _hash_plane_root(id: str, plane: dict | None) -> str:
 def _hash_plane_chain(
     parent_hash: str, parent_connector: dict, child_connector: dict, connection: dict
 ) -> str:
-    """🔗Chain plane hash depends on parent plane hash plus the inputs consumed by computeChildPlane."""
+    """🔗️Chain plane hash depends on parent plane hash plus the inputs consumed by computeChildPlane."""
     w = HashWriter()
     w.writeString("plane.chain")
     w.writeHash(parent_hash)
@@ -14951,7 +14951,7 @@ def _hash_plane_chain(
 
 
 def _hash_center_root(id: str, center: dict | None) -> str:
-    """🌱Root center hash includes only the piece id and its fixed center (identity when absent)."""
+    """🌱️Root center hash includes only the piece id and its fixed center (identity when absent)."""
     w = HashWriter()
     if center is None:
         w.writeString("center.root.identity")
@@ -14967,7 +14967,7 @@ def _hash_center_root(id: str, center: dict | None) -> str:
 def _hash_center_chain(
     parent_hash: str, parent_connector: dict, connection: dict
 ) -> str:
-    """🔗Chain center hash conservatively includes every potentially-read input of the child center computation."""
+    """🔗️Chain center hash conservatively includes every potentially-read input of the child center computation."""
     w = HashWriter()
     w.writeString("center.chain")
     w.writeHash(parent_hash)
@@ -14980,7 +14980,7 @@ def _hash_center_chain(
 
 
 def computeFlatHashesDict(kit: dict, designId: str) -> dict[str, dict]:
-    """🌳Compute per-piece {planeHash, centerHash} merkle hashes for the flattened design so callers can cache by chain identity."""
+    """🌳️Compute per-piece {planeHash, centerHash} merkle hashes for the flattened design so callers can cache by chain identity."""
     design = next((d for d in kit.get("designs", []) if d.get("id") == designId), None)
     if design is None:
         raise ValueError(f"Design {designId} not found")
@@ -15070,7 +15070,7 @@ def computeFlatHashesDict(kit: dict, designId: str) -> dict[str, dict]:
 def flattenDesignCachedDict(
     kit: dict, designId: str, cache: dict[str, dict] | None = None
 ) -> tuple[dict, dict[str, dict]]:
-    """🧠Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run."""
+    """🧠️Flatten a design reusing cached plane/center values when the per-piece merkle hashes match the previous run."""
     newHashes = computeFlatHashesDict(kit, designId)
     rep = flattenDesignReportDict(kit, designId)
     if not rep["ok"]:
@@ -15134,18 +15134,18 @@ def flattenDesignCachedDict(
     return rep, nextCache
 
 
-# #endregion 🌳Flatten Merkle Hashes
+# #endregion 🌳️Flatten Merkle Hashes
 
 
 # #endregion 🌤️Flatten Design
 
 
-# #region 🧿Kit Import/Export
+# #region 🧿️Kit Import/Export
 # Import and export utilities for kit serialization and deserialization.
 
 
 class KitData:
-    """🔖Simple in-memory kit representation that supports attribute access."""
+    """🔖️Simple in-memory kit representation that supports attribute access."""
 
     def __init__(self, data: dict):
         self._data = data
@@ -15166,7 +15166,7 @@ class KitData:
         return self._data
 
     def filter_kit(self, filter_spec: dict) -> "KitData":
-        """🔖General-purpose kit filter with glob support."""
+        """🔖️General-purpose kit filter with glob support."""
         design_id = filter_spec.get("design_id")
         tags = filter_spec.get("representation_tags")
 
@@ -15452,7 +15452,7 @@ class KitData:
 
 
 def _parse_connector_from_sqlite(row: dict) -> dict:
-    """🔖_parse_connector_from_sqlite performs the _parse_connector_from_sqlite operation."""
+    """🔖️_parse_connector_from_sqlite performs the _parse_connector_from_sqlite operation."""
     return {
         "id": row.get("id"),
         "name": row.get("name"),
@@ -15474,7 +15474,7 @@ def _parse_connector_from_sqlite(row: dict) -> dict:
 
 
 def _parse_representation_from_sqlite(row: dict) -> dict:
-    """🔖_parse_representation_from_sqlite performs the _parse_representation_from_sqlite operation."""
+    """🔖️_parse_representation_from_sqlite performs the _parse_representation_from_sqlite operation."""
     return {
         "id": row.get("id"),
         "name": row.get("name"),
@@ -15486,7 +15486,7 @@ def _parse_representation_from_sqlite(row: dict) -> dict:
 def _parse_type_from_sqlite(
     row: dict, connectors: list[dict], representations: list[dict]
 ) -> dict:
-    """🔖_parse_type_from_sqlite performs the _parse_type_from_sqlite operation."""
+    """🔖️_parse_type_from_sqlite performs the _parse_type_from_sqlite operation."""
     return {
         "id": row.get("id"),
         "name": row.get("name"),
@@ -15506,7 +15506,7 @@ def _parse_type_from_sqlite(
 
 
 def _parse_piece_from_sqlite(row: dict) -> dict:
-    """🔖Build a piece dict from a SQLite row aligned with ``compose/sqlite/🛢️schema.sql`` (``pose_*`` columns, ``design_ref_id``, ``hidden`` / ``locked``)."""
+    """🔖️Build a piece dict from a SQLite row aligned with ``compose/sqlite/🛢️schema.sql`` (``pose_*`` columns, ``design_ref_id``, ``hidden`` / ``locked``)."""
     _pose_plane_keys = (
         "pose_plane_origin_x",
         "pose_plane_origin_y",
@@ -15593,7 +15593,7 @@ def _parse_piece_from_sqlite(row: dict) -> dict:
 
 
 def _parse_connection_from_sqlite(row: dict) -> dict:
-    """🔖_parse_connection_from_sqlite performs the _parse_connection_from_sqlite operation."""
+    """🔖️_parse_connection_from_sqlite performs the _parse_connection_from_sqlite operation."""
     return {
         "id": row.get("id"),
         "parent": {
@@ -15621,7 +15621,7 @@ def _parse_connection_from_sqlite(row: dict) -> dict:
 def _parse_design_from_sqlite(
     row: dict, pieces: list[dict], connections: list[dict]
 ) -> dict:
-    """🔖_parse_design_from_sqlite performs the _parse_design_from_sqlite operation."""
+    """🔖️_parse_design_from_sqlite performs the _parse_design_from_sqlite operation."""
     view = None
     if (
         row.get("view_center_u") is not None
@@ -15665,7 +15665,7 @@ def _parse_design_from_sqlite(
 
 
 def _build_folder_path(kit_dict: dict, folder_id: str) -> str:
-    """🔖Build folder path from folder hierarchy."""
+    """🔖️Build folder path from folder hierarchy."""
     for f in kit_dict.get("folders", []):
         if f.get("id") == folder_id:
             parent = f.get("parent")
@@ -15678,7 +15678,7 @@ def _build_folder_path(kit_dict: dict, folder_id: str) -> str:
 
 
 def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
-    """🔖Build file path from folder hierarchy and file name."""
+    """🔖️Build file path from folder hierarchy and file name."""
     folder = file_dict.get("folder")
     if folder:
         folder_path = _build_folder_path(kit_dict, folder.get("id", ""))
@@ -15687,16 +15687,16 @@ def _build_file_path(kit_dict: dict, file_dict: dict) -> str:
     return file_dict.get("name", "")
 
 
-# #region 🔄Kit Workflow Helpers
+# #region 🔄️Kit Workflow Helpers
 
 
 def _kit_to_dict(kit: KitData | dict) -> dict:
-    """🔖Return the underlying kit dictionary."""
+    """🔖️Return the underlying kit dictionary."""
     return kit.to_dict() if isinstance(kit, KitData) else kit
 
 
 def _kit_without_file_blobs(kit: KitData | dict) -> dict:
-    """🔖Return a deep copy of a kit dictionary without embedded file blobs."""
+    """🔖️Return a deep copy of a kit dictionary without embedded file blobs."""
     kit_copy = copy.deepcopy(_kit_to_dict(kit))
     for file_entry in kit_copy.get("files", []):
         file_entry.pop("blob", None)
@@ -15704,13 +15704,13 @@ def _kit_without_file_blobs(kit: KitData | dict) -> dict:
 
 
 def _decode_kit_file_blob(blob: str) -> bytes:
-    """🔖Decode a kit file blob into raw bytes."""
+    """🔖️Decode a kit file blob into raw bytes."""
     encoded = blob.split(",", 1)[1] if blob.startswith("data:") else blob
     return base64.b64decode(encoded)
 
 
 def _attach_file_blobs_to_kit(kit_dict: dict, files: dict[str, bytes]) -> dict:
-    """🔖Attach file blobs from asset bytes to a kit dictionary."""
+    """🔖️Attach file blobs from asset bytes to a kit dictionary."""
     for file_entry in kit_dict.get("files", []):
         file_path = _build_file_path(kit_dict, file_entry)
         if file_path in files:
@@ -15722,7 +15722,7 @@ def _attach_file_blobs_to_kit(kit_dict: dict, files: dict[str, bytes]) -> dict:
 def _collect_kit_asset_files(
     kit: KitData | dict, files: typing.Optional[dict[str, bytes]] = None
 ) -> dict[str, bytes]:
-    """🔖Collect asset bytes for the current kit file entries."""
+    """🔖️Collect asset bytes for the current kit file entries."""
     data = _kit_to_dict(kit)
     existing_files = files or {}
     collected: dict[str, bytes] = {}
@@ -15737,7 +15737,7 @@ def _collect_kit_asset_files(
 
 
 def _merge_sqlite_entity(parsed: dict, payload_entity: typing.Optional[dict]) -> dict:
-    """🧱Merge a structured SQLite entity with payload metadata."""
+    """🧱️Merge a structured SQLite entity with payload metadata."""
     if payload_entity is None:
         return parsed
     merged = copy.deepcopy(payload_entity)
@@ -15752,7 +15752,7 @@ def _merge_sqlite_entity(parsed: dict, payload_entity: typing.Optional[dict]) ->
 
 
 def _read_kit_from_sqlite(db_path: str) -> dict:
-    """🔖Read a kit dictionary from the folder SQLite database."""
+    """🔖️Read a kit dictionary from the folder SQLite database."""
     import sqlite3
 
     if not os.path.exists(db_path):
@@ -15952,13 +15952,13 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
 
 
 def import_file_kit(path: str) -> KitData:
-    """📥Import a JSON file kit (via the ``compose-gql`` I/O path)."""
+    """📥️Import a JSON file kit (via the ``compose-gql`` I/O path)."""
     d = load_kit_via_io("io.importFromFile", {"path": path})
     return KitData(d)
 
 
 def export_file_kit(kit: KitData | dict, path: str) -> None:
-    """📤Export a JSON file kit (via ``compose-gql``)."""
+    """📤️Export a JSON file kit (via ``compose-gql``)."""
     dto = _kit_to_dict(kit)
     with StoreClient() as c:
         c.call("kit.create", {"dto": dto})
@@ -15966,7 +15966,7 @@ def export_file_kit(kit: KitData | dict, path: str) -> None:
 
 
 def import_folder_kit(folder_path: str) -> tuple[KitData, dict[str, bytes]]:
-    """🔖Import a folder kit backed by :file:`.compose/kit.db` (``compose-gql`` + Rust SQLite)."""
+    """🔖️Import a folder kit backed by :file:`.compose/kit.db` (``compose-gql`` + Rust SQLite)."""
     try:
         kit_dict = load_kit_via_io("io.importFromFolder", {"path": folder_path})
     except FileNotFoundError:
@@ -15987,7 +15987,7 @@ def import_folder_kit(folder_path: str) -> tuple[KitData, dict[str, bytes]]:
 def export_folder_kit(
     kit: KitData | dict, files: dict[str, bytes], folder_path: str
 ) -> None:
-    """🔖Export a folder kit (``compose-gql`` + Rust SQLite on disk)."""
+    """🔖️Export a folder kit (``compose-gql`` + Rust SQLite on disk)."""
     dto = _kit_to_dict(kit)
     asset_files = _collect_kit_asset_files(dto, files)
     os.makedirs(folder_path, exist_ok=True)
@@ -16010,7 +16010,7 @@ def export_folder_kit(
 
 
 def _read_remote_kit_bytes(uri: str) -> tuple[str, bytes, str]:
-    """🔖Read remote kit bytes and detect JSON or ZIP format."""
+    """🔖️Read remote kit bytes and detect JSON or ZIP format."""
     parsed = urllib.parse.urlparse(uri)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         raise RemoteKitUriNotValid(uri)
@@ -16031,7 +16031,7 @@ def _read_remote_kit_bytes(uri: str) -> tuple[str, bytes, str]:
 
 
 def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
-    """🔖Import a remote kit from JSON or ZIP."""
+    """🔖️Import a remote kit from JSON or ZIP."""
     remote_kind, body, _ = _read_remote_kit_bytes(uri)
     if remote_kind == "archive":
         with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as handle:
@@ -16049,7 +16049,7 @@ def import_remote_kit(uri: str) -> tuple[KitData, dict[str, bytes]]:
 
 
 def edit_temporary_kit(kit: KitData | dict, commands: list[dict] | dict) -> KitData:
-    """🔖Edit an in-memory kit with ``ChangeKitCommand`` JSON (``compose.rs``) via the sidecar."""
+    """🔖️Edit an in-memory kit with ``ChangeKitCommand`` JSON (``compose.rs``) via the sidecar."""
     if isinstance(commands, dict):
         raise TypeError(
             "dict diffs are removed — pass a list of ChangeKitCommand objects as JSON"
@@ -16065,14 +16065,14 @@ def edit_temporary_kit(kit: KitData | dict, commands: list[dict] | dict) -> KitD
 
 
 def edit_file_kit(path: str, diff: dict) -> KitData:
-    """🔖Edit a JSON file kit in place."""
+    """🔖️Edit a JSON file kit in place."""
     updated = edit_temporary_kit(import_file_kit(path), diff)
     export_file_kit(updated, path)
     return updated
 
 
 def edit_folder_kit(folder_path: str, diff: dict) -> KitData:
-    """🔖Edit a folder kit in place."""
+    """🔖️Edit a folder kit in place."""
     kit, files = import_folder_kit(folder_path)
     updated = edit_temporary_kit(kit, diff)
     export_folder_kit(updated, _collect_kit_asset_files(updated, files), folder_path)
@@ -16080,7 +16080,7 @@ def edit_folder_kit(folder_path: str, diff: dict) -> KitData:
 
 
 def edit_archive_kit(path: str, diff: dict) -> KitData:
-    """🔖Edit an archive kit in place."""
+    """🔖️Edit an archive kit in place."""
     kit, files = import_kit(path)
     updated = edit_temporary_kit(kit, diff)
     export_kit(updated, _collect_kit_asset_files(updated, files), path)
@@ -16104,7 +16104,7 @@ def _write_remote_kit_bytes(uri: str, body: bytes, content_type: str) -> None:
 
 
 def edit_remote_kit(uri: str, diff: dict) -> KitData:
-    """🔖Edit a remote JSON or ZIP kit in place."""
+    """🔖️Edit a remote JSON or ZIP kit in place."""
     remote_kind, _, content_type = _read_remote_kit_bytes(uri)
     kit, files = import_remote_kit(uri)
     updated = edit_temporary_kit(kit, diff)
@@ -16127,11 +16127,11 @@ def edit_remote_kit(uri: str, diff: dict) -> KitData:
     return updated
 
 
-# #endregion 🔄Kit Workflow Helpers
+# #endregion 🔄️Kit Workflow Helpers
 
 
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
-    """📦Import a kit from a ``.zip`` (``kit.json`` at archive root) via :program:`compose-gql`."""
+    """📦️Import a kit from a ``.zip`` (``kit.json`` at archive root) via :program:`compose-gql`."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"File not found: {path}")
     kit_dict = load_kit_via_io("io.importFromZip", {"path": path})
@@ -16140,7 +16140,7 @@ def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
 
 
 def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
-    """🔖Write kit data to SQLite database using the TypeScript schema."""
+    """🔖️Write kit data to SQLite database using the TypeScript schema."""
     import sqlite3
     from datetime import datetime
 
@@ -16632,7 +16632,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
 
 
 def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
-    """📦Export a kit to a ``.zip`` (``kit.json`` at root) via :program:`compose-gql`."""
+    """📦️Export a kit to a ``.zip`` (``kit.json`` at root) via :program:`compose-gql`."""
     _ = files  # file blobs are carried on the DTO; external assets follow Rust inlining rules
     data = _kit_to_dict(kit)
     with StoreClient() as c:
@@ -16640,11 +16640,11 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
         c.call("io.exportToZip", {"path": path})
 
 
-# #region 🧬Kit Kind Classes
+# #region 🧬️Kit Kind Classes
 
 
 class TransportKit:
-    """📋 Wraps a static JSON string for kit serialization/deserialization."""
+    """📋️ Wraps a static JSON string for kit serialization/deserialization."""
 
     def __init__(self, json_str: str):
         self.json = json_str
@@ -16658,7 +16658,7 @@ class TransportKit:
 
 
 class ArchiveKit:
-    """📦 Wraps a static zipped local kit."""
+    """📦️ Wraps a static zipped local kit."""
 
     def __init__(self, data: bytes):
         self.data = data
@@ -16689,7 +16689,7 @@ class ArchiveKit:
 
 
 class SyncKit:
-    """🔄 Base class for synchronized kit kinds."""
+    """🔄️ Base class for synchronized kit kinds."""
 
     def __init__(self, kit: KitData):
         self._kit = kit
@@ -16758,7 +16758,7 @@ class SyncKit:
 
 
 class DevKit(SyncKit):
-    """📝 Synchronized JSON file kit."""
+    """📝️ Synchronized JSON file kit."""
 
     @staticmethod
     def from_json(json_str: str) -> "DevKit":
@@ -16766,24 +16766,24 @@ class DevKit(SyncKit):
 
 
 class LocalKit(SyncKit):
-    """📂 Synchronized folder with .compose/kit.db SQLite database."""
+    """📂️ Synchronized folder with .compose/kit.db SQLite database."""
 
     pass
 
 
 class RemoteKit(SyncKit):
-    """🌐 Synchronized websocket connection to compose/hub."""
+    """🌐️ Synchronized websocket connection to compose/hub."""
 
     pass
 
 
-# #endregion 🧬Kit Kind Classes
+# #endregion 🧬️Kit Kind Classes
 
 
-# #endregion 🧿Kit Import/Export
+# #endregion 🧿️Kit Import/Export
 
 
-# #region 🔩Kit Representation Export
+# #region 🔩️Kit Representation Export
 # 3D representation export utilities for designs. Exports design scene graphs as GLB, GLTF, OBJ, STL, PLY, OFF, IFC.
 
 EXPORT_REPRESENTATION_FORMATS: dict[str, str] = {
@@ -16800,7 +16800,7 @@ EXPORT_REPRESENTATION_FORMATS: dict[str, str] = {
 
 
 def _plane_to_matrix_4x4(plane: "Plane") -> numpy.ndarray:
-    """🔖Convert a Plane to a 4x4 column-major transformation matrix."""
+    """🔖️Convert a Plane to a 4x4 column-major transformation matrix."""
     origin = numpy.array([plane.origin.x, plane.origin.y, plane.origin.z])
     x_axis = numpy.array([plane.xAxis.x, plane.xAxis.y, plane.xAxis.z])
     y_axis = numpy.array([plane.yAxis.x, plane.yAxis.y, plane.yAxis.z])
@@ -16837,7 +16837,7 @@ def _compose_matrix_to_gltf_matrix(matrix: numpy.ndarray) -> numpy.ndarray:
 
 
 def _identity_plane() -> "Plane":
-    """🔖Create an identity plane at the world origin with standard axes."""
+    """🔖️Create an identity plane at the world origin with standard axes."""
     p = Plane()
     p.origin = Point(x=0.0, y=0.0, z=0.0)
     p.xAxis = Vector(x=1.0, y=0.0, z=0.0)
@@ -16846,19 +16846,19 @@ def _identity_plane() -> "Plane":
 
 
 def _type_key_from_id(type_id: "TypeId") -> str:
-    """🔖Build a unique string key from a TypeId (name:variant)."""
+    """🔖️Build a unique string key from a TypeId (name:variant)."""
     return f"{type_id.name}:{type_id.variant}"
 
 
 def _type_key_from_type(t: "Type") -> str:
-    """🔖Build a unique string key from a Type (name:variant)."""
+    """🔖️Build a unique string key from a Type (name:variant)."""
     return f"{t.name}:{t.variant}"
 
 
 def _find_matching_representation(
     kit: "Kit", type_obj: "Type", tags: list[str]
 ) -> typing.Optional["Representation"]:
-    """📨Find the best matching representation for a type given requested tags."""
+    """📨️Find the best matching representation for a type given requested tags."""
     if not type_obj.representations or len(type_obj.representations) == 0:
         return None
     if not tags or len(tags) == 0:
@@ -16888,7 +16888,7 @@ def _find_matching_representation(
 def _load_glb_mesh_from_bytes(
     raw: bytes, mesh_name: str | None = None
 ) -> "typing.Any | None":
-    """🔖Load a mesh directly from GLB bytes by reading accessors."""
+    """🔖️Load a mesh directly from GLB bytes by reading accessors."""
     import struct as _struct
 
     import trimesh as _trimesh
@@ -17042,7 +17042,7 @@ def _load_glb_mesh_from_bytes(
 def _load_type_mesh(
     kit: "Kit", type_obj: "Type", tags: list[str]
 ) -> "typing.Any | None":
-    """🎯Load the 3D mesh for a type from its best-matching representation blob."""
+    """🎯️Load the 3D mesh for a type from its best-matching representation blob."""
     import base64 as _base64
 
     import trimesh as _trimesh
@@ -17578,7 +17578,7 @@ def export_design_representation(
 
     scene = _trimesh.Scene()
 
-    # #region 🎁Load Or Create Meshes Per Type
+    # #region 🎁️Load Or Create Meshes Per Type
     type_meshes: dict[str, str] = {}
     for piece in pieces:
         if piece.type is None:
@@ -17602,9 +17602,9 @@ def export_design_representation(
             geometry_name = tk
         type_meshes[tk] = geometry_name
         scene.geometry[geometry_name] = mesh
-    # #endregion 🎁Load Or Create Meshes Per Type
+    # #endregion 🎁️Load Or Create Meshes Per Type
 
-    # #region 🧭Build Scene Graph With Connection Hierarchy
+    # #region 🧭️Build Scene Graph With Connection Hierarchy
     def _build_node(piece_id: str) -> None:
         piece = pieces_dict[piece_id]
         world_plane = piece_planes[piece_id]
@@ -17642,13 +17642,13 @@ def export_design_representation(
 
     for root_id in roots:
         _build_node(root_id)
-    # #endregion 🧭Build Scene Graph With Connection Hierarchy
+    # #endregion 🧭️Build Scene Graph With Connection Hierarchy
 
     return _export_trimesh_scene(scene, format)
 
 
 def _export_empty_scene(format: str) -> bytes:
-    """🔖Export a minimal valid empty scene for the requested format."""
+    """🔖️Export a minimal valid empty scene for the requested format."""
     import struct as _struct
 
     empty_json: dict = {
@@ -17677,7 +17677,7 @@ def _export_empty_scene(format: str) -> bytes:
 
 
 def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
-    """🔖Export a trimesh.Scene to the requested format as bytes."""
+    """🔖️Export a trimesh.Scene to the requested format as bytes."""
     import base64
 
     import trimesh as _trimesh
@@ -17747,12 +17747,12 @@ def _export_trimesh_scene(scene: "typing.Any", format: str) -> bytes:
     return bytes(result)
 
 
-# #region 📻IFC Export
+# #region 📻️IFC Export
 # IFC exporter mapping compose domain to IFC4 schema via ifcopenshell.
 
 
 def _gltf_xyz_to_compose_xyz(x: float, y: float, z: float) -> tuple[float, float, float]:
-    """🔖Convert glTF coordinates to compose/IFC coordinates."""
+    """🔖️Convert glTF coordinates to compose/IFC coordinates."""
     return (float(x), float(-z), float(y))
 
 
@@ -18003,7 +18003,7 @@ def _export_ifc_from_dict(
         )
     # #endregion 🖨️Step 1
 
-    # #region 📋Step 2: Piece-to-storey Mapping From Piece Names
+    # #region 📋️Step 2: Piece-to-storey Mapping From Piece Names
     import re as _re
 
     def _piece_storey(piece_name: str) -> typing.Any:
@@ -18014,7 +18014,7 @@ def _export_ifc_from_dict(
                 return storey_by_number[floor]
         return default_storey
 
-    # #endregion 📋Step 2
+    # #endregion 📋️Step 2
 
     pieces = (design.get("pieces", []) or []) if design else []
     connections = (design.get("connections", []) or []) if design else []
@@ -18025,7 +18025,7 @@ def _export_ifc_from_dict(
         tag.get("id"): tag for tag in (kit.get("tags", []) or []) if tag.get("id")
     }
 
-    # #region 🛕Step 3: Types With Geometry
+    # #region 🛕️Step 3: Types With Geometry
     ifc_types: dict[str, typing.Any] = {}
     for piece in pieces:
         type_ref = piece.get("type")
@@ -18139,9 +18139,9 @@ def _export_ifc_from_dict(
                     )
 
         ifc_types[type_id] = ifc_type
-    # #endregion 🛕Step 3
+    # #endregion 🛕️Step 3
 
-    # #region 🎈Step 4: Pieces As Occurrences
+    # #region 🎈️Step 4: Pieces As Occurrences
     ifc_occurrences: dict[str, typing.Any] = {}
     ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
     for piece in pieces:
@@ -18314,7 +18314,7 @@ def _export_ifc_from_dict(
                 )
 
                 ifc_connector_ports[piece_id][conn_id] = port
-    # #endregion 🎈Step 4
+    # #endregion 🎈️Step 4
 
     # #region 🌪️Step 5: Connections As Port Relationships
     for connection in connections:
@@ -18384,7 +18384,7 @@ def _export_ifc_from_dict(
             )
     # #endregion 🌪️Step 5
 
-    # #region 🏆Step 6: Kit-level Metadata
+    # #region 🏆️Step 6: Kit-level Metadata
     kit_meta: dict[str, typing.Any] = {}
     if kit.get("name"):
         kit_meta["name"] = kit.get("name")
@@ -18403,7 +18403,7 @@ def _export_ifc_from_dict(
             "pset.add_pset", ifc, product=project, name="ComposeKitMetadata"
         )
         _ifc_api.run("pset.edit_pset", ifc, pset=kit_pset, properties=kit_meta)
-    # #endregion 🏆Step 6
+    # #endregion 🏆️Step 6
 
     return ifc.to_string().encode("utf-8")
 
@@ -18528,7 +18528,7 @@ def _export_ifc_from_entities(
         )
     # #endregion 🖨️Step 1
 
-    # #region 📋Step 2: Piece-to-storey Mapping
+    # #region 📋️Step 2: Piece-to-storey Mapping
     import re as _re
 
     def _piece_storey_entity(piece_name: str) -> typing.Any:
@@ -18539,12 +18539,12 @@ def _export_ifc_from_entities(
                 return storey_by_number[floor]
         return default_storey
 
-    # #endregion 📋Step 2
+    # #endregion 📋️Step 2
 
     pieces = design.pieces or []
     connections = design.connections or []
 
-    # #region 🛕Step 3: Types With Geometry
+    # #region 🛕️Step 3: Types With Geometry
     ifc_types: dict[str, typing.Any] = {}
     for piece in pieces:
         if piece.type is None:
@@ -18600,9 +18600,9 @@ def _export_ifc_from_entities(
                     )
 
         ifc_types[tk] = ifc_type
-    # #endregion 🛕Step 3
+    # #endregion 🛕️Step 3
 
-    # #region 🎈Step 4: Pieces As Occurrences
+    # #region 🎈️Step 4: Pieces As Occurrences
     ifc_occurrences: dict[str, typing.Any] = {}
     ifc_connector_ports: dict[str, dict[str, typing.Any]] = {}
     for piece in pieces:
@@ -18684,7 +18684,7 @@ def _export_ifc_from_entities(
                 )
 
                 ifc_connector_ports[piece.id_][conn_id] = port
-    # #endregion 🎈Step 4
+    # #endregion 🎈️Step 4
 
     # #region 🌪️Step 5: Connections As Port Relationships
     for conn in connections:
@@ -18748,9 +18748,9 @@ def _export_ifc_from_entities(
     return ifc.to_string().encode("utf-8")
 
 
-# #endregion 📻IFC Export
+# #endregion 📻️IFC Export
 
-# #endregion 🔩Kit Representation Export
+# #endregion 🔩️Kit Representation Export
 
 
 # #region ❄️Geometric Insights
@@ -18759,7 +18759,7 @@ def _export_ifc_from_entities(
 
 @dataclasses.dataclass
 class GeometricInsights:
-    """🔖Aggregated geometric KPIs for a single mesh or merged scene.
+    """🔖️Aggregated geometric KPIs for a single mesh or merged scene.
     All geometric data is expressed in the compose coordinate system:
     compose.x = glb.x, compose.y = -glb.x, compose.z = glb.y.
     """
@@ -18803,7 +18803,7 @@ class GeometricInsights:
 def get_geometric_insights_for_representation(
     representation: str | bytes,
 ) -> GeometricInsights:
-    """🔖Compute key performance indicators for the geometry of a GLB/GLTF representation."""
+    """🔖️Compute key performance indicators for the geometry of a GLB/GLTF representation."""
     import trimesh as _trimesh
 
     if isinstance(representation, bytes):
@@ -18977,7 +18977,7 @@ def get_geometric_insights_for_representation(
 def geometric_insights_to_report_dict(
     insights: GeometricInsights, round_digits: int = 6
 ) -> dict[str, typing.Any]:
-    """🔖Serialize GeometricInsights to a JSON-serializable dict for reports. Uses compose Point/Vector as {x,y,z}."""
+    """🔖️Serialize GeometricInsights to a JSON-serializable dict for reports. Uses compose Point/Vector as {x,y,z}."""
     out: dict[str, typing.Any] = {}
     r = round_digits
 
@@ -19041,12 +19041,12 @@ def geometric_insights_to_report_dict(
 # #endregion ❄️Geometric Insights
 
 
-# #region 🔍Spatial Math
+# #region 🔍️Spatial Math
 # Spatial math utilities for vector normalization and plane computation.
 
 
 def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
-    """🔖Normalize a 3D vector to unit length."""
+    """🔖️Normalize a 3D vector to unit length."""
     length = numpy.linalg.norm(v)
     if length < 1e-10:
         return v
@@ -19056,7 +19056,7 @@ def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
 def planeFromYAxis(
     yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.ndarray | None = None
 ) -> Plane:
-    """🔖Construct a plane from an origin point and a Y-axis direction."""
+    """🔖️Construct a plane from an origin point and a Y-axis direction."""
     if origin is None:
         origin = numpy.array([0.0, 0.0, 0.0])
     yAxis = normalizeVector(yAxis)
@@ -19185,10 +19185,10 @@ def computeChildPlane(
     return plane
 
 
-# #endregion 🔍Spatial Math
+# #endregion 🔍️Spatial Math
 
 
-# #region 🧪Tests
+# #region 🧪️Tests
 # Tests for the compose py module.
 
 TEST_TOLERANCE = 0.001
@@ -19204,7 +19204,7 @@ REPORTS_REPRESENTATION_KPI_DIR = (
 
 
 def _assemble_split_initial_kit_from_directory(initial_kit_dir: str) -> dict:
-    """🧩 Merges split kit shell JSON with sibling types/ and designs/ sidecars."""
+    """🧩️ Merges split kit shell JSON with sibling types/ and designs/ sidecars."""
     with open(os.path.join(initial_kit_dir, "kit.compose.json"), "r", encoding="utf-8") as f:
         kit = json.load(f)
     type_by_id: dict[str, dict] = {}
@@ -19258,7 +19258,7 @@ def _assemble_split_initial_kit_from_directory(initial_kit_dir: str) -> dict:
 
 
 def _deep_unwrap_hash_items_blocks(node):
-    """🧩 Recursively replaces every `{ hash, items: [...] }` collection block with its plain `items` array (test helpers operate on flat lists)."""
+    """🧩️ Recursively replaces every `{ hash, items: [...] }` collection block with its plain `items` array (test helpers operate on flat lists)."""
     if isinstance(node, dict):
         if isinstance(node.get("items"), list) and "hash" in node:
             return [_deep_unwrap_hash_items_blocks(v) for v in node["items"]]
@@ -19281,7 +19281,7 @@ def _test_load_json(filename: str) -> dict:
 
 
 def _test_load_kit(filename: str) -> dict:
-    """🧪Load and normalize kit JSON for Kit.parse (flattens parent/folder refs, etc.)."""
+    """🧪️Load and normalize kit JSON for Kit.parse (flattens parent/folder refs, etc.)."""
     data = _test_load_json(filename)
     if "id" in data and "uri" not in data:
         data["uri"] = data["id"]
@@ -19350,7 +19350,7 @@ def _test_load_kit(filename: str) -> dict:
 
 
 def _test_build_workflow_kit() -> dict:
-    """💼Build a compact kit fixture for workflow roundtrip tests."""
+    """💼️Build a compact kit fixture for workflow roundtrip tests."""
     asset_blob = "data:text/plain;base64," + base64.b64encode(
         b"workflow asset payload"
     ).decode("ascii")
@@ -19411,7 +19411,7 @@ def _test_build_workflow_kit() -> dict:
 
 
 def _test_build_workflow_diff(updated_name: str, updated_asset_name: str) -> dict:
-    """🔖Build a compact diff for workflow edit tests."""
+    """🔖️Build a compact diff for workflow edit tests."""
     return {
         "name": updated_name,
         "files": {
@@ -19428,7 +19428,7 @@ def _test_build_workflow_diff(updated_name: str, updated_asset_name: str) -> dic
 def _test_build_workflow_archive_bytes(
     kit_dict: dict, files: dict[str, bytes]
 ) -> bytes:
-    """🔖Build archive bytes for remote ZIP workflow tests."""
+    """🔖️Build archive bytes for remote ZIP workflow tests."""
     with tempfile.TemporaryDirectory() as tmpdir:
         archive_path = os.path.join(tmpdir, "workflow.zip")
         export_kit(KitData(kit_dict), files, archive_path)
@@ -19907,7 +19907,7 @@ class TestFlatten:
 
 
 def _flatten_merkle_set_path(obj: dict, path: str, value) -> None:
-    """🌳Assign a value inside a nested dict structure using a dotted path (creating intermediate dicts when missing)."""
+    """🌳️Assign a value inside a nested dict structure using a dotted path (creating intermediate dicts when missing)."""
     keys = path.split(".")
     current = obj
     for key in keys[:-1]:
@@ -19918,7 +19918,7 @@ def _flatten_merkle_set_path(obj: dict, path: str, value) -> None:
 
 
 def _flatten_merkle_find_design_by_path(kit: dict, design_path: list[str]) -> dict:
-    """🌳Resolve a design by its hierarchical name path (root, then successive parents)."""
+    """🌳️Resolve a design by its hierarchical name path (root, then successive parents)."""
     if not design_path:
         raise ValueError("designPath must not be empty")
     current = None
@@ -19947,7 +19947,7 @@ def _flatten_merkle_find_design_by_path(kit: dict, design_path: list[str]) -> di
 def _flatten_merkle_apply_mutations(
     kit: dict, design: dict, mutations: list[dict]
 ) -> None:
-    """🌳Apply the asset-described mutations in-place on a kit clone prior to recomputing hashes."""
+    """🌳️Apply the asset-described mutations in-place on a kit clone prior to recomputing hashes."""
     for mutation in mutations:
         kind = mutation.get("kind")
         path = mutation.get("path")
@@ -20604,7 +20604,7 @@ class TestKitFilterDesign:
             )
 
 
-# #region 🔍Find Replaceable Types In Designs Tests
+# #region 🔍️Find Replaceable Types In Designs Tests
 class TestFindReplaceableTypesInDesigns:
     _frt_doc = _test_load_json("find-replaceable-types.cases.compose.json")
 
@@ -20790,7 +20790,7 @@ class TestFindReplaceableTypesInDesigns:
                 )
 
 
-# #endregion 🔍Find Replaceable Types In Designs Tests
+# #endregion 🔍️Find Replaceable Types In Designs Tests
 
 
 class TestDesignQualitySum:
@@ -21058,7 +21058,7 @@ class TestExportDesignRepresentation:
 
 
 class TestGetGeometricInsightsForRepresentation:
-    """🔖Representation/KPI tests for get_geometric_insights_for_representation using nakagin-capsule-tower.gltf."""
+    """🔖️Representation/KPI tests for get_geometric_insights_for_representation using nakagin-capsule-tower.gltf."""
 
     def test_nakagin_capsule_tower_gltf_returns_insights(self):
         representation_path = os.path.join(
@@ -21117,7 +21117,7 @@ class TestGetGeometricInsightsForRepresentation:
 
 
 class TestTypeMeta:
-    """🔖Tests for TypeMeta deserialization from JSON."""
+    """🔖️Tests for TypeMeta deserialization from JSON."""
 
     def test_type_meta(self):
         data = _test_load_json("tambour.meta.type.compose.json")
@@ -21134,7 +21134,7 @@ class TestTypeMeta:
 
 
 class TestTypeShallow:
-    """🔖Tests for TypeShallow deserialization from JSON."""
+    """🔖️Tests for TypeShallow deserialization from JSON."""
 
     def test_type_shallow(self):
         data = _test_load_json("tambour.shallow.type.compose.json")
@@ -21152,7 +21152,7 @@ class TestTypeShallow:
 
 
 class TestDesignMeta:
-    """🔖Tests for DesignMeta deserialization from JSON."""
+    """🔖️Tests for DesignMeta deserialization from JSON."""
 
     def test_design_meta(self):
         data = _test_load_json("nakagin-capsule-tower.meta.design.compose.json")
@@ -21167,7 +21167,7 @@ class TestDesignMeta:
 
 
 class TestDesignShallow:
-    """🔖Tests for DesignShallow deserialization from JSON."""
+    """🔖️Tests for DesignShallow deserialization from JSON."""
 
     def test_design_shallow(self):
         data = _test_load_json("nakagin-capsule-tower.shallow.design.compose.json")
@@ -21190,7 +21190,7 @@ class TestDesignShallow:
 
 
 class TestKitMeta:
-    """🔖Tests for KitMeta deserialization from JSON."""
+    """🔖️Tests for KitMeta deserialization from JSON."""
 
     def test_kit_meta(self):
         data = _test_load_json("metabolism.meta.kit.compose.json")
@@ -21206,7 +21206,7 @@ class TestKitMeta:
 
 
 class TestKitShallow:
-    """🔖Tests for KitShallow deserialization from JSON."""
+    """🔖️Tests for KitShallow deserialization from JSON."""
 
     def test_kit_shallow(self):
         data = _test_load_json("metabolism.shallow.kit.compose.json")
@@ -21224,7 +21224,7 @@ class TestKitShallow:
 
 
 class TestKitToMetaShallow:
-    """🔖Tests for converting a full kit dict to meta and shallow representations."""
+    """🔖️Tests for converting a full kit dict to meta and shallow representations."""
 
     def test_kit_to_meta_shallow(self):
         kit_dict = _test_load_json("kit/dev/metabolism/wip/initialKit/kit.compose.json")
@@ -21285,7 +21285,7 @@ class TestKitToMetaShallow:
 
 
 class TestKitKind:
-    """📇Tests for the KitKind enum."""
+    """📇️Tests for the KitKind enum."""
 
     def test_all_kit_kinds_has_five_values(self):
         assert len(ALL_KIT_KINDS) == 5
@@ -21405,7 +21405,7 @@ class TestValidateKitDiffDict:
 
 
 class TestHash:
-    """🔖Tests for the Merkle hash functions."""
+    """🔖️Tests for the Merkle hash functions."""
 
     _hash_cases = _test_load_json("hash.cases.compose.json")
 
@@ -21453,7 +21453,7 @@ class TestHash:
 
 
 class TestMaxChildren:
-    """🔖Tests for maxChildren field on Port and Connector."""
+    """🔖️Tests for maxChildren field on Port and Connector."""
 
     def test_port_max_children_default(self):
         port = PortProps(name="TestPort")
@@ -21564,7 +21564,7 @@ def test_store_generate_id_roundtrip() -> None:
         assert snap.get("name") == "py-store-test"
 
 
-# #endregion 🧪Tests
+# #endregion 🧪️Tests
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ todos:
    content: Minimal symbol renames in elements/lib/react/*-play-host.tsx so playground builds against the new framework API
    status: completed
  - id: tests
-   content: "Extend the #region 🧪Tests block in core/index.ts to cover program lifecycle, surface routing (selector + capabilities), and the built-in window/panel surfaces"
+   content: "Extend the #region 🧪️Tests block in core/index.ts to cover program lifecycle, surface routing (selector + capabilities), and the built-in window/panel surfaces"
    status: completed
  - id: agents-md
    content: Update elements/lib/framework/AGENTS.md vocabulary line to Product/App/Mode/WindowKind/Surface/Capability/Plugin/Contribution
@@ -78,26 +78,26 @@ Stay framework-only - no new top-level folders. Edit existing files in place:
 
 Region structure inside `core/index.ts`:
 
-- `#region 🧱Header`
-- `#region 🔖JsonValue`
-- `#region 🔖Disposable`
-- `#region 🔖CommandBus` (`CommandBus`, `Controller`)
-- `#region 🔖ContextKeys` (typed context for `when` expressions)
-- `#region 🔖Capability` (`Capability = string` alias + helpers)
-- `#region 🔖UiNode` (kept; renderer-agnostic descriptors)
-- `#region 🔖SurfaceDefinition`
-- `#region 🔖WindowKindDefinition`
-- `#region 🔖ModeDefinition`
-- `#region 🔖AppDefinition`
-- `#region 🔖ProductDefinition`
-- `#region 🔖SurfaceSelector` (matcher: product/app/mode/windowKind/surface/kind/capabilities/when)
-- `#region 🔖ContributionRoute`
-- `#region 🔖ContributionRegistry`
-- `#region 🔖SurfaceRouter`
-- `#region 🔖ProductPlugin` (manifest + module + `PluginContext` + `SurfaceContext` + `defineProductPlugin`)
-- `#region 🔖PluginHost`
-- `#region 🔖ProductRuntime` (replaces `Workbench`; owns runtime state, command bus, observable subscriptions)
-- `#region 🧪Tests`
+- `#region 🧱️Header`
+- `#region 🔖️JsonValue`
+- `#region 🔖️Disposable`
+- `#region 🔖️CommandBus` (`CommandBus`, `Controller`)
+- `#region 🔖️ContextKeys` (typed context for `when` expressions)
+- `#region 🔖️Capability` (`Capability = string` alias + helpers)
+- `#region 🔖️UiNode` (kept; renderer-agnostic descriptors)
+- `#region 🔖️SurfaceDefinition`
+- `#region 🔖️WindowKindDefinition`
+- `#region 🔖️ModeDefinition`
+- `#region 🔖️AppDefinition`
+- `#region 🔖️ProductDefinition`
+- `#region 🔖️SurfaceSelector` (matcher: product/app/mode/windowKind/surface/kind/capabilities/when)
+- `#region 🔖️ContributionRoute`
+- `#region 🔖️ContributionRegistry`
+- `#region 🔖️SurfaceRouter`
+- `#region 🔖️ProductPlugin` (manifest + module + `PluginContext` + `SurfaceContext` + `defineProductPlugin`)
+- `#region 🔖️PluginHost`
+- `#region 🔖️ProductRuntime` (replaces `Workbench`; owns runtime state, command bus, observable subscriptions)
+- `#region 🧪️Tests`
 
 ## 4. Core types (essentials, not exhaustive)
 
@@ -219,7 +219,7 @@ Out of scope here: `elements/lib/react/*` play hosts still import a couple of fr
 
 Out of scope for this ticket. `compose/client/lib/sketchpad/js/index.ts` does not import framework symbols directly (verified - sketchpad has its own `DesignApp`/`KitApp` type names that are unrelated to the framework's `WorkbenchApp`). A follow-up ticket `SKETCHPAD-ON-FRAMEWORK-PRODUCT` will define `sketchpadProduct: ProductDefinition` and migrate Home/Kit/Design.
 
-## 8. Tests (extend existing `#region 🧪Tests` in `core/index.ts`)
+## 8. Tests (extend existing `#region 🧪️Tests` in `core/index.ts`)
 
 - `defineProductPlugin` + `PluginHost.activateAll` registers a typed surface contribution and disposes on deactivate.
 - `SurfaceRouter.matchesSurface` honours app/mode/windowKind/kind/capabilities (positive + negative cases).
@@ -229,7 +229,7 @@ Out of scope for this ticket. `compose/client/lib/sketchpad/js/index.ts` does no
 
 ## 9. Ticket bookkeeping
 
-- Reuse `.repo/🎫/26/05/24/REACT-CORE-PURE-ARCHITECTURE/` if it already covers framework rebuild (verify via `ticket_reopen`), otherwise `ticket_open FRAMEWORK-PRODUCT-PLUGINS`.
+- Reuse `.repo/🎫️/26/05/24/REACT-CORE-PURE-ARCHITECTURE/` if it already covers framework rebuild (verify via `ticket_reopen`), otherwise `ticket_open FRAMEWORK-PRODUCT-PLUGINS`.
 - Read `repo://goals` to associate with the right goal before opening.
 - All temporary scripts/notes inside the ticket folder.
 - Close ticket with summary listing edited files (`core/index.ts`, `renderer/react/index.tsx`, `AGENTS.md`, any minimal play-host symbol renames).

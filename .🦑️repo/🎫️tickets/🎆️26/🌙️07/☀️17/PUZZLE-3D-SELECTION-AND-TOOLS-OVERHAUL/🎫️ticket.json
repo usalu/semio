@@ -1,0 +1,15 @@
+{
+  "title": "Puzzle 3D Selection and Tools Overhaul",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Overhaul Puzzle 3D (and 5D parity) selection/tools: remove select utility, move selection to window options, fix worldPick deselect, gumball only on transform tools, vortex click-vs-drag select vs connect.",
+  "summary": "Fixed Puzzle 3D vortex replacement selection end to end. Plain clicks now use the surface selection merge mode, the plugin replaces the prior vortex in selective mode, and vortex marker materials are remounted whenever selected/hovered visual state changes so deselection is rendered immediately instead of waiting for another pointer event. Added renderer and plugin regressions and verified the Concrete Forest click sequence live.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2024"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️b934a45fce8d4cd6b47256c351408872",
+    "⚪️7db74da53dbf44fcaae22049dab357ff"
+  ]
+}

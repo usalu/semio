@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,18 +6,18 @@
 
 // Single-file source for the compose 3dm React UI embedded in Rhino WebView2.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 // Imports MUST include React, compose types, Lucide icons from assets, and ReactDOM.
 
 import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Kit, type Type as ComposeType, type Design, type Representation } from "@semio-tech/compose-react";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio-tech/semio-asset";
-import "../🎨globals.css";
+import "../🎨️globals.css";
 
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 // #region ⚗️WebViewGlobal
 // Global type augmentation for the WebView2 chrome.webview API.
@@ -64,7 +64,7 @@ export interface BridgeEvent {
 
 // #endregion 🎛️BridgeProtocol
 
-// #region 🌊BridgeClient
+// #region 🌊️BridgeClient
 // Bridge client MUST route all native calls through WebView2 postMessage.
 
 let requestCounter = 0;
@@ -72,7 +72,7 @@ const pendingRequests = new Map<string, { resolve: (value: unknown) => void; rej
 const eventListeners = new Map<string, Set<(payload: unknown) => void>>();
 
 /**
- * 📋Initializes the bridge message listener.
+ * 📋️Initializes the bridge message listener.
  * MUST be called once at app startup.
  */
 export function initBridge(): void {
@@ -104,7 +104,7 @@ export function initBridge(): void {
 }
 
 /**
- * 📨Sends a typed bridge request to the native host.
+ * 📨️Sends a typed bridge request to the native host.
  * MUST return a promise that resolves with the typed result.
  */
 export async function callBridge<T>(binding: string, method: string, params?: unknown): Promise<T> {
@@ -128,7 +128,7 @@ export async function callBridge<T>(binding: string, method: string, params?: un
 }
 
 /**
- * 📡Subscribes to a native bridge event.
+ * 📡️Subscribes to a native bridge event.
  */
 export function onBridgeEvent(event: string, callback: (payload: unknown) => void): () => void {
   if (!eventListeners.has(event)) {
@@ -141,7 +141,7 @@ export function onBridgeEvent(event: string, callback: (payload: unknown) => voi
   };
 }
 
-// #endregion 🌊BridgeClient
+// #endregion 🌊️BridgeClient
 
 // #region ⚙️TypedApis
 // Typed API wrappers MUST expose domain-specific operations only.
@@ -165,7 +165,7 @@ export const importApi = {
 
 // #endregion ⚙️TypedApis
 
-// #region 🧬TreeNodeKind
+// #region 🧬️TreeNodeKind
 // Tree node kind MUST distinguish between structural folders and selectable items.
 
 type TreeNodeKind = "kits" | "kit" | "types" | "type" | "representations" | "representation" | "designs" | "design";
@@ -178,9 +178,9 @@ interface TreeNode {
   data?: unknown;
 }
 
-// #endregion 🧬TreeNodeKind
+// #endregion 🧬️TreeNodeKind
 
-// #region 🎍BuildTree
+// #region 🎍️BuildTree
 // Tree builder MUST convert Kit[] into the specified tree structure.
 
 function buildTree(kits: Kit[]): TreeNode {
@@ -234,7 +234,7 @@ function buildTree(kits: Kit[]): TreeNode {
   };
 }
 
-// #endregion 🎍BuildTree
+// #endregion 🎍️BuildTree
 
 // #region 🌪️TreeNodeComponent
 // Tree node component MUST render expandable/collapsible nodes with action buttons.
@@ -296,7 +296,7 @@ function TreeNodeView({ node, depth, onImportKit, onImportRepresentation }: { no
 
 // #endregion 🌪️TreeNodeComponent
 
-// #region 🔑RhinoPanel
+// #region 🔑️RhinoPanel
 // RhinoPanel MUST manage loaded kits and dispatch import actions.
 
 export function RhinoPanel() {
@@ -404,7 +404,7 @@ export function RhinoPanel() {
   );
 }
 
-// #endregion 🔑RhinoPanel
+// #endregion 🔑️RhinoPanel
 
 // #region 🛎️Entrypoint
 // Entrypoint MUST initialize the bridge and render the RhinoPanel component.

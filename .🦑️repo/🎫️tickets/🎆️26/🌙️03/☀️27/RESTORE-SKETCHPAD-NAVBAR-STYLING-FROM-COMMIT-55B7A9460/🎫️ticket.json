@@ -1,0 +1,12 @@
+{
+  "title": "Restore Sketchpad Navbar Styling From Commit 55b7a9460",
+  "emoji": "✏️",
+  "status": "closed",
+  "description": "Extract the sketchpad navbar styling and visible elements from commit 55b7a94600d19400243dafae711c6af7dfec8889 into the current sketchpad build settings, prioritizing visual structure and element composition over legacy toggle behavior. Verify with existing tests/build commands and close the ticket when complete.",
+  "summary": "Restored the sketchpad navbar chrome to match commit 55b7a9460 by bringing back the padded navbar row, splitting navigation controls back into standalone navbar items, and reintroducing the fullscreen toggle while keeping the current panel-toggle behavior. Extended the embedded Playwright suite with a navbar structure assertion covering the restored chrome.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1123"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️e42d5ccf86db41f08af5fdb49a7df979"]
+}

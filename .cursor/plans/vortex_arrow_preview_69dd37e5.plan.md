@@ -31,7 +31,7 @@ Vortices are connection points with world `position` and `direction`. Today both
 
 Plugin already emits direction in `[world_vortices_json](puzzle/plugin/rs/lib.rs)`. Window options follow the existing `vortex_show` pattern (per-window via `Puzzle3dWindowOptions`).
 
-Goal: `🎯r2602` (Running Sketchpad). New ticket (no open ticket covers arrow display).
+Goal: `🎯️r2602` (Running Sketchpad). New ticket (no open ticket covers arrow display).
 
 ## Display semantics
 
@@ -116,7 +116,7 @@ Extend existing program tests in the same file (no new test files):
 
 ## Ticket workflow (on execute)
 
-1. `ticket_open` under goal `🎯r2602`
+1. `ticket_open` under goal `🎯️r2602`
 2. Implement + run `cargo test -p puzzle-plugin` for the new/updated cases
 3. `ticket_close` with summary and touched paths
 

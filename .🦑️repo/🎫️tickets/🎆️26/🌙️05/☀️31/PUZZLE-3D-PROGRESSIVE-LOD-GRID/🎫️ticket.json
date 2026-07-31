@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 3d Progressive Lod Grid",
+  "emoji": "📐️",
+  "status": "open",
+  "description": "Display progressive LOD grid bands in puzzle 3d according to LOD (mirror puzzle 2d large/medium/small/micro layers).",
+  "summary": "Puzzle 3d LOD grid now mirrors puzzle 2d progressive bands: large/medium/small/micro layers at fixed quanta (10/2.5/0.5/0.1 × gridFactor) with stroke opacities 1/0.72/0.48/0.32, revealed as scene LOD decreases (thresholds 1000/50/10/2). LodGridHelper renders stacked GridHelpers; lodGridStepWorld returns the finest visible band for relocate snap. Exported lodGridBandStepsWorld, lodProgressiveGridLayers, band constants. Vitest: puzzle/3d/react 114 pass, puzzle/3d/play 18 pass.",
+  "goal": "🎯️framework",
+  "sessions": ["⚪️a4450a1270714568b46bd3e951d17801", "⚪️246bf58357314b5fb682cde7112815d4"]
+}

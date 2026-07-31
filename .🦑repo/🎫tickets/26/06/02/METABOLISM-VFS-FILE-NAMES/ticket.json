@@ -1,9 +1,0 @@
-{
-  "title": "Metabolism VFS File Names",
-  "emoji": "📁",
-  "status": "closed",
-  "description": "Fix sketchpad VFS showing file GUIDs instead of names for metabolism kit after installProjection.",
-  "summary": "Fixed metabolism kit files showing UUIDs in sketchpad VFS: `initial_kit_projection_value` now round-trips file `name`, `folder`, `mime`, and `icon`; added folder projection/hydration. Corrected JS VFS folder children query (`subFolders`, drop invalid `typologies`). Added Rust + JS tests.",
-  "goal": "🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪496c269d50514c4abc76f78dc13400d4"]
-}

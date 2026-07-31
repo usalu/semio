@@ -1,0 +1,12 @@
+{
+  "title": "Tighten Dag Flow Node Rectangles",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "DAG and flow computation nodes use oversized fixed rectangles (160px wide, 24px row height, extra header row). Reduce to minimal content-fitted rectangles with almost no spacing.",
+  "summary": "Tightened DAG/flow node rectangles: row height 24→14, removed extra header row, added content-fitted computation_node_width/io_widget sizing, edge-aligned port labels with 4px inset, auto-fit on engine rebuild. Flow widget_node_size now uses shared helpers. Demo fixture updated. All dag (24) and flow core (16) tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1554"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️7bc2d4b0366c4bcba17980a1b9ce9493"]
+}

@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/story/puzzle/2d/Board.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/story/puzzle/2d/Board.stories.tsx
 // Specs: Host the framework renderer's `Board2dHost` for Storybook + Playwright selection/camera/utility checks.
-// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/utility actions so the controlled scene ⇄ session loop round-trips without a running dev server.
+// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the `puzzle2d-play` Rust plugin's `applyBoardEvents`/selection/utility actions so the controlled scene ⇄️ session loop round-trips without a running dev server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
@@ -50,7 +50,7 @@ const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   lodMode: "automatic",
 };
 
-/** @emoji 📬 Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` — only the event kinds the stories exercise. */
+/** @emoji 📬️ Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` — only the event kinds the stories exercise. */
 function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): StoryPuzzle2dState {
   let events: readonly { readonly name: string; readonly payload?: Record<string, unknown> }[] = [];
   try {
@@ -112,7 +112,7 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
   return { fixture, runtime };
 }
 
-/** @emoji 🧩 Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough for the interaction stories to round-trip. */
+/** @emoji 🧩️ Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough for the interaction stories to round-trip. */
 function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
   const { fixture, runtime } = state;
   switch (action) {
@@ -243,7 +243,7 @@ function Board2dStoryHost({ initialFixture, initialRuntime, interactive }: { rea
 //#endregion StoryHost
 
 const meta = {
-  title: "🧩puzzle🩻2d",
+  title: "🧩️puzzle🩻️2d",
   component: Board2dStoryHost,
   parameters: {
     layout: "fullscreen",

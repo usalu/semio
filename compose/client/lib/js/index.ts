@@ -1,23 +1,23 @@
-//#region 🧲Header
+//#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // GNU LGPL-3.0 or later — compose/js: stateless {@link Session} + GraphQL transport (WASM worker or inline); no client-side kit cache.
-//#endregion 🧲Header
+//#endregion 🧲️Header
 
-//#region 🌐GraphqlContract
-/** @emoji 📜 Golden SDL path (single schema source for tooling and embedded tests). */
+//#region 🌐️GraphqlContract
+/** @emoji 📜️ Golden SDL path (single schema source for tooling and embedded tests). */
 export const COMPOSE_GRAPHQL_GOLDEN_SCHEMA_PATH = "compose/client/schema/graphql/schema.golden.graphql" as const;
 
-/** @emoji 🧵 GraphQL-over-HTTP POST body — the only payload shape across the rs/js boundary. */
+/** @emoji 🧵️ GraphQL-over-HTTP POST body — the only payload shape across the rs/js boundary. */
 export type GraphqlWirePostBody = Readonly<{
   query: string;
   variables: Readonly<Record<string, unknown>>;
   operationName: string | null;
 }>;
 
-/** @emoji 🧪 Empty in-memory WASM store URI (host lifecycle only; kit state changes use GraphQL). */
+/** @emoji 🧪️ Empty in-memory WASM store URI (host lifecycle only; kit state changes use GraphQL). */
 export const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
 
-/** @emoji 🛑 Rejects non-empty WASM bootstrap URIs; kit JSON must use {@link Store.installProjection}. */
+/** @emoji 🛑️ Rejects non-empty WASM bootstrap URIs; kit JSON must use {@link Store.installProjection}. */
 export function assertRsJsSessionOpenUri(uri: string): void {
   const t = uri.trim();
   if (t !== RS_WASM_EMPTY_STORE_URI) {
@@ -30,10 +30,10 @@ export function assertRsJsSessionOpenUri(uri: string): void {
     throw new Error("Session.open: dev+json bootstrap is not part of the rs/js contract; use Session.openInMemory() and store.installProjection(json)");
   }
 }
-//#endregion 🌐GraphqlContract
+//#endregion 🌐️GraphqlContract
 
-//#region 🌐GraphqlKitSelection
-/** @emoji 📬 Selection for golden {@code Response} on command mutation leaves. */
+//#region 🌐️GraphqlKitSelection
+/** @emoji 📬️ Selection for golden {@code Response} on command mutation leaves. */
 export const GQL_RESPONSE_SELECTION = "ok errors { kind message requestId } result { ... on IdResult { value } }";
 
 type GqlScan = { paren: number; inString: boolean; escape: boolean };
@@ -132,7 +132,7 @@ function transformKitSelectionBlock(inner: string): string {
   return `${head} { ${transformKitSelectionBlock(body)} }${tail === "" ? "" : ` ${transformKitSelectionBlock(tail)}`}`;
 }
 
-/** @emoji 📬 Appends {@link GQL_RESPONSE_SELECTION} after kit command args, not inside input objects. */
+/** @emoji 📬️ Appends {@link GQL_RESPONSE_SELECTION} after kit command args, not inside input objects. */
 export function withResponseSelection(kitSelection: string): string {
   const trimmed = kitSelection.trim();
   const open = trimmed.indexOf("{");
@@ -145,13 +145,13 @@ export function withResponseSelection(kitSelection: string): string {
   const result = `${head} { ${transformKitSelectionBlock(inner)} }`;
   return tail === "" ? result : `${result} ${withResponseSelection(tail)}`;
 }
-//#endregion 🌐GraphqlKitSelection
+//#endregion 🌐️GraphqlKitSelection
 
-//#region 🌐RsWasmTransport
+//#region 🌐️RsWasmTransport
 export type GraphqlExecuteFn = (requestJson: string) => Promise<string>;
 export type GraphqlSubscribeFn = (requestJson: string, onEvent: (eventJson: string) => void) => Promise<void>;
 
-/** @emoji 🌐 WASM handle — JSON GraphQL wire in/out only (no Rust DTO surface). */
+/** @emoji 🌐️ WASM handle — JSON GraphQL wire in/out only (no Rust DTO surface). */
 export type RsWasmGraphqlHandle = Readonly<{
   execute: GraphqlExecuteFn;
   subscribe: GraphqlSubscribeFn;
@@ -212,22 +212,22 @@ export async function createRsWasmGraphqlHandle(bootstrapUri: string, opts?: Rea
   }
   return wasmHandle as RsWasmGraphqlHandle;
 }
-//#endregion 🌐RsWasmTransport
+//#endregion 🌐️RsWasmTransport
 
-//#region 🔌Adapters
-//#endregion 🔌Adapters
+//#region 🔌️Adapters
+//#endregion 🔌️Adapters
 
 export type ID = string;
 
-//#region 🌐Transport
-/** @emoji 🧵 Bundled worker — Vite resolves `@semio-tech/compose-rs-wasm`; Blob workers cannot import bare specifiers. */
+//#region 🌐️Transport
+/** @emoji 🧵️ Bundled worker — Vite resolves `@semio-tech/compose-rs-wasm`; Blob workers cannot import bare specifiers. */
 export function createKitStoreWorker(): Worker {
   return new Worker(new URL("./kit-store.worker", import.meta.url), { type: "module" });
 }
 
-/** @emoji 🧵 File-local GraphQL wire JSON (not part of the public @semio-tech/compose-js surface). */
+/** @emoji 🧵️ File-local GraphQL wire JSON (not part of the public @semio-tech/compose-js surface). */
 type JsonValue = string | number | boolean | null | readonly JsonValue[] | JsonObject;
-/** @emoji 🧵 File-local GraphQL wire JSON object node. */
+/** @emoji 🧵️ File-local GraphQL wire JSON object node. */
 type JsonObject = { readonly [k: string]: JsonValue };
 
 type GraphqlEnvelope<TData> = Readonly<{
@@ -258,7 +258,7 @@ function unwrapGraphqlData<TData>(response: GraphqlEnvelope<TData>): TData {
 
 type GraphqlWireKind = "query" | "mutation" | "subscription";
 
-/** @emoji 🔍 SDL operation keyword after leading whitespace and full-line {@code #} comments. */
+/** @emoji 🔍️ SDL operation keyword after leading whitespace and full-line {@code #} comments. */
 function graphqlWireOperationKind(document: string): GraphqlWireKind | null {
   let rest = document.trimStart();
   for (;;) {
@@ -275,20 +275,20 @@ function graphqlWireOperationKind(document: string): GraphqlWireKind | null {
   return null;
 }
 
-/** @emoji 🛑 Enforces golden-schema split: {@code Query} vs {@code Mutation} vs {@code Subscription} roots only. */
+/** @emoji 🛑️ Enforces golden-schema split: {@code Query} vs {@code Mutation} vs {@code Subscription} roots only. */
 function assertGraphqlWireKind(document: string, kind: GraphqlWireKind): void {
   const found = graphqlWireOperationKind(document);
   if (found !== kind) throw new Error(`graphql: expected ${kind}, got ${found ?? "unknown"}`);
 }
 
-/** @emoji 🧵 Canonical GraphQL-over-HTTP POST object: {@code query}, {@code variables}, {@code operationName} always present on the wire. */
+/** @emoji 🧵️ Canonical GraphQL-over-HTTP POST object: {@code query}, {@code variables}, {@code operationName} always present on the wire. */
 type GraphqlWirePostBodyLocal = Readonly<{
   query: string;
   variables: JsonObject;
   operationName: string | null;
 }>;
 
-/** @emoji 🧵 Supplies omitted {@code variables} / {@code operationName} so JSON bodies always carry the full triple. */
+/** @emoji 🧵️ Supplies omitted {@code variables} / {@code operationName} so JSON bodies always carry the full triple. */
 function normalizeGraphqlWirePostBody(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null }): GraphqlWirePostBodyLocal {
   return {
     query: body.query,
@@ -297,7 +297,7 @@ function normalizeGraphqlWirePostBody(body: { readonly query: string; readonly v
   };
 }
 
-/** @emoji 🧵 {@link JSON.stringify} of {@link normalizeGraphqlWirePostBody} for execute/subscribe transports. */
+/** @emoji 🧵️ {@link JSON.stringify} of {@link normalizeGraphqlWirePostBody} for execute/subscribe transports. */
 function graphqlWirePostBodyJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null }): string {
   return JSON.stringify(normalizeGraphqlWirePostBody(body));
 }
@@ -458,8 +458,8 @@ class WorkerStringTransport {
   }
 }
 
-//#region 🌐HttpStoreTransport
-/** @emoji 🌐 GraphQL-over-HTTP to native `compose-gql` (no WASM); subscriptions are no-operations until the sidecar exposes a stream. */
+//#region 🌐️HttpStoreTransport
+/** @emoji 🌐️ GraphQL-over-HTTP to native `compose-gql` (no WASM); subscriptions are no-operations until the sidecar exposes a stream. */
 class HttpStringTransport {
   constructor(private readonly baseUrl: string) {}
 
@@ -480,11 +480,11 @@ class HttpStringTransport {
 
   dispose(): void {}
 }
-//#endregion 🌐HttpStoreTransport
+//#endregion 🌐️HttpStoreTransport
 
 type KitStoreInnerTransport = WorkerStringTransport | InlineTransport | HttpStringTransport;
 
-/** @emoji 🌐 Thin GraphQL JSON transport: request in, JSON string out; pairs with rs {@code KitStoreHandle}. */
+/** @emoji 🌐️ Thin GraphQL JSON transport: request in, JSON string out; pairs with rs {@code KitStoreHandle}. */
 export class GqlTransport {
   constructor(private readonly inner: KitStoreInnerTransport) {}
 
@@ -493,7 +493,7 @@ export class GqlTransport {
     return parseJsonValue(json) as GraphqlEnvelope<JsonValue>;
   }
 
-  /** @emoji 📖 POST wire aligned with {@code type Query} in {@code schema.golden.graphql}. */
+  /** @emoji 📖️ POST wire aligned with {@code type Query} in {@code schema.golden.graphql}. */
   async executeQueryJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null }, timeoutMs: number): Promise<GraphqlEnvelope<JsonValue>> {
     assertGraphqlWireKind(body.query, "query");
     return this.executeWireJson(body, timeoutMs);
@@ -505,7 +505,7 @@ export class GqlTransport {
     return this.executeWireJson(body, timeoutMs);
   }
 
-  /** @emoji 📡 Subscribe wire aligned with {@code type Subscription} in {@code schema.golden.graphql}. */
+  /** @emoji 📡️ Subscribe wire aligned with {@code type Subscription} in {@code schema.golden.graphql}. */
   async subscribeJson(body: { readonly query: string; readonly variables?: JsonObject; readonly operationName?: string | null }, onEvent: (env: GraphqlEnvelope<JsonValue>) => void): Promise<void> {
     assertGraphqlWireKind(body.query, "subscription");
     await this.inner.subscribe(graphqlWirePostBodyJson(body), (eventJson) => {
@@ -524,7 +524,7 @@ export class GqlTransport {
 
 export type Unsubscribe = () => void;
 
-/** @emoji 📡 Demultiplexes live subscription `data` roots into listener fan-out (no client cache). */
+/** @emoji 📡️ Demultiplexes live subscription `data` roots into listener fan-out (no client cache). */
 export class EventBus {
   private readonly listeners = new Set<(ev: JsonValue) => void>();
 
@@ -553,25 +553,25 @@ export class EventBus {
   }
 }
 
-/** @emoji 📡 Live target {@code Subscription.operation} stream used to match command IDs emitted by mutations. */
+/** @emoji 📡️ Live target {@code Subscription.operation} stream used to match command IDs emitted by mutations. */
 export const KIT_EVENT_STREAM_SUBSCRIPTION = `subscription { operation { id __typename } }` as const;
 
-/** @emoji 🧭 Store entry query fragment aligned with {@code schema.golden.graphql} (WIP head + {@code theKit} id). */
+/** @emoji 🧭️ Store entry query fragment aligned with {@code schema.golden.graphql} (WIP head + {@code theKit} id). */
 export const KIT_SESSION_QUERY_ENTRY = `query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }` as const;
 
-//#endregion 🌐Transport
+//#endregion 🌐️Transport
 
 export type SetErrorKind = "IllegalName" | "NameTooLong" | "InvalidUrl" | "InvalidValue" | "DuplicateId" | "NotFound" | "CyclicReference" | "PortFamilyMismatch" | "Readonly" | "Disposed" | "Timeout" | "LockPoisoned" | "Internal" | "NotSupported";
 
-/** @emoji 🧾 Normalized set/mutation error from rs {@code SetError}. */
+/** @emoji 🧾️ Normalized set/mutation error from rs {@code SetError}. */
 export type SetError = { kind: SetErrorKind; message: string; field?: string; entity?: { kind: string; id: string } };
 
-/** @emoji 🧾 Mutation receipt (no speculative client-side apply). */
+/** @emoji 🧾️ Mutation receipt (no speculative client-side apply). */
 export type SetResult = { ok: true } | { ok: false; error: SetError };
 
 export type ChangeId = string;
 
-/** @emoji 🧭 Materialization anchor for target-schema reads. */
+/** @emoji 🧭️ Materialization anchor for target-schema reads. */
 export type KitReadPoint =
   | { readonly theKit: null }
   | {
@@ -600,10 +600,10 @@ export type SessionOpenOptions = Readonly<{
   workerFactory?: () => Worker;
 }>;
 
-/** @emoji 🌐 Options for {@link Session.openHttp} against `compose-gql` (POST `/install` + POST `/graphql`). */
+/** @emoji 🌐️ Options for {@link Session.openHttp} against `compose-gql` (POST `/install` + POST `/graphql`). */
 export type SessionHttpOpenOptions = Readonly<SessionOpenOptions & { readonly installCreateDto?: JsonObject }>;
 
-/** @emoji 🧪 Canonical bootstrap URI for an empty in-memory RS kit store (host lifecycle only). */
+/** @emoji 🧪️ Canonical bootstrap URI for an empty in-memory RS kit store (host lifecycle only). */
 export const COMPOSE_IN_MEMORY_KIT_URI = RS_WASM_EMPTY_STORE_URI;
 
 function gqlString(s: string): string {
@@ -696,7 +696,7 @@ function gqlOkFromEnvelope(env: GraphqlEnvelope<JsonValue>): SetResult {
   return { ok: true };
 }
 
-/** @emoji 📬 Parses a {@code Response} object from mutation data. */
+/** @emoji 📬️ Parses a {@code Response} object from mutation data. */
 function parseResponsePayload(node: JsonValue | undefined): SetResult {
   if (!isJsonObjectNode(node)) return { ok: true };
   if (node["ok"] === false) {
@@ -712,7 +712,7 @@ function parseResponsePayload(node: JsonValue | undefined): SetResult {
   return { ok: true };
 }
 
-/** @emoji 🆔 Reads {@code IdResult.value} from a {@code Response} payload. */
+/** @emoji 🆔️ Reads {@code IdResult.value} from a {@code Response} payload. */
 function responseResultId(node: JsonValue | undefined): string {
   if (!isJsonObjectNode(node)) return "";
   const result = jsonObjectField(node, "result");
@@ -726,7 +726,7 @@ function isBrowserWorkerRuntime(): boolean {
   return typeof Worker !== "undefined" && typeof window !== "undefined" && typeof document !== "undefined";
 }
 
-/** @emoji 🧪 True when Vitest or embedded package tests run (jsdom still has Worker/window). */
+/** @emoji 🧪️ True when Vitest or embedded package tests run (jsdom still has Worker/window). */
 function isVitestOrEmbeddedTestRuntime(): boolean {
   try {
     const env = (import.meta as { env?: Record<string, unknown> }).env;
@@ -752,12 +752,12 @@ function shouldStartLiveSubscriptionLoop(): boolean {
   return isBrowserWorkerRuntime();
 }
 
-//#region 🧱Classes
+//#region 🧱️Classes
 
-//#region 🧬Entity
+//#region 🧬️Entity
 
 //#region 🛠️Base
-/** @emoji 🧬 Strong entity anchor: {@link Session} + id (no cached fields on the instance). */
+/** @emoji 🧬️ Strong entity anchor: {@link Session} + id (no cached fields on the instance). */
 export class Entity {
   public readonly session: Session;
 
@@ -769,19 +769,19 @@ export class Entity {
     this.session = session;
   }
 
-  /** @emoji 🧾 Reads kit fields through the owning {@link Store} scope, never through an active-store fallback. */
+  /** @emoji 🧾️ Reads kit fields through the owning {@link Store} scope, never through an active-store fallback. */
   async readKitInner(inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
     return this.session.readKitInnerForStore(this.storeId, inner, variables);
   }
 
-  /** @emoji 🎬 Starts or reuses the command change ID for the owning {@link Store} scope. */
+  /** @emoji 🎬️ Starts or reuses the command change ID for the owning {@link Store} scope. */
   async ensureChangeId(): Promise<string> {
     if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
     return this.session.ensureChangeId(this.storeId);
   }
 
-  /** @emoji 🎬 Sends a kit mutation through the owning {@link Store} command scope. */
+  /** @emoji 🎬️ Sends a kit mutation through the owning {@link Store} command scope. */
   async mutateScoped(changeId: string, kitSelection: string): Promise<SetResult> {
     if (this.storeId == null || this.storeId === "") throw new Error(`${this.constructor.name} is not scoped to a Store`);
     return this.session.mutateScoped(this.storeId, changeId, kitSelection);
@@ -793,8 +793,8 @@ export class Entity {
 }
 //#endregion 🛠️Base
 
-//#region 🪶WeakArtifacts
-/** @emoji 🪪 Weak {@link Attribute} anchored on an owning {@link Entity} (no separate {@code node(id:)} identity). */
+//#region 🪶️WeakArtifacts
+/** @emoji 🪪️ Weak {@link Attribute} anchored on an owning {@link Entity} (no separate {@code node(id:)} identity). */
 export class Attribute {
   constructor(
     public readonly owner: Entity,
@@ -809,7 +809,7 @@ export class Attribute {
   }
 }
 
-/** @emoji 🏁 Weak {@link Benchmark} under {@link Quality}. */
+/** @emoji 🏁️ Weak {@link Benchmark} under {@link Quality}. */
 export class Benchmark {
   constructor(
     public readonly quality: Quality,
@@ -826,11 +826,11 @@ export class Benchmark {
   }
 }
 
-/** @emoji 🧬 Union anchor for VCS scope / modification ends (narrow at callsites). */
+/** @emoji 🧬️ Union anchor for VCS scope / modification ends (narrow at callsites). */
 export type EntityRef = Entity;
-//#endregion 🪶WeakArtifacts
+//#endregion 🪶️WeakArtifacts
 
-//#region 🏭Factories
+//#region 🏭️Factories
 type KitPathEntity = Entity & {
   kitInnerPath(inner: string): string;
 };
@@ -839,38 +839,38 @@ type BoundKitFieldSpec<T, E extends KitPathEntity = KitPathEntity> = Readonly<{
   selection: string;
   parse: (v: JsonValue) => T;
   parseEntity?: (entity: E, v: JsonValue) => T;
-  /** @emoji 📖 Prototype method name when it differs from the GraphQL field (e.g. {@code typeId} for {@code type { id }}). */
+  /** @emoji 📖️ Prototype method name when it differs from the GraphQL field (e.g. {@code typeId} for {@code type { id }}). */
   method?: string;
-  /** @emoji 📡 Bus {@code kind}; defaults via {@link defaultFieldEventKind}. */
+  /** @emoji 📡️ Bus {@code kind}; defaults via {@link defaultFieldEventKind}. */
   eventKind?: string;
-  /** @emoji 📡 List/connection fields: invalidate on {@code commandSucceeded} + {@code kitRenamed}. */
+  /** @emoji 📡️ List/connection fields: invalidate on {@code commandSucceeded} + {@code kitRenamed}. */
   coarseEvent?: boolean;
 }>;
 
 type BoundNodeFieldSpec<T> = Readonly<{
   selection: string;
   parse: (node: JsonObject | undefined) => T;
-  /** @emoji 📖 Prototype method name when it differs from the GraphQL selection root. */
+  /** @emoji 📖️ Prototype method name when it differs from the GraphQL selection root. */
   method?: string;
 }>;
 
 type BoundKitOperationSpec<E extends KitPathEntity> = Readonly<{
-  /** @emoji 🎬 Prototype method name (GraphQL operation leaf). */
+  /** @emoji 🎬️ Prototype method name (GraphQL operation leaf). */
   method: string;
   buildInner: (entity: E, ...args: readonly unknown[]) => string;
 }>;
 
-/** @emoji 🏭 Metadata-only bound field list used to install prototype methods from one schema-like roster. */
+/** @emoji 🏭️ Metadata-only bound field list used to install prototype methods from one schema-like roster. */
 function defineBoundKitFields<const S extends readonly BoundKitFieldSpec<unknown>[]>(specs: S): S {
   return specs;
 }
 
-/** @emoji 🏭 Metadata-only node field list used to install {@code node(id)} readers from one roster. */
+/** @emoji 🏭️ Metadata-only node field list used to install {@code node(id)} readers from one roster. */
 function defineBoundNodeFields<const S extends readonly BoundNodeFieldSpec<unknown>[]>(specs: S): S {
   return specs;
 }
 
-/** @emoji 🏭 Metadata-only bound operation list used to install mutation methods from one roster. */
+/** @emoji 🏭️ Metadata-only bound operation list used to install mutation methods from one roster. */
 function defineBoundKitOperations<const S extends readonly BoundKitOperationSpec<KitPathEntity>[]>(specs: S): S {
   return specs;
 }
@@ -887,7 +887,7 @@ function schemaOperationName(inner: string): string {
   return name;
 }
 
-/** @emoji 📡 GraphQL {@code Operation} {@code __typename} → {@link EventBus} {@code kind} (react hooks rely on these strings). */
+/** @emoji 📡️ GraphQL {@code Operation} {@code __typename} → {@link EventBus} {@code kind} (react hooks rely on these strings). */
 function operationTypenameToEventKind(typename: string): string {
   switch (typename) {
     case "RenamedKit":
@@ -905,19 +905,19 @@ function operationTypenameToEventKind(typename: string): string {
   }
 }
 
-/** @emoji 📡 Installed {@code onFieldChanged} method name for a scalar/list field (e.g. {@code onNameChanged}). */
+/** @emoji 📡️ Installed {@code onFieldChanged} method name for a scalar/list field (e.g. {@code onNameChanged}). */
 function fieldChangedEventMethodName(fieldName: string): string {
   return `on${fieldName.charAt(0).toUpperCase()}${fieldName.slice(1)}Changed`;
 }
 
-/** @emoji 📡 Default bus kind for a field read on an entity class. */
+/** @emoji 📡️ Default bus kind for a field read on an entity class. */
 function defaultFieldEventKind(entityCtorName: string, fieldName: string): string {
   if (entityCtorName === "Kit" && fieldName === "name") return "kitRenamed";
   if (fieldName === "description") return "changedDescription";
   return "commandSucceeded";
 }
 
-/** @emoji 🏭 Installs kit-relative read methods on a prototype so classes stay declarative and schema-shaped. */
+/** @emoji 🏭️ Installs kit-relative read methods on a prototype so classes stay declarative and schema-shaped. */
 function installKitFieldMethods<E extends KitPathEntity>(ctor: abstract new (...args: never[]) => E, specs: readonly BoundKitFieldSpec<unknown, E>[]): void {
   for (const spec of specs) {
     const method = spec.method ?? schemaFieldName(spec.selection);
@@ -942,7 +942,7 @@ async function readNodeSelection<T>(entity: Entity, typename: string, selection:
   return parse(data["node"] as JsonObject | undefined);
 }
 
-/** @emoji 🏭 Installs {@code node(id)}-based read methods on a prototype from one typed roster. */
+/** @emoji 🏭️ Installs {@code node(id)}-based read methods on a prototype from one typed roster. */
 function installNodeFieldMethods<E extends Entity>(ctor: abstract new (...args: never[]) => E, typename: string, specs: readonly BoundNodeFieldSpec<unknown>[]): void {
   for (const spec of specs) {
     const method = spec.method ?? schemaFieldName(spec.selection);
@@ -956,7 +956,7 @@ function installNodeFieldMethods<E extends Entity>(ctor: abstract new (...args: 
   }
 }
 
-/** @emoji 🏭 Installs kit-relative mutation methods on a prototype from one operation roster. */
+/** @emoji 🏭️ Installs kit-relative mutation methods on a prototype from one operation roster. */
 function installKitOperationMethods<E extends KitPathEntity>(ctor: abstract new (...args: never[]) => E, specs: readonly BoundKitOperationSpec<E>[]): void {
   for (const spec of specs) {
     Object.defineProperty(ctor.prototype, spec.method, {
@@ -970,7 +970,7 @@ function installKitOperationMethods<E extends KitPathEntity>(ctor: abstract new 
   }
 }
 
-/** @emoji 🏭 Installs {@code onFieldChanged} subscription methods — one per field spec. */
+/** @emoji 🏭️ Installs {@code onFieldChanged} subscription methods — one per field spec. */
 function installKitEventMethods<E extends KitPathEntity>(ctor: abstract new (...args: never[]) => E, specs: readonly BoundKitFieldSpec<unknown, E>[]): void {
   const entityName = ctor.name;
   for (const spec of specs) {
@@ -994,14 +994,14 @@ function installKitEventMethods<E extends KitPathEntity>(ctor: abstract new (...
   }
 }
 
-/** @emoji 🏭 Installs kit field reads, mutation commands, and per-field change subscriptions from three rosters. */
+/** @emoji 🏭️ Installs kit field reads, mutation commands, and per-field change subscriptions from three rosters. */
 function installEntityKitMethods<E extends KitPathEntity>(ctor: abstract new (...args: never[]) => E, fields: readonly BoundKitFieldSpec<unknown, E>[], operations: readonly BoundKitOperationSpec<E>[] = []): void {
   installKitFieldMethods(ctor, fields);
   if (operations.length > 0) installKitOperationMethods(ctor, operations);
   installKitEventMethods(ctor, fields);
 }
 
-/** @emoji 🏭 Installs {@code node(id)} field reads and per-field change subscriptions. */
+/** @emoji 🏭️ Installs {@code node(id)} field reads and per-field change subscriptions. */
 function installEntityNodeMethods<E extends Entity>(ctor: abstract new (...args: never[]) => E, typename: string, fields: readonly BoundNodeFieldSpec<unknown>[]): void {
   installNodeFieldMethods(ctor, typename, fields);
   for (const spec of fields) {
@@ -1041,7 +1041,7 @@ function defineBoundStoreBranchFields<const S extends readonly BoundStoreBranchF
   return specs;
 }
 
-/** @emoji 🏭 Installs store-scoped field reads and {@code onFieldChanged} on a nested branch (VCS graph roots, checkpoints, …). */
+/** @emoji 🏭️ Installs store-scoped field reads and {@code onFieldChanged} on a nested branch (VCS graph roots, checkpoints, …). */
 function installStoreBranchFieldMethods<E extends StoreBranchEntity>(ctor: abstract new (...args: never[]) => E, specs: readonly BoundStoreBranchFieldSpec<unknown, E>[]): void {
   const entityName = ctor.name;
   for (const spec of specs) {
@@ -1073,7 +1073,7 @@ function installStoreBranchFieldMethods<E extends StoreBranchEntity>(ctor: abstr
   }
 }
 
-/** @emoji 🏭 Installs store-scoped field reads, events, and optional branch helpers on one entity class. */
+/** @emoji 🏭️ Installs store-scoped field reads, events, and optional branch helpers on one entity class. */
 function installEntityStoreBranchMethods<E extends StoreBranchEntity>(ctor: abstract new (...args: never[]) => E, fields: readonly BoundStoreBranchFieldSpec<unknown, E>[]): void {
   installStoreBranchFieldMethods(ctor, fields);
 }
@@ -1095,7 +1095,7 @@ function defineBoundScopedNodeFields<const S extends readonly BoundScopedNodeFie
   return specs;
 }
 
-/** @emoji 🏭 Installs field reads on a store-nested node already resolved by {@link ScopedNodeEntity#readScopedNode}. */
+/** @emoji 🏭️ Installs field reads on a store-nested node already resolved by {@link ScopedNodeEntity#readScopedNode}. */
 function installEntityScopedNodeMethods<E extends ScopedNodeEntity>(ctor: abstract new (...args: never[]) => E, fields: readonly BoundScopedNodeFieldSpec<unknown>[]): void {
   const entityName = ctor.name;
   for (const spec of fields) {
@@ -1133,7 +1133,7 @@ type BoundWeakFieldSpec<T> = Readonly<{
   coarseEvent?: boolean;
 }>;
 
-/** @emoji 🏭 Installs async scalar reads on weak kit-nested artifacts ({@link Coordinate}, {@link Point}, …). */
+/** @emoji 🏭️ Installs async scalar reads on weak kit-nested artifacts ({@link Coordinate}, {@link Point}, …). */
 function installWeakKitFieldMethods<E extends object>(
   ctor: abstract new (...args: never[]) => E,
   readRole: (self: E, selection: string) => Promise<JsonObject | null>,
@@ -1168,10 +1168,10 @@ function installWeakKitFieldMethods<E extends object>(
   }
 }
 
-//#endregion 🏭Factories
+//#endregion 🏭️Factories
 
-//#region 🧩Parsers
-/** @emoji 🧩 Parses {@code attributes { edges { node { … } } }} under a JSON object (e.g. {@code tag}, {@code node}). */
+//#region 🧩️Parsers
+/** @emoji 🧩️ Parses {@code attributes { edges { node { … } } }} under a JSON object (e.g. {@code tag}, {@code node}). */
 function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | null | undefined): readonly Attribute[] {
   const attrs = owner?.["attributes"] as JsonObject | undefined;
   const edges = attrs?.["edges"] as readonly JsonValue[] | undefined;
@@ -1186,7 +1186,7 @@ function parseAttributeConnectionUnder(ownerEntity: Entity, owner: JsonObject | 
   return out;
 }
 
-/** @emoji 🏁 Parses {@code benchmarks { edges { node { … } } }} under a {@link Quality} kit branch. */
+/** @emoji 🏁️ Parses {@code benchmarks { edges { node { … } } }} under a {@link Quality} kit branch. */
 function parseBenchmarkConnectionUnder(quality: Quality, owner: JsonObject | null | undefined): readonly Benchmark[] {
   const bench = owner?.["benchmarks"] as JsonObject | undefined;
   const edges = bench?.["edges"] as readonly JsonValue[] | undefined;
@@ -1211,31 +1211,31 @@ function parseBenchmarkConnectionUnder(quality: Quality, owner: JsonObject | nul
   return out;
 }
 
-//#region 📦KitBranch
-/** @emoji 📦 String field from nested kit JSON (e.g. `{ design: { name } }` or flattened `{ name }`). */
+//#region 📦️KitBranch
+/** @emoji 📦️ String field from nested kit JSON (e.g. `{ design: { name } }` or flattened `{ name }`). */
 function readKitBranchString(frag: JsonObject | null | undefined, branchKey: string, field: string): string {
   const branch = frag?.[branchKey] as JsonObject | undefined;
   const v = branch?.[field] ?? frag?.[field];
   return String(v ?? "");
 }
 
-/** @emoji 📦 Numeric field from nested kit JSON (e.g. {@code qualitySum}). */
+/** @emoji 📦️ Numeric field from nested kit JSON (e.g. {@code qualitySum}). */
 function readKitBranchNumber(frag: JsonObject | null | undefined, branchKey: string, field: string): number {
   const branch = frag?.[branchKey] as JsonObject | undefined;
   const raw = branch?.[field] ?? frag?.[field];
   return typeof raw === "number" ? raw : Number(raw ?? NaN);
 }
 
-/** @emoji 📦 Nullable number on a nested branch (e.g. {@code Tag.order}). */
+/** @emoji 📦️ Nullable number on a nested branch (e.g. {@code Tag.order}). */
 function readKitBranchNumberOrNull(frag: JsonObject | null | undefined, branchKey: string, field: string): number | null {
   const branch = frag?.[branchKey] as JsonObject | undefined;
   const raw = branch?.[field] ?? frag?.[field];
   return typeof raw === "number" ? raw : null;
 }
-//#endregion 📦KitBranch
+//#endregion 📦️KitBranch
 
-//#region 🧭KitPath
-/** @emoji 🧭 Descends string keys on kit JSON; returns undefined if any step is not an object. */
+//#region 🧭️KitPath
+/** @emoji 🧭️ Descends string keys on kit JSON; returns undefined if any step is not an object. */
 function readKitPathNode(frag: JsonObject | null | undefined, path: readonly string[]): JsonObject | undefined {
   let cur: JsonValue | undefined = frag;
   for (const p of path) {
@@ -1245,23 +1245,23 @@ function readKitPathNode(frag: JsonObject | null | undefined, path: readonly str
   return isJsonObjectNode(cur) ? cur : undefined;
 }
 
-/** @emoji 🧭 String scalar at {@code path} then {@code field} (e.g. {@code type → port → code}). */
+/** @emoji 🧭️ String scalar at {@code path} then {@code field} (e.g. {@code type → port → code}). */
 function readKitPathString(frag: JsonObject | null | undefined, path: readonly string[], field: string): string {
   const n = readKitPathNode(frag, path);
   const v = n?.[field];
   return v == null ? "" : String(v);
 }
 
-/** @emoji 🧭 Nullable number at path end (e.g. {@code Port.order}). */
+/** @emoji 🧭️ Nullable number at path end (e.g. {@code Port.order}). */
 function readKitPathNumberOrNull(frag: JsonObject | null | undefined, path: readonly string[], field: string): number | null {
   const n = readKitPathNode(frag, path);
   const v = n?.[field];
   return typeof v === "number" ? v : null;
 }
-//#endregion 🧭KitPath
+//#endregion 🧭️KitPath
 
-//#region 📡BusCoarse
-/** @emoji 📡 Coarse invalidation pair used for kit-scoped list refetches ({@code commandSucceeded} + {@code kitRenamed}). */
+//#region 📡️BusCoarse
+/** @emoji 📡️ Coarse invalidation pair used for kit-scoped list refetches ({@code commandSucceeded} + {@code kitRenamed}). */
 function subscribeKitCoarseRefetch(bus: { subscribeKind(kind: string, fn: () => void): Unsubscribe }, run: () => void): Unsubscribe {
   const kinds = ["commandSucceeded", "kitRenamed", "draggedPiece", "fixedPiece"] as const;
   const subs = kinds.map((kind) => bus.subscribeKind(kind, run));
@@ -1269,11 +1269,11 @@ function subscribeKitCoarseRefetch(bus: { subscribeKind(kind: string, fn: () => 
     for (const off of subs) off();
   };
 }
-//#endregion 📡BusCoarse
-//#endregion 🧩Parsers
-//#endregion 🧬Entity
+//#endregion 📡️BusCoarse
+//#endregion 🧩️Parsers
+//#endregion 🧬️Entity
 
-//#region 🏪Store
+//#region 🏪️Store
 function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const conn = frag?.[key] as JsonObject | undefined;
   const edges = conn?.["edges"] as readonly JsonValue[] | undefined;
@@ -1289,7 +1289,7 @@ function parseEntityConnectionIds(frag: JsonObject | null | undefined, key: stri
   return out;
 }
 
-//#region 📁FileSystem
+//#region 📁️FileSystem
 type FileSystemNodeRef = { readonly id: string; readonly kind: string };
 
 function parseFileSystemNodeRef(node: JsonObject | null | undefined): FileSystemNodeRef | null {
@@ -1474,7 +1474,7 @@ function vfsEntityPathFields(path: readonly string[], designId?: string) {
   ] as const;
 }
 
-/** @emoji 📁 One lazy VFS child row from {@link fetchComposeFileSystemChildren}. */
+/** @emoji 📁️ One lazy VFS child row from {@link fetchComposeFileSystemChildren}. */
 export interface ComposeFileSystemChildRef {
   readonly id: string;
   readonly kind: string;
@@ -1485,7 +1485,7 @@ export interface ComposeFileSystemChildRef {
   readonly designId?: string;
 }
 
-/** @emoji 📁 Parent node scope for {@link fetchComposeFileSystemChildren}. */
+/** @emoji 📁️ Parent node scope for {@link fetchComposeFileSystemChildren}. */
 export type ComposeFileSystemParentRef =
   | { readonly kind: "KIT"; readonly id: string }
   | { readonly kind: "FOLDER"; readonly id: string }
@@ -1506,12 +1506,12 @@ type ComposeRelayVfsBranchSpec = {
   readonly skipNode?: (node: JsonObject) => boolean;
 };
 
-/** @emoji 📄 Speckle-style representation blob basename (`e5267da44d`). */
+/** @emoji 📄️ Speckle-style representation blob basename (`e5267da44d`). */
 function composeLooksLikeSpeckleRepresentationBlobName(name: string): boolean {
   return name.length === 10 && /^[0-9a-f]+$/i.test(name);
 }
 
-/** @emoji 📄 True when a loose kit-root file is a representation backing blob, not a browsable VFS asset. */
+/** @emoji 📄️ True when a loose kit-root file is a representation backing blob, not a browsable VFS asset. */
 function composeKitRootFileHiddenFromVfs(node: JsonObject): boolean {
   const name = String(node["name"] ?? "");
   if (composeLooksLikeSpeckleRepresentationBlobName(name)) return true;
@@ -1784,20 +1784,20 @@ function composeParseRelayVfsChildren(parent: ComposeFileSystemParentRef, frag: 
   }
 }
 
-/** @emoji 📁 Loads VFS children for a kit-graph parent via kit entity GraphQL (not {@link FileSystemNode} interface). */
+/** @emoji 📁️ Loads VFS children for a kit-graph parent via kit entity GraphQL (not {@link FileSystemNode} interface). */
 export async function fetchComposeFileSystemChildren(store: Store, parent: ComposeFileSystemParentRef): Promise<readonly ComposeFileSystemChildRef[]> {
   const inner = composeFileSystemChildrenInner(parent);
   const frag = await store.readKitInner(inner);
   return composeParseRelayVfsChildren(parent, frag);
 }
 
-/** @emoji 📁 Loads kit-root VFS children (alias for {@link fetchComposeFileSystemChildren} on the kit node). */
+/** @emoji 📁️ Loads kit-root VFS children (alias for {@link fetchComposeFileSystemChildren} on the kit node). */
 export async function fetchComposeFileSystemRootChildren(store: Store, kitId: string): Promise<readonly ComposeFileSystemChildRef[]> {
   return fetchComposeFileSystemChildren(store, { kind: "KIT", id: kitId });
 }
-//#endregion 📁FileSystem
+//#endregion 📁️FileSystem
 
-/** @emoji 🧩 Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON object (e.g. {@code Checkpoint.changes}). */
+/** @emoji 🧩️ Parses {@code key: [{ id: … }]} non-relay {@code [StrongEntity!]} lists on a JSON object (e.g. {@code Checkpoint.changes}). */
 function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: string): readonly string[] {
   const arr = frag?.[key] as readonly JsonValue[] | undefined;
   if (!Array.isArray(arr)) return [];
@@ -1811,7 +1811,7 @@ function parseStrongEntityArrayIds(frag: JsonObject | null | undefined, key: str
 }
 
 /**
- * @emoji 🧭 Target {@code Session}: owns GraphQL transport and only tracks command IDs for {@code Subscription.operation} correlation; {@link EventBus} emits {@code commandSucceeded} only (no duplicate event-kind payloads).
+ * @emoji 🧭️ Target {@code Session}: owns GraphQL transport and only tracks command IDs for {@code Subscription.operation} correlation; {@link EventBus} emits {@code commandSucceeded} only (no duplicate event-kind payloads).
  */
 export class Session {
   private readonly timeoutMs: number;
@@ -1821,9 +1821,9 @@ export class Session {
   private disposed = false;
   private readonly commandIds = new Set<string>();
 
-  /** @emoji 🌐 GraphQL executor (JSON in/out). */
+  /** @emoji 🌐️ GraphQL executor (JSON in/out). */
   readonly gql: GqlTransport;
-  /** @emoji 📡 Demuxed subscription fan-out. */
+  /** @emoji 📡️ Demuxed subscription fan-out. */
   readonly bus: EventBus;
 
   private constructor(timeoutMs: number, inner: KitStoreInnerTransport) {
@@ -1882,13 +1882,13 @@ export class Session {
     return executeGraphql(this.handle, body, this.timeoutMs);
   }
 
-  /** @emoji 🧾 Applies a mutation envelope and registers emitted operation ids for {@code Subscription.operation}. */
+  /** @emoji 🧾️ Applies a mutation envelope and registers emitted operation ids for {@code Subscription.operation}. */
   mutationReceipt(env: GraphqlEnvelope<JsonValue>): SetResult {
     this.ensureAlive();
     return this.trackCommandResult(env);
   }
 
-  /** @emoji 🧾 Reads a selection inside a specific store's scoped {@code kit { … }} through GraphQL. */
+  /** @emoji 🧾️ Reads a selection inside a specific store's scoped {@code kit { … }} through GraphQL. */
   async readKitInnerForStore(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     const { query, variables: v0 } = kitReadSelectionDocument(theKitReadPoint, inner);
     const data = unwrapGraphqlData(await this.readEnvelope({ query, variables: { ...v0, ...variables } })) as JsonValue;
@@ -1903,14 +1903,14 @@ export class Session {
     throw new Error("store id is required; use session.store(id).readStoreInner(...)");
   }
 
-  /** @emoji 🧾 Reads a selection inside a specific target {@code Store} edge. */
+  /** @emoji 🧾️ Reads a selection inside a specific target {@code Store} edge. */
   async readStoreInnerForId(storeId: string, inner: string, variables: JsonObject = {}): Promise<JsonObject | null> {
     const { query, variables: v0 } = sessionStoreSelectionDocument(inner);
     const data = unwrapGraphqlData(await this.readEnvelope({ query, variables: { ...v0, ...variables } })) as JsonValue;
     return sessionStoreNodeFromData(data, storeId);
   }
 
-  /** @emoji 🧾 Runs a store-scoped kit mutation through {@code SessionCommand.store(id:)}. */
+  /** @emoji 🧾️ Runs a store-scoped kit mutation through {@code SessionCommand.store(id:)}. */
   async mutateScoped(storeId: string, changeId?: string, kitSelection?: string): Promise<SetResult> {
     this.ensureAlive();
     if (changeId == null || kitSelection == null) throw new Error("store id is required for store-scoped mutation");
@@ -2035,7 +2035,7 @@ export class Session {
     return this.trackCommandResult(env);
   }
 
-  /** @emoji 📥 Hydrates WIP kit state from projection or bundle JSON (sole rs/js kit bootstrap besides empty store). */
+  /** @emoji 📥️ Hydrates WIP kit state from projection or bundle JSON (sole rs/js kit bootstrap besides empty store). */
   async installProjection(storeId: string, json: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.mutateEnvelope({
@@ -2095,7 +2095,7 @@ export class Session {
     return this.trackCommandResult(env);
   }
 
-  /** @emoji 🛜 Runs target {@code BackboneCommand.sync} through the given store command scope. */
+  /** @emoji 🛜️ Runs target {@code BackboneCommand.sync} through the given store command scope. */
   async backboneSyncNow(storeId: string): Promise<SetResult> {
     this.ensureAlive();
     const env = await this.mutateEnvelope({
@@ -2105,7 +2105,7 @@ export class Session {
     return this.trackCommandResult(env);
   }
 
-  /** @emoji 🛜 Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw JSON). */
+  /** @emoji 🛜️ Reads {@code BackboneStatus} via the command shell (typed snapshot, not raw JSON). */
   async backboneStatus(storeId: string): Promise<Readonly<{ attachedUri: string | null; kind: string }>> {
     this.ensureAlive();
     const data = unwrapGraphqlData(await this.readEnvelope({ query: `query { session { stores { edges { node { authoritative { id } conflicts { edges { node { id } } } } } } } }` })) as JsonObject;
@@ -2116,7 +2116,7 @@ export class Session {
     };
   }
 
-  /** @emoji 🧾 Warm-path query after WASM init. */
+  /** @emoji 🧾️ Warm-path query after WASM init. */
   private async warmGraphqlRead(): Promise<void> {
     const stores = await this.stores();
     if (stores.length > 0) await stores[0]!.readKitInner("id name");
@@ -2157,12 +2157,12 @@ export class Session {
     return k;
   }
 
-  /** @emoji 🧪 Opens the RS-backed empty in-memory kit store used for local bridge and UI smoke paths. */
+  /** @emoji 🧪️ Opens the RS-backed empty in-memory kit store used for local bridge and UI smoke paths. */
   static async openInMemory(opts?: SessionOpenOptions): Promise<Session> {
     return Session.open(COMPOSE_IN_MEMORY_KIT_URI, opts);
   }
 
-  /** @emoji 🌐 Opens a {@link Session} against native `compose-gql` HTTP GraphQL at {@code baseUrl} (optional server `/install` only). */
+  /** @emoji 🌐️ Opens a {@link Session} against native `compose-gql` HTTP GraphQL at {@code baseUrl} (optional server `/install` only). */
   static async openHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
     const root = baseUrl.replace(/\/$/, "");
@@ -2192,10 +2192,10 @@ export class Session {
   }
 }
 
-//#endregion 🏪Store
+//#endregion 🏪️Store
 
-//#region 📦Kit
-/** @emoji 📦 Target-schema kit entity beneath {@link Version}; one read + one change event per field, one method per command. */
+//#region 📦️Kit
+/** @emoji 📦️ Target-schema kit entity beneath {@link Version}; one read + one change event per field, one method per command. */
 export class Kit extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -2443,7 +2443,7 @@ const KIT_OPERATIONS = defineBoundKitOperations([
 ] as const);
 
 installEntityKitMethods(Kit, KIT_FIELDS as readonly BoundKitFieldSpec<unknown, Kit>[], KIT_OPERATIONS);
-//#endregion 📦Kit
+//#endregion 📦️Kit
 
 function executeSessionReadGraphql(session: Session, body: Readonly<{ query: string; variables?: JsonObject; operationName?: string | null }>): Promise<GraphqlEnvelope<JsonValue>> {
   return (session as unknown as { readEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).readEnvelope(body);
@@ -2453,11 +2453,11 @@ function executeSessionWriteGraphql(session: Session, body: Readonly<{ query: st
   return (session as unknown as { mutateEnvelope(b: typeof body): Promise<GraphqlEnvelope<JsonValue>> }).mutateEnvelope(body);
 }
 
-//#region 🧬VcsEntities
-/** @emoji 🌐 WIP or authoritative {@code Graph} root from {@code Query}. */
+//#region 🧬️VcsEntities
+/** @emoji 🌐️ WIP or authoritative {@code Graph} root from {@code Query}. */
 export type GraphRootKind = "wip" | "authoritative";
 
-/** @emoji 🏪 Target store selected from {@code Session.stores.edges.cursor}. */
+/** @emoji 🏪️ Target store selected from {@code Session.stores.edges.cursor}. */
 export class Store extends Entity {
   constructor(session: Session, id: string) {
     super(session, id);
@@ -2519,7 +2519,7 @@ export class Store extends Entity {
     return await this.session.startNewChange(this.id);
   }
 
-  /** @emoji 📥 Hydrates WIP kit state from projection or bundle JSON (rs/js GraphQL contract). */
+  /** @emoji 📥️ Hydrates WIP kit state from projection or bundle JSON (rs/js GraphQL contract). */
   async installProjection(json: string): Promise<SetResult> {
     return this.session.installProjection(this.id, json);
   }
@@ -2570,7 +2570,7 @@ export class Store extends Entity {
   }
 }
 
-/** @emoji 🪢 Backbone exposed by a local or remote provider. */
+/** @emoji 🪢️ Backbone exposed by a local or remote provider. */
 export class Backbone extends Entity {
   constructor(
     session: Session,
@@ -2581,7 +2581,7 @@ export class Backbone extends Entity {
   }
 }
 
-/** @emoji 🔌 Provider command facade for creating and attaching backbones to managed stores. */
+/** @emoji 🔌️ Provider command facade for creating and attaching backbones to managed stores. */
 export abstract class Provider extends Entity {
   protected abstract readonly commandSelection: string;
 
@@ -2622,7 +2622,7 @@ export abstract class Provider extends Entity {
   }
 }
 
-/** @emoji 💾 Local provider facade for file-backed stores and backbones. */
+/** @emoji 💾️ Local provider facade for file-backed stores and backbones. */
 export class LocalProvider extends Provider {
   protected readonly commandSelection = "localProvider";
 
@@ -2636,7 +2636,7 @@ export class LocalProvider extends Provider {
   }
 }
 
-/** @emoji 🛜 Remote provider facade for websocket/hub-backed stores and backbones. */
+/** @emoji 🛜️ Remote provider facade for websocket/hub-backed stores and backbones. */
 export class RemoteProvider extends Provider {
   protected readonly commandSelection: string;
 
@@ -2675,7 +2675,7 @@ export class RemoteProvider extends Provider {
   }
 }
 
-/** @emoji 🌐 VCS graph: {@code wip} / {@code authoritative} selections on {@link Store}. */
+/** @emoji 🌐️ VCS graph: {@code wip} / {@code authoritative} selections on {@link Store}. */
 export class Graph extends Entity {
   constructor(
     session: Session,
@@ -2701,7 +2701,7 @@ export class Graph extends Entity {
     return await this.session.readStoreInnerForId(this.managedStoreId, this.storeBranchPath(selection));
   }
 
-  /** @emoji 🏛 {@code graph { theKit }} handle. */
+  /** @emoji 🏛️ {@code graph { theKit }} handle. */
   theKit(): TheKit {
     return new TheKit(this.session, this.root, this.managedStoreId);
   }
@@ -2741,10 +2741,10 @@ installEntityStoreBranchMethods(
   ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Graph>[],
 );
 
-/** @emoji 🧭 Parent scope for {@link Alternative} navigation. */
+/** @emoji 🧭️ Parent scope for {@link Alternative} navigation. */
 export type AlternativeParent = { readonly parent: "graph"; readonly root: GraphRootKind; readonly storeId: string };
 
-/** @emoji 🔀 {@code Alternative} under {@link Graph} or {@link Session}. */
+/** @emoji 🔀️ {@code Alternative} under {@link Graph} or {@link Session}. */
 export class Alternative extends Entity {
   constructor(
     session: Session,
@@ -2788,7 +2788,7 @@ installEntityStoreBranchMethods(
   ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Alternative>[],
 );
 
-/** @emoji 🏛 {@code TheKit} under {@code wip}/{@code authoritative}. */
+/** @emoji 🏛️ {@code TheKit} under {@code wip}/{@code authoritative}. */
 export class TheKit extends Entity {
   constructor(
     session: Session,
@@ -2798,7 +2798,7 @@ export class TheKit extends Entity {
     super(session, `theKit:${graphRoot}`);
   }
 
-  /** @emoji 📦 Target {@code Version.kit} handle beneath this version node. */
+  /** @emoji 📦️ Target {@code Version.kit} handle beneath this version node. */
   kitRef(id = "kit"): Kit {
     return new Kit(this.session, id, this.managedStoreId);
   }
@@ -2831,7 +2831,7 @@ installEntityStoreBranchMethods(
   ] as const) as readonly BoundStoreBranchFieldSpec<unknown, TheKit>[],
 );
 
-/** @emoji 🏁 {@code Checkpoint} under {@link Graph}. */
+/** @emoji 🏁️ {@code Checkpoint} under {@link Graph}. */
 export class Checkpoint extends Entity {
   readonly graphRoot: GraphRootKind;
   constructor(
@@ -2898,7 +2898,7 @@ installEntityStoreBranchMethods(
   ] as const) as readonly BoundStoreBranchFieldSpec<unknown, Checkpoint>[],
 );
 
-/** @emoji 🔀 {@code Change} scoped to a {@link Checkpoint}. */
+/** @emoji 🔀️ {@code Change} scoped to a {@link Checkpoint}. */
 export class Change extends Entity {
   readonly graphRoot: GraphRootKind;
   readonly checkpointId: string;
@@ -3051,10 +3051,10 @@ installEntityNodeMethods(
   ] as const) as readonly BoundNodeFieldSpec<unknown>[],
 );
 
-//#endregion 🧬VcsEntities
+//#endregion 🧬️VcsEntities
 
-//#region 📐Design
-/** @emoji 📐 Design artifact: declarative field reads, commands, and per-field change subscriptions. */
+//#region 📐️Design
+/** @emoji 📐️ Design artifact: declarative field reads, commands, and per-field change subscriptions. */
 export class Design extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -3167,13 +3167,13 @@ function parseDesignBranchConnection(frag: JsonObject | null, key: string): read
   return parseEntityConnectionIds(d ?? (isJsonObjectNode(frag) ? frag : null), key);
 }
 
-/** @emoji 🧭 Descends {@code type → …} connection ids on kit JSON. */
+/** @emoji 🧭️ Descends {@code type → …} connection ids on kit JSON. */
 function parseTypeBranchConnection(frag: JsonObject | null, key: string): readonly string[] {
   const t = frag?.["type"] as JsonObject | undefined;
   return parseEntityConnectionIds(t ?? (isJsonObjectNode(frag) ? frag : null), key);
 }
 
-/** @emoji 🧭 Scalar on a nested {@code design.hasLayers|hasGroups} edge node matched by id. */
+/** @emoji 🧭️ Scalar on a nested {@code design.hasLayers|hasGroups} edge node matched by id. */
 function readDesignListNodeField(frag: JsonObject | null, listKey: "hasLayers" | "hasGroups", nodeId: string, field: string): string {
   const edges = (((frag?.["design"] as JsonObject | undefined)?.[listKey] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
   for (const e of edges) {
@@ -3183,7 +3183,7 @@ function readDesignListNodeField(frag: JsonObject | null, listKey: "hasLayers" |
   return "";
 }
 
-/** @emoji 🧭 Nullable number on a nested {@code design.hasLayers} edge node. */
+/** @emoji 🧭️ Nullable number on a nested {@code design.hasLayers} edge node. */
 function readDesignListNodeNumberOrNull(frag: JsonObject | null, nodeId: string, field: string): number | null {
   const edges = (((frag?.["design"] as JsonObject | undefined)?.["hasLayers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
   for (const e of edges) {
@@ -3196,7 +3196,7 @@ function readDesignListNodeNumberOrNull(frag: JsonObject | null, nodeId: string,
   return null;
 }
 
-/** @emoji 🧭 Nullable boolean on a nested {@code design.hasLayers} edge node. */
+/** @emoji 🧭️ Nullable boolean on a nested {@code design.hasLayers} edge node. */
 function readDesignListNodeBooleanOrNull(frag: JsonObject | null, nodeId: string, field: string): boolean | null {
   const edges = (((frag?.["design"] as JsonObject | undefined)?.["hasLayers"] as JsonObject | undefined)?.["edges"] as readonly JsonObject[] | undefined) ?? [];
   for (const e of edges) {
@@ -3209,12 +3209,12 @@ function readDesignListNodeBooleanOrNull(frag: JsonObject | null, nodeId: string
   return null;
 }
 
-/** @emoji 🧩 Scalar under {@code design.piece} on kit JSON. */
+/** @emoji 🧩️ Scalar under {@code design.piece} on kit JSON. */
 function readPieceBranchString(frag: JsonObject | null, field: string): string {
   return String(pieceKit(frag)?.[field] ?? "");
 }
 
-/** @emoji 🧩 Nullable scalar under {@code design.piece}. */
+/** @emoji 🧩️ Nullable scalar under {@code design.piece}. */
 function readPieceBranchNumberOrNull(frag: JsonObject | null, field: string): number | null {
   const v = pieceKit(frag)?.[field];
   return typeof v === "number" ? v : null;
@@ -3422,10 +3422,10 @@ installEntityKitMethods(Design, DESIGN_FIELDS as readonly BoundKitFieldSpec<unkn
     },
   });
 }
-//#endregion 📐Design
+//#endregion 📐️Design
 
-//#region 🧰Type
-/** @emoji 🧰 Type artifact: declarative field reads, commands, and per-field change subscriptions. */
+//#region 🧰️Type
+/** @emoji 🧰️ Type artifact: declarative field reads, commands, and per-field change subscriptions. */
 export class Type extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -3588,17 +3588,17 @@ const TYPE_OPERATIONS = defineBoundKitOperations([
 ] as const);
 
 installEntityKitMethods(Type, TYPE_FIELDS as readonly BoundKitFieldSpec<unknown, Type>[], TYPE_OPERATIONS);
-//#endregion 🧰Type
+//#endregion 🧰️Type
 
-/** @emoji 🧷 Kit JSON path {@code type → port} for nested reads under {@link Port}. */
+/** @emoji 🧷️ Kit JSON path {@code type → port} for nested reads under {@link Port}. */
 const KIT_PATH_TYPE_PORT: readonly string[] = ["type", "port"];
-/** @emoji 🧷 Kit JSON path {@code type → connector}. */
+/** @emoji 🧷️ Kit JSON path {@code type → connector}. */
 const KIT_PATH_TYPE_CONNECTOR: readonly string[] = ["type", "connector"];
-/** @emoji 🧷 Kit JSON path {@code type → representation}. */
+/** @emoji 🧷️ Kit JSON path {@code type → representation}. */
 const KIT_PATH_TYPE_REPRESENTATION: readonly string[] = ["type", "representation"];
 
-//#region 🔘Port
-/** @emoji 🔘 Port under {@link Type}: declarative field reads, commands, and change subscriptions. */
+//#region 🔘️Port
+/** @emoji 🔘️ Port under {@link Type}: declarative field reads, commands, and change subscriptions. */
 export class Port extends Entity {
   readonly typeId: string;
   constructor(session: Session, typeId: string, id: string, storeId?: string) {
@@ -3659,10 +3659,10 @@ installEntityKitMethods(
     { method: "removeAttributes", buildInner: (_e, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   ] as const),
 );
-//#endregion 🔘Port
+//#endregion 🔘️Port
 
-//#region 🔗Connector
-/** @emoji 🔗 Connector under {@link Type}: declarative field reads, commands, and change subscriptions. */
+//#region 🔗️Connector
+/** @emoji 🔗️ Connector under {@link Type}: declarative field reads, commands, and change subscriptions. */
 export class Connector extends Entity {
   readonly typeId: string;
   constructor(session: Session, typeId: string, id: string, storeId?: string) {
@@ -3719,10 +3719,10 @@ installEntityKitMethods(
     { method: "changeIcon", buildInner: (_e, newIcon) => `ci: changeIcon(newIcon: ${gqlString(String(newIcon ?? ""))})` },
   ] as const),
 );
-//#endregion 🔗Connector
+//#endregion 🔗️Connector
 
-//#region 🧩Piece
-/** @emoji 🧩 @description Blueprint target on a {@link Piece} (`Type` or `Design` node). */
+//#region 🧩️Piece
+/** @emoji 🧩️ @description Blueprint target on a {@link Piece} (`Type` or `Design` node). */
 export interface PieceBlueprint {
   readonly blueprintKind: "Type" | "Design";
   readonly id: string;
@@ -3734,8 +3734,8 @@ function pieceKit(frag: JsonObject | null | undefined): JsonObject | null {
   return p ?? null;
 }
 
-//#region 🪶WeakGeometry
-/** @emoji 📌 Weak {@code position}/{@code flatPosition} anchored on {@link Piece} (stable child cache). */
+//#region 🪶️WeakGeometry
+/** @emoji 📌️ Weak {@code position}/{@code flatPosition} anchored on {@link Piece} (stable child cache). */
 export class Position {
   private readonly _center: Coordinate;
   private readonly _plane: Plane;
@@ -3756,7 +3756,7 @@ export class Position {
   }
 }
 
-/** @emoji 📍 Weak {@code Coordinate} under {@link Position}. */
+/** @emoji 📍️ Weak {@code Coordinate} under {@link Position}. */
 export class Coordinate {
   constructor(public readonly parent: Position) {}
 
@@ -3780,7 +3780,7 @@ installWeakKitFieldMethods(
   (self) => self.parent.piece.session.bus,
 );
 
-/** @emoji 📐 Weak {@code Plane} under {@link Position}. */
+/** @emoji 📐️ Weak {@code Plane} under {@link Position}. */
 export class Plane {
   private readonly _origin: Point;
   private readonly _xAxis: Vector;
@@ -3804,7 +3804,7 @@ export class Plane {
   }
 }
 
-/** @emoji 🔵 Weak 3D point leaf (origin) under {@link Plane}. */
+/** @emoji 🔵️ Weak 3D point leaf (origin) under {@link Plane}. */
 export class Point {
   constructor(public readonly parent: Plane) {}
 
@@ -3861,7 +3861,7 @@ installWeakKitFieldMethods(
   (self) => self.parent.parent.piece.session.bus,
 );
 
-/** @emoji ↔️ Weak {@code OffsetInput} path shell (drag hints; expand when SDL exposes offset nodes). */
+/** @emoji ↔ Weak {@code OffsetInput} path shell (drag hints; expand when SDL exposes offset nodes). */
 export class Offset {
   constructor(
     public readonly piece: Piece,
@@ -3869,7 +3869,7 @@ export class Offset {
   ) {}
 }
 
-/** @emoji 🌍 Geographic weak shell (parent + role path for future SDL). */
+/** @emoji 🌍️ Geographic weak shell (parent + role path for future SDL). */
 export class Place {
   constructor(
     public readonly owner: Entity,
@@ -3882,7 +3882,7 @@ export class Location {
   constructor(public readonly parent: Place) {}
 }
 
-/** @emoji 📷 Weak camera shell (viewport hints). */
+/** @emoji 📷️ Weak camera shell (viewport hints). */
 export class Camera {
   constructor(
     public readonly owner: Entity,
@@ -3890,8 +3890,8 @@ export class Camera {
   ) {}
 }
 
-//#region 📥GeomInputs
-/** @emoji 📥 GraphQL {@code PositionInput} mirror for kit mutations (matches SDL input, not {@link Position}). */
+//#region 📥️GeomInputs
+/** @emoji 📥️ GraphQL {@code PositionInput} mirror for kit mutations (matches SDL input, not {@link Position}). */
 export type PositionInput = Readonly<{
   center: Readonly<{ u: number; v: number }>;
   plane: Readonly<{
@@ -3901,7 +3901,7 @@ export type PositionInput = Readonly<{
   }>;
 }>;
 
-/** @emoji 📥 GraphQL {@code OffsetInput} mirror for kit mutations. */
+/** @emoji 📥️ GraphQL {@code OffsetInput} mirror for kit mutations. */
 export type OffsetInput = Readonly<{
   u: number;
   v: number;
@@ -3911,7 +3911,7 @@ function gqlFiniteNumber(n: number): string {
   return Number.isFinite(n) ? String(n) : "0";
 }
 
-/** @emoji 📡 Inline GraphQL object literal for {@code PositionInput}. */
+/** @emoji 📡️ Inline GraphQL object literal for {@code PositionInput}. */
 export function formatPositionInput(p: PositionInput): string {
   const c = p.center;
   const pl = p.plane;
@@ -3921,12 +3921,12 @@ export function formatPositionInput(p: PositionInput): string {
   return `{ center: { u: ${gqlFiniteNumber(c.u)}, v: ${gqlFiniteNumber(c.v)} }, plane: { origin: { x: ${gqlFiniteNumber(o.x)}, y: ${gqlFiniteNumber(o.y)}, z: ${gqlFiniteNumber(o.z)} }, xAxis: { x: ${gqlFiniteNumber(xa.x)}, y: ${gqlFiniteNumber(xa.y)}, z: ${gqlFiniteNumber(xa.z)} }, yAxis: { x: ${gqlFiniteNumber(ya.x)}, y: ${gqlFiniteNumber(ya.y)}, z: ${gqlFiniteNumber(ya.z)} } } }`;
 }
 
-/** @emoji 📡 Inline GraphQL object literal for {@code OffsetInput}. */
+/** @emoji 📡️ Inline GraphQL object literal for {@code OffsetInput}. */
 export function formatOffsetInput(o: OffsetInput): string {
   return `{ u: ${gqlFiniteNumber(o.u)}, v: ${gqlFiniteNumber(o.v)} }`;
 }
-//#endregion 📥GeomInputs
-//#endregion 🪶WeakGeometry
+//#endregion 📥️GeomInputs
+//#endregion 🪶️WeakGeometry
 
 const PIECE_POSITION_SELECTION = "center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } }";
 
@@ -3954,7 +3954,7 @@ function parseIdListConnection(obj: JsonObject | null | undefined, field: string
   return ids;
 }
 
-/** @emoji 🧩 Piece under {@link Design}: declarative reads/commands/events; weak {@link Position} handles stay synchronous. */
+/** @emoji 🧩️ Piece under {@link Design}: declarative reads/commands/events; weak {@link Position} handles stay synchronous. */
 export class Piece extends Entity {
   readonly designId: string;
   private readonly positionByRole = new Map<"position" | "flatPosition", Position>();
@@ -4170,7 +4170,7 @@ const PIECE_OPERATIONS = defineBoundKitOperations([
 
 installEntityKitMethods(Piece, PIECE_FIELDS as readonly BoundKitFieldSpec<unknown, Piece>[], PIECE_OPERATIONS);
 
-/** @emoji 📡 {@link Piece} weak {@link Position} handles: coarse bus invalidation (drag/move/fix). */
+/** @emoji 📡️ {@link Piece} weak {@link Position} handles: coarse bus invalidation (drag/move/fix). */
 function installPieceWeakGeometryChangeEvents(): void {
   for (const role of ["position", "flatPosition"] as const) {
     const eventMethod = fieldChangedEventMethodName(role);
@@ -4184,15 +4184,15 @@ function installPieceWeakGeometryChangeEvents(): void {
   }
 }
 installPieceWeakGeometryChangeEvents();
-//#endregion 🧩Piece
+//#endregion 🧩️Piece
 
-//#region 🪢PiecesOperation
+//#region 🪢️PiecesOperation
 type PiecesOperationCommandSpec = Readonly<{
   method: string;
   buildInner: (self: PiecesOperation, ...args: readonly unknown[]) => string;
 }>;
 
-/** @emoji 🪢 Installs one batch-command method per spec on {@link PiecesOperation}. */
+/** @emoji 🪢️ Installs one batch-command method per spec on {@link PiecesOperation}. */
 function installPiecesOperationMethods(specs: readonly PiecesOperationCommandSpec[]): void {
   for (const spec of specs) {
     Object.defineProperty(PiecesOperation.prototype, spec.method, {
@@ -4207,7 +4207,7 @@ function installPiecesOperationMethods(specs: readonly PiecesOperationCommandSpe
   }
 }
 
-/** @emoji 🪢 Batch piece commands under one design: one command method each (no cached fields). */
+/** @emoji 🪢️ Batch piece commands under one design: one command method each (no cached fields). */
 export class PiecesOperation {
   constructor(
     readonly session: Session,
@@ -4232,7 +4232,7 @@ installPiecesOperationMethods([
   { method: "fix", buildInner: (self) => self.kitInnerPath(`fx: fix`) },
   { method: "changeBlueprint", buildInner: (self, blueprintId) => self.kitInnerPath(`cb: changeBlueprint(blueprintId: ${gqlString(String(blueprintId ?? ""))})`) },
 ]);
-//#endregion 🪢PiecesOperation
+//#endregion 🪢️PiecesOperation
 
 //#region ⛓️Connection
 /** @emoji ⛓️ Schema-aligned {@link Connection} endpoint (piece + optional port / connector / designPiece ids). */
@@ -4249,7 +4249,7 @@ export class Side {
     public readonly storeId?: string,
   ) {}
 
-  /** @emoji 🧩 Resolved {@link Piece} on this kit read point. */
+  /** @emoji 🧩️ Resolved {@link Piece} on this kit read point. */
   piece(): Piece {
     return new Design(this.session, this.designId, this.storeId).piece(this.pieceId);
   }
@@ -4437,8 +4437,8 @@ const AUTHOR_FIELDS = defineBoundNodeFields([
 installEntityNodeMethods(Author, "Author", AUTHOR_FIELDS);
 //#endregion ✍️Author
 
-//#region 💎Quality
-/** @emoji 💎 Quality artifact: {@code QualityOperationInput} leaves + scalar reads via {@code quality(id:)}. */
+//#region 💎️Quality
+/** @emoji 💎️ Quality artifact: {@code QualityOperationInput} leaves + scalar reads via {@code quality(id:)}. */
 export class Quality extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -4501,7 +4501,7 @@ installEntityKitMethods(
   ]) as readonly BoundKitFieldSpec<unknown, Quality>[],
   QUALITY_OPERATIONS,
 );
-//#endregion 💎Quality
+//#endregion 💎️Quality
 
 //#region 🏷️Tag
 /** @emoji 🏷️ Tag artifact: {@code TagOperationInput} leaves + kit-scoped reads. */
@@ -4554,8 +4554,8 @@ installEntityKitMethods(
 );
 //#endregion 🏷️Tag
 
-//#region 💡Concept
-/** @emoji 💡 Concept artifact: {@code ConceptOperationInput} leaves + kit-scoped reads. */
+//#region 💡️Concept
+/** @emoji 💡️ Concept artifact: {@code ConceptOperationInput} leaves + kit-scoped reads. */
 export class Concept extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -4603,10 +4603,10 @@ installEntityKitMethods(
     { method: "removeAttributes", buildInner: (_entity, ids) => `ras: removeAttributes(ids: ${gqlIdList((ids as readonly string[]) ?? [])})` },
   ] as const),
 );
-//#endregion 💡Concept
+//#endregion 💡️Concept
 
-//#region 🎨Representation
-/** @emoji 🎨 Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
+//#region 🎨️Representation
+/** @emoji 🎨️ Representation under {@link Type}: read-only until schema adds {@code RepresentationOperationInput}. */
 export class Representation extends Entity {
   readonly typeId: string;
   constructor(session: Session, typeId: string, id: string, storeId?: string) {
@@ -4717,10 +4717,10 @@ installEntityKitMethods(
     ...vfsEntityPathFields(KIT_PATH_TYPE_REPRESENTATION),
   ]) as readonly BoundKitFieldSpec<unknown, Representation>[],
 );
-//#endregion 🎨Representation
+//#endregion 🎨️Representation
 
-//#region 👨‍👩‍👦Family
-/** @emoji 👨‍👩‍👦 Family artifact: read-only in current kit API. */
+//#region 👨️‍👩️‍👦️Family
+/** @emoji 👨️‍👩️‍👦️ Family artifact: read-only in current kit API. */
 export class Family extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -4750,7 +4750,7 @@ const FAMILY_FIELDS = defineBoundKitFields([
 ] as const);
 
 installEntityKitMethods(Family, FAMILY_FIELDS as readonly BoundKitFieldSpec<unknown, Family>[], []);
-//#endregion 👨‍👩‍👦Family
+//#endregion 👨️‍👩️‍👦️Family
 
 //#region 🏛️Typology
 /** @emoji 🏛️ Typology artifact: owns kit types and designs. */
@@ -4802,8 +4802,8 @@ const TYPOLOGY_FIELDS = defineBoundKitFields([
 installEntityKitMethods(Typology, TYPOLOGY_FIELDS as readonly BoundKitFieldSpec<unknown, Typology>[], []);
 //#endregion 🏛️Typology
 
-//#region 📄File
-/** @emoji 📄 Kit file: inverse derived references via representations and kinds. */
+//#region 📄️File
+/** @emoji 📄️ Kit file: inverse derived references via representations and kinds. */
 export class File extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -4874,10 +4874,10 @@ const FILE_FIELDS = defineBoundKitFields([
 ] as const);
 
 installEntityKitMethods(File, FILE_FIELDS as readonly BoundKitFieldSpec<unknown, File>[], []);
-//#endregion 📄File
+//#endregion 📄️File
 
-//#region 📁Folder
-/** @emoji 📁 Folder artifact with constrained virtual file system navigation. */
+//#region 📁️Folder
+/** @emoji 📁️ Folder artifact with constrained virtual file system navigation. */
 export class Folder extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -4978,10 +4978,10 @@ const FOLDER_FIELDS = defineBoundKitFields([
 ] as const);
 
 installEntityKitMethods(Folder, FOLDER_FIELDS as readonly BoundKitFieldSpec<unknown, Folder>[], []);
-//#endregion 📁Folder
+//#endregion 📁️Folder
 
-//#region 🪟Layer
-/** @emoji 🪟 Design {@link Layer}: declarative field reads and change subscriptions (read-only in current kit API). */
+//#region 🪟️Layer
+/** @emoji 🪟️ Design {@link Layer}: declarative field reads and change subscriptions (read-only in current kit API). */
 export class Layer extends Entity {
   readonly designId: string;
   constructor(session: Session, designId: string, id: string, storeId?: string) {
@@ -5014,10 +5014,10 @@ installEntityKitMethods(
     { selection: "locked", parse: (frag) => null, parseEntity: (entity, frag) => readDesignListNodeBooleanOrNull(frag as JsonObject | null, entity.id, "locked") },
   ] as const) as readonly BoundKitFieldSpec<unknown, Layer>[],
 );
-//#endregion 🪟Layer
+//#endregion 🪟️Layer
 
-//#region 👥Group
-/** @emoji 👥 Design {@link Group}: declarative field reads and change subscriptions (read-only in current kit API). */
+//#region 👥️Group
+/** @emoji 👥️ Design {@link Group}: declarative field reads and change subscriptions (read-only in current kit API). */
 export class Group extends Entity {
   readonly designId: string;
   constructor(session: Session, designId: string, id: string, storeId?: string) {
@@ -5036,10 +5036,10 @@ installEntityKitMethods(
   Group,
   defineBoundKitFields([{ selection: "name", parse: (frag) => "", parseEntity: (entity, frag) => readDesignListNodeField(frag as JsonObject | null, "hasGroups", entity.id, "name") }] as const) as readonly BoundKitFieldSpec<unknown, Group>[],
 );
-//#endregion 👥Group
+//#endregion 👥️Group
 
-//#region 📊Stat
-/** @emoji 📊 Stat artifact: read-only in current kit API. */
+//#region 📊️Stat
+/** @emoji 📊️ Stat artifact: read-only in current kit API. */
 export class Stat extends Entity {
   constructor(session: Session, id: string, storeId?: string) {
     super(session, id, storeId);
@@ -5065,7 +5065,7 @@ installEntityNodeMethods(
     { selection: "icon", parse: (node) => String(node?.["icon"] ?? "") },
   ] as const),
 );
-//#endregion 📊Stat
+//#endregion 📊️Stat
 
 //#region 🎚️Prop
 /** @emoji 🎚️ Prop artifact: read-only in current kit API. */
@@ -5100,27 +5100,27 @@ installEntityNodeMethods(
 );
 //#endregion 🎚️Prop
 
-//#endregion 🧱Classes
+//#endregion 🧱️Classes
 
-//#region 🚀PublicAPI
-/** @emoji 🚀 Opens an empty rs WASM {@link Session} (`dev://empty` only; seed kit JSON via {@link Store.installProjection}). */
+//#region 🚀️PublicAPI
+/** @emoji 🚀️ Opens an empty rs WASM {@link Session} (`dev://empty` only; seed kit JSON via {@link Store.installProjection}). */
 export async function openSessionInMemory(opts?: SessionOpenOptions): Promise<Session> {
   return Session.openInMemory(opts);
 }
 
-/** @emoji 🚀 Opens a {@link Session} backed by rs WASM; {@code uri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
+/** @emoji 🚀️ Opens a {@link Session} backed by rs WASM; {@code uri} must be {@link RS_WASM_EMPTY_STORE_URI}. */
 export async function openSession(uri: string, opts?: SessionOpenOptions): Promise<Session> {
   return Session.open(uri, opts);
 }
 
-/** @emoji 🚀 Opens a {@link Session} against native `compose-gql` HTTP GraphQL. */
+/** @emoji 🚀️ Opens a {@link Session} against native `compose-gql` HTTP GraphQL. */
 export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
   return Session.openHttp(baseUrl, opts);
 }
 
-//#endregion 🚀PublicAPI
+//#endregion 🚀️PublicAPI
 
-//#region 🧪Tests
+//#region 🧪️Tests
 if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
   const eventually = async <T>(read: () => Promise<T>, matches: (value: T) => boolean, timeoutMs = 5_000): Promise<T> => {
@@ -5136,7 +5136,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
   /** 🎚️Rank of `SEMIO_TEST_LEVEL` (fundamental=0..exhaustive=3); a shipped-package inline copy of `repo/lib/js/index.ts`'s `testLevelRank` — this file can't import repo-internal dev tooling. */
   const semioTestLevelRank = Math.max(0, ["fundamental", "quick", "long", "exhaustive"].indexOf(process.env["SEMIO_TEST_LEVEL"] ?? "fundamental"));
 
-  //#region ⚡FastUnit
+  //#region ⚡️FastUnit
   describe("compose/js", () => {
     it("graphql wire kinds match golden operation roots", () => {
       expect(graphqlWireOperationKind("  #c\nquery X { session { __typename } }")).toBe("query");
@@ -5192,9 +5192,9 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
       await expect(Session.open("dev+json:eyJpZCI6IngifQ==")).rejects.toThrow(/installProjection/);
     });
   });
-  //#endregion ⚡FastUnit
+  //#endregion ⚡️FastUnit
 
-  //#region 🐘WasmE2e
+  //#region 🐘️WasmE2e
   /** ⏱️`long`-level (rank ≥ 2): each `it` boots the rs WASM engine via `Session.openInMemory`, too slow for fundamental/quick. */
   if (semioTestLevelRank >= 2)
   describe("compose/js e2e", () => {
@@ -5272,7 +5272,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
           (rows) => rows.some((row) => row.kind === "FOLDER" && row.name === "representations"),
           30_000,
         );
-        expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "🧊base.glb")).toBe(false);
+        expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "🧊️base.glb")).toBe(false);
         expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "e5267da44d")).toBe(false);
         expect(kitRoot.filter((row) => row.kind === "FILE")).toHaveLength(0);
         expect(kitRoot.some((row) => row.kind === "FOLDER" && row.name === "representations")).toBe(true);
@@ -5280,10 +5280,10 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
         expect(repFolder).toBeDefined();
         const repChildren = await eventually(
           () => fetchComposeFileSystemChildren(store, { kind: "FOLDER", id: representationsFolderId }),
-          (rows) => rows.some((row) => row.kind === "FILE" && row.name === "🧊base.glb"),
+          (rows) => rows.some((row) => row.kind === "FILE" && row.name === "🧊️base.glb"),
           30_000,
         );
-        const baseGlb = repChildren.find((row) => row.kind === "FILE" && row.name === "🧊base.glb");
+        const baseGlb = repChildren.find((row) => row.kind === "FILE" && row.name === "🧊️base.glb");
         expect(baseGlb).toBeDefined();
         expect(baseGlb!.id).toBe("457d2061-ac4b-4317-8563-ba41afffd149");
       } finally {
@@ -5630,7 +5630,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
       }
     });
   });
-  //#endregion 🐘WasmE2e
+  //#endregion 🐘️WasmE2e
 }
 
-//#endregion 🧪Tests
+//#endregion 🧪️Tests

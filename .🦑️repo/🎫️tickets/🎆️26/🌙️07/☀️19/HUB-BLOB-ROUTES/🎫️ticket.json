@@ -1,0 +1,14 @@
+{
+  "title": "Hub Blob Routes",
+  "emoji": "🗃️",
+  "status": "closed",
+  "description": "Wire HTTP routes for blob storage in framework/product/os/hub/rs/bin.rs. The storage layer already fully implements blob operations (HubStorage::put_blob/get_blob/has_blob across sqlite/postgres/neo4j backends), but the hub HTTP router has zero blob-related routes. Add three studio-scoped, auth-gated routes matching the existing document route conventions: PUT /studios/{studio_id}/blobs/{hash} (accepts raw bytes + content-type, calls put_blob, validates hash matches, returns 400/409 on mismatch), GET /studios/{studio_id}/blobs/{hash} (calls get_blob, returns raw bytes with content-type or 404), HEAD /studios/{studio_id}/blobs/{hash} (calls has_blob, returns 200/404 no body). Reuse the existing resolve_auth pattern used by document routes. Extend the existing test module in bin.rs with a round-trip test (PUT then GET/HEAD, plus a mismatched-hash rejection test) — no new test files. Verify with cargo check -p os-hub and cargo test -p os-hub. This unblocks the dependent ticket \"R3b Dataflow Drivers\" which reads blob artifacts through these routes.",
+  "summary": "Added studio-scoped blob HTTP routes to framework/product/os/hub/rs/bin.rs on top of the existing HubStorage put_blob/get_blob/has_blob methods: PUT/GET/HEAD /studios/{studio_id}/blobs/{hash} (route table at line 669), auth-gated the same way as document routes. put_blob (line 520) rejects a client-claimed hash that doesn't match the storage-computed hash. get_blob (line 538) serves raw bytes as generic binary (media type isn't retrievable on read per HubStorage's contract). Extended the existing hub test module in-place with a round-trip test (put then get/head, lines ~993-1010) and a hash-mismatch rejection test (~1019-1021) rather than creating new test files. cargo check -p os-hub compiles clean (0 errors) after a ~166min queue behind concurrent-session build-lock contention on the shared target directory.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2118"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️0173cf13d77a4a39b2e88845307beb34"
+  ]
+}

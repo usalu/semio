@@ -1,0 +1,8 @@
+{
+  "title": "Fix Desktop Folder Kit Sketchpad Filesystem Sync",
+  "status": "closed",
+  "description": "Compose desktop sketchpad folder kits must create and move files/folders against the actual filesystem, not just in-memory kit state. Investigate the desktop Electron adapter and sketchpad folder-kit store, implement end-to-end filesystem-backed create/move behavior for sketchpad folder entries, extend existing tests to cover the behavior, validate by running the relevant test suites, and fix any related issues required to get the flow working.",
+  "summary": "Completed the remaining desktop folder-kit filesystem sync by forwarding binary filesystem operations through CollaborativeKitStore, which is the actual sketchpad UI execution path. Dropped files now write into the selected physical folder-kit directory and created folders now create physical directories. Added wrapped-store coverage for addFile/createFolder filesystem sync and verified with passing @semio-tech/compose-desktop integration tests plus a fully passing @semio-tech/compose-js Vitest run.",
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️6f5ebcca471240fc80fd1ca3e743af31", "⚪️9bee2eef0c9b4274a962c58f32762596"]
+}

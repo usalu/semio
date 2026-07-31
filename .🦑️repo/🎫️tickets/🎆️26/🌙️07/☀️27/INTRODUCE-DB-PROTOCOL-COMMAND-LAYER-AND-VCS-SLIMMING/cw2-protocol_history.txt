@@ -1,0 +1,132 @@
+Wave: CW2 (protocol crate family implementation)
+Crate: protocol_history (protocol/history/rs)
+Agent scope: implement lib.rs only, strictly against
+.repo/🎫️/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md "## protocol_history" section.
+
+STATUS: cargo build -p protocol_history -> clean (no warnings from this crate).
+        cargo test  -p protocol_history -> 23/23 tests pass.
+        cargo clippy -p protocol_history --all-targets -> 0 warnings (fixed 2 derivable-impl/
+          collapsible-match warnings in lib.rs + 3 redundant-clone/useless-vec warnings in tests).
+        cargo build -p protocol_history --target wasm32-unknown-unknown -> clean (target already
+          installed; crate is wasm32-clean as required for this crate family).
+
+WHAT WAS IMPLEMENTED (single-file lib.rs, regions matching the contract exactly)
+
+- //#region 🔖️Model
+  HistoryLog / HistoryEdit / OpPayload / HistoryOpMeta / HistoryChange / HistoryCheckpoint /
+  HistoryAuthor / HistoryAlternative — copied verbatim from the contract's struct definitions.
+
+- //#region 🔖️TextGrammar
+  parse_ops_text / print_ops_text: a from-scratch twin of vcs::OpsHeaderLine's grammar, built
+  directly against dsl_schema's RecordSpec/Shape/parse/print primitives (no dependency on vcs or
+  dsl_derive, as required). Six private RecordSpec builders (doc/edit/change/checkpoint/
+  alternative/active + a nested author record for `by=[...]`) declare fields in the SAME order as
+  vcs's OpsHeaderLine struct fields, which is what makes dsl_schema::print_record's scalar-before-
+  composite stable-sort reproduce vcs's exact printed field order for free. Op lines inside an
+  edit are opaque two-space-indented text lines (never interpreted — this crate never depends on
+  operation semantics). Comments/blank lines normalize away on parse.
+
+- //#region 🔖️Payloads
+  encode_doc/decode_doc, encode_edit/decode_edit (exact signatures from the contract), plus
+  encode_change/decode_change, encode_checkpoint/decode_checkpoint, encode_alternative/
+  decode_alternative, encode_active/decode_active (signatures I designed to fit the contract's
+  "same shape" instruction — documented below). All built on protocol_core::scalar::{write_id,
+  read_id, write_timestamp, read_timestamp} + protocol_core::{DictBuilder, DictReader}.
+
+- //#region 🔖️Codec
+  EncodeOptions/DecodeOptions (Default impls per contract) + encode_history/decode_history over
+  protocol_format::SprWriter/FrameCursor. Dictionary deltas are flushed incrementally (one
+  REC_STR_DICT record right before whichever record first needed the new entries) rather than in
+  a separate pre-pass — a single forward pass, deterministic because DictBuilder's first-use
+  interning order is itself deterministic (verified by the canonical-stability test).
+  DecodeOptions::verification::Full additionally recomputes the commit hash chain (blake3 via
+  protocol_format::Blake3Hasher, since protocol_core stays hash-algorithm-free) and compares
+  against each REC_COMMIT's embedded chain_hash, erroring ChainMismatch{commit_seq} on mismatch.
+
+- //#region 🔖️Append
+  HistoryAppender<S: PackSink> wrapping SprWriter<S> + a live DictBuilder and an edit-id ordinal
+  map (for HistoryChange::edit_ids' tag-3 edit-ordinal id encoding).
+
+- //#region 🔖️Scan
+  HistoryReader::open first runs protocol_format::recover (RecoveryMode::LastCommit) to establish
+  a trusted byte range, so a torn tail can never surface a partial record. edits() (EditIter)
+  walks forward lazily, growing its own DictReader/edit-id table incrementally. edits_rev(limit)
+  (RevEditIter) needs the FULL dict + FULL edit-id table before it can decode ANY edit in reverse
+  (payload id-dictrefs/ordinals are stable/append-only, so the final dict state is valid for
+  decoding any earlier record) — since the contract's edits_rev signature returns RevEditIter
+  directly (not Result), a prescan failure is deferred into the iterator's first `next()` call
+  rather than failing at construction.
+
+- //#region 🔖️Frontier
+  AlternativeHead / FrontierSummary / FrontierComparison / frontier_delta, ordinal-then-chain-hash
+  comparison; Diverged::common_edit_count is a conservative estimate (documented — FrontierSummary
+  alone carries no shared-ancestry data to compute a true common ancestor).
+
+- //#region 🔖️Index
+  SEC_* consts (values from the contract) + IndexBuilder/IndexReader. Byte layout for the
+  REC_INDEX payload sections is this crate's own choice (the contract only fixes the section-kind
+  byte values); IndexReader borrows checkpoint ids as &'a str directly out of the payload.
+
+- //#region 🧪️Tests
+  23 inline #[test] fns (no quick/long/exhaustive submodules — nothing here is slow) covering: ops
+  text round-trip + fixpoint-under-reprint + comment/blank-line skipping + unknown-keyword
+  rejection; every payload codec's round trip (doc/edit-with-meta/edit-minimal/change-with-edit-
+  ordinal-refs/checkpoint-with-authors/alternative/active-Some-and-None) + format-rejection;
+  whole-file encode/decode identity at Standard and Full verification, canonical-stability
+  (encode twice, byte-identical), and a tamper test; HistoryAppender-streamed output decoding
+  identically to HistoryLog::encode_history's buffered output; HistoryReader forward/reverse edit
+  iteration; frontier_delta's four outcomes; IndexBuilder/IndexReader round trip.
+
+DEVIATIONS / DESIGN CHOICES (contract left these to the implementer; each is a comment at its
+definition site in lib.rs too)
+
+1. encode_doc/encode_edit's single `dict: &mut DictBuilder` parameter (frozen by the contract)
+   backs REC_STR_DICT only. protocol_core::REC_ACTOR_DICT stays defined but this crate's writer
+   never emits it (v1 doesn't split a separate actor dictionary); the reader treats REC_ACTOR_DICT
+   as a no-op skip for forward compatibility with some other future writer that might emit it.
+
+2. encode_change/decode_change take an edit_ordinal_of/ordinal_to_id closure pair (matching
+   encode_edit's shape) because HistoryChange::edit_ids genuinely references edit ids.
+   encode_checkpoint/decode_checkpoint and encode_alternative/decode_alternative do NOT take that
+   closure pair — they never reference an edit id (checkpoints reference changes, alternatives
+   reference checkpoints), so there was nothing for the closure to do. encode_active/decode_active
+   is `Option<&str>` in, `Option<String>` out, with just a `dict` parameter.
+
+3. EncodeOptions::write_backwards_section is accepted (per the frozen struct shape) but has no
+   effect: HistoryEdit (per the Model region) carries no backward-op field to serialize —
+   backwards is explicitly-excluded derived data — so REC_EDIT's presence bit5 is never set by
+   this crate's writer. decode_edit still tolerates bit5 being set by a hypothetical foreign
+   writer (the trailing bytes are simply left unconsumed, per the "trailing bytes ignored"
+   additive-evolution rule).
+
+4. Every Option<T> field inside one HistoryOpMeta entry (op_id/author_id/hlt/payload_hash) gets
+   its own presence bitmask byte (bit0..bit3) — the contract's prose names each field with a `?`
+   suffix but doesn't fix the exact bit layout.
+
+5. protocol_core::scalar::read_id/write_id's closures return Result<&str, PackError>, but this
+   crate's own decode_edit/decode_change (per the frozen contract signatures) expose
+   Result<&str, ProtocolError> to their callers. The boundary maps DictMiss/unresolvable-ordinal
+   conditions into a generic PackError::Malformed at the read_id_field call site — this loses the
+   exact ProtocolError variant on that specific failure path only (never affects the success
+   path), documented at read_id_field's definition.
+
+6. VerificationLevel::Full's chain recompute needs (commit_seq, chain_hash) out of a REC_COMMIT
+   frame's payload; this now calls protocol_format::parse_commit_payload directly (that crate's own
+   follow-up review pass made CommitPayload/parse_commit_payload pub specifically for this kind of
+   downstream use) via a thin local parse_commit_fields wrapper, rather than re-deriving the
+   64-byte offsets here.
+
+7. IndexBuilder/IndexReader's REC_INDEX payload byte layout (section framing: kind u8 + count
+   varint + entries) is this crate's own choice; the contract only fixes the SEC_* kind byte
+   values, calling the whole record "advisory, rebuildable, never authoritative."
+
+8. FrontierComparison::Diverged's common_edit_count is a conservative estimate (the shared
+   ordinal), not a verified common ancestor, since FrontierSummary alone carries no shared-history
+   data — same caveat the sibling protocol_causal::FrontierComparison documents for its own
+   runtime twin.
+
+CARGO.TOML: unchanged — all five deps the stub already listed (protocol_core, protocol_format,
+pack_core, dsl_core, dsl_schema) were exactly what was needed; no dependency added.
+
+FILES TOUCHED: /Users/ueli/Documents/semio/protocol/history/rs/lib.rs (full rewrite, stub -> real
+implementation). No other file in the repo was touched.

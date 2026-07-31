@@ -1,8 +1,8 @@
 {
   "name": "Metabolism",
   "version": "r25.07-1",
-  "description": "🏗 Everything for metabolistic architecture.",
-  "icon": "icons/🔣metabolism.svg",
+  "description": "🏗️ Everything for metabolistic architecture.",
+  "icon": "icons/🔣️metabolism.svg",
   "image": "images/🖼️metabolism.png",
   "remote": "https://github.com/usalu/metabolism/archive/refs/tags/r25.07-1.zip",
   "homepage": "https://github.com/usalu/metabolism/tree/r25.07-1",
@@ -58,7 +58,7 @@
     "added": [
       {
         "id": "457d2061-ac4b-4317-8563-ba41afffd149",
-        "name": "🧊base.glb",
+        "name": "🧊️base.glb",
         "folder": {
           "id": "019adc83-0113-75e0-90b2-9d0912f1d60f"
         },
@@ -78,7 +78,7 @@
           "id": "77e02ef4-e37e-41dd-80f6-00889cfcabb4"
         },
         "diff": {
-          "name": "📐base_1to500.3dm"
+          "name": "📐️base_1to500.3dm"
         }
       }
     ]

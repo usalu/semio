@@ -1,0 +1,9 @@
+{
+  "title": "Elements UI Class Abstraction",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Framework-free @elements/ui-shell (Workbench, App, Mode, Controller, CommandBus); React WorkbenchView + ReactUI.mount; migrate plays + compose algorithm shell; remove AppConfig/PureAppDefinition.",
+  "summary": "Generalized elements play infrastructure around the declarative UI shell and fixed current-layout build wiring. Topology play validates through its declarative shell target; board and scene play builds resolve current paths; package/project scripts route through nx/script.ts; Rust board build paths and styling codegen now resolve from the moved elements tree. Verified @elements/topology:test, @elements/scene:build, and @elements/board:build. Geometry build was stopped after confirming the corrected repo cache root because OpenCascade WASM compilation was still long-running.",
+  "goal": "🎯️elements🎯️uibundle",
+  "sessions": ["⚪️4b6044d3f76f486dbe1e025429511551"]
+}

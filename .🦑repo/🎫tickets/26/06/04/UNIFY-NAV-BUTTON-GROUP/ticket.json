@@ -1,8 +1,0 @@
-{
-  "title": "Unify Nav Button Group",
-  "emoji": "🧭",
-  "status": "open",
-  "summary": "",
-  "description": "Merge back, forward, and up into one ButtonGroup in PlatformView so breadcrumb spacing is correct.",
-  "goal": "🎯framework"
-}

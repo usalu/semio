@@ -1,0 +1,12 @@
+{
+  "title": "Fix Puzzle 5d 2d Preview Missing When Suggesting Parts From 3d",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When suggesting a part from the 3D view in puzzle 5d, the 2D preview doesn't show. The 3D preview is correct. The issue: puzzle5dSyncBrushPreviewFromVolume opens the flat slot via flatRenderer.brushOpenSlot() but puzzle2dBrushSuggestionsDrivingRendererRef is not set. So puzzle2dApplyBrushSuggestionsCandidateIndex has no driving renderer, skips setBrushCandidateIndex on WASM, WASM stays at default candidate index, and puzzle2dBuildBrushSuggestionsPreview(null,...) returns null → no preview. Fix: call flatRenderer.setBrushCandidateIndex(index) before puzzle2dApplyBrushSuggestionsCandidateIndex so WASM advances and the drain provides the correct preview.",
+  "summary": "Fixed puzzle 5d: 2D preview missing when suggesting parts from 3D view. Root cause: puzzle5dSyncBrushPreviewFromVolume opened flat slot without setting puzzle2dBrushSuggestionsDrivingRendererRef, so puzzle2dApplyBrushSuggestionsCandidateIndex skipped setBrushCandidateIndex on WASM, WASM stayed at default candidate 0, and puzzle2dBuildBrushSuggestionsPreview(null, ...) returned null. Fix: added flatRenderer.setBrushCandidateIndex(index) before puzzle2dApplyBrushSuggestionsCandidateIndex so WASM advances to the correct candidate, the drain provides the preview, and the session is broadcast to all authoring peers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1687"
+  },
+  "goal": "🎯️puzzle🎯️5d",
+  "sessions": ["⚪️d494c54091a04d6792d55110d7ae7264"]
+}

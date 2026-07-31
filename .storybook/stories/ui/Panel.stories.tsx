@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // .elements/ui/.storybook/story/elements/Panel.stories.tsx
 
@@ -9,14 +9,14 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Panel, PanelChromeTabBar, singleTreeLeaf } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState, type ComponentType } from "react";
 
-// #region 🧭Panel
+// #region 🧭️Panel
 
 const Info = createIconComponent("info");
 const Layers = createIconComponent("layers");
@@ -230,4 +230,4 @@ export const PanelChromeHostedBottomMiddle: Story = {
   render: () => <ChromeHostedPanelDemo anchor="bottom-middle" />,
 };
 
-// #endregion 🧭Panel
+// #endregion 🧭️Panel

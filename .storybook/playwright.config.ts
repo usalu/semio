@@ -1,18 +1,18 @@
-// #region 🧲Header
-// 💻 .storybook/playwright.config.ts
+// #region 🧲️Header
+// 💻️ .storybook/playwright.config.ts
 // Specs: Run Playwright end-to-end coverage against the built workspace Storybook.
 // Summary: `bun run test:storybook` builds, serves `storybook-static/` via `script.ts dev storybook-static`, then runs Playwright against every `*.spec.ts` in this directory with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
 
 import { playwrightTestTimeoutMs } from "../repo/lib/js/index.ts";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");
 const storybookPort = process.env.STORYBOOK_PORT ?? "6010";

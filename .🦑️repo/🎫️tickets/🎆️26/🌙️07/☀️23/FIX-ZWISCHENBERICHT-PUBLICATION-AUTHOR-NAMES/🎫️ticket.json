@@ -1,0 +1,14 @@
+{
+  "title": "Fix Zwischenbericht Publication Author Names",
+  "emoji": "📚️",
+  "status": "closed",
+  "description": "Some first names in mit-bestand Zwischenbericht publications are invented (e.g. Charlotte Henschel should be Christoph Henschel). Check all publications that the names are correct and fix invented/wrong first names in references.bib.",
+  "summary": "Checked every personal-name author in mit-bestand Zwischenbericht `references.bib` against primary sources and corrected invented/wrong first names.\n\nFixes: Charlotte→Christoph Henschel (3 entries); Ophelia→Oliver Kusche; Malin→Maria Sivers; D5 paper Bradley→Brandon Byers, Dhruv→Deepika Raghu, Manuel→Matthew Gordon, Vera→Vanessa Schwarzkopf, Emmanouil→Eleftherios Triantafyllidis; Sam→Simone Cooper.\n\nBaselCircular and Brütting/Senatore/Fivet authors verified correct. Corporate authors unchanged. Zwischenbericht light+dark rebuild succeeded; BBL shows corrected given names.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2264"
+  },
+  "goal": "🎯️r2602/🎯️updateddocs",
+  "sessions": [
+    "⚪️25ad94ec6fb04dfc92e5280f11faed11"
+  ]
+}

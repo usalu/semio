@@ -1,0 +1,12 @@
+{
+  "title": "Fix Code Violations in Home Tsx and Tutorials Tsx",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix all code breachs in Home.tsx (44) and Tutorials.tsx (59) by adding section summary comments and definition summary+spec comments",
+  "summary": "Validated the current sketchpad Home surface on the current codebase, confirmed the Home Playwright path and production build pass, and determined the repo autofix/audit path currently corrupts Home.tsx while reporting unrelated bundle README breaches outside Home scope.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/523"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo🎯️consistentsections",
+  "sessions": ["⚪️fb4f6f3189464583a0d6663fa3d7cd10"]
+}

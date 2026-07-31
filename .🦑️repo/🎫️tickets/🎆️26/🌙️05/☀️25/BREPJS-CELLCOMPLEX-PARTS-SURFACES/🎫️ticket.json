@@ -1,0 +1,8 @@
+{
+  "title": "Brepjs CellComplex Parts and Surfaces",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Replace adhoc AABB part/surface derivation with topologic-inspired BRep pipeline: split-based atomic decomposition, SelfMerge topology augmentation, face-adjacency surfaces.",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": []
+}

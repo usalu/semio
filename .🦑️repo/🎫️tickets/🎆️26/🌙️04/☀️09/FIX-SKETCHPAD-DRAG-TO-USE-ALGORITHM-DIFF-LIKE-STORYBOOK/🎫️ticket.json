@@ -1,0 +1,11 @@
+{
+  "title": "Fix Sketchpad Drag To Use Algorithm Diff Like Storybook",
+  "status": "closed",
+  "description": "Fix sketchpad onNodeDragStop to properly use dragPiecesInDesign algorithm diff (like the storybook algorithms Drag story) instead of manually computing center updates for all pieces. Currently the sketchpad incorrectly sets center on connected (non-fixed) pieces; only fixed pieces should get center updates, and connected pieces should only get parent connection offset adjustments.",
+  "summary": "Refactored sketchpad onNodeDragStop to use the dragPiecesInDesign algorithm diff directly (matching the storybook algorithms Drag story). Fixed pieces get center updates, connected pieces get parent connection offset adjustments, descendants move implicitly. Updated integration tests to use resolved metadata centers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1302"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️8fee1235741748ca87b0f5c6b8d38a73"]
+}

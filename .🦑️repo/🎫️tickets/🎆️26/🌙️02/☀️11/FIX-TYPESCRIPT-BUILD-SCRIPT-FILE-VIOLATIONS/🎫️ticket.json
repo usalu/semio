@@ -1,0 +1,11 @@
+{
+  "title": "Fix TypeScript Build Script File Breachs",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix code policy breachs in TypeScript build/script files. Add proper section regions to wrap orphan definitions, and summary+spec comments.",
+  "summary": "Added section regions around orphan code and summary+spec comments for definitions in 5 engine TypeScript files: build.ts (Build section, cwd/args defs), generate-schemas.ts (Schema Generation section), test.ts (Test Runner section), sqliteschema.ts (Schema Export section, dbPath/outputPath defs), post-build.ts (Post Build section, 6 path constant defs)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/515"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo🎯️consistentsections"
+}

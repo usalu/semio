@@ -31,7 +31,7 @@ isProject: false
 2. First renderer: `@semio-tech/framework-presentation-renderer-react` (React + reveal.js as the adapter boundary).
 3. Migrate [`mit-bestand/präsentation/33.projektetage`](mit-bestand/präsentation/33.projektetage/index.tsx) so its content is the eg-ice-25 intro (5 slides) expressed declaratively, with **no direct `react`, `react-dom`, `reveal.js`, or `@semio-tech/ui-react`** dependency.
 
-This follows the existing `@semio-tech/framework-playground` pattern: a pure-TS `core` + a `renderer/react`, mirroring [`framework/product/playground`](framework/product/playground/package.json). Reveal.js stays fully isolated inside the renderer's `🔌Adapters` region (core never imports it).
+This follows the existing `@semio-tech/framework-playground` pattern: a pure-TS `core` + a `renderer/react`, mirroring [`framework/product/playground`](framework/product/playground/package.json). Reveal.js stays fully isolated inside the renderer's `🔌️Adapters` region (core never imports it).
 
 ## Architecture
 
@@ -71,7 +71,7 @@ Implements presentation/AGENTS.md verbatim, render-neutral, with inline vitest. 
 
 ## Renderer (`@semio-tech/framework-presentation-renderer-react/index.tsx`)
 
-- `🔌Adapters`: `import Reveal from "reveal.js"`, `reveal.css`, React, `@semio-tech/ui-react` `useElementsSurfaceChrome`.
+- `🔌️Adapters`: `import Reveal from "reveal.js"`, `reveal.css`, React, `@semio-tech/ui-react` `useElementsSurfaceChrome`.
 - Maps the declarative tree to reveal DOM: `Presentation` → `.reveal > .slides`; each `Sequence` → outer horizontal `<section>`; each `Arrangement` → inner vertical `<section data-auto-animate>`; each placement → element with `data-id={participantId}` (drives auto-animate morph, e.g. title full→short) and `opacity-20` when `emphasis==="muted"`. Text levels map to `h1/h2/h4` + `r-fit-text`; authors → flex row with `<sup>` marks; affiliations → footnote block.
 - Exports `mountPresentation(rootEl, presentation, options?)` and a `<PresentationDeck presentation>` component. Folds in the deck/init/destroy + `syncRevealBackgroundKind` + surface-chrome logic currently inline in [`33.projektetage/index.tsx`](mit-bestand/präsentation/33.projektetage/index.tsx) lines 128-191.
 - Ships `globals.css` (the reveal CSS-variable theme overrides currently in [`33.projektetage/globals.css`](mit-bestand/präsentation/33.projektetage/globals.css)), exported as `./globals.css`.

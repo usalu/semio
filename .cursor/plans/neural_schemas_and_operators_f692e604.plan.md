@@ -125,7 +125,7 @@ flowchart TB
 
 ## Ticket workflow (first execution step)
 
-Read `repo://goals`, then open a new ticket (e.g. "Neural Schemas And Operators") under the most fitting goal (likely `🎯procedural🎯floweditor`), or reopen if an existing one matches. All temp logs/scripts go inside the ticket folder; close with a summary + touched files when done.
+Read `repo://goals`, then open a new ticket (e.g. "Neural Schemas And Operators") under the most fitting goal (likely `🎯️procedural🎯️floweditor`), or reopen if an existing one matches. All temp logs/scripts go inside the ticket folder; close with a summary + touched files when done.
 
 ## Validation
 

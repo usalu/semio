@@ -12,7 +12,7 @@ todos:
    content: "Rewrite mit-bestand/bericht/zwischenbericht/zwischenbericht.tex: cover metadata, renamed AP workpackage table, full 4-section heading skeleton (section/subsection/subsubsection/paragraph + nested itemize), secnumdepth=4, remove old prose/appendix"
    status: completed
  - id: build-verify
-   content: Build with bun ./script.ts build and visually verify light+dark PDF output
+   content: Build with bun ./📜️script.ts build and visually verify light+dark PDF output
    status: completed
  - id: ticket-close
    content: Reopen MIT-BESTAND-ZWISCHENBERICHT-LA-TE-X-WORKSHOP ticket, then close with summary
@@ -43,7 +43,7 @@ Mapping:
 - `\subsection` — Arbeitspakete, Personalkosten, Leistungen Dritter, Repositorien, …
 - `\subsubsection` — AP-Erfahrung/AP-Plattform/AP-Tool/AP-Validierung, Leibniz Universität Hannover, …
 - `\paragraph` — Recherche, Interviews, User Stories, Generatoren, Test-Case, …
-- nested `itemize` (2-3 levels) — Bauteilbörsen▸Archetypen▸Depotshop, Geplante Interviews▸I-Usability▸I-U-Plattform, etc.
+- nested `itemize` (2-3 levels) — Bauteilbörsen▸️Archetypen▸️Depotshop, Geplante Interviews▸️I-Usability▸️I-U-Plattform, etc.
 
 I'll rebuild the tree from your **indentation** (source of truth) rather than the literal printed numbers, since several are inconsistent/duplicated in the pasted outline (e.g. duplicate `2.2.1.1.1.1` for both I-U-Plattform/I-U-Tool, `2.2.4.1` reused for both Test-Case and Workshop, `4.2`/`4.3` reused). LaTeX will auto-number everything correctly regardless. I'll also fix obvious typos while transcribing: Harvestkatalog, KI-Modelle, Entwurfsgrammatik, AP-Validierung, Leibniz Universität (Hannover).
 
@@ -63,9 +63,9 @@ Per your answers:
 
 ## Verification
 
-- Build with `bun ./script.ts build` in `mit-bestand/bericht` (or the `latex` nx target) to compile via Tectonic, confirming the new secnumdepth/itemize nesting and cover fields compile cleanly for both light and derived dark variants.
+- Build with `bun ./📜️script.ts build` in `mit-bestand/bericht` (or the `latex` nx target) to compile via Tectonic, confirming the new secnumdepth/itemize nesting and cover fields compile cleanly for both light and derived dark variants.
 - Visually spot-check a rendered page (convert PDF page to image) to confirm the `\paragraph` chip styling still reads well with back-to-back empty headings and that nested nested lists render legibly.
 
 ## Ticket workflow
 
-Reopen the existing closed ticket `MIT-BESTAND-ZWISCHENBERICHT-LA-TE-X-WORKSHOP` (goal `🎯r2603`) since it covers this exact file, rather than opening a new one; close it again when done with a summary of the files touched.
+Reopen the existing closed ticket `MIT-BESTAND-ZWISCHENBERICHT-LA-TE-X-WORKSHOP` (goal `🎯️r2603`) since it covers this exact file, rather than opening a new one; close it again when done with a summary of the files touched.

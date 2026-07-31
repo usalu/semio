@@ -1,11 +1,11 @@
-// #region 🧲Header
+// #region 🧲️Header
 // .storybook/story/elements/ui/Ui.stories.tsx
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { App, Mode, Ui, reactHostPort } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 // `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping
 // a `<Window>` (level="window"), both of which already fill `ui-surface`/`ui-glass` — this stays

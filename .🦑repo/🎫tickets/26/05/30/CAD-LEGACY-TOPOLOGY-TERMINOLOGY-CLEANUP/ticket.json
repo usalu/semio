@@ -1,9 +1,0 @@
-{
-  "title": "Cad Legacy Topology Terminology Cleanup",
-  "emoji": "🏷️",
-  "status": "closed",
-  "description": "Remove legacy CAD terminology (topology-prefixed APIs, Topologic references, kernelTopologyTypologies, etc.) and align names/comments with cad/AGENTS.md vocabulary only.",
-  "summary": "Renamed legacy topology-prefixed CAD APIs and comments to cad/AGENTS.md vocabulary: kernelTypologies, kernelTypologyIds, ModelPrimitiveDocument, PRIMITIVE_MODEL_ENTITY_KINDS, primitive pick/document helpers; removed OCCT/Topologic/Geom_* references from docstrings; fixed replBuildDispatchEvent model destructuring. Verified buildModelPrimitiveDocument unit test passes.",
-  "goal": "🎯spatial",
-  "sessions": ["⚪827c71ef4fd94f3b9aab78413841372a"]
-}

@@ -1,0 +1,101 @@
+CW2 progress report — protocol_testkit (protocol/testkit/rs)
+
+CONCURRENCY NOTE: another session/agent was actively editing this exact crate's Cargo.toml and
+benches/protocol.rs while I worked (files changed under me mid-task, per CLAUDE.md's "work
+simultaneously with others" rule — confirmed via the tool-call system reminders that surfaced the
+diffs as they landed). I did not revert or overwrite their work; instead I read what changed,
+adapted my own lib.rs to actually use the `protocol_history` path dependency they added (rather
+than the `HistoryAppender`-only workaround I'd started with), and verified the whole crate builds
+and tests cleanly with everyone's changes merged. Final state: I wrote lib.rs in full; the other
+session wrote (or converged independently on) the same `protocol_core`/`protocol_format`/
+`protocol_history`/`serde`/`serde_json` Cargo.toml additions I had also concluded were needed, plus
+`benches/protocol.rs` (I had not yet written that file when theirs landed, so I kept it as-is after
+confirming it compiles and runs cleanly against my lib.rs's public API).
+
+WHAT'S IMPLEMENTED (protocol/testkit/rs/lib.rs):
+- //#region 🔖️Gen: inline `SplitMix64` splitmix64 PRNG (repo precedent, matches
+  `pack_testkit::RecordValueGen`'s convention — not arbitrary/quickcheck/proptest).
+  `GenProfile { edit_count, max_ops_per_edit, checkpoint_every, adversarial }`.
+  `HistoryLogGen::{new, generate}` fabricates a full `protocol::HistoryLog` — doc identity,
+  edits (each with 0..=max_ops_per_edit opaque op lines), a `HistoryChange`+`HistoryCheckpoint`
+  every `checkpoint_every` edits (chained via `parent_id`), 0..=2 alternatives referencing a random
+  checkpoint subset, and an optional active alternative. `adversarial: true` widens unicode ids/
+  descriptions, forces some zero-op edits, and generates non-canonical timestamp strings that
+  exercise `protocol_core::scalar`'s tag-0 raw-text fallback. `OpDagGen::{new, generate}` fabricates
+  a closed, acyclic `Vec<protocol::OperationEnvelope>` (every dependency references a strictly
+  earlier index) for the OpDag-convergence law's exhaustive tier.
+- //#region 🔖️Laws — the original contract's set: `assert_history_encode_decode_identity`,
+  `assert_history_canonical_stable`, `assert_ops_protocol_bidirectional`,
+  `assert_streamed_equals_buffered`, `assert_zero_copy`, `assert_chain_detects_tamper`,
+  `assert_recovery_truncates_to_commit`, `assert_compaction_identity` (native-only, writes to a
+  scratch temp file since `protocol::compact` is file-based) — plus the amendment's
+  `assert_op_text_round_trip`, `assert_op_dag_convergence`, `assert_crdt_commutative`,
+  `assert_crdt_idempotent`, `assert_wire_frame_round_trip`.
+- //#region 🔖️Corrupt / 🔖️Golden: `pub use pack_testkit::{CorruptionLevel, CorruptionReport,
+  fuzz_bit_flips, fuzz_truncation}` and `pub use pack_testkit::golden_hash_hex;` verbatim, per
+  contract — zero duplication, exercised against `protocol::HistoryReader::open` and
+  `protocol_format::recover` in this crate's own tests.
+- //#region 🧪️Tests: 29 inline tests (all passing), plus `mod quick`/`mod exhaustive` submodules
+  under the OpDag-convergence and recovery-truncation laws for the higher-density tier (the only
+  two laws in this crate with a genuinely exhaustive-only mode).
+- benches/protocol.rs: criterion harness (`harness = false`, following
+  `kernel/3d/brep/rs/benches/kernel.rs`'s pattern) with groups covering `HistoryLogGen` generation
+  cost, `encode_history`/`decode_history` (history encode/decode), `HistoryAppender` streaming
+  append + `protocol_format::recover` (format frame round-trip), `protocol_wire` frame codec,
+  `protocol_crdt::merge_concurrent_diffs`, and `OpDag::insert` (causal OpDag insert) — each
+  parameterized via `BenchmarkId` over an 8/64/256(-ish) scaling value.
+
+DEVIATIONS FROM THE LITERAL "Deps:" LINE (`protocol = {...}, pack_testkit = {...}` only), all
+documented inline in Cargo.toml:
+- The `protocol` facade re-exports `RecoveryMode`/`RecoveryReport`/`FrameCursor`/etc. as *types*
+  but not the free fn `protocol_format::recover`, `HEADER_SIZE`, or the `REC_*` record-kind
+  constants — needed by `assert_zero_copy`/`assert_chain_detects_tamper`/
+  `assert_recovery_truncates_to_commit`/`assert_compaction_identity`, which walk raw record
+  streams and classify frame kinds directly. Added `protocol_core` and `protocol_format` as direct
+  path deps.
+- The facade also does not re-export `protocol_history::{encode_history, decode_history,
+  parse_ops_text, print_ops_text}` (only `HistoryAppender`/`HistoryReader` and the ops-text-only
+  `compile_ops`/`decompile_ops` wrappers) — but several frozen law signatures take
+  `&protocol::HistoryLog` directly (`assert_history_encode_decode_identity`,
+  `assert_history_canonical_stable`) or need the raw text grammar
+  (`assert_ops_protocol_bidirectional`), which only the whole-batch codec/text-grammar functions
+  provide. Added `protocol_history` as a direct path dep.
+- `serde`/`serde_json` added: `OpDagGen`/wire-frame-law samples build `serde_json::Value` payloads
+  directly, and this crate's inline test fixtures (`AddOp`/`AddDiff`/`RegisterDiff`) need
+  `#[derive(serde::Serialize, serde::Deserialize)]`. `dsl_core` added as a dev-dependency only
+  (never in the public API) since the `OpText` fixture's `parse_op` returns
+  `Result<Self, dsl_core::TextError>`.
+  Every added dependency is a sibling crate already inside this family, not an external one.
+- `assert_chain_detects_tamper`'s docstring softens the contract's "Full verification must error"
+  prose to "must never go unnoticed" (never silently decodes to the untampered original). Reason:
+  per-frame CRC-32C is checked during `protocol_format::recover`'s own scan BEFORE
+  `VerificationLevel::Full`'s chain-hash check ever runs, so a tampered byte inside an
+  already-committed frame makes `recover` truncate the trusted range *before* it — an `Ok` with a
+  visibly shorter/different log, not always a hard `Err`. This is `protocol_history`'s own
+  documented precedent (`history_full_verification_detects_tampering` test, same file), not a bug
+  in this crate; the law here is phrased against that real layering while still proving genuine
+  tamper-detection.
+- `assert_op_dag_convergence(envelopes, seed, permutation_count)` and `assert_wire_frame_round_trip`
+  (via a `WireFrameSample::{Client, Server}` enum wrapper, since `ClientFrame`/`ServerFrame` have
+  distinct encode/decode fn pairs) are this crate's own signature choices — the contract names
+  these two law fns but does not pin exact signatures beyond that.
+
+VERIFICATION (all commands run directly, output inspected — nothing claimed without running it):
+- `cd protocol/testkit/rs && cargo build -p protocol_testkit` — clean, no warnings.
+- `cargo test -p protocol_testkit` — 29/29 tests pass, 0 failed.
+- `cargo clippy -p protocol_testkit --all-targets` — zero warnings attributable to this crate (the
+  handful that appear come from `protocol_materialize`/`protocol_wire`/`pack_testkit`, pre-existing
+  sibling-crate code, not touched here).
+- `cargo build -p protocol_testkit --lib --target wasm32-unknown-unknown` — clean (target already
+  installed; not contractually required for this crate, verified anyway since it cost nothing).
+- `cargo bench -p protocol_testkit -- --test` — all 8 benchmark groups (`history_log_gen`,
+  `encode_decode_history`, `history_appender`, `recover`, `wire_frame_codec`, `crdt_merge`,
+  `op_dag_insert`) run to completion with "Success" for every parameterized case.
+
+FINAL BUILD/TEST STATUS: PASSING (build clean, 29/29 tests pass, clippy clean, wasm32 target
+builds, criterion benches run).
+
+Files touched: protocol/testkit/rs/Cargo.toml (added protocol_core/protocol_format/
+protocol_history/serde/serde_json deps + dsl_core dev-dep), protocol/testkit/rs/lib.rs (full
+implementation, replacing the stub), protocol/testkit/rs/benches/protocol.rs (criterion harness).
+Nothing outside protocol/testkit/rs was touched.

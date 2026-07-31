@@ -1,0 +1,12 @@
+{
+  "title": "Add Template File Kind",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Add a new file kind template (.tpl) to the repo system across GraphQL schema, Go CLI, and VSCode extension",
+  "summary": "Added template file kind (📋️) across the repo stack: GraphQL schema (TEMPLATE enum), Go CLI (FileKindTemplate, DeriveFileKind for .tpl/.tmpl/.gotmpl/.mustache/.hbs/.ejs/.njk/.jinja2/.j2/.pug/.jade/.slim/.haml/.liquid extensions, fileKindToInt=6, emoji, CLI flags --only-template/--no-template, GraphQL enum), VSCode extension (📋️ file-template emoji, filter), SQL already had template at index 6. License shifted from 6 to 7.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/743"
+  },
+  "goal": "🎯️repo🎯️tooling",
+  "sessions": ["⚪️17724245359870020853409959004470076304"]
+}

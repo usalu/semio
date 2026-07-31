@@ -3,7 +3,7 @@ name: Wrap External Dependencies
 overview: "Establish a repo-wide ports-and-adapters discipline so no package imports a third-party library directly: every external dependency is reached only through a first-party interface (port) plus a thin adapter, enforced by a new repo policy and linter statutes across all languages."
 todos:
  - id: policy
-   content: Add `dependency-boundary` policy + per-language statutes to .repo/📊/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language program extractImports)
+   content: Add `dependency-boundary` policy + per-language statutes to .repo/📊️/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language program extractImports)
    status: completed
  - id: rust-compose
    content: Wrap third-party deps in the Rust `compose` crate (nalgebra, rusqlite, ureq, zip, async-graphql, wasm web-sys/js-sys) behind traits + adapter regions
@@ -39,7 +39,7 @@ No first-party source touches a third-party library directly. Each external depe
 
 - **Port**: a first-party interface describing the capability the package needs (not the library's API surface). Maps to repo definition kind `interface`.
 - **Adapter**: the only code allowed to `import`/`use`/`require` the third-party package; implements the port. Maps to definition kind `implementation`.
-- **Location**: one adapter unit per dependency, named for the dependency, isolated in its own region/file so the import boundary is greppable (mirrors the existing `//#region 🌐Transport` boundary in [compose/client/lib/js](compose/client/lib/js) where `@semio-tech/compose-rs-wasm` is only imported inside `rs-wasm-transport.ts`).
+- **Location**: one adapter unit per dependency, named for the dependency, isolated in its own region/file so the import boundary is greppable (mirrors the existing `//#region 🌐️Transport` boundary in [compose/client/lib/js](compose/client/lib/js) where `@semio-tech/compose-rs-wasm` is only imported inside `rs-wasm-transport.ts`).
 - **Wiring**: composition happens at the package entry/bootstrap (constructor injection / provider), never deep in domain logic.
 - **Naming**: follow repo rules — use `kind` not `type`, titleized names, emoji-prefixed docstrings, organize with `#region`/subregions in the existing god-files rather than new files where the codebase already concentrates code.
 
@@ -67,7 +67,7 @@ flowchart LR
 
 ## Enforcement (the durable part)
 
-Add a repo policy `dependency-boundary` to [.repo/📊/policies.json](.repo/📊/policies.json) with statutes detecting direct third-party imports outside whitelisted adapter regions, wired into the existing analyze/lint pipeline:
+Add a repo policy `dependency-boundary` to [.repo/📊️/policies.json](.repo/📊️/policies.json) with statutes detecting direct third-party imports outside whitelisted adapter regions, wired into the existing analyze/lint pipeline:
 
 - Extend the JS linter in [repo/lib/js/src/linter.ts](repo/lib/js/src/linter.ts) and the Go `analyze` path in [repo/client/cli](repo/client/cli) with per-language import extraction (the language plugins already expose `extractImports`).
 - A breach fires when a file imports a package listed in its manifest's third-party deps and the file is not the registered adapter for that package.

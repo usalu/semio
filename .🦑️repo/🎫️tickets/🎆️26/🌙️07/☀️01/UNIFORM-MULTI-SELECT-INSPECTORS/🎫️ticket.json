@@ -1,0 +1,17 @@
+{
+  "title": "Uniform Multi-Select Inspectors",
+  "emoji": "🔍️",
+  "status": "closed",
+  "description": "Bring every technology playground Inspection tab to batch-editable multi-select with inheritance-ordered field groups (specific first, general last).",
+  "summary": "Implemented batch multi-select inspector upgrades for GIS map, presentation tile, shooting, and trinity play surfaces using shared uiInspector* helpers. Added batch patch commands (patchPositions/patchRoutes, patchTileCrops/renameTiles, patchShots/patchAssets, patchTrinityNodes) and extended vitest coverage in each play module. Updated framework playground renderer for shooting multi-select API and trinity inspector controllerId.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1775"
+  },
+  "goal": "🎯️framework🎯️playground",
+  "plan": {
+    "client": "cursor",
+    "id": "bf6290b6",
+    "local": "uniform_multi-select_inspectors_bf6290b6.plan.md"
+  },
+  "sessions": ["⚪️7163c0402d614f7aa890e2d6d00e3a36"]
+}

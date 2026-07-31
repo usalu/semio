@@ -1,0 +1,178 @@
+CW8 — Shim removal + policy lints — REPORT
+============================================
+
+## 1. Shim verification and deletion
+
+Re-verified the user's summary was NOT fully complete before touching anything. A fresh repo-wide
+grep (excluding target/, .repo/, .claude/worktrees/), including a multi-line-aware scan of
+`use vcs::{ ... }` import blocks (a naive single-line grep misses continuation lines — this is
+exactly how one real consumer was almost missed, see below), found FIVE real, non-comment consumer
+sites beyond the one the pre-briefing described (compose's two `impl vcs::OpText` blocks):
+
+1. `compose/client/lib/rs/lib.rs` — the briefing undercounted this file itself. Besides the two
+   `impl vcs::OpText for ...` blocks (now at lines ~7908, ~10858), it also had two `use vcs::{...,
+   Operation as VcsOperation, OperationDiff}` / `use vcs::{..., Operation, OperationDiff}` import
+   lines (7816, 19533) that needed splitting. `impl VcsOperation<KitSnapshot> for
+   ComposeWireOperation` (line 7919) needed no textual change since `VcsOperation` is just the
+   import-site alias, now importing `protocol::Operation`. `crate::vcs::Edit`/`crate::vcs::Graph`
+   references elsewhere in the file are compose's OWN unrelated `pub mod vcs { ... }` GraphQL entity
+   module (verified by reading its module boundary) — correctly left untouched.
+2. `framework/sync/rs/lib.rs:1518` (test module) — `use vcs::{create_document_vcs_envelope,
+   operation_envelope_from_edit, Edit, Operation, OperationDiff};`. Split: `create_document_vcs_
+   envelope`/`operation_envelope_from_edit` stay from `vcs::` (the latter is vcs's OWN permanent
+   function per the (now-deleted) shim's own "NOT shimmed" documentation, unrelated to this shim);
+   `Edit`/`Operation`/`OperationDiff` now from `protocol::`.
+3. `framework/plugin/rs/lib.rs` — three sites: two test-submodule `use vcs::{Operation,
+   OperationDiff}` imports (lines 2090, 4738), AND a top-level (non-test) multi-line `use vcs::{
+   build_history_columns, ..., OpText, StudioConflict, };` block (lines 216-219) with real
+   production usage at line 3547 (`.map(OpText::print_op)`). This last one is the site a naive
+   line-by-line grep missed on the first pass — only a whole-file-content scan catches a shim name
+   sitting on a continuation line of a multi-line `use` block.
+4. `framework/product/os/core/rs/lib.rs:776,780` — `Vec<vcs::ReconcileReport>` /
+   `vcs::ReconcileReport { ..., severity: vcs::ReconcileSeverity::Warning }` inside a real
+   `reconcile()` trait method impl. Both renamed to `protocol::`.
+5. `dsl/rs/lib.rs:441,443,654,656` (test module) — `<DerivedOperation as vcs::OpText>::...` /
+   `<PaintOp as vcs::OpText>::...`. Renamed to `protocol::OpText`. This also surfaced a genuinely
+   pre-existing, unrelated bug blocking `cargo check -p dsl --tests`: `dsl/rs`'s own
+   `#[derive(dsl::DslOps)]` test fixtures expand to `impl ::protocol::OpText for ...` (dsl_derive
+   was already flipped to emit `::protocol::OpText` in an earlier wave), but `dsl/rs/Cargo.toml`
+   never gained a `protocol` dependency — so `dsl --tests` failed with `error[E0433]: cannot find
+   protocol in the crate root` even before considering the shim. Fixed by adding
+   `protocol = { path = "../../protocol/rs" }` to `[dev-dependencies]` (no dependency cycle:
+   protocol_command/protocol_history depend only on `dsl_core`, never on `dsl`/`dsl_derive`).
+
+All five were simple, safe, pure renames (same trait/type, different import path — Rust guarantees
+identical behavior) — none required the "report and leave the shim in place" fallback.
+
+Re-ran the same exhaustive, multi-line-aware, comment-excluding scan after all fixes: **zero** real
+`vcs::<shim-name>` references remain anywhere in the repo outside `.claude/worktrees/`/`.repo/`
+ticket backups.
+
+Deleted the shim region from `vcs/rs/lib.rs` (was lines 31-64, marked `//#region 🚧️TEMPORARY
+protocol shim` / `//#endregion`). The `pub use protocol::{merge_concurrent_diffs, Edit, Operation,
+OperationDiff, OperationMeta, OpText, ReconcileReport, ReconcileSeverity};` line is gone. It was
+NOT simply deleted outright, though: `vcs/rs/lib.rs`'s own body still spells ~150 bare references
+to `Operation`/`OpText`/`Edit`/`OperationMeta` throughout (generic bounds like `Operation: OpText`,
+`Edit<Operation>` struct literals, `crate::Operation<P>` disambiguating the trait from a
+same-named generic parameter) that predate the shim and are unrelated to it — so a bare deletion
+would have broken the crate's own compilation. Replaced with a PRIVATE (non-`pub`) `use
+protocol::{Edit, Operation, OperationDiff, OperationMeta, OpText, ReconcileReport};` — this keeps
+internal ergonomics working while ending external `vcs::Operation`/`vcs::OpText`/etc resolution,
+which is the actual thing "the shim" means. `merge_concurrent_diffs` and `ReconcileSeverity` were
+dropped from even the private import: neither is referenced bare anywhere inside `vcs/rs/lib.rs`
+(confirmed via cargo's unused-import warning disappearing once trimmed) — both stay reachable only
+via fully-qualified `protocol::` inside vcs (already used that way at several call sites), never
+via `vcs::`.
+
+## 2. Policy lints (root `script.ts`)
+
+Added three new policy-rule regions plus a Cargo-dep allowlist prefix change, registered in the
+`policy` export next to `policyPackCompletenessBreaches`/`policyNoPackFilesBreaches`:
+
+- **`policyProtocolMigrationBreaches`** (`//#region 🔧️PolicyRuleProtocolMigration`) — scans every
+  `*.rs` file (`policyAllRustFiles`) for `vcs::<Name>` (qualified-path form, comment-line- and
+  `crate::vcs::`-excluding) or a multi-line `use vcs::{...}` block importing any of: `Operation`,
+  `OperationDiff`, `OperationMeta`, `OpText`, `Edit`, `merge_concurrent_diffs`, `ReconcileReport`,
+  `ReconcileSeverity` (the deleted shim's own name set) plus the CW3-extracted
+  `semio_framework_core` types (`HybridLogicalTimestamp`, `OperationEnvelope`, `OpDag`,
+  `UndoPolicy`, `MergeStrategyKind`) and the hub wire-frame enums (`HubClientFrame`,
+  `HubServerFrame`) — guarding against any of those ever being re-shimmed onto `vcs::` again.
+  **Current breach count: 0.**
+- **`policyCommandEnvelopeCompletenessBreaches`** (`//#region 🔧️PolicyRuleCommandEnvelopeCompleteness`)
+  — mirrors `policyPackCompletenessBreaches`'s shrinking-allowlist pattern: any file that already
+  calls `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` must also call
+  `vcs::test_support::assert_command_envelope_round_trip` (added in CW7). Computed the current gap
+  via the same `grep -rl` approach prior policy additions used: 56 files call the pack-round-trip
+  asserts, 55 of them (all except `vcs/rs/lib.rs` itself, which proves the mechanism via its own
+  `DemoProjection`/`LossyOperation` fixtures — same precedent as
+  `POLICY_PACK_COMPLETENESS_ALLOWLIST`) don't yet call the command-envelope assert. Seeded
+  `POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST` with exactly those 55 files. **Current breach
+  count: 0** (fully covered by the seeded allowlist, as expected on day one).
+- **`policyDbServerOnlyBreaches`** (`//#region 🔧️PolicyRuleDbServerOnly`) — new
+  `policyDiscoverCargoTomlFiles` walker (same `POLICY_SKIP_DIRS` pattern as the other file
+  discoverers) finds every `Cargo.toml` in the repo (including the root one); for each whose
+  directory is NOT under `db/`, `framework/product/os/hub/`, or a `compose/**/hub/**` path (checked
+  structurally via path segments, not a fixed prefix, since `compose/server/hub/rs` isn't a single
+  literal prefix), flags any `db`/`db_*` path dependency found via a Cargo-dependency-line regex
+  (mirrors `POLICY_CARGO_DEP_RE`'s style). **Current breach count: 0** — the only current db/db_*
+  dependents are `framework/product/os/hub/rs`, `compose/server/hub/rs`, and `db/*` crates
+  depending on each other, all inside the allowed set.
+- **`POLICY_ALWAYS_ALLOWED_DEP_PREFIXES`** gained `"protocol/"` (apps now depend on it directly per
+  CW7's import sweep). Did NOT add `"db/"` — db stays reached only through the hub servers and
+  (behind a feature) `db_engine`, enforced instead by `policyDbServerOnlyBreaches`.
+
+Verified via an ad hoc bun script directly importing and calling script.ts's exported `policy`
+linter function (the exact code path `bun ./script.ts lint`'s nx target / the repo's GraphQL
+linter infra ultimately invokes — a prior ticket in this same campaign,
+`26/07/26/DSL-MIGRATION-LOCK-STEP-...`, used the identical technique for the identical reason:
+`bun ./script.ts lint` itself runs a heavy repo-wide nx ESLint + dependency-cruiser pipeline
+unrelated to these Rust-facing checks and would take far longer than exercising the actual new
+code). Result: all three new lint kinds report 0 breaches; the pre-existing 43 breaches across
+other lint kinds (`app-plugin/*`, `dsl-migration/completeness`) are unchanged, confirming nothing
+else regressed. One false positive was found and fixed during this verification:
+`policyProtocolMigrationBreaches` initially flagged compose's own `crate::vcs::Edit` references
+(its internal GraphQL entity module happens to be named `vcs` too) — fixed by excluding matches
+immediately preceded by `crate::`.
+
+## 3. Dead-code sweep
+
+Ran `cargo build --workspace` (full log: `cw8-full-build.txt`, 0 errors) and grepped every
+`never used`/`never read`/`never constructed` warning for one whose file path is under `vcs/` or
+`protocol/`. Found exactly one: `protocol/cli/rs/lib.rs`'s `main` function. This is NOT
+migration-artifact dead code — it's the same pre-existing dual bin/lib-target Cargo-structure
+artifact `pack_cli` and `db_cli` also warn about (cargo warns "file found to be present in
+multiple build targets" for all three, unrelated to this ticket's scope), so left alone. No other
+CW3-CW7 migration-surface dead code (no leftover vcs-side duplicate types/functions that only the
+deleted shim's implementation used) was found — stating this plainly per the instructions rather
+than inventing cleanup work.
+
+## 4. Verify
+
+- `cargo build --workspace`: clean, 0 errors (`cw8-full-build.txt`).
+- `cargo test -p vcs`: 81 passed, 0 failed.
+- `cargo test --manifest-path compose/server/hub/rs/Cargo.toml` (compose-hub is its own detached
+  single-crate workspace, confirmed via its `Cargo.toml`'s `[workspace]` header — not reachable via
+  `-p compose-hub` from the root): 91 passed, 0 failed.
+- `cargo test -p compose` (compose's client lib, part of the root workspace): 59 passed, **12
+  failed**, 1 ignored. Investigated thoroughly rather than waved away: `git diff --stat
+  compose/client/lib/rs/lib.rs` shows ONLY this session's 4 rename edits (8 insertions / 6
+  deletions across 14 lines) uncommitted in that file — everything else is exactly the last
+  commit's content. The 12 failing tests (kit GraphQL mutation/traversal/virtual-file-system tests
+  around lines 19951-21367) are nowhere near the three regions this ticket touched (~7813-7920,
+  ~10855-10867, ~19531-19538) and exercise entirely unrelated kit-graph/GraphQL domain logic that
+  never references `OpText`/`Operation`. A pure rename of which module path names an
+  already-identical trait cannot change runtime behavior. **Conclusion: pre-existing failures from
+  concurrent compose kit-graph development already in the last commit, not caused by this
+  ticket** — consistent with this repo's live-concurrent-dev nature.
+- `cargo test -p dsl`: 15 passed, 0 failed.
+- `cargo test -p semio-framework-sync`: 14 passed, 0 failed.
+- `cargo test -p semio-framework-plugin`: 100 passed, 0 failed (1 pre-existing ignored doctest).
+- `cargo test -p semio-framework-os`: 55 passed, 0 failed.
+- Policy lints: see section 2 above — all three new lints registered and firing correctly, 0/0/0
+  breaches, 55-entry seeded allowlist for the command-envelope-completeness one as expected.
+
+## Files touched
+
+- `vcs/rs/lib.rs` — deleted the `//#region 🚧️TEMPORARY protocol shim` region; replaced the `pub use`
+  with a trimmed, private `use protocol::{Edit, Operation, OperationDiff, OperationMeta, OpText,
+  ReconcileReport};`.
+- `compose/client/lib/rs/lib.rs` — pure `vcs::OpText`/`vcs::{Operation, OperationDiff}` →
+  `protocol::` renames at 4 sites (2 impl blocks, 2 import lines). No other compose changes (its
+  deferred "real client-wiring" work was left untouched, per instructions).
+- `framework/sync/rs/lib.rs` — one test-module import split (`Edit`/`Operation`/`OperationDiff` →
+  `protocol::`).
+- `framework/plugin/rs/lib.rs` — one top-level `OpText` import moved to `protocol::` (production
+  code), plus two test-module `Operation`/`OperationDiff` imports moved to `protocol::`.
+- `framework/product/os/core/rs/lib.rs` — `ReconcileReport`/`ReconcileSeverity` renamed to
+  `protocol::` in the real `reconcile()` impl.
+- `dsl/rs/lib.rs` — four `vcs::OpText` → `protocol::OpText` test-code renames.
+- `dsl/rs/Cargo.toml` — added `protocol` to `[dev-dependencies]` (fixes a pre-existing,
+  shim-unrelated missing-dependency bug this sweep surfaced).
+- `script.ts` — added `policyProtocolMigrationBreaches`, `policyCommandEnvelopeCompletenessBreaches`
+  (+ `POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`), `policyDbServerOnlyBreaches` (+
+  `policyDiscoverCargoTomlFiles`/`policyDbAllowedDir` helpers), registered all three in the `policy`
+  export, and added `"protocol/"` to `POLICY_ALWAYS_ALLOWED_DEP_PREFIXES`.
+- Ticket-folder scratch: `cw8-full-build.txt` (full workspace build log), `cw8-verification.txt`
+  (detailed grep/test/policy verification notes).
+
+No git commands beyond normal file reads were used. No worktrees. No `AGENTS.md` edits.

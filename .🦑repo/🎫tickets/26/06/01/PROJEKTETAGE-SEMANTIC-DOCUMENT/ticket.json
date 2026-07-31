@@ -1,9 +1,0 @@
-{
-  "title": "Projektetage Semantic Document",
-  "emoji": "📽",
-  "status": "closed",
-  "description": "Restructure mit-bestand/präsentation/33.projektetage deck document: Kapitel Einführung \u003e Sequenz Einleitung \u003e Gedanke Über Uns; Kapitel System \u003e Sequenz Bauteilbörse \u003e Gedanke Inventar with semantically named Folien. Update tests.",
-  "summary": "Restructured projektetage deck bookmarks: Kapitel Einführung → Sequenz Einleitung → Gedanke Über Uns (intro); Kapitel System → Sequenz Bauteilbörse → Gedanke Inventar with Folien Bauteilkatalog … Website. Dynamic renderer import keeps inline vitest on core only. All 6 deck tests pass.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪50dface678f24b0c859c1ca2248fa2eb"]
-}

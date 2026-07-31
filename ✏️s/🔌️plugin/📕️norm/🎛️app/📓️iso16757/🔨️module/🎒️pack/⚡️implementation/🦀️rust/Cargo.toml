@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-norm-iso16757-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "ISO 16757 app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📓️iso16757/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+iso16757 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📓️iso16757/⚡️implementation/🦀️rust", package = "semio-s-app-norm-iso16757" }
+pack = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

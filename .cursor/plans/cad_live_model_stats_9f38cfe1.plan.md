@@ -57,8 +57,8 @@ New file `cad/schema/json/stat.json` (sibling of `cad/schema/json/attribute.json
 
 All edits in `[cad/js/core/index.ts](cad/js/core/index.ts)`, added to existing files via regions/subregions (no new core files).
 
-- `📥ModelDefinitionRegistry` region: add `statDefinitions` to `ModelDefinitionAssetModules` (interface + `emptyModelDefinitionAssetModules` + `registerModelDefinitionAssets`), and a `modelDefinitionStatCatalog()` accessor (mirrors `modelDefinitionPropertyCatalog` at line 77).
-- `📥ModelDefinitionAssets` region: add `import.meta.glob("../../asset/modelDefinition/**/statDefinition/*.json", ...)` and include it in the `registerModelDefinitionAssets({...})` call (mirrors `__modelDefinitionPropertyDefinitionModules` at line 112).
+- `📥️ModelDefinitionRegistry` region: add `statDefinitions` to `ModelDefinitionAssetModules` (interface + `emptyModelDefinitionAssetModules` + `registerModelDefinitionAssets`), and a `modelDefinitionStatCatalog()` accessor (mirrors `modelDefinitionPropertyCatalog` at line 77).
+- `📥️ModelDefinitionAssets` region: add `import.meta.glob("../../asset/modelDefinition/**/statDefinition/*.json", ...)` and include it in the `registerModelDefinitionAssets({...})` call (mirrors `__modelDefinitionPropertyDefinitionModules` at line 112).
 - New subregion near the property-definition code (~line 2088-2320):
   - `StatDefinitionSpec` interface + `parseStatDefinitionSpec(raw)` (mirrors `parsePropertyDefinitionSpec`).
   - `shippedStatDefinitionCatalog()`, `loadStatDefinition(id)`, `listModelDefinitionStatDefinitions()`.
@@ -99,8 +99,8 @@ In `[cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)`, import `M
 
 ## 6. Tests (extend existing inline suites only)
 
-- `[cad/js/core/index.ts](cad/js/core/index.ts)` `🧪Tests`: `parseStatDefinitionSpec` round-trip; `listModelDefinitionStatDefinitions`/`loadStatDefinition` find the three shipped stats; `listStatDefinitionsForModelDefinition` scoping; `resolveModelDefinitionScope(...).statDefinitions`; `computeStat` for `spatial.shape.geometry` on a box model returns correct `solidCount`/`totalVolume`; energy + structure computers return finite outputs on their fixtures.
-- `[cad/js/renderer/index.tsx](cad/js/renderer/index.tsx)` `🧪Tests`: a smoke test that `ModelStatsPanel` renders stat labels for the shape model definition.
+- `[cad/js/core/index.ts](cad/js/core/index.ts)` `🧪️Tests`: `parseStatDefinitionSpec` round-trip; `listModelDefinitionStatDefinitions`/`loadStatDefinition` find the three shipped stats; `listStatDefinitionsForModelDefinition` scoping; `resolveModelDefinitionScope(...).statDefinitions`; `computeStat` for `spatial.shape.geometry` on a box model returns correct `solidCount`/`totalVolume`; energy + structure computers return finite outputs on their fixtures.
+- `[cad/js/renderer/index.tsx](cad/js/renderer/index.tsx)` `🧪️Tests`: a smoke test that `ModelStatsPanel` renders stat labels for the shape model definition.
 
 ## Notes
 

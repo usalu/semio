@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // .elements/ui/.storybook/story/elements/display/DiagramNode.stories.tsx
 
@@ -9,12 +9,12 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { DiagramNode, DiagramSkeleton } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
-// #region 🔓DiagramNode
+// #region 🔓️DiagramNode
 
 const meta = {
   title: "🖱️ui⚛️react/DiagramNode",
@@ -58,4 +58,4 @@ export const DiagramSkeletonStory: Story = {
   ),
 };
 
-// #endregion 🔓DiagramNode
+// #endregion 🔓️DiagramNode

@@ -123,12 +123,12 @@ Single-file `lowpoly/play/index.ts` (`@semio-tech/lowpoly-play`), directly model
 
 ## Phase 6 — Wire into shared shell and tooling
 
-- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): new `//#region 🔖LowpolyPlayHost` block (copy of `SequencePlayHost` region, ~220 lines) with `LowpolyPlaySurfaceHost`, panel definitions, `registerLowpolyPlaySurfaceHosts`, `bootLowpolyPlay`.
+- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): new `//#region 🔖️LowpolyPlayHost` block (copy of `SequencePlayHost` region, ~220 lines) with `LowpolyPlaySurfaceHost`, panel definitions, `registerLowpolyPlaySurfaceHosts`, `bootLowpolyPlay`.
 - [framework/product/playground/renderer/react/package.json](framework/product/playground/renderer/react/package.json): add `"./lowpoly": "./index.tsx"` export and `@semio-tech/lowpoly-core|react|play` deps.
 - [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts): add `"lowpoly"` to `PlaygroundRendererPuzzleKind`, alias `@semio-tech/framework-playground-renderer-react/lowpoly`, region markers, and resolve aliases for `@semio-tech/lowpoly-play|react|core` (+ `pkg/lowpoly_core.js`).
-- Root [package.json](package.json): workspaces `"lowpoly/core"`, `"lowpoly/react"`, `"lowpoly/play"`; script `"dev:lowpoly": "bun ./script.ts dev lowpoly"`.
+- Root [package.json](package.json): workspaces `"lowpoly/core"`, `"lowpoly/react"`, `"lowpoly/play"`; script `"dev:lowpoly": "bun ./📜️script.ts dev lowpoly"`.
 - [script.ts](script.ts) dev router: `if (segments[0] === "lowpoly") { runCmd(...,"@semio-tech/lowpoly-play:dev",...) }`.
-- [.vscode/launch.json](.vscode/launch.json): new `"🛠️dev📜lowpoly"` entry, `LOWPOLY_PLAY_PORT: "6078"`, inserted in the existing alphabetical/grouped ordering.
+- [.vscode/launch.json](.vscode/launch.json): new `"🛠️dev📜️lowpoly"` entry, `LOWPOLY_PLAY_PORT: "6078"`, inserted in the existing alphabetical/grouped ordering.
 - `bun install` to regenerate `bun.lock` after adding the new workspace packages.
 - New top-level `lowpoly/AGENTS.md` technology doc (short, matching the style of [puzzle/AGENTS.md](puzzle/AGENTS.md) / `procedural/AGENTS.md`).
 

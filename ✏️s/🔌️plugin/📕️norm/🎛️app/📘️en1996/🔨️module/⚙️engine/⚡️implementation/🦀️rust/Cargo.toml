@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-en1996-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1996 app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1996/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+en1996 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1996/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1996" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "norm_core" }
+norm_en_1990 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990-engine" }
+serde = { version = "1.0.219", features = ["derive"] }

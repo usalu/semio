@@ -1,0 +1,11 @@
+{
+  "title": "Top-level Only Definitions",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Definitions in repo are just top-level. They start on a newline and declaration/statements inside, dont count as definition. E.g. in python in compose.py __str__ is wrongly being identified as definition",
+  "summary": "Anchored definition regexes for Python, Rust, C#, and Shell to enforce top-level only definitions in the repo tool. Updated documentation in AGENTS.md and README.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/410"
+  },
+  "goal": "🎯️repodefinitionmechanism"
+}

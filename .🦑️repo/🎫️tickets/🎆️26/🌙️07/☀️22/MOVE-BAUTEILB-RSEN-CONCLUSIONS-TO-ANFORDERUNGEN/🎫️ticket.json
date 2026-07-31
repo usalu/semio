@@ -1,0 +1,14 @@
+{
+  "title": "Move Bauteilbörsen Conclusions to Anforderungen",
+  "emoji": "📝️",
+  "status": "closed",
+  "description": "Move the Bauteilbörsen evaluation conclusions (three central requirements and literature confirmation) from floating prose under the archetypes into a dedicated \\paragraph{Anforderungen} heading as 1.2.1.1.1.5, because that content does not belong to an archetype.",
+  "summary": "Moved the Bauteilbörsen evaluation conclusions (three central requirements and literature confirmation) from floating prose under the archetypes into a dedicated \\paragraph{Anforderungen} heading as 1.2.1.1.1.5. Build verified the TOC entry.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2212"
+  },
+  "goal": "🎯️r2603",
+  "sessions": [
+    "⚪️7b0716a721304b9d8573acfa070b30f8"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "title": "Remove Parent Field From Type And Design",
+  "status": "open",
+  "description": "Remove the `parent` field from Type and Design structs (and their Meta/Shallow/Diff/DTO variants) in `compose/rs/lib.rs`. Keep Folder's parent field. Remove all related conversion, clone, PartialEq, apply_diff, diff computation, SQLite read/write, merkle hash, default/test constructors, isEmpty checks, guid remapping, and inverse diff computation code.",
+  "goal": "🎯️coda",
+  "sessions": ["⚪️764c20b4510643aa8f04ad0f06a30e9a"]
+}

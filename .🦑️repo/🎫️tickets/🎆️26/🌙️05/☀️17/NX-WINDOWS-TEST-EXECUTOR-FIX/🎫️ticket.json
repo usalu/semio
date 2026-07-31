@@ -1,0 +1,9 @@
+{
+  "title": "Nx Windows Test Executor Fix",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix Nx/Windows test failures: @elements/ui:test spawn cmd.exe ENOENT; unblock @semio-tech/compose-algorithms:test dependency chain.",
+  "summary": "Fixed stale Nx run-commands cwd paths: @elements/ui targets now use elements/client/lib/react; @compose/ui uses compose/client/lib/react/rendering; aligned package.json repository.directory and lint cwd; sketchpad Vite @elements/ui aliases point at elements/client/lib/react. Restored @compose/ui behavior: kit ports from families+types, shallow kit kind rows, connector name fallback for empty string, untagged representation preference, connections.updated in preview merge, explicit DesignDiff status maps for diagram/scene snapshots (plus removed diagram points + scene origin plane fallback), full-design merge for kit artifact preview by design id. Nakagin preview test now asserts full piece count and documents zero pre-flatten plane/center until wasm flatten is wired. Verified: nx run @compose/ui:test (89), nx run @semio-tech/compose-algorithms:test.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️cdc26d2a29cc4b039cea3240b08297b5"]
+}

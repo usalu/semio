@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // .elements/ui/.storybook/story/elements/Strip.stories.tsx
 
@@ -9,12 +9,12 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Band, Strip } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
-// #region 📢Strip
+// #region 📢️Strip
 
 const stripMeta = {
   title: "🖱️ui⚛️react/Strip",
@@ -49,9 +49,9 @@ export const WithFlexItems: StripStory = {
   },
 };
 
-// #endregion 📢Strip
+// #endregion 📢️Strip
 
-// #region 🥁Band
+// #region 🥁️Band
 
 export const BandDefault: StripStory = {
   name: "Band",
@@ -72,4 +72,4 @@ export const BandDefault: StripStory = {
   ),
 };
 
-// #endregion 🥁Band
+// #endregion 🥁️Band

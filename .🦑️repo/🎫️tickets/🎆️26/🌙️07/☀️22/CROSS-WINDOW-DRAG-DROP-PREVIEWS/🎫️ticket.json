@@ -1,0 +1,14 @@
+{
+  "title": "Cross-Window Drag Drop Previews",
+  "emoji": "👻️",
+  "status": "closed",
+  "description": "All drag and drop previews should always show across all windows. E.g. puzzle 3d catalogue object drops currently wrongly only preview in the hovered/dropped window; the ghost must appear in every open window of that surface (world-space shared preview). Fix all catalogue/fixture drop previews that are incorrectly scoped to a single host instance.",
+  "summary": "Catalogue/fixture drop ghosts now render in every pane of the same controller, not only the hovered window. Puzzle 3D uses a shared world-space catalogue-drop store (controller-scoped) that all World3dHost panes subscribe to; the hovered pane publishes the raycast origin and peers only clear when the pointer leaves every pane or the drag ends. Puzzle 2D pushes world-coordinate fixture-drop previews through board2dPeerRegistry to every peer session. Tests cover the shared store, peer push, and updated world-space preview JSON (202/202 passing).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2215"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️5a06c800be134496a3736f3ff453e048"
+  ]
+}

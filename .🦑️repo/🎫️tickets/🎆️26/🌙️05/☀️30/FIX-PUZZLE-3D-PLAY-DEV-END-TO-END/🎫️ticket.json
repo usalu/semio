@@ -1,0 +1,12 @@
+{
+  "title": "Fix Puzzle 3D Play Dev End to End",
+  "status": "closed",
+  "description": "puzzle 3d play dev server fails with Babel duplicate declaration BoardStructuralDeleteReporter in framework playground react renderer.",
+  "summary": "Fixed the deterministic LLVM 22 wasm-component-ld SIGSEGV that blocked Puzzle 3D startup by overriding the release codegen-unit count only for the vcs cdylib while retaining the workspace-wide fast release profile. Verified cargo metadata, a complete puzzle-plugin wasm32-wasip2 release build, the canonical bun run dev:puzzle:3d startup through Vite on port 6013, HTTP 200, and browser runtime with the Concrete Forest example rendered in a 1265x626 canvas and zero browser warnings/errors.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️80276a7fbc27489ab72bd53969bc3776",
+    "⚪️24c984c1362840a5be4f79df7ebb5258",
+    "⚪️92acc27ba2c54e5c932ebbe86139d68c"
+  ]
+}

@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,13 +6,13 @@
 
 // Vite build and development configuration for the playground app.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
 // Vite build configuration for the play application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
@@ -24,11 +24,11 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
-import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
-import { readInitialKitFixtureFromPath } from "../../../../fixture/📜script.ts";
+import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
+import { readInitialKitFixtureFromPath } from "../../../../fixture/📜️script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 /**
  * Absolute file path of the current module.
@@ -41,18 +41,18 @@ const __filename = fileURLToPath(import.meta.url);
  **/
 const __dirname = path.dirname(__filename);
 
-/** @emoji 🧊 Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad play app —
+/** @emoji 🧊️ Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad play app —
  * mirrors puzzle/plugin/rs's `[[package.metadata.semio.assets]]` `mesh-collection` row. */
 const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
   kind: "mesh-collection",
   route: "/mesh",
   roots: ["framework/asset/metabolism/representation", "mit-bestand/asset/abbau-aufbau"],
-  placeholder: "framework/asset/mesh/🧊placeholder.glb",
+  placeholder: "framework/asset/mesh/🧊️placeholder.glb",
   filterFromExamples: true,
 };
 
 const PLAYWRIGHT_DEV_STUB_ID = "\0compose-sketchpad-play-playwright-dev-stub";
-const EMBEDDED_NODE_TEST_REGIONS = [/\/\/#region 🧪Tests[\s\S]*?\/\/#endregion 🧪Tests\s*/, /\/\/#region 🧪E2E[\s\S]*?\/\/#endregion 🧪E2E\s*/];
+const EMBEDDED_NODE_TEST_REGIONS = [/\/\/#region 🧪️Tests[\s\S]*?\/\/#endregion 🧪️Tests\s*/, /\/\/#region 🧪️E2E[\s\S]*?\/\/#endregion 🧪️E2E\s*/];
 
 function isEmbeddedNodeTestIndexModule(id: string): boolean {
   const file = id.replace(/\\/g, "/");
@@ -86,7 +86,7 @@ function stripEmbeddedNodeTestsPlugin(): Plugin {
   };
 }
 
-/** @emoji 🧱 Keeps Playwright out of the browser graph when embedded E2E regions are scanned. */
+/** @emoji 🧱️ Keeps Playwright out of the browser graph when embedded E2E regions are scanned. */
 function monorepoPlaywrightDevStubPlugin(): Plugin {
   return {
     name: "compose-sketchpad-play-playwright-dev-stub",
@@ -105,7 +105,7 @@ function monorepoPlaywrightDevStubPlugin(): Plugin {
 // Vite configuration with plugins, resolve aliases, and asset serving.
 // Export MUST call defineConfig with the complete build configuration.
 export default defineConfig(async () => {
-  // 📥normal import fails in electron due to esm stuff
+  // 📥️normal import fails in electron due to esm stuff
   const tailwind = await import("@tailwindcss/vite");
   const fs = await import("fs");
   const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");

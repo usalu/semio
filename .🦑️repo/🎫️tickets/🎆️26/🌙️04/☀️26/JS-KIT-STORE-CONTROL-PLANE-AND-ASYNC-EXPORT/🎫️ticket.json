@@ -1,0 +1,9 @@
+{
+  "title": "Js Kit Store Control Plane And Async Export",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Implement single-export KitStore in compose/js: GraphQL-only wasm string transport per dedicated worker, RxJS internally, thick async typesafe API, migrate react/sketchpad/consumers.",
+  "summary": "JS control-plane refactor (plan b312f522): Exported KIT_STORE_BATCH_MUTATION + KIT_EVENT_STREAM_SUBSCRIPTION; subscription uses constant. Removed submitShell/submitShellJson; all writes route through runKitStoreBatch + runScopedTransactionBatch, runBackboneBatchSetResult/typed read, runVcsUndoRedo, runScopedCanvasControl. Renamed COMPOSE_SHELL_* to COMPOSE_KIT_STORE_CONTROL_* and lifecycle commandKind branding; KitTypedChangeKitCommandsBatch replaces KitTypedShellCommand. Scoped reads deduped via gqlKitReadOnlyScope (merged typesShallow+designsShallow for shallow read). pasteDesignSelection returns explicit NotSupported aligned with Rust stub. Added embedded vitest reading schema.graphql for wire contract. Verified: compose/js vitest 23 passed; compose/react vitest 14 passed; full compose/sketchpad playwright had 4 failures/timeouts (Home diagram warm path, Type console noise, Design tree assert, Settings 180s timeout) — kit metabolism grep smoke passed; failures look unrelated to kit batch wiring.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️03399f555e1343b0948f69aedc5b65ef"]
+}

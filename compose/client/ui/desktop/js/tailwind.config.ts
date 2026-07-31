@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,7 +6,7 @@
 
 // Tailwind CSS configuration for the desktop app styling.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
 // Tailwind CSS configuration extending the shared compose preset for the desktop application.

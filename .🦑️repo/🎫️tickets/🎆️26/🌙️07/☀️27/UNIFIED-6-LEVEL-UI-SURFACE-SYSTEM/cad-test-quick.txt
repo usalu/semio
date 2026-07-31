@@ -1,0 +1,77 @@
+
+> nx run @semio-tech/cad-js-renderer:test-quick
+
+> bun ./script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/cad/renderer/js
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯️ |@semio-tech/cad-js-renderer| index.tsx (68 tests | 3 failed) 548ms
+     × lists active session action input and possibles 7ms
+     × exposes only an action input while idle so a window can start an interaction 0ms
+     × keeps action input with onRepeatLast when idle without startable interactions 0ms
+
+⎯ Failed Tests 3 ⎯
+
+ FAIL  |@semio-tech/cad-js-renderer| index.tsx > buildInteractionReplEngagement / buildInteractionReplSearch > lists active session action input and possibles
+TypeError: undefined is not an object (evaluating 'WINDOW_SEARCH_USER.actionPlaceholderActive')
+ ❯️ buildInteractionReplSearch index.tsx:4708:57
+    4706|           id: "search-input",
+    4707|           value: inputs.cmdLine,
+    4708|           placeholder: inputs.boundInteractionSession ? WINDOW_SEARCH_…
+       |                                                         ^
+    4709|           onChange: inputs.onInputChange,
+    4710|           onSubmit: inputs.onInputSubmit,
+ ❯️ index.tsx:6825:20
+
+⎯[1/3]⎯
+
+ FAIL  |@semio-tech/cad-js-renderer| index.tsx > buildInteractionReplEngagement / buildInteractionReplSearch > exposes only an action input while idle so a window can start an interaction
+TypeError: undefined is not an object (evaluating 'WINDOW_SEARCH_USER.actionPlaceholder')
+ ❯️ buildInteractionReplSearch index.tsx:4708:102
+    4706|           id: "search-input",
+    4707|           value: inputs.cmdLine,
+    4708|           placeholder: inputs.boundInteractionSession ? WINDOW_SEARCH_…
+       |                                                                                                      ^
+    4709|           onChange: inputs.onInputChange,
+    4710|           onSubmit: inputs.onInputSubmit,
+ ❯️ index.tsx:6839:20
+
+⎯[2/3]⎯
+
+ FAIL  |@semio-tech/cad-js-renderer| index.tsx > buildInteractionReplEngagement / buildInteractionReplSearch > keeps action input with onRepeatLast when idle without startable interactions
+TypeError: undefined is not an object (evaluating 'WINDOW_SEARCH_USER.actionPlaceholder')
+ ❯️ buildInteractionReplSearch index.tsx:4708:102
+    4706|           id: "search-input",
+    4707|           value: inputs.cmdLine,
+    4708|           placeholder: inputs.boundInteractionSession ? WINDOW_SEARCH_…
+       |                                                                                                      ^
+    4709|           onChange: inputs.onInputChange,
+    4710|           onSubmit: inputs.onInputSubmit,
+ ❯️ index.tsx:6870:20
+
+⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 65 passed (68)
+   Start at  13:22:35
+   Duration  4.37s (transform 2.08s, setup 0ms, import 3.31s, tests 548ms, environment 419ms)
+
+Warning: command "bun ./script.ts test quick" exited with non-zero status code
+
+
+ NX   Running target test-quick for project @semio-tech/cad-js-renderer failed
+
+Failed tasks:
+
+- @semio-tech/cad-js-renderer:test-quick
+
+Hint: run the command with --verbose for more details.
+

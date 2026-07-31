@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-norm-din16798-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DIN EN 16798 app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📗️din16798/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+din16798 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📗️din16798/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din16798" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

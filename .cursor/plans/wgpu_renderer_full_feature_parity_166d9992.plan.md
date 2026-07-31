@@ -115,7 +115,7 @@ Painting directly on the model (not just the UV window) needs a UV-mapped textur
 
 1. `cargo test -p ui_wgpu -p semio-framework-renderer-wgpu -p lowpoly-plugin` for new frustum/pick/UV-layer/selection-parsing unit tests.
 2. Rebuild wgpu WASM (`bun ./framework/renderer/wgpu/script.ts wasm`).
-3. Run the existing wgpu playground e2e sweep (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) with body-content assertions for all six world3d plugins plus lowpoly's UV window.
+3. Run the existing wgpu playground e2e sweep (`.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) with body-content assertions for all six world3d plugins plus lowpoly's UV window.
 4. Manual browser verification (cursor-ide-browser) for lowpoly under the wgpu renderer: footer shows dynamic edit/paint tool trees with working undo/redo, window engagement rail updates live, UV window renders the paint texture + dashed-seam wireframe with pan/zoom and paints correctly, 3D viewport supports vertex/edge/face click-select and marquee with visible overlays, painting directly on the mesh surface works, and gumball operates at the correct component-level centroid.
 5. Spot-check the other five plugins (cad, puzzle3d, puzzle5d, procedural3d, shooting) still orbit/pan/zoom/select/marquee/gumball correctly and now show their dynamic tool trees/live engagement rails (Phase 0 is shared infrastructure).
-6. Update the ticket (`.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/important.md`) with a summary of wgpu parity work and files touched.
+6. Update the ticket (`.repo/🎫️/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/important.md`) with a summary of wgpu parity work and files touched.

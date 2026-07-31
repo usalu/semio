@@ -1,0 +1,12 @@
+{
+  "title": "Vortex Suggest Objects Loading State",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When right-clicking a vortex and clicking Suggest objects, the menu briefly shows no collision-free placement before results arrive. Fix so waiting is not displayed as no solution.",
+  "summary": "Suggest menu vortex column now shows the specific port label (template.label, scene instance vortex.label, or vortexKind fallback) instead of resolving through the vortex-kind catalog. Added label to ObjectKindVortexTemplate, brushCandidateSourceVortexLabel, puzzle3dBrushSceneFixtureRef, and placement uses template label when set.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1671"
+  },
+  "goal": "🎯️puzzle🎯️3d",
+  "sessions": ["⚪️d901a026b4f34361901d603bebe902f4", "⚪️616e24ed49a14cf9a75caa34ed1c0b36", "⚪️40bbda12039a4f279802950f698325bb"]
+}

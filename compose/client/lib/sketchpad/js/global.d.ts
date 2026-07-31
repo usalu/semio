@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,4 +6,4 @@
 
 // Global type declarations for the JavaScript workspace.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header

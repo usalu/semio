@@ -1,0 +1,14 @@
+{
+  "title": "Fix Mirrored Panel Growth",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "Fix Panel/Pane window-chrome so right-to-left and bottom-to-top growth keep a correct U-cutout silhouette and cap docking.",
+  "summary": "Fixed mirrored panel/pane growth for RTL (top-right, bottom-right) and bottom-up anchors by making WindowChrome cap-dock aware and rewriting measureWindowSilhouetteMetrics to read painted chip spans by data-dock instead of assuming LTR top caps. Panel/Pane pass capDock from flow.block; added vitest coverage for RTL metrics, bottom-dock metrics, and bottom-anchored panel wiring.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2368"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️a801861b707d476f9dd102dd1f650b27"
+  ]
+}

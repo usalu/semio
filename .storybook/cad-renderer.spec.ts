@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 .storybook/cad-renderer.spec.ts
+// #region 🧲️Header
+// 💻️ .storybook/cad-renderer.spec.ts
 // Specs: End-to-end checks for the cad scope's `InteractionCanvas`/`InteractionSpatialView` box-interaction stories.
 // Summary: Loads the `Idle` and `CommittedBox` stories inside the aggregated Storybook static build, asserting a clean
 // boot (no page/console errors, canvas mounted) and, for `CommittedBox`, the `cad-box-debug` readout reaching the
 // `committed` state with the story's `StoryBoxKernel` recording the scripted `(0,0,0)→(2,3,0)`/height-4 box.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
@@ -48,13 +48,13 @@ async function expectCadStory(page: Page, storyId: string): Promise<{ readonly d
 }
 
 test("cad idle: boots with the fresh primitive.box interaction, no committed solid yet", async ({ page }) => {
-  const { debug } = await expectCadStory(page, "📐cad--idle");
+  const { debug } = await expectCadStory(page, "📐️cad--idle");
   const state = await readCadBoxDebug(debug);
   expect(state.lastBox).toBeNull();
 });
 
 test("cad committed box: scripted corner → corner → height → confirm commits a real box through the pure-JS StoryBoxKernel", async ({ page }) => {
-  const { debug } = await expectCadStory(page, "📐cad--committed-box");
+  const { debug } = await expectCadStory(page, "📐️cad--committed-box");
   await expect.poll(async () => (await readCadBoxDebug(debug)).state).toBe("committed");
   const state = await readCadBoxDebug(debug);
   expect(state.lastBox).toEqual({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 });

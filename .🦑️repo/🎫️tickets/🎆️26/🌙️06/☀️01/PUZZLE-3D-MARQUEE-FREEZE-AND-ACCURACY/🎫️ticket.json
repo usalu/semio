@@ -1,0 +1,14 @@
+{
+  "title": "Puzzle 3d Marquee Freeze And Accuracy",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Add live highlight preview while dragging rectangle/lasso marquee and eliminate post-release freeze by caching projected footprints once per gesture and deferring host shell rebuild.",
+  "summary": "Fixed puzzle3d group-selection first-gesture freeze and inaccurate marquee hits.\n\nFreeze: buildMarqueeCandidates no longer cold-traverses geometry on activation. Per-object footprint cache stores mesh local AABB corners (buildObjectMarqueeFootprintCache); warm on register (idle + rAF), on three-env attach, and rebuild when mesh count changes. Pointerdown prefetches candidates via rAF; activation reuses prefetched candidates while refreshing base selection.\n\nAccuracy: MarqueeCandidate carries convex hull + screenBounds. Hit tests use hull (window: all hull points inside; crossing: screenRectIntersectsPolygon / screenPolygonsIntersect for lasso). Inflated screenBounds-only overlap no longer selects wrong objects.\n\n218 @semio-tech/puzzle-3d-react tests pass.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "plan": {
+    "client": "cursor",
+    "id": "f358d691",
+    "local": "puzzle3d_marquee_freeze_and_accuracy_f358d691.plan.md"
+  },
+  "sessions": ["⚪️01c9f56bcf2f45ab8ed0892f6f45a469", "⚪️10fa8a217603462f8427d2dce033379c", "⚪️9d6116740b6f4b5583865ce1b960bfa1", "⚪️f33d898a3c5e42a4bccf3ff690c6feb8"]
+}

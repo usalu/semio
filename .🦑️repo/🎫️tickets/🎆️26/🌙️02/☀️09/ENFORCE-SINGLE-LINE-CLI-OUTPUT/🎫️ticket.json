@@ -1,0 +1,8 @@
+{
+  "title": "Enforce Single Line CLI Output",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "All items returned from the CLI (either tree or list) should always be on a single line. All properties should be separated by `-` and wrapped in backticks. Multi-line content (e.g., summaries, descriptions) must be collapsed to a single line. Backticks in content must be escaped to prevent breaking markdown wrapping. Extend existing tests to cover everything.",
+  "summary": "Enforced single-line output for all CLI tree and list items. Added sanitizeProp (strips newlines, replaces backticks with single quotes, collapses spaces) and sanitizeSingleLine (final rendering safety net) functions. Updated collectEntityProps, renderEntityMarkdownLink, and renderEntityHuman to use them. Extended TestCollectEntityPropsConsistency with 7 new sub-tests and added TestSingleLineOutput with 50+ sub-tests covering all entity kinds through every rendering path. Fixed missing io/fs import in test file. Updated AGENTS.md and README.md with requirements and codebase docs.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

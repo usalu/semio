@@ -1,9 +1,0 @@
-{
-  "title": "Board Play Progressive Redraw",
-  "emoji": "⏱️",
-  "status": "closed",
-  "description": "Board play force redraw: remove fixed play interval, use rAF to maximize iterations per frame; repulsion default 80 medium band; progressive iterations ramp + auto-stop after 3s with option; reset progression on user node drag while playing.",
-  "summary": "Replaced fixed-interval play redraw with requestAnimationFrame: each frame runs as many force-graph WASM passes as fit in ~14ms; tree gets one layout pass per frame. Removed play interval and per-tick iteration sliders. Added progressive iteration ramp (low to play max), optional auto-stop (default 3000ms, 0=off), and repulsion slider 40–120 default 80. Node drag during play resets progressive epoch via BoardPlayRedrawProgressReset listening to nodeMove.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪04f23b318bff42d4b00d43662433288a"]
-}

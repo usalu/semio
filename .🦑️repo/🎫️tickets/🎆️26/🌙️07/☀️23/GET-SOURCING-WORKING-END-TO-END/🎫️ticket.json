@@ -1,0 +1,14 @@
+{
+  "title": "Get Sourcing Working End to End",
+  "emoji": "🛒️",
+  "status": "closed",
+  "description": "Get sourcing working end to end. Plugin build fails: UiPresence undeclared and UiToggleNode missing pressed field (presence-based UI model) in sourcing/plugin/rs/lib.rs. Fix compile errors and verify sourcing-curate runs via framework OS playground (dev:sourcing).",
+  "summary": "Fixed sourcing-plugin compile break against the unified UiPresence model (import UiPresence; module filter toggles use presence.selected instead of removed pressed). Verified wasm/OS build, curate+plugin unit tests (incl. new filter-bar presence regression), and Playwright smoke of sourcing-curate on :6081 showing Pool/Curated/Preview/Grid with Beams/Windows/Slabs and no page errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2291"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️4a78ead0fd464aa7b3ef91dc52b4b1f6"
+  ]
+}

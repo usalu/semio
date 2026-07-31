@@ -37,7 +37,7 @@ isProject: false
 
 ## Audit summary
 
-Compared pre-migration TypeScript (`git show 5ecbe3dbf^:forms/react/index.tsx`, `git show e1369ca57^:forms/core/js/{index,internal}.ts`, and ticket `.repo/🎫/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE/`) against the current Rust/WASM [forms/rs/lib.rs](forms/rs/lib.rs) + [forms/plugin/rs/lib.rs](forms/plugin/rs/lib.rs). Findings:
+Compared pre-migration TypeScript (`git show 5ecbe3dbf^:forms/react/index.tsx`, `git show e1369ca57^:forms/core/js/{index,internal}.ts`, and ticket `.repo/🎫️/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE/`) against the current Rust/WASM [forms/rs/lib.rs](forms/rs/lib.rs) + [forms/plugin/rs/lib.rs](forms/plugin/rs/lib.rs). Findings:
 
 - The domain model regressed hard: `FormQuestion` today only has `{id, label, kind, default, text, options}` — it silently drops `required`, `description`, `placeholder`, `min/max/step/unit`, vector `fields`, `schema`, `src`, `accept`, `fixtureSlug`/`params`, and `condition` on every parse. The already-handcrafted [forms/example/building-component.forms.json](forms/example/building-component.forms.json) fixture authors all of these fields today, but they're silently discarded.
 - "Try" mode (`render_try_table` at [forms/plugin/rs/lib.rs:406](forms/plugin/rs/lib.rs)) is a label-only `TableScene` — there is no interactive form at all (no inputs, no step wizard, no validation, no conditional visibility).
@@ -105,6 +105,6 @@ Restore `forms/fixture`-equivalent `.example(...)` entries in `create_forms_app(
 - `cargo check`/`cargo test` (native) for `forms-plugin`, `flow-plugin`, `procedural2d-plugin`, `procedural3d-plugin`, `semio-framework-plugin`, `semio-framework-core`, `semio-framework-renderer-wgpu`.
 - `cargo build --target wasm32-unknown-unknown` for the same crates; rebuild wasm bindings.
 - `bun nx run @semio-tech/framework-renderer-react:test` after the interpreter changes.
-- Re-run/extend the WGPU playground E2E harness ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for `forms`, `flow`, `procedural2d`, `procedural3d`, screenshot-diffing wgpu vs React for Edit/Try/Preview/Generate.
+- Re-run/extend the WGPU playground E2E harness ([.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for `forms`, `flow`, `procedural2d`, `procedural3d`, screenshot-diffing wgpu vs React for Edit/Try/Preview/Generate.
 - Manual runtime pass with `[DEBUG]` console logs (per repo rules): author a question of every kind, fill the Try wizard to submission, edit a `buildingComponent`'s params and confirm the mesh updates in Preview (both renderers), and add/rename/remove a Generate-mode generation with live preview updates (flow + procedural 2d + procedural 3d, both renderers).
 - Open/reopen the appropriate repo-MCP ticket (read `repo://goals` first) before starting implementation; close it with a full touched-files summary when done.

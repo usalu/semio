@@ -1,9 +1,0 @@
-{
-  "title": "Board Central Kinds And Compatibility",
-  "emoji": "🧩",
-  "status": "closed",
-  "description": "Implement central board kind catalogs (node, edge, handle, wire) with id-referenced kinds, instance overrides, and unified compatibility pairs with specificity ordering (general \u003c node \u003c edge \u003c handle \u003c wire) plus important flag; wire-draw snap uses compatibility. Extend TS + WASM board.",
-  "summary": "Centralized board semantic kinds via BoardKindCatalogBundle (handles, wires, nodes, edges) pushed through setBoardKindCatalogsJson; instances expose nodeKind, edgeKind, wireKind overrides in descriptor JSON. Unified BoardKindCompatEntry rules with specificity tiers and important bypass; WASM link snap/commit uses combined wire/handle/node/edge/general matching. BoardCanvas now takes kindCatalogs and kindCompatibility; defaults BOARD_DEFAULT_KIND_CATALOG_BUNDLE wire chain for gestures. Vitest + Rust tests extended; wasm-pack outputs regenerated.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪8e45e8413f0a455292ddb74910808509"]
-}

@@ -1,7 +1,0 @@
-{
-  "title": "Implement d3-force layout for kit diagram with configurable simulation parameters",
-  "emoji": "🔨",
-  "status": "closed",
-  "description": "\"PLAN: The diagram in kit app should be a d3-force layout. The nodes should be a circle with the icons. Add the parameters for the simulation to the settings of the kit app.\"",
-  "goal": "🎯r2602🎯runningsketchpad"
-}

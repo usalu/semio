@@ -28,7 +28,7 @@ isProject: false
 
 # Draw Technology Completeness Pass
 
-Continues ticket `26/06/30/DRAW-VECTOR-TECHNOLOGY` (reopen via `ticket_reopen`, do not open a new ticket). All temp scripts go in that ticket's folder; reuse `.repo/🎫/26/06/30/DRAW-VECTOR-TECHNOLOGY/runtime-check.mjs` and `preview-check.mjs`, extending them rather than creating new files.
+Continues ticket `26/06/30/DRAW-VECTOR-TECHNOLOGY` (reopen via `ticket_reopen`, do not open a new ticket). All temp scripts go in that ticket's folder; reuse `.repo/🎫️/26/06/30/DRAW-VECTOR-TECHNOLOGY/runtime-check.mjs` and `preview-check.mjs`, extending them rather than creating new files.
 
 ## 1. Fix selection/hover mechanics to match the shared primitives (`draw/react/index.tsx`)
 
@@ -93,6 +93,6 @@ In `DrawCanvas`, add pointer-gesture state machines per tool, each ending in `on
 ## 7. Verification
 
 - Re-run `geometry_drawing_rs`, `@semio-tech/draw-core:test`, `@semio-tech/draw-react:test`, `@semio-tech/draw-play:test`.
-- Extend `.repo/🎫/26/06/30/DRAW-VECTOR-TECHNOLOGY/runtime-check.mjs` to also exercise: shape/text/image factories + flatten, boolean child row id round-trip, `selectionMergeIds`/`marqueeModeFromModifiers` behavior for all four modes, and `commitDocument`-style edit application for a drawn shape/path/trace.
-- Extend `.repo/🎫/26/06/30/DRAW-VECTOR-TECHNOLOGY/preview-check.mjs` (Playwright) to: hover/select a few different layer kinds and assert document highlight sync, perform a marquee with shift (additive) and shift+ctrl (invertive) and assert resulting selection set, expand a boolean row and assert its children rows are present, and exercise one shape-drawing gesture end-to-end (drag a rect, assert a new path/shape SVG element appears and document gains a row).
+- Extend `.repo/🎫️/26/06/30/DRAW-VECTOR-TECHNOLOGY/runtime-check.mjs` to also exercise: shape/text/image factories + flatten, boolean child row id round-trip, `selectionMergeIds`/`marqueeModeFromModifiers` behavior for all four modes, and `commitDocument`-style edit application for a drawn shape/path/trace.
+- Extend `.repo/🎫️/26/06/30/DRAW-VECTOR-TECHNOLOGY/preview-check.mjs` (Playwright) to: hover/select a few different layer kinds and assert document highlight sync, perform a marquee with shift (additive) and shift+ctrl (invertive) and assert resulting selection set, expand a boolean row and assert its children rows are present, and exercise one shape-drawing gesture end-to-end (drag a rect, assert a new path/shape SVG element appears and document gains a row).
 - `ticket_reopen` for `26/06/30/DRAW-VECTOR-TECHNOLOGY`, then `ticket_close` with the summary and full file list once verified.

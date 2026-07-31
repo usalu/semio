@@ -1,8 +1,0 @@
-{
-  "title": "Scene Cad Fixture Coordinates",
-  "emoji": "🧭",
-  "status": "closed",
-  "description": "elements.scene.fixture/v1 extension data in CAD (Z-up); GLB meshes stay glTF Y-up; runtime maps CAD↔Three.js at render boundary.",
-  "summary": "Scene fixtures use CAD Z-up; runtime CAD↔Three at pose groups (sketchpad −90° X). glTF kit meshes get inner +90° X GlbMeshFrame so file Y-up aligns with CAD object Z-up. Nakagin fixture in CAD; relocate/camera in CAD.",
-  "goal": "🎯r2602"
-}

@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle 3d Mesh Serving Fix",
-  "emoji": "🧩",
-  "status": "closed",
-  "description": "Fix /meshes/*.glb 404 in puzzle 3d play and sketchpad: wrong meshRoot path and missing middleware in sketchpad/5d play.",
-  "summary": "Fixed puzzle 3d GLB loading: meshRoot pointed at removed assets/compose/metabolism path. Added shared puzzle3dMeshesVitePlugin serving compose/fixtures/kit/dev/metabolism/representations at /meshes/* for sketchpad, puzzle 3d/5d play, and static builds.",
-  "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": ["⚪e7c36e9f0cee4ad58415f2bebe733a89"]
-}

@@ -29,11 +29,11 @@ Node scene objects have no per-instance color override (only handles do), and `p
 
 ## 1. Contrast helper (`ui/styling/js/resolve.ts`)
 
-Add to the `🎨Resolve` region:
+Add to the `🎨️Resolve` region:
 
 - `relativeLuminance(hex: string): number` - WCAG sRGB relative luminance.
 - `readableForegroundHex(backgroundRef: string, lightKey?, darkKey?): string` - resolves `backgroundRef` to hex, then returns `tokenHex(darkKey ?? "dark")` on light backgrounds and `tokenHex(lightKey ?? "light")` on dark backgrounds (luminance threshold ~0.5, cached like `resolveColorHex`).
-- Extend the `🧪Tests` block in the same file (no new test files) covering luminance ordering and that a dark fill yields the light token and vice versa.
+- Extend the `🧪️Tests` block in the same file (no new test files) covering luminance ordering and that a dark fill yields the light token and vice versa.
 
 ## 2. Apply readable labels in puzzle 2d overlay (`puzzle/2d/react/index.tsx`)
 

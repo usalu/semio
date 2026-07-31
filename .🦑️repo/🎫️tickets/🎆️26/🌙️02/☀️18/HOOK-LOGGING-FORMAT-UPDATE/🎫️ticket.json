@@ -1,0 +1,11 @@
+{
+  "title": "Hook Logging Format Update",
+  "emoji": "🪝️",
+  "status": "closed",
+  "description": "All hooks should log all information to `./repo/📜️/{{YY}}{{MM}}{{DD}}{{HH}}{{MM}}{{SS}}_{{client}}_{{hook-kind}}.json` e.g. `./repo/📜️/260218230207_vscode-chat_agent-started.json`. Currently the logHook function creates filenames like `YYMMDDHHMMSS_event-name.json` but it should include the client name and use hook-kind instead of event name.",
+  "summary": "Updated hook logging format to include client name in filename. Changed from `YYMMDDHHMMSS_event-name.json` to `YYMMDDHHMMSS_client_hook-kind.json` format. Updated logHook function and corresponding test. All hook tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/614"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Board Force Barnes Hut Tests",
+  "emoji": "✅️",
+  "status": "closed",
+  "description": "Strengthen Barnes-Hut force graph testing: extend force_graph_tests in lib.rs and board Vitest describe for layoutBoardFixtureForceGraph; fix stale nalgebra test title.",
+  "summary": "Expanded Barnes–Hut / force-graph testing: Rust `force_graph_tests` now checks BH layout spatial spread (x/y span), bitwise reproducibility for BH and pairwise paths, extreme `barnesHutTheta` clamp smoke, and keeps clamped-theta 3-node run. Vitest `board force graph layout` gains BH dense-graph spread test, redraw path with BH options, and fixes stale wasm+nalgebra title. Ran `cargo test -p elements_board` (57) and full board vitest (74).",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️bbe661eff8c547b89ff0c21efaaa0d35"]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Refactor Elements UI to Be Sketchpad Independent",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "The elements/ui bundle must be fully independent from compose/sketchpad. Generic UI elements like App, Canvas, Panel, etc. should remain in elements/ui with no sketchpad-specific imports or logic. Any sketchpad-specific code must be moved back to the sketchpad bundle.",
+  "summary": "Made elements/ui fully independent from compose/sketchpad and compose/js. Defined generic primitives (cn, Expertise, setExpertiseProvider, useLabel, Point, Vector, Plane, Camera) directly in elements.tsx. Moved Canvas, HorizontalWindows, VerticalWindows layout components from sketchpad/Sketchpad.tsx to elements.tsx. Updated sketchpad i18n.ts to re-export from elements/ui. Updated storybook stories to import from @elements/ui. Removed @semio-tech/compose-sketchpad dependency and path aliases from package.json, tsconfig.json, and storybook main.ts. Added tailwind-merge dependency. Verified storybook builds successfully and sketchpad TypeScript compiles cleanly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/889"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["🔀️77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪️17735169388020986994116915823293939185"]
+}

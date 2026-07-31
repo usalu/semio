@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/flow-module-logic",
+  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/🧠️logic",
+        "command": "bun ./📜️script.ts wasm"
+      }
+    }
+  }
+}

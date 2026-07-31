@@ -1,0 +1,17 @@
+{
+  "title": "Rename Semios to S",
+  "emoji": "🖥️",
+  "status": "closed",
+  "description": "Introduce semios/ technology: studio CQRS VCS, dev JSON backbone, programs (sketchpad as program), resource registry, media graph, unified semios/play shell hosting all technologies.",
+  "summary": "Renamed Semios to S across the technology directory, APIs, package and crate identities, schemas, fixtures, manifests, runtime kinds, scripts, workspaces, Nx projects, and launch tasks. Removed obsolete generated artifacts. Verified graph and WASM generation plus S core, play, React, and Rust suites; documented unrelated repo-wide blockers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1771"
+  },
+  "goal": "🎯️platform",
+  "plan": {
+    "client": "cursor",
+    "id": "753831c3",
+    "local": "semios_full_cqrs_unification_753831c3.plan.md"
+  },
+  "sessions": ["⚪️7abf98171c24479490ae4cc903af8800", "⚪️1ffce31567da4dea8cd8d4be2f2579e1", "⚪️fd1e728e9eed45859719ea59cd1fc6c9", "⚪️b2bf68ce374d46adacc4f153a75cc613"]
+}

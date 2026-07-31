@@ -1,0 +1,16 @@
+{
+  "title": "Introduction Step Window Drag Handle",
+  "emoji": "✨️",
+  "status": "closed",
+  "description": "On introduction step windows add a drag handle in the middle of the top to be able to drag the UI element.",
+  "summary": "Fixed the introduction info-box drag boundary at its root by separating automatic placement inset from direct-manipulation bounds. Authored placement retains the 16 px visual gap, while pointer dragging now clamps to the exact viewport edges (0 through viewport minus measured box size). Added a shared pure clamp helper and extended the existing in-file component and helper tests to cover all four borders. Focused Vitest verification passes: 6 tests. Full typecheck, lint, and Storybook runtime checks were attempted but remain blocked by unrelated concurrent repository errors (generated StyleSpec/icon paths and other UI types; missing react-hooks lint rule; Vite/native dependency optimization).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2321"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps/🎯️designapp",
+  "sessions": [
+    "⚪️f9e3aa249d34410ea507045b70d347af",
+    "⚪️7cc8c1837f7640e6a0c0e66cae7347c9",
+    "⚪️b8a5b10030124273bb1c0b1fce0ab304"
+  ]
+}

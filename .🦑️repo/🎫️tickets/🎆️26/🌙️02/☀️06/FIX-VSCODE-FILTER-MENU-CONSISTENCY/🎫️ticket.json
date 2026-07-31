@@ -1,0 +1,11 @@
+{
+  "title": "Fix Vscode Filter Menu Consistency",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The menu items on the filter are not consistent. Dont use codeicons. Dont use text. Just use the emoji and show as tooltip what the filter does. Dont show the static emoji text.",
+  "summary": "Restored named filter tree labels, switched filter menu actions to emoji-only labels without codeicons, updated tests, and documented the filter label/tooltip requirement.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/423"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad"
+}

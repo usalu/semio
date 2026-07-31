@@ -35,23 +35,23 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## docker-compose.yml
 
-Compose stack for the devcontainer: **`compose`** only. Neo4j is installed in the **`compose`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.🦑repo/🛂manifest`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`compose`**.
+Compose stack for the devcontainer: **`compose`** only. Neo4j is installed in the **`compose`** image, started by **`post-start.sh`**, and persisted in repo-owned Cypher files under **`.🦑️repo/🛂️manifest`**. The live Neo4j store is container-local and replayed from those Cypher files on an empty DB. MCP uses **`bolt://localhost:7687`** from inside **`compose`**.
 
 ## Neo4j Cypher Persistence
 
 APOC Core and APOC Extended are installed in the **`compose`** image and configured for file import/export. The canonical repo persistence paths are:
 
-- **`.🦑repo/🛂manifest/compose.cypher`**
-- **`.🦑repo/🛂manifest/elements.cypher`**
-- **`.🦑repo/🛂manifest/coda.cypher`**
-- **`.🦑repo/🛂manifest/reuse.cypher`**
+- **`.🦑️repo/🛂️manifest/compose.cypher`**
+- **`.🦑️repo/🛂️manifest/elements.cypher`**
+- **`.🦑️repo/🛂️manifest/coda.cypher`**
+- **`.🦑️repo/🛂️manifest/reuse.cypher`**
 
 On devcontainer start, **`post-start.sh`** imports non-empty schema files with **`apoc.cypher.runFile`** only when the live database is empty. Export technology-scoped graph state with APOC query exports instead of dumping the whole database, for example:
 
 ```cypher
 CALL apoc.export.cypher.query(
   'MATCH (n:Compose) OPTIONAL MATCH (n)-[r]->(m:Compose) RETURN n, r, m',
-  '/workspaces/semio/.🦑repo/🛂manifest/compose.cypher',
+  '/workspaces/semio/.🦑️repo/🛂️manifest/compose.cypher',
   {format: 'cypher-shell'}
 );
 ```
@@ -128,7 +128,7 @@ The devcontainer automatically detects WSL environments and starts GitKraken wit
 
 A VS Code task is available for launching GitKraken:
 
-- Use `Ctrl+Shift+P` → "Tasks: Run Task" → "🐧gitkraken"
+- Use `Ctrl+Shift+P` → "Tasks: Run Task" → "🐧️gitkraken"
 - Or run from terminal: `bash .devcontainer/gitkraken-launch.sh`
 
 The launcher script automatically:
@@ -164,7 +164,7 @@ The devcontainer image installs ripgrep (`rg`) as part of the base apt package s
 Playwright browser downloads live under the workspace `node_modules` volume so the binaries persist across container restarts and editor reloads.
 The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-operation once cached.
 
-# 💯Requirements
+# 💯️Requirements
 
 ## Devcontainer
 

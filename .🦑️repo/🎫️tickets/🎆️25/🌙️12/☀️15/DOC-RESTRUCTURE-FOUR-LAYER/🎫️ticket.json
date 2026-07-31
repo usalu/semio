@@ -1,0 +1,7 @@
+{
+  "title": "Restructure documentation to four-layer system",
+  "emoji": "🏗️",
+  "status": "closed",
+  "description": "Migrate all existing docs and code to the new structure. Update outdated docs.",
+  "goal": "🎯️r2602🎯️updateddocs🎯️updateddevdocs🎯️updatedagentsmd"
+}

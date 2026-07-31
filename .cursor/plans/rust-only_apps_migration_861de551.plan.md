@@ -88,7 +88,7 @@ Generic shared render libs stay (not app code): `@semio-tech/ui-react` ([ui/js/r
 ## Phase 6: Verification
 
 - Build all plugin WASM + both renderers via `framework/product/os/dev/script.ts`.
-- Run the existing e2e suites for all 25 playgrounds on both renderers (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts` and the React twin in the `SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS` ticket), asserting real paint for the merged node-graph (s program) and enriched text-editor (writer).
+- Run the existing e2e suites for all 25 playgrounds on both renderers (`.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts` and the React twin in the `SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS` ticket), asserting real paint for the merged node-graph (s program) and enriched text-editor (writer).
 - Run Rust tests and the surviving JS test suites; extend existing test files for the new scene payload fields.
 
 ## Ticket

@@ -1,6 +1,0 @@
-{
-  "title": "Toolbar Dropdown Fix",
-  "emoji": "🔧",
-  "status": "closed",
-  "summary": "Fixed toolbar dropdown positioning by centering the alignment. Updated the dropdown to include the currently selected tool in the list. Refactored Design app tool settings to display Additive/Subtractive modes for Selection tool and remove redundant Hand tool toggle."
-}

@@ -1,7 +1,0 @@
-{
-  "title": "Rename layout to device in hooks, types, and enums",
-  "emoji": "🏷️",
-  "status": "closed",
-  "description": "Rename layout in useLayout to device and useDevice, etc. All types enums etc. Not the Layout component.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps"
-}

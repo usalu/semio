@@ -51,7 +51,7 @@ In [cad/schema/json/typology.json](cad/schema/json/typology.json), add an option
 
 ## 2. Core: parse + deterministic resolve
 
-In [cad/js/core/index.ts](cad/js/core/index.ts), in the typology region (around `TypologySpec` / `parseTypology` near lines 1976-2057), add a new `// #region 🎨TypologyStyle`:
+In [cad/js/core/index.ts](cad/js/core/index.ts), in the typology region (around `TypologySpec` / `parseTypology` near lines 1976-2057), add a new `// #region 🎨️TypologyStyle`:
 
 - Extend `TypologySpec` with `readonly style?: TypologyStyleSpec`; parse it in `parseTypology`.
 - Add `export function resolveTypologyStyle(typology: string): ResolvedTypologyStyle`:

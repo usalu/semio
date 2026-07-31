@@ -1,0 +1,120 @@
+CW4 — db_compact implementation report
+=======================================
+
+Scope
+-----
+Replaced the stub at db/compact/rs/lib.rs with a real implementation covering the crate's
+contract responsibility: "WAL merge/recompress, snapshot consolidation, diff collapse, index
+merge, payload GC (ref tracing), tombstone/branch/preview GC, online compaction with manifest
+CAS + fencing, cold-tier pack archival, budgets."
+
+No Cargo.toml change was needed. The existing deps (db_core, db_wal, db_storage, db_snapshot,
+db_index, db_state) were sufficient — every ContentHash-typed value used in this crate flows
+through already-typed values from db_wal/db_snapshot/db_storage's own public APIs (pattern
+matches, struct field moves, HashSet<_> with inferred element type), so no pack/pack_core
+dependency was required to be added, even though this crate manipulates ContentHash-shaped
+values throughout.
+
+Regions implemented (single file, db/compact/rs/lib.rs)
+---------------------------------------------------------
+- 🔖️Budget — CompactionBudget{max_wal_segments, max_snapshot_generations, max_payloads},
+  Default + unlimited(); threaded through every subsystem below so one compaction pass never
+  does unbounded work.
+- 🔖️Lease — CompactionLease, a LeaseStorage-backed fencing primitive mirroring
+  db_snapshot::SnapshotLease's shape exactly, under its own "compact:"-prefixed resource
+  namespace (distinct from "snapshot:") so a document's snapshot builder and compactor never
+  contend on the same lease.
+- 🔖️WalRetention — SegmentHorizon, segment_horizons() (groups db_wal::replay_document's output
+  by WalRecord::SegmentHeader boundaries, tracks max head_seq per segment span via
+  WAL_FRONTIER/WAL_SNAPSHOT_PUB records), plan_wal_retention() (selects sealed segments fully
+  covered by a floor head_seq, NEVER the highest-index segment, budget-capped),
+  apply_wal_retention() (deletes via WalStorage::delete_segment).
+- 🔖️PayloadGc — sweep_payloads(): ref-traced GC over a caller-supplied candidate set (the
+  payload CAS hashes referenced only within just-deleted WAL segments), deleting any hash not
+  also referenced by a surviving record.
+- 🔖️IndexCompaction — compact_all_indexes(): iterates all 10 db_index::IndexKind variants,
+  calls IndexHandle::compact() on each (merges runs, physically drops shadowed tombstones —
+  this crate's mechanism for "index merge" and the Preview/Conflict-kind share of
+  "tombstone/preview GC").
+- 🔖️SnapshotConsolidation — SnapshotConsolidator::consolidate(): walks a document's incremental
+  snapshot chain (db_snapshot's own public open_latest/open_ancestor/read_page/
+  materialize_chain), unions every generation's new_pages deduplicated by content hash, and
+  publishes a fresh self-sufficient FullBaseline generation; ::retain_from() forwards to
+  db_snapshot::SnapshotManager::retain_from. This is exactly the roll-up db_snapshot's own
+  module doc explicitly defers to db_compact.
+- 🔖️ColdArchive — build_cold_archive(): thin wrapper over
+  SnapshotManager::materialize_chain producing a self-contained, independently-openable byte
+  blob for a cold-tier store.
+- 🔖️Compactor — the top-level fenced/budgeted orchestrator: run() acquires the
+  CompactionLease, runs WAL retention -> payload GC -> index compaction -> (optional) snapshot
+  consolidation + retain_from, and ALWAYS releases the lease (even on mid-pass failure — tested
+  explicitly). run_from_latest_snapshot() is a convenience that derives the WAL floor from the
+  document's current latest snapshot head_seq.
+
+Deviations / scope decisions from the contract (all documented inline in the module doc)
+------------------------------------------------------------------------------------------
+1. "WAL merge/recompress" is NOT implemented as literal REC_SEALED-style frame splicing inside
+   a db_wal .spr segment. db_wal's own decode_records() hard-rejects any frame kind outside its
+   0x40..=0x4F extension range plus REC_COMMIT (DbError::Corrupt otherwise), so db_compact
+   cannot legally inject protocol_core::REC_SEALED/REC_COMPACTION frames into a segment db_wal
+   will later replay without db_wal itself changing (out of scope — db_wal is another crate's
+   finished, tested work). Instead, db_compact achieves the same goal (reclaiming space,
+   bounding replay cost) by deleting WHOLE sealed segments once every record in them is proven
+   covered by a floor frontier (typically the latest snapshot's head_seq) — a real, tested,
+   conservative form of "merge/recompress" scoped to what's achievable without db_wal changes.
+2. "Diff collapse" is explicitly left unimplemented as a stated scope boundary (module doc): no
+   db crate below db_document interprets operation semantics, and WAL_DIFF/WAL_INVERSE records
+   are opaque bytes to this crate — collapsing two diffs into one requires knowing what a diff
+   means. The structural substitute (deleting a whole covered segment, diffs included) is what's
+   implemented instead.
+3. "Branch GC" is explicitly left unimplemented (module doc): branches are a vcs::Alternative
+   concept and only db_engine (behind the vcs feature) may depend on vcs; this crate has no
+   VersionGraph handle. Flagged as a db_engine-layer extension, not faked here.
+4. "Manifest CAS" fencing is implemented via db_storage::LeaseStorage (CompactionLease),
+   NOT db_storage::CatalogStorage::cas_root. CatalogStorage guards ONE global root blob shared
+   by every document in a DbStorage instance, owned by db_engine/the catalog actor; db_compact
+   has no schema for that blob's contents and touching it here would race the engine layer.
+   This mirrors db_snapshot::SnapshotLease's own precedent for exactly the same reason.
+5. Snapshot consolidation is a page-UNION roll-up, not a reachability GC (documented on
+   SnapshotConsolidator::consolidate): a page that became unreferenced somewhere along the chain
+   is still carried into the new baseline. This is always correct (never drops a page `roots`
+   might need) but not maximally compact. Pruning truly-unreachable pages needs the
+   application-level page-tree structure (which pages reference which children), which lives
+   above this crate (db_state's structures are in-memory, not a serialized page format this
+   crate can walk) — left as a documented extension seam, not faked.
+6. Payload GC is candidate-based, not full mark-and-sweep: db_storage::PayloadStorage has no
+   enumeration method (by design), so a full "walk every stored payload" GC is structurally
+   impossible from this trait. sweep_payloads() instead ref-traces a caller-supplied candidate
+   set (naturally: the payload hashes referenced only within segments WAL retention just
+   deleted), which is real and precisely what Compactor::run wires up.
+
+Tests
+-----
+20 inline unit tests, all passing, organized in matching //#region subsections under
+//#region 🧪️Tests — covering: budget defaults; lease round-trip + resource-namespace distinctness
+from SnapshotLease; segment_horizons grouping/max-head-seq tracking; plan_wal_retention's three
+laws (never selects the highest index, never selects an unknown-horizon segment, respects the
+budget cap) as pure-function tests; apply_wal_retention idempotency; sweep_payloads correctness
+(orphan deleted, still-live kept) and budget cap; compact_all_indexes covering all 10 kinds and
+actually merging multiple runs into one; SnapshotConsolidator producing a real self-sufficient
+full baseline verified by independently re-opening the bytes and reading every page from both
+source generations directly out of the new baseline (no ancestor walk), plus its chain-depth
+budget; build_cold_archive byte-identical to materialize_chain and independently reopenable;
+and five Compactor::run integration tests — never touches the sole/active WAL segment, full
+end-to-end run (index compact + snapshot consolidate + prune + lease released), Conflict error
+when another holder holds the lease, lease ALWAYS released even when a step fails (WAL replay
+on a deliberately corrupted segment), and run_from_latest_snapshot's floor derivation.
+
+Build/test status
+-----------------
+cd db/compact/rs && cargo build -p db_compact   -> success, zero warnings from db_compact itself
+                                                    (only pre-existing warnings from unrelated
+                                                    crates: db_state, pack_cli, db_cli, protocol_cli
+                                                    manifest/bin-target warnings, none touched).
+cd db/compact/rs && cargo test  -p db_compact   -> 20 passed; 0 failed; 0 ignored.
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/db/compact/rs/lib.rs (replaced stub with full implementation)
+
+No other files were created or modified.

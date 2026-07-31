@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 .storybook/coda-trees.spec.ts
+// #region 🧲️Header
+// 💻️ .storybook/coda-trees.spec.ts
 // Specs: End-to-end checks for the coda scope's gap-fill `OntologyTree`/`ValidationTree` stories.
 // Summary: Loads `CodaTrees--uncovered-kinds` and `CodaValidationTree--uncovered-kinds` inside the aggregated
 // Storybook static build, asserting a clean boot (no page/console errors) and that every previously-uncovered
 // node-kind icon glyph (∀, ≥n, ≤n, ∀d, v, D) renders somewhere in the tree.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { expect, test, type Page } from "@playwright/test";
 

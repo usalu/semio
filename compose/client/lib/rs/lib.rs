@@ -1,12 +1,12 @@
-//! 🦀 compose rust control plane — in-memory Arc-reference architecture (code-first GraphQL).
+//! 🦀️ compose rust control plane — in-memory Arc-reference architecture (code-first GraphQL).
 
 #![allow(clippy::new_without_default)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::duplicated_attributes)]
 
-//#region 🧬 entity_dsl
+//#region 🧬️ entity_dsl
 
-/// @emoji 🧩 Chains `SchemaBuilder::register_output_type` so macro-emitted shapes stay reachable in `Schema::sdl()`.
+/// @emoji 🧩️ Chains `SchemaBuilder::register_output_type` so macro-emitted shapes stay reachable in `Schema::sdl()`.
 #[macro_export]
 macro_rules! register_output_types {
     ($builder:expr, $( $ty:ty ),+ $(,)? ) => {{
@@ -14,7 +14,7 @@ macro_rules! register_output_types {
     }};
 }
 
-/// @emoji 🧩 Chains `SchemaBuilder::register_input_type` for `InputObject` shapes not yet referenced by `Query`/`Mutation` fields (keeps golden `input` lines in `gql::sdl()`).
+/// @emoji 🧩️ Chains `SchemaBuilder::register_input_type` for `InputObject` shapes not yet referenced by `Query`/`Mutation` fields (keeps golden `input` lines in `gql::sdl()`).
 #[macro_export]
 macro_rules! register_input_types {
     ($builder:expr, $( $ty:ty ),+ $(,)? ) => {{
@@ -22,7 +22,7 @@ macro_rules! register_input_types {
     }};
 }
 
-/// @emoji 🪢 `_entity_relay_shell!` — shared relay Edge/Connection structs; `from_entities` body is supplied by [`entity_relay!`] or [`entity_relay_sync!`].
+/// @emoji 🪢️ `_entity_relay_shell!` — shared relay Edge/Connection structs; `from_entities` body is supplied by [`entity_relay!`] or [`entity_relay_sync!`].
 #[macro_export]
 macro_rules! _entity_relay_shell {
     ($Conn:ident, $Edge:ident, $Node:ty, $($from_entities:tt)*) => {
@@ -46,7 +46,7 @@ macro_rules! _entity_relay_shell {
     };
 }
 
-/// @emoji 🪢 `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
+/// @emoji 🪢️ `entity_relay_sync!` — relay Edge/Connection for `SimpleObject` entities with sync child digests (`compute_entity_hash`, …).
 #[macro_export]
 macro_rules! entity_relay_sync {
     ($Conn:ident, $Edge:ident, $Node:ty, $hash_fn:expr) => {
@@ -67,7 +67,7 @@ macro_rules! entity_relay_sync {
     };
 }
 
-/// @emoji 🪢 `entity_full_family!` — relay Edge/Connection for geometry (`VectorEdge`…`LocationEdge`).
+/// @emoji 🪢️ `entity_full_family!` — relay Edge/Connection for geometry (`VectorEdge`…`LocationEdge`).
 #[macro_export]
 macro_rules! entity_full_family {
     (
@@ -79,7 +79,7 @@ macro_rules! entity_full_family {
     };
 }
 
-/// @emoji 🪢 `entity_relay!` — relay Edge/Connection for `Arc` graph nodes with async `compute_hash` digests.
+/// @emoji 🪢️ `entity_relay!` — relay Edge/Connection for `Arc` graph nodes with async `compute_hash` digests.
 #[macro_export]
 macro_rules! entity_relay {
     ($Conn:ident, $Edge:ident, $Node:ty) => {
@@ -100,7 +100,7 @@ macro_rules! entity_relay {
     };
 }
 
-/// @emoji 🪜 `_ladder_relay_lite!` — golden **3-shell** relay (`NameEdge` + `NameConnection`); delegates to [`entity_relay!`].
+/// @emoji 🪜️ `_ladder_relay_lite!` — golden **3-shell** relay (`NameEdge` + `NameConnection`); delegates to [`entity_relay!`].
 #[macro_export]
 macro_rules! _ladder_relay_lite {
     ($Conn:ident, $Edge:ident, $Node:ty) => {
@@ -108,7 +108,7 @@ macro_rules! _ladder_relay_lite {
     };
 }
 
-/// @emoji 🪜 `_ladder_relay_full!` — golden **12-shell** tail: `*Diff*` + `*Modification*` + `*Modifications*` relay triple (after main `entity_relay!`).
+/// @emoji 🪜️ `_ladder_relay_full!` — golden **12-shell** tail: `*Diff*` + `*Modification*` + `*Modifications*` relay triple (after main `entity_relay!`).
 #[macro_export]
 macro_rules! _ladder_relay_full {
     (
@@ -128,7 +128,7 @@ macro_rules! _ladder_relay_full {
     };
 }
 
-/// @emoji 🧱 `entity_bare!` — splices `item` tokens (structs, impls, consts) with **no** relay shells; use for roots and `LocalProvider`-class bare nodes.
+/// @emoji 🧱️ `entity_bare!` — splices `item` tokens (structs, impls, consts) with **no** relay shells; use for roots and `LocalProvider`-class bare nodes.
 #[macro_export]
 macro_rules! entity_bare {
     ($($item:item)*) => {
@@ -136,7 +136,7 @@ macro_rules! entity_bare {
     };
 }
 
-/// @emoji 🪢 `entity_lite!` — golden **3-ladder** (`Name` + `NameEdge` + `NameConnection`); expands relay via [`_ladder_relay_lite!`].
+/// @emoji 🪢️ `entity_lite!` — golden **3-ladder** (`Name` + `NameEdge` + `NameConnection`); expands relay via [`_ladder_relay_lite!`].
 #[macro_export]
 macro_rules! entity_lite {
     ($Conn:ident, $Edge:ident, $Node:ty $(,)?) => {
@@ -189,7 +189,7 @@ macro_rules! operation_no_input {
     };
 }
 
-/// @emoji 🧾 `entity_input!` — GraphQL `InputObject` with explicit SDL `name` (no serde; control plane is GraphQL-native).
+/// @emoji 🧾️ `entity_input!` — GraphQL `InputObject` with explicit SDL `name` (no serde; control plane is GraphQL-native).
 #[macro_export]
 macro_rules! entity_input {
     (
@@ -207,7 +207,7 @@ macro_rules! entity_input {
     };
 }
 
-/// @emoji 📁 VFS computed fields for types implementing golden `FileSystemNode`.
+/// @emoji 📁️ VFS computed fields for types implementing golden `FileSystemNode`.
 #[macro_export]
 macro_rules! file_system_node_complex_methods {
     ($variant:ident) => {
@@ -252,7 +252,7 @@ macro_rules! file_system_node_complex_methods {
     };
 }
 
-/// @emoji 📁 `#[Object]` VFS fields resolved via `file_system_vfs::node_for_*` (must live on the GraphQL object, not a detached `ComplexObject`).
+/// @emoji 📁️ `#[Object]` VFS fields resolved via `file_system_vfs::node_for_*` (must live on the GraphQL object, not a detached `ComplexObject`).
 #[macro_export]
 macro_rules! file_system_node_object_methods {
     ($ty:ty, $node_for:path, $default_kind:ident) => {
@@ -301,7 +301,7 @@ macro_rules! file_system_node_object_methods {
     };
 }
 
-/// @emoji 📁 `#[ComplexObject]` VFS fields resolved via `file_system_vfs::node_for_*` (for `#[Object]` types without a direct `Arc` handle).
+/// @emoji 📁️ `#[ComplexObject]` VFS fields resolved via `file_system_vfs::node_for_*` (for `#[Object]` types without a direct `Arc` handle).
 #[macro_export]
 macro_rules! file_system_node_vfs_complex_ctx {
     ($ty:ty, $node_for:path) => {
@@ -613,10 +613,10 @@ macro_rules! meta_quality_entity {
     };
 }
 
-//#endregion 🧬 entity_dsl
+//#endregion 🧬️ entity_dsl
 
-//#region 🔌ExternalAdapters
-/// @emoji 🔌 Sole import surface for third-party crates used by `compose` (domain code uses `crate::external_adapters::*`).
+//#region 🔌️ExternalAdapters
+/// @emoji 🔌️ Sole import surface for third-party crates used by `compose` (domain code uses `crate::external_adapters::*`).
 pub mod external_adapters {
     pub use async_broadcast;
     pub use async_channel;
@@ -641,21 +641,21 @@ pub mod external_adapters {
     #[cfg(not(target_arch = "wasm32"))]
     pub use {chrono, rusqlite, tempfile, ureq, walkdir, zip};
 }
-//#endregion 🔌ExternalAdapters
+//#endregion 🔌️ExternalAdapters
 
-//#region 🆔 id
+//#region 🆔️ id
 
 pub mod id {
-    //! 🆔 Immutable uuid-v7 wrapper used by every entity.
+    //! 🆔️ Immutable uuid-v7 wrapper used by every entity.
     use crate::external_adapters::async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
     use std::fmt;
 
-    /// @emoji 🆔 Opaque node identifier (uuidv7 string); GraphQL wire name `ID` per target schema.
+    /// @emoji 🆔️ Opaque node identifier (uuidv7 string); GraphQL wire name `ID` per target schema.
     #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
     pub struct Id(pub String);
 
     impl Id {
-        /// 🆕 Mint a fresh uuid-v7 (timestamped, monotonic).
+        /// 🆕️ Mint a fresh uuid-v7 (timestamped, monotonic).
         pub async fn new() -> Self {
             Self(crate::external_adapters::uuid::Uuid::now_v7().to_string())
         }
@@ -693,7 +693,7 @@ pub mod id {
         }
     }
 
-    /// @emoji 🆔 Wire name `ID` matches relay + [`compose/client/schema/graphql/schema.golden.graphql`](../../../schema/graphql/schema.golden.graphql) `scalar`/Node ids.
+    /// @emoji 🆔️ Wire name `ID` matches relay + [`compose/client/schema/graphql/schema.golden.graphql`](../../../schema/graphql/schema.golden.graphql) `scalar`/Node ids.
     #[Scalar(name = "ID")]
     impl ScalarType for Id {
         fn parse(value: Value) -> InputValueResult<Self> {
@@ -707,8 +707,8 @@ pub mod id {
         }
     }
 
-    //#region 🔖Dsl
-    /// @emoji 🧬 `Id` is a bare `pub String` newtype with no `serde`/derive machinery of its own (it's
+    //#region 🔖️Dsl
+    /// @emoji 🧬️ `Id` is a bare `pub String` newtype with no `serde`/derive machinery of its own (it's
     /// a GraphQL custom scalar, not a `dsl::Dsl*`-derivable record/enum), so it gets a small hand
     /// `dsl::DslField` bridge — binds as `Shape::Text`, mirroring `String`'s own blanket impl — rather
     /// than a derive, exactly like the `HashMap`/`Box` bridges other converted crates hand-write at
@@ -727,10 +727,10 @@ pub mod id {
             }
         }
     }
-    //#endregion 🔖Dsl
+    //#endregion 🔖️Dsl
 }
 
-//#endregion 🆔 id
+//#endregion 🆔️ id
 
 //#region ⏱️ timestamp
 
@@ -757,10 +757,10 @@ pub mod timestamp {
 
 //#endregion ⏱️ timestamp
 
-//#region 🎨 color
+//#region 🎨️ color
 
 pub mod color {
-    //! 🎨 Hex/CSS color token scalar matching golden `scalar Color`.
+    //! 🎨️ Hex/CSS color token scalar matching golden `scalar Color`.
     use crate::external_adapters::async_graphql::{InputValueError, InputValueResult, Scalar, ScalarType, Value};
 
     #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -780,12 +780,12 @@ pub mod color {
     }
 }
 
-//#endregion 🎨 color
+//#endregion 🎨️ color
 
-//#region 🚨 error
+//#region 🚨️ error
 
 pub mod error {
-    //! 🚨 Crate-wide error type wired through the event bus as `OperationFailed`.
+    //! 🚨️ Crate-wide error type wired through the event bus as `OperationFailed`.
     use crate::external_adapters::async_graphql::Object;
     use crate::external_adapters::thiserror::Error;
 
@@ -840,12 +840,12 @@ pub mod error {
     pub type Result<T> = std::result::Result<T, ComposeError>;
 }
 
-//#endregion 🚨 error
+//#endregion 🚨️ error
 
-//#region 📐 geom
+//#region 📐️ geom
 
 pub mod geom {
-    //! 📐 Geometry: wire [`VectorInput`], [`PositionInput`], … for GraphQL kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
+    //! 📐️ Geometry: wire [`VectorInput`], [`PositionInput`], … for GraphQL kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
     use crate::external_adapters::async_graphql::InputObject;
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject, dsl::DslRecord)]
@@ -891,7 +891,7 @@ pub mod geom {
     }
 
     impl Default for PlaneInput {
-        /// @emoji ◭ World XY plane through origin; hydrates kit JSON that omits plane axes.
+        /// @emoji ◭️ World XY plane through origin; hydrates kit JSON that omits plane axes.
         fn default() -> Self {
             Self { origin: PointInput::default(), x_axis: VectorInput { x: 1.0, y: 0.0, z: 0.0 }, y_axis: VectorInput { x: 0.0, y: 1.0, z: 0.0 } }
         }
@@ -904,7 +904,7 @@ pub mod geom {
         pub plane: PlaneInput,
     }
 
-    /// @emoji 🌍 Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
+    /// @emoji 🌍️ Wire `LocationInput` (lon/lat/alt) for [`entity::Location`].
     #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
     #[graphql(name = "LocationInput")]
     pub struct LocationInput {
@@ -913,9 +913,9 @@ pub mod geom {
         pub altitude: f64,
     }
 
-    //#region 📐 entity
+    //#region 📐️ entity
     pub mod entity {
-        //! 📐 `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::interface`].
+        //! 📐️ `Arc` geometry nodes (target WeakEntity / Entity graph shapes); `#[Object]` impls live after [`crate::interface`].
         use std::sync::Arc;
 
         use crate::external_adapters::async_lock::RwLock;
@@ -929,7 +929,7 @@ pub mod geom {
             Id::from(format!("weak:{prefix}:{}", h(parts)))
         }
 
-        /// @emoji 📍 Canonical weak `Coordinate` (live u/v under `RwLock`).
+        /// @emoji 📍️ Canonical weak `Coordinate` (live u/v under `RwLock`).
         #[derive(Debug)]
         pub struct Coordinate {
             pub id: Id,
@@ -943,7 +943,7 @@ pub mod geom {
                 Arc::new(Self { id, u: RwLock::new(c.u), v: RwLock::new(c.v) })
             }
 
-            /// @emoji 🪪 Merkle leaf: id + live u/v (matches [`super::CoordinateInput`] payload).
+            /// @emoji 🪪️ Merkle leaf: id + live u/v (matches [`super::CoordinateInput`] payload).
             pub async fn compute_hash(&self) -> String {
                 let u = *self.u.read().await;
                 let v = *self.v.read().await;
@@ -951,7 +951,7 @@ pub mod geom {
             }
         }
 
-        /// @emoji ↗ Canonical weak `Vector`.
+        /// @emoji ↗️ Canonical weak `Vector`.
         #[derive(Debug)]
         pub struct Vector {
             pub id: Id,
@@ -966,7 +966,7 @@ pub mod geom {
                 Arc::new(Self { id, x: RwLock::new(v.x), y: RwLock::new(v.y), z: RwLock::new(v.z) })
             }
 
-            /// @emoji 🪪 Merkle leaf: id + live x/y/z.
+            /// @emoji 🪪️ Merkle leaf: id + live x/y/z.
             pub async fn compute_hash(&self) -> String {
                 let x = *self.x.read().await;
                 let y = *self.y.read().await;
@@ -975,7 +975,7 @@ pub mod geom {
             }
         }
 
-        /// @emoji ◆ Canonical weak `Point`.
+        /// @emoji ◆️ Canonical weak `Point`.
         #[derive(Debug)]
         pub struct Point {
             pub id: Id,
@@ -990,7 +990,7 @@ pub mod geom {
                 Arc::new(Self { id, x: RwLock::new(p.x), y: RwLock::new(p.y), z: RwLock::new(p.z) })
             }
 
-            /// @emoji 🪪 Merkle leaf: id + live x/y/z.
+            /// @emoji 🪪️ Merkle leaf: id + live x/y/z.
             pub async fn compute_hash(&self) -> String {
                 let x = *self.x.read().await;
                 let y = *self.y.read().await;
@@ -999,7 +999,7 @@ pub mod geom {
             }
         }
 
-        /// @emoji ▭ Canonical weak `Plane` (owns origin + axes).
+        /// @emoji ▭️ Canonical weak `Plane` (owns origin + axes).
         #[derive(Debug)]
         pub struct Plane {
             pub id: Id,
@@ -1017,7 +1017,7 @@ pub mod geom {
                 Arc::new(Self { id, origin, x_axis, y_axis })
             }
 
-            /// @emoji 🪪 Merkle node: sorted child digests of origin + axes.
+            /// @emoji 🪪️ Merkle node: sorted child digests of origin + axes.
             pub async fn compute_hash(&self) -> String {
                 let mut ch = vec![self.origin.compute_hash().await, self.x_axis.compute_hash().await, self.y_axis.compute_hash().await];
                 ch.sort();
@@ -1025,7 +1025,7 @@ pub mod geom {
             }
         }
 
-        /// @emoji ↖ Canonical weak `Offset` (piece drag input echo).
+        /// @emoji ↖️ Canonical weak `Offset` (piece drag input echo).
         #[derive(Debug)]
         pub struct Offset {
             pub id: Id,
@@ -1039,7 +1039,7 @@ pub mod geom {
                 Arc::new(Self { id, u: RwLock::new(o.u), v: RwLock::new(o.v) })
             }
 
-            /// @emoji 🪪 Merkle leaf: id + live u/v.
+            /// @emoji 🪪️ Merkle leaf: id + live u/v.
             pub async fn compute_hash(&self) -> String {
                 let u = *self.u.read().await;
                 let v = *self.v.read().await;
@@ -1047,7 +1047,7 @@ pub mod geom {
             }
         }
 
-        /// @emoji ⌖ Canonical weak `Position` (center + plane); live state only in child locks.
+        /// @emoji ⌖️ Canonical weak `Position` (center + plane); live state only in child locks.
         #[derive(Debug)]
         pub struct Position {
             pub id: Id,
@@ -1063,7 +1063,7 @@ pub mod geom {
                 Arc::new(Self { id, center, plane })
             }
 
-            /// @emoji 📸 Wire [`super::PositionInput`] from live center + plane child locks (single source of truth).
+            /// @emoji 📸️ Wire [`super::PositionInput`] from live center + plane child locks (single source of truth).
             pub async fn snapshot_input(&self) -> PositionInput {
                 let u = *self.center.u.read().await;
                 let v = *self.center.v.read().await;
@@ -1079,7 +1079,7 @@ pub mod geom {
                 PositionInput { center: CoordinateInput { u, v }, plane: PlaneInput { origin: PointInput { x: ox, y: oy, z: oz }, x_axis: VectorInput { x: xx, y: xy, z: xz }, y_axis: VectorInput { x: yx, y: yy, z: yz } } }
             }
 
-            /// @emoji 🪪 Merkle node: live position scalars plus sorted digests of center + plane arcs.
+            /// @emoji 🪪️ Merkle node: live position scalars plus sorted digests of center + plane arcs.
             pub async fn compute_hash(&self) -> String {
                 let p = self.snapshot_input().await;
                 let flat = format!(
@@ -1092,7 +1092,7 @@ pub mod geom {
             }
         }
 
-        /// @emoji 🌍 Canonical weak `Location` (lon/lat/alt).
+        /// @emoji 🌍️ Canonical weak `Location` (lon/lat/alt).
         #[derive(Debug)]
         pub struct Location {
             pub id: Id,
@@ -1107,7 +1107,7 @@ pub mod geom {
                 Arc::new(Self { id, longitude: RwLock::new(loc.longitude), latitude: RwLock::new(loc.latitude), altitude: RwLock::new(loc.altitude) })
             }
 
-            /// @emoji 🪪 Merkle leaf over lon/lat/alt fields.
+            /// @emoji 🪪️ Merkle leaf over lon/lat/alt fields.
             pub async fn compute_hash(&self) -> String {
                 let lo = *self.longitude.read().await;
                 let la = *self.latitude.read().await;
@@ -1116,7 +1116,7 @@ pub mod geom {
             }
         }
 
-        /// @emoji 🧭 Placeholder shell for `Place` (full meta wiring lands with meta lift).
+        /// @emoji 🧭️ Placeholder shell for `Place` (full meta wiring lands with meta lift).
         #[derive(Debug)]
         pub struct Place {
             pub id: Id,
@@ -1128,7 +1128,7 @@ pub mod geom {
                 Arc::new(Self { id: Id::new().await, label: RwLock::new(None) })
             }
 
-            /// @emoji 🪪 Merkle leaf: id + optional label.
+            /// @emoji 🪪️ Merkle leaf: id + optional label.
             pub async fn compute_hash(&self) -> String {
                 let lb = self.label.read().await.clone().unwrap_or_default();
                 merkle_node_str(&["Place", self.id.as_str(), lb.as_str()], Vec::new())
@@ -1184,7 +1184,7 @@ pub mod geom {
         }
         //#endregion
     }
-    //#endregion 📐 entity
+    //#endregion 📐️ entity
 
     //#region 🌤️FlattenDesign
     /// @emoji 🌤️ Computes absolute piece planes and centers from relative connections.
@@ -1504,11 +1504,11 @@ pub mod geom {
     //#endregion 🌤️FlattenDesign
 }
 
-//#endregion 📐 geom
+//#endregion 📐️ geom
 
-//#region 🪢 gql_relay
+//#region 🪢️ gql_relay
 
-/// 🪢 Relay `PageInfo` + connection shells for static GraphQL (edges, pageInfo, hash).
+/// 🪢️ Relay `PageInfo` + connection shells for static GraphQL (edges, pageInfo, hash).
 pub mod gql_relay {
     use std::sync::Arc;
 
@@ -1540,7 +1540,7 @@ pub mod gql_relay {
         pub end_cursor: Option<String>,
     }
 
-    /// @emoji 🪢 Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
+    /// @emoji 🪢️ Golden `PageInfoEdge` / `PageInfoConnection` (relay shells around [`PageInfo`]).
     #[derive(Clone, Debug, Default, SimpleObject)]
     #[graphql(name = "PageInfoEdge")]
     pub struct PageInfoEdge {
@@ -1558,7 +1558,7 @@ pub mod gql_relay {
     }
 
     impl PageInfoConnection {
-        /// @emoji 🪢 Golden `PageInfoConnection` with no edges — valid `EntityConnection` implementor for empty `owns` shells.
+        /// @emoji 🪢️ Golden `PageInfoConnection` with no edges — valid `EntityConnection` implementor for empty `owns` shells.
         pub fn empty_entity_shell() -> Self {
             Self { edges: vec![], page_info: Arc::new(PageInfo::default()), hash: h(&["EntityConnection", "PageInfo", "empty"]) }
         }
@@ -1758,7 +1758,7 @@ pub mod gql_relay {
     crate::entity_full_family!(Location, Arc<crate::geom::entity::Location>, relay = (LocationConnection, LocationEdge));
 
     crate::entity_family! {
-        /// @emoji 🧷 Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
+        /// @emoji 🧷️ Kit [`Family`] SDL shell — Artifact [`name`]/[`description`]/[`icon`] are persisted kit fields.
         pub struct Family {
             pub id: Id,
             pub name: String,
@@ -1871,12 +1871,12 @@ pub mod gql_relay {
         pub async fn folder_id(&self) -> Option<Id> {
             self.folder_id.read().await.clone()
         }
-        /// @emoji 🧰 Kinds owned by this typology.
+        /// @emoji 🧰️ Kinds owned by this typology.
         #[graphql(name = "hasTypes")]
         pub async fn has_types(&self) -> TypeConnection {
             TypeConnection::from_types(self.types.read().await.clone()).await
         }
-        /// @emoji 🏘 Designs owned by this typology.
+        /// @emoji 🏘️ Designs owned by this typology.
         #[graphql(name = "hasDesigns")]
         pub async fn has_designs(&self) -> DesignConnection {
             DesignConnection::from_designs(self.designs.read().await.clone()).await
@@ -1894,12 +1894,12 @@ pub mod gql_relay {
     //#endregion 🏛️ typology
 }
 
-//#endregion 🪢 gql_relay
+//#endregion 🪢️ gql_relay
 
-//#region 🩹 schema_gap_surfaces
+//#region 🩹️ schema_gap_surfaces
 
 pub mod schema_gap_surfaces {
-    //! 🩹 SDL-only synthetic relay surfaces for long-tail golden declarations; registered into `Schema::sdl()` so the exported schema reaches the current target declaration set.
+    //! 🩹️ SDL-only synthetic relay surfaces for long-tail golden declarations; registered into `Schema::sdl()` so the exported schema reaches the current target declaration set.
 
     use std::sync::Arc;
 
@@ -2612,9 +2612,9 @@ pub mod meta {
     use crate::id::Id;
     use crate::timestamp::Timestamp;
 
-    //#region 🧾 graphql inputs
+    //#region 🧾️ graphql inputs
     crate::entity_input! {
-        /// @emoji 🧾 SDL `AttributeInput` — instantiates [`Attribute`] entities on entity create/update paths.
+        /// @emoji 🧾️ SDL `AttributeInput` — instantiates [`Attribute`] entities on entity create/update paths.
         pub struct AttributeInput as "AttributeInput" {
             pub key: String,
             pub value: Option<String>,
@@ -2623,7 +2623,7 @@ pub mod meta {
     }
 
     crate::entity_input! {
-        /// @emoji 🧾 SDL `TagInput`.
+        /// @emoji 🧾️ SDL `TagInput`.
         pub struct TagInput as "TagInput" {
             pub name: String,
             pub description: Option<String>,
@@ -2634,7 +2634,7 @@ pub mod meta {
     }
 
     crate::entity_input! {
-        /// @emoji 🧾 SDL `ConceptInput`.
+        /// @emoji 🧾️ SDL `ConceptInput`.
         pub struct ConceptInput as "ConceptInput" {
             pub name: String,
             pub description: Option<String>,
@@ -2645,7 +2645,7 @@ pub mod meta {
     }
 
     crate::entity_input! {
-        /// @emoji 🧾 SDL `QualityInput` (subset aligned to persisted kit fields).
+        /// @emoji 🧾️ SDL `QualityInput` (subset aligned to persisted kit fields).
         pub struct QualityInput as "QualityInput" {
             pub key: String,
             pub value: Option<String>,
@@ -2656,21 +2656,21 @@ pub mod meta {
             pub attributes: Option<Vec<AttributeInput>>,
         }
     }
-    //#endregion 🧾 graphql inputs
+    //#endregion 🧾️ graphql inputs
 
     impl AttributeInput {
-        /// @emoji ➕ Mint a persisted [`Attribute`] from GraphQL input (fresh [`Id`]).
+        /// @emoji ➕️ Mint a persisted [`Attribute`] from GraphQL input (fresh [`Id`]).
         pub async fn into_attribute(self) -> Attribute {
             Attribute { id: Id::new().await, key: self.key, value: self.value.unwrap_or_default(), definition: self.definition }
         }
 
-        /// @emoji 🪪 Rebuild a persisted [`Attribute`] using a caller-supplied id from a normalized operation scope.
+        /// @emoji 🪪️ Rebuild a persisted [`Attribute`] using a caller-supplied id from a normalized operation scope.
         pub fn into_attribute_with_id(self, id: Id) -> Attribute {
             Attribute { id, key: self.key, value: self.value.unwrap_or_default(), definition: self.definition }
         }
     }
 
-    /// @emoji ➕ Expand optional GraphQL attribute entities into minted [`Attribute`] entities.
+    /// @emoji ➕️ Expand optional GraphQL attribute entities into minted [`Attribute`] entities.
     pub async fn attributes_from_inputs(inp: Option<Vec<AttributeInput>>) -> Vec<Attribute> {
         let mut v = Vec::new();
         for a in inp.into_iter().flatten() {
@@ -2679,7 +2679,7 @@ pub mod meta {
         v
     }
 
-    /// @emoji 🪪 Rebuild optional GraphQL attribute entities using the ids already recorded in operation scope.
+    /// @emoji 🪪️ Rebuild optional GraphQL attribute entities using the ids already recorded in operation scope.
     pub fn attributes_from_inputs_with_ids(inp: Option<Vec<AttributeInput>>, ids: &[Id]) -> Result<Vec<Attribute>, crate::error::ComposeError> {
         let attrs = inp.unwrap_or_default();
         if attrs.len() != ids.len() {
@@ -2695,7 +2695,7 @@ pub mod meta {
             pub url: String,
             pub mime: Option<String>,
             pub size: Option<i32>,
-            /// @emoji 📎 Blob/content digest on the wire (`hash` in JSON); omitted from GraphQL in favor of entity [`File::hash`] resolver.
+            /// @emoji 📎️ Blob/content digest on the wire (`hash` in JSON); omitted from GraphQL in favor of entity [`File::hash`] resolver.
             #[graphql(skip)]
             pub hash: String,
             pub description: Option<String>,
@@ -2741,27 +2741,27 @@ pub mod meta {
             pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
                 None
             }
-            /// @emoji 💾 Representations that reference this file.
+            /// @emoji 💾️ Representations that reference this file.
             #[graphql(name = "hasRepresentations")]
             pub async fn has_representations_field(&self) -> crate::gql_relay::RepresentationConnection {
                 crate::gql_relay::RepresentationConnection::from_representations(self.has_representations().await).await
             }
-            /// @emoji 🧰 Kinds that own a representation referencing this file.
+            /// @emoji 🧰️ Kinds that own a representation referencing this file.
             #[graphql(name = "referencesTypes")]
             pub async fn references_types_field(&self) -> crate::gql_relay::TypeConnection {
                 crate::gql_relay::TypeConnection::from_types(self.references_types().await).await
             }
-            /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+            /// @emoji 🏘️ Designs with a direct piece blueprinting a kind that references this file.
             #[graphql(name = "referencesDesigns")]
             pub async fn references_designs_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.references_designs().await).await
             }
-            /// @emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
+            /// @emoji 🧰️ Kinds that reference this file (kinds do not nest; same as direct).
             #[graphql(name = "referencesTypesTransitive")]
             pub async fn references_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
                 crate::gql_relay::TypeConnection::from_types(self.references_types_transitive().await).await
             }
-            /// @emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+            /// @emoji 🏘️ Designs that reference this file transitively through kinds and nested designs.
             #[graphql(name = "referencesDesignsTransitive")]
             pub async fn references_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.references_designs_transitive().await).await
@@ -2775,7 +2775,7 @@ pub mod meta {
             self.owner_kit.upgrade()
         }
 
-        /// @emoji 💾 Representations on kit kinds that reference this file.
+        /// @emoji 💾️ Representations on kit kinds that reference this file.
         pub async fn has_representations(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Representation>> {
             let Some(kit) = self.owner_kit_arc().await else {
                 return Vec::new();
@@ -2783,7 +2783,7 @@ pub mod meta {
             kit.representations_for_file(&self.id).await
         }
 
-        /// @emoji 🧰 Kinds that own a representation referencing this file.
+        /// @emoji 🧰️ Kinds that own a representation referencing this file.
         pub async fn references_types(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Type>> {
             let Some(kit) = self.owner_kit_arc().await else {
                 return Vec::new();
@@ -2791,7 +2791,7 @@ pub mod meta {
             kit.types_for_file(&self.id).await
         }
 
-        /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references this file.
+        /// @emoji 🏘️ Designs with a direct piece blueprinting a kind that references this file.
         pub async fn references_designs(&self) -> Vec<std::sync::Arc<crate::kit::design::Design>> {
             let Some(kit) = self.owner_kit_arc().await else {
                 return Vec::new();
@@ -2799,12 +2799,12 @@ pub mod meta {
             kit.designs_with_direct_file_reference(&self.id).await
         }
 
-        /// @emoji 🧰 Kinds that reference this file (kinds do not nest; same as direct).
+        /// @emoji 🧰️ Kinds that reference this file (kinds do not nest; same as direct).
         pub async fn references_types_transitive(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Type>> {
             self.references_types().await
         }
 
-        /// @emoji 🏘 Designs that reference this file transitively through kinds and nested designs.
+        /// @emoji 🏘️ Designs that reference this file transitively through kinds and nested designs.
         pub async fn references_designs_transitive(&self) -> Vec<std::sync::Arc<crate::kit::design::Design>> {
             let Some(kit) = self.owner_kit_arc().await else {
                 return Vec::new();
@@ -2896,7 +2896,7 @@ pub mod meta {
                     None
                 }
             }
-            /// @emoji 🧰 Kinds in this folder.
+            /// @emoji 🧰️ Kinds in this folder.
             #[graphql(name = "hasTypes")]
             pub async fn has_types_field(&self) -> crate::gql_relay::TypeConnection {
                 crate::gql_relay::TypeConnection::from_types(self.has_types().await).await
@@ -2910,7 +2910,7 @@ pub mod meta {
                     None
                 }
             }
-            /// @emoji 🏘 Designs in this folder.
+            /// @emoji 🏘️ Designs in this folder.
             #[graphql(name = "hasDesigns")]
             pub async fn has_designs_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.has_designs().await).await
@@ -2920,7 +2920,7 @@ pub mod meta {
     }
 
     impl Folder {
-        /// @emoji 🧰 Kinds assigned to this folder.
+        /// @emoji 🧰️ Kinds assigned to this folder.
         pub async fn has_types(&self) -> Vec<std::sync::Arc<crate::kit::r#type::Type>> {
             let Some(kit) = self.owner_kit.upgrade() else {
                 return Vec::new();
@@ -2934,7 +2934,7 @@ pub mod meta {
             out
         }
 
-        /// @emoji 🏘 Designs assigned to this folder.
+        /// @emoji 🏘️ Designs assigned to this folder.
         pub async fn has_designs(&self) -> Vec<std::sync::Arc<crate::kit::design::Design>> {
             let Some(kit) = self.owner_kit.upgrade() else {
                 return Vec::new();
@@ -2981,7 +2981,7 @@ pub mod meta {
     }
 
     impl Attribute {
-        /// @emoji 🌿 Blake3 leaf over persisted attribute columns (no owner weak refs).
+        /// @emoji 🌿️ Blake3 leaf over persisted attribute columns (no owner weak refs).
         pub fn compute_entity_hash(&self) -> String {
             crate::hash::merkle_node_str(&["Attribute", self.id.as_str(), self.key.as_str(), self.value.as_str(), self.definition.as_deref().unwrap_or("")], Vec::new())
         }
@@ -3045,7 +3045,7 @@ pub mod meta {
             crate::hash::merkle_node_str(&["Prop", this.id.as_str(), this.key.as_str(), this.value.as_str(), this.unit.as_deref().unwrap_or("")], Vec::new())
         }
         , extra = (
-            /// @emoji 🔎 SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
+            /// @emoji 🔎️ SDL `Prop.attribute(id)` — props carry no attribute bag yet; reserved for kit snapshots.
             pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
                 None
             }
@@ -3073,7 +3073,7 @@ pub mod meta {
             )
         }
         , extra = (
-            /// @emoji 🔎 SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
+            /// @emoji 🔎️ SDL `Stat.attribute(id)` — stats carry no attribute bag yet; reserved for kit snapshots.
             pub async fn attribute(&self, #[graphql(name = "id")] _id: Id) -> Option<Attribute> {
                 None
             }
@@ -3144,10 +3144,10 @@ pub mod meta {
 
 //#endregion 🏷️ meta
 
-//#region 🪪 hash
+//#region 🪪️ hash
 
 pub mod hash {
-    //! 🪪 Blake3 Merkle helpers: [`h`] for delimiter-joined parts; [`merkle_node_str`] for ordered own fields plus sorted child digests; [`merkle_collection`] for relay connection hashes.
+    //! 🪪️ Blake3 Merkle helpers: [`h`] for delimiter-joined parts; [`merkle_node_str`] for ordered own fields plus sorted child digests; [`merkle_collection`] for relay connection hashes.
     use crate::external_adapters::blake3::Hasher;
 
     pub fn h<S: AsRef<[u8]>>(parts: &[S]) -> String {
@@ -3159,7 +3159,7 @@ pub mod hash {
         hasher.finalize().to_hex().to_string()
     }
 
-    /// @emoji 🔢 Canonical `f64` text for hash joins (integral-ish values without trailing `.0`; trims fractional noise).
+    /// @emoji 🔢️ Canonical `f64` text for hash joins (integral-ish values without trailing `.0`; trims fractional noise).
     pub fn format_number_for_hash(n: f64) -> String {
         if n.is_nan() {
             return "nan".to_string();
@@ -3189,7 +3189,7 @@ pub mod hash {
         }
     }
 
-    /// @emoji 🌳 Merkle fold: concatenates `own` in order, then **sorted** `children` hex digests (order-independent set hashing).
+    /// @emoji 🌳️ Merkle fold: concatenates `own` in order, then **sorted** `children` hex digests (order-independent set hashing).
     pub fn merkle_node_str(own: &[&str], mut children: Vec<String>) -> String {
         children.sort();
         let mut hasher = Hasher::new();
@@ -3204,22 +3204,22 @@ pub mod hash {
         hasher.finalize().to_hex().to_string()
     }
 
-    /// @emoji 🪢 Relay collection hash: sorted child entity hashes under a stable collection tag.
+    /// @emoji 🪢️ Relay collection hash: sorted child entity hashes under a stable collection tag.
     pub fn merkle_collection(children: Vec<String>) -> String {
         merkle_node_str(&["RelayCollection"], children)
     }
 }
 
-//#endregion 🪪 hash
+//#endregion 🪪️ hash
 
-//#region 📦 kit
+//#region 📦️ kit
 
 pub mod kit {
-    //! 📦 Kit ↔ Type ↔ Design entity tree (Arc + interior RwLock per mutable field).
+    //! 📦️ Kit ↔ Type ↔ Design entity tree (Arc + interior RwLock per mutable field).
 
-    //#region 🏠 type
+    //#region 🏠️ type
     pub mod r#type {
-        //! 🏠 Types, their connectors and representations.
+        //! 🏠️ Types, their connectors and representations.
         use std::sync::{Arc, Weak};
 
         use crate::external_adapters::async_graphql::{Object, Union};
@@ -3230,8 +3230,8 @@ pub mod kit {
         use crate::meta::{Attribute, Author, Concept, File, Prop, Quality, Stat, Tag};
         use crate::timestamp::Timestamp;
 
-        //#region 🛟 port
-        /// 🔌 Kit-level named attachment point; referenced by [`Connector`] and [`super::connection::Side`].
+        //#region 🛟️ port
+        /// 🔌️ Kit-level named attachment point; referenced by [`Connector`] and [`super::connection::Side`].
         #[derive(Debug)]
         pub struct Port {
             pub id: Id,
@@ -3300,9 +3300,9 @@ pub mod kit {
         }
 
         crate::file_system_node_vfs_complex_ctx!(Port, crate::gql::interfaces::file_system_vfs::node_for_port);
-        //#endregion 🛟 port
+        //#endregion 🛟️ port
 
-        //#region ⚓ connector
+        //#region ⚓️ connector
         pub struct Connector {
             pub id: Id,
             pub owner_type: Weak<Type>,
@@ -3312,15 +3312,15 @@ pub mod kit {
             pub description: RwLock<String>,
             /// @emoji 🏷️ SDL `Connector.icon` (Artifact).
             pub icon: RwLock<String>,
-            /// @emoji 📍 Connector attachment point in type-local space.
+            /// @emoji 📍️ Connector attachment point in type-local space.
             pub point: RwLock<crate::geom::PointInput>,
             /// @emoji ➡️ Connector outward direction in type-local space.
             pub direction: RwLock<crate::geom::VectorInput>,
-            /// @emoji 🎯 Parametric position on connector arc for diagram layout.
+            /// @emoji 🎯️ Parametric position on connector arc for diagram layout.
             pub t_param: RwLock<Option<f64>>,
-            /// @emoji ✅ Whether this connector must be connected.
+            /// @emoji ✅️ Whether this connector must be connected.
             pub mandatory: RwLock<Option<bool>>,
-            /// @emoji 🔗 Resolved port pointer (`# data` on the wire).
+            /// @emoji 🔗️ Resolved port pointer (`# data` on the wire).
             pub port: RwLock<Option<Arc<Port>>>,
             pub qualities: RwLock<Vec<Arc<Quality>>>,
             pub attributes: RwLock<Vec<Attribute>>,
@@ -3452,9 +3452,9 @@ pub mod kit {
         }
 
         crate::file_system_node_vfs_complex_ctx!(Connector, crate::gql::interfaces::file_system_vfs::node_for_connector);
-        //#endregion ⚓ connector
+        //#endregion ⚓️ connector
 
-        //#region 💾 representation
+        //#region 💾️ representation
         pub struct Representation {
             pub id: Id,
             pub owner_type: Weak<Type>,
@@ -3503,7 +3503,7 @@ pub mod kit {
                 })
             }
 
-            /// 🧾 Insert a representation with caller-controlled external [`Id`] (JSON snapshot hydration).
+            /// 🧾️ Insert a representation with caller-controlled external [`Id`] (JSON snapshot hydration).
             pub async fn new_with_external_id(owner_type: Weak<Type>, id: Id, url: String) -> Arc<Self> {
                 Arc::new(Self { id, owner_type, url: RwLock::new(url), ..Default::default() })
             }
@@ -3516,7 +3516,7 @@ pub mod kit {
                 h(&[self.id.as_str(), name.as_str(), url.as_str(), desc.as_str(), icon.as_str()])
             }
 
-            /// @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+            /// @emoji 🏘️ Designs with a direct piece blueprinting this representation's owner kind.
             pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<super::design::Design>> {
                 let Some(ty) = self.owner_type.upgrade() else {
                     return Vec::new();
@@ -3527,7 +3527,7 @@ pub mod kit {
                 kit.designs_with_direct_blueprint_type(&ty.id).await
             }
 
-            /// @emoji 🏘 Designs that reference this representation's owner kind transitively.
+            /// @emoji 🏘️ Designs that reference this representation's owner kind transitively.
             pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<super::design::Design>> {
                 let Some(ty) = self.owner_type.upgrade() else {
                     return Vec::new();
@@ -3538,7 +3538,7 @@ pub mod kit {
                 kit.designs_referencing_type_transitive(&ty.id).await
             }
 
-            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this representation's owner kind.
+            /// @emoji 🪢️ Pieces in the owner kit whose blueprint is this representation's owner kind.
             pub async fn referenced_by_pieces(&self) -> Vec<Arc<super::design::piece::Piece>> {
                 let Some(ty) = self.owner_type.upgrade() else {
                     return Vec::new();
@@ -3549,12 +3549,12 @@ pub mod kit {
                 kit.pieces_with_blueprint_type(&ty.id).await
             }
 
-            /// @emoji 🧰 Owner kind of this representation (zero or one).
+            /// @emoji 🧰️ Owner kind of this representation (zero or one).
             pub async fn owner_types(&self) -> Vec<Arc<Type>> {
                 self.owner_type.upgrade().into_iter().collect()
             }
 
-            /// @emoji 📄 Linked file for this representation (zero or one).
+            /// @emoji 📄️ Linked file for this representation (zero or one).
             pub async fn linked_files(&self) -> Vec<File> {
                 self.file.read().await.clone().into_iter().collect()
             }
@@ -3610,27 +3610,27 @@ pub mod kit {
             pub async fn attribute(&self, id: Id) -> Option<Attribute> {
                 self.attributes.read().await.iter().find(|a| a.id == id).cloned()
             }
-            /// @emoji 🪢 Pieces whose blueprint is this representation's owner kind.
+            /// @emoji 🪢️ Pieces whose blueprint is this representation's owner kind.
             #[graphql(name = "referencedBy")]
             pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
                 crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
             }
-            /// @emoji 🧰 Owner kind of this representation.
+            /// @emoji 🧰️ Owner kind of this representation.
             #[graphql(name = "hasTypes")]
             pub async fn has_types(&self) -> crate::gql_relay::TypeConnection {
                 crate::gql_relay::TypeConnection::from_types(self.owner_types().await).await
             }
-            /// @emoji 📄 File linked from this representation.
+            /// @emoji 📄️ File linked from this representation.
             #[graphql(name = "referencesFiles")]
             pub async fn references_files(&self) -> crate::gql_relay::FileConnection {
                 crate::gql_relay::FileConnection::from_entities(self.linked_files().await)
             }
-            /// @emoji 🏘 Designs with a direct piece blueprinting this representation's owner kind.
+            /// @emoji 🏘️ Designs with a direct piece blueprinting this representation's owner kind.
             #[graphql(name = "referencedByDesigns")]
             pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
             }
-            /// @emoji 🏘 Designs that reference this representation's owner kind transitively.
+            /// @emoji 🏘️ Designs that reference this representation's owner kind transitively.
             #[graphql(name = "referencedByDesignsTransitive")]
             pub async fn referenced_by_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
@@ -3638,9 +3638,9 @@ pub mod kit {
         }
 
         crate::file_system_node_vfs_complex_ctx!(Representation, crate::gql::interfaces::file_system_vfs::node_for_representation);
-        //#endregion 💾 representation
+        //#endregion 💾️ representation
 
-        //#region 🏠 type
+        //#region 🏠️ type
         pub struct Type {
             pub id: Id,
             pub owner_typology: Weak<crate::gql_relay::Typology>,
@@ -3654,7 +3654,7 @@ pub mod kit {
             pub connectors: RwLock<Vec<Arc<Connector>>>,
             pub ports: RwLock<Vec<Arc<Port>>>,
             pub representations: RwLock<Vec<Arc<Representation>>>,
-            /// 🧷 Refreshed from `connectors` before single-id GraphQL lookups (no stale `Id` scans in resolvers).
+            /// 🧷️ Refreshed from `connectors` before single-id GraphQL lookups (no stale `Id` scans in resolvers).
             pub connector_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Connector>>>,
             pub port_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Port>>>,
             pub representation_weak_by_id: RwLock<std::collections::HashMap<Id, Weak<Representation>>>,
@@ -3707,7 +3707,7 @@ pub mod kit {
                 Arc::new(Self { id: Id::new().await, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
 
-            /// 🧾 Insert a workspace kind with caller-controlled external [`Id`] (wasm / JSON snapshot hydration).
+            /// 🧾️ Insert a workspace kind with caller-controlled external [`Id`] (wasm / JSON snapshot hydration).
             pub async fn new_with_external_id(owner_typology: Weak<crate::gql_relay::Typology>, id: Id, name: String) -> Arc<Self> {
                 Arc::new(Self { id, owner_typology, name: RwLock::new(name), ..Default::default() })
             }
@@ -3721,7 +3721,7 @@ pub mod kit {
                 h(&[self.id.as_str(), name.as_str(), desc.as_str(), icon.as_str(), image.as_str(), unit.as_str()])
             }
 
-            /// 🧷 Rebuild weak maps from the live vecs (call before `connector` / `representation` field resolution).
+            /// 🧷️ Rebuild weak maps from the live vecs (call before `connector` / `representation` field resolution).
             pub async fn refresh_connector_child_weak_maps(&self) {
                 {
                     let v = self.connectors.read().await;
@@ -3763,7 +3763,7 @@ pub mod kit {
                 best.map(|(_, r)| r)
             }
 
-            /// @emoji 📄 Distinct kit [`File`] nodes linked from this kind's representations (order preserved).
+            /// @emoji 📄️ Distinct kit [`File`] nodes linked from this kind's representations (order preserved).
             pub async fn files_from_representations(&self) -> Vec<File> {
                 use std::collections::HashSet;
                 let mut out = Vec::new();
@@ -3778,7 +3778,7 @@ pub mod kit {
                 out
             }
 
-            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+            /// @emoji 🪢️ Pieces in the owner kit whose blueprint is this kind.
             pub async fn referenced_by_pieces(&self) -> Vec<Arc<super::design::piece::Piece>> {
                 let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
@@ -3786,7 +3786,7 @@ pub mod kit {
                 kit.pieces_with_blueprint_type(&self.id).await
             }
 
-            /// @emoji 🏘 Designs with a direct piece blueprinting this kind.
+            /// @emoji 🏘️ Designs with a direct piece blueprinting this kind.
             pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<super::design::Design>> {
                 let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
@@ -3794,7 +3794,7 @@ pub mod kit {
                 kit.designs_with_direct_blueprint_type(&self.id).await
             }
 
-            /// @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+            /// @emoji 🏘️ Designs that reference this kind transitively through nested design blueprints.
             pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<super::design::Design>> {
                 let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
@@ -3802,17 +3802,17 @@ pub mod kit {
                 kit.designs_referencing_type_transitive(&self.id).await
             }
 
-            /// @emoji ⚓ Connectors owned directly by this kind.
+            /// @emoji ⚓️ Connectors owned directly by this kind.
             pub async fn has_connectors(&self) -> Vec<Arc<Connector>> {
                 self.connectors.read().await.clone()
             }
 
-            /// @emoji 🔘 Ports owned directly by this kind.
+            /// @emoji 🔘️ Ports owned directly by this kind.
             pub async fn has_ports(&self) -> Vec<Arc<Port>> {
                 self.ports.read().await.clone()
             }
 
-            /// @emoji 💾 Representations owned directly by this kind.
+            /// @emoji 💾️ Representations owned directly by this kind.
             pub async fn has_representations(&self) -> Vec<Arc<Representation>> {
                 self.representations.read().await.clone()
             }
@@ -3853,12 +3853,12 @@ pub mod kit {
             pub async fn updated(&self) -> Option<Timestamp> {
                 self.updated.read().await.clone()
             }
-            /// @emoji ⚓ Connectors owned directly by this kind.
+            /// @emoji ⚓️ Connectors owned directly by this kind.
             #[graphql(name = "hasConnectors")]
             pub async fn has_connectors_field(&self) -> crate::gql_relay::ConnectorConnection {
                 crate::gql_relay::ConnectorConnection::from_connectors(self.has_connectors().await).await
             }
-            /// @emoji 🔘 Ports owned directly by this kind.
+            /// @emoji 🔘️ Ports owned directly by this kind.
             #[graphql(name = "hasPorts")]
             pub async fn has_ports_field(&self) -> crate::gql_relay::PortConnection {
                 crate::gql_relay::PortConnection::from_entities(self.has_ports().await).await
@@ -3871,7 +3871,7 @@ pub mod kit {
                 self.refresh_connector_child_weak_maps().await;
                 self.connector_weak_by_id.read().await.get(&id).and_then(|w| w.upgrade())
             }
-            /// @emoji 💾 Representations owned directly by this kind.
+            /// @emoji 💾️ Representations owned directly by this kind.
             #[graphql(name = "hasRepresentations")]
             pub async fn has_representations_field(&self) -> crate::gql_relay::RepresentationConnection {
                 crate::gql_relay::RepresentationConnection::from_representations(self.has_representations().await).await
@@ -3884,22 +3884,22 @@ pub mod kit {
             pub async fn best_representation(&self, tag_ids: Vec<Id>) -> Option<Arc<Representation>> {
                 self.best_representation_for_tags(&tag_ids).await
             }
-            /// @emoji 📄 Files referenced indirectly via representations on this kind.
+            /// @emoji 📄️ Files referenced indirectly via representations on this kind.
             #[graphql(name = "referencesFiles")]
             pub async fn references_files(&self) -> crate::gql_relay::FileConnection {
                 crate::gql_relay::FileConnection::from_entities(self.files_from_representations().await)
             }
-            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this kind.
+            /// @emoji 🪢️ Pieces in the owner kit whose blueprint is this kind.
             #[graphql(name = "referencedBy")]
             pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
                 crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
             }
-            /// @emoji 🏘 Designs with a direct piece blueprinting this kind.
+            /// @emoji 🏘️ Designs with a direct piece blueprinting this kind.
             #[graphql(name = "referencedByDesigns")]
             pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
             }
-            /// @emoji 🏘 Designs that reference this kind transitively through nested design blueprints.
+            /// @emoji 🏘️ Designs that reference this kind transitively through nested design blueprints.
             #[graphql(name = "referencedByDesignsTransitive")]
             pub async fn referenced_by_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
@@ -3957,9 +3957,9 @@ pub mod kit {
 
         crate::file_system_node_vfs_complex_ctx!(Type, crate::gql::interfaces::file_system_vfs::node_for_type);
 
-        //#endregion 🏠 type
+        //#endregion 🏠️ type
 
-        //#region 🧩 blueprint
+        //#region 🧩️ blueprint
         #[derive(Clone, Union)]
         #[graphql(name = "Blueprint")]
         pub enum Blueprint {
@@ -3972,17 +3972,17 @@ pub mod kit {
                 Blueprint::Type(Arc::default())
             }
         }
-        //#endregion 🧩 blueprint
+        //#endregion 🧩️ blueprint
     }
-    //#endregion 🏠 type
+    //#endregion 🏠️ type
 
-    //#region 🏘 design
+    //#region 🏘️ design
     pub mod design {
-        //! 🏘 Designs and their pieces, connections, layers, groups.
+        //! 🏘️ Designs and their pieces, connections, layers, groups.
 
-        //#region ⭕ piece
+        //#region ⭕️ piece
         pub mod piece {
-            //! ⭕ Piece (instance of a Type or Design within a Design).
+            //! ⭕️ Piece (instance of a Type or Design within a Design).
             use std::sync::{Arc, Weak};
 
             use crate::external_adapters::async_graphql::{Enum, Object};
@@ -4052,13 +4052,13 @@ pub mod kit {
                     Arc::new(Self { id: Id::new().await, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
-                /// 🧾 Hydrated workspace piece aligned to external JSON id (facade snapshot hydration).
+                /// 🧾️ Hydrated workspace piece aligned to external JSON id (facade snapshot hydration).
                 pub async fn new_fixed_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint, position: PositionInput) -> Arc<Self> {
                     let pos_node = PositionEntity::from_position_input(position);
                     Arc::new(Self { id, owner_design, position: RwLock::new(Some(pos_node)), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Fixed)), ..Default::default() })
                 }
 
-                /// @emoji 🔗 Linked piece without stored absolute pose (position resolved via flatten).
+                /// @emoji 🔗️ Linked piece without stored absolute pose (position resolved via flatten).
                 pub async fn new_connected_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint) -> Arc<Self> {
                     Arc::new(Self { id, owner_design, position: RwLock::new(None), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Connected)), ..Default::default() })
                 }
@@ -4096,7 +4096,7 @@ pub mod kit {
                     PositionInput::default()
                 }
 
-                /// @emoji 🧰 Direct blueprint when this piece is a kind instance.
+                /// @emoji 🧰️ Direct blueprint when this piece is a kind instance.
                 pub async fn is_type(&self) -> Option<Arc<super::super::r#type::Type>> {
                     match self.blueprint.read().await.clone() {
                         super::super::r#type::Blueprint::Type(t) => Some(t),
@@ -4104,7 +4104,7 @@ pub mod kit {
                     }
                 }
 
-                /// @emoji 🏘 Direct blueprint when this piece is a nested design instance.
+                /// @emoji 🏘️ Direct blueprint when this piece is a nested design instance.
                 pub async fn is_design(&self) -> Option<Arc<super::Design>> {
                     match self.blueprint.read().await.clone() {
                         super::super::r#type::Blueprint::Design(d) => Some(d),
@@ -4112,7 +4112,7 @@ pub mod kit {
                     }
                 }
 
-                /// @emoji 🧰 Kinds reachable through this piece's blueprint, expanding nested designs.
+                /// @emoji 🧰️ Kinds reachable through this piece's blueprint, expanding nested designs.
                 pub async fn is_types_transitive(&self) -> Vec<Arc<super::super::r#type::Type>> {
                     use std::collections::{HashSet, VecDeque};
                     let mut type_seen = HashSet::new();
@@ -4139,7 +4139,7 @@ pub mod kit {
                     out
                 }
 
-                /// @emoji 🏘 Designs reachable through this piece's blueprint, expanding nested designs.
+                /// @emoji 🏘️ Designs reachable through this piece's blueprint, expanding nested designs.
                 pub async fn is_designs_transitive(&self) -> Vec<Arc<super::Design>> {
                     use std::collections::{HashSet, VecDeque};
                     let mut design_seen = HashSet::new();
@@ -4162,17 +4162,17 @@ pub mod kit {
                     out
                 }
 
-                /// @emoji 🪢 Direct child pieces in the piece tree.
+                /// @emoji 🪢️ Direct child pieces in the piece tree.
                 pub async fn has_pieces(&self) -> Vec<Arc<Piece>> {
                     self.child_pieces.read().await.clone()
                 }
 
-                /// @emoji 🔗 Direct child connections in the piece tree.
+                /// @emoji 🔗️ Direct child connections in the piece tree.
                 pub async fn has_connections(&self) -> Vec<Arc<super::connection::Connection>> {
                     self.child_connections.read().await.clone()
                 }
 
-                /// @emoji 🪢 All descendant pieces in the piece tree.
+                /// @emoji 🪢️ All descendant pieces in the piece tree.
                 pub async fn has_pieces_transitive(&self) -> Vec<Arc<Piece>> {
                     use std::collections::{HashSet, VecDeque};
                     let mut out = Vec::new();
@@ -4190,7 +4190,7 @@ pub mod kit {
                     out
                 }
 
-                /// @emoji 🔗 All descendant connections in the piece tree.
+                /// @emoji 🔗️ All descendant connections in the piece tree.
                 pub async fn has_connections_transitive(&self) -> Vec<Arc<super::connection::Connection>> {
                     use std::collections::{HashSet, VecDeque};
                     let mut out = Vec::new();
@@ -4233,42 +4233,42 @@ pub mod kit {
                         super::super::r#type::Blueprint::Design(d) => crate::gql::interfaces::EntityInterface::Design(d),
                     }
                 }
-                /// @emoji 🧰 Kind blueprint when this piece instances a kind.
+                /// @emoji 🧰️ Kind blueprint when this piece instances a kind.
                 #[graphql(name = "isType")]
                 pub async fn is_type_field(&self) -> Option<Arc<super::super::r#type::Type>> {
                     self.is_type().await
                 }
-                /// @emoji 🏘 Design blueprint when this piece instances a nested design.
+                /// @emoji 🏘️ Design blueprint when this piece instances a nested design.
                 #[graphql(name = "isDesign")]
                 pub async fn is_design_field(&self) -> Option<Arc<super::Design>> {
                     self.is_design().await
                 }
-                /// @emoji 🧰 Kinds reachable transitively through nested design blueprints on this piece.
+                /// @emoji 🧰️ Kinds reachable transitively through nested design blueprints on this piece.
                 #[graphql(name = "isTypesTransitive")]
                 pub async fn is_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
                     crate::gql_relay::TypeConnection::from_types(self.is_types_transitive().await).await
                 }
-                /// @emoji 🏘 Designs reachable transitively through nested design blueprints on this piece.
+                /// @emoji 🏘️ Designs reachable transitively through nested design blueprints on this piece.
                 #[graphql(name = "isDesignsTransitive")]
                 pub async fn is_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
                     crate::gql_relay::DesignConnection::from_designs(self.is_designs_transitive().await).await
                 }
-                /// @emoji 🪢 Direct child pieces in the piece tree.
+                /// @emoji 🪢️ Direct child pieces in the piece tree.
                 #[graphql(name = "hasPieces")]
                 pub async fn has_pieces_field(&self) -> crate::gql_relay::PieceConnection {
                     crate::gql_relay::PieceConnection::from_pieces(self.has_pieces().await).await
                 }
-                /// @emoji 🔗 Direct child connections in the piece tree.
+                /// @emoji 🔗️ Direct child connections in the piece tree.
                 #[graphql(name = "hasConnections")]
                 pub async fn has_connections_field(&self) -> crate::gql_relay::ConnectionConnection {
                     crate::gql_relay::ConnectionConnection::from_connections(self.has_connections().await).await
                 }
-                /// @emoji 🪢 All descendant pieces in the piece tree.
+                /// @emoji 🪢️ All descendant pieces in the piece tree.
                 #[graphql(name = "hasPiecesTransitive")]
                 pub async fn has_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
                     crate::gql_relay::PieceConnection::from_pieces(self.has_pieces_transitive().await).await
                 }
-                /// @emoji 🔗 All descendant connections in the piece tree.
+                /// @emoji 🔗️ All descendant connections in the piece tree.
                 #[graphql(name = "hasConnectionsTransitive")]
                 pub async fn has_connections_transitive_field(&self) -> crate::gql_relay::ConnectionConnection {
                     crate::gql_relay::ConnectionConnection::from_connections(self.has_connections_transitive().await).await
@@ -4340,11 +4340,11 @@ pub mod kit {
 
             crate::file_system_node_vfs_complex_ctx!(Piece, crate::gql::interfaces::file_system_vfs::node_for_piece);
         }
-        //#endregion ⭕ piece
+        //#endregion ⭕️ piece
 
-        //#region 🔗 connection
+        //#region 🔗️ connection
         pub mod connection {
-            //! 🔗 Connection between two piece sides + the Side value.
+            //! 🔗️ Connection between two piece sides + the Side value.
             use std::sync::{Arc, Weak};
 
             use crate::external_adapters::async_graphql::Object;
@@ -4357,7 +4357,7 @@ pub mod kit {
             //#region ⛓️ side
             pub struct Side {
                 pub id: Id,
-                /// @emoji 🔗 Owning connection when sides are wired into a [`Connection`].
+                /// @emoji 🔗️ Owning connection when sides are wired into a [`Connection`].
                 pub owner_connection: RwLock<Weak<Connection>>,
                 pub piece: RwLock<Arc<super::piece::Piece>>,
                 pub port: RwLock<Option<Arc<super::super::r#type::Port>>>,
@@ -4376,7 +4376,7 @@ pub mod kit {
                     Arc::new(Self { id: Id::new().await, piece: RwLock::new(piece), ..Default::default() })
                 }
 
-                /// @emoji 🪪 Blake3 digest over `Side` wire shape: optional `connector` + `designPiece`, then `piece` (matches kit JSON `parent` / `child` objects).
+                /// @emoji 🪪️ Blake3 digest over `Side` wire shape: optional `connector` + `designPiece`, then `piece` (matches kit JSON `parent` / `child` objects).
                 pub async fn compute_hash(&self) -> String {
                     let mut parts: Vec<String> = vec!["Side".into()];
                     if let Some(co) = self.connector.read().await.as_ref() {
@@ -4393,32 +4393,32 @@ pub mod kit {
                     h(&refs)
                 }
 
-                /// @emoji 🪢 Piece referenced by this connection end.
+                /// @emoji 🪢️ Piece referenced by this connection end.
                 pub async fn references_piece(&self) -> Arc<super::piece::Piece> {
                     self.piece.read().await.clone()
                 }
 
-                /// @emoji ⚓ Connector referenced by this connection end.
+                /// @emoji ⚓️ Connector referenced by this connection end.
                 pub async fn references_connector(&self) -> Option<Arc<super::super::r#type::Connector>> {
                     self.connector.read().await.clone()
                 }
 
-                /// @emoji 🔘 Port referenced by this connection end.
+                /// @emoji 🔘️ Port referenced by this connection end.
                 pub async fn references_port(&self) -> Option<Arc<super::super::r#type::Port>> {
                     self.port.read().await.clone()
                 }
 
-                /// @emoji 🪢 Nested design piece referenced by this connection end.
+                /// @emoji 🪢️ Nested design piece referenced by this connection end.
                 pub async fn references_design_piece(&self) -> Option<Arc<super::piece::Piece>> {
                     self.design_piece.read().await.clone()
                 }
 
-                /// @emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
+                /// @emoji 🧰️ Kinds reachable over the referenced piece, expanding nested design blueprints.
                 pub async fn references_types_transitive(&self) -> Vec<Arc<super::super::r#type::Type>> {
                     self.references_piece().await.is_types_transitive().await
                 }
 
-                /// @emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive over nested designs).
+                /// @emoji ⚓️ Connectors on kinds reachable over the referenced piece (transitive over nested designs).
                 pub async fn references_connectors_transitive(&self) -> Vec<Arc<super::super::r#type::Connector>> {
                     use std::collections::HashSet;
                     let mut out = Vec::new();
@@ -4436,7 +4436,7 @@ pub mod kit {
 
             //#endregion ⛓️ side
 
-            //#region 🔗 connection
+            //#region 🔗️ connection
             pub struct Connection {
                 pub id: Id,
                 pub owner_design: Weak<super::Design>,
@@ -4481,7 +4481,7 @@ pub mod kit {
             }
 
             impl Connection {
-                /// @emoji 🪪 Blake3 digest over `Connection` wire shape: sorted `attributes`, `parent` / `child` [`Side`] digests, optional `description`, then scalar join fields.
+                /// @emoji 🪪️ Blake3 digest over `Connection` wire shape: sorted `attributes`, `parent` / `child` [`Side`] digests, optional `description`, then scalar join fields.
                 pub async fn compute_hash(&self) -> String {
                     use crate::hash::{format_number_for_hash, merkle_collection};
                     let mut parts: Vec<String> = vec!["Connection".into()];
@@ -4529,7 +4529,7 @@ pub mod kit {
                     vec![self.parent.read().await.clone(), self.child.read().await.clone()]
                 }
 
-                /// @emoji 🪢 Pieces referenced by the parent and child sides (deduplicated).
+                /// @emoji 🪢️ Pieces referenced by the parent and child sides (deduplicated).
                 pub async fn references_pieces(&self) -> Vec<Arc<super::piece::Piece>> {
                     use std::collections::HashSet;
                     let parent = self.parent.read().await;
@@ -4544,7 +4544,7 @@ pub mod kit {
                     out
                 }
 
-                /// @emoji ⚓ Connectors referenced by the parent and child sides (deduplicated).
+                /// @emoji ⚓️ Connectors referenced by the parent and child sides (deduplicated).
                 pub async fn references_connectors(&self) -> Vec<Arc<super::super::r#type::Connector>> {
                     use std::collections::HashSet;
                     let parent = self.parent.read().await;
@@ -4559,7 +4559,7 @@ pub mod kit {
                     out
                 }
 
-                /// @emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
+                /// @emoji 🪢️ Pieces referenced transitively through nested design blueprints on both sides.
                 pub async fn references_pieces_transitive(&self) -> Vec<Arc<super::piece::Piece>> {
                     use std::collections::HashSet;
                     let parent = self.parent.read().await;
@@ -4592,7 +4592,7 @@ pub mod kit {
                     out
                 }
 
-                /// @emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
+                /// @emoji ⚓️ Connectors referenced transitively on kinds reachable from both sides.
                 pub async fn references_connectors_transitive(&self) -> Vec<Arc<super::super::r#type::Connector>> {
                     use std::collections::HashSet;
                     let parent = self.parent.read().await;
@@ -4677,25 +4677,25 @@ pub mod kit {
                     self.has_sides().await
                 }
 
-                /// @emoji 🪢 Pieces referenced by the parent and child sides.
+                /// @emoji 🪢️ Pieces referenced by the parent and child sides.
                 #[graphql(name = "referencesPieces")]
                 pub async fn references_pieces_field(&self) -> crate::gql_relay::PieceConnection {
                     crate::gql_relay::PieceConnection::from_pieces(self.references_pieces().await).await
                 }
 
-                /// @emoji ⚓ Connectors referenced by the parent and child sides.
+                /// @emoji ⚓️ Connectors referenced by the parent and child sides.
                 #[graphql(name = "referencesConnectors")]
                 pub async fn references_connectors_field(&self) -> crate::gql_relay::ConnectorConnection {
                     crate::gql_relay::ConnectorConnection::from_connectors(self.references_connectors().await).await
                 }
 
-                /// @emoji 🪢 Pieces referenced transitively through nested design blueprints on both sides.
+                /// @emoji 🪢️ Pieces referenced transitively through nested design blueprints on both sides.
                 #[graphql(name = "referencesPiecesTransitive")]
                 pub async fn references_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
                     crate::gql_relay::PieceConnection::from_pieces(self.references_pieces_transitive().await).await
                 }
 
-                /// @emoji ⚓ Connectors referenced transitively on kinds reachable from both sides.
+                /// @emoji ⚓️ Connectors referenced transitively on kinds reachable from both sides.
                 #[graphql(name = "referencesConnectorsTransitive")]
                 pub async fn references_connectors_transitive_field(&self) -> crate::gql_relay::ConnectorConnection {
                     crate::gql_relay::ConnectorConnection::from_connectors(self.references_connectors_transitive().await).await
@@ -4718,41 +4718,41 @@ pub mod kit {
                 pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                     Some(crate::gql::interfaces::empty_entity_connection())
                 }
-                /// @emoji 🪢 Piece referenced by this connection end.
+                /// @emoji 🪢️ Piece referenced by this connection end.
                 #[graphql(name = "referencesPiece")]
                 pub async fn references_piece_field(&self) -> Arc<super::piece::Piece> {
                     self.references_piece().await
                 }
-                /// @emoji 🔘 Port referenced by this connection end.
+                /// @emoji 🔘️ Port referenced by this connection end.
                 #[graphql(name = "referencesPort")]
                 pub async fn references_port_field(&self) -> Option<Arc<super::super::r#type::Port>> {
                     self.references_port().await
                 }
-                /// @emoji 🪢 Nested design piece referenced by this connection end.
+                /// @emoji 🪢️ Nested design piece referenced by this connection end.
                 #[graphql(name = "referencesDesignPiece")]
                 pub async fn references_design_piece_field(&self) -> Option<Arc<super::piece::Piece>> {
                     self.references_design_piece().await
                 }
-                /// @emoji ⚓ Connector referenced by this connection end.
+                /// @emoji ⚓️ Connector referenced by this connection end.
                 #[graphql(name = "referencesConnector")]
                 pub async fn references_connector_field(&self) -> Option<Arc<super::super::r#type::Connector>> {
                     self.references_connector().await
                 }
-                /// @emoji 🧰 Kinds reachable over the referenced piece, expanding nested design blueprints.
+                /// @emoji 🧰️ Kinds reachable over the referenced piece, expanding nested design blueprints.
                 #[graphql(name = "referencesTypesTransitive")]
                 pub async fn references_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
                     crate::gql_relay::TypeConnection::from_types(self.references_types_transitive().await).await
                 }
-                /// @emoji ⚓ Connectors on kinds reachable over the referenced piece (transitive).
+                /// @emoji ⚓️ Connectors on kinds reachable over the referenced piece (transitive).
                 #[graphql(name = "referencesConnectorsTransitive")]
                 pub async fn references_connectors_transitive_field(&self) -> crate::gql_relay::ConnectorConnection {
                     crate::gql_relay::ConnectorConnection::from_connectors(self.references_connectors_transitive().await).await
                 }
             }
-            //#endregion 🔗 connection
+            //#endregion 🔗️ connection
         }
 
-        //#region 🏘 design
+        //#region 🏘️ design
         use std::collections::HashMap;
         use std::sync::{Arc, Weak};
 
@@ -4765,8 +4765,8 @@ pub mod kit {
         use crate::meta::{Attribute, Author, Group, Layer, Prop, Quality, Stat};
         use crate::timestamp::Timestamp;
 
-        //#region 🧱 clump
-        /// @emoji 🧱 SDL `Clump` — connected-component bucket for layout (`WeakEntity` projection hook).
+        //#region 🧱️ clump
+        /// @emoji 🧱️ SDL `Clump` — connected-component bucket for layout (`WeakEntity` projection hook).
         pub struct Clump {
             pub id: Id,
             pub owner_design: Weak<Design>,
@@ -4804,7 +4804,7 @@ pub mod kit {
                 crate::gql_relay::PieceConnection::from_pieces(Vec::new()).await
             }
         }
-        //#endregion 🧱 clump
+        //#endregion 🧱️ clump
 
         pub struct Design {
             pub id: Id,
@@ -4818,7 +4818,7 @@ pub mod kit {
             pub created: RwLock<Option<Timestamp>>,
             pub updated: RwLock<Option<Timestamp>>,
             pub pieces: RwLock<Vec<Arc<piece::Piece>>>,
-            /// 🧷 Write-side only: external piece [`Id`] → `Weak` (GraphQL `piece(id:)` upgrades here; no vec index table).
+            /// 🧷️ Write-side only: external piece [`Id`] → `Weak` (GraphQL `piece(id:)` upgrades here; no vec index table).
             pub piece_weak_by_external_id: RwLock<HashMap<Id, Weak<piece::Piece>>>,
             pub connections: RwLock<Vec<Arc<connection::Connection>>>,
             flat_positions_cache: RwLock<Option<HashMap<Id, crate::geom::PositionInput>>>,
@@ -4889,12 +4889,12 @@ pub mod kit {
                 computed
             }
 
-            /// @emoji 🧹 Drops cached flatten output after topology edits.
+            /// @emoji 🧹️ Drops cached flatten output after topology edits.
             pub async fn invalidate_flat_positions_cache(&self) {
                 *self.flat_positions_cache.write().await = None;
             }
 
-            /// 🆕 Push a piece into this design's pieces; returns the same Arc (refcount + 1) for the caller.
+            /// 🆕️ Push a piece into this design's pieces; returns the same Arc (refcount + 1) for the caller.
             pub async fn insert_piece(&self, piece: Arc<piece::Piece>) -> Arc<piece::Piece> {
                 self.invalidate_flat_positions_cache().await;
                 let mut pieces = self.pieces.write().await;
@@ -4905,7 +4905,7 @@ pub mod kit {
                 piece
             }
 
-            /// @emoji 🗑 Remove a piece from this design's ordered list and external-id index.
+            /// @emoji 🗑️ Remove a piece from this design's ordered list and external-id index.
             pub async fn delete_piece_by_external_id(&self, piece_id: &Id) -> Result<(), crate::error::ComposeError> {
                 self.invalidate_flat_positions_cache().await;
                 let mut pieces = self.pieces.write().await;
@@ -4918,12 +4918,12 @@ pub mod kit {
                 Ok(())
             }
 
-            /// @emoji 🪢 Command / GraphQL boundary: resolve a piece by external [`Id`] via the write-side weak map.
+            /// @emoji 🪢️ Command / GraphQL boundary: resolve a piece by external [`Id`] via the write-side weak map.
             pub async fn piece_by_external_id(&self, id: &Id) -> Option<Arc<piece::Piece>> {
                 self.piece_weak_by_external_id.read().await.get(id).and_then(|w| w.upgrade())
             }
 
-            /// @emoji 🧰 Distinct [`Type`] blueprints on this design's own pieces (one hop).
+            /// @emoji 🧰️ Distinct [`Type`] blueprints on this design's own pieces (one hop).
             pub async fn references_types(&self) -> Vec<Arc<super::r#type::Type>> {
                 use std::collections::HashSet;
                 let mut out = Vec::new();
@@ -4938,7 +4938,7 @@ pub mod kit {
                 out
             }
 
-            /// @emoji 🏘 Distinct [`Design`] blueprints on this design's own pieces (one hop).
+            /// @emoji 🏘️ Distinct [`Design`] blueprints on this design's own pieces (one hop).
             pub async fn references_designs(&self) -> Vec<Arc<Design>> {
                 use std::collections::HashSet;
                 let mut out = Vec::new();
@@ -4953,7 +4953,7 @@ pub mod kit {
                 out
             }
 
-            /// @emoji 📄 Files from representations of direct [`Type`] blueprints on this design's pieces.
+            /// @emoji 📄️ Files from representations of direct [`Type`] blueprints on this design's pieces.
             pub async fn references_files(&self) -> Vec<crate::meta::File> {
                 use std::collections::HashSet;
                 let mut out = Vec::new();
@@ -4968,7 +4968,7 @@ pub mod kit {
                 out
             }
 
-            /// @emoji 💾 Representations on direct [`Type`] blueprints on this design's pieces.
+            /// @emoji 💾️ Representations on direct [`Type`] blueprints on this design's pieces.
             pub async fn references_representations(&self) -> Vec<Arc<super::r#type::Representation>> {
                 use std::collections::HashSet;
                 let mut out = Vec::new();
@@ -4983,7 +4983,7 @@ pub mod kit {
                 out
             }
 
-            /// @emoji 💾 Representations on [`Type`] blueprints reachable transitively through nested designs.
+            /// @emoji 💾️ Representations on [`Type`] blueprints reachable transitively through nested designs.
             pub async fn references_representations_transitive(&self) -> Vec<Arc<super::r#type::Representation>> {
                 use std::collections::HashSet;
                 let mut out = Vec::new();
@@ -5031,42 +5031,42 @@ pub mod kit {
                 }
             }
 
-            /// @emoji 🧰 Kinds referenced transitively through nested design blueprints.
+            /// @emoji 🧰️ Kinds referenced transitively through nested design blueprints.
             pub async fn references_types_transitive(&self) -> Vec<Arc<super::r#type::Type>> {
                 self.transitive_reference_closure().await.0
             }
 
-            /// @emoji 🏘 Designs referenced transitively through nested design blueprints.
+            /// @emoji 🏘️ Designs referenced transitively through nested design blueprints.
             pub async fn references_designs_transitive(&self) -> Vec<Arc<Design>> {
                 self.transitive_reference_closure().await.1
             }
 
-            /// @emoji 📄 Files referenced transitively through nested design and kind blueprints.
+            /// @emoji 📄️ Files referenced transitively through nested design and kind blueprints.
             pub async fn references_files_transitive(&self) -> Vec<crate::meta::File> {
                 self.transitive_reference_closure().await.2
             }
 
-            /// @emoji 🪢 Pieces owned directly by this design.
+            /// @emoji 🪢️ Pieces owned directly by this design.
             pub async fn has_pieces(&self) -> Vec<Arc<piece::Piece>> {
                 self.pieces.read().await.clone()
             }
 
-            /// @emoji 🔗 Connections owned directly by this design.
+            /// @emoji 🔗️ Connections owned directly by this design.
             pub async fn has_connections(&self) -> Vec<Arc<connection::Connection>> {
                 self.connections.read().await.clone()
             }
 
-            /// @emoji 🎨 Layers owned directly by this design.
+            /// @emoji 🎨️ Layers owned directly by this design.
             pub async fn has_layers(&self) -> Vec<Layer> {
                 self.layers.read().await.clone()
             }
 
-            /// @emoji 👥 Groups owned directly by this design.
+            /// @emoji 👥️ Groups owned directly by this design.
             pub async fn has_groups(&self) -> Vec<Group> {
                 self.groups.read().await.clone()
             }
 
-            /// @emoji 🪢 Pieces in this design and nested design blueprints (transitive).
+            /// @emoji 🪢️ Pieces in this design and nested design blueprints (transitive).
             pub async fn has_pieces_transitive(&self) -> Vec<Arc<piece::Piece>> {
                 use std::collections::{HashSet, VecDeque};
                 let mut piece_seen = HashSet::new();
@@ -5101,7 +5101,7 @@ pub mod kit {
                 out
             }
 
-            /// @emoji 🔗 Connections in this design and nested design blueprints (transitive).
+            /// @emoji 🔗️ Connections in this design and nested design blueprints (transitive).
             pub async fn has_connections_transitive(&self) -> Vec<Arc<connection::Connection>> {
                 use std::collections::{HashSet, VecDeque};
                 let mut connection_seen = HashSet::new();
@@ -5138,7 +5138,7 @@ pub mod kit {
                 out
             }
 
-            /// @emoji 🔗 Transitive closure of referenced types, designs, and files through nested design blueprints.
+            /// @emoji 🔗️ Transitive closure of referenced types, designs, and files through nested design blueprints.
             pub async fn transitive_reference_closure(&self) -> (Vec<Arc<super::r#type::Type>>, Vec<Arc<Design>>, Vec<crate::meta::File>) {
                 use std::collections::{HashSet, VecDeque};
                 let mut all_types = Vec::new();
@@ -5156,7 +5156,7 @@ pub mod kit {
                 (all_types, all_designs, all_files)
             }
 
-            /// @emoji 🪢 Pieces anywhere in the owner kit whose blueprint is this design.
+            /// @emoji 🪢️ Pieces anywhere in the owner kit whose blueprint is this design.
             pub async fn referenced_by_pieces(&self) -> Vec<Arc<piece::Piece>> {
                 let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
@@ -5164,7 +5164,7 @@ pub mod kit {
                 kit.pieces_with_blueprint_design(&self.id).await
             }
 
-            /// @emoji 🏘 Designs with a direct piece blueprinting this design.
+            /// @emoji 🏘️ Designs with a direct piece blueprinting this design.
             pub async fn referenced_by_designs_direct(&self) -> Vec<Arc<Design>> {
                 let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
@@ -5172,7 +5172,7 @@ pub mod kit {
                 kit.designs_with_direct_blueprint_design(&self.id).await
             }
 
-            /// @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+            /// @emoji 🏘️ Designs that reference this design transitively through nested design blueprints.
             pub async fn referenced_by_designs_transitive(&self) -> Vec<Arc<Design>> {
                 let Some(kit) = self.owner_kit().await else {
                     return Vec::new();
@@ -5221,7 +5221,7 @@ pub mod kit {
             pub async fn updated_at(&self) -> Option<Timestamp> {
                 self.updated.read().await.clone()
             }
-            /// @emoji 🪢 Pieces owned directly by this design.
+            /// @emoji 🪢️ Pieces owned directly by this design.
             #[graphql(name = "hasPieces")]
             pub async fn has_pieces_field(&self) -> crate::gql_relay::PieceConnection {
                 crate::gql_relay::PieceConnection::from_pieces(self.has_pieces().await).await
@@ -5229,7 +5229,7 @@ pub mod kit {
             pub async fn piece(&self, id: Id) -> Option<Arc<piece::Piece>> {
                 self.piece_by_external_id(&id).await
             }
-            /// @emoji 🔗 Connections owned directly by this design.
+            /// @emoji 🔗️ Connections owned directly by this design.
             #[graphql(name = "hasConnections")]
             pub async fn has_connections_field(&self) -> crate::gql_relay::ConnectionConnection {
                 crate::gql_relay::ConnectionConnection::from_connections(self.has_connections().await).await
@@ -5237,22 +5237,22 @@ pub mod kit {
             pub async fn connection(&self, id: Id) -> Option<Arc<connection::Connection>> {
                 self.connections.read().await.iter().find(|c| c.id == id).cloned()
             }
-            /// @emoji 🎨 Layers owned directly by this design.
+            /// @emoji 🎨️ Layers owned directly by this design.
             #[graphql(name = "hasLayers")]
             pub async fn has_layers_field(&self) -> crate::gql_relay::LayerConnection {
                 crate::gql_relay::LayerConnection::from_entities(self.has_layers().await)
             }
-            /// @emoji 👥 Groups owned directly by this design.
+            /// @emoji 👥️ Groups owned directly by this design.
             #[graphql(name = "hasGroups")]
             pub async fn has_groups_field(&self) -> crate::gql_relay::GroupConnection {
                 crate::gql_relay::GroupConnection::from_entities(self.has_groups().await)
             }
-            /// @emoji 🪢 Pieces in this design and nested design blueprints (transitive).
+            /// @emoji 🪢️ Pieces in this design and nested design blueprints (transitive).
             #[graphql(name = "hasPiecesTransitive")]
             pub async fn has_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
                 crate::gql_relay::PieceConnection::from_pieces(self.has_pieces_transitive().await).await
             }
-            /// @emoji 🔗 Connections in this design and nested design blueprints (transitive).
+            /// @emoji 🔗️ Connections in this design and nested design blueprints (transitive).
             #[graphql(name = "hasConnectionsTransitive")]
             pub async fn has_connections_transitive_field(&self) -> crate::gql_relay::ConnectionConnection {
                 crate::gql_relay::ConnectionConnection::from_connections(self.has_connections_transitive().await).await
@@ -5277,57 +5277,57 @@ pub mod kit {
                 0.0
             }
 
-            /// @emoji 🧰 Kinds referenced by this design's pieces (one hop over blueprints).
+            /// @emoji 🧰️ Kinds referenced by this design's pieces (one hop over blueprints).
             #[graphql(name = "referencesTypes")]
             pub async fn references_types_field(&self) -> crate::gql_relay::TypeConnection {
                 crate::gql_relay::TypeConnection::from_types(self.references_types().await).await
             }
-            /// @emoji 🏘 Designs referenced by this design's pieces (one hop over blueprints).
+            /// @emoji 🏘️ Designs referenced by this design's pieces (one hop over blueprints).
             #[graphql(name = "referencesDesigns")]
             pub async fn references_designs_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.references_designs().await).await
             }
-            /// @emoji 📄 Files referenced via kind blueprints on this design's pieces (one hop).
+            /// @emoji 📄️ Files referenced via kind blueprints on this design's pieces (one hop).
             #[graphql(name = "referencesFiles")]
             pub async fn references_files_field(&self) -> crate::gql_relay::FileConnection {
                 crate::gql_relay::FileConnection::from_entities(self.references_files().await)
             }
-            /// @emoji 💾 Representations on kind blueprints referenced by this design's pieces (one hop).
+            /// @emoji 💾️ Representations on kind blueprints referenced by this design's pieces (one hop).
             #[graphql(name = "referencesRepresentations")]
             pub async fn references_representations_field(&self) -> crate::gql_relay::RepresentationConnection {
                 crate::gql_relay::RepresentationConnection::from_representations(self.references_representations().await).await
             }
-            /// @emoji 💾 Representations on kinds referenced transitively through nested design blueprints.
+            /// @emoji 💾️ Representations on kinds referenced transitively through nested design blueprints.
             #[graphql(name = "referencesRepresentationsTransitive")]
             pub async fn references_representations_transitive_field(&self) -> crate::gql_relay::RepresentationConnection {
                 crate::gql_relay::RepresentationConnection::from_representations(self.references_representations_transitive().await).await
             }
-            /// @emoji 🧰 Kinds referenced transitively through nested design blueprints.
+            /// @emoji 🧰️ Kinds referenced transitively through nested design blueprints.
             #[graphql(name = "referencesTypesTransitive")]
             pub async fn references_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
                 crate::gql_relay::TypeConnection::from_types(self.references_types_transitive().await).await
             }
-            /// @emoji 🏘 Designs referenced transitively through nested design blueprints.
+            /// @emoji 🏘️ Designs referenced transitively through nested design blueprints.
             #[graphql(name = "referencesDesignsTransitive")]
             pub async fn references_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.references_designs_transitive().await).await
             }
-            /// @emoji 📄 Files referenced transitively through nested design and kind blueprints.
+            /// @emoji 📄️ Files referenced transitively through nested design and kind blueprints.
             #[graphql(name = "referencesFilesTransitive")]
             pub async fn references_files_transitive_field(&self) -> crate::gql_relay::FileConnection {
                 crate::gql_relay::FileConnection::from_entities(self.references_files_transitive().await)
             }
-            /// @emoji 🪢 Pieces in the owner kit whose blueprint is this design.
+            /// @emoji 🪢️ Pieces in the owner kit whose blueprint is this design.
             #[graphql(name = "referencedBy")]
             pub async fn referenced_by(&self) -> crate::gql_relay::PieceConnection {
                 crate::gql_relay::PieceConnection::from_pieces(self.referenced_by_pieces().await).await
             }
-            /// @emoji 🏘 Designs with a direct piece blueprinting this design.
+            /// @emoji 🏘️ Designs with a direct piece blueprinting this design.
             #[graphql(name = "referencedByDesigns")]
             pub async fn referenced_by_designs(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_direct().await).await
             }
-            /// @emoji 🏘 Designs that reference this design transitively through nested design blueprints.
+            /// @emoji 🏘️ Designs that reference this design transitively through nested design blueprints.
             #[graphql(name = "referencedByDesignsTransitive")]
             pub async fn referenced_by_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
                 crate::gql_relay::DesignConnection::from_designs(self.referenced_by_designs_transitive().await).await
@@ -5335,12 +5335,12 @@ pub mod kit {
         }
 
         crate::file_system_node_vfs_complex_ctx!(Design, crate::gql::interfaces::file_system_vfs::node_for_design);
-        //#endregion 🏘 design
+        //#endregion 🏘️ design
     }
-    //#endregion 🏘 design
+    //#endregion 🏘️ design
 
-    //#region 📚 kit_target_operations
-    /// 🧾 Arc-backed operation `*Input` shells for Quality / Tag / Concept / Port (`schema.golden.graphql` nested Operations block).
+    //#region 📚️ kit_target_operations
+    /// 🧾️ Arc-backed operation `*Input` shells for Quality / Tag / Concept / Port (`schema.golden.graphql` nested Operations block).
     pub mod target_operations {
         use std::sync::Arc;
 
@@ -5350,7 +5350,7 @@ pub mod kit {
         use crate::kit::r#type::Port;
         use crate::meta::{Attribute, Concept, Quality, Tag};
 
-        //#region 🔖 Quality inputs
+        //#region 🔖️ Quality inputs
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedQualityInput")]
         pub struct CreatedQualityInput {
@@ -5420,7 +5420,7 @@ pub mod kit {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
-        //#endregion 🔖 Quality inputs
+        //#endregion 🔖️ Quality inputs
 
         //#region 🏷️ Tag inputs
         #[derive(Clone, SimpleObject)]
@@ -5494,7 +5494,7 @@ pub mod kit {
         }
         //#endregion 🏷️ Tag inputs
 
-        //#region 💡 Concept inputs
+        //#region 💡️ Concept inputs
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedConceptInput")]
         pub struct CreatedConceptInput {
@@ -5564,9 +5564,9 @@ pub mod kit {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
-        //#endregion 💡 Concept inputs
+        //#endregion 💡️ Concept inputs
 
-        //#region 🔌 Port inputs
+        //#region 🔌️ Port inputs
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "CreatedPortInput")]
         pub struct CreatedPortInput {
@@ -5637,11 +5637,11 @@ pub mod kit {
             #[graphql(name = "hasInput")]
             pub has_input: bool,
         }
-        //#endregion 🔌 Port inputs
+        //#endregion 🔌️ Port inputs
     }
-    //#endregion 📚 kit_target_operations
+    //#endregion 📚️ kit_target_operations
 
-    //#region 📦 kit
+    //#region 📦️ kit
     use std::collections::HashMap;
     use std::sync::{Arc, Weak};
 
@@ -5671,9 +5671,9 @@ pub mod kit {
         pub version: RwLock<Option<String>>,
         /// 🏛️ Typologies own kit [`Type`] and [`Design`] entities (kit no longer stores them directly).
         pub typologies: RwLock<Vec<Arc<Typology>>>,
-        /// 🧷 Kit-wide type [`Id`] → `Weak` for GraphQL `type(id:)` across all typologies.
+        /// 🧷️ Kit-wide type [`Id`] → `Weak` for GraphQL `type(id:)` across all typologies.
         pub type_weak_by_id: RwLock<HashMap<Id, Weak<r#type::Type>>>,
-        /// 🧷 Kit-wide design [`Id`] → `Weak` for GraphQL `design(id:)` across all typologies.
+        /// 🧷️ Kit-wide design [`Id`] → `Weak` for GraphQL `design(id:)` across all typologies.
         pub design_weak_by_id: RwLock<HashMap<Id, Weak<design::Design>>>,
         pub files: RwLock<Vec<File>>,
         pub folders: RwLock<Vec<Folder>>,
@@ -5685,15 +5685,15 @@ pub mod kit {
         pub props: RwLock<Vec<Prop>>,
         pub attributes: RwLock<Vec<Attribute>>,
         pub stats: RwLock<Vec<Stat>>,
-        /// 🧷 Kit-wide tag identity map (all tag owners).
+        /// 🧷️ Kit-wide tag identity map (all tag owners).
         pub tag_by_id: RwLock<HashMap<Id, Arc<Tag>>>,
         pub concept_by_id: RwLock<HashMap<Id, Arc<Concept>>>,
         pub quality_by_id: RwLock<HashMap<Id, Arc<Quality>>>,
-        /// @emoji 🔢 Monotonic counter bumped by every GraphQL graph mutation (test / backbone observability).
+        /// @emoji 🔢️ Monotonic counter bumped by every GraphQL graph mutation (test / backbone observability).
         pub touch_epoch: RwLock<u64>,
-        /// 🧭 Optional client-facing kit id from WASM/JSON hydration (`@compose/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
+        /// 🧭️ Optional client-facing kit id from WASM/JSON hydration (`@compose/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
         pub snapshot_external_kit_id: RwLock<Option<Id>>,
-        /// @emoji 👨‍👩‍👦 Preserved `families` projection subtree (kit-level ports) for `initialKit` round-trips.
+        /// @emoji 👨️‍👩️‍👦️ Preserved `families` projection subtree (kit-level ports) for `initialKit` round-trips.
         pub snapshot_families_projection: RwLock<Option<crate::external_adapters::serde_json::Value>>,
     }
 
@@ -5773,12 +5773,12 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 Designs contained in this kit (in-memory projection).
+        /// @emoji 🏘️ Designs contained in this kit (in-memory projection).
         pub async fn has_designs(&self) -> Vec<Arc<design::Design>> {
             self.designs_flat().await
         }
 
-        /// @emoji 🧰 Kinds contained in this kit (in-memory projection).
+        /// @emoji 🧰️ Kinds contained in this kit (in-memory projection).
         pub async fn has_types(&self) -> Vec<Arc<r#type::Type>> {
             self.types_flat().await
         }
@@ -5800,7 +5800,7 @@ pub mod kit {
             self.typologies.read().await.iter().find(|t| t.id == *id).cloned()
         }
 
-        /// @emoji 🧬 Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / operation replay.
+        /// @emoji 🧬️ Deep-clone this kit graph (dev-backbone `initialKit` projection round-trip) for immutable graph `initialKit` baselines / operation replay.
         pub async fn deep_clone(self: &Arc<Self>) -> Arc<Kit> {
             let snap = crate::kit_backbone::initial_kit_projection_value(self).await;
             let owner = self.owner_graph.clone();
@@ -5810,7 +5810,7 @@ pub mod kit {
             entity
         }
 
-        /// @emoji 📦 Single mutation entry: walks canonical [`crate::operation::CanonicalKitDiff`] from [`crate::operation::Operation::to_diff`].
+        /// @emoji 📦️ Single mutation entry: walks canonical [`crate::operation::CanonicalKitDiff`] from [`crate::operation::Operation::to_diff`].
         pub async fn apply_diff(self: &Arc<Self>, diff: &crate::operation::KitDiff) -> Result<(), crate::error::ComposeError> {
             let d = &diff.0;
             if let Some(s) = &d.name {
@@ -6157,7 +6157,7 @@ pub mod kit {
             Ok(())
         }
 
-        /// @emoji 🪪 Inlined tag creation for [`Kit::apply_diff`] (no public mutator surface).
+        /// @emoji 🪪️ Inlined tag creation for [`Kit::apply_diff`] (no public mutator surface).
         async fn apply_create_tag_scoped(self: &Arc<Self>, owner_id: &Id, tag_id: &Id, attribute_ids: &[Id], input: crate::meta::TagInput) -> Result<(), crate::error::ComposeError> {
             let slot = self.resolve_tag_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
@@ -6284,7 +6284,7 @@ pub mod kit {
             self.type_weak_by_id.read().await.get(id).and_then(|w| w.upgrade())
         }
 
-        /// @emoji 🔎 Locate a representation by id across all kit types.
+        /// @emoji 🔎️ Locate a representation by id across all kit types.
         pub async fn find_representation(&self, id: &Id) -> Option<Arc<r#type::Representation>> {
             let tys = self.types_flat().await;
             for t in tys.iter() {
@@ -6298,7 +6298,7 @@ pub mod kit {
             None
         }
 
-        /// @emoji 🪢 Pieces in this kit whose blueprint is the given kind.
+        /// @emoji 🪢️ Pieces in this kit whose blueprint is the given kind.
         pub async fn pieces_with_blueprint_type(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::piece::Piece>> {
             let target = type_id.clone();
             let mut out = Vec::new();
@@ -6312,7 +6312,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🪢 Pieces in this kit whose blueprint is the given design.
+        /// @emoji 🪢️ Pieces in this kit whose blueprint is the given design.
         pub async fn pieces_with_blueprint_design(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::piece::Piece>> {
             let target = design_id.clone();
             let mut out = Vec::new();
@@ -6326,7 +6326,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 Designs with a direct piece blueprinting the given kind.
+        /// @emoji 🏘️ Designs with a direct piece blueprinting the given kind.
         pub async fn designs_with_direct_blueprint_type(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::Design>> {
             let target = type_id.clone();
             let mut out = Vec::new();
@@ -6338,7 +6338,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 Designs that reference the given kind transitively through nested design blueprints.
+        /// @emoji 🏘️ Designs that reference the given kind transitively through nested design blueprints.
         pub async fn designs_referencing_type_transitive(self: &Arc<Self>, type_id: &Id) -> Vec<Arc<design::Design>> {
             let target = type_id.clone();
             let mut out = Vec::new();
@@ -6350,7 +6350,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 Designs with a direct piece blueprinting the given design.
+        /// @emoji 🏘️ Designs with a direct piece blueprinting the given design.
         pub async fn designs_with_direct_blueprint_design(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::Design>> {
             let target = design_id.clone();
             let mut out = Vec::new();
@@ -6362,7 +6362,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 Designs that reference the given design transitively through nested design blueprints.
+        /// @emoji 🏘️ Designs that reference the given design transitively through nested design blueprints.
         pub async fn designs_referencing_design_transitive(self: &Arc<Self>, design_id: &Id) -> Vec<Arc<design::Design>> {
             let target = design_id.clone();
             let mut out = Vec::new();
@@ -6374,7 +6374,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 💾 Representations on kit kinds that reference the given file.
+        /// @emoji 💾️ Representations on kit kinds that reference the given file.
         pub async fn representations_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Representation>> {
             let target = file_id.clone();
             let mut out = Vec::new();
@@ -6388,7 +6388,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 📄 File ids used as representation backing blobs on kit kinds.
+        /// @emoji 📄️ File ids used as representation backing blobs on kit kinds.
         pub async fn file_ids_referenced_by_representations(&self) -> std::collections::HashSet<Id> {
             use std::collections::HashSet;
             let mut ids = HashSet::new();
@@ -6402,12 +6402,12 @@ pub mod kit {
             ids
         }
 
-        /// @emoji 📄 Speckle-style representation blob basename (`e5267da44d`).
+        /// @emoji 📄️ Speckle-style representation blob basename (`e5267da44d`).
         fn looks_like_speckle_representation_blob_name(name: &str) -> bool {
             name.len() == 10 && name.bytes().all(|b| b.is_ascii_hexdigit())
         }
 
-        /// @emoji 📄 True when a loose kit file is a representation backing blob, not a browsable VFS asset.
+        /// @emoji 📄️ True when a loose kit file is a representation backing blob, not a browsable VFS asset.
         fn file_is_hidden_representation_blob(file: &crate::meta::File, rep_file_ids: &std::collections::HashSet<Id>) -> bool {
             if rep_file_ids.contains(&file.id) {
                 return true;
@@ -6424,13 +6424,13 @@ pub mod kit {
             false
         }
 
-        /// @emoji 📁 Kit-root files for VFS (no folder; excludes representation-only backing blobs).
+        /// @emoji 📁️ Kit-root files for VFS (no folder; excludes representation-only backing blobs).
         pub async fn vfs_kit_root_files(&self) -> Vec<crate::meta::File> {
             let rep_file_ids = self.file_ids_referenced_by_representations().await;
             self.files.read().await.iter().filter(|f| f.folder_id.is_none() && !Self::file_is_hidden_representation_blob(f, &rep_file_ids)).cloned().collect()
         }
 
-        /// @emoji 🧰 Kinds that own a representation referencing the given file.
+        /// @emoji 🧰️ Kinds that own a representation referencing the given file.
         pub async fn types_for_file(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<r#type::Type>> {
             use std::collections::HashSet;
             let target = file_id.clone();
@@ -6449,7 +6449,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 Designs with a direct piece blueprinting a kind that references the given file.
+        /// @emoji 🏘️ Designs with a direct piece blueprinting a kind that references the given file.
         pub async fn designs_with_direct_file_reference(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
             use std::collections::HashSet;
             let type_ids: HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
@@ -6463,7 +6463,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 Designs that reference the given file transitively through kinds and nested designs.
+        /// @emoji 🏘️ Designs that reference the given file transitively through kinds and nested designs.
         pub async fn designs_referencing_file_transitive(self: &Arc<Self>, file_id: &Id) -> Vec<Arc<design::Design>> {
             let type_ids: std::collections::HashSet<Id> = self.types_for_file(file_id).await.into_iter().map(|t| t.id.clone()).collect();
             let mut out = Vec::new();
@@ -6475,7 +6475,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🪢 All pieces across every design, expanding nested design blueprints.
+        /// @emoji 🪢️ All pieces across every design, expanding nested design blueprints.
         pub async fn has_pieces_transitive(&self) -> Vec<Arc<design::piece::Piece>> {
             use std::collections::HashSet;
             let mut out = Vec::new();
@@ -6490,7 +6490,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🔗 All connections across every design, expanding nested design blueprints.
+        /// @emoji 🔗️ All connections across every design, expanding nested design blueprints.
         pub async fn has_connections_transitive(&self) -> Vec<Arc<design::connection::Connection>> {
             use std::collections::HashSet;
             let mut out = Vec::new();
@@ -6505,7 +6505,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🧰 All kinds referenced by any design piece, expanding nested design blueprints.
+        /// @emoji 🧰️ All kinds referenced by any design piece, expanding nested design blueprints.
         pub async fn has_types_transitive(&self) -> Vec<Arc<r#type::Type>> {
             use std::collections::HashSet;
             let mut out = Vec::new();
@@ -6520,7 +6520,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🏘 All designs referenced by any design piece, expanding nested design blueprints.
+        /// @emoji 🏘️ All designs referenced by any design piece, expanding nested design blueprints.
         pub async fn has_designs_transitive(&self) -> Vec<Arc<design::Design>> {
             use std::collections::HashSet;
             let mut out = Vec::new();
@@ -6535,7 +6535,7 @@ pub mod kit {
             out
         }
 
-        /// @emoji 🔎 Locate a connector by id across all kit types.
+        /// @emoji 🔎️ Locate a connector by id across all kit types.
         pub async fn find_connector(&self, id: &Id) -> Option<Arc<r#type::Connector>> {
             for t in self.has_types().await.iter() {
                 let conns = t.has_connectors().await;
@@ -6567,7 +6567,7 @@ pub mod kit {
             self.quality_by_id.read().await.get(id).cloned()
         }
 
-        /// @emoji 🪢 Resolve SDL `TagInput` owner (`Kit` root id, `Type` id, or `Representation` id).
+        /// @emoji 🪢️ Resolve SDL `TagInput` owner (`Kit` root id, `Type` id, or `Representation` id).
         pub async fn resolve_tag_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::ComposeError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
@@ -6582,7 +6582,7 @@ pub mod kit {
             Err(crate::error::ComposeError::not_found("TagOwner", owner_id.as_str()))
         }
 
-        /// @emoji 🪢 Resolve SDL `ConceptInput` owner (`Kit` or `Type`).
+        /// @emoji 🪢️ Resolve SDL `ConceptInput` owner (`Kit` or `Type`).
         pub async fn resolve_concept_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::ComposeError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
@@ -6594,7 +6594,7 @@ pub mod kit {
             Err(crate::error::ComposeError::not_found("ConceptOwner", owner_id.as_str()))
         }
 
-        /// @emoji 🪢 Resolve SDL `QualityInput` owner (kit/type/representation/connector/design).
+        /// @emoji 🪢️ Resolve SDL `QualityInput` owner (kit/type/representation/connector/design).
         pub async fn resolve_quality_owner_slot(self: &Arc<Self>, owner_id: &Id) -> Result<crate::gql::interfaces::KitGraphParentWeak, crate::error::ComposeError> {
             let kid = self.workspace_kit_id().await;
             if owner_id == &kid || owner_id == &self.id {
@@ -6615,7 +6615,7 @@ pub mod kit {
             Err(crate::error::ComposeError::not_found("QualityOwner", owner_id.as_str()))
         }
 
-        /// @emoji ➕ Create [`Tag`], register globally, append to owner collection.
+        /// @emoji ➕️ Create [`Tag`], register globally, append to owner collection.
         pub async fn create_and_register_tag(self: &Arc<Self>, owner_id: &Id, input: crate::meta::TagInput) -> Result<Arc<Tag>, crate::error::ComposeError> {
             let attribute_count = input.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let tag_id = Id::new().await;
@@ -6626,7 +6626,7 @@ pub mod kit {
             self.create_and_register_tag_with_scope(owner_id, &tag_id, &attribute_ids, input).await
         }
 
-        /// @emoji 🪪 Create [`Tag`] from a normalized operation scope carrying every referenced id.
+        /// @emoji 🪪️ Create [`Tag`] from a normalized operation scope carrying every referenced id.
         pub async fn create_and_register_tag_with_scope(self: &Arc<Self>, owner_id: &Id, tag_id: &Id, attribute_ids: &[Id], input: crate::meta::TagInput) -> Result<Arc<Tag>, crate::error::ComposeError> {
             let slot = self.resolve_tag_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
@@ -6654,7 +6654,7 @@ pub mod kit {
             Ok(tag)
         }
 
-        /// @emoji 🗑 Remove a tag from its owner vec + id map.
+        /// @emoji 🗑️ Remove a tag from its owner vec + id map.
         pub async fn delete_tag_by_id(self: &Arc<Self>, tag_id: &Id) -> Result<(), crate::error::ComposeError> {
             let tag = self.find_tag(tag_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Tag", tag_id.as_str()))?;
             match &*tag.owner.read().await {
@@ -6680,7 +6680,7 @@ pub mod kit {
             Ok(())
         }
 
-        /// @emoji ➕ Create [`Concept`] under kit or type.
+        /// @emoji ➕️ Create [`Concept`] under kit or type.
         pub async fn create_and_register_concept(self: &Arc<Self>, owner_id: &Id, input: crate::meta::ConceptInput) -> Result<Arc<Concept>, crate::error::ComposeError> {
             let attribute_count = input.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let concept_id = Id::new().await;
@@ -6691,7 +6691,7 @@ pub mod kit {
             self.create_and_register_concept_with_scope(owner_id, &concept_id, &attribute_ids, input).await
         }
 
-        /// @emoji 🪪 Create [`Concept`] from a normalized operation scope carrying every referenced id.
+        /// @emoji 🪪️ Create [`Concept`] from a normalized operation scope carrying every referenced id.
         pub async fn create_and_register_concept_with_scope(self: &Arc<Self>, owner_id: &Id, concept_id: &Id, attribute_ids: &[Id], input: crate::meta::ConceptInput) -> Result<Arc<Concept>, crate::error::ComposeError> {
             let slot = self.resolve_concept_owner_slot(owner_id).await?;
             let attrs = crate::meta::attributes_from_inputs_with_ids(input.attributes.clone(), attribute_ids)?;
@@ -6714,7 +6714,7 @@ pub mod kit {
             Ok(c)
         }
 
-        /// @emoji 🗑 Remove a concept from its owner vec + id map.
+        /// @emoji 🗑️ Remove a concept from its owner vec + id map.
         pub async fn delete_concept_by_id(self: &Arc<Self>, concept_id: &Id) -> Result<(), crate::error::ComposeError> {
             let concept = self.find_concept(concept_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Concept", concept_id.as_str()))?;
             match &*concept.owner.read().await {
@@ -6735,7 +6735,7 @@ pub mod kit {
             Ok(())
         }
 
-        /// @emoji ➕ Create [`Quality`] under resolved owner (kit/type/representation/connector/design).
+        /// @emoji ➕️ Create [`Quality`] under resolved owner (kit/type/representation/connector/design).
         pub async fn create_and_register_quality(self: &Arc<Self>, owner_id: &Id, input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::ComposeError> {
             let attribute_count = input.attributes.as_ref().map(|items| items.len()).unwrap_or_default();
             let quality_id = Id::new().await;
@@ -6746,7 +6746,7 @@ pub mod kit {
             self.create_and_register_quality_with_scope(owner_id, &quality_id, &attribute_ids, &[], input).await
         }
 
-        /// @emoji 🪪 Create [`Quality`] from a normalized operation scope carrying every referenced id.
+        /// @emoji 🪪️ Create [`Quality`] from a normalized operation scope carrying every referenced id.
         pub async fn create_and_register_quality_with_scope(self: &Arc<Self>, owner_id: &Id, quality_id: &Id, attribute_ids: &[Id], benchmark_ids: &[Id], input: crate::meta::QualityInput) -> Result<Arc<Quality>, crate::error::ComposeError> {
             let slot = self.resolve_quality_owner_slot(owner_id).await?;
             if !benchmark_ids.is_empty() {
@@ -6786,7 +6786,7 @@ pub mod kit {
             Ok(q)
         }
 
-        /// @emoji 🗑 Remove a quality from its owner vec + id map.
+        /// @emoji 🗑️ Remove a quality from its owner vec + id map.
         pub async fn delete_quality_by_id(self: &Arc<Self>, quality_id: &Id) -> Result<(), crate::error::ComposeError> {
             let quality = self.find_quality(quality_id).await.ok_or_else(|| crate::error::ComposeError::not_found("Quality", quality_id.as_str()))?;
             match &*quality.owner.read().await {
@@ -6821,7 +6821,7 @@ pub mod kit {
             Ok(())
         }
 
-        /// @emoji 🆕 Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_weak_by_id`]).
+        /// @emoji 🆕️ Insert (or look up) a design by id, returning the shared Arc (maintains [`Kit::design_weak_by_id`]).
         pub async fn ensure_design(self: &Arc<Self>, design_id: &Id) -> Arc<design::Design> {
             {
                 let map = self.design_weak_by_id.read().await;
@@ -6844,7 +6844,7 @@ pub mod kit {
             d
         }
 
-        /// 🧷 Single external-id translation → opaque handle + shared [`Arc`] for all subsequent hot-path graph work.
+        /// 🧷️ Single external-id translation → opaque handle + shared [`Arc`] for all subsequent hot-path graph work.
         pub async fn bind_external_design_id(self: &Arc<Self>, design_id: &Id) -> (crate::kit_graph_engine::DesignSlot, Arc<design::Design>) {
             let design = self.ensure_design(design_id).await;
             let slot = {
@@ -6854,7 +6854,7 @@ pub mod kit {
             (crate::kit_graph_engine::DesignSlot(slot), design)
         }
 
-        /// @emoji 🔁 Clears every **layout** node’s placed pieces and piece slot maps so [`crate::kit_backbone`] can replay without duplicating projections; kit metadata and empty layout shells stay resident (detach leaves this graph materialized in memory).
+        /// @emoji 🔁️ Clears every **layout** node’s placed pieces and piece slot maps so [`crate::kit_backbone`] can replay without duplicating projections; kit metadata and empty layout shells stay resident (detach leaves this graph materialized in memory).
         pub async fn clear_piece_projections_for_backbone_replay(self: &Arc<Self>) {
             let designs = self.designs_flat().await;
             for design in designs.iter() {
@@ -6922,7 +6922,7 @@ pub mod kit {
         pub async fn design(&self, id: Id) -> Option<Arc<design::Design>> {
             self.design_by_external_id(&id).await
         }
-        /// @emoji 🏘 Designs contained in this kit.
+        /// @emoji 🏘️ Designs contained in this kit.
         #[graphql(name = "hasDesigns")]
         pub async fn has_designs_field(&self) -> crate::gql_relay::DesignConnection {
             crate::gql_relay::DesignConnection::from_designs(self.has_designs().await).await
@@ -6931,23 +6931,23 @@ pub mod kit {
         pub async fn type_(&self, id: Id) -> Option<Arc<r#type::Type>> {
             self.type_by_external_id(&id).await
         }
-        /// @emoji 🧰 Kinds contained in this kit.
+        /// @emoji 🧰️ Kinds contained in this kit.
         #[graphql(name = "hasTypes")]
         pub async fn has_types_field(&self) -> crate::gql_relay::TypeConnection {
             crate::gql_relay::TypeConnection::from_types(self.has_types().await).await
         }
-        /// @emoji 📄 Kit-root VFS files only (excludes folder-placed and representation backing blobs).
+        /// @emoji 📄️ Kit-root VFS files only (excludes folder-placed and representation backing blobs).
         #[graphql(name = "hasFiles")]
         pub async fn has_files(&self) -> crate::gql_relay::FileConnection {
             crate::gql_relay::FileConnection::from_entities(self.vfs_kit_root_files().await)
         }
-        /// @emoji 📁 Kit-root folders only (no {@code parent_folder_id}).
+        /// @emoji 📁️ Kit-root folders only (no {@code parent_folder_id}).
         #[graphql(name = "hasFolders")]
         pub async fn has_folders(&self) -> crate::gql_relay::FolderConnection {
             let rows = self.folders.read().await.iter().filter(|f| f.parent_folder_id.is_none()).cloned().collect();
             crate::gql_relay::FolderConnection::from_entities(rows)
         }
-        /// @emoji 👪 Kit-root families only (not placed in a folder).
+        /// @emoji 👪️ Kit-root families only (not placed in a folder).
         #[graphql(name = "hasFamilies")]
         pub async fn has_families(&self) -> crate::gql_relay::FamilyConnection {
             let rows = self.families.read().await.iter().filter(|f| f.folder_id.is_none()).cloned().collect();
@@ -6965,22 +6965,22 @@ pub mod kit {
             }
             crate::gql_relay::TypologyConnection::from_typologies(filtered).await
         }
-        /// @emoji 🪢 All pieces across designs, expanding nested design blueprints.
+        /// @emoji 🪢️ All pieces across designs, expanding nested design blueprints.
         #[graphql(name = "hasPiecesTransitive")]
         pub async fn has_pieces_transitive_field(&self) -> crate::gql_relay::PieceConnection {
             crate::gql_relay::PieceConnection::from_pieces(self.has_pieces_transitive().await).await
         }
-        /// @emoji 🔗 All connections across designs, expanding nested design blueprints.
+        /// @emoji 🔗️ All connections across designs, expanding nested design blueprints.
         #[graphql(name = "hasConnectionsTransitive")]
         pub async fn has_connections_transitive_field(&self) -> crate::gql_relay::ConnectionConnection {
             crate::gql_relay::ConnectionConnection::from_connections(self.has_connections_transitive().await).await
         }
-        /// @emoji 🧰 All kinds referenced across designs, expanding nested design blueprints.
+        /// @emoji 🧰️ All kinds referenced across designs, expanding nested design blueprints.
         #[graphql(name = "hasTypesTransitive")]
         pub async fn has_types_transitive_field(&self) -> crate::gql_relay::TypeConnection {
             crate::gql_relay::TypeConnection::from_types(self.has_types_transitive().await).await
         }
-        /// @emoji 🏘 All designs referenced across designs, expanding nested design blueprints.
+        /// @emoji 🏘️ All designs referenced across designs, expanding nested design blueprints.
         #[graphql(name = "hasDesignsTransitive")]
         pub async fn has_designs_transitive_field(&self) -> crate::gql_relay::DesignConnection {
             crate::gql_relay::DesignConnection::from_designs(self.has_designs_transitive().await).await
@@ -7052,10 +7052,10 @@ pub mod kit {
     }
 
     crate::file_system_node_vfs_complex_ctx!(Kit, crate::gql::interfaces::file_system_vfs::node_for_kit);
-    //#endregion 📦 kit
+    //#endregion 📦️ kit
 }
 
-//#endregion 📦 kit
+//#endregion 📦️ kit
 
 //#region 🏷️ meta graphql
 
@@ -7175,10 +7175,10 @@ impl crate::meta::Quality {
 
 //#endregion 🏷️ meta graphql
 
-//#region 🌿 vcs
+//#region 🌿️ vcs
 
 pub mod vcs {
-    //! 🌿 Version-control entities — [`Change`](../../../schema/graphql/schema.golden.graphql), [`Edit`](../../../schema/graphql/schema.golden.graphql), [`Checkpoint`](../../../schema/graphql/schema.golden.graphql), [`Alternative`](../../../schema/graphql/schema.golden.graphql), [`Graph`](../../../schema/graphql/schema.golden.graphql), [`Session`](../../../schema/graphql/schema.golden.graphql), [`TheKit`](../../../schema/graphql/schema.golden.graphql) ([`Workspace`](../../../schema/graphql/schema.golden.graphql)), [`Conflict`](../../../schema/graphql/schema.golden.graphql).
+    //! 🌿️ Version-control entities — [`Change`](../../../schema/graphql/schema.golden.graphql), [`Edit`](../../../schema/graphql/schema.golden.graphql), [`Checkpoint`](../../../schema/graphql/schema.golden.graphql), [`Alternative`](../../../schema/graphql/schema.golden.graphql), [`Graph`](../../../schema/graphql/schema.golden.graphql), [`Session`](../../../schema/graphql/schema.golden.graphql), [`TheKit`](../../../schema/graphql/schema.golden.graphql) ([`Workspace`](../../../schema/graphql/schema.golden.graphql)), [`Conflict`](../../../schema/graphql/schema.golden.graphql).
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::{Arc, Weak};
 
@@ -7204,7 +7204,7 @@ pub mod vcs {
     }
     //#endregion 🏷️ golden_version_kind
 
-    //#region 🪪 change
+    //#region 🪪️ change
     pub struct Change {
         pub id: Id,
         pub owner: RwLock<Option<ChangeOwnerRef>>,
@@ -7213,16 +7213,16 @@ pub mod vcs {
         pub saved_at: RwLock<Option<Timestamp>>,
         pub description: RwLock<String>,
         pub origin: RwLock<String>,
-        /// @emoji 📜 Forward [`operation::Operation`] steps (materialized via `Kit::apply_diff`; persisted `kitDiff` in bundles is derived from each operation's `to_diff` at projection time).
+        /// @emoji 📜️ Forward [`operation::Operation`] steps (materialized via `Kit::apply_diff`; persisted `kitDiff` in bundles is derived from each operation's `to_diff` at projection time).
         pub forwards: RwLock<Vec<operation::Operation>>,
-        /// @emoji 📜 Backward companion operations for explicit undo/redo (same pipeline).
+        /// @emoji 📜️ Backward companion operations for explicit undo/redo (same pipeline).
         pub backwards: RwLock<Vec<operation::Operation>>,
-        /// @emoji 🆔 Stable operation-log ids aligned with bundle `OperationStep.id` (see `forwardOperationRecordIds`).
+        /// @emoji 🆔️ Stable operation-log ids aligned with bundle `OperationStep.id` (see `forwardOperationRecordIds`).
         pub forward_record_ids: RwLock<Vec<Id>>,
         pub backward_record_ids: RwLock<Vec<Id>>,
     }
 
-    /// 🔗 Weak owner matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
+    /// 🔗️ Weak owner matching SDL `Alternative | Checkpoint` for persisted [`Change`] entities.
     #[derive(Clone)]
     pub enum ChangeOwnerRef {
         Alternative(Weak<Alternative>),
@@ -7301,23 +7301,23 @@ pub mod vcs {
             self.origin.read().await.clone()
         }
 
-        /// @emoji 🔗 Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
+        /// @emoji 🔗️ Ordered operation record ids constituting the forwards side (bundle `OperationLog` ids) when persisted.
         #[graphql(name = "forwardOperationRecordIds")]
         pub async fn forward_operation_record_ids(&self) -> Vec<Id> {
             self.forward_record_ids.read().await.clone()
         }
 
-        /// @emoji 🔗 Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
+        /// @emoji 🔗️ Ordered operation record ids for backwards / inverse application when persisted separately from `OperationKind`.
         #[graphql(name = "backwardOperationRecordIds")]
         pub async fn backward_operation_record_ids(&self) -> Vec<Id> {
             self.backward_record_ids.read().await.clone()
         }
     }
 
-    //#endregion 🪪 change
+    //#endregion 🪪️ change
 
-    //#region 💼 edit
-    /// @emoji 🔗 [`Edit`] owner: [`TheKit`] lives on [`Graph`]; [`Alternative`] is its own [`Workspace`](../../../schema/graphql/schema.golden.graphql) (SDL `Workspace`).
+    //#region 💼️ edit
+    /// @emoji 🔗️ [`Edit`] owner: [`TheKit`] lives on [`Graph`]; [`Alternative`] is its own [`Workspace`](../../../schema/graphql/schema.golden.graphql) (SDL `Workspace`).
     pub enum EditOwner {
         TheKit(Weak<Graph>),
         Alternative(Weak<Alternative>),
@@ -7379,7 +7379,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 🧾 Flatten [`Edit`] entities into target-schema [`Change`](../../../schema/graphql/schema.golden.graphql) entities for a [`Workspace`](../../../schema/graphql/schema.golden.graphql).
+    /// @emoji 🧾️ Flatten [`Edit`] entities into target-schema [`Change`](../../../schema/graphql/schema.golden.graphql) entities for a [`Workspace`](../../../schema/graphql/schema.golden.graphql).
     async fn changes_from_edits(edits: Vec<Arc<Edit>>) -> Vec<Arc<Change>> {
         let mut out = Vec::new();
         for ed in edits {
@@ -7442,10 +7442,10 @@ pub mod vcs {
             self.changes.read().await.clone()
         }
     }
-    //#endregion 💼 edit
+    //#endregion 💼️ edit
 
-    //#region 📍 kit read point
-    /// @emoji 📍 GraphQL input for [`Graph::materialized_kit_at_point`] (wip anchors).
+    //#region 📍️ kit read point
+    /// @emoji 📍️ GraphQL input for [`Graph::materialized_kit_at_point`] (wip anchors).
     #[derive(Clone, Debug, InputObject)]
     #[graphql(name = "KitReadPointInput")]
     pub struct KitReadPointInput {
@@ -7470,10 +7470,10 @@ pub mod vcs {
         #[graphql(name = "draftChangeId")]
         pub draft_change_id: Option<Id>,
     }
-    //#endregion 📍 kit read point
+    //#endregion 📍️ kit read point
 
-    //#region 📖 read write version
-    /// @emoji 📖 Placeholder read-side `ReadVersion` shell (golden schema).
+    //#region 📖️ read write version
+    /// @emoji 📖️ Placeholder read-side `ReadVersion` shell (golden schema).
     pub struct ReadVersion {
         pub id: Id,
     }
@@ -7494,7 +7494,7 @@ pub mod vcs {
         }
     }
 
-    /// @emoji 📖 Placeholder write-side `WriteVersion` shell (golden schema).
+    /// @emoji 📖️ Placeholder write-side `WriteVersion` shell (golden schema).
     pub struct WriteVersion {
         pub id: Id,
     }
@@ -7514,14 +7514,14 @@ pub mod vcs {
             self.compute_hash().await
         }
     }
-    //#endregion 📖 read write version
+    //#endregion 📖️ read write version
 
-    //#region 🪧 checkpoint
+    //#region 🪧️ checkpoint
     pub struct Checkpoint {
         pub id: Id,
         pub timestamp: RwLock<Option<Timestamp>>,
         pub authors: RwLock<Vec<Author>>,
-        /// @emoji 🔗 Owning graph for [`Checkpoint::initial`] / [`Checkpoint::kit`] (single [`Graph::initial_kit`] baseline, not per-checkpoint kit storage).
+        /// @emoji 🔗️ Owning graph for [`Checkpoint::initial`] / [`Checkpoint::kit`] (single [`Graph::initial_kit`] baseline, not per-checkpoint kit storage).
         pub owner_graph: Weak<Graph>,
         pub parent_checkpoint: RwLock<Weak<Checkpoint>>,
         pub message: RwLock<Option<String>>,
@@ -7574,12 +7574,12 @@ pub mod vcs {
             crate::gql_relay::AuthorConnection::from_entities(self.authors.read().await.clone())
         }
 
-        /// @emoji 🔗 SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
+        /// @emoji 🔗️ SDL `Checkpoint.parent` — prior checkpoint in the spine (none for the seed checkpoint).
         pub async fn parent(&self) -> Option<Arc<Checkpoint>> {
             self.parent_checkpoint.read().await.upgrade()
         }
 
-        /// @emoji 🔗 SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
+        /// @emoji 🔗️ SDL `Checkpoint.ancestors` — ordered walk up `parent` (immediate parent first).
         pub async fn ancestors(&self) -> Vec<Arc<Checkpoint>> {
             let mut out = Vec::new();
             let mut cur = self.parent_checkpoint.read().await.upgrade();
@@ -7591,7 +7591,7 @@ pub mod vcs {
             out
         }
 
-        /// @emoji 🌱 SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
+        /// @emoji 🌱️ SDL `Checkpoint.initial` — graph-level [`Graph::initial_kit`] baseline (saved once per graph, not duplicated on each checkpoint).
         pub async fn initial(&self) -> Option<Arc<Kit>> {
             match self.owner_graph.upgrade() {
                 Some(g) => Some(g.initial_kit.read().await.clone()),
@@ -7599,7 +7599,7 @@ pub mod vcs {
             }
         }
 
-        /// @emoji 📦 SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
+        /// @emoji 📦️ SDL `Checkpoint.kit` — materialized kit at this anchor (`TheKit` wip parent tip or alternative spine tip); other checkpoints fall back to `initial` until checkpoint-scoped replay exists.
         pub async fn kit(&self) -> Option<Arc<Kit>> {
             let g = self.owner_graph.upgrade()?;
             g.materialized_kit_for_checkpoint_id(&self.id).await.ok()
@@ -7627,15 +7627,15 @@ pub mod vcs {
             self.message.read().await.clone().unwrap_or_default()
         }
     }
-    //#endregion 🪧 checkpoint
+    //#endregion 🪧️ checkpoint
 
-    //#region 🧭 the kit version
+    //#region 🧭️ the kit version
     pub struct TheKit {
         pub owner_graph: Weak<Graph>,
     }
 
     impl TheKit {
-        /// @emoji 🧭 SDL [`TheKit`](../../../schema/graphql/schema.golden.graphql) — [`Workspace`] on [`Graph`] with `savedChanges` / `unsavedChanges` / `kit`.
+        /// @emoji 🧭️ SDL [`TheKit`](../../../schema/graphql/schema.golden.graphql) — [`Workspace`] on [`Graph`] with `savedChanges` / `unsavedChanges` / `kit`.
         pub fn new(owner_graph: Weak<Graph>) -> Arc<Self> {
             Arc::new(Self { owner_graph })
         }
@@ -7699,9 +7699,9 @@ pub mod vcs {
             }
         }
     }
-    //#endregion 🧭 the kit version
+    //#endregion 🧭️ the kit version
 
-    //#region 🌱 alternative
+    //#region 🌱️ alternative
     pub struct Alternative {
         pub id: Id,
         pub owner_graph: Weak<Graph>,
@@ -7804,9 +7804,9 @@ pub mod vcs {
             None
         }
     }
-    //#endregion 🌱 alternative
+    //#endregion 🌱️ alternative
 
-    //#region 🔖kit_vcs
+    //#region 🔖️kit_vcs
     pub mod kit_vcs {
         use crate::external_adapters::futures_lite::future::block_on;
         use crate::external_adapters::serde::{Deserialize, Serialize};
@@ -7821,8 +7821,8 @@ pub mod vcs {
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         pub struct KitSnapshot(pub Value);
 
-        //#region 🔖Dsl
-        /// @emoji 🌱 `KitSnapshot` is a deliberate schema-less bridge — the real, richly-typed kit
+        //#region 🔖️Dsl
+        /// @emoji 🌱️ `KitSnapshot` is a deliberate schema-less bridge — the real, richly-typed kit
         /// state only exists as the live `Arc<RwLock<..>>` `Kit` entity graph (see `crate::kit::Kit`);
         /// there is no plain serializable "whole kit" struct anywhere in this crate to derive
         /// `dsl::DslDocument` on; the wire boundary this VCS store actually replays against is, by
@@ -7843,10 +7843,10 @@ pub mod vcs {
                 crate::external_adapters::serde_json::to_string_pretty(&self.0).unwrap_or_default()
             }
         }
-        //#endregion 🔖Dsl
+        //#endregion 🔖️Dsl
 
-        //#region 🔖Pack
-        /// @emoji 📦 Same schema-less bridge rationale as `KitSnapshot`'s `DocumentDsl` above:
+        //#region 🔖️Pack
+        /// @emoji 📦️ Same schema-less bridge rationale as `KitSnapshot`'s `DocumentDsl` above:
         /// `encode_pack_with`/`decode_pack_with` round-trip straight through the still-standing
         /// `store::DocumentPack for serde_json::Value` impl (JSON-bridge pack encoding), same
         /// local-bridge shape as `puzzle-plugin`'s `Puzzle2dPlayProjection`/`Puzzle3dPlayProjection`/
@@ -7860,7 +7860,7 @@ pub mod vcs {
                 Value::decode_pack_with(bytes, options).map(KitSnapshot)
             }
         }
-        //#endregion 🔖Pack
+        //#endregion 🔖️Pack
 
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
         pub struct ComposeKitDiff(pub Value);
@@ -7898,8 +7898,8 @@ pub mod vcs {
             }
         }
 
-        //#region 🔖OpText
-        /// @emoji 🌱 Same schema-less rationale as `KitSnapshot`'s `DocumentDsl` above: `input` is a
+        //#region 🔖️OpText
+        /// @emoji 🌱️ Same schema-less rationale as `KitSnapshot`'s `DocumentDsl` above: `input` is a
         /// dynamically-shaped `Value` keyed by `kind`, resolved back through
         /// `kit_backbone::kit_operation_from_stored`, not a fixed per-kind Rust shape — a single-line
         /// compact JSON object is this wire type's own natural one-line text form (never contains a
@@ -7916,7 +7916,7 @@ pub mod vcs {
             }
         }
 
-        /// @emoji 🌱 Binary twin of the `OpText` impl above — same schema-less rationale: `{kind,
+        /// @emoji 🌱️ Binary twin of the `OpText` impl above — same schema-less rationale: `{kind,
         /// input: Value}` has no fixed per-kind shape to hand to `dsl::op_rt`, so `input` goes
         /// through `store::pack_rt`'s `Shape::Value` bridge (real pack TLV binary — the same
         /// compliant dynamic-value encoding `DocumentPack for serde_json::Value` uses one level up,
@@ -7942,7 +7942,7 @@ pub mod vcs {
                 Ok(ComposeWireOperation { kind, input })
             }
         }
-        //#endregion 🔖OpText
+        //#endregion 🔖️OpText
 
         impl VcsOperation<KitSnapshot> for ComposeWireOperation {
             type Diff = ComposeKitDiff;
@@ -8000,7 +8000,7 @@ pub mod vcs {
         pub type KitSnapshotStore = DocumentStore<KitSnapshot, ComposeWireOperation>;
         pub type KitSnapshotEnvelope = DocumentEnvelope<KitSnapshot, ComposeWireOperation>;
 
-        //#region 🔖CodecRegistration
+        //#region 🔖️CodecRegistration
         /// 🗂️ Registers `KitSnapshot`'s pack<->dsl codec under its real `KIT_SNAPSHOT_SCHEMA` string
         /// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can
         /// print/parse kit documents. `compose` has no `framework/plugin`-style native setup hook (it
@@ -8015,7 +8015,7 @@ pub mod vcs {
                 store::register_document_codec(store::DocumentCodec::of::<KitSnapshot, ComposeWireOperation>(KIT_SNAPSHOT_SCHEMA));
             });
         }
-        //#endregion 🔖CodecRegistration
+        //#endregion 🔖️CodecRegistration
 
         pub fn create_kit_snapshot_store(id: &crate::id::Id, initial: Value) -> KitSnapshotStore {
             register_kit_snapshot_codec();
@@ -8054,9 +8054,9 @@ pub mod vcs {
             }
         }
     }
-    //#endregion 🔖kit_vcs
+    //#endregion 🔖️kit_vcs
 
-    /// @emoji 📦 Cached materialized [`Kit`] for a [`Workspace`](../../../schema/graphql/schema.golden.graphql) (`workspace_id` + `change_seq`).
+    /// @emoji 📦️ Cached materialized [`Kit`] for a [`Workspace`](../../../schema/graphql/schema.golden.graphql) (`workspace_id` + `change_seq`).
     pub struct MaterializedSlot {
         pub workspace_id: Id,
         pub change_seq: u64,
@@ -8089,7 +8089,7 @@ pub mod vcs {
         fn placeholder_kit_snapshot_store() -> kit_vcs::KitSnapshotStore {
             kit_vcs::create_kit_snapshot_store(&Id::default(), crate::external_adapters::serde_json::Value::Object(Default::default()))
         }
-        /// 🆕 Build a brand-new Graph; seeds [`Graph::mutable_kit`] from a deep-cloned empty [`Kit`] so [`Graph::initial_kit`] baselines never alias live mutation.
+        /// 🆕️ Build a brand-new Graph; seeds [`Graph::mutable_kit`] from a deep-cloned empty [`Kit`] so [`Graph::initial_kit`] baselines never alias live mutation.
         pub async fn new() -> Arc<Self> {
             let id = Id::new().await;
             let g = Arc::new_cyclic(|weak_self: &Weak<Graph>| {
@@ -8121,12 +8121,12 @@ pub mod vcs {
             g
         }
 
-        /// @emoji 🔗 Upgrade `&Graph` to [`Arc`] via the cyclic weak slot (panics if weak is unset).
+        /// @emoji 🔗️ Upgrade `&Graph` to [`Arc`] via the cyclic weak slot (panics if weak is unset).
         pub fn arc_here(&self) -> Arc<Graph> {
             self.self_weak.lock().ok().and_then(|slot| slot.upgrade()).expect("Graph::new is the only constructor and seeds self_weak via Arc::new_cyclic, so any live &Graph upgrades")
         }
 
-        /// @emoji 🪪 Map persisted bundle anchor `the-kit` onto this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql) [`Workspace`](../../../schema/graphql/schema.golden.graphql) id ([`Graph::id`]).
+        /// @emoji 🪪️ Map persisted bundle anchor `the-kit` onto this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql) [`Workspace`](../../../schema/graphql/schema.golden.graphql) id ([`Graph::id`]).
         pub async fn resolve_workspace_id(self: &Arc<Self>, workspace_ref: &Id) -> Id {
             if workspace_ref.as_str() == "the-kit" {
                 self.ensure_default_checkpoint_for_the_kit().await;
@@ -8136,44 +8136,44 @@ pub mod vcs {
             }
         }
 
-        /// @emoji 📦 [`TheKit.kit`](../../../schema/graphql/schema.golden.graphql) — materialized [`Kit`] for the graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql) [`Workspace`](../../../schema/graphql/schema.golden.graphql).
+        /// @emoji 📦️ [`TheKit.kit`](../../../schema/graphql/schema.golden.graphql) — materialized [`Kit`] for the graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql) [`Workspace`](../../../schema/graphql/schema.golden.graphql).
         pub async fn materialized_head_kit(self: &Arc<Self>) -> Arc<Kit> {
             self.ensure_default_checkpoint_for_the_kit().await;
             self.materialized_kit_for_workspace(&self.id).await
         }
 
-        /// @emoji 📦 Same as [`Graph::materialized_head_kit`] but callable from `&Graph` resolvers.
+        /// @emoji 📦️ Same as [`Graph::materialized_head_kit`] but callable from `&Graph` resolvers.
         pub async fn materialized_head_kit_from_ref(&self) -> Arc<Kit> {
             self.arc_here().materialized_head_kit().await
         }
 
-        /// @emoji 🧊 Invalidate lazily materialized kit cache (abort / record operation).
+        /// @emoji 🧊️ Invalidate lazily materialized kit cache (abort / record operation).
         pub async fn invalidate_materialized_cache(self: &Arc<Self>) {
             *self.materialized_cache.write().await = None;
         }
 
-        /// @emoji 🌱 Reseed [`Graph::the_kit_snapshot_store`]'s envelope from the current [`Graph::mutable_kit`] projection. Must run after any direct kit hydration (bundle install, projection install) — otherwise [`Graph::materialized_kit_for_workspace`] replays the stale envelope from [`Graph::new`] over the freshly-hydrated baseline, clobbering it back to the default kit.
+        /// @emoji 🌱️ Reseed [`Graph::the_kit_snapshot_store`]'s envelope from the current [`Graph::mutable_kit`] projection. Must run after any direct kit hydration (bundle install, projection install) — otherwise [`Graph::materialized_kit_for_workspace`] replays the stale envelope from [`Graph::new`] over the freshly-hydrated baseline, clobbering it back to the default kit.
         pub async fn reseed_kit_snapshot_store_from_mutable_kit(self: &Arc<Self>) {
             let kit = self.mutable_kit.read().await.clone();
             let snap = crate::kit_backbone::initial_kit_projection_value(&kit).await;
             *self.the_kit_snapshot_store.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = kit_vcs::create_kit_snapshot_store(&self.id, snap);
         }
 
-        /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
+        /// @emoji 🧾️ SDL `TheKit.savedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
         pub async fn saved_change_connection_for_the_kit(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
             self.ensure_default_checkpoint_for_the_kit().await;
             let txs = self.the_kit_saved_edits.read().await.clone();
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
         }
 
-        /// @emoji 🧾 SDL `TheKit.unsavedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
+        /// @emoji 🧾️ SDL `TheKit.unsavedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
         pub async fn unsaved_change_connection_for_the_kit(self: &Arc<Self>) -> crate::gql_relay::ChangeConnection {
             self.ensure_default_checkpoint_for_the_kit().await;
             let txs = self.the_kit_unsaved_edits.read().await.clone();
             crate::gql_relay::ChangeConnection::from_changes(changes_from_edits(txs).await).await
         }
 
-        /// @emoji 📎 Ordered saved then unsaved [`Edit`] entities for a [`Workspace`](../../../schema/graphql/schema.golden.graphql) id ([`TheKit`](../../../schema/graphql/schema.golden.graphql) = [`Graph::id`], [`Alternative`](../../../schema/graphql/schema.golden.graphql) = [`Alternative::id`]).
+        /// @emoji 📎️ Ordered saved then unsaved [`Edit`] entities for a [`Workspace`](../../../schema/graphql/schema.golden.graphql) id ([`TheKit`](../../../schema/graphql/schema.golden.graphql) = [`Graph::id`], [`Alternative`](../../../schema/graphql/schema.golden.graphql) = [`Alternative::id`]).
         pub async fn workspace_saved_and_unsaved_edits(self: &Arc<Self>, workspace_id: &Id) -> Option<(Vec<Arc<Edit>>, Vec<Arc<Edit>>)> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             if ws == self.id {
@@ -8209,7 +8209,7 @@ pub mod vcs {
             t
         }
 
-        /// @emoji 📦 Deterministic materialized [`Kit`] for a [`Workspace`](../../../schema/graphql/schema.golden.graphql): clone [`Graph::mutable_kit`] and replay recorded [`Operation`] forwards (matches SDL `Workspace.kit` computation).
+        /// @emoji 📦️ Deterministic materialized [`Kit`] for a [`Workspace`](../../../schema/graphql/schema.golden.graphql): clone [`Graph::mutable_kit`] and replay recorded [`Operation`] forwards (matches SDL `Workspace.kit` computation).
         pub async fn materialized_kit_for_workspace(self: &Arc<Self>, workspace_id: &Id) -> Arc<Kit> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             let (saved, unsaved, seq) = if ws == self.id {
@@ -8265,7 +8265,7 @@ pub mod vcs {
             mat
         }
 
-        /// @emoji 📦 [`Kit`] materialized for `workspace_id` through `target_edit` / `change_idx` / `forward_idx` (used when persisting each operation's `kitDiff` beside its input).
+        /// @emoji 📦️ [`Kit`] materialized for `workspace_id` through `target_edit` / `change_idx` / `forward_idx` (used when persisting each operation's `kitDiff` beside its input).
         pub async fn kit_materialized_for_workspace_before_operation_step(self: &Arc<Self>, workspace_id: &Id, target_edit: &Arc<Edit>, change_idx: usize, forward_idx: usize) -> Arc<Kit> {
             let (saved, unsaved) = self.workspace_saved_and_unsaved_edits(workspace_id).await.unwrap_or_else(|| (Vec::new(), Vec::new()));
             let base = self.mutable_kit.read().await.clone();
@@ -8299,7 +8299,7 @@ pub mod vcs {
             mat
         }
 
-        /// @emoji 📝 Append one forward operation plus backward operations onto the open [`Edit`]'s tail [`Change`], bumping the workspace cache epoch.
+        /// @emoji 📝️ Append one forward operation plus backward operations onto the open [`Edit`]'s tail [`Change`], bumping the workspace cache epoch.
         pub async fn record_operation_in_open_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id, forward: crate::operation::Operation, backwards: Vec<crate::operation::Operation>) -> Result<(), ComposeError> {
             let ws = self.resolve_workspace_id(workspace_id).await;
             let tx = if ws == self.id {
@@ -8352,7 +8352,7 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji 🌱 Ensure a seed [`Checkpoint`] exists and [`TheKit`](../../../schema/graphql/schema.golden.graphql) is anchored (idempotent).
+        /// @emoji 🌱️ Ensure a seed [`Checkpoint`] exists and [`TheKit`](../../../schema/graphql/schema.golden.graphql) is anchored (idempotent).
         pub async fn ensure_default_checkpoint_for_the_kit(self: &Arc<Self>) {
             let checkpoint = {
                 let cps = self.checkpoints.read().await;
@@ -8381,7 +8381,7 @@ pub mod vcs {
             }
         }
 
-        /// @emoji 🌱 Fork a new named [`Alternative`](../../../schema/graphql/schema.golden.graphql) from [`TheKit`](../../../schema/graphql/schema.golden.graphql) or another alternative's tip [`Checkpoint`](../../../schema/graphql/schema.golden.graphql).
+        /// @emoji 🌱️ Fork a new named [`Alternative`](../../../schema/graphql/schema.golden.graphql) from [`TheKit`](../../../schema/graphql/schema.golden.graphql) or another alternative's tip [`Checkpoint`](../../../schema/graphql/schema.golden.graphql).
         pub async fn create_alternative_from_tip(self: &Arc<Self>, name: String, source_alternative_id: Option<&Id>) -> Result<Id, ComposeError> {
             let name = name.trim().to_string();
             if name.is_empty() {
@@ -8427,7 +8427,7 @@ pub mod vcs {
             Ok(new_alt_id)
         }
 
-        /// @emoji 🟢 Open a new unsaved [`Edit`] on `workspace_id` (SDL `unsavedChanges`).
+        /// @emoji 🟢️ Open a new unsaved [`Edit`] on `workspace_id` (SDL `unsavedChanges`).
         pub async fn open_transaction(self: &Arc<Self>, workspace_id: &Id) -> Result<Arc<Edit>, ComposeError> {
             let tx_id = Id::new().await;
             if self.workspace_is_the_kit(workspace_id).await {
@@ -8446,7 +8446,7 @@ pub mod vcs {
             Ok(tx)
         }
 
-        /// @emoji ✅ Commit an unsaved [`Edit`]: move it from `unsavedChanges` to `savedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
+        /// @emoji ✅️ Commit an unsaved [`Edit`]: move it from `unsavedChanges` to `savedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
         pub async fn commit_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), ComposeError> {
             if self.workspace_is_the_kit(workspace_id).await {
                 let tx = {
@@ -8479,7 +8479,7 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji ⛔ Drop an unsaved [`Edit`] from `unsavedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
+        /// @emoji ⛔️ Drop an unsaved [`Edit`] from `unsavedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
         pub async fn abort_transaction(self: &Arc<Self>, workspace_id: &Id, edit_id: &Id) -> Result<(), ComposeError> {
             if self.workspace_is_the_kit(workspace_id).await {
                 {
@@ -8514,7 +8514,7 @@ pub mod vcs {
             Ok(())
         }
 
-        /// @emoji 📦 Golden `Checkpoint.kit` / `KitReadPointInput.checkpointId` — WIP parent checkpoint resolves like `TheKit.kit`; alternative tip like `Alternative.kit`; otherwise graph `initialKit` until per-checkpoint edit slices exist.
+        /// @emoji 📦️ Golden `Checkpoint.kit` / `KitReadPointInput.checkpointId` — WIP parent checkpoint resolves like `TheKit.kit`; alternative tip like `Alternative.kit`; otherwise graph `initialKit` until per-checkpoint edit slices exist.
         pub async fn materialized_kit_for_checkpoint_id(self: &Arc<Self>, checkpoint_id: &Id) -> Result<Arc<Kit>, ComposeError> {
             let mut found = false;
             for c in self.checkpoints.read().await.iter() {
@@ -8554,7 +8554,7 @@ pub mod vcs {
             Ok(self.initial_kit.read().await.clone())
         }
 
-        /// @emoji 📍 Materialized [`Kit`] at a [`KitReadPointInput`] anchor ([`TheKit`](../../../schema/graphql/schema.golden.graphql), [`Checkpoint`](../../../schema/graphql/schema.golden.graphql), [`Alternative`](../../../schema/graphql/schema.golden.graphql)).
+        /// @emoji 📍️ Materialized [`Kit`] at a [`KitReadPointInput`] anchor ([`TheKit`](../../../schema/graphql/schema.golden.graphql), [`Checkpoint`](../../../schema/graphql/schema.golden.graphql), [`Alternative`](../../../schema/graphql/schema.golden.graphql)).
         pub async fn materialized_kit_at_point(self: &Arc<Self>, p: KitReadPointInput) -> Result<Arc<Kit>, ComposeError> {
             if p.the_kit == Some(true) {
                 return Ok(self.materialized_head_kit().await);
@@ -8575,7 +8575,7 @@ pub mod vcs {
             Ok(self.materialized_head_kit().await)
         }
 
-        /// @emoji 🔧 Apply `createFixedPiece` via [`Graph::record_operation_in_open_transaction`] (tests / golden replay).
+        /// @emoji 🔧️ Apply `createFixedPiece` via [`Graph::record_operation_in_open_transaction`] (tests / golden replay).
         pub async fn apply_create_fixed_piece(
             self: &Arc<Self>,
             workspace_id: Id,
@@ -8650,9 +8650,9 @@ pub mod vcs {
             crate::gql_relay::CheckpointConnection::from_checkpoints(self.releases.read().await.clone()).await
         }
     }
-    //#endregion 🌐 graph
+    //#endregion 🌐️ graph
 
-    //#region 👤 session
+    //#region 👤️ session
     pub struct Session {
         pub id: Id,
         pub started_at: RwLock<Option<Timestamp>>,
@@ -8692,7 +8692,7 @@ pub mod vcs {
             Some(crate::gql::interfaces::empty_entity_connection())
         }
 
-        /// @emoji 🌐 Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
+        /// @emoji 🌐️ Same navigation as WIP [`Graph`] — resolved via [`crate::worker::ParentStore::wip_graph`] for the active runtime.
         pub async fn alternatives(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<crate::gql_relay::AlternativeConnection> {
             let rt = ctx.data::<Arc<crate::worker::ParentStore>>()?;
             Ok(crate::gql_relay::AlternativeConnection::from_alternatives(rt.wip_graph.alternatives.read().await.clone()).await)
@@ -8725,7 +8725,7 @@ pub mod vcs {
             Ok(crate::gql::RemoteProviderConnection::from_providers(rt.remote_providers.read().await.clone()))
         }
     }
-    //#endregion 👤 session
+    //#endregion 👤️ session
 
     //#region ⚠️ conflict
     pub struct Conflict {
@@ -8742,7 +8742,7 @@ pub mod vcs {
     }
 
     impl Conflict {
-        /// @emoji 🪪 Merkle leaf: id, optional backbone tip, reason, created-at (relay + GraphQL `Conflict.hash`).
+        /// @emoji 🪪️ Merkle leaf: id, optional backbone tip, reason, created-at (relay + GraphQL `Conflict.hash`).
         pub async fn compute_hash(&self) -> String {
             let tip = self.backbone_tip.read().await.clone().unwrap_or_default();
             let reason = self.reason.read().await.clone();
@@ -8785,9 +8785,9 @@ pub mod vcs {
     }
     //#endregion ⚠️ conflict
 }
-//#endregion 🌿 vcs
+//#endregion 🌿️ vcs
 
-//#region 🧷 interface
+//#region 🧷️ interface
 
 pub mod interface {
     use std::sync::Arc;
@@ -8816,7 +8816,7 @@ pub mod interface {
         RemoteProvider(std::sync::Arc<crate::gql::RemoteProvider>),
     }
 
-    /// @emoji 🔎 Resolve a global id against WIP + authoritative graphs, sessions, and conflicts.
+    /// @emoji 🔎️ Resolve a global id against WIP + authoritative graphs, sessions, and conflicts.
     pub async fn resolve_node(rt: &crate::worker::ParentStore, id: &Id) -> Option<KitGraphNavNode> {
         for g in [&rt.wip_graph, &rt.auth_graph] {
             if &g.id == id {
@@ -8872,7 +8872,7 @@ pub mod interface {
         None
     }
 
-    /// @emoji 📍 Resolve `pieceInDesign` on the WIP graph line.
+    /// @emoji 📍️ Resolve `pieceInDesign` on the WIP graph line.
     pub async fn piece_in_design_on_wip(rt: &crate::worker::ParentStore, design_id: &Id, piece_id: &Id) -> Option<Arc<Piece>> {
         let g = &rt.wip_graph;
         let kit = g.mutable_kit.read().await.clone();
@@ -8880,7 +8880,7 @@ pub mod interface {
         des.piece_by_external_id(piece_id).await
     }
 
-    /// @emoji 📍 Resolve `alternativePieceKind` from the WIP kit: find the piece in any design and return the GraphQL `Blueprint` union tag (`Type` or `Design`).
+    /// @emoji 📍️ Resolve `alternativePieceKind` from the WIP kit: find the piece in any design and return the GraphQL `Blueprint` union tag (`Type` or `Design`).
     pub async fn alternative_piece_kind(rt: &crate::worker::ParentStore, piece_id: &Id) -> Option<String> {
         let kit = rt.wip_graph.mutable_kit.read().await.clone();
         let designs = kit.designs_flat().await;
@@ -8896,7 +8896,7 @@ pub mod interface {
         None
     }
 
-    /// @emoji 📍 WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
+    /// @emoji 📍️ WeakEntity + entity shell for [`Coordinate`] (SDL `Coordinate`).
     #[Object(name = "Coordinate")]
     impl Coordinate {
         pub async fn id(&self) -> Id {
@@ -9040,7 +9040,7 @@ pub mod interface {
         }
     }
 
-    /// @emoji 🌍 WeakEntity shell for [`Location`] (SDL `Location`).
+    /// @emoji 🌍️ WeakEntity shell for [`Location`] (SDL `Location`).
     #[Object(name = "Location")]
     impl Location {
         pub async fn id(&self) -> Id {
@@ -9083,7 +9083,7 @@ pub mod interface {
     }
 }
 
-//#endregion 🧷 interface
+//#endregion 🧷️ interface
 
 //#region ⚙️ operation
 
@@ -9102,15 +9102,15 @@ pub mod operation {
     use crate::meta::{ConceptInput, QualityInput, TagInput};
     use crate::vcs::Edit;
 
-    //#region 🧭 normalized operation contract
-    //#region 🔖 canonical_kit_diff
-    /// @emoji 📦 `Id` reference wrapper for kit diff collection entities.
+    //#region 🧭️ normalized operation contract
+    //#region 🔖️ canonical_kit_diff
+    /// @emoji 📦️ `Id` reference wrapper for kit diff collection entities.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct IdRef {
         pub id: Id,
     }
 
-    /// @emoji 📦 Sparse `tags` triple (`metabolism.kit.diff.compose.json`).
+    /// @emoji 📦️ Sparse `tags` triple (`metabolism.kit.diff.compose.json`).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagsCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9131,7 +9131,7 @@ pub mod operation {
         pub icon: Option<String>,
     }
 
-    /// @emoji 📦 One `tags.added[]` entry (owner + ids + GraphQL [`TagInput`]).
+    /// @emoji 📦️ One `tags.added[]` entry (owner + ids + GraphQL [`TagInput`]).
     #[derive(Clone, Debug, PartialEq)]
     pub struct TagAdded {
         pub owner_id: Id,
@@ -9140,7 +9140,7 @@ pub mod operation {
         pub tag: TagInput,
     }
 
-    /// @emoji 📦 Sparse `concepts` triple.
+    /// @emoji 📦️ Sparse `concepts` triple.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ConceptsCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9169,7 +9169,7 @@ pub mod operation {
         pub concept: ConceptInput,
     }
 
-    /// @emoji 📦 Sparse `qualities` triple (kit-level).
+    /// @emoji 📦️ Sparse `qualities` triple (kit-level).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct QualitiesCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9202,7 +9202,7 @@ pub mod operation {
         pub quality: QualityInput,
     }
 
-    /// @emoji 📦 One `designs.added[]` entry (kit-owned design scalars).
+    /// @emoji 📦️ One `designs.added[]` entry (kit-owned design scalars).
     #[derive(Clone, Debug, PartialEq)]
     pub struct DesignAdded {
         pub owner_id: Id,
@@ -9214,7 +9214,7 @@ pub mod operation {
         pub unit: Option<String>,
     }
 
-    /// @emoji 📦 One `types.added[]` entry (kit-owned kind scalars).
+    /// @emoji 📦️ One `types.added[]` entry (kit-owned kind scalars).
     #[derive(Clone, Debug, PartialEq)]
     pub struct TypeAdded {
         pub owner_id: Id,
@@ -9226,8 +9226,8 @@ pub mod operation {
         pub unit: Option<String>,
     }
 
-    //#region 🔖canonical_kit_types_designs_mod
-    /// @emoji 📦 Sparse `types` triple.
+    //#region 🔖️canonical_kit_types_designs_mod
+    /// @emoji 📦️ Sparse `types` triple.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TypesCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9235,7 +9235,7 @@ pub mod operation {
         pub added: Vec<TypeAdded>,
     }
 
-    /// @emoji 📦 One `types.modified[]` entity.
+    /// @emoji 📦️ One `types.modified[]` entity.
     #[derive(Clone, Debug, PartialEq)]
     pub struct TypeModified {
         pub type_ref: IdRef,
@@ -9299,7 +9299,7 @@ pub mod operation {
         pub pieces: Option<PiecesCollectionDiff>,
     }
 
-    /// @emoji 📦 Sparse `designs` triple.
+    /// @emoji 📦️ Sparse `designs` triple.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct DesignsCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9307,16 +9307,16 @@ pub mod operation {
         pub added: Vec<DesignAdded>,
     }
 
-    /// @emoji 📦 One `designs.modified[]` entity.
+    /// @emoji 📦️ One `designs.modified[]` entity.
     #[derive(Clone, Debug, PartialEq)]
     pub struct DesignModified {
         pub design: IdRef,
         pub diff: DesignDiff,
     }
 
-    //#endregion 🔖canonical_kit_types_designs_mod
+    //#endregion 🔖️canonical_kit_types_designs_mod
 
-    /// @emoji 📁 One `folders.added[]` entry.
+    /// @emoji 📁️ One `folders.added[]` entry.
     #[derive(Clone, Debug, PartialEq)]
     pub struct FolderAdded {
         pub id: Id,
@@ -9338,7 +9338,7 @@ pub mod operation {
         pub patch: FolderPatch,
     }
 
-    /// @emoji 📦 Sparse `folders` triple.
+    /// @emoji 📦️ Sparse `folders` triple.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct FoldersCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9357,7 +9357,7 @@ pub mod operation {
         pub patch: FilePatch,
     }
 
-    /// @emoji 📦 Sparse `files` triple (kit-level file folder membership).
+    /// @emoji 📦️ Sparse `files` triple (kit-level file folder membership).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct FilesCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9376,7 +9376,7 @@ pub mod operation {
         pub patch: FamilyPatch,
     }
 
-    /// @emoji 📦 Sparse `families` triple (kit-level family folder membership).
+    /// @emoji 📦️ Sparse `families` triple (kit-level family folder membership).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct FamiliesCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -9384,10 +9384,10 @@ pub mod operation {
         pub added: Vec<IdRef>,
     }
 
-    /// @emoji 📦 `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
+    /// @emoji 📦️ `authors`: `None` omitted; `Some(false)` trivial; `Some(true)` means unsupported non-empty subtree.
     pub type KitAuxSubtree = Option<bool>;
 
-    /// @emoji 📦 Canonical sparse kit diff aligned with metabolism fixtures (typed collections; aux subtrees use tri-state `KitAuxSubtree` flags).
+    /// @emoji 📦️ Canonical sparse kit diff aligned with metabolism fixtures (typed collections; aux subtrees use tri-state `KitAuxSubtree` flags).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CanonicalKitDiff {
         pub name: Option<String>,
@@ -9414,7 +9414,7 @@ pub mod operation {
     pub struct KitDiff(pub CanonicalKitDiff);
 
     impl KitDiff {
-        /// @emoji 🔗 Shallow-merge `other` scalar/collection fields into `self.0` (used when coalescing multi-target diffs).
+        /// @emoji 🔗️ Shallow-merge `other` scalar/collection fields into `self.0` (used when coalescing multi-target diffs).
         pub fn absorb(&mut self, other: CanonicalKitDiff) {
             let a = &mut self.0;
             let b = other;
@@ -9445,47 +9445,47 @@ pub mod operation {
             opt!(authors);
         }
     }
-    //#endregion 🔖 canonical_kit_diff
+    //#endregion 🔖️ canonical_kit_diff
 
-    /// @emoji 🚫 Empty payload marker for scope-only operations.
+    /// @emoji 🚫️ Empty payload marker for scope-only operations.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct NoInput;
 
-    /// @emoji 🪪 Rename-kit scope; the kit id is implicit from the target graph line.
+    /// @emoji 🪪️ Rename-kit scope; the kit id is implicit from the target graph line.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct RenameKitScope;
 
-    /// @emoji 🪪 Single entity scope.
+    /// @emoji 🪪️ Single entity scope.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct EntityScope {
         pub entity_id: Id,
     }
 
-    /// @emoji 🪪 Single tag scope.
+    /// @emoji 🪪️ Single tag scope.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagScope {
         pub tag_id: Id,
     }
 
-    /// @emoji 🪪 Multi-tag scope.
+    /// @emoji 🪪️ Multi-tag scope.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagsScope {
         pub tag_ids: Vec<Id>,
     }
 
-    /// @emoji 🪪 Single concept scope.
+    /// @emoji 🪪️ Single concept scope.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct ConceptScope {
         pub concept_id: Id,
     }
 
-    /// @emoji 🪪 Single quality scope.
+    /// @emoji 🪪️ Single quality scope.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct QualityScope {
         pub quality_id: Id,
     }
 
-    /// @emoji 🪪 Create-tag scope with owner id plus all pre-minted ids.
+    /// @emoji 🪪️ Create-tag scope with owner id plus all pre-minted ids.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateTagScope {
         pub owner_id: Id,
@@ -9493,7 +9493,7 @@ pub mod operation {
         pub attribute_ids: Vec<Id>,
     }
 
-    /// @emoji 🪪 Batch create-tag scope with owner id plus all pre-minted ids.
+    /// @emoji 🪪️ Batch create-tag scope with owner id plus all pre-minted ids.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateTagsScope {
         pub owner_id: Id,
@@ -9501,7 +9501,7 @@ pub mod operation {
         pub attribute_ids: Vec<Vec<Id>>,
     }
 
-    /// @emoji 🪪 Create-concept scope with owner id plus all pre-minted ids.
+    /// @emoji 🪪️ Create-concept scope with owner id plus all pre-minted ids.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateConceptScope {
         pub owner_id: Id,
@@ -9509,7 +9509,7 @@ pub mod operation {
         pub attribute_ids: Vec<Id>,
     }
 
-    /// @emoji 🪪 Create-quality scope with owner id plus all pre-minted ids.
+    /// @emoji 🪪️ Create-quality scope with owner id plus all pre-minted ids.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateQualityScope {
         pub owner_id: Id,
@@ -9518,7 +9518,7 @@ pub mod operation {
         pub benchmark_ids: Vec<Id>,
     }
 
-    /// @emoji 🪪 Create-piece scope with the parent design id and the pre-minted piece id.
+    /// @emoji 🪪️ Create-piece scope with the parent design id and the pre-minted piece id.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct CreateFixedPieceScope {
         pub design_id: Id,
@@ -9527,14 +9527,14 @@ pub mod operation {
         pub attribute_ids: Vec<Id>,
     }
 
-    /// @emoji 🪪 Single piece-in-design scope.
+    /// @emoji 🪪️ Single piece-in-design scope.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct PieceInDesignScope {
         pub design_id: Id,
         pub piece_id: Id,
     }
 
-    /// @emoji 🪪 Multi-piece-in-design scope.
+    /// @emoji 🪪️ Multi-piece-in-design scope.
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct PiecesInDesignScope {
         pub design_id: Id,
@@ -9591,7 +9591,7 @@ pub mod operation {
         pub offset: OffsetInput,
     }
 
-    /// @emoji 🧭 Shared scope payload: every distinct id-shape used across [`Operation`] commands.
+    /// @emoji 🧭️ Shared scope payload: every distinct id-shape used across [`Operation`] commands.
     #[derive(Clone, Debug, PartialEq)]
     pub enum Scope {
         Kit,
@@ -9614,7 +9614,7 @@ pub mod operation {
         PiecesInDesign { design_id: Id, piece_ids: Vec<Id> },
     }
 
-    /// @emoji 🧭 Shared non-id input payload reused across commands with the same shape.
+    /// @emoji 🧭️ Shared non-id input payload reused across commands with the same shape.
     #[derive(Clone, Debug, PartialEq)]
     pub enum Input {
         None,
@@ -9633,7 +9633,7 @@ pub mod operation {
         MoveToFolder { folder_id: Option<Id> },
     }
 
-    /// @emoji 🧩 Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
+    /// @emoji 🧩️ Normalized  operation surface: every variant is `{ scope: Scope, input: Input }`.
     #[derive(Clone, Debug, PartialEq)]
     pub enum Operation {
         RenameKit { scope: Scope, input: Input },
@@ -9694,7 +9694,7 @@ pub mod operation {
             }
         }
 
-        /// @emoji 🔢 Stable digest for deterministic diff ids (no JSON serde).
+        /// @emoji 🔢️ Stable digest for deterministic diff ids (no JSON serde).
         pub fn stable_payload_digest(&self) -> String {
             fn pos_fp(p: &PositionInput) -> String {
                 format!(
@@ -10660,8 +10660,8 @@ pub mod operation {
             attributes: Some(quality.attributes.read().await.iter().map(|attribute| crate::meta::AttributeInput { key: attribute.key.clone(), value: Some(attribute.value.clone()), definition: attribute.definition.clone() }).collect()),
         }
     }
-    //#region 🔖OpText
-    // 🧬 `.compose` operation-log DSL via the `dsl::` derive engine — every persisted `Operation` line
+    //#region 🔖️OpText
+    // 🧬️ `.compose` operation-log DSL via the `dsl::` derive engine — every persisted `Operation` line
     // goes through a flat local mirror (`ComposeOperationDsl`) rather than deriving `dsl::DslOps`
     // directly on `Operation` itself: `Operation`'s own `{ scope: Scope, input: Input }` shape reuses
     // two generic polymorphic enums across all 25 kinds (the "normalized operation contract" above),
@@ -10727,7 +10727,7 @@ pub mod operation {
         MoveToFolder { entity_id: Id, folder_id: Option<Id> },
     }
 
-    /// @emoji 🧬 `Operation` → `ComposeOperationDsl`. Panics (via `unreachable!`) on a scope/input
+    /// @emoji 🧬️ `Operation` → `ComposeOperationDsl`. Panics (via `unreachable!`) on a scope/input
     /// pairing that violates the normalized-operation-contract invariant — every real construction
     /// site (`kit_backbone::kit_operation_from_stored` and every GraphQL mutation resolver) always
     /// pairs each `Operation` kind with its one fixed `Scope`/`Input` shape, so a mismatch here can
@@ -10853,7 +10853,7 @@ pub mod operation {
         }
     }
 
-    /// @emoji 🧬 `ComposeOperationDsl` → `Operation`, rebuilding whichever `Scope`/`Input` pairing the
+    /// @emoji 🧬️ `ComposeOperationDsl` → `Operation`, rebuilding whichever `Scope`/`Input` pairing the
     /// operation kind expects.
     fn compose_operation_from_dsl(mirror: ComposeOperationDsl) -> Operation {
         match mirror {
@@ -10904,11 +10904,11 @@ pub mod operation {
             <ComposeOperationDsl as protocol::OpText>::print_op(&compose_operation_to_dsl(self))
         }
     }
-    //#endregion 🔖OpText
+    //#endregion 🔖️OpText
 
-    //#endregion 🧭 normalized operation contract
+    //#endregion 🧭️ normalized operation contract
 
-    //#region 🧾 inputs
+    //#region 🧾️ inputs
     #[derive(Clone, Debug, Default)]
     pub struct CreatedFixedPieceInput {
         pub design_id: Id,
@@ -11008,7 +11008,7 @@ pub mod operation {
         }
     }
 
-    //#endregion 🧾 inputs
+    //#endregion 🧾️ inputs
 
     /// @emoji 🗄️ Backbone materialization: dev JSON file, local `.compose/` SQLite+blobs, or remote hub (reserved).
     #[derive(Clone, Copy, Debug, Eq, PartialEq, crate::external_adapters::async_graphql::Enum)]
@@ -11041,10 +11041,10 @@ pub mod operation {
             Err(crate::error::ComposeError::invalid("backbone uri must start with dev://, local://, remote://, or file://"))
         }
     }
-    //#endregion 🧭 graph workspace + backbone store kind (readable/writable selectors)
+    //#endregion 🧭️ graph workspace + backbone store kind (readable/writable selectors)
 
-    //#region 📜  operation record (kit bundle / operation log contract)
-    /// @emoji 📜 One persisted  operation: stable id, kind string, JSON payload, monotonic sequence index.
+    //#region 📜️  operation record (kit bundle / operation log contract)
+    /// @emoji 📜️ One persisted  operation: stable id, kind string, JSON payload, monotonic sequence index.
     #[derive(Clone, Debug, Default, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "OperationRecord")]
     pub struct OperationRecord {
@@ -11055,18 +11055,18 @@ pub mod operation {
         pub payload_json: String,
         pub sequence: i32,
     }
-    //#endregion 📜  operation record (kit bundle / operation log contract)
+    //#endregion 📜️  operation record (kit bundle / operation log contract)
 
-    //#region 📦 diff
-    /// 📜 Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings — **not** the geometric `interface Diff` from `compose/client/schema/graphql/schema.golden.graphql` (`VectorDiff`, `PositionDiff`, …).
+    //#region 📦️ diff
+    /// 📜️ Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings — **not** the geometric `interface Diff` from `compose/client/schema/graphql/schema.golden.graphql` (`VectorDiff`, `PositionDiff`, …).
     #[derive(Clone, Debug, Default)]
     pub struct Diff {
         pub id: Id,
         pub summary: Option<String>,
     }
-    //#endregion 📦 diff
+    //#endregion 📦️ diff
 
-    //#region 🪄 operations
+    //#region 🪄️ operations
     pub struct CreatedFixedPiece {
         pub id: Id,
         pub owner_edit: Weak<Edit>,
@@ -11299,7 +11299,7 @@ pub mod operation {
         }
     }
 
-    /// 🌗 Sum-type carrying any operation through the event bus / change log (Arc-shared).
+    /// 🌗️ Sum-type carrying any operation through the event bus / change log (Arc-shared).
     #[derive(Clone, Union)]
     #[graphql(name = "OperationKind")]
     pub enum OperationKind {
@@ -11310,7 +11310,7 @@ pub mod operation {
         ChangedDescription(Arc<ChangedDescription>),
     }
 
-    /// 🪄 GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
+    /// 🪄️ GraphQL `interface Operation` (each variant is an Arc-shared operation entity).
     #[derive(Clone, Interface)]
     #[graphql(
         name = "Operation",
@@ -11337,7 +11337,7 @@ pub mod operation {
     }
 
     impl OperationInterface {
-        /// @emoji 🪪 Stable entity id for relay operation edges / merkle shells.
+        /// @emoji 🪪️ Stable entity id for relay operation edges / merkle shells.
         pub fn entity_id(&self) -> Id {
             match self {
                 OperationInterface::CreatedFixedPiece(o) => o.id.clone(),
@@ -11348,10 +11348,10 @@ pub mod operation {
             }
         }
     }
-    //#endregion 🪄 operations
+    //#endregion 🪄️ operations
 
-    //#region 📡 commands
-    /// 📡 Internal command envelope passed parent → child runtime over the work queue.
+    //#region 📡️ commands
+    /// 📡️ Internal command envelope passed parent → child runtime over the work queue.
     #[derive(Clone, Debug)]
     pub enum Command {
         ApplyOperation { request_id: Id, workspace_id: Id, transaction_id: Id, operation: Box<Operation> },
@@ -11369,7 +11369,7 @@ pub mod operation {
         }
     }
 
-    /// ✅ Lightweight signal that a command was accepted (used by `commandSucceeded`).
+    /// ✅️ Lightweight signal that a command was accepted (used by `commandSucceeded`).
     #[derive(Clone, Debug, Default, crate::external_adapters::async_graphql::SimpleObject)]
     #[graphql(name = "Command")]
     pub struct CommandReceipt {
@@ -11378,7 +11378,7 @@ pub mod operation {
         pub kind: String,
     }
 
-    /// @emoji 🆔 GraphQL `IdResult` — command payload id surfaced through `Response.result`.
+    /// @emoji 🆔️ GraphQL `IdResult` — command payload id surfaced through `Response.result`.
     #[derive(Clone, Debug)]
     pub struct IdResult {
         pub id: Id,
@@ -11405,7 +11405,7 @@ pub mod operation {
         }
     }
 
-    /// @emoji 📦 GraphQL `interface Result` — success payloads for `Response.result`.
+    /// @emoji 📦️ GraphQL `interface Result` — success payloads for `Response.result`.
     #[derive(Clone, Debug, Interface)]
     #[graphql(
         name = "Result",
@@ -11418,7 +11418,7 @@ pub mod operation {
         Id(IdResult),
     }
 
-    /// @emoji 📬 GraphQL command outcome — `ok` / `errors` / `result` per golden `Response`.
+    /// @emoji 📬️ GraphQL command outcome — `ok` / `errors` / `result` per golden `Response`.
     #[derive(Clone, Debug)]
     pub struct CommandResponse {
         pub id: Id,
@@ -11480,7 +11480,7 @@ pub mod operation {
         }
     }
 
-    /// @emoji 📬 GraphQL `interface Response` — mutation return surface (`CommandResponse` today; operations later).
+    /// @emoji 📬️ GraphQL `interface Response` — mutation return surface (`CommandResponse` today; operations later).
     #[derive(Clone, Debug, Interface)]
     #[graphql(
         name = "Response",
@@ -11495,12 +11495,12 @@ pub mod operation {
     pub enum ResponseInterface {
         Command(CommandResponse),
     }
-    //#endregion 📡 commands
+    //#endregion 📡️ commands
 
-    /// @emoji 🧩 Declarative operation entity registration hook (`operations! { CreatedFixedPiece, … }`) — expand to typed operation structs + history wiring.
+    /// @emoji 🧩️ Declarative operation entity registration hook (`operations! { CreatedFixedPiece, … }`) — expand to typed operation structs + history wiring.
     macro_rules! operations {
         ($($entity:ident),* $(,)?) => {
-            /// @emoji 🔢 Operation count listed in `operations! { … }` (static registry grows toward ~100 SDL operations).
+            /// @emoji 🔢️ Operation count listed in `operations! { … }` (static registry grows toward ~100 SDL operations).
             pub const GRAPH_OPERATION_REGISTRY_LEN: usize = [$(stringify!($entity)),*].len();
         };
     }
@@ -11609,10 +11609,10 @@ pub mod operation {
 
 //#endregion ⚙️ operation
 
-//#region 🧮 kit graph engine
+//#region 🧮️ kit graph engine
 
 pub mod kit_graph_engine {
-    //! @emoji 🧮 Core kit graph engine: deterministic projection fingerprints, ephemeral operation diffs, and typed [`crate::operation::Operation`] apply for replay (no serde on the control-plane surface).
+    //! @emoji 🧮️ Core kit graph engine: deterministic projection fingerprints, ephemeral operation diffs, and typed [`crate::operation::Operation`] apply for replay (no serde on the control-plane surface).
     use std::collections::BTreeMap;
     use std::sync::Arc;
 
@@ -11623,14 +11623,14 @@ pub mod kit_graph_engine {
     use crate::operation::{self, Operation, Scope};
     use crate::vcs::Graph;
 
-    //#region 🔖 design_slot
-    /// @emoji 🧷 Opaque internal design list index; external [`Id`] maps only in [`kit::Kit::bind_external_design_id`].
+    //#region 🔖️ design_slot
+    /// @emoji 🧷️ Opaque internal design list index; external [`Id`] maps only in [`kit::Kit::bind_external_design_id`].
     #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
     pub struct DesignSlot(pub u32);
-    //#endregion 🔖 design_slot
+    //#endregion 🔖️ design_slot
 
-    //#region 🔖 projection_fingerprint
-    /// @emoji 🔢 Stable `projectionFingerprint`: [`h`] over sorted piece centers keyed by design id (matches golden `kit-store.golden.expected`).
+    //#region 🔖️ projection_fingerprint
+    /// @emoji 🔢️ Stable `projectionFingerprint`: [`h`] over sorted piece centers keyed by design id (matches golden `kit-store.golden.expected`).
     pub async fn projection_fingerprint_for_kit(kit: &kit::Kit) -> String {
         let designs = kit.designs_flat().await;
         let mut by_design: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
@@ -11654,24 +11654,24 @@ pub mod kit_graph_engine {
             .collect();
         h(&[flattened.join("|")])
     }
-    //#endregion 🔖 projection_fingerprint
+    //#endregion 🔖️ projection_fingerprint
 
-    //#region 🔖 deterministic_diff
-    /// @emoji 📦 Deterministic non-persisted diff from operation kind + stable payload digest + projection fingerprint transition.
+    //#region 🔖️ deterministic_diff
+    /// @emoji 📦️ Deterministic non-persisted diff from operation kind + stable payload digest + projection fingerprint transition.
     pub fn deterministic_diff(op_kind: &str, payload_digest: &str, projection_fp_before: &str, projection_fp_after: &str) -> operation::Diff {
         let digest = h(&[op_kind, payload_digest, projection_fp_before, projection_fp_after]);
         operation::Diff { id: Id::from(format!("diff:{digest}")), summary: Some(digest) }
     }
-    //#endregion 🔖 deterministic_diff
+    //#endregion 🔖️ deterministic_diff
 
-    //#region 🔖 apply_kit_operation
-    /// @emoji 🧾 Output of [`apply_kit_operation`]: ephemeral diff + optional created entities.
+    //#region 🔖️ apply_kit_operation
+    /// @emoji 🧾️ Output of [`apply_kit_operation`]: ephemeral diff + optional created entities.
     pub struct AppliedOperation {
         pub diff: operation::Diff,
         pub created_piece: Option<Arc<kit::design::piece::Piece>>,
     }
 
-    /// @emoji 🧩 Record one forward [`Operation`] (plus backwards) on `graph` and return deterministic projection metadata.
+    /// @emoji 🧩️ Record one forward [`Operation`] (plus backwards) on `graph` and return deterministic projection metadata.
     pub async fn apply_kit_operation(graph: &Arc<Graph>, workspace_id: &Id, transaction_id: &Id, operation: Operation) -> Result<AppliedOperation, ComposeError> {
         let ws = graph.resolve_workspace_id(workspace_id).await;
         let op_kind = operation.kind();
@@ -11697,16 +11697,16 @@ pub mod kit_graph_engine {
         };
         Ok(AppliedOperation { diff, created_piece })
     }
-    //#endregion 🔖 apply_kit_operation
+    //#endregion 🔖️ apply_kit_operation
 }
 
-//#endregion 🧮 kit graph engine
+//#endregion 🧮️ kit graph engine
 
 //#region 🗄️ kit backbone persistence (native)
 
 pub mod kit_backbone {
     //! @emoji 🗄️ Dev JSON + local `.compose/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_kit_operation`].
-    //! 🌐 The bundle wire format (`DevBackboneBundleDoc` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible —
+    //! 🌐️ The bundle wire format (`DevBackboneBundleDoc` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible —
     //! sketchpad's WASM runtime serializes / hydrates the metabolism-shaped JSON directly. The SQLite + filesystem-IO parts
     //! (atomic writes, `DevJsonAttached`, `LocalAttached`) are native-only and gated below.
 
@@ -11722,17 +11722,17 @@ pub mod kit_backbone {
     use crate::id::Id;
     use crate::vcs::Graph;
 
-    //#region 🧾 wire format
+    //#region 🧾️ wire format
 
-    /// @emoji 🪪 On-disk schema marker stamped at the bundle root; matches `compose/fixture/kit-store.bundle.example.compose.json`.
-    pub const KIT_STORE_BUNDLE_SCHEMA: &str = "🎆26🌙06⬆️1";
+    /// @emoji 🪪️ On-disk schema marker stamped at the bundle root; matches `compose/fixture/kit-store.bundle.example.compose.json`.
+    pub const KIT_STORE_BUNDLE_SCHEMA: &str = "🎆️26🌙️06⬆️1";
 
-    /// @emoji 🧾 Blake3 hex (empty-input digest) used on the wire until per-entity merkle is filled.
+    /// @emoji 🧾️ Blake3 hex (empty-input digest) used on the wire until per-entity merkle is filled.
     pub const KIT_BUNDLE_HASH_STUB: &str = "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
-    /// @emoji 🧾 ISO timestamp used when a checkpoint has no persisted time yet.
+    /// @emoji 🧾️ ISO timestamp used when a checkpoint has no persisted time yet.
     pub const KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB: &str = "2020-01-01T00:00:00.000Z";
 
-    /// @emoji 📎 Resolve kit snapshot collection slices serialized as `{ hash, items }` blocks.
+    /// @emoji 📎️ Resolve kit snapshot collection slices serialized as `{ hash, items }` blocks.
     pub(crate) fn json_block_items_ref(v: &crate::external_adapters::serde_json::Value) -> Option<&Vec<crate::external_adapters::serde_json::Value>> {
         match v {
             crate::external_adapters::serde_json::Value::Object(o) => o.get("items").and_then(|x| x.as_array()),
@@ -11740,7 +11740,7 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji 📎 Mutable slice for hydrate / blob merge paths on `{ hash, items }` blocks.
+    /// @emoji 📎️ Mutable slice for hydrate / blob merge paths on `{ hash, items }` blocks.
     pub(crate) fn json_block_items_mut(v: &mut crate::external_adapters::serde_json::Value) -> Option<&mut Vec<crate::external_adapters::serde_json::Value>> {
         match v {
             crate::external_adapters::serde_json::Value::Object(o) => o.get_mut("items").and_then(|x| x.as_array_mut()),
@@ -11748,7 +11748,7 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji 🆔 Reads an entity id from a plain string or `{ "id": "…" }` bundle ref.
+    /// @emoji 🆔️ Reads an entity id from a plain string or `{ "id": "…" }` bundle ref.
     pub(crate) fn json_entity_id_ref(v: &crate::external_adapters::serde_json::Value) -> Option<&str> {
         match v {
             crate::external_adapters::serde_json::Value::String(s) => Some(s.as_str()),
@@ -11757,7 +11757,7 @@ pub mod kit_backbone {
         }
     }
 
-    //#region 🔖 dev_backbone_kit_operation_json
+    //#region 🔖️ dev_backbone_kit_operation_json
     fn position_input_to_json(p: &crate::geom::PositionInput) -> crate::external_adapters::serde_json::Value {
         crate::external_adapters::serde_json::json!({
             "center": { "u": p.center.u, "v": p.center.v },
@@ -11769,8 +11769,8 @@ pub mod kit_backbone {
         })
     }
 
-    //#region 🔖 dev_backbone_canonical_kit_diff_wire_json
-    /// @emoji 📦 Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.compose.json` collection keys).
+    //#region 🔖️ dev_backbone_canonical_kit_diff_wire_json
+    /// @emoji 📦️ Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.compose.json` collection keys).
     pub(crate) fn canonical_kit_diff_to_wire_json(d: &crate::operation::CanonicalKitDiff) -> crate::external_adapters::serde_json::Value {
         use crate::external_adapters::serde_json::{Map, Value};
         let mut root = Map::new();
@@ -12092,7 +12092,7 @@ pub mod kit_backbone {
             })).collect::<Vec<Value>>(),
         })
     }
-    //#endregion 🔖 dev_backbone_canonical_kit_diff_wire_json
+    //#endregion 🔖️ dev_backbone_canonical_kit_diff_wire_json
 
     fn kit_scope_json(s: &crate::operation::Scope) -> crate::external_adapters::serde_json::Value {
         use crate::operation::Scope;
@@ -12312,7 +12312,7 @@ pub mod kit_backbone {
         Some(crate::geom::VectorInput { x: o.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0), y: o.get("y").and_then(|x| x.as_f64()).unwrap_or(0.0), z: o.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0) })
     }
 
-    //#region 🔖 wire_tags
+    //#region 🔖️ wire_tags
     /// 🏷️ Typed [`crate::operation::Scope`] wire-tag: parsed once from the incoming JSON key at [`kit_scope_from_json`]'s boundary, then matched exhaustively instead of scattering `&str` comparisons through the body.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum ScopeTag {
@@ -12480,7 +12480,7 @@ pub mod kit_backbone {
             }
         }
     }
-    //#endregion 🔖 wire_tags
+    //#endregion 🔖️ wire_tags
 
     fn kit_scope_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Scope, ComposeError> {
         use crate::operation::Scope;
@@ -12725,7 +12725,7 @@ pub mod kit_backbone {
         })
     }
 
-    /// @emoji 🧩 Accepts both the flat golden-fixture shape (`{designId, blueprintId, position, ...}`) and the canonical wrapped wire shape [`kit_operation_step_input_json`] emits for `CreateFixedPiece` (`{"CreateFixedPiece": {"scope": {"CreateFixedPiece": {design_id, blueprint_id, ...}}, "input": {"FixedPiece": {position, ...}}}}`) — the two callers of [`kit_operation_from_stored`] persist different shapes for this one kind.
+    /// @emoji 🧩️ Accepts both the flat golden-fixture shape (`{designId, blueprintId, position, ...}`) and the canonical wrapped wire shape [`kit_operation_step_input_json`] emits for `CreateFixedPiece` (`{"CreateFixedPiece": {"scope": {"CreateFixedPiece": {design_id, blueprint_id, ...}}, "input": {"FixedPiece": {position, ...}}}}`) — the two callers of [`kit_operation_from_stored`] persist different shapes for this one kind.
     async fn stored_create_fixed_piece_operation(input: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
         if let Some(wrapped) = input.get("CreateFixedPiece") {
             let scope = kit_scope_from_json(wrapped.get("scope").ok_or_else(|| ComposeError::invalid("scope"))?)?;
@@ -12760,9 +12760,9 @@ pub mod kit_backbone {
             StoredOperationKind::Other => kit_operation_from_step_json(input),
         }
     }
-    //#endregion 🔖 dev_backbone_kit_operation_json
+    //#endregion 🔖️ dev_backbone_kit_operation_json
 
-    //#region 🔖 dev_backbone_initial_kit_projection
+    //#region 🔖️ dev_backbone_initial_kit_projection
     pub(crate) async fn initial_kit_projection_value(kit: &std::sync::Arc<crate::kit::Kit>) -> crate::external_adapters::serde_json::Value {
         use crate::kit::r#type::Blueprint;
         let kid = kit.workspace_kit_id().await;
@@ -13020,7 +13020,7 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji 🧬 Hydrates kit-level family ports (metabolism) into a shared registry for type connector resolution.
+    /// @emoji 🧬️ Hydrates kit-level family ports (metabolism) into a shared registry for type connector resolution.
     pub(crate) async fn hydrate_kit_scope_ports_from_snapshot_value(json: &crate::external_adapters::serde_json::Value) -> std::collections::HashMap<String, std::sync::Arc<crate::kit::r#type::Port>> {
         use std::collections::HashMap;
         use std::sync::Arc;
@@ -13064,7 +13064,7 @@ pub mod kit_backbone {
         ports_by_id
     }
 
-    /// @emoji 📁 Hydrates kit-level folder rows from projection JSON (`name`, `path`, nested `parent`).
+    /// @emoji 📁️ Hydrates kit-level folder rows from projection JSON (`name`, `path`, nested `parent`).
     pub(crate) async fn hydrate_kit_folders_from_snapshot_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::ComposeError> {
         let mut folders_slot = kit.folders.write().await;
         folders_slot.clear();
@@ -13088,7 +13088,7 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    /// @emoji 📎 Hydrates kit-level file rows from projection JSON (`blob`, `url`, or `blobHash`).
+    /// @emoji 📎️ Hydrates kit-level file rows from projection JSON (`blob`, `url`, or `blobHash`).
     pub(crate) async fn hydrate_kit_files_from_snapshot_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::ComposeError> {
         let mut files_slot = kit.files.write().await;
         files_slot.clear();
@@ -13124,7 +13124,7 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    /// @emoji 🔌 Hydrates one kit kind's ports, connectors, representations, and port compatibility from projection JSON.
+    /// @emoji 🔌️ Hydrates one kit kind's ports, connectors, representations, and port compatibility from projection JSON.
     pub(crate) async fn hydrate_type_from_snapshot_value(
         ty: &std::sync::Arc<crate::kit::r#type::Type>,
         t_json: &crate::external_adapters::serde_json::Value,
@@ -13394,7 +13394,7 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` entity (`pieces` block or array).
+    /// @emoji 🪢️ Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` entity (`pieces` block or array).
     pub(crate) async fn hydrate_design_pieces_from_snapshot_value(
         des: &std::sync::Arc<crate::kit::design::Design>,
         kit: &std::sync::Arc<crate::kit::Kit>,
@@ -13441,7 +13441,7 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    /// @emoji 🔗 Hydrates design connections and wires parent/child piece graph links.
+    /// @emoji 🔗️ Hydrates design connections and wires parent/child piece graph links.
     pub(crate) async fn hydrate_design_connections_from_snapshot_value(
         des: &std::sync::Arc<crate::kit::design::Design>,
         kit: &std::sync::Arc<crate::kit::Kit>,
@@ -13532,9 +13532,9 @@ pub mod kit_backbone {
         g.reseed_kit_snapshot_store_from_mutable_kit().await;
         Ok(g)
     }
-    //#endregion 🔖 dev_backbone_initial_kit_projection
+    //#endregion 🔖️ dev_backbone_initial_kit_projection
 
-    /// @emoji 📜 `{hash, items: [T]}` envelope — the universal "block-hashed list" reused in every nested collection of the bundle.
+    /// @emoji 📜️ `{hash, items: [T]}` envelope — the universal "block-hashed list" reused in every nested collection of the bundle.
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct BlockHashedList<T> {
         pub hash: String,
@@ -13547,14 +13547,14 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji 🔗 `{id, hash}` typed reference to another node in the bundle (authors, qualities, ports, families, …).
+    /// @emoji 🔗️ `{id, hash}` typed reference to another node in the bundle (authors, qualities, ports, families, …).
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct HashRef {
         pub id: String,
         pub hash: String,
     }
 
-    /// @emoji 📦 Top-level on-disk kit store bundle (mirrors `kit-store.bundle.example.compose.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
+    /// @emoji 📦️ Top-level on-disk kit store bundle (mirrors `kit-store.bundle.example.compose.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneBundleDoc {
         pub schema: String,
@@ -13567,14 +13567,14 @@ pub mod kit_backbone {
         pub blobs: BlockHashedList<crate::external_adapters::serde_json::Value>,
     }
 
-    /// @emoji 🌐 One graph snapshot (head pointer used as `wip` / `authoritative` / `stage` heads in the bundle).
+    /// @emoji 🌐️ One graph snapshot (head pointer used as `wip` / `authoritative` / `stage` heads in the bundle).
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneGraphHead {
         pub id: String,
         pub hash: String,
         #[serde(default)]
         pub authors: BlockHashedList<HashRef>,
-        /// @emoji 📦 Wire key `initialKit` — persisted kit seed for this snapshot (GraphQL `Graph.theKit` is the live materialization, not this JSON name).
+        /// @emoji 📦️ Wire key `initialKit` — persisted kit seed for this snapshot (GraphQL `Graph.theKit` is the live materialization, not this JSON name).
         #[serde(rename = "initialKit", default = "empty_initial_kit_value")]
         pub initial_kit: crate::external_adapters::serde_json::Value,
         #[serde(rename = "theKit", default)]
@@ -13585,7 +13585,7 @@ pub mod kit_backbone {
         pub alternatives: BlockHashedList<DevBackboneAltHead>,
     }
 
-    /// @emoji 🧭 Main kit version entity; version-scoped changes live here, not on the graph snapshot.
+    /// @emoji 🧭️ Main kit version entity; version-scoped changes live here, not on the graph snapshot.
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneTheKitHead {
         pub id: String,
@@ -13602,7 +13602,7 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji 🌿 Alternative version entity; each alternative owns its own version-scoped changes.
+    /// @emoji 🌿️ Alternative version entity; each alternative owns its own version-scoped changes.
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct DevBackboneAltHead {
         pub id: String,
@@ -13614,7 +13614,7 @@ pub mod kit_backbone {
         pub unsaved_changes: BlockHashedList<VersionChange>,
     }
 
-    /// @emoji 🧾 Version change record containing ordered edits directly on `the kit` or an alternative.
+    /// @emoji 🧾️ Version change record containing ordered edits directly on `the kit` or an alternative.
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct VersionChange {
         pub id: String,
@@ -13652,7 +13652,7 @@ pub mod kit_backbone {
         pub origin: Option<String>,
     }
 
-    /// @emoji 🪡 One  operation step inside an edit.
+    /// @emoji 🪡️ One  operation step inside an edit.
     #[derive(Clone, Debug, crate::external_adapters::serde::Deserialize, crate::external_adapters::serde::Serialize)]
     pub struct OperationStep {
         pub id: String,
@@ -13662,12 +13662,12 @@ pub mod kit_backbone {
         pub description: Option<String>,
         #[serde(default)]
         pub input: crate::external_adapters::serde_json::Value,
-        /// @emoji 📦 Canonical [`crate::operation::CanonicalKitDiff`] JSON persisted beside `input` for audit and tooling (replay still uses `input`).
+        /// @emoji 📦️ Canonical [`crate::operation::CanonicalKitDiff`] JSON persisted beside `input` for audit and tooling (replay still uses `input`).
         #[serde(rename = "kitDiff", default, skip_serializing_if = "Option::is_none")]
         pub kit_diff: Option<crate::external_adapters::serde_json::Value>,
     }
 
-    /// @emoji 🌱 Empty `initialKit` JSON snapshot for fresh dev backbones until a full metabolism-shaped [`Kit`] snapshot is persisted.
+    /// @emoji 🌱️ Empty `initialKit` JSON snapshot for fresh dev backbones until a full metabolism-shaped [`Kit`] snapshot is persisted.
     fn empty_initial_kit_value() -> crate::external_adapters::serde_json::Value {
         crate::external_adapters::serde_json::json!({
             "hash": KIT_BUNDLE_HASH_STUB,
@@ -13678,7 +13678,7 @@ pub mod kit_backbone {
     }
 
     impl DevBackboneGraphHead {
-        /// @emoji 🌱 Empty graph snapshot stamped with `kit_id` (used for fresh `wip` / `authoritative` / `stage` heads).
+        /// @emoji 🌱️ Empty graph snapshot stamped with `kit_id` (used for fresh `wip` / `authoritative` / `stage` heads).
         pub fn empty(kit_id: &str) -> Self {
             Self {
                 id: kit_id.to_string(),
@@ -13693,7 +13693,7 @@ pub mod kit_backbone {
     }
 
     impl DevBackboneBundleDoc {
-        /// @emoji 🌱 Fresh empty bundle stamped with [`KIT_STORE_BUNDLE_SCHEMA`]; kit ids fill in once the live kit projects into `initialKit`.
+        /// @emoji 🌱️ Fresh empty bundle stamped with [`KIT_STORE_BUNDLE_SCHEMA`]; kit ids fill in once the live kit projects into `initialKit`.
         pub fn template() -> Self {
             Self {
                 schema: KIT_STORE_BUNDLE_SCHEMA.to_string(),
@@ -13705,7 +13705,7 @@ pub mod kit_backbone {
             }
         }
 
-        /// @emoji 🔁 Flatten every recorded `wip` version edit into ordered [`StoredOperation`] records ready for replay.
+        /// @emoji 🔁️ Flatten every recorded `wip` version edit into ordered [`StoredOperation`] records ready for replay.
         pub fn wip_operations(&self) -> Vec<StoredOperation> {
             let mut out = Vec::new();
             Self::push_operations_from_version_changes(&mut out, self.wip.the_kit.saved_changes.items.iter().chain(self.wip.the_kit.unsaved_changes.items.iter()), "the-kit");
@@ -13726,7 +13726,7 @@ pub mod kit_backbone {
             }
         }
 
-        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that operation's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../../schema/graphql/schema.golden.graphql) / [`Edit`](../../../schema/graphql/schema.golden.graphql) cursor as full materialization.
+        /// @emoji 📸️ Project one live change into a bundle edit; each step's `kitDiff` is computed from that operation's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../../schema/graphql/schema.golden.graphql) / [`Edit`](../../../schema/graphql/schema.golden.graphql) cursor as full materialization.
         async fn edit_from_runtime_change(
             graph: &std::sync::Arc<crate::vcs::Graph>,
             workspace_id: &crate::id::Id,
@@ -13775,7 +13775,7 @@ pub mod kit_backbone {
             }
         }
 
-        /// @emoji 📸 Project one live write session into a version change with edits.
+        /// @emoji 📸️ Project one live write session into a version change with edits.
         async fn change_from_runtime_edit(graph: &std::sync::Arc<crate::vcs::Graph>, workspace_id: &crate::id::Id, tx: &std::sync::Arc<crate::vcs::Edit>, saved: bool) -> VersionChange {
             let mut edits = Vec::new();
             for (idx, ch) in tx.changes.read().await.iter().enumerate() {
@@ -13806,7 +13806,7 @@ pub mod kit_backbone {
             (saved, unsaved)
         }
 
-        /// @emoji 📸 Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
+        /// @emoji 📸️ Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
         /// `wip.id` mirrors the graph id; `wip.initialKit` is the immutable [`Graph::initial_kit`] baseline (SDL `Graph.initialKit`); head materialization stays on `theKit.kit` / version changes.
         pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
             let mut bundle = Self::template();
@@ -13823,7 +13823,7 @@ pub mod kit_backbone {
             bundle.authoritative.initial_kit = initial.clone();
             bundle.stage.initial_kit = initial;
 
-            // 🪧 Project checkpoints (metadata only; kit baselines live on `Graph.initialKit`).
+            // 🪧️ Project checkpoints (metadata only; kit baselines live on `Graph.initialKit`).
             for cp in graph.checkpoints.read().await.iter() {
                 let msg = cp.message.read().await.clone().unwrap_or_default();
                 let ts = cp.timestamp.read().await.clone().map(|t| t.0).unwrap_or_else(|| KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB.to_string());
@@ -13850,14 +13850,14 @@ pub mod kit_backbone {
             bundle
         }
 
-        //#region 📦 bundle file blobs (content-addressed outside kit projection JSON)
+        //#region 📦️ bundle file blobs (content-addressed outside kit projection JSON)
 
-        /// @emoji 🔢 Blake3 hex digest of the UTF-8 blob wire (`data:` URL or raw); identical bytes ⇒ identical digest ⇒ one entity in [`DevBackboneBundleDoc::blobs`].
+        /// @emoji 🔢️ Blake3 hex digest of the UTF-8 blob wire (`data:` URL or raw); identical bytes ⇒ identical digest ⇒ one entity in [`DevBackboneBundleDoc::blobs`].
         pub(crate) fn digest_kit_blob_wire(wire: &str) -> String {
             crate::external_adapters::blake3::hash(wire.as_bytes()).to_hex().to_string()
         }
 
-        /// @emoji 📦 Hoist each `files[].blob` into [`DevBackboneBundleDoc::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across graph `initialKit` projections).
+        /// @emoji 📦️ Hoist each `files[].blob` into [`DevBackboneBundleDoc::blobs`] keyed by [`digest_kit_blob_wire`], set `files[].blobHash`, strip inline payload (shared digest dedupes across graph `initialKit` projections).
         pub fn hoist_inline_file_blobs_for_storage(bundle: &mut DevBackboneBundleDoc) {
             let mut seen_digest = std::collections::HashSet::<String>::new();
             let mut collected: Vec<crate::external_adapters::serde_json::Value> = Vec::new();
@@ -13866,7 +13866,7 @@ pub mod kit_backbone {
             Self::purge_unreferenced_blobs(bundle);
         }
 
-        /// @emoji 🧹 Drop [`blobs`] entities whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots.
+        /// @emoji 🧹️ Drop [`blobs`] entities whose digest is not referenced by any `files[].blobHash` on `wip` / `authoritative` / `stage` `initialKit` snapshots.
         pub fn purge_unreferenced_blobs(bundle: &mut DevBackboneBundleDoc) {
             let refs = Self::referenced_blob_hashes_from_bundle(bundle);
             bundle.blobs.items.retain(|b| b.get("hash").and_then(|x| x.as_str()).map(|h| refs.contains(h)).unwrap_or(false));
@@ -13920,7 +13920,7 @@ pub mod kit_backbone {
             }
         }
 
-        /// @emoji 📎 Merge [`blobs`] into a kit projection clone for hydrate (`files[].blob` restored from `files[].blobHash`); does not mutate the persisted bundle JSON shape.
+        /// @emoji 📎️ Merge [`blobs`] into a kit projection clone for hydrate (`files[].blob` restored from `files[].blobHash`); does not mutate the persisted bundle JSON shape.
         pub(crate) fn merge_bundle_file_blobs_into_kit_json(kit: &mut crate::external_adapters::serde_json::Value, blobs: &[crate::external_adapters::serde_json::Value]) {
             if blobs.is_empty() {
                 return;
@@ -13950,9 +13950,9 @@ pub mod kit_backbone {
             }
         }
 
-        //#endregion 📦 bundle file blobs (content-addressed outside kit projection JSON)
+        //#endregion 📦️ bundle file blobs (content-addressed outside kit projection JSON)
 
-        /// @emoji 🩻 Hydrate the live graph from a previously-persisted bundle JSON and keep version changes available for  replay.
+        /// @emoji 🩻️ Hydrate the live graph from a previously-persisted bundle JSON and keep version changes available for  replay.
         pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, ComposeError> {
             let bundle: Self = crate::external_adapters::serde_json::from_str(json).map_err(|e| ComposeError::invalid(format!("bundle parse: {e}")))?;
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
@@ -13974,7 +13974,7 @@ pub mod kit_backbone {
             Ok(bundle)
         }
 
-        /// @emoji 🌱 Initialize an empty bundle with a non-empty `wip` head: empty `initialKit` projection stamped with `kit_id`,
+        /// @emoji 🌱️ Initialize an empty bundle with a non-empty `wip` head: empty `initialKit` projection stamped with `kit_id`,
         /// a single seed checkpoint anchored on the empty kit, and one empty unsaved change directly on the version.
         /// This is the "create dev kit" bootstrap state that sketchpad sees the moment a JSON file is opened/created.
         pub fn initialize_with_unsaved_change(kit_id: &str, change_id: &str, checkpoint_id: &str) -> Self {
@@ -13985,7 +13985,7 @@ pub mod kit_backbone {
             bundle.wip.the_kit.id = kit_id.to_string();
             bundle.authoritative.the_kit.id = kit_id.to_string();
             bundle.stage.the_kit.id = kit_id.to_string();
-            // 🪧 First checkpoint anchors the kit at its initial empty projection (no changes yet).
+            // 🪧️ First checkpoint anchors the kit at its initial empty projection (no changes yet).
             bundle.wip.checkpoints.items.push(crate::external_adapters::serde_json::json!({
                 "id": checkpoint_id,
                 "hash": KIT_BUNDLE_HASH_STUB,
@@ -13994,7 +13994,7 @@ pub mod kit_backbone {
                 "authors": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
                 "changes": { "hash": KIT_BUNDLE_HASH_STUB, "items": [] },
             }));
-            // 🧾 Initial unsaved change on the version; edits are added when user actions run.
+            // 🧾️ Initial unsaved change on the version; edits are added when user actions run.
             bundle.wip.the_kit.unsaved_changes.items.push(VersionChange {
                 id: change_id.to_string(),
                 hash: KIT_BUNDLE_HASH_STUB.to_string(),
@@ -14007,12 +14007,12 @@ pub mod kit_backbone {
             bundle
         }
 
-        /// @emoji ➕ Append a single forward operation to an unsaved version change (creating the change/edit if absent).
+        /// @emoji ➕️ Append a single forward operation to an unsaved version change (creating the change/edit if absent).
         pub fn append_unsaved_edit(&mut self, change_id: &str, kind: &str, input: crate::external_adapters::serde_json::Value) {
             self.append_unsaved_edit_with_origin(change_id, None, kind, input, None);
         }
 
-        /// @emoji ➕ Append a forward operation to an unsaved version change and keep an optional replay origin anchor plus optional persisted [`crate::operation::CanonicalKitDiff`] JSON.
+        /// @emoji ➕️ Append a forward operation to an unsaved version change and keep an optional replay origin anchor plus optional persisted [`crate::operation::CanonicalKitDiff`] JSON.
         pub fn append_unsaved_edit_with_origin(&mut self, change_id: &str, origin: Option<String>, kind: &str, input: crate::external_adapters::serde_json::Value, kit_diff: Option<crate::external_adapters::serde_json::Value>) {
             let changes = &mut self.wip.the_kit.unsaved_changes.items;
             let change_idx = match changes.iter().position(|c| c.id == change_id) {
@@ -14046,7 +14046,7 @@ pub mod kit_backbone {
             changes[change_idx].edits.items[0].forwards.items.push(OperationStep { id: crate::external_adapters::uuid::Uuid::now_v7().to_string(), hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: kind.to_string(), description: None, input, kit_diff });
         }
 
-        /// @emoji 🪪 Build a metabolism-shaped bundle from a flat ordered  operation log (used by golden test fixtures and import paths).
+        /// @emoji 🪪️ Build a metabolism-shaped bundle from a flat ordered  operation log (used by golden test fixtures and import paths).
         pub fn from_stored_operations(operations: &[StoredOperation]) -> Self {
             let mut bundle = Self::template();
             for operation in operations {
@@ -14056,7 +14056,7 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji 📜 Internal value type used by replay + the SQLite local-`.compose/` path; not part of the on-disk dev-json wire format.
+    /// @emoji 📜️ Internal value type used by replay + the SQLite local-`.compose/` path; not part of the on-disk dev-json wire format.
     #[derive(Clone, Debug)]
     pub struct StoredOperation {
         pub workspace_id: String,
@@ -14065,9 +14065,9 @@ pub mod kit_backbone {
         pub input: crate::external_adapters::serde_json::Value,
         pub kit_diff: Option<crate::external_adapters::serde_json::Value>,
     }
-    //#endregion 🧾 wire format
+    //#endregion 🧾️ wire format
 
-    //#region 🧭 paths + uri (native only)
+    //#region 🧭️ paths + uri (native only)
     #[cfg(not(target_arch = "wasm32"))]
     pub fn normalize_connection_uri(raw: &str) -> String {
         raw.trim().to_string()
@@ -14164,7 +14164,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
         };
         Ok(compose_root.join(name))
     }
-    //#endregion 🧭 paths + uri
+    //#endregion 🧭️ paths + uri
 
     //#region ✍️ atomic json (native only)
     #[cfg(not(target_arch = "wasm32"))]
@@ -14188,7 +14188,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
     }
     //#endregion ✍️ atomic json
 
-    //#region 🔁 replay
+    //#region 🔁️ replay
     pub async fn replay_stored_operations(graph: &Arc<Graph>, operations: &[StoredOperation]) -> Result<(), ComposeError> {
         graph.mutable_kit.read().await.clear_piece_projections_for_backbone_replay().await;
         for operation in operations {
@@ -14199,9 +14199,9 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
         }
         Ok(())
     }
-    //#endregion 🔁 replay
+    //#endregion 🔁️ replay
 
-    //#region 🧩 attached variants (native only)
+    //#region 🧩️ attached variants (native only)
     #[cfg(not(target_arch = "wasm32"))]
     pub struct DevBackboneAttached {
         path: PathBuf,
@@ -14210,12 +14210,12 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 
     #[cfg(not(target_arch = "wasm32"))]
     impl DevBackboneAttached {
-        /// @emoji 📥 Read the on-disk bundle (or fresh template if file is absent).
+        /// @emoji 📥️ Read the on-disk bundle (or fresh template if file is absent).
         pub fn read_bundle(&self) -> Result<DevBackboneBundleDoc, ComposeError> {
             read_or_init_bundle(&self.path)
         }
 
-        /// @emoji ➕ Append a forward  operation step into the targeted unsaved version change and atomically rewrite the bundle.
+        /// @emoji ➕️ Append a forward  operation step into the targeted unsaved version change and atomically rewrite the bundle.
         pub fn append_operation(&mut self, workspace_id: &Id, transaction_id: &Id, kind: &str, input: &crate::external_adapters::serde_json::Value, kit_diff: Option<&crate::external_adapters::serde_json::Value>) -> Result<(), ComposeError> {
             let mut doc = self.read_bundle()?;
             let _ = workspace_id;
@@ -14318,14 +14318,14 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
             }
         }
     }
-    //#endregion 🧩 attached variants
+    //#endregion 🧩️ attached variants
 
-    /// @emoji 📑 US-001 golden JSON: top-level `operations` array.
+    /// @emoji 📑️ US-001 golden JSON: top-level `operations` array.
     pub fn golden_operation_records_ref(src: &crate::external_adapters::serde_json::Value) -> Result<&Vec<crate::external_adapters::serde_json::Value>, ComposeError> {
         src.get("operations").and_then(|v| v.as_array()).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` array"))
     }
 
-    /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.operations.compose.json` (US-001 fixture) for persistence tests.
+    /// @emoji 🧪️ Build [`StoredOperation`] entities from `kit-store.golden.operations.compose.json` (US-001 fixture) for persistence tests.
     pub fn stored_operations_from_golden_operations_json(src: &crate::external_adapters::serde_json::Value) -> Result<Vec<StoredOperation>, ComposeError> {
         let workspace_id = src["draftId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing transactionId"))?.to_string();
@@ -14343,10 +14343,10 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
 
 //#endregion 🗄️ kit backbone persistence (native)
 
-//#region 📣 event
+//#region 📣️ event
 
 pub mod event {
-    //! 📣 The single emit point of the entire crate. Variants carry Arc-shared payloads.
+    //! 📣️ The single emit point of the entire crate. Variants carry Arc-shared payloads.
     use std::sync::{Arc, Mutex};
 
     use crate::external_adapters::async_broadcast::{InactiveReceiver, Receiver, Sender};
@@ -14355,7 +14355,7 @@ pub mod event {
     use crate::error::ComposeError;
     use crate::operation;
 
-    /// 🌐 Broadcast envelope for every observable thing the control plane emits.
+    /// 🌐️ Broadcast envelope for every observable thing the control plane emits.
     #[derive(Clone)]
     pub enum Event {
         CommandSucceeded(operation::CommandReceipt),
@@ -14369,12 +14369,12 @@ pub mod event {
     }
 
     impl Event {
-        /// @emoji 🧭 Command / aggregate outcome events re-emit every live subscription root.
+        /// @emoji 🧭️ Command / aggregate outcome events re-emit every live subscription root.
         pub fn invalidates_all_subscription_paths(&self) -> bool {
             matches!(self, Self::CommandSucceeded(_) | Self::OperationSucceeded(_) | Self::OperationFailed(_))
         }
 
-        /// @emoji 🎯 `watched` comes from subscription lookahead; empty ⇒ match all paths.
+        /// @emoji 🎯️ `watched` comes from subscription lookahead; empty ⇒ match all paths.
         pub fn matches_watched_paths(&self, watched: &[String]) -> bool {
             if watched.is_empty() {
                 return true;
@@ -14386,7 +14386,7 @@ pub mod event {
             watched.iter().any(|w| touched.iter().any(|t| t == w))
         }
 
-        /// @emoji 📍 Canonical dotted paths this event may invalidate (wip / authoritative mirrors).
+        /// @emoji 📍️ Canonical dotted paths this event may invalidate (wip / authoritative mirrors).
         pub fn canonical_touched_paths(&self) -> Vec<String> {
             match self {
                 Self::CommandSucceeded(_) | Self::OperationSucceeded(_) | Self::OperationFailed(_) => Vec::new(),
@@ -14399,11 +14399,11 @@ pub mod event {
         }
     }
 
-    /// 📣 The bus. Holds the only `emit_event` function in the crate.
+    /// 📣️ The bus. Holds the only `emit_event` function in the crate.
     pub struct EventBus {
         tx: AsyncMutex<Sender<Event>>,
         keep_alive: InactiveReceiver<Event>,
-        /// @emoji 🧷 Per-subscription [`Event`] fan-out keyed by watched canonical paths.
+        /// @emoji 🧷️ Per-subscription [`Event`] fan-out keyed by watched canonical paths.
         path_sinks: Mutex<Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)>>,
     }
 
@@ -14416,7 +14416,7 @@ pub mod event {
             Arc::new(Self { tx: AsyncMutex::new(tx), keep_alive: rx.deactivate(), path_sinks: Mutex::new(Vec::new()) })
         }
 
-        /// 📣 The **only** `emit_event` in the entire crate. All other code paths must call this.
+        /// 📣️ The **only** `emit_event` in the entire crate. All other code paths must call this.
         pub async fn emit_event(&self, ev: Event) {
             let sinks: Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)> = self.path_sinks.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).iter().map(|(p, t)| (p.clone(), t.clone())).collect();
             for (paths, tx) in sinks {
@@ -14428,12 +14428,12 @@ pub mod event {
             let _ = txb.broadcast_direct(ev).await;
         }
 
-        /// 🔔 New subscriber receiver (unfiltered broadcast).
+        /// 🔔️ New subscriber receiver (unfiltered broadcast).
         pub fn subscribe(&self) -> Receiver<Event> {
             self.keep_alive.activate_cloned()
         }
 
-        /// @emoji 🔔 Path-filtered channel: emits only [`Event`] values matching `watched` canonical paths.
+        /// @emoji 🔔️ Path-filtered channel: emits only [`Event`] values matching `watched` canonical paths.
         pub fn subscribe_paths(&self, watched: &[String]) -> crate::external_adapters::async_channel::Receiver<Event> {
             let (tx, rx) = crate::external_adapters::async_channel::unbounded();
             self.path_sinks.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).push((watched.to_vec(), tx));
@@ -14442,12 +14442,12 @@ pub mod event {
     }
 }
 
-//#endregion 📣 event
+//#endregion 📣️ event
 
-//#region 🧵 worker
+//#region 🧵️ worker
 
 pub mod worker {
-    //! 🧵 Parent router + two child runtimes (wip + authoritative).
+    //! 🧵️ Parent router + two child runtimes (wip + authoritative).
     //!
     //! Native: both children are spawned on `std::thread + futures-lite::block_on`.
     //! Wasm: each child lives in a dedicated [`web_sys::Worker`]; messages cross via [`crate::wasm_bridge`].
@@ -14536,7 +14536,7 @@ pub mod worker {
     }
     //#endregion 🗄️ backbone slot
 
-    /// 🚪 Per-child handle held by the parent: send commands in (events flow through the shared bus).
+    /// 🚪️ Per-child handle held by the parent: send commands in (events flow through the shared bus).
     pub struct ChildPort {
         inbound: Sender<Command>,
     }
@@ -14640,7 +14640,7 @@ pub mod worker {
             }
         }
 
-        /// @emoji 📥 Hydrates the live WIP graph from kit projection or bundle JSON (`StoreCommand.installProjection`).
+        /// @emoji 📥️ Hydrates the live WIP graph from kit projection or bundle JSON (`StoreCommand.installProjection`).
         pub async fn install_projection_json(&self, json: &str) -> Result<(), crate::error::ComposeError> {
             let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(json).map_err(|e| crate::error::ComposeError::invalid(format!("installProjection json: {e}")))?;
             if v.get("schema").and_then(|s| s.as_str()) == Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA) {
@@ -14667,7 +14667,7 @@ pub mod worker {
             id
         }
 
-        /// @emoji ⏳ Enqueues on wip and waits for `CommandSucceeded` / `OperationFailed` on the bus.
+        /// @emoji ⏳️ Enqueues on wip and waits for `CommandSucceeded` / `OperationFailed` on the bus.
         pub async fn dispatch_wip_wait(&self, cmd: Command) -> crate::operation::CommandResponse {
             use std::time::Duration;
 
@@ -14717,7 +14717,7 @@ pub mod worker {
         }
     }
 
-    /// 🧵 In-worker actor: drains the inbox, applies, emits.
+    /// 🧵️ In-worker actor: drains the inbox, applies, emits.
     pub struct ChildStore {
         pub label: &'static str,
         pub graph: Arc<Graph>,
@@ -14807,12 +14807,12 @@ pub mod worker {
     }
 }
 
-//#endregion 🧵 worker
+//#endregion 🧵️ worker
 
-//#region 🌐 gql
+//#region 🌐️ gql
 
 pub mod gql {
-    //! 🌐 Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
+    //! 🌐️ Type-safe static GraphQL schema via `Schema::build` (embedded target SDL string for tooling).
     use crate::external_adapters::async_graphql::{Context, Lookahead, Object, Schema, Subscription};
     use crate::external_adapters::async_stream::stream;
     use crate::external_adapters::futures_util::Stream;
@@ -14826,8 +14826,8 @@ pub mod gql {
     use crate::vcs::Graph;
     use crate::worker::ParentStore;
 
-    //#region 📡 subscription_paths
-    /// @emoji 📡 Flattens subscription selection into canonical `root:field:...` strings for [`crate::event::Event::matches_watched_paths`].
+    //#region 📡️ subscription_paths
+    /// @emoji 📡️ Flattens subscription selection into canonical `root:field:...` strings for [`crate::event::Event::matches_watched_paths`].
     pub(crate) fn collect_subscription_field_paths(root: &str, ctx: &Context<'_>) -> Vec<String> {
         let la = ctx.look_ahead();
         let inner = la.field(root);
@@ -14865,7 +14865,7 @@ pub mod gql {
         }
     }
 
-    /// @emoji 🧷 Maps [`crate::interface::KitGraphNavNode`] into golden `Node` interface for [`Query::node`].
+    /// @emoji 🧷️ Maps [`crate::interface::KitGraphNavNode`] into golden `Node` interface for [`Query::node`].
     fn kit_graph_nav_node_to_node_interface(node: crate::interface::KitGraphNavNode) -> Option<crate::gql::interfaces::NodeInterface> {
         use crate::gql::interfaces::NodeInterface as NI;
         use crate::interface::KitGraphNavNode as N;
@@ -14883,10 +14883,10 @@ pub mod gql {
             N::RemoteProvider(p) => NI::RemoteProvider(p),
         })
     }
-    //#endregion 📡 subscription_paths
+    //#endregion 📡️ subscription_paths
 
-    //#region 🌐 interfaces
-    /// @emoji 🌐 SDL `Node`, `Entity`, `EntityConnection`, `EntityEdge`, and `Workspace` interface shells (code-first; mirrors `schema.golden.graphql`).
+    //#region 🌐️ interfaces
+    /// @emoji 🌐️ SDL `Node`, `Entity`, `EntityConnection`, `EntityEdge`, and `Workspace` interface shells (code-first; mirrors `schema.golden.graphql`).
     pub mod interfaces {
         use std::sync::{Arc, OnceLock, Weak};
 
@@ -14898,7 +14898,7 @@ pub mod gql {
         use crate::meta::Author;
         use crate::timestamp::Timestamp;
 
-        /// @emoji 🌐 SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
+        /// @emoji 🌐️ SDL `interface EntityConnection` — shared relay tail (`StoreConnection`, golden `PageInfoConnection` for empty owns).
         #[derive(Interface)]
         #[graphql(name = "EntityConnection", field(name = "pageInfo", method = "page_info", ty = "&Arc<crate::gql_relay::PageInfo>"), field(name = "hash", ty = "String"))]
         pub enum EntityConnectionInterface {
@@ -14906,12 +14906,12 @@ pub mod gql {
             Store(crate::gql::StoreConnection),
         }
 
-        /// @emoji 🪢 Canonical empty `EntityConnection` for shells without materialized child entities (golden `PageInfoConnection` implementor).
+        /// @emoji 🪢️ Canonical empty `EntityConnection` for shells without materialized child entities (golden `PageInfoConnection` implementor).
         pub fn empty_entity_connection() -> EntityConnectionInterface {
             EntityConnectionInterface::PageInfo(crate::gql_relay::PageInfoConnection::empty_entity_shell())
         }
 
-        /// @emoji 🪢 Weak back-reference for golden `Entity.owner` on in-memory kit graph entities.
+        /// @emoji 🪢️ Weak back-reference for golden `Entity.owner` on in-memory kit graph entities.
         #[derive(Debug, Default)]
         pub enum KitGraphParentWeak {
             #[default]
@@ -14923,7 +14923,7 @@ pub mod gql {
             Design(Weak<crate::kit::design::Design>),
         }
 
-        /// @emoji 🌐 SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
+        /// @emoji 🌐️ SDL `interface Entity` — VCS + conflict shells participating in the global owner graph.
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Entity",
@@ -14965,7 +14965,7 @@ pub mod gql {
             Typology(std::sync::Arc<crate::gql_relay::Typology>),
         }
 
-        /// @emoji 📁 SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
+        /// @emoji 📁️ SDL `FileSystemNodeKind` — discriminant for constrained VFS nodes.
         #[derive(Clone, Copy, Debug, Eq, PartialEq, crate::external_adapters::async_graphql::Enum)]
         #[graphql(name = "FileSystemNodeKind")]
         pub enum FileSystemNodeKind {
@@ -14995,7 +14995,7 @@ pub mod gql {
             Connector,
         }
 
-        /// @emoji 📁 SDL `FileSystemNodeEdge` — relay edge for constrained VFS children.
+        /// @emoji 📁️ SDL `FileSystemNodeEdge` — relay edge for constrained VFS children.
         #[derive(Clone)]
         pub struct FileSystemNodeEdge {
             pub cursor: String,
@@ -15012,7 +15012,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 📁 SDL `FileSystemNodeConnection` — relay connection for constrained VFS children.
+        /// @emoji 📁️ SDL `FileSystemNodeConnection` — relay connection for constrained VFS children.
         #[derive(Clone)]
         pub struct FileSystemNodeConnection {
             pub edges: Vec<FileSystemNodeEdge>,
@@ -15033,7 +15033,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 📁 SDL `interface FileSystemNode` — constrained kit virtual file system projection.
+        /// @emoji 📁️ SDL `interface FileSystemNode` — constrained kit virtual file system projection.
         #[derive(Clone, Interface)]
         #[graphql(
             name = "FileSystemNode",
@@ -15066,7 +15066,7 @@ pub mod gql {
         }
 
         impl FileSystemNodeInterface {
-            /// @emoji 🆔 Whether this VFS node matches the given id.
+            /// @emoji 🆔️ Whether this VFS node matches the given id.
             pub fn matches_id(&self, id: &crate::id::Id) -> bool {
                 match self {
                     Self::Kit(k) => k.id == *id,
@@ -15096,39 +15096,39 @@ pub mod gql {
             use crate::meta::Folder;
             use crate::worker::ParentStore;
 
-            /// @emoji 📁 Empty VFS child connection when the backing node cannot be resolved.
+            /// @emoji 📁️ Empty VFS child connection when the backing node cannot be resolved.
             pub fn empty_connection() -> FileSystemNodeConnection {
                 FileSystemNodeConnection { edges: Vec::new(), page_info: PageInfo::default(), hash: String::new() }
             }
 
-            /// @emoji 📁 Resolve the active kit as a VFS node (ignores the `#[Object]` receiver).
+            /// @emoji 📁️ Resolve the active kit as a VFS node (ignores the `#[Object]` receiver).
             pub async fn node_for_kit(_kit: &Kit, ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
                 Some(FileSystemNodeInterface::Kit(rt.wip_graph.mutable_kit.read().await.clone()))
             }
 
-            /// @emoji 📁 Resolve a typology as a VFS node from the live kit graph.
+            /// @emoji 📁️ Resolve a typology as a VFS node from the live kit graph.
             pub async fn node_for_typology(topo: &crate::gql_relay::Typology, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let kit = topo.owner_kit.upgrade()?;
                 let tops = kit.typologies.read().await;
                 tops.iter().find(|t| t.id == topo.id).cloned().map(FileSystemNodeInterface::Typology)
             }
 
-            /// @emoji 📁 Resolve a kind as a VFS node from the live kit graph.
+            /// @emoji 📁️ Resolve a kind as a VFS node from the live kit graph.
             pub async fn node_for_type(ty: &crate::kit::r#type::Type, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let kit = ty.owner_kit().await?;
                 let types = kit.types_flat().await;
                 types.iter().find(|t| t.id == ty.id).cloned().map(FileSystemNodeInterface::Type)
             }
 
-            /// @emoji 📁 Resolve a design as a VFS node from its owning kit graph.
+            /// @emoji 📁️ Resolve a design as a VFS node from its owning kit graph.
             pub async fn node_for_design(design: &crate::kit::design::Design, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let kit = design.owner_kit().await?;
                 let designs = kit.designs_flat().await;
                 designs.iter().find(|d| d.id == design.id).cloned().map(FileSystemNodeInterface::Design)
             }
 
-            /// @emoji 📁 Resolve a piece as a VFS node from its owning design.
+            /// @emoji 📁️ Resolve a piece as a VFS node from its owning design.
             pub async fn node_for_piece(piece: &crate::kit::design::piece::Piece, ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
                 let kit = rt.wip_graph.mutable_kit.read().await.clone();
@@ -15139,7 +15139,7 @@ pub mod gql {
                 pieces.iter().find(|p| p.id == piece.id).cloned().map(FileSystemNodeInterface::Piece)
             }
 
-            /// @emoji 📁 Resolve a connection as a VFS node from its owning design.
+            /// @emoji 📁️ Resolve a connection as a VFS node from its owning design.
             pub async fn node_for_connection(connection: &crate::kit::design::connection::Connection, ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let rt = ctx.data::<Arc<ParentStore>>().ok()?;
                 let kit = rt.wip_graph.mutable_kit.read().await.clone();
@@ -15150,7 +15150,7 @@ pub mod gql {
                 connections.iter().find(|c| c.id == connection.id).cloned().map(FileSystemNodeInterface::Connection)
             }
 
-            /// @emoji 📁 Resolve a representation as a VFS node from its owning kind.
+            /// @emoji 📁️ Resolve a representation as a VFS node from its owning kind.
             pub async fn node_for_representation(representation: &crate::kit::r#type::Representation, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let owner = representation.owner_type.upgrade()?;
                 let kit = owner.owner_kit().await?;
@@ -15161,7 +15161,7 @@ pub mod gql {
                 reps.iter().find(|r| r.id == representation.id).cloned().map(FileSystemNodeInterface::Representation)
             }
 
-            /// @emoji 📁 Resolve a port as a VFS node from its owning kind.
+            /// @emoji 📁️ Resolve a port as a VFS node from its owning kind.
             pub async fn node_for_port(port: &crate::kit::r#type::Port, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let owner = port.owner_type.upgrade()?;
                 let kit = owner.owner_kit().await?;
@@ -15172,7 +15172,7 @@ pub mod gql {
                 ports.iter().find(|p| p.id == port.id).cloned().map(FileSystemNodeInterface::Port)
             }
 
-            /// @emoji 📁 Resolve a connector as a VFS node from its owning kind.
+            /// @emoji 📁️ Resolve a connector as a VFS node from its owning kind.
             pub async fn node_for_connector(connector: &crate::kit::r#type::Connector, _ctx: &Context<'_>) -> Option<FileSystemNodeInterface> {
                 let owner = connector.owner_type.upgrade()?;
                 let kit = owner.owner_kit().await?;
@@ -15183,7 +15183,7 @@ pub mod gql {
                 connectors.iter().find(|c| c.id == connector.id).cloned().map(FileSystemNodeInterface::Connector)
             }
 
-            /// @emoji 📁 Maps a VFS node to its SDL kind discriminant.
+            /// @emoji 📁️ Maps a VFS node to its SDL kind discriminant.
             pub fn kind(node: &FileSystemNodeInterface) -> super::FileSystemNodeKind {
                 match node {
                     FileSystemNodeInterface::Kit(_) => super::FileSystemNodeKind::Kit,
@@ -15384,7 +15384,7 @@ pub mod gql {
                 }
             }
 
-            /// @emoji 📁 Whether the node has at least one VFS child.
+            /// @emoji 📁️ Whether the node has at least one VFS child.
             pub async fn has_children(node: &FileSystemNodeInterface) -> bool {
                 !children_nodes(node).await.is_empty()
             }
@@ -15548,7 +15548,7 @@ pub mod gql {
         }
 
         impl KitGraphParentWeak {
-            /// @emoji 🌐 Upgrade to live [`EntityInterface`] for GraphQL `Entity.owner` resolution.
+            /// @emoji 🌐️ Upgrade to live [`EntityInterface`] for GraphQL `Entity.owner` resolution.
             pub fn upgrade(&self) -> Option<EntityInterface> {
                 match self {
                     Self::Unset => None,
@@ -15560,7 +15560,7 @@ pub mod gql {
                 }
             }
 
-            /// @emoji 🪪 Resolve owning [`crate::id::Id`] for normalized kit operations (`Kit` uses workspace kit id).
+            /// @emoji 🪪️ Resolve owning [`crate::id::Id`] for normalized kit operations (`Kit` uses workspace kit id).
             pub async fn resolve_workspace_owner_id(&self, kit: &Arc<crate::kit::Kit>) -> Result<crate::id::Id, crate::error::ComposeError> {
                 use crate::error::ComposeError;
                 match self {
@@ -15609,7 +15609,7 @@ pub mod gql {
             Location(LocationEdge),
         }
 
-        /// @emoji 🌐 SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
+        /// @emoji 🌐️ SDL `interface WeakEntity` — hash-backed graph nodes sharing the golden `Entity` tail (`id`, `hash`, `owner`, `owns`).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "WeakEntity",
@@ -15628,8 +15628,8 @@ pub mod gql {
             Location(Arc<Location>),
         }
 
-        //#region 🪢 golden_interface_relay
-        /// @emoji 🪢 SDL `InputEdge` / `InputConnection` — relay over [`PubInputInterface`].
+        //#region 🪢️ golden_interface_relay
+        /// @emoji 🪢️ SDL `InputEdge` / `InputConnection` — relay over [`PubInputInterface`].
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "InputEdge")]
         pub struct InputEdge {
@@ -15646,7 +15646,7 @@ pub mod gql {
             pub hash: String,
         }
 
-        /// @emoji 🪢 SDL `DiffEdge` / `DiffConnection` — relay over [`GqlDiffInterface`].
+        /// @emoji 🪢️ SDL `DiffEdge` / `DiffConnection` — relay over [`GqlDiffInterface`].
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "DiffEdge")]
         pub struct DiffEdge {
@@ -15663,7 +15663,7 @@ pub mod gql {
             pub hash: String,
         }
 
-        /// @emoji 🪢 SDL `ModificationEdge` / `ModificationConnection` — relay over [`GqlModificationInterface`].
+        /// @emoji 🪢️ SDL `ModificationEdge` / `ModificationConnection` — relay over [`GqlModificationInterface`].
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "ModificationEdge")]
         pub struct ModificationEdge {
@@ -15681,13 +15681,13 @@ pub mod gql {
         }
 
         impl ModificationConnection {
-            /// @emoji 🪢 Empty `ModificationConnection` for aggregate `Modifications.modifications`.
+            /// @emoji 🪢️ Empty `ModificationConnection` for aggregate `Modifications.modifications`.
             pub fn empty_shell() -> Self {
                 Self { edges: Vec::new(), page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash: crate::hash::h(&["modification-connection", "empty"]) }
             }
         }
 
-        /// @emoji 🧱 SDL `Modifications` — aggregate removed / live / added modifications (minimal projection from live graph where wired).
+        /// @emoji 🧱️ SDL `Modifications` — aggregate removed / live / added modifications (minimal projection from live graph where wired).
         #[derive(Clone, Debug, Default)]
         pub struct Modifications {
             pub id: Id,
@@ -15734,7 +15734,7 @@ pub mod gql {
             pub hash: String,
         }
 
-        /// @emoji 🪢 SDL `BackboneCommandEdge` / `BackboneCommandConnection`.
+        /// @emoji 🪢️ SDL `BackboneCommandEdge` / `BackboneCommandConnection`.
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "BackboneCommandEdge")]
         pub struct BackboneCommandEdge {
@@ -15751,7 +15751,7 @@ pub mod gql {
             pub hash: String,
         }
 
-        /// @emoji 🪢 SDL `ProviderEdge` / `ProviderConnection`.
+        /// @emoji 🪢️ SDL `ProviderEdge` / `ProviderConnection`.
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "ProviderEdge")]
         pub struct ProviderEdge {
@@ -15768,7 +15768,7 @@ pub mod gql {
             pub hash: String,
         }
 
-        /// @emoji 🪢 SDL `ProviderCommandEdge` / `ProviderCommandConnection`.
+        /// @emoji 🪢️ SDL `ProviderCommandEdge` / `ProviderCommandConnection`.
         #[derive(Clone, SimpleObject)]
         #[graphql(name = "ProviderCommandEdge")]
         pub struct ProviderCommandEdge {
@@ -15785,7 +15785,7 @@ pub mod gql {
             pub hash: String,
         }
 
-        /// @emoji 📐 SDL `VectorDiff` — golden `Diff` implementor for [`geom::entity::Vector`] scalars.
+        /// @emoji 📐️ SDL `VectorDiff` — golden `Diff` implementor for [`geom::entity::Vector`] scalars.
         #[derive(Clone, Debug, Default)]
         pub struct VectorDiff {
             pub id: Id,
@@ -15827,7 +15827,7 @@ pub mod gql {
 
         crate::entity_relay!(VectorDiffConnection, VectorDiffEdge, Arc<VectorDiff>);
 
-        /// @emoji 📐 SDL `VectorModification` — golden `Modification` implementor for vector before/after.
+        /// @emoji 📐️ SDL `VectorModification` — golden `Modification` implementor for vector before/after.
         #[derive(Clone, Debug)]
         pub struct VectorModification {
             pub id: Id,
@@ -15878,7 +15878,7 @@ pub mod gql {
 
         crate::entity_relay!(VectorModificationConnection, VectorModificationEdge, Arc<VectorModification>);
 
-        /// @emoji 📐 SDL `VectorModifications` — aggregate vector modifications.
+        /// @emoji 📐️ SDL `VectorModifications` — aggregate vector modifications.
         #[derive(Clone, Debug, Default)]
         pub struct VectorModifications {
             pub id: Id,
@@ -15917,7 +15917,7 @@ pub mod gql {
 
         crate::entity_relay!(VectorModificationsConnection, VectorModificationsEdge, Arc<VectorModifications>);
 
-        /// @emoji 📐 SDL `PointDiff` — golden `Diff` implementor for [`geom::entity::Point`].
+        /// @emoji 📐️ SDL `PointDiff` — golden `Diff` implementor for [`geom::entity::Point`].
         #[derive(Clone, Debug, Default)]
         pub struct PointDiff {
             pub id: Id,
@@ -16047,7 +16047,7 @@ pub mod gql {
 
         crate::entity_relay!(PointModificationsConnection, PointModificationsEdge, Arc<PointModifications>);
 
-        /// @emoji 📐 SDL `CoordinateDiff`.
+        /// @emoji 📐️ SDL `CoordinateDiff`.
         #[derive(Clone, Debug, Default)]
         pub struct CoordinateDiff {
             pub id: Id,
@@ -16173,7 +16173,7 @@ pub mod gql {
 
         crate::entity_relay!(CoordinateModificationsConnection, CoordinateModificationsEdge, Arc<CoordinateModifications>);
 
-        /// @emoji 📐 SDL `OffsetDiff`.
+        /// @emoji 📐️ SDL `OffsetDiff`.
         #[derive(Clone, Debug, Default)]
         pub struct OffsetDiff {
             pub id: Id,
@@ -16299,7 +16299,7 @@ pub mod gql {
 
         crate::entity_relay!(OffsetModificationsConnection, OffsetModificationsEdge, Arc<OffsetModifications>);
 
-        /// @emoji 📐 SDL `PlaneDiff` — nullable nested geometry per golden.
+        /// @emoji 📐️ SDL `PlaneDiff` — nullable nested geometry per golden.
         #[derive(Clone, Debug, Default)]
         pub struct PlaneDiff {
             pub id: Id,
@@ -16442,7 +16442,7 @@ pub mod gql {
 
         crate::entity_relay!(PlaneModificationsConnection, PlaneModificationsEdge, Arc<PlaneModifications>);
 
-        /// @emoji 📐 SDL `PositionDiff`.
+        /// @emoji 📐️ SDL `PositionDiff`.
         #[derive(Clone, Debug, Default)]
         pub struct PositionDiff {
             pub id: Id,
@@ -16576,7 +16576,7 @@ pub mod gql {
 
         crate::entity_relay!(PositionModificationsConnection, PositionModificationsEdge, Arc<PositionModifications>);
 
-        /// @emoji 📐 SDL `LocationDiff`.
+        /// @emoji 📐️ SDL `LocationDiff`.
         #[derive(Clone, Debug, Default)]
         pub struct LocationDiff {
             pub id: Id,
@@ -16705,10 +16705,10 @@ pub mod gql {
         }
 
         crate::entity_relay!(LocationModificationsConnection, LocationModificationsEdge, Arc<LocationModifications>);
-        //#endregion 🪢 golden_interface_relay
+        //#endregion 🪢️ golden_interface_relay
 
-        //#region 🧱 golden_interface_minimals
-        /// @emoji 🧷 SDL `EmptyDiff` — minimal [`Diff`] implementor until geometry `*Diff` kinds wire into this enum.
+        //#region 🧱️ golden_interface_minimals
+        /// @emoji 🧷️ SDL `EmptyDiff` — minimal [`Diff`] implementor until geometry `*Diff` kinds wire into this enum.
         #[derive(Clone, Debug, Default)]
         pub struct GqlEmptyDiff {
             pub id: Id,
@@ -16730,7 +16730,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyModification` — minimal [`Modification`] shell for golden `Operation.modification`.
+        /// @emoji 🧷️ SDL `EmptyModification` — minimal [`Modification`] shell for golden `Operation.modification`.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyModification {
             pub id: Id,
@@ -16763,12 +16763,12 @@ pub mod gql {
 
         static EMPTY_MODIFICATION_SINGLETON: OnceLock<Arc<EmptyModification>> = OnceLock::new();
 
-        /// @emoji 🧷 Shared [`EmptyModification`] for [`crate::operation::OperationInterface::modification`] when no concrete modification is loaded.
+        /// @emoji 🧷️ Shared [`EmptyModification`] for [`crate::operation::OperationInterface::modification`] when no concrete modification is loaded.
         pub fn empty_modification_singleton() -> Arc<EmptyModification> {
             EMPTY_MODIFICATION_SINGLETON.get_or_init(|| Arc::new(EmptyModification { id: Id::default() })).clone()
         }
 
-        /// @emoji 🧷 SDL `EmptyPubInput` — minimal [`Input`] implementor until `*Input` GraphQL types implement the interface.
+        /// @emoji 🧷️ SDL `EmptyPubInput` — minimal [`Input`] implementor until `*Input` GraphQL types implement the interface.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyPubInput {
             pub id: Id,
@@ -16790,7 +16790,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyDocument` — minimal [`Document`] implementor (golden has no concrete `Document` yet).
+        /// @emoji 🧷️ SDL `EmptyDocument` — minimal [`Document`] implementor (golden has no concrete `Document` yet).
         #[derive(Clone, Debug, Default)]
         pub struct EmptyDocument {
             pub id: Id,
@@ -16852,7 +16852,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyEvent` — minimal [`Event`] implementor until concrete event kinds implement the interface.
+        /// @emoji 🧷️ SDL `EmptyEvent` — minimal [`Event`] implementor until concrete event kinds implement the interface.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyEvent {
             pub id: Id,
@@ -16880,7 +16880,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyRichStrong` — minimal [`RichStrongEntity`] until every artifact exposes rich fields.
+        /// @emoji 🧷️ SDL `EmptyRichStrong` — minimal [`RichStrongEntity`] until every artifact exposes rich fields.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyRichStrong {
             pub id: Id,
@@ -16917,7 +16917,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🧷 SDL `EmptyArtifact` — minimal [`Artifact`] until concrete artifact fields are unified on entities.
+        /// @emoji 🧷️ SDL `EmptyArtifact` — minimal [`Artifact`] until concrete artifact fields are unified on entities.
         #[derive(Clone, Debug, Default)]
         pub struct EmptyArtifact {
             pub id: Id,
@@ -16975,7 +16975,7 @@ pub mod gql {
             }
         }
 
-        /// @emoji 🌐 SDL `interface Diff` — hash-backed diff projection (`EmptyDiff` shell plus future `VectorDiff`, …).
+        /// @emoji 🌐️ SDL `interface Diff` — hash-backed diff projection (`EmptyDiff` shell plus future `VectorDiff`, …).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Diff",
@@ -16995,7 +16995,7 @@ pub mod gql {
             LocationDiff(Arc<LocationDiff>),
         }
 
-        /// @emoji 🌐 SDL `interface Modification` — `before` / `diff` / `after` triple shell.
+        /// @emoji 🌐️ SDL `interface Modification` — `before` / `diff` / `after` triple shell.
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Modification",
@@ -17018,7 +17018,7 @@ pub mod gql {
             LocationModification(Arc<LocationModification>),
         }
 
-        /// @emoji 🌐 SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
+        /// @emoji 🌐️ SDL `interface Input` — operation-side argument projection (`*Input` types implement this in golden).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Input",
@@ -17031,7 +17031,7 @@ pub mod gql {
             Stub(Arc<EmptyPubInput>),
         }
 
-        /// @emoji 🌐 SDL `interface Document` — preview-capable artifact (`EmptyDocument` minimal variant).
+        /// @emoji 🌐️ SDL `interface Document` — preview-capable artifact (`EmptyDocument` minimal variant).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Document",
@@ -17057,7 +17057,7 @@ pub mod gql {
             Stub(Arc<EmptyDocument>),
         }
 
-        /// @emoji 🌐 SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
+        /// @emoji 🌐️ SDL `interface Event` — timestamped weak entity (`EmptyEvent` minimal variant).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Event",
@@ -17072,7 +17072,7 @@ pub mod gql {
             Stub(Arc<EmptyEvent>),
         }
 
-        /// @emoji 🌐 SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
+        /// @emoji 🌐️ SDL `interface RichStrongEntity` — titled uuid entities (`EmptyRichStrong` minimal variant plus future concrete kinds).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "RichStrongEntity",
@@ -17090,7 +17090,7 @@ pub mod gql {
             Stub(Arc<EmptyRichStrong>),
         }
 
-        /// @emoji 🌐 SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` minimal variant).
+        /// @emoji 🌐️ SDL `interface Artifact` — authored change graph on rich entities (`EmptyArtifact` minimal variant).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "Artifact",
@@ -17115,7 +17115,7 @@ pub mod gql {
             Stub(Arc<EmptyArtifact>),
         }
 
-        /// @emoji 🌐 SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
+        /// @emoji 🌐️ SDL `interface StrongEntity` — uuidv7-backed [`Entity`] projection (mirrors golden implementors reachable today).
         #[derive(Clone, Interface)]
         #[graphql(
             name = "StrongEntity",
@@ -17151,7 +17151,7 @@ pub mod gql {
             Operation(crate::operation::OperationInterface),
         }
 
-        /// @emoji 🌐 SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
+        /// @emoji 🌐️ SDL `interface BackboneCommand` — `detach` / `sync` command handles on backbones.
         #[derive(Clone, Interface)]
         #[graphql(name = "BackboneCommand", field(name = "detach", ty = "crate::operation::ResponseInterface"), field(name = "sync", ty = "crate::operation::ResponseInterface"))]
         pub enum BackboneCommandInterface {
@@ -17196,7 +17196,7 @@ pub mod gql {
                 crate::operation::CommandResponse::not_implemented().await.into()
             }
         }
-        //#endregion 🧱 golden_interface_minimals
+        //#endregion 🧱️ golden_interface_minimals
 
         #[derive(Clone, Interface)]
         #[graphql(
@@ -17216,10 +17216,10 @@ pub mod gql {
             Alternative(Arc<crate::vcs::Alternative>),
         }
     }
-    //#endregion 🌐 interfaces
+    //#endregion 🌐️ interfaces
 
-    //#region 🌐 runtime_hosting
-    /// @emoji 🛜 Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
+    //#region 🌐️ runtime_hosting
+    /// @emoji 🛜️ Golden `BackboneStatus` enum (`OFFLINE` / `RECONNECTING` / `ONLINE`).
     #[derive(Clone, Copy, PartialEq, Eq, crate::external_adapters::async_graphql::Enum)]
     pub enum BackboneStatus {
         #[graphql(name = "OFFLINE")]
@@ -17258,7 +17258,7 @@ pub mod gql {
         }
     }
 
-    /// @emoji 🌐 Golden `WebsocketBackbone` — websocket backbone shell (status surfaces once transport is wired).
+    /// @emoji 🌐️ Golden `WebsocketBackbone` — websocket backbone shell (status surfaces once transport is wired).
     pub struct WebsocketBackbone {
         pub id: Id,
         pub uri: String,
@@ -17286,7 +17286,7 @@ pub mod gql {
         }
     }
 
-    /// @emoji 🧷 Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
+    /// @emoji 🧷️ Golden `interface Backbone` — concrete [`FileBackbone`] / [`WebsocketBackbone`].
     #[derive(Clone, crate::external_adapters::async_graphql::Interface)]
     #[graphql(
         name = "Backbone",
@@ -17302,7 +17302,7 @@ pub mod gql {
         Websocket(Arc<WebsocketBackbone>),
     }
 
-    /// @emoji 🪢 Golden `BackboneEdge` / `BackboneConnection` relay shells.
+    /// @emoji 🪢️ Golden `BackboneEdge` / `BackboneConnection` relay shells.
     #[derive(Clone, crate::external_adapters::async_graphql::SimpleObject)]
     pub struct BackboneEdge {
         pub cursor: String,
@@ -17319,20 +17319,20 @@ pub mod gql {
     }
 
     impl BackboneConnection {
-        /// @emoji 🪢 Empty backbone connection (no entities materialised yet).
+        /// @emoji 🪢️ Empty backbone connection (no entities materialised yet).
         pub fn empty() -> Self {
             Self { edges: Vec::new(), page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash: crate::hash::h(&["backbone-connection", "empty"]) }
         }
     }
 
-    /// @emoji 🏠 Golden `LocalProvider` — dev host provider (`uri` + active [`StoreConnection`]).
+    /// @emoji 🏠️ Golden `LocalProvider` — dev host provider (`uri` + active [`StoreConnection`]).
     pub struct LocalProvider {
         pub id: Id,
         pub uri: String,
     }
 
     impl LocalProvider {
-        /// @emoji 🏠 Builds a deterministic shell for the active session provider entity.
+        /// @emoji 🏠️ Builds a deterministic shell for the active session provider entity.
         pub fn new(id: Id, uri: String) -> Self {
             Self { id, uri }
         }
@@ -17421,7 +17421,7 @@ pub mod gql {
     }
 
     impl RemoteProviderConnection {
-        /// @emoji 🪢 Builds the golden `RemoteProviderConnection` from runtime entities.
+        /// @emoji 🪢️ Builds the golden `RemoteProviderConnection` from runtime entities.
         pub fn from_providers(providers: Vec<Arc<RemoteProvider>>) -> Self {
             let mut child_hashes = Vec::with_capacity(providers.len());
             for p in &providers {
@@ -17432,7 +17432,7 @@ pub mod gql {
             Self { edges, page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash }
         }
 
-        /// @emoji 🪢 Empty remote-provider catalog.
+        /// @emoji 🪢️ Empty remote-provider catalog.
         pub fn empty() -> Self {
             Self::from_providers(Vec::new())
         }
@@ -17515,12 +17515,12 @@ pub mod gql {
             Ok(crate::operation::CommandResponse::not_implemented().await.into())
         }
     }
-    //#endregion 🌐 runtime_hosting
+    //#endregion 🌐️ runtime_hosting
 
-    /// @emoji 🧩 Executable schema (`Query`, `Mutation`, `Subscription`).
+    /// @emoji 🧩️ Executable schema (`Query`, `Mutation`, `Subscription`).
     pub type AppSchema = Schema<Query, Mutation, Subscription>;
 
-    /// @emoji 🏪 Explicit target-schema Store root for graph heads and conflict reads.
+    /// @emoji 🏪️ Explicit target-schema Store root for graph heads and conflict reads.
     #[derive(Clone)]
     pub struct Store;
 
@@ -17541,7 +17541,7 @@ pub mod gql {
     }
 
     impl StoreConnection {
-        /// @emoji 🪢 Builds the active-session store connection from the runtime store roots.
+        /// @emoji 🪢️ Builds the active-session store connection from the runtime store roots.
         pub fn active() -> Self {
             Self { edges: vec![StoreEdge { cursor: crate::gql_relay::edge_cursor(0), node: Store }], page_info: Arc::new(crate::gql_relay::PageInfo::default()), hash: crate::hash::h(&["store"]) }
         }
@@ -17549,12 +17549,12 @@ pub mod gql {
 
     #[Object(name = "Store")]
     impl Store {
-        /// @emoji 🌐 Writable in-progress graph head.
+        /// @emoji 🌐️ Writable in-progress graph head.
         pub async fn wip(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Arc<Graph>> {
             Ok(ctx.data::<Arc<ParentStore>>()?.wip_graph.clone())
         }
 
-        /// @emoji 🧾 Authoritative graph head when available.
+        /// @emoji 🧾️ Authoritative graph head when available.
         #[graphql(name = "authoritative")]
         pub async fn authoritative(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<Arc<Graph>>> {
             Ok(Some(ctx.data::<Arc<ParentStore>>()?.auth_graph.clone()))
@@ -17572,13 +17572,13 @@ pub mod gql {
 
     #[Object]
     impl Query {
-        /// @emoji 🔎 Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
+        /// @emoji 🔎️ Golden `Query.node(id)` — returns the `Node` interface for resolvable globals on this runtime.
         pub async fn node(&self, ctx: &Context<'_>, id: Id) -> crate::external_adapters::async_graphql::Result<Option<crate::gql::interfaces::NodeInterface>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(crate::interface::resolve_node(rt.as_ref(), &id).await.and_then(kit_graph_nav_node_to_node_interface))
         }
 
-        /// @emoji 🔎 Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
+        /// @emoji 🔎️ Golden `Query.entity(hash)` — returns the `Entity` interface for VCS shells resolvable on this runtime.
         pub async fn entity(&self, ctx: &Context<'_>, hash: Id) -> crate::external_adapters::async_graphql::Result<Option<crate::gql::interfaces::EntityInterface>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             Ok(match crate::interface::resolve_node(rt.as_ref(), &hash).await {
@@ -17597,13 +17597,13 @@ pub mod gql {
             })
         }
 
-        /// @emoji 🧭 First active [`crate::vcs::Session`] on this runtime.
+        /// @emoji 🧭️ First active [`crate::vcs::Session`] on this runtime.
         pub async fn session(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<Arc<crate::vcs::Session>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             rt.sessions.read().await.first().cloned().ok_or_else(|| crate::external_adapters::async_graphql::Error::new("no session"))
         }
 
-        /// @emoji 🏪 Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
+        /// @emoji 🏪️ Active [`Store`] for bundle tests and relay paths (same surface as `LocalProvider.stores` / `Session.stores`).
         pub async fn store(&self) -> Store {
             Store
         }
@@ -18625,7 +18625,7 @@ pub mod gql {
 
     #[Subscription]
     impl Subscription {
-        /// @emoji 📡 Golden `Subscription.session` — live mirror of [`Query::session`].
+        /// @emoji 📡️ Golden `Subscription.session` — live mirror of [`Query::session`].
         async fn session(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<SessionStream> {
             let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
@@ -18662,7 +18662,7 @@ pub mod gql {
             }))
         }
 
-        /// @emoji 📡 Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
+        /// @emoji 📡️ Golden `Subscription.operation` — emits the latest WIP [`OperationInterface`] (tracks `op_history` tail until finer-grained cursor wiring lands).
         async fn operation(&self, ctx: &Context<'_>) -> crate::external_adapters::async_graphql::Result<OperationStream> {
             let rt = ctx.data::<Arc<ParentStore>>()?.clone();
             let bus = ctx.data::<Arc<EventBus>>()?.clone();
@@ -18964,12 +18964,12 @@ pub mod gql {
         normalize_target_sdl(&out)
     }
 
-    /// 📜 Canonical SDL emitted by the executable async-graphql schema.
+    /// 📜️ Canonical SDL emitted by the executable async-graphql schema.
     pub async fn sdl() -> String {
         prune_non_golden_sdl(build_schema().await.sdl())
     }
 
-    /// 🧮 Normalize SDL text for stable comparisons (trim ends, collapse blank-line runs).
+    /// 🧮️ Normalize SDL text for stable comparisons (trim ends, collapse blank-line runs).
     pub fn normalize_target_sdl(s: &str) -> String {
         let mut out = String::with_capacity(s.len());
         let mut blank_run = 0u32;
@@ -18990,18 +18990,18 @@ pub mod gql {
         out.trim_end_matches('\n').to_string() + "\n"
     }
 
-    /// 🧱 Build schema with parent runtime + bus.
+    /// 🧱️ Build schema with parent runtime + bus.
     pub fn build_schema_for(rt: Arc<ParentStore>) -> AppSchema {
         build_schema_sync_for(rt)
     }
 
-    /// 🧱 Default schema (fresh runtime).
+    /// 🧱️ Default schema (fresh runtime).
     pub async fn build_schema() -> AppSchema {
         build_schema_sync_for(ParentStore::spawn().await)
     }
 
-    //#region 🌐native_http_graphql
-    /// @emoji 🌐 Parses a GraphQL-over-HTTP JSON body (`query`, optional `variables`, optional `operationName`) into an async-graphql [`Request`].
+    //#region 🌐️native_http_graphql
+    /// @emoji 🌐️ Parses a GraphQL-over-HTTP JSON body (`query`, optional `variables`, optional `operationName`) into an async-graphql [`Request`].
     pub fn graphql_request_from_json_str(body: &str) -> Result<crate::external_adapters::async_graphql::Request, crate::error::ComposeError> {
         use crate::external_adapters::async_graphql::Variables;
         let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(body).map_err(|e| crate::error::ComposeError::invalid(format!("graphql json: {e}")))?;
@@ -19019,16 +19019,16 @@ pub mod gql {
         }
         Ok(req)
     }
-    //#endregion 🌐native_http_graphql
+    //#endregion 🌐️native_http_graphql
 }
 
-//#endregion 🌐 gql
+//#endregion 🌐️ gql
 
-//#region 🔌 wasm_bridge
+//#region 🔌️ wasm_bridge
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm_bridge {
-    //! 🌐 `KitStoreHandle`: GraphQL executor + subscriptions over seeded [`crate::worker::ParentStore`] (WASM build).
+    //! 🌐️ `KitStoreHandle`: GraphQL executor + subscriptions over seeded [`crate::worker::ParentStore`] (WASM build).
     use std::sync::Arc;
     use std::sync::Mutex;
 
@@ -19069,7 +19069,7 @@ pub mod wasm_bridge {
     #[wasm_bindgen(js_name = boot)]
     pub fn boot() {}
 
-    /// 📜 Schema SDL for tooling (`schema_sdl` export name matches existing pkg consumers).
+    /// 📜️ Schema SDL for tooling (`schema_sdl` export name matches existing pkg consumers).
     #[wasm_bindgen]
     pub fn schema_sdl() -> js_sys::Promise {
         future_to_promise(async move {
@@ -19087,7 +19087,7 @@ pub mod wasm_bridge {
         })
     }
 
-    /// 🌐 Stateful GraphQL façade for `@compose/js` embedded worker + inline WASM.
+    /// 🌐️ Stateful GraphQL façade for `@compose/js` embedded worker + inline WASM.
     #[wasm_bindgen]
     pub struct KitStoreHandle {
         rt: Arc<ParentStore>,
@@ -19096,7 +19096,7 @@ pub mod wasm_bridge {
 
     #[wasm_bindgen]
     impl KitStoreHandle {
-        /// 🧾 `KitStoreHandle.create(uri)` — `dev://empty` only; kit JSON via GraphQL `installProjection`.
+        /// 🧾️ `KitStoreHandle.create(uri)` — `dev://empty` only; kit JSON via GraphQL `installProjection`.
         #[wasm_bindgen(js_name = create)]
         pub fn create(uri: String) -> js_sys::Promise {
             future_to_promise(async move {
@@ -19165,11 +19165,11 @@ pub mod wasm_bridge {
     }
 }
 
-//#endregion 🔌 wasm_bridge
+//#endregion 🔌️ wasm_bridge
 
-//#region 📋 kit_store_comprehensive_e2e
+//#region 📋️ kit_store_comprehensive_e2e
 
-/// @emoji 📋 In-process runner for `kit-store.comprehensive.compose.json` (native hosts + compose-gql E2E).
+/// @emoji 📋️ In-process runner for `kit-store.comprehensive.compose.json` (native hosts + compose-gql E2E).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod kit_store_comprehensive_e2e {
     use std::path::Path;
@@ -19179,7 +19179,7 @@ pub mod kit_store_comprehensive_e2e {
 
     use crate::gql::{build_schema_for, AppSchema};
 
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `compose/asset/compose/`.
+    /// @emoji 📎️ US-001 replay fixtures (`kit-store.golden.*`) under `compose/asset/compose/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose");
         let operations = base.join("kit-store.golden.operations.compose.json");
@@ -19191,7 +19191,7 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-    /// @emoji 📋 Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `compose/asset/compose/`.
+    /// @emoji 📋️ Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `compose/asset/compose/`.
     pub fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose/kit-store.comprehensive.compose.json");
         if path.is_file() {
@@ -19214,12 +19214,12 @@ pub mod kit_store_comprehensive_e2e {
         v.pointer(&p)
     }
 
-    /// @emoji 🪢 Reads a fixture capture scalar from a JSON leaf (`string` or `{ "value": "…" }` IdResult shape).
+    /// @emoji 🪢️ Reads a fixture capture scalar from a JSON leaf (`string` or `{ "value": "…" }` IdResult shape).
     pub fn kit_store_capture_scalar(v: &crate::external_adapters::serde_json::Value) -> Option<String> {
         v.as_str().map(str::to_string).or_else(|| v.get("value").and_then(|inner| inner.as_str()).map(str::to_string))
     }
 
-    //#region 🔖 fixture_wire_tags
+    //#region 🔖️ fixture_wire_tags
     /// 🏷️ Typed replay-engine wire-tag, parsed once at [`kit_store_replay_golden_ops_on_graph`]'s boundary.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum ReplayEngineKind {
@@ -19293,7 +19293,7 @@ pub mod kit_store_comprehensive_e2e {
             })
         }
     }
-    //#endregion 🔖 fixture_wire_tags
+    //#endregion 🔖️ fixture_wire_tags
 
     async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::vcs::Graph>, ops_json: &crate::external_adapters::serde_json::Value, engine: &str) {
         let workspace_id = g.id.clone();
@@ -19526,7 +19526,7 @@ pub mod kit_store_comprehensive_e2e {
         }
     }
 
-    /// @emoji 🧪 Load and validate fixture, run GraphQL steps + native backbone steps (in-process ParentStore).
+    /// @emoji 🧪️ Load and validate fixture, run GraphQL steps + native backbone steps (in-process ParentStore).
     pub async fn run_in_process(fixture: &crate::external_adapters::serde_json::Value) {
         kit_store_validate_comprehensive_fixture(fixture);
         let rt = crate::worker::ParentStore::spawn().await;
@@ -19534,7 +19534,7 @@ pub mod kit_store_comprehensive_e2e {
         kit_store_run_comprehensive_fixture_steps(fixture, &rt, &schema).await;
     }
 
-    /// @emoji 🧪 Every `replayEngines` entry matches golden invariants on a fresh graph.
+    /// @emoji 🧪️ Every `replayEngines` entry matches golden invariants on a fresh graph.
     pub async fn run_all_replay_engines(fixture: &crate::external_adapters::serde_json::Value) {
         kit_store_validate_comprehensive_fixture(fixture);
         let (ops_path, exp_path) = kit_store_golden_fixture_paths().expect("golden paths");
@@ -19549,9 +19549,9 @@ pub mod kit_store_comprehensive_e2e {
     }
 }
 
-//#endregion 📋 kit_store_comprehensive_e2e
+//#endregion 📋️ kit_store_comprehensive_e2e
 
-//#region 🧪 tests
+//#region 🧪️ tests
 
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
@@ -19625,8 +19625,8 @@ mod tests {
         assert_eq!(replayed.id, "patched");
     }
 
-    //#region 🔖DslTests
-    /// @emoji 🧬 One `operation::Operation` value per representative kind, chosen to exercise every
+    //#region 🔖️DslTests
+    /// @emoji 🧬️ One `operation::Operation` value per representative kind, chosen to exercise every
     /// `FieldKind` the `dsl::` derive engine's `ComposeOperationDsl` mirror carries: bare scalars
     /// (`RenameKit`), `Option<String>` (`ChangeDescription`), an `Id` scalar bridge plus a nested
     /// `dsl::DslRecord`-derived `TagInput` with its own `Option<Vec<AttributeInput>>` (`CreateTag`),
@@ -19711,9 +19711,9 @@ mod tests {
         store::test_support::assert_document_text_round_trip(&store);
         store::test_support::assert_document_pack_round_trip(&store);
     }
-    //#endregion 🔖DslTests
+    //#endregion 🔖️DslTests
 
-    /// @emoji 📜 Collects `(kind, name)` for top-level GraphQL declarations (first line of each declaration block).
+    /// @emoji 📜️ Collects `(kind, name)` for top-level GraphQL declarations (first line of each declaration block).
     fn collect_schema_decl_keys(sdl: &str) -> BTreeSet<(String, String)> {
         let mut out = BTreeSet::new();
         for raw in sdl.lines() {
@@ -19734,7 +19734,7 @@ mod tests {
         out
     }
 
-    /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) live under `compose/asset/compose/` when present in the checkout.
+    /// @emoji 📎️ US-001 replay fixtures (`kit-store.golden.*`) live under `compose/asset/compose/` when present in the checkout.
     fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose");
         let operations = base.join("kit-store.golden.operations.compose.json");
@@ -19846,7 +19846,7 @@ mod tests {
             });
         }
 
-        /// 🪡 `kit_graph_engine::apply_kit_operation` must replay the same golden operations as manual apply.
+        /// 🪡️ `kit_graph_engine::apply_kit_operation` must replay the same golden operations as manual apply.
         #[test]
         fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
             block_on(async {
@@ -20035,7 +20035,7 @@ mod tests {
         }
     }
 
-    /// @emoji 📜 `gql::sdl()` is code-first; set `COMPOSE_GOLDEN_STRICT=1` to assert every golden `type`/`interface`/`union`/`input`/`enum`/`scalar` exists in generated SDL (structural superset).
+    /// @emoji 📜️ `gql::sdl()` is code-first; set `COMPOSE_GOLDEN_STRICT=1` to assert every golden `type`/`interface`/`union`/`input`/`enum`/`scalar` exists in generated SDL (structural superset).
     #[test]
     fn schema_matches_target_graphql_file() {
         let from_fn = block_on(crate::gql::sdl());
@@ -20054,7 +20054,7 @@ mod tests {
         }
     }
 
-    /// @emoji 🧱 `entity_bare!` / `operation_with_input!` / `operation_no_input!` expand to real `item` tokens (compile-time splice, not `$( )* => {}` stubs).
+    /// @emoji 🧱️ `entity_bare!` / `operation_with_input!` / `operation_no_input!` expand to real `item` tokens (compile-time splice, not `$( )* => {}` stubs).
     #[test]
     fn golden_macro_dsl_item_splices_compile() {
         crate::entity_bare! {
@@ -20071,7 +20071,7 @@ mod tests {
 
     const GQL_RESPONSE_ID: &str = "{ ok result { ... on IdResult { value } } }";
 
-    /// @emoji 🌱 Opens an unsaved kit change via golden `Mutation.session.store.theKit.startNewChange` (see `schema.golden.graphql` Commands block).
+    /// @emoji 🌱️ Opens an unsaved kit change via golden `Mutation.session.store.theKit.startNewChange` (see `schema.golden.graphql` Commands block).
     async fn graphql_start_new_change(schema: &AppSchema) -> String {
         let mutation = format!(r#"mutation {{ session {{ store(id: "test-store") {{ theKit {{ startNewChange {} }} }} }} }}"#, GQL_RESPONSE_ID);
         let res = schema.execute(Request::new(mutation)).await;
@@ -20079,7 +20079,7 @@ mod tests {
         res.data.into_json().unwrap()["session"]["store"]["theKit"]["startNewChange"]["result"]["value"].as_str().expect("change id").to_string()
     }
 
-    /// @emoji 🌱 GraphQL tests open a target-schema unsaved change; the internal draft anchor stays hidden.
+    /// @emoji 🌱️ GraphQL tests open a target-schema unsaved change; the internal draft anchor stays hidden.
     async fn graphql_seed_defaults_and_open_tx(schema: &AppSchema) -> (String, String) {
         let tx_id = graphql_start_new_change(schema).await;
         ("the-kit".to_string(), tx_id)
@@ -20131,7 +20131,7 @@ mod tests {
         "{ store { authoritative { theKit { kit { hasDesigns { edges { node { hasPieces { edges { node { id } } } } } } } } } } }"
     }
 
-    /// 📤 Writes the executable schema's SDL to `COMPOSE_GRAPHQL_SCHEMA_OUT`; run via `npx nx build compose/graphql`.
+    /// 📤️ Writes the executable schema's SDL to `COMPOSE_GRAPHQL_SCHEMA_OUT`; run via `npx nx build compose/graphql`.
     #[test]
     #[ignore = "writes the generated SDL to COMPOSE_GRAPHQL_SCHEMA_OUT"]
     fn export_compose_graphql_schema_file() {
@@ -20157,7 +20157,7 @@ mod tests {
     fn worker_child_runtime_guard_no_direct_mutable_kit_write_or_apply_diff() {
         let src = include_str!("lib.rs");
         let i = src.find("impl ChildStore").expect("ChildStore impl");
-        let j = src[i..].find("//#endregion 🧵 worker").expect("worker end marker") + i;
+        let j = src[i..].find("//#endregion 🧵️ worker").expect("worker end marker") + i;
         let worker = &src[i..j];
         assert!(!worker.contains("mutable_kit.write()"), "ChildStore must not assign Graph::mutable_kit");
         assert!(!worker.contains("apply_diff"), "ChildStore must not call Kit::apply_diff; use record_operation_in_open_transaction + materialized_kit_for_workspace");
@@ -20165,7 +20165,7 @@ mod tests {
 
     #[test]
     fn kit_store_bundle_serialize_hydrate_round_trip_via_graphql() {
-        // 📸 Renames then hydrates via [`crate::kit_backbone::DevBackboneBundleDoc`] (bundle GraphQL entry points were dropped from the target schema).
+        // 📸️ Renames then hydrates via [`crate::kit_backbone::DevBackboneBundleDoc`] (bundle GraphQL entry points were dropped from the target schema).
         block_on(async {
             let rt = crate::worker::ParentStore::spawn().await;
             let g = rt.wip_graph.clone();
@@ -21529,7 +21529,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn kit_store_bundle_template_round_trips_metabolism_top_level_keys() {
-        // 🧾 The empty bundle template is byte-stable in its top-level shape: serialise → deserialise → keys match.
+        // 🧾️ The empty bundle template is byte-stable in its top-level shape: serialise → deserialise → keys match.
         let bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         let s = crate::external_adapters::serde_json::to_string_pretty(&bundle).expect("serialize empty template");
         let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&s).expect("parse template");
@@ -21609,7 +21609,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn kit_store_bundle_initialize_with_unsaved_change_seeds_checkpoint_and_change() {
-        // 🌱 Bundle bootstrap matches sketchpad "create dev kit (json)": one `initialKit`, one checkpoint, one unsaved change on the version.
+        // 🌱️ Bundle bootstrap matches sketchpad "create dev kit (json)": one `initialKit`, one checkpoint, one unsaved change on the version.
         let bundle = crate::kit_backbone::DevBackboneBundleDoc::initialize_with_unsaved_change("kit-id-1", "change-1", "ckpt-1");
         assert_eq!(bundle.schema, crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA);
         assert_eq!(bundle.wip.id, "kit-id-1");
@@ -21628,7 +21628,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn dev_json_backbone_round_trip_persists_metabolism_shape_on_disk() {
-        // 🔁 Mount (no file) → append operation via attached backbone → re-read on-disk JSON → confirm metabolism top-level + version change path.
+        // 🔁️ Mount (no file) → append operation via attached backbone → re-read on-disk JSON → confirm metabolism top-level + version change path.
         block_on(async {
             let dir = tempfile::tempdir().expect("temp dir");
             let path = dir.path().join("dev-kit.json");
@@ -21665,7 +21665,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn kit_store_bundle_append_unsaved_edit_creates_change_and_edit_paths() {
-        // ➕ Appending to a fresh template materialises wip.theKit.unsavedChanges[0].edits[0].forwards[0] without touching authoritative/stage.
+        // ➕️ Appending to a fresh template materialises wip.theKit.unsavedChanges[0].edits[0].forwards[0] without touching authoritative/stage.
         let mut bundle = crate::kit_backbone::DevBackboneBundleDoc::template();
         bundle.append_unsaved_edit("change-y", "kit.design.piece.createdFixedPiece", crate::external_adapters::serde_json::json!({"hello": "world"}));
         assert_eq!(bundle.wip.the_kit.unsaved_changes.items.len(), 1, "wip.theKit unsaved change created");
@@ -21857,7 +21857,7 @@ mod tests {
         });
     }
 
-    /// @emoji 📦 `metabolism.kit.diff.compose.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
+    /// @emoji 📦️ `metabolism.kit.diff.compose.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
     fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
         const FIXTURE: &str = include_str!("../../../fixture/metabolism.kit.diff.compose.json");
@@ -21871,7 +21871,7 @@ mod tests {
         assert!(designs.get("added").and_then(|v| v.as_array()).is_some_and(|a| !a.is_empty()), "fixture designs diff must include added entries");
     }
 
-    //#region 🪪 merkle hashing
+    //#region 🪪️ merkle hashing
     #[test]
     fn merkle_node_str_sorts_child_digests_for_order_independence() {
         let a = crate::hash::merkle_node_str(&["test:node", "id-1"], vec!["zzz".into(), "aaa".into(), "mmm".into()]);
@@ -21948,12 +21948,12 @@ mod tests {
     fn guard_gql_relay_has_no_legacy_id_join_hash() {
         let src = include_str!("lib.rs");
         let i = src.find("pub mod gql_relay").expect("gql_relay module");
-        let j = src[i..].find("//#endregion 🪢 gql_relay").expect("gql_relay end") + i;
+        let j = src[i..].find("//#endregion 🪢️ gql_relay").expect("gql_relay end") + i;
         let relay = &src[i..j];
         let needle = concat!("hash", "_ids");
         assert!(!relay.contains(needle), "gql_relay must not contain legacy id-join hash helper; use merkle_collection / entity compute_hash digests");
     }
-    //#endregion 🪪 merkle hashing
+    //#endregion 🪪️ merkle hashing
 
     #[test]
     fn normalized_create_fixed_piece_replay_reuses_scoped_piece_id() {
@@ -21992,7 +21992,7 @@ mod tests {
     #[test]
     fn metabolism_nakagin_install_hydrates_connections() {
         block_on(async {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.🦑repo/🎫tickets/26/06/24/FIX-NAKAGIN-DESIGN-NOT-SHOWING-PIECES/assembled-metabolism.kit.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.🦑️repo/🎫️tickets/26/06/24/FIX-NAKAGIN-DESIGN-NOT-SHOWING-PIECES/assembled-metabolism.kit.json");
             if !path.exists() {
                 return;
             }
@@ -22076,4 +22076,4 @@ mod tests {
     }
 }
 
-//#endregion 🧪 tests
+//#endregion 🧪️ tests

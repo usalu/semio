@@ -1,0 +1,142 @@
+db_actor — wave CW4 implementation report
+===========================================
+
+Scope
+-----
+Replaced the stub /Users/ueli/Documents/semio/db/actor/rs/lib.rs with a complete, tested
+implementation of db_actor's contracted responsibility: the priority-mailbox actor core (6
+bounded lanes, deficit-round-robin, shed-previews-first admission), supervision
+(OneForOne/OneForAll/Escalate, generation bumping, catch_unwind poison isolation), hand-rolled
+Send/Recv/Reply futures (dual blocking/async, no tokio), and a std::thread-based ThreadSpawner.
+
+No Cargo.toml changes were needed — db_actor's only dependency remains db_core, per the contract's
+per-crate dependency table. No new dependency was added.
+
+What was implemented
+---------------------
+- Envelope<M>: one in-flight message (priority, per-mailbox seq, payload).
+- Mailbox core (MailboxInner<M>, MailboxState<M>): six VecDeque lanes indexed by
+  db_core::Priority::rank, a per-lane DRR deficit array + persistent cursor, closed flag,
+  AtomicU64 generation counter.
+- Admission law (try_admit): checks generation staleness first (DbError::StaleGeneration),
+  then closed, then per-lane capacity from db_core::MailboxCapacities. Priority::Preview is the
+  only lane that ever sheds (pops its own oldest entry) instead of reporting Full — matches
+  db_core::Priority::sheddable()'s own doc ("the only lane ever shed under backpressure").
+  Every other lane reports Admission::Full and leaves backpressure to the caller.
+- Receive law (try_recv): System then Recovery drain strictly ahead of everything else ("never
+  queued behind anything" / "run before ordinary work" per db_core::Priority's doc); the
+  remaining four lanes (Command/Query/Live/Preview) share classic deficit-round-robin using
+  Priority::default_weight() as the DRR quantum, with the cursor persisted in MailboxState so a
+  lane's weight is honored as a run of consecutive dequeues across many try_recv calls, not
+  re-decided from scratch each call. Verified in
+  tests::drr_serves_a_lane_a_run_of_messages_proportional_to_its_weight: with weights
+  Command=16/Query=8, 32 Command + 32 Query messages drain as an exact 16-then-8-then-16... run,
+  not an approximation.
+- Generation-based restart safety: a supervised restart bumps the SAME MailboxInner's generation
+  counter (does not allocate a new mailbox — already-queued messages survive a crash) rather than
+  recreating it. Every Address cloned before the bump is now "stale": its next send fails loudly
+  with DbError::StaleGeneration instead of silently enqueuing into a mailbox nobody drains — this
+  directly implements the behavior db_core::GenerationId's own doc comment describes and is
+  exercised end-to-end in one_for_one_restarts_only_the_failed_child_and_bumps_only_its_generation.
+- Address<M> / Receiver<M> / mailbox()/mailbox_from_config(): the sender/receiver pair, analogous
+  to std::sync::mpsc::channel.
+- SendFuture<M> / RecvFuture<'a, M>: hand-rolled Future impls using a register-then-re-check
+  pattern (register the waker, then re-attempt the operation once more) to close the classic
+  lost-wakeup race on both the send-blocked-on-full-lane and recv-blocked-on-empty-mailbox paths.
+  Verified in non_preview_lane_send_future_blocks_until_a_recv_frees_a_slot, which deliberately
+  does NOT use a sleep to sequence the race — the register-then-re-check pattern makes the outcome
+  correct regardless of thread scheduling order, and the test's comment explains why.
+- Reply oneshot pair (oneshot(), ReplySender<R>, ReplyReceiver<R>): write-once/read-once channel;
+  an abandoned ReplySender (dropped without send) resolves the receiver to DbError::Closed via a
+  Drop impl, instead of hanging forever.
+- AskFuture<M, R> / Address::ask: a two-phase state machine (AskState::Sending →
+  AskState::Waiting) composing SendFuture and ReplyReceiver into one request/response future
+  without needing async/.await syntax anywhere in the crate — everything is a hand-written stable
+  Future impl.
+- block_on (native only): a minimal executor using the stable std::task::Wake trait plus
+  std::thread::park/unpark and the std::pin::pin! macro — no futures-lite/async-trait dependency,
+  matching the contract's "no tokio, hand-rolled futures" instruction and keeping db_actor's
+  dependency list at just db_core.
+- Actor trait + ActorContext<M>: on_start/handle, with access to the actor's own Address,
+  GenerationId, and an Arc<dyn db_core::Emit> observability seam (wired through but only emits one
+  event today — see "Extension seams" below).
+- RestartStrategy (OneForOne/OneForAll/Escalate) + SupervisionDecision + RestartStrategy::decide:
+  the pure decision law, deliberately factored out of any thread/mailbox machinery so it compiles
+  and is unit-testable on wasm32 too.
+- ThreadSpawner/JoinHandleLike traits + StdThreadSpawner: the default std::thread-per-actor
+  spawner.
+- run_actor_loop + Supervisor<A: Actor>: the real execution engine. catch_unwind isolates both
+  on_start and every handle() call (documented AssertUnwindSafe justification: on a panic the
+  actor/ctx are discarded entirely, never touched again, so their internal unwind-safety is moot).
+  Supervisor::reap() is a non-blocking health check: it reaps terminated children's join handles,
+  and for the first Panicked outcome found applies the configured strategy — RestartOne bumps and
+  respawns just that slot; RestartAll gracefully closes+joins every sibling first, then bumps and
+  respawns all of them (so no two threads ever drain the same mailbox concurrently); Escalate
+  restarts nothing and just returns the decision for the caller (documented as this crate's
+  explicit boundary — see below).
+
+wasm32-unknown-unknown cleanliness
+-----------------------------------
+Verified with `cargo build -p db_actor --target wasm32-unknown-unknown --no-default-features`
+(disables the "thread" feature) — builds successfully. Per-item `#[cfg(not(target_arch =
+"wasm32"))]` gates block_on/ThreadWaker and the blocking convenience methods; the ThreadSpawner
+trait family, StdThreadSpawner, run_actor_loop, and Supervisor are additionally gated behind
+`feature = "thread"`. The wasm32 build emits two harmless dead_code warnings (bump_generation,
+reopen, ReplyReceiver::try_recv) because those private methods are only called from the
+thread-gated Supervisor/Runner code that this build excludes — not a defect, just an artifact of
+feature-gating; the native build (which does exercise them) is warning-clean.
+
+Deviations from the contract
+------------------------------
+None. db_actor depends only on db_core as specified. WAL/storage/protocol are untouched (out of
+scope for this crate). The DRR algorithm, the exact split between "strict" (System/Recovery) and
+"weighted" (Command/Query/Live/Preview) lanes, and the Address-generation-staleness mechanism are
+this crate's own choice within the contract's "6 bounded lanes, deficit-round-robin,
+shed-previews-first admission" + supervision/generation description — each choice is documented
+inline at its definition site (MailboxInner::try_recv, MailboxInner::bump_generation).
+
+Extension seams left (not implemented, not stubbed)
+-----------------------------------------------------
+- Supervisor is scoped to a homogeneous child set (one Actor type per Supervisor). A
+  heterogeneous supervision tree is expected to compose multiple Supervisors, with an Escalate
+  decision from a child Supervisor handled by whatever owns the next level up (typically
+  db_engine's catalog actor). This is a real, complete decision boundary — SupervisionDecision::
+  Escalate is a genuine typed signal, not a placeholder — just not itself a tree data structure,
+  since nothing in the contract asks db_actor to own multi-level supervision topology.
+  db_engine (or a later wave) is the natural owner of that composition.
+- ActorContext::emit is wired through and used once (an "db_actor.incarnation_poisoned" event on
+  a panic) but this crate does not attempt a full observability taxonomy — that is db_observe's
+  contracted responsibility; the seam (Arc<dyn db_core::Emit>) is real and usable by any Actor
+  implementation today.
+- Supervisor::reap() is polled, not event-driven (no background watcher thread auto-restarting
+  children). This was a deliberate scope choice for testability/determinism: an event-driven
+  auto-supervisor loop would need its own OS thread with its own shutdown lifecycle, which is
+  exactly db_engine's job (owning the top-level scheduling loop) rather than db_actor's.
+
+Build/test status
+------------------
+- `cargo build -p db_actor` — clean, 0 warnings, 0 errors (native default features).
+- `cargo build -p db_actor --target wasm32-unknown-unknown --no-default-features` — clean except
+  2 expected dead_code warnings explained above.
+- `cargo test -p db_actor` — 15/15 tests pass:
+  system_and_recovery_lanes_drain_strictly_ahead_of_the_drr_lanes,
+  drr_serves_a_lane_a_run_of_messages_proportional_to_its_weight,
+  preview_lane_sheds_its_own_oldest_message_and_never_blocks_or_errors,
+  non_preview_lane_rejects_try_send_when_full_instead_of_shedding,
+  non_preview_lane_send_future_blocks_until_a_recv_frees_a_slot,
+  closing_a_mailbox_drains_remaining_messages_then_resolves_recv_to_none,
+  a_stale_generation_address_is_rejected_loudly_instead_of_enqueuing_silently,
+  oneshot_reply_round_trips_a_value,
+  oneshot_reply_resolves_closed_when_sender_is_dropped_without_sending,
+  ask_pattern_round_trips_through_a_real_actor_thread,
+  restart_strategy_decide_is_the_pure_law_wasm_clean_paths_rely_on,
+  one_for_one_restarts_only_the_failed_child_and_bumps_only_its_generation,
+  one_for_all_restarts_every_child_and_bumps_every_generation,
+  escalate_reports_the_failure_without_restarting_anything,
+  mailbox_from_config_honors_the_profile_default_capacities.
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/db/actor/rs/lib.rs (rewritten from stub to full implementation)
+- Cargo.toml: unchanged (no dependency addition needed)
+- This report: /Users/ueli/Documents/semio/.repo/🎫️/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw4-db_actor.txt

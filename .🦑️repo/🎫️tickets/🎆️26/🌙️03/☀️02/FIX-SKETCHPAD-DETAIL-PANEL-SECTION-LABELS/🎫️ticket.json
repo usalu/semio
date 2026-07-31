@@ -1,0 +1,126 @@
+{
+  "title": "Fix Sketchpad Detail Panel Section Labels",
+  "status": "closed",
+  "prompt": "Fix sketchpad detail panel section names so raw ids like compose.sketchpad.app.design.properties and compose.sketchpad.app.kit.properties render as Design and Kit Properties.",
+  "summary": "Bulk close",
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-02T10:28:28.51060329Z",
+  "finished": "2026-03-05T13:26:27.248857908Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-02 10:28:28",
+        "finished": "2026-03-02 10:45:59"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Fix sketchpad detail panel section names so raw ids like compose.sketchpad.app.design.properties and compose.sketchpad.app.kit.properties render as Design and Kit Properties.",
+      "llm": "gpt-5-3-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 124,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts",
+              "lines": {
+                "added": 139,
+                "removed": 15
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Kit Zip Entry Filtering",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Multiple Connections Detail Panel",
+              "lines": {
+                "added": 15,
+                "removed": 15
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Home Panel Combinations",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Kit Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Design Panel Combinations",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪️compose/js/sketchpad.test.ts#Type Panel Combinations",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-03-02 19:55:40",
+        "finished": "2026-03-05 13:26:27"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "codex",
+      "commit": "3c6f0c1c5f30d0f9f9293050a0792778ac332032",
+      "prompt": "Extend the sketchpad detail panel label fix to cover the type properties and connector section names as well.",
+      "llm": "gpt-5-3-codex"
+    }
+  ]
+}

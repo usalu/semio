@@ -6,7 +6,7 @@ todos:
    content: Add missing \ExplSyntaxOff at end of \AfterEndPreamble block in print/tex/semio-window.sty
    status: completed
  - id: rebuild
-   content: Rebuild zwischenbericht.tex and zwischenbericht-dark.tex with bun ./script.ts build
+   content: Rebuild zwischenbericht.tex and zwischenbericht-dark.tex with bun ./📜️script.ts build
    status: completed
  - id: verify
    content: Render and visually verify pages 5-7 (and spot-check earlier pages) in both light/dark PDFs show correct spacing/wrapping
@@ -70,7 +70,7 @@ This restores normal space catcode (10) for the remainder of the document, fixin
 
 ## Verification
 
-1. Rebuild with `bun ./script.ts build` in `mit-bestand/bericht` for both `zwischenbericht.tex` and `zwischenbericht-dark.tex`.
+1. Rebuild with `bun ./📜️script.ts build` in `mit-bestand/bericht` for both `zwischenbericht.tex` and `zwischenbericht-dark.tex`.
 2. Re-render pages 5-7 (the "Ergebnisse" content) of both PDFs to PNG (same `pdfjs-dist` + `@napi-rs/canvas` approach used for diagnosis) and visually confirm:
    - Interword spaces are present in prose and in heading/chip titles (e.g. "18 Interviews", not "18Interviews").
    - Lines wrap normally within the window border / text width, no overshoot.

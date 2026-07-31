@@ -1,0 +1,11 @@
+{
+  "title": "Migrate Bundle Docs to CLI README",
+  "emoji": "📝️",
+  "status": "closed",
+  "description": "Migrate Code Hygiene, Repo Tooling Sync, Artifact Kind Derivation, Ticket Workflow Signals, Code Report, Monorepo Tree, Section Tree, Shell Language Support, Ticket System, MCP Tool Gateway, and Contributors sections from root README.md into repo/cli/README.md Docs section.",
+  "summary": "Migrated 11 sections",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/473"
+  },
+  "goal": "🎯️r2602🎯️updateddocs🎯️updateddevdocs🎯️updatedreadmemd"
+}

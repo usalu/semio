@@ -1,0 +1,32 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+----------------------------·---------------------------------------------------------------------------------------------------------------------------------------------·-·---··-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------·x-----------------------------------------
+
+⎯ Failed Tests 1 ⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > control chrome > activating a surface clears its introduced stamps so the active stroke can win
+AssertionError: expected 'normal' to be 'introduced' // Object.is equality
+
+Expected: "introduced"
+Received: "normal"
+
+ ❯️ index.tsx:36933:107
+    36932|       expect(resolveWindowSilhouetteBorderKind(stack.querySelector('[d…
+    36933|       await waitFor(() => {
+    36934|         expect(stack.querySelector('[data-slot="mode-dock-silhouette-b…
+       |                                                                               ^
+    36935|       });
+    36936|       fireEvent.pointerDown(stack.querySelector('[data-slot="mode-dock…
+
+⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed | 465 skipped (472)
+   Start at  19:00:19
+   Duration  9.94s (transform 3.89s, setup 296ms, import 8.29s, tests 539ms, environment 484ms)
+

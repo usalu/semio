@@ -1,13 +1,13 @@
-// #region 🧲Header
-// 💻 compose/algorithm/index.ts
+// #region 🧲️Header
+// 💻️ compose/algorithm/index.ts
 // Specs: Story helpers over `@semio-tech/compose-js` `openSessionInMemory` + `installProjection` plus plain JSON {@link Design} types from `@semio-tech/ui-react`.
 // Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no snapshot store or schema bridge.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 /// <reference types="vite/client" />
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import {
   AlgorithmApp,
   WindowKind,
@@ -29,39 +29,39 @@ import * as React from "react";
 import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio-tech/compose-fixture";
 
 import { openSessionInMemory, type Store as JsStore } from "@semio-tech/compose-js";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// #region 🧾GqlWire
-/** @emoji 🧾 Local GraphQL response fragment object (replaces re-exported @semio-tech/compose-js wire types). */
+// #region 🧾️GqlWire
+/** @emoji 🧾️ Local GraphQL response fragment object (replaces re-exported @semio-tech/compose-js wire types). */
 type GqlWireObject = { readonly [k: string]: unknown };
-// #endregion 🧾GqlWire
+// #endregion 🧾️GqlWire
 
-// #region 📤UiReExports
+// #region 📤️UiReExports
 export { AlgorithmApp, WindowKind, createIpoAlgorithmLayout, getKitPorts, kitSurface, useAlgorithm, type AlgorithmAppProps, type AlgorithmContextValue, type AlgorithmWindowDef, type DesignDiff, type DesignPlain, type MoveVector, type VecValue };
-// #endregion 📤UiReExports
+// #endregion 📤️UiReExports
 
-/** @emoji 📍 2D coordinate used by drag algorithms (`u`/`v` plane). */
+/** @emoji 📍️ 2D coordinate used by drag algorithms (`u`/`v` plane). */
 export type CoordinatePlain = Readonly<{ u: number; v: number }>;
 
-/** @emoji 🧾 Anchoring kinds accepted by {@link pasteDesign}. */
+/** @emoji 🧾️ Anchoring kinds accepted by {@link pasteDesign}. */
 export type PasteDesignAnchoringKind = "original" | "middle" | "centroid" | "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
 
-/** @emoji 🎯 Nakagin tower design id in metabolism kit fixtures. */
+/** @emoji 🎯️ Nakagin tower design id in metabolism kit fixtures. */
 export const NAKAGIN_CAPSULE_TOWER_DESIGN_ID = "9a890dd4-0a9c-48ac-920a-9e62666465ef";
 
-/** @emoji 🧾 Diagram selection wire for Storybook fixture JSON. */
+/** @emoji 🧾️ Diagram selection wire for Storybook fixture JSON. */
 export type DiagramSelectionWire = Readonly<{
   pieces?: readonly { id?: string }[];
   connections?: readonly { id?: string }[];
 }>;
 
-/** @emoji 📋 Paste options for {@link pasteDesign}. */
+/** @emoji 📋️ Paste options for {@link pasteDesign}. */
 export type PasteDesignOptions = Readonly<{
   coordinate?: CoordinatePlain;
   anchoring?: PasteDesignAnchoringKind;
 }>;
 
-// #region 🧰StoryKitFacade
+// #region 🧰️StoryKitFacade
 const PASTE_ANCHORS: readonly PasteDesignAnchoringKind[] = ["original", "middle", "centroid", "bottomLeft", "bottomRight", "topLeft", "topRight"] as const;
 
 const PASTE_ANCHOR_LABELS: Record<PasteDesignAnchoringKind, string> = {
@@ -74,22 +74,22 @@ const PASTE_ANCHOR_LABELS: Record<PasteDesignAnchoringKind, string> = {
   topRight: "Top right",
 };
 
-/** @emoji 🧰 Static kit helpers for Storybook (selection anchoring + stub replaceable search). */
+/** @emoji 🧰️ Static kit helpers for Storybook (selection anchoring + stub replaceable search). */
 export const Kit = Object.freeze({
   pasteDesignAnchoringKinds: PASTE_ANCHORS,
   pasteAnchoringOptions: PASTE_ANCHORS.map((anchoringKind) => ({ anchoringKind, label: PASTE_ANCHOR_LABELS[anchoringKind] })),
 });
 
-/** @emoji 🔍 Stub find-replaceable result for Nakagin story (deterministic fixture design ids). */
+/** @emoji 🔍️ Stub find-replaceable result for Nakagin story (deterministic fixture design ids). */
 export function findReplaceableTypesForSelection(_sel: { pieces: readonly string[] }): { types: string[]; designs: string[] } {
   return {
     types: [],
     designs: ["d7e12638-9749-471b-937e-a6e5523778ff", "019ab4e0-7295-7e1e-bb5f-9dfae8c0c4cf", "019ab4e0-8da8-7217-946f-5b5a83aca0e3"],
   };
 }
-// #endregion 🧰StoryKitFacade
+// #endregion 🧰️StoryKitFacade
 
-// #region 🧱PlainDesignModel
+// #region 🧱️PlainDesignModel
 /** @emoji 🗃️ Reads a `pieces`/`connections` node that is either a bare array (test-built {@link Design}) or a fixture-wrapped `{items}` node. */
 function __itemsOf<T>(node: unknown): readonly T[] {
   return Array.isArray(node) ? (node as readonly T[]) : fixtureItemsOf<T>(node);
@@ -244,10 +244,10 @@ class Design {
 
 export { Design };
 
-/** @emoji 🧾 Story {@link Design} handle (plain JSON model used by algorithm runners). */
+/** @emoji 🧾️ Story {@link Design} handle (plain JSON model used by algorithm runners). */
 export type StoryDesign = Design;
 
-/** @emoji 📋 Builds unique piece/connection id lists from diagram selection fixture JSON. */
+/** @emoji 📋️ Builds unique piece/connection id lists from diagram selection fixture JSON. */
 export function selectionIdsFromWire(
   wire: DiagramSelectionWire,
   options?: Readonly<{
@@ -264,7 +264,7 @@ export function selectionIdsFromWire(
   return { pieceIds, connectionIds };
 }
 
-/** @emoji 🏯 Nakagin copy/paste story selection (omits external-stub piece + link). */
+/** @emoji 🏯️ Nakagin copy/paste story selection (omits external-stub piece + link). */
 export function nakaginStoryCopySelection(): { pieceIds: string[]; connectionIds: string[] } {
   return selectionIdsFromWire(NakaginCapsuleTowerCopySelection, {
     omitPieceIds: ["31be08e1-e75c-4024-86b4-c3c6d3939fbb"],
@@ -274,31 +274,31 @@ export function nakaginStoryCopySelection(): { pieceIds: string[]; connectionIds
   });
 }
 
-/** @emoji 🏯 Nakagin paste-target design row for copy/paste stories. */
+/** @emoji 🏯️ Nakagin paste-target design row for copy/paste stories. */
 export function nakaginPasteTargetDesign(): Design {
   return new Design(NakaginCapsuleTowerPasteDesign as Record<string, unknown>);
 }
 
-/** @emoji 📄 Plain design row for {@link mergeKitDesigns}. */
+/** @emoji 📄️ Plain design row for {@link mergeKitDesigns}. */
 export function storyDesignPlain(design: Design): Record<string, unknown> {
   return design.toPlain() as Record<string, unknown>;
 }
 
-/** @emoji 🎯 Piece ids from a pieces-only diagram wire. */
+/** @emoji 🎯️ Piece ids from a pieces-only diagram wire. */
 export function pieceIdsFromWire(wire: { pieces?: readonly { id?: string }[] }): string[] {
   return (wire.pieces ?? []).map((p) => String(p.id ?? "")).filter(Boolean);
 }
-// #endregion 🧱PlainDesignModel
+// #endregion 🧱️PlainDesignModel
 
-// #region 🧾StoryTypes
+// #region 🧾️StoryTypes
 export type DesignOperationResult = { ok: true; design: Design; diff: { forward: DesignDiff; reverse: DesignDiff } } | { ok: false; errors: readonly { code: string; message: string }[] };
 
 export type DesignDiffOperationResult = { ok: true; diff: DesignDiff } | { ok: false; errors: readonly { code: string; message: string }[] };
 
 export type OperationResult<T> = { ok: true; value: T } | { ok: false; errors: readonly { code: string; message: string }[] };
-// #endregion 🧾StoryTypes
+// #endregion 🧾️StoryTypes
 
-// #region 🌐WasmKitSession
+// #region 🌐️WasmKitSession
 function __toBootstrap(kit: unknown): GqlWireObject {
   return JSON.parse(JSON.stringify(kit)) as GqlWireObject;
 }
@@ -348,9 +348,9 @@ function __piecesDiffFromLayout(rows: readonly { pieceId: string; plane: unknown
     })),
   };
 }
-// #endregion 🌐WasmKitSession
+// #endregion 🌐️WasmKitSession
 
-// #region 🧮KitRunners
+// #region 🧮️KitRunners
 function __cloneDesignWithDiff(base: unknown, diff: DesignDiff): Design {
   return Design.previewWithDiff(base, diff);
 }
@@ -367,7 +367,7 @@ function __pasteCoordinateOffset(srcPieces: readonly Record<string, unknown>[], 
 }
 
 /**
- * @emoji 🧮 Forward+empty-reverse flatten diff produced from rs-backed `flatPosition` reads.
+ * @emoji 🧮️ Forward+empty-reverse flatten diff produced from rs-backed `flatPosition` reads.
  */
 export async function flattenDesign(kit: unknown, designId: string): Promise<DesignOperationResult> {
   const designs = __listDesignsFromBundle(kit);
@@ -390,7 +390,7 @@ export async function flattenDesign(kit: unknown, designId: string): Promise<Des
 }
 
 /**
- * @emoji 🧮 Flat design used as the display base for input + diff windows (connections preserved).
+ * @emoji 🧮️ Flat design used as the display base for input + diff windows (connections preserved).
  */
 export async function flatDesign(kit: unknown, designId: string): Promise<Design | null> {
   const result = await flattenDesign(kit, designId);
@@ -401,7 +401,7 @@ export async function flatDesign(kit: unknown, designId: string): Promise<Design
 }
 
 /**
- * @emoji 🧮 Fully flattened design (forward diff applied; connections stripped).
+ * @emoji 🧮️ Fully flattened design (forward diff applied; connections stripped).
  */
 export async function flattenedDesign(kit: unknown, designId: string): Promise<Design | null> {
   const result = await flattenDesign(kit, designId);
@@ -412,14 +412,14 @@ export async function flattenedDesign(kit: unknown, designId: string): Promise<D
 }
 
 /**
- * @emoji 🧮 Delete pieces+connections via plain diff construction.
+ * @emoji 🧮️ Delete pieces+connections via plain diff construction.
  */
 export async function deletePieces(design: Design, pieceIds: readonly string[], connectionIds: readonly string[]): Promise<DesignDiffOperationResult> {
   return __ensureStoryDesign(design).deletePiecesAndConnectionsDiff([...pieceIds], [...connectionIds]);
 }
 
 /**
- * @emoji 🧮 Drag selection on flat centers + re-flatten via WASM for the output preview.
+ * @emoji 🧮️ Drag selection on flat centers + re-flatten via WASM for the output preview.
  */
 export async function dragPieces(kit: unknown, rawDesign: Design, pieceIds: readonly string[], offset: CoordinatePlain): Promise<{ inputDesign: Design; output: Design; dragDiff: DesignDiff }> {
   const designId = __designId(rawDesign);
@@ -446,7 +446,7 @@ export async function dragPieces(kit: unknown, rawDesign: Design, pieceIds: read
 }
 
 /**
- * @emoji 🧮 Move preview: approximates joint motion by re-flattening after nudging selected flat centers using gap/shift/rise as u/v offsets (story fidelity only).
+ * @emoji 🧮️ Move preview: approximates joint motion by re-flattening after nudging selected flat centers using gap/shift/rise as u/v offsets (story fidelity only).
  */
 export async function movePieces(kit: unknown, rawDesign: Design, pieceIds: readonly string[], vector: MoveVector): Promise<{ inputDesign: Design; output: Design; moveDiff: DesignDiff }> {
   const designId = __designId(rawDesign);
@@ -478,7 +478,7 @@ export async function movePieces(kit: unknown, rawDesign: Design, pieceIds: read
 }
 
 /**
- * @emoji 🧮 Copy a selection into an isolated clipboard design (plain JSON).
+ * @emoji 🧮️ Copy a selection into an isolated clipboard design (plain JSON).
  */
 export async function copyDesign(design: Design, pieceIds: readonly string[], connectionIds: readonly string[]): Promise<OperationResult<Design>> {
   const src = __plainFromDesign(design);
@@ -510,7 +510,7 @@ export async function copyDesign(design: Design, pieceIds: readonly string[], co
 }
 
 /**
- * @emoji 🧮 Paste clipboard design onto target (anchoring + coordinate shift; plain diff).
+ * @emoji 🧮️ Paste clipboard design onto target (anchoring + coordinate shift; plain diff).
  */
 export async function pasteDesign(source: Design, target: Design, options: PasteDesignOptions = {}): Promise<DesignDiff> {
   const src = __plainFromDesign(source);
@@ -533,15 +533,15 @@ export async function pasteDesign(source: Design, target: Design, options: Paste
     ...(connectionsAdded.length ? { connections: { added: connectionsAdded } } : {}),
   } as DesignDiff;
 }
-// #endregion 🧮KitRunners
+// #endregion 🧮️KitRunners
 
-// #region 🪝StoryProxies
-/** @emoji 🔎 Finds a design row by id inside a kit bundle surface. */
+// #region 🪝️StoryProxies
+/** @emoji 🔎️ Finds a design row by id inside a kit bundle surface. */
 export function designFromKit(kit: unknown, designId: string): Record<string, unknown> | undefined {
   return __listDesignsFromBundle(kit).find((d) => String(d["id"] ?? "") === designId);
 }
 
-/** @emoji 📚 Lists type rows from a kit bundle surface. */
+/** @emoji 📚️ Lists type rows from a kit bundle surface. */
 export function typesFromKit(kit: unknown): readonly { id: string; name?: string }[] {
   return fixtureItemsOf<Record<string, unknown>>(kitSurface(kit)["types"]).map((t) => ({
     id: String(t["id"] ?? ""),
@@ -549,12 +549,12 @@ export function typesFromKit(kit: unknown): readonly { id: string; name?: string
   }));
 }
 
-/** @emoji 📚 Lists design rows from a kit bundle surface. */
+/** @emoji 📚️ Lists design rows from a kit bundle surface. */
 export function designsFromKit(kit: unknown): readonly Record<string, unknown>[] {
   return __listDesignsFromBundle(kit);
 }
 
-/** @emoji 🧩 Merges extra design rows into a kit bundle for Storybook presets. */
+/** @emoji 🧩️ Merges extra design rows into a kit bundle for Storybook presets. */
 export function mergeKitDesigns(kit: unknown, ...extraDesigns: Record<string, unknown>[]): unknown {
   const root = kit as { wip?: { initialKit?: Record<string, unknown> } };
   const surface = { ...kitSurface(kit) };
@@ -563,25 +563,25 @@ export function mergeKitDesigns(kit: unknown, ...extraDesigns: Record<string, un
   return { ...(kit as object), wip: { ...root.wip, initialKit: surface } };
 }
 
-/** @emoji 📐 WASM flatten layout diff for {@link AlgorithmContextValue.diagramLayoutDiff}. */
+/** @emoji 📐️ WASM flatten layout diff for {@link AlgorithmContextValue.diagramLayoutDiff}. */
 export async function flattenDiagramLayoutDiff(kit: unknown, designId: string): Promise<DesignDiff | undefined> {
   const flattenRes = await flattenDesign(kit, designId);
   return flattenRes.ok && flattenRes.diff.forward.pieces ? { pieces: flattenRes.diff.forward.pieces } : undefined;
 }
 
-/** @emoji 📐 Loads flat design preview plus optional diagram layout diff from WASM flatten. */
+/** @emoji 📐️ Loads flat design preview plus optional diagram layout diff from WASM flatten. */
 export async function loadFlatDesignBundle(kit: unknown, designId: string): Promise<{ flat: Design | null; diagramLayoutDiff: DesignDiff | undefined }> {
   const [flat, diagramLayoutDiff] = await Promise.all([flatDesign(kit, designId), flattenDiagramLayoutDiff(kit, designId)]);
   return { flat, diagramLayoutDiff };
 }
 
-/** @emoji 🔀 Applies a {@link DesignDiff} onto a design row; returns fallback when diff is absent. */
+/** @emoji 🔀️ Applies a {@link DesignDiff} onto a design row; returns fallback when diff is absent. */
 export function previewDesignWithAppliedDiff(design: unknown, diff: DesignDiff | undefined, fallback: unknown): Design {
   if (!diff) return __ensureStoryDesign(design ?? fallback);
   return Design.previewWithDiff(design ?? fallback, diff);
 }
 
-/** @emoji 🎯 Keeps piece selection ids that still exist on the preset design. */
+/** @emoji 🎯️ Keeps piece selection ids that still exist on the preset design. */
 export function reconcilePieceSelectionIds(rawDesign: { pieces?: readonly { id?: string }[] }, prev: readonly string[], fallbackIds: readonly string[]): string[] {
   const pieceIds = new Set((rawDesign.pieces ?? []).map((p) => String(p.id ?? "")).filter(Boolean));
   const filtered = prev.filter((g) => pieceIds.has(g));
@@ -598,7 +598,7 @@ function __useCancelledEffect(effect: (isCancelled: () => boolean) => void | Pro
   }, deps);
 }
 
-/** @emoji 📐 Story hook: WASM flat design + diagram layout diff for algorithm input boards. */
+/** @emoji 📐️ Story hook: WASM flat design + diagram layout diff for algorithm input boards. */
 export function useFlatDesignPreview(kit: unknown, designId: string) {
   const [flatInputDesign, setFlatInputDesign] = React.useState<Design | null>(null);
   const [diagramLayoutDiff, setDiagramLayoutDiff] = React.useState<DesignDiff | undefined>(undefined);
@@ -621,7 +621,7 @@ export function useFlatDesignPreview(kit: unknown, designId: string) {
   return { flatInputDesign, diagramLayoutDiff, loading, ready: flatInputDesign !== null };
 }
 
-/** @emoji 📐 Story hook: flatten IPO trio (flat base, flattened output, forward diff). */
+/** @emoji 📐️ Story hook: flatten IPO trio (flat base, flattened output, forward diff). */
 export function useFlattenPreview(kit: unknown, designId: string) {
   const [flatPreview, setFlatPreview] = React.useState<Design | null>(null);
   const [flattenedPreview, setFlattenedPreview] = React.useState<Design | null>(null);
@@ -647,14 +647,14 @@ export function useFlattenPreview(kit: unknown, designId: string) {
   return { flatPreview, flattenedPreview, flattenDiff, loading, ready: flatPreview !== null && flattenedPreview !== null && flattenDiff !== undefined };
 }
 
-/** @emoji 🎯 Story hook: piece ids with reconcile after flat preset load. */
+/** @emoji 🎯️ Story hook: piece ids with reconcile after flat preset load. */
 export function useAlgorithmPieceSelection(initialPieceIds: readonly string[], rawDesign?: { pieces?: readonly { id?: string }[] }, fallbackPieceIds?: readonly string[]) {
   const [selectedPieceIds, setSelectedPieceIds] = React.useState<string[]>([...initialPieceIds]);
   const reconcile = React.useCallback((prev: string[]) => reconcilePieceSelectionIds(rawDesign ?? {}, prev, fallbackPieceIds ?? initialPieceIds), [fallbackPieceIds, initialPieceIds, rawDesign]);
   return { selectedPieceIds, setSelectedPieceIds, reconcile };
 }
 
-/** @emoji 🎯 Reconciles piece selection once flat WASM preview is ready. */
+/** @emoji 🎯️ Reconciles piece selection once flat WASM preview is ready. */
 export function useReconciledPieceSelection(initialPieceIds: readonly string[], rawDesign: { pieces?: readonly { id?: string }[] }, fallbackPieceIds: readonly string[], ready: boolean) {
   const { selectedPieceIds, setSelectedPieceIds, reconcile } = useAlgorithmPieceSelection(initialPieceIds, rawDesign, fallbackPieceIds);
   React.useEffect(() => {
@@ -664,12 +664,12 @@ export function useReconciledPieceSelection(initialPieceIds: readonly string[], 
   return { selectedPieceIds, setSelectedPieceIds };
 }
 
-/** @emoji 🧩 Kit bundle with one extra design row from a {@link Design} instance. */
+/** @emoji 🧩️ Kit bundle with one extra design row from a {@link Design} instance. */
 export function mergeKitWithStoryDesign(kit: unknown, design: Design): unknown {
   return mergeKitDesigns(kit, storyDesignPlain(design));
 }
 
-/** @emoji ⚡ Story hook: runs an async algorithm operation when deps change; surfaces loading and errors. */
+/** @emoji ⚡️ Story hook: runs an async algorithm operation when deps change; surfaces loading and errors. */
 export function useAlgorithmAsyncRun<T>(enabled: boolean, run: () => Promise<T>, deps: React.DependencyList): { result: T | undefined; loading: boolean; error: string | undefined } {
   const [result, setResult] = React.useState<T | undefined>(undefined);
   const [loading, setLoading] = React.useState(false);
@@ -708,7 +708,7 @@ export function useAlgorithmAsyncRun<T>(enabled: boolean, run: () => Promise<T>,
   return { result, loading, error };
 }
 
-/** @emoji 📋 Story hook: copy/paste pipeline for IPO copy & paste boards. */
+/** @emoji 📋️ Story hook: copy/paste pipeline for IPO copy & paste boards. */
 export function useCopyPastePreview(params: {
   kit: unknown;
   kitWithTarget: unknown;
@@ -753,9 +753,9 @@ export function useCopyPastePreview(params: {
     hasSelection,
   };
 }
-// #endregion 🪝StoryProxies
+// #endregion 🪝️StoryProxies
 
-// #region 🧪EmbeddedTests
+// #region 🧪️EmbeddedTests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
@@ -818,4 +818,4 @@ if (import.meta.vitest) {
     });
   });
 }
-// #endregion 🧪EmbeddedTests
+// #endregion 🧪️EmbeddedTests

@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/stories/animate/PresentationDeck.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/animate/PresentationDeck.stories.tsx
 // Specs: `PresentationDeck` (`animate/present/renderer/react/index.tsx`) mounts a declarative
 // `Presentation` (`@semio-tech/animate-present-core`) — `Presentation → Chapter[] → Sequence[] → Thought[] →
 // Slide[]` — through reveal.js. The component's own module already does `import "reveal.js/dist/reveal.css"`
-// (see that file's header: "📽 React + reveal.js renderer for `@semio-tech/animate-present-core` declarative
+// (see that file's header: "📽️ React + reveal.js renderer for `@semio-tech/animate-present-core` declarative
 // decks"), so reveal's structural CSS needs no extra import here. The `--r-*` custom-property theming lives in
 // a separate `./globals.css` package export (real production usage:
 // `mit-bestand/präsentation/33.projektetage/globals.css` does `@import "…/animate/present/renderer/react/globals.css"`)
@@ -11,17 +11,17 @@
 // package's declared `exports["./globals.css"]` subpath.
 // Summary: A minimal 3-slide deck (one chapter, one sequence, one thought) with plain text embodiments.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react";
 import { PresentationDeck } from "@semio-tech/animate-present-renderer-react";
 import type { Presentation, Slide } from "@semio-tech/animate-present-core";
 import "@semio-tech/animate-present-renderer-react/globals.css";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// #region 🎬StoryDeckFixture
-/** @emoji 🎬 One title/body text slide, unique embodiment ids per slide so each carries its own copy. */
+// #region 🎬️StoryDeckFixture
+/** @emoji 🎬️ One title/body text slide, unique embodiment ids per slide so each carries its own copy. */
 function textSlide(slideIndex: number, headingLines: readonly string[], bodyLines: readonly string[], headingLevel: "title" | "heading" = "heading"): Slide {
   return {
     arrangement: {
@@ -39,7 +39,7 @@ function textSlide(slideIndex: number, headingLines: readonly string[], bodyLine
   };
 }
 
-/** @emoji 🎬 3-slide deck: title, a feature slide, a closing slide — one chapter/sequence/thought. */
+/** @emoji 🎬️ 3-slide deck: title, a feature slide, a closing slide — one chapter/sequence/thought. */
 const storyPresentation: Presentation = {
   id: "storybook-deck",
   name: "Storybook Deck",
@@ -65,10 +65,10 @@ const storyPresentation: Presentation = {
     },
   ],
 };
-// #endregion 🎬StoryDeckFixture
+// #endregion 🎬️StoryDeckFixture
 
 const meta = {
-  title: "🎬animate",
+  title: "🎬️animate",
   component: PresentationDeck,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -78,7 +78,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** @emoji 🎬 3-slide reveal.js deck — arrow keys / space to navigate, no URL hash sync inside Storybook. */
+/** @emoji 🎬️ 3-slide reveal.js deck — arrow keys / space to navigate, no URL hash sync inside Storybook. */
 export const ThreeSlideDeck: Story = {
   args: {
     presentation: storyPresentation,

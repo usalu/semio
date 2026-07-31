@@ -1,0 +1,11 @@
+{
+  "title": "Universal Filtering System for Repo Commands",
+  "emoji": "📂️",
+  "status": "closed",
+  "description": "Add --only-\u003ckind\u003e flags for every --no-\u003ckind\u003e flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
+  "summary": "Implemented universal filtering system across repo CLI, GraphQL API, and VSCode extension. Added --only-\u003ckind\u003e flags to complement --no-\u003ckind\u003e flags. Added --filter, --regex, --match-case, --match-whole-word flags to all list and tree commands. Extended file kind filtering to non-file commands (bundles, tickets, goals, contributors, policies) by checking associated files. Updated GraphQL schema with FilterInput type and FileKind enum. Refactored VSCode extension filter UI with file kind toggles and show all/none/default actions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/272"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

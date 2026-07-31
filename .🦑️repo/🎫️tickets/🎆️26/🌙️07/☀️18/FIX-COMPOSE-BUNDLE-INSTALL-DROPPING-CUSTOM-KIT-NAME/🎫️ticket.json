@@ -1,0 +1,14 @@
+{
+  "title": "Fix Compose Bundle Install Dropping Custom Kit Name",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Rust test `tests::sidecar_install_create_accepts_full_kit_store_bundle_doc` in compose/client/bin/store/rs/bin.rs fails: after POSTing a full DevBackboneBundleDoc bundle (with wip.initialKit.name = \"BundleInstallName\") to /install, querying theKit.kit.name returns the hardcoded default \"the kit\" instead of the custom name. Root cause under investigation in compose/client/lib/rs/lib.rs spawn_from_install_json_value / DevBackboneBundleDoc::hydrate_into_graph and Graph::materialized_kit_for_workspace, which appears to replay a stale Graph::the_kit_snapshot_store envelope (seeded once at Graph::new() with the default kit) over the freshly-hydrated kit, clobbering the custom name. Fix must land in the shared compose crate, not the test.",
+  "summary": "Root cause: Graph::the_kit_snapshot_store (used by materialized_kit_for_workspace to compute theKit.kit) was seeded once in Graph::new() with the default empty kit projection and never refreshed by any of the direct-hydration paths (bundle install, projection install). Since materialized_kit_for_workspace always replays that stale envelope on top of mutable_kit, any custom kit name/data set via install was clobbered back to the default \"the kit\" the moment theKit.kit was queried. Rename-based tests passed previously only because an explicit rename operation gets appended to the snapshot store's applied edits via record_operation_in_open_transaction, masking the bug.\n\nFix: added Graph::reseed_kit_snapshot_store_from_mutable_kit() and called it after every place that hydrates mutable_kit/initial_kit directly — Graph::new (refactored to use the new helper), kit_backbone::graph_new_overlay_from_initial_projection_json, DevBackboneBundleDoc::hydrate_into_graph, and worker::ParentStore::install_projection_json — so the snapshot envelope always matches the current baseline before materialization replays it.\n\nVerified: `cargo test -p compose-store sidecar_install_create_accepts_full_kit_store_bundle_doc` now passes (was failing with left=\"the kit\" / right=\"BundleInstallName\"). Full compose-store suite passes. Full `compose --lib` suite was also run with and without the fix (temporarily reverted then reapplied) to isolate impact: the same 16 tests fail identically, with byte-identical panic messages/line numbers, in both cases — confirming those are pre-existing failures unrelated to this change (likely concurrent in-progress work elsewhere in this shared file), not something introduced by this fix.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2064"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️7e1e3d00473d407db4f5c4b561372ccc"
+  ]
+}

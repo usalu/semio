@@ -1,7 +1,0 @@
-{
-  "title": "Board Wire Entity",
-  "status": "closed",
-  "description": "Introduce Wire as first-class board entity (TS scene + WASM descriptor) for temporary handle-drag connections; link gesture draws a wire curve instead of screen-space polyline preview.",
-  "summary": "Added Wire as a first-class board entity alongside nodes, handles, and edges: TypeScript Wire class + BoardScene.wires, JSX intrinsic elements.board/wire, descriptor JSON wires[] synced to WASM, Rust WireData/WireDescJson with cubic drawing (replacing link_screen_preview polyline). Link-drag gesture now uses Interaction::LinkDragSnap.end_world for the same cubic as edges.",
-  "goal": "🎯r2602🎯runningsketchpad"
-}

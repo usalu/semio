@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,13 +6,13 @@
 
 // Vite build configuration for the Electron renderer process.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
 // Vite configuration for the Electron renderer process with React and Tailwind.
 // Configuration MUST enable the React and Tailwind CSS plugins.
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -24,8 +24,8 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
-import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
-// #endregion 🔌Adapters
+import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
+// #endregion 🔌️Adapters
 
 type CjsFacadeResolveOpts = {
   htmlParseStringifyEntry: string;

@@ -1,0 +1,12 @@
+{
+  "title": "Print Single Spacing Unit",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Refactor print LaTeX chrome/typography to use exactly one spacing unit everywhere (mirroring ui --ui-spacing/--spacing-single/--spacing-double). Fix dead-padding bug in window tab captions. Replace touch spacing and hardcoded 3pt with unit multiples.",
+  "summary": "Fixed regression where window name, hierarchy label, top borders and tab backgrounds disappeared. Restored git-HEAD cap/gap/header geometry (`\\vbox to \\semio@chrome@titlebar@height`, `\\vfil` centering, fixed titlebar height strokes). Removed broken dynamic row-height compute and plain `\\vbox` cap structure. Spacing-only changes retained: `\\hspace{\\semio@chrome@padding}` in cap slots, tight tab/ctrl baselineskip, tcolorbox `top=\\semio@chrome@padding` + `boxsep=0pt` + `before upper` parindent reset, `\\noindent` before window bodies, navbar/footer chip padding via `\\semio@chrome@padding`, headsep/footskip via `\\semio@spacing@double`. All 12 template PDFs build; zwischenbericht page 3 verified visually — U-cutout header intact.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1845"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️533656ca89da4ed099c4c01c478f3ba0", "⚪️2018728852c1452fae4d83f26ca36240", "⚪️22e072269cce419b9cfdd6adade73554", "⚪️fd2a5d03ff7d42cb8a07f353d8b9d122", "⚪️a8413aaa2b7b4981b12a3f1a76013551"]
+}

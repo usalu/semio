@@ -96,7 +96,7 @@ Every app now needs exactly one call to `createPlaygroundApp({...})` — no subc
 Each app's `index.ts` gets a trailing region:
 
 ```ts
-//#region 🔖Play
+//#region 🔖️Play
 const drawExampleCatalog = loadPlaygroundExampleCatalog("../example/*.draw.json", ".draw.json", "semio");
 
 export const drawPlayAppDefinition = createPlaygroundApp({
@@ -108,7 +108,7 @@ export const drawPlayAppDefinition = createPlaygroundApp({
   bootRenderer: async (pg) => (await import("@semio-tech/framework-playground-renderer-react/draw")).bootDrawPlay(pg),
   devHost: { playEntryKind: "draw", resolveDedupe: [...], optimizeDeps: {...} },
 });
-//#endregion 🔖Play
+//#endregion 🔖️Play
 ```
 
 - `<app>/core/package.json` drops the `"./playground"` export.
@@ -128,14 +128,14 @@ export const drawPlayAppDefinition = createPlaygroundApp({
 `draw`, `note`, `writer`, `forms`, `raster`, `shooting`, `procedural/2d`, `procedural/3d`, `gis/2d`, `puzzle/2d`, `puzzle/3d`, `puzzle/5d`, `layout`, `sequence`, `imperative`, `lowpoly`, `flow`, `mathematical/graph/port/directed/dag`, `reasoning/mindmap/wires`, `trinity/jack/host-core`, `trinity/rewrite`, `s`, `vcs`, `framework/product/presentation`, `cad/js/renderer`.
 
 1. Rename/create `fixture/` → `example/` (git mv where it exists; author JSON from the current inline default where it doesn't).
-2. Delete `core/playground.ts`. Move its contents into `core/index.ts`'s new `//#region 🔖Play` using `createPlaygroundApp` + `loadPlaygroundExampleCatalog` (or a custom `createRuntime`/example-loading hook for outliers like `puzzle/5d`'s fetch-by-URL loader and `s`'s cross-app aggregation of `draw`/`writer`/`note` examples — these keep bespoke loading logic but still collapse into `index.ts`, no separate file).
+2. Delete `core/playground.ts`. Move its contents into `core/index.ts`'s new `//#region 🔖️Play` using `createPlaygroundApp` + `loadPlaygroundExampleCatalog` (or a custom `createRuntime`/example-loading hook for outliers like `puzzle/5d`'s fetch-by-URL loader and `s`'s cross-app aggregation of `draw`/`writer`/`note` examples — these keep bespoke loading logic but still collapse into `index.ts`, no separate file).
 3. Rename fixture-flavored identifiers (`fixture-slugs.ts`, `*_FIXTURE_*`, `setActiveFixture`, `PlayFixtureHostConfig`) to their example equivalents; update every inline `if (import.meta.vitest)` block accordingly.
 4. Drop `"./playground"` from `core/package.json` exports.
 5. Convert puzzle 2d/3d/5d, gis/2d, cad, trinity's direct-import fixture patterns to the standard `loadPlaygroundExampleCatalog` glob convention for uniformity, keeping bespoke runtime-loading (fetch/disk) only where the app's _production_ runtime (not just the playground) genuinely needs it (puzzle/5d).
 
 ## Validation
 
-- `bun run build --app <kind>` for all 24 kinds (mirrors the prior RESTORE-PLAYGROUNDS-APP-SPLIT verification in [.repo/🎫/26/07/02/RESTORE-PLAYGROUNDS-APP-SPLIT/restore-playgrounds-verify-log.md](.repo/🎫/26/07/02/RESTORE-PLAYGROUNDS-APP-SPLIT/restore-playgrounds-verify-log.md)).
+- `bun run build --app <kind>` for all 24 kinds (mirrors the prior RESTORE-PLAYGROUNDS-APP-SPLIT verification in [.repo/🎫️/26/07/02/RESTORE-PLAYGROUNDS-APP-SPLIT/restore-playgrounds-verify-log.md](.repo/🎫️/26/07/02/RESTORE-PLAYGROUNDS-APP-SPLIT/restore-playgrounds-verify-log.md)).
 - `bun test` across every touched package (playground-core, each app's core, ui-react, repo/lib/js).
 - Typecheck (`tsc --noEmit` via nx) repo-wide since this touches shared exports consumed everywhere.
 - Spot-check a locked-fixture-style build (`PLAYGROUND_LOCKED_EXAMPLE_ID`) still renders the single-example host correctly (puzzle 5d screenshot builds depend on this).

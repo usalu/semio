@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/Paint2dHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/Paint2dHost.stories.tsx
 // Specs: Host the framework renderer's `Paint2dHost` against the real prebuilt `framework/surface/paint/rs`
 // `RasterSession` WASM engine.
 // Summary: A debug-readout host mounts `Paint2dHost` against a `Paint2dScene`; `parameters.wasm: ["paint-2d"]`
 // gates first paint on `WASM_LOADERS["paint-2d"]` (see `.storybook/preview.tsx`) resolving.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useState, type ReactElement } from "react";
@@ -56,7 +56,7 @@ function Paint2dStoryHost({ scene, controllerId, surfaceId }: { readonly scene: 
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/Paint2dHost",
+  title: "🛠️framework🔌️hosts/Paint2dHost",
   component: Paint2dStoryHost,
   parameters: { layout: "fullscreen", wasm: ["paint-2d"] },
   tags: ["autodocs"],

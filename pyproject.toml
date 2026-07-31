@@ -1,7 +1,7 @@
 [project]
 name = "monorepo"
 version = "0.1.0"
-description = "🐍 compose monorepo Python workspace"
+description = "🐍️ compose monorepo Python workspace"
 readme = "README.md"
 requires-python = ">=3.14,<3.15"
 license = "AGPL-3.0-or-later"

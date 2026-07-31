@@ -1,0 +1,8 @@
+{
+  "title": "Strict Side Panel Tree API",
+  "emoji": "🌲️",
+  "status": "closed",
+  "description": "Enforce Tab -\u003e Tree -\u003e TreeSection -\u003e TreeItem -\u003e typed control across all side panels; remove TreeDataSection.content and playgroundPanelSection escape hatches; migrate puzzle 2d/5d and CAD play panels.",
+  "summary": "Enforced strict side-panel tree API: removed TreeDataSection.content escape hatch and playgroundPanelSection/PlaygroundPanelBody; added UiSliderNode/UiNumberStepperNode/UiRingNode/UiIconSelectNode controls; migrated puzzle 2d inspector/settings, puzzle 5d status, and CAD catalog/details panels to declarative UiTreeNode sections; re-exported uiTreeNodeToTreePanelConfig from playground shell entry (fixes CAD runtime import); removed dead CadPlay aside components. Tests: playground renderer 21/21, platform core 13/13, CAD play vite build passes.",
+  "goal": "🎯️r2602/🎯️runningsketchpad"
+}

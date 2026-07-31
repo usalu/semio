@@ -1,7 +1,0 @@
-{
-  "title": "SIMPLIFY-TICKETS",
-  "emoji": "📋",
-  "status": "closed",
-  "description": "Simplify the ticket mechanism to remove checkpoints and interactions. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"
-}

@@ -1,0 +1,110 @@
+Wave CW4 report — db_cluster
+=============================
+
+Scope implemented (against contract.md's db_cluster row: "Sharding (consistent hash), shard map,
+ownership leases + epoch failover, follower WAL consumption, segment/snapshot replication, quorum
+durability, read/preview routing, split-brain repair"):
+
+- //#region 🔖️ShardMap: NodeId newtype; ShardMap consistent-hash ring (BTreeMap<u64, NodeId> keyed
+  by a small inline FNV-1a hash, DEFAULT_VIRTUAL_NODES = 128) with add_node/remove_node/owner/nodes.
+  Tested: stable ownership for an unchanged ring; owner() is None on an empty ring; removing a node
+  remaps ONLY the documents it owned (exact law, not a heuristic); adding a node remaps a bounded
+  minority of documents (statistical law over 1000 sampled document ids, asserts < 50% moved with 4
+  nodes / 128 vnodes — comfortably above the ~25% expected).
+
+- //#region 🔖️Ownership: ShardOwnership (shard/holder/fence) wrapping db_storage::LeaseStorage's
+  acquire/renew/release, plus validate() built on db_core::EpochFence::check. ownership_status()
+  projects LeaseStorage::current() to a cluster-flavored OwnershipStatus{Held, Vacant}. Tested:
+  acquire/renew/validate round-trip; vacant-before-acquire; release frees the resource for a fresh
+  acquire (note below); failover via lease expiry bumps the epoch (EpochFence::next()) and hands
+  off to a new holder.
+
+- //#region 🔖️Replication: replicate_document(leader, follower, document, policy, now_ms) —
+  follower WAL consumption + segment/snapshot replication. Replays both sides via
+  db_sync::replay_sync_state, decides a db_sync::BootstrapPlan against the leader, and applies it:
+  Tail -> appends each missing command to the follower's own db_wal::DocumentWal (one submit() per
+  command, Fsync durability, matching db_sync's own commit_seq-counting convention exactly);
+  Snapshot -> copies the raw generation bytes verbatim into the follower's SnapshotStorage.
+  ReplicationOutcome{UpToDate, TailApplied, SnapshotTransferred} reports what happened. Tested:
+  fresh follower catches up via Tail; already-caught-up follower reports UpToDate on a second call;
+  a follower below the leader's retained WAL floor (WAL_SNAPSHOT_PUB marker present) triggers
+  SnapshotTransferred and the bytes land in the follower's SnapshotStorage byte-for-byte.
+
+- //#region 🔖️Quorum: QuorumTracker (ack-idempotent, edge-triggered satisfaction) and
+  durability_satisfied(class, replica_ack_count) — Memory/Os/Fsync always satisfied (single-node
+  concerns), only Quorum(n) gates on a real ack count. Tested: idempotent acking, edge-trigger fires
+  exactly once, durability_satisfied's threshold behavior.
+
+- //#region 🔖️ReadRouting: ReadIntent{Canonical, BoundedStaleness{at_least}, AnyReplica, Preview} +
+  ReplicaStatus + route_read(). Canonical/Preview require the leader; BoundedStaleness prefers a
+  qualifying follower over the leader (deterministic tie-break by node id), falling back to the
+  leader if no follower qualifies; AnyReplica picks the freshest (highest head_seq). Tested for
+  every branch including the all-empty and none-qualify error paths.
+
+- //#region 🔖️SplitBrain: resolve_split_brain(local, remote) -> LocalWins/RemoteWins/Tie by epoch
+  comparison; reconcile_shard_owner(storage, shard, claimed, now_ms) re-validates a locally-held
+  ShardOwnership against storage's actual current state (the repair primitive for a node that
+  believes it still owns a shard after a partition heals) — a still-matching holder+fence is
+  confirmed LocalWins (not Tie, since it's not actually contested); anything else is decided by
+  resolve_split_brain. Tested: epoch ordering; a still-valid local claim confirms; a vacant shard is
+  an uncontested local win; a genuine failover (see the Ownership test above) reports RemoteWins for
+  the stale claimant.
+
+- //#region 🔖️Coordinator: ClusterEvent{OwnershipLost, ReplicationCaughtUp, QuorumReached} +
+  priority() (System/Recovery/Live respectively) + cluster_mailbox() over db_actor::mailbox — this
+  crate's genuine use of db_actor per the contract's per-crate dep table (not just an unused dep).
+  Tested end-to-end: sending events out of priority order and observing they drain by priority
+  (System before Recovery before Live), exercising db_actor's real DRR/priority-lane mailbox.
+
+23 tests total, all passing. cargo clippy -p db_cluster --all-targets is clean (one warning was
+found and fixed: manual_contains in a test assertion).
+
+Deviations / choices made where the contract said "your choice":
+- Consistent-hash ring uses a small inline FNV-1a rather than blake3 — deliberately avoids adding a
+  new direct dependency the contract's per-crate dep table doesn't list for db_cluster (db_core,
+  db_actor, db_wal, db_storage, db_sync only). Ring placement needs a well-distributed deterministic
+  hash, not content-addressing, so this is a reasoned choice, not a shortcut. Documented in the
+  module doc.
+- DEFAULT_VIRTUAL_NODES = 128 (own choice; contract fixes "consistent hash", not a vnode count).
+- ReadIntent is this crate's own minimal projection of what db_query's (not implemented this wave)
+  Consistency enum will eventually need for shard-level routing — not the full Consistency surface,
+  which belongs to db_query.
+
+Dependencies added (both dev-only, noted per the wave instructions):
+- protocol = { path = "../../../protocol/rs" } (dev-dependency) — needed to construct real
+  protocol::OperationEnvelope fixtures for replicate_document's tests, the same fixture shape
+  db_sync's own tests already use. Not a runtime dependency of db_cluster.
+- serde_json = "1" (dev-dependency) — for building sample DocumentDiff/InverseOperation payloads in
+  the same fixtures.
+No runtime (non-dev) dependencies were added; Cargo.toml's original [dependencies] block is
+untouched.
+
+Extension seam left deliberately incomplete (not a stub, not a panic — see ReplicationOutcome's
+doc): ReplicationOutcome::SnapshotTransferred transports raw snapshot bytes to a follower's
+SnapshotStorage (the "segment/snapshot replication" responsibility) but does NOT decode/materialize
+them into live document state, and does NOT advance the follower's WAL-derived frontier in that
+case. Full materialization is db_snapshot's/db_document's responsibility per the contract's
+crate-boundary table; neither crate exists yet this wave. The caller (eventually db_engine) is
+expected to complete materialization before treating a snapshot-caught-up follower as current. This
+is the only place this crate's coverage of its contract row stops short of full depth; every other
+listed responsibility (sharding, ownership leases + epoch failover, follower WAL consumption,
+quorum durability, read/preview routing, split-brain repair) is implemented and tested for real,
+not faked.
+
+Observation (not a change made — db_storage is a frozen sibling crate, out of scope to touch): its
+LeaseStorage::release doc comment says a released lease "will still bump the epoch, since a hand-off
+occurred", but both MemoryStorage's and FsStorage's actual release() implementation deletes the
+lease record entirely, so the next acquire() on that resource returns EpochFence::INITIAL again
+(the None branch), not a bumped epoch. db_cluster's tests were written against the actual observed
+behavior (release -> fresh acquire -> EpochFence::INITIAL), not the doc comment's claim. Flagging
+this here in case a future wave wants to reconcile db_storage's doc with its code (or vice versa) —
+not fixed by this wave since db_storage is out of this ticket's per-crate ownership boundary for
+db_cluster.
+
+Files touched:
+- /Users/ueli/Documents/semio/db/cluster/rs/lib.rs (replaced stub with full implementation)
+- /Users/ueli/Documents/semio/db/cluster/rs/Cargo.toml (added a [dev-dependencies] block only;
+  [dependencies] untouched)
+
+Final status: cargo build -p db_cluster — clean. cargo test -p db_cluster — 23/23 passing (plus 0
+doc-tests, none written). cargo clippy -p db_cluster --all-targets — clean.

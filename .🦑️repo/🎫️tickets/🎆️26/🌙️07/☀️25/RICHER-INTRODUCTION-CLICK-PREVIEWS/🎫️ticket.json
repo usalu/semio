@@ -1,0 +1,18 @@
+{
+  "title": "Richer Introduction Click Previews",
+  "emoji": "🎬️",
+  "status": "open",
+  "description": "Make introduction ghost-cursor demonstrations visually unique per click kind: model pointer button + modifiers in IntroductionGesture, render mini-mouse + modifier chips + distinct ripples/trails in IntroductionDemonstrationOverlay.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2323"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps/🎯️designapp",
+  "plan": {
+    "client": "cursor",
+    "id": "35f8f7dc",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/richer_intro_click_previews_35f8f7dc.plan.md"
+  },
+  "sessions": [
+    "⚪️fa3b450a6321421186501e3d982d2a39"
+  ]
+}

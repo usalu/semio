@@ -1,0 +1,9 @@
+{
+  "title": "Projektetage Title Auto-Animate Fix",
+  "emoji": "📽️",
+  "status": "closed",
+  "description": "Fix title morph from intro slide 1 to 2 in projektetage — title re-enters from bottom instead of reveal.js auto-animate.",
+  "summary": "Fixed projektetage title (and other intro morphs) re-entering from the bottom on slide 1→2.\n\nRoot cause: reveal.js auto-animate matches both `[data-id]` elements and nested text nodes (`h1`–`h6`, `p`, `li`). We put `data-id` on wrapper `\u003cdiv\u003e`s with `\u003ch2\u003e` inside, so reveal animated the wrapper and the inner heading separately with the same FLIP translate — compounding ~252px into ~500px+ and looking like the title flew in from below.\n\nFix: Put `data-id` only on leaf morph targets (h2, p, h4, h5) per reveal.js docs; use `title--0` style ids for multi-line blocks. Verified in browser: single `data-auto-animate-target` on title h2, no wrapper match, transform `translate(0, 251.5px)` only (correct scaled delta from y≈465 to y≈93). All renderer (6) and core (7) tests pass.",
+  "goal": "🎯️framework",
+  "sessions": ["⚪️f650c1780bbc4b3a839d229b37545ee4"]
+}

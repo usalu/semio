@@ -1,0 +1,11 @@
+{
+  "title": "Remove List and Tree MCP Tools Except Main Tree",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Remove all list and tree MCP tools from the repo CLI/MCP server, keeping only the main `tree` tool. This consolidates the API surface by removing redundant granular list/tree tools that are superseded by the unified tree command.",
+  "summary": "Removed all 15 granular list/tree MCP tools (policy_list, policy_tree, ticket_list, draft_list, goal_list, contributor_list, project_list, project_tree, folder_list, folder_tree, file_list, file_tree, section_list, section_tree, definition_list) and their handler functions. Added a single unified `tree` MCP tool that delegates to the existing monorepo tree infrastructure with query filtering. Updated canonical commands list in repoPolicy. All MCP schema tests pass (29 tools).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/565"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomcp🎯️repomcptools"
+}

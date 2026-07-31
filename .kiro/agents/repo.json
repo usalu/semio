@@ -6,27 +6,27 @@
   // "hooks": {
   //   "agentSpawn": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook agentSpawn"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook agentSpawn"
   //     }
   //   ],
   //   "postToolUse": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook postToolUse"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook postToolUse"
   //     }
   //   ],
   //   "preToolUse": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook preToolUse"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook preToolUse"
   //     }
   //   ],
   //   "stop": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook stop"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook stop"
   //     }
   //   ],
   //   "userPromptSubmit": [
   //     {
-  //       "command": "bun ./script.ts dev mcp stdio kiro hook userPromptSubmit"
+  //       "command": "bun ./📜️script.ts dev mcp stdio kiro hook userPromptSubmit"
   //     }
   //   ]
   // },

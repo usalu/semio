@@ -1,0 +1,11 @@
+{
+  "title": "Extend list and tree commands",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Extend all list and tree commands to receive --show-ignored and --show-generated flags",
+  "summary": "Implemented flags and config updates",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/264"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

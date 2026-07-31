@@ -1,0 +1,7 @@
+{
+  "title": "CONTRIBUTORS-FROM-TICKETS-FILES",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "contributions should be derived from the tickets (frontmatter) and files (headers) instead of being hardcoded. Sort contributors by amount of tickets contributed. Extend the contributions list command. Adjust also the vscode extension tree.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoticketmechanism"
+}

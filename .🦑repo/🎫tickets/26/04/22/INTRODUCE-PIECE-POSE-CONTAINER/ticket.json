@@ -1,8 +1,0 @@
-{
-  "title": "Introduce Piece Pose Container",
-  "status": "closed",
-  "description": "Rename guid to id everywhere within compose: code, assets, tests, specs, schemas, docs, and bindings. This is a breaking rename with no backwards compatibility. Update runtime models, DTOs, APIs, OpenAPI/JSON Schema/OWL/XMI/docs, shared assets, and tests so the compose subtree consistently uses id instead of guid. Validate affected builds/tests and close out with the files changed.",
-  "summary": "Refactored compose/rs pieces to own an explicit pose container for plane and center while keeping DTO/storage compatibility. Plane and center setters now update pose independently, emit pose-level field/hash events, bubble a piece-level pose update, and preserve design/kit hash plus flatten-derived invalidation. Updated the existing Rust event and flatten tests in compose/rs/src/lib.rs and verified with targeted cargo test filters plus the full compose/rs suite (95 tests passing).",
-  "goal": "🎯🎯compose",
-  "sessions": ["⚪2db8860d228e4e11bf69b41ddcd0be64"]
-}

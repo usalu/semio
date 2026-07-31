@@ -1,0 +1,15 @@
+{
+  "title": "Update Funding Notice in Aggregator",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Update the funding notice (Förderhinweis) in the aggregator introduction brand info to state that it is being funded (wird gefördert) instead of was funded (wurde gefördert).",
+  "summary": "Added VDI 3805 as norm_vdi_3805 family crate under norm/vdi/3805 with runtime SchemaRegistry (sheets 1–100, corrections, domains), Part 1 native text parse/serialize and record model, geometry/functions/catalog/io/validate engines, macro-generated part_02..part_100 modules, Document/evaluate/Vdi3805Family session, NormFamilyId::Vdi3805, plugin DocumentApp, launch.json test entry, and 10 passing unit tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2223"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️a6e71274d45e4cdabb72fc1bd2f03189",
+    "⚪️32c299d607f3433b97a1a44a59794ec3"
+  ]
+}

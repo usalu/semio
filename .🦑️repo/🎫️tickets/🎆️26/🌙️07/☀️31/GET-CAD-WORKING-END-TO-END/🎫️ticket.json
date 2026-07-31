@@ -1,0 +1,11 @@
+{
+  "title": "Get Cad Working End to End",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Get CAD working end to end. User ran bun ./📜️script.ts dev cad and got Module not found ./📜️script.ts because root entrypoint is 📜️script.ts. Fix launch.json and CAD playground boot until React CAD playground runs end to end.",
+  "summary": "CAD playground runs end-to-end on http://127.0.0.1:6020. Fixed: (1) root script.ts ASCII alias to emoji-prefixed 📜️script.ts so bun ./script.ts works; (2) missing columns catalog icon + non-panicking IconName::from; (3) cad-fixture static-dir root to ✏️s/🔌️plugin/📐️cad/🧫️fixture; (4) FE0E pollution in Rust char literals from concurrent emoji unlock; (5) fixture filename/URL alignment. Playwright smoke: title semio · cad, 4 canvases (Shape/Building/Energy/Structure Classic), Hexagonal Cut Concrete Forest Left, no page errors.",
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": [
+    "⚪️00cdd8bd248b44ff9d73d817751f060a"
+  ]
+}

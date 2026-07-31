@@ -1,0 +1,136 @@
+[package]
+name = "norm-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:norm"
+
+[[package.metadata.semio.playground]]
+variant = "din4108"
+app = "norm-din-4108-play"
+ports = { react = 6091, wgpu = 6191 }
+
+[[package.metadata.semio.playground]]
+variant = "din16798"
+app = "norm-din-en-16798-play"
+ports = { react = 6092, wgpu = 6192 }
+
+[[package.metadata.semio.playground]]
+variant = "din18599"
+app = "norm-din-v-18599-play"
+ports = { react = 6093, wgpu = 6193 }
+
+[[package.metadata.semio.playground]]
+variant = "en1990"
+app = "norm-en-1990-play"
+ports = { react = 6094, wgpu = 6194 }
+
+[[package.metadata.semio.playground]]
+variant = "en1991"
+app = "norm-en-1991-play"
+ports = { react = 6095, wgpu = 6195 }
+
+[[package.metadata.semio.playground]]
+variant = "en1992"
+app = "norm-en-1992-play"
+ports = { react = 6096, wgpu = 6196 }
+
+[[package.metadata.semio.playground]]
+variant = "en1993"
+app = "norm-en-1993-play"
+ports = { react = 6097, wgpu = 6197 }
+
+[[package.metadata.semio.playground]]
+variant = "en1994"
+app = "norm-en-1994-play"
+ports = { react = 6098, wgpu = 6198 }
+
+[[package.metadata.semio.playground]]
+variant = "en1995"
+app = "norm-en-1995-play"
+ports = { react = 6099, wgpu = 6199 }
+
+[[package.metadata.semio.playground]]
+variant = "en1996"
+app = "norm-en-1996-play"
+ports = { react = 6100, wgpu = 6200 }
+
+[[package.metadata.semio.playground]]
+variant = "en1997"
+app = "norm-en-1997-play"
+ports = { react = 6101, wgpu = 6201 }
+
+[[package.metadata.semio.playground]]
+variant = "en1998"
+app = "norm-en-1998-play"
+ports = { react = 6102, wgpu = 6202 }
+
+[[package.metadata.semio.playground]]
+variant = "en1999"
+app = "norm-en-1999-play"
+ports = { react = 6103, wgpu = 6203 }
+
+[[package.metadata.semio.playground]]
+variant = "iso16757"
+app = "norm-iso-16757-play"
+ports = { react = 6104, wgpu = 6204 }
+
+[[package.metadata.semio.playground]]
+variant = "vdi3805"
+app = "norm-vdi-3805-play"
+ports = { react = 6105, wgpu = 6205 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+norm_core = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "norm_core" }
+din4108 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📕️din4108/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din4108" }
+din4108_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📕️din4108/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din4108-op" }
+din4108_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📕️din4108/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din4108-engine" }
+din16798 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📗️din16798/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din16798" }
+din16798_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📗️din16798/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din16798-op" }
+din16798_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📗️din16798/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din16798-engine" }
+din18599 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📙️din18599/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din18599" }
+din18599_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📙️din18599/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din18599-op" }
+din18599_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📙️din18599/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din18599-engine" }
+en1990 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990" }
+en1990_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990-op" }
+en1990_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990-engine" }
+en1991 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1991/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1991" }
+en1991_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1991/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1991-op" }
+en1991_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1991/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1991-engine" }
+en1992 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1992/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1992" }
+en1992_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1992/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1992-op" }
+en1992_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1992/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1992-engine" }
+en1993 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1993/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1993" }
+en1993_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1993/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1993-op" }
+en1993_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1993/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1993-engine" }
+en1994 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1994/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1994" }
+en1994_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1994/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1994-op" }
+en1994_engine = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1994/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1994-engine" }
+en1995 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1995/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1995" }
+en1995_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1995/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1995-op" }
+en1996 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1996/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1996" }
+en1996_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1996/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1996-op" }
+en1997 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1997/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1997" }
+en1997_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1997/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1997-op" }
+en1998 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1998/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1998" }
+en1998_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1998/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1998-op" }
+en1999 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1999/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1999" }
+en1999_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1999/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1999-op" }
+iso16757 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📓️iso16757/⚡️implementation/🦀️rust", package = "semio-s-app-norm-iso16757" }
+iso16757_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📓️iso16757/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-iso16757-op" }
+vdi3805 = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📔️vdi3805/⚡️implementation/🦀️rust", package = "semio-s-app-norm-vdi3805" }
+vdi3805_op = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📔️vdi3805/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-vdi3805-op" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+vcs = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

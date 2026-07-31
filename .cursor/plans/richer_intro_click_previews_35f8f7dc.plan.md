@@ -48,7 +48,7 @@ flowchart LR
 
 ## 1. Extend the gesture contract
 
-In `[framework/core/rs/lib.rs](framework/core/rs/lib.rs)` (`🔖Introduction`):
+In `[framework/core/rs/lib.rs](framework/core/rs/lib.rs)` (`🔖️Introduction`):
 
 - Add `IntroductionPointerButton` (`left` | `middle` | `right`)
 - Add `IntroductionKeyModifier` (`alt` | `shift` | `control` | `meta`)
@@ -111,7 +111,7 @@ Extend existing suites (no new test files):
 
 ## 5. Ticket workflow (on execute)
 
-- Associate with goal `🎯r2602/🎯runningsketchpad/🎯runningsketchpadapps/🎯designapp` (same as recent introduction tickets).
+- Associate with goal `🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps/🎯️designapp` (same as recent introduction tickets).
 - Open a new ticket (no existing open ticket covers richer click previews).
 - Put scratch notes/logs under the ticket folder only.
 - Close with summary + touched files when done.

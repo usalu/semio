@@ -1,0 +1,8 @@
+{
+  "title": "Optimize D3 Diagram Drag Performance With Benchmark",
+  "status": "closed",
+  "description": "Optimize the D3 force diagram and design diagram drag performance in compose/sketchpad/index.tsx for real-time smooth behavior. The drag is currently laggy due to: (1) simulation tick calling setDiagramNodes on every tick causing React re-renders at 60fps, (2) DRAG_THROTTLE_MS=50 (20fps) in design diagram onNodeDrag, (3) updateNodesFromSimulation creating new node arrays on every tick. Fix by: batching simulation ticks via requestAnimationFrame, removing the 50ms throttle and using RAF instead, and adding a Playwright benchmark test in index.tsx that measures drag frame time and asserts it stays under 16ms (60fps).",
+  "summary": "Bulk close",
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️cd8e290ab449411c94a0a19fee047f26", "⚪️a77a1f52d69843c6b2647966bb483527", "⚪️e99239ac101341f5a2d5eec7ba2b62ab"]
+}

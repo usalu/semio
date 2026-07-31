@@ -1,0 +1,23 @@
+[package]
+name = "semio-s-app-remodel-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Remodel app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+remodel = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust", package = "semio-s-app-remodel" }
+remodel_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-op" }
+remodel_app_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-engine" }
+remodel_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "remodel_engine" }
+remodel_image = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }
+remodel_video = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "remodel_video" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde_json = "1.0.140"
+base64 = "0.22.1"

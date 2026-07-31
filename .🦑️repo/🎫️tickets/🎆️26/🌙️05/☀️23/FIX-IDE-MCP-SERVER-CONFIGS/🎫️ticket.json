@@ -1,0 +1,12 @@
+{
+  "title": "Fix IDE MCP Server Configs",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Fix outdated and broken IDE MCP server configurations so each IDE points at the current repo MCP server layout instead of stale paths such as C:\\git\\compose\\repo\\mcp. Inspect existing config files, update existing files only, keep changes cross-platform where possible, and validate the resulting commands or paths.",
+  "summary": "Updated IDE MCP and hook configurations to remove stale repo/mcp, repo/claude, repo/cursor, repo/kiro, and repo/cli paths. Routed Cursor, Copilot, Claude, Kiro, Windsurf, and Droid hooks through bun ./📜️script.ts dev mcp stdio with per-IDE profiles where available. Updated repo CLI config generation to emit the same centralized script.ts-based commands. Added repo-mcp test routing in script.ts and changed MCP project.json test targets to call script.ts from the workspace root, fixing the Windows go.work nested-module failure. Validated JSON configs, hook smoke commands, direct repo-mcp Go tests, and representative Nx targets.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1468"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomcp",
+  "sessions": ["⚪️7e466ce54e4940fe85187358b80b8a6a", "⚪️fbe4b29cca1d43108990bb352a4ec7ec"]
+}

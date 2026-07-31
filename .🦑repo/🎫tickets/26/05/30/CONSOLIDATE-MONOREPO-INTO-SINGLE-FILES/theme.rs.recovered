@@ -1,8 +1,0 @@
-//! 🎨 Default Vello board paint helpers for generic graph canvases.
-
-use crate::vello::peniko::Color;
-
-/// @emoji 🎨 Shared default clear color for graph board canvases.
-pub fn default_raster_clear() -> Color {
-    Color::from_rgba8(248, 248, 250, 255)
-}

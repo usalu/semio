@@ -114,8 +114,8 @@ Vello can't render SVG/PDF/video, so Screen content renders as absolutely-positi
 ### 10. Ticket + runtime validation
 
 - Read `repo://goals`, open a repo ticket (e.g. "Generalize DAG Nodes to Input and Output Kinds"); keep temp logs/scripts inside the ticket folder.
-- Rebuild WASM (dag crate `bun ./script.ts wasm` via its `test` target) and run `cargo test -p mathematical_graph_port_directed_dag` + `@dag/`_ and `@flow/_` vitest.
-- Extend [validate-dag-runtime.mjs](.repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs): update the 6/6 count checks to the new counts; drag the slider thumb and assert the `[DEBUG] dag slider value` log + changed fixture value; assert a Screen media overlay element is present in the DOM.
+- Rebuild WASM (dag crate `bun ./📜️script.ts wasm` via its `test` target) and run `cargo test -p mathematical_graph_port_directed_dag` + `@dag/`_ and `@flow/_` vitest.
+- Extend [validate-dag-runtime.mjs](.repo/🎫️/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/validate-dag-runtime.mjs): update the 6/6 count checks to the new counts; drag the slider thumb and assert the `[DEBUG] dag slider value` log + changed fixture value; assert a Screen media overlay element is present in the DOM.
 
 ### Decisions (opinionated)
 

@@ -1,0 +1,12 @@
+{
+  "title": "Flow Duplicate Io Channel Labels",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Input/output channel names appear twice in the flow editor because port labels are painted both via Vello (paint_port_labels) and the JS Canvas 2D overlay (port_label_overlay_rows). Skip Vello port label painting when delegated to the JS overlay.",
+  "summary": "Channel names were still doubled because stale `flow_core` WASM kept painting port labels via Vello while the JS overlay also drew them. `wasmPackInputsStale` now checks path-dependency `lib.rs`/`Cargo.toml` files so DAG changes trigger a flow WASM rebuild. `paint_port_labels` early-returns when labels are delegated to the JS overlay. Rebuilt `flow_core_bg.wasm`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1593"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️d19f979f21b74105a7514b463febe6ff", "⚪️65c71c53d5f04238b596929694692414", "⚪️01d4a818f1634fe7a7feef6d583a30d9", "⚪️a9673a7c226a49cc85a00911ec332a91"]
+}

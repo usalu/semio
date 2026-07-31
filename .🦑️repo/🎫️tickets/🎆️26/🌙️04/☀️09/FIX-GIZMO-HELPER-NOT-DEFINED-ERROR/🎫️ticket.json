@@ -1,0 +1,11 @@
+{
+  "title": "Fix GizmoHelper Not Defined Error",
+  "status": "closed",
+  "description": "Fix ReferenceError: GizmoHelper is not defined in elements/ui/index.tsx Gizmo component",
+  "summary": "Added GizmoHelper and GizmoViewport to the @react-three/drei import at line 44 of elements/ui/index.tsx. They were used by the Gizmo component but only re-exported, not imported for local use.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1311"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️4bf53a366ae34d02b45e765e82bc7aea"]
+}

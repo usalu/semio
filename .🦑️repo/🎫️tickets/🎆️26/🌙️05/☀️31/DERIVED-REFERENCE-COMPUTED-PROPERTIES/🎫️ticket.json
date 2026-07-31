@@ -1,0 +1,9 @@
+{
+  "title": "Derived Reference Computed Properties",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Add computed derived-reference properties to compose kit graph: Type.files; Design.types/designs/files (direct) and allTypes/allDesigns/allFiles (transitive); implement Design.referencedBy.",
+  "summary": "Completed symmetric derived-reference computed properties: Representation inverse fields (referencedBy, types, files, referencedByDesigns, allReferencedByDesigns) mirroring Type/Design; Design↔Representation forward fields; kit scan helpers and GraphQL/JS accessors; fixed entity_family vfs macro arm, FileSystemNode Interface dispatch (Result returns, fileSystemChild id arg), and removed duplicate enum VFS impl so the crate compiles. Rust test derived_reference_computed_properties_resolve passes.",
+  "goal": "🎯️compose",
+  "sessions": ["⚪️bf4b9f1fdfdf4e068a35176beb2cca99", "⚪️76d92179413940e0b87c9b5ab947dc79", "⚪️8313cfe17a1b4e959250f387f39944a8", "⚪️fdae1bc730484750898eabcfa6fc3845"]
+}

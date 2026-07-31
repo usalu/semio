@@ -1,0 +1,11 @@
+{
+  "title": "Implement and Test Nakagin Capsule Tower Diff Design Asset",
+  "status": "closed",
+  "description": "Implement and test for assets/compose with metabolism and the nakagin capsule tower diff. Create the nakagin-capsule-tower.diff.design.compose.json diff design asset with comprehensive diff operations. Integrate it into the metabolism kit diffs and storybook stories. Make sure all tests pass across all languages.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1272"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️a877b3537efe4d8d9cb9201947783e6f"]
+}

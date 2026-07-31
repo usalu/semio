@@ -1,0 +1,78 @@
+{
+  "name": "@semio-tech/framework-renderer-wgpu",
+  "$schema": "../../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test quick",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test long",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test exhaustive",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust"
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts wasm",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts serve",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts dev",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts native",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts lint",
+        "cwd": "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust"
+      }
+    }
+  },
+  "tags": [
+    "scope:framework",
+    "type:renderer"
+  ]
+}

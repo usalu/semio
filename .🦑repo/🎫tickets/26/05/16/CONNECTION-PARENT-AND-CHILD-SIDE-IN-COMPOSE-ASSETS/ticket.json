@@ -1,9 +1,0 @@
-{
-  "title": "Connection Parent And Child Side In Compose Assets",
-  "emoji": "🔗",
-  "status": "closed",
-  "description": "Refactor compose connection assets: replace unordered connected/connecting sides with strict parent:Side and child:Side on every connection representation (Rust, GraphQL, TS if in compose only). Update tests and callers.",
-  "summary": "Introduced unified WASM redraw API (boardRedrawLayoutFixtureJson) with modes force-graph and hierarchical-tree; force layout now seeds missing node x/y from camera center; tree layout ranks by directed edges and optional root flags. TypeScript exports layoutBoardFixtureRedraw, BoardRedrawLayoutOptions, and relaxed parseBoardFixtureV1 for omitted coordinates. Board play settings and toolbar use shared tick timing with mode-specific controls.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪146fe6849ade4669afc18ebc82d40118"]
-}

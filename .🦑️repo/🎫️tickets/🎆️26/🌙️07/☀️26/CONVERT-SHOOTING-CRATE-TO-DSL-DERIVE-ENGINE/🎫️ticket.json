@@ -1,0 +1,13 @@
+{
+  "title": "Convert Shooting Crate To Dsl Derive Engine",
+  "emoji": "🔫️",
+  "status": "open",
+  "description": "Convert shooting/rs/lib.rs (package `shooting`) from its hand-rolled `mod shooting_text` parser/printer plus manual `impl vcs::DocumentDsl for ShootingFixture`/`impl vcs::OpText for ShootingOperation` onto the declarative `dsl::` derive engine (DslRecord/DslDocument/DslEnum/DslOps), following the established conversion cheat sheet (worked examples: fem/2d, fem/3d, norm/core, imperative/core). shooting/plugin/rs (package `shooting-plugin`) depends on shooting's public types (ShootingFixture/ShootingOperation/ShootingAsset/etc.) but has no DSL impl of its own — must keep compiling/passing against whatever public field/type names result (no renames to existing Rust field names/types). Regenerate shooting/example/base-icon.shooting via the mandatory fixture-regeneration procedure (old parser -\u003e new printer -\u003e write back -\u003e reparse -\u003e assert equality) before deleting the old hand-rolled module. Verify with `cargo test -p shooting -p shooting-plugin` and report exact pass/fail counts.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2336"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": [
+    "⚪️5a63312af0c940f3907842dcc98511e3"
+  ]
+}

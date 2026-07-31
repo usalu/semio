@@ -62,7 +62,7 @@ In the existing `if (import.meta.vitest)` block of the same file, add a test und
 2. On `http://localhost:6050` slide 10, select a media item and use the browser `browser_click` tool (real CDP input with hit-testing) on the enlarge and reset buttons; confirm via the `[DEBUG]` logs that the action handlers fire and `clearSelection` does NOT, and that the item enlarges / resets and stays selected.
 3. Repeat for figure, video, and PDF, plus the slide-level reset.
 4. Remove the `[DEBUG]` logs.
-5. Run the renderer suite: `bun ./script.ts test` in `framework/product/presentation/renderer/react` and confirm all pass (note: `scales pdf pages to cover the disposition frame` is a pre-existing intermittent failure unrelated to this change).
+5. Run the renderer suite: `bun ./📜️script.ts test` in `framework/product/presentation/renderer/react` and confirm all pass (note: `scales pdf pages to cover the disposition frame` is a pre-existing intermittent failure unrelated to this change).
 
 ### Notes
 

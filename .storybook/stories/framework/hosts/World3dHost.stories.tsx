@@ -1,12 +1,12 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/World3dHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/World3dHost.stories.tsx
 // Specs: Host the framework renderer's `World3dHost` — a pure `@react-three/fiber` + `@semio-tech/infinite-world-r3f`
 // component (`WorldCanvas`) that owns no WASM engine of its own, EXCEPT when `scene.terrainJson` is present:
 // it then mounts `WorldTerrainLayer`, which drives the real `framework/surface/terrain/rs` `TerrainSession`.
 // Summary: `MinimalViewport` needs no wasm loader at all; `TerrainViewport` sets `parameters.wasm: ["terrain"]`
 // so `withWasm` gates first paint on `WASM_LOADERS.terrain` (see `.storybook/preview.tsx`) resolving.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useState, type ReactElement } from "react";
@@ -62,7 +62,7 @@ function World3dStoryHost({ scene, controllerId, surfaceId }: { readonly scene: 
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/World3dHost",
+  title: "🛠️framework🔌️hosts/World3dHost",
   component: World3dStoryHost,
   parameters: { layout: "fullscreen" },
   // The r3f `WorldCanvas` render loop makes this heavy/nondeterministic to re-render as a static docs snapshot;
@@ -74,7 +74,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🌐 No `terrainJson` — pure r3f viewport, no WASM engine involved. */
+/** 🌐️ No `terrainJson` — pure r3f viewport, no WASM engine involved. */
 export const MinimalViewport: Story = {
   args: { scene: MINIMAL_SCENE, controllerId: "puzzle3d-play", surfaceId: "puzzle.3d.play.viewport" },
 };

@@ -1,0 +1,11 @@
+{
+  "title": "Add Node And Handle Scale Props",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Add scale props with default 1 to board nodes, node kinds, handles, and handle kinds. Node scale must also scale child handles; handle scale further multiplies that result. Implement the change in the elements board package, update any dependent type plumbing and rendering paths, extend existing tests to cover the behavior, and validate with relevant test runs. Keep changes in existing files only and close the ticket with a touched-file summary when done.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1434"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️f48020db305945d4bf4919688dcd4738"]
+}

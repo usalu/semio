@@ -1,0 +1,12 @@
+{
+  "title": "Restore GIS 2D React Renderer Tiles",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "GIS 2D shows no tiles (neither raster image nor vector). MapSession.uploadTile and uploadVectorTile throw \"null pointer passed to rust\" from wasm-bindgen in framework/renderer/react/components/gis-map-host.tsx. Bring the react renderer back to premigration level (git tag `premigration`, where gis/2d/react/index.tsx rendered tiles correctly) on the migrated architecture.",
+  "summary": "GIS 2D react renderer showed no tiles: every backbone sync re-ran GisMapHost's mount layout-effect because dispatchCamera (via onCommand, which changes identity on each os-shell state update) was in the effect deps. Each re-run freed the wasm MapSession while tile fetches were in flight (wasm-bindgen \"null pointer passed to rust\" in uploadTile/uploadVectorTile) and tore down the boot before a frame rendered. Fixed by routing camera dispatch through a ref (premigration pattern) so the mount effect only depends on stable values, and added disposed guards around tile uploads so a genuine unmount mid-fetch can no longer call into a freed session. Also regenerated the stale plugin registry (it had been overwritten by a procedural playground session, leaving the gis plugin unregistered and the app failing with \"No plugins loaded\"). Verified at runtime on the gis 2d playground: vector and raster tiles fetch and upload without errors, world map renders with positions/routes/labels, zoom triggers clean tile refreshes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1902"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️e65e97b45dc341cd963e491ba3686dfa"]
+}

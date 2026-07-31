@@ -1,0 +1,8 @@
+{
+  "title": "Paste Rematch Coord Uses Target Parent Center",
+  "status": "closed",
+  "description": "Remapped parent connection u/v with coord must use flat(target matched parent).center not clipboard stub; child/internal connections unchanged.",
+  "summary": "Rematch+coord u/v use target matched parent center first (Go/Python/C#/Rust); JS aligned in comments/tests. Vitest: coord formula + internal bb5449be u/v unchanged.",
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️7647cce78de845ce8292ea9727e228da"]
+}

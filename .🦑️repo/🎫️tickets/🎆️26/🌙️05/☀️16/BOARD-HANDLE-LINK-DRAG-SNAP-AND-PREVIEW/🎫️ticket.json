@@ -1,0 +1,8 @@
+{
+  "title": "Board Handle Link Drag Snap And Preview",
+  "emoji": "🔗️",
+  "status": "open",
+  "description": "Implement handle-to-handle linking on the elements board: drag from a handle with movement threshold shows an open polyline preview (screen space), snap cursor to nearest compatible handle within tolerance (world/screen derived), commit new edge on pointer-up with edgeCreate event; extend BoardRenderer applyWasmDrainToScene for edgeCreate; add Rust host tests and extend existing TS tests.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️f272f8ee16ea47208b51b6adff969965"]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Session Json For Agent Sessions",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Create session.json per session folder to store session-level metadata such as client, llm, and start time without duplicating event payloads.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/718"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️17721920296038824008013667854621024716"]
+}

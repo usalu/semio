@@ -1,0 +1,8 @@
+{
+  "title": "Fix SCadPlayRoot Lazy Import",
+  "emoji": "🐛️",
+  "status": "open",
+  "description": "get semio draw dev working again",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️92e810c61f31499facbcbd1bf947453a"]
+}

@@ -1,0 +1,8 @@
+{
+  "title": "App Tool Categories",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Apps register toolbar tools per category (selection, filter, create, etc.). Toolbar shows a category control only when that category has registered tools. Migrate all elements App tool registration; remove flat tools list and toolbarItems legacy.",
+  "summary": "App tools are now `AppTools` (partial record keyed by `AppToolCategory`). `UIToolbar` shows category toggles only for populated categories and renders the active category tools. Removed `toolbarItems` and flat `UIToolbarItem[]` app registration. Migrated geometry play and Storybook; added merge/category tests (45 passing in @elements/ui).",
+  "goal": "🎯️elements🎯️uibundle"
+}

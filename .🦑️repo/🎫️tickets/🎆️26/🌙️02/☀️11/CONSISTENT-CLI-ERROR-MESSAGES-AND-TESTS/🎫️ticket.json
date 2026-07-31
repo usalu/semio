@@ -1,0 +1,8 @@
+{
+  "title": "Consistent Cli Error Messages and Tests",
+  "emoji": "❌️",
+  "status": "closed",
+  "description": "Fix inconsistent/inaccurate CLI error messages across all commands. Add status guards for lifecycle operations (close on non-open, reopen on non-closed). Extend test suite to cover wrong arguments and wrong lifecycle state for every command.",
+  "summary": "Fixed inconsistent CLI error messages: added status guards to FinishTicket, GoalClose, GoalReopen; extended wrong-args tests for all commands (todo, section delete/extract/integrate, goal change, top-level move/extract/integrate); added TestCliWrongArgs_ErrorMessages with 36 error message verification cases; added wrong-lifecycle checks to E2E ticket/goal lifecycle tests; extended TestCliJsonErrorsToStderr from 4 to 22 cases",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

@@ -1,0 +1,29 @@
+{
+  "tokens": "🔣️tokens.json",
+  "adapters": [
+    {
+      "id": "js-tailwind",
+      "description": "Tailwind v4 @theme fragments + @font-face for @semio-tech/ui-styling",
+      "generator": "script.ts generate",
+      "outputs": ["generated/palette-fonts.css", "generated/palette-🎨️theme.css", "js/🎨️palette.css", "js/🟦️tokens.generated.ts"]
+    },
+    {
+      "id": "dotnet-elements-styling",
+      "description": "C# Palette, Strokes, Radii from 🔣️tokens.json",
+      "generator": "script.ts generate",
+      "outputs": ["net/Elements.Styling/Generated/Palette.g.cs"]
+    },
+    {
+      "id": "rust-ui-styling",
+      "description": "ui_styling crate 🤖️generated.rs — linear-sRGB themes, strokes, radii, metrics",
+      "generator": "script.ts generate",
+      "outputs": ["rs/🤖️generated.rs"]
+    },
+    {
+      "id": "python-ui-styling",
+      "description": "Python styling.generated module",
+      "generator": "script.ts generate",
+      "outputs": ["py/styling/🤖️generated.py"]
+    }
+  ]
+}

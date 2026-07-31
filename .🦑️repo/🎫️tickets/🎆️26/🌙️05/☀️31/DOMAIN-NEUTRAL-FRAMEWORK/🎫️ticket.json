@@ -1,0 +1,9 @@
+{
+  "title": "Domain Neutral Framework",
+  "emoji": "🧱️",
+  "status": "closed",
+  "description": "Remove compose/sketchpad/kit/design domain leaks from framework technology. Move kit VFS schemas and helpers to compose. Keep framework domain-neutral.",
+  "summary": "Removed compose/sketchpad/kit domain leaks from framework: moved KIT VFS schema and descriptor helpers to compose/sketchpad; generalized platform VFS demo (workspace/branch/leaf); added canDrag on node records; renamed puzzle5d command to puzzle5dSelection; removed sketchpad layout aliases and KIT schema fallback from renderer; neutralized framework tests and docs.",
+  "goal": "🎯️framework",
+  "sessions": ["⚪️813d26eb6ea045fbbe9f69b640c28a84"]
+}

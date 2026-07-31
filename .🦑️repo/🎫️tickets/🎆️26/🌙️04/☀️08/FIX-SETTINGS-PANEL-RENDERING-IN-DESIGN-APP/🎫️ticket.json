@@ -1,0 +1,11 @@
+{
+  "title": "Fix Settings Panel Rendering in Design App",
+  "status": "closed",
+  "description": "Fix the settings panel in the sketchpad design app so it renders all settings properly. In other apps the settings are rendered correctly but in the design app they are broken.",
+  "summary": "Fixed the design app settings panel by adding missing i18n translations. The `app.design.settings` section was completely absent from both DE and EN translation bundles in `elements/ui/index.tsx`. Added complete translation entries for all 9 settings keys (theme, language, device, expertise, mode, panel.toolbar, panel.workbench, panel.windows, panel.details) in both languages. TypeScript check passes, JSON bundles parse correctly, and all translation keys resolve to proper labels.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1290"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️713c8d54bdfd4e07b36654abb8bae0d9"]
+}

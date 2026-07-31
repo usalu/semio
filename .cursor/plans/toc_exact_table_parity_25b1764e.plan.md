@@ -74,14 +74,14 @@ Contrast with the short colspec used by Netzwerk ([print/tex/semio-table.sty](pr
 **Fix:**
 
 1. Remove the `\ifsemio@table@long@mode` guard so `\SemioTableRow` always draws `\semio@table@row@sep` between rows, in both modes.
-2. Rebuild and check the TOC page/entry count against the known-good baseline (TOC spanning 2 pages, page 2 with ~130+ hierarchy-number matches, page 3 with ~60, from [verify-log.md](.repo/🎫/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md)).
+2. Rebuild and check the TOC page/entry count against the known-good baseline (TOC spanning 2 pages, page 2 with ~130+ hierarchy-number matches, page 3 with ~60, from [verify-log.md](.repo/🎫️/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md)).
 3. If the pagination bug reproduces (many near-empty pages), root-cause it directly instead of re-disabling: `\semio@table@row@sep` relies on `\global\semio@table@row@startedtrue`/`false`, and `longtable` internally does a hidden pre-pass to measure row heights — a `\global` boolean flipped during that pre-pass can leak state into the real typesetting pass. Try switching to an unconditional literal `\hline` appended after every row's `\\` (the same plain mechanism already proven safe in `\endfirsthead`/`\endhead`'s header rows), rather than a `\global`-boolean-gated `\noalign`.
 4. Keep `\semio@table@long@closing@rule` (in `\endlastfoot`) as the bottom-closing rule; verify it actually renders in the fresh build (previously placed correctly between `\endfoot`/`\endlastfoot` but never visually confirmed post-fix).
 
 ## Verification
 
 1. Reopen ticket `TOC-SEMIO-WINDOW-TABLES` via repo MCP.
-2. Rebuild `zwischenbericht` (light + dark): `cd mit-bestand/bericht && bun ./script.ts build`.
+2. Rebuild `zwischenbericht` (light + dark): `cd mit-bestand/bericht && bun ./📜️script.ts build`.
 3. Confirm zero `Overfull`/`Underfull \hbox ... in alignment` warnings tied to the register/reference/glossary long tables.
 4. Confirm TOC page count/entry distribution matches the known-good baseline (no pagination regression to near-empty pages).
 5. Render TOC pages and the `Netzwerk` page to PNG and visually confirm: right border aligned at the same margin as Netzwerk's box edge, hairline between every TOC row, bottom closing rule present, header shading/padding identical.

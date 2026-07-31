@@ -131,4 +131,4 @@ export interface AppExampleContribution {
 
 ## Work tracking
 
-- This continues the "App-Defined Apps, Fully Derived Shells" effort; reopen its existing ticket (or the in-progress `APP-ISOLATION-ENFORCED-BOUNDARIES` work already scaffolded under `.repo/🎫/26/07/03/`) rather than opening a new one, per the repo's ticket workflow.
+- This continues the "App-Defined Apps, Fully Derived Shells" effort; reopen its existing ticket (or the in-progress `APP-ISOLATION-ENFORCED-BOUNDARIES` work already scaffolded under `.repo/🎫️/26/07/03/`) rather than opening a new one, per the repo's ticket workflow.

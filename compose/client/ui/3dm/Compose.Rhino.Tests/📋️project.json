@@ -1,0 +1,39 @@
+{
+  "name": "compose-rhino-tests",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/Compose.Rhino.Tests",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/Compose.Rhino.Tests",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/Compose.Rhino.Tests",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/client/ui/3dm/Compose.Rhino.Tests",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

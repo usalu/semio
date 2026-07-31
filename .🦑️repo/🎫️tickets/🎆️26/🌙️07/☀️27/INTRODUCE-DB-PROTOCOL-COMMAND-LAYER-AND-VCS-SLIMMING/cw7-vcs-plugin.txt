@@ -1,0 +1,68 @@
+CW7 — vcs/plugin/rs migration report
+=====================================
+
+Scope note: vcs/plugin/rs is the app-plugin crate that dogfoods vcs's own
+DocumentVcsStore (a demo "VCS" app), distinct from vcs/rs itself. It was
+migrated as part of the CW7 app fan-out, per
+.repo/🎫️/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-instructions.md.
+
+Grep results before editing (vcs/plugin/rs/lib.rs):
+- CollectionOperation::  -> none found.
+- vcs::apply_collection_operation / vcs::invert_collection_operation /
+  vcs::collection_diff_from_operation -> none found.
+- vcs::Identified / vcs::Patchable -> none found.
+- vcs::OpText / OpText -> not imported/used (only appears inside a region
+  comment `//#region DslAndOpText`, no actual OpText symbol usage).
+- vcs::Edit -> not imported/used (only string literals "edit"/"textEdit"
+  for UI actions, unrelated to the protocol `Edit` type).
+- vcs::Operation / vcs::OperationDiff -> USED. This crate implements
+  `Operation<VcsDemoProjection>` for `VcsDemoOperation` and
+  `OperationDiff<VcsDemoProjection>` for `VcsDemoDiff`, importing both
+  traits via `use vcs::{DocumentVcsCommand, DocumentVcsStore, Operation,
+  OperationDiff};`.
+
+This crate has no `CollectionOperation`/`Identified`/`Patchable` usage at
+all (it doesn't model a collection-shaped document), so steps 1-6 of the
+instructions (the CollectionOperation::Add{index,item}->Add{id,item,at}
+and Move.to_index->Move.to rewrites) do not apply — there was nothing to
+rewrite. Only step 7 (the `Operation`/`OperationDiff`/`OpText` import-path
+trio) applied, and only for `Operation`/`OperationDiff` since `OpText` was
+never imported here.
+
+Change made (lib.rs, top-of-file imports only):
+  Before:
+    use serde::{Deserialize, Serialize};
+    use serde_json::{json, Value};
+    use vcs::{DocumentVcsCommand, DocumentVcsStore, Operation, OperationDiff};
+
+  After:
+    use protocol::{Operation, OperationDiff};
+    use serde::{Deserialize, Serialize};
+    use serde_json::{json, Value};
+    use vcs::{DocumentVcsCommand, DocumentVcsStore};
+
+Verified `protocol::{Operation, OperationDiff, OpText}` are re-exported at
+the protocol facade (protocol/rs/lib.rs: `pub use protocol_command::{...,
+Operation, OperationDiff, OpText, ...}`), and that vcs/rs/lib.rs's own
+`Operation`/`OperationDiff` are themselves just `pub use protocol::{...}`
+re-exports (vcs/rs/lib.rs:63) — so this is a pure import-path swap with
+zero behavioral change; the trait definitions were already identical.
+
+No other vcs:: symbols were touched (vcs::Author, vcs::DocumentVcsCommand,
+vcs::DocumentVcsStore, vcs::DocumentVcsEnvelope, vcs::HistoryColumn,
+vcs::build_history_columns, vcs::test_support all remain vcs:: — none of
+these are in the migration's scope per the instructions).
+
+Cargo.toml: `protocol` was already a direct dependency (added in an
+earlier CW3 sweep) — no Cargo.toml change needed/made.
+
+Cross-crate ripple check: grepped the workspace for crates depending on
+`vcs-plugin`/`vcs_plugin` — none found (it's a leaf app-plugin crate, not
+a library other crates build on). No ripple to report.
+
+Build + test status (both actually run, not assumed):
+  cargo build -p vcs-plugin  -> Finished, no errors/warnings from this crate.
+  cargo test  -p vcs-plugin  -> 15 passed; 0 failed; 0 ignored.
+
+Files touched: vcs/plugin/rs/lib.rs only (import block). vcs/plugin/rs/Cargo.toml
+untouched (dependency already present).

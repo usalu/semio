@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // .elements/ui/.storybook/story/elements/window/Window.stories.tsx
 
@@ -9,13 +9,13 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { ButtonGroup, ButtonGroupItem, Canvas, createIconComponent, HorizontalWindows, Ribbon, RibbonGroup, RibbonItem, RibbonZone, ToggleGroup, VerticalWindows, Window, type RibbonRow } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 
-// #region 🌊Window
+// #region 🌊️Window
 
 const meta = {
   title: "🖱️ui⚛️react/Window",
@@ -162,7 +162,7 @@ type CategoryDemoNode = { readonly id: string; readonly label: string; readonly 
   | { readonly kind: "group"; readonly children: readonly CategoryDemoNode[] }
 );
 
-/** @emoji 🪟 Only window-scoped categories (selection / utilities) belong in a window's own panel — mode-wide categories like actions/history are shared across every window in the mode and render once in the footer instead (see .storybook/stories/ui/Ribbon.stories.tsx `ModeWideFooterCategories`). */
+/** @emoji 🪟️ Only window-scoped categories (selection / utilities) belong in a window's own panel — mode-wide categories like actions/history are shared across every window in the mode and render once in the footer instead (see .storybook/stories/ui/Ribbon.stories.tsx `ModeWideFooterCategories`). */
 const WINDOW_CATEGORY_DEMO_TREE: readonly CategoryDemoNode[] = [
   { id: "selection", label: "Selection", icon: MousePointer, kind: "leaves", leaves: [{ id: "direct", icon: MousePointer }] },
   {
@@ -352,4 +352,4 @@ export const NestedLayout: Story = {
   ),
 };
 
-// #endregion 🌊Window
+// #endregion 🌊️Window

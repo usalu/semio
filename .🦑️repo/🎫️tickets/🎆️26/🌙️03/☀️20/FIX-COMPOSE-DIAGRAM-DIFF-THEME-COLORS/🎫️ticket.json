@@ -1,0 +1,12 @@
+{
+  "title": "Fix Compose Diagram Diff Theme Colors",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix compose/ui Diagram diff preview colors so modified, added, and removed states render as distinct semantic colors instead of collapsing to the selection blue. Extend compose/ui globals.css with color-modified, color-new, and color-removed variables derived from the theme, update the diagram component to use them correctly, and verify compose/ui type-check and Storybook build.",
+  "summary": "Added semantic compose/ui theme variables for new, modified, and removed diagram colors, updated Diagram to use those theme tokens, and changed selection styling so it no longer overwrites diff operation colors. Re-verified compose/ui type-check and Storybook build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/987"
+  },
+  "goal": "🎯️elements",
+  "sessions": ["⚪️f9ea5ce3453f445098d659ade03a5a0c"]
+}

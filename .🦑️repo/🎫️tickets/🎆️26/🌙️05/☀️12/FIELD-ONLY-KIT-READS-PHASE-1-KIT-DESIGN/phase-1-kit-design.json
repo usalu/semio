@@ -1,0 +1,29 @@
+{
+  "completed": "2026-05-12",
+  "scope": ["compose/js/index.ts regions 🎒️Kit + 🏭️Factories mirrors", "compose/react/index.tsx 🪝️KitFieldBind/KitOpBind, 🪝️HooksKit, 🪝️HooksDesign, 🎭️Contexts"],
+  "schemaRefs": ["compose/graphql/target.schema.graphql KitOperationInput", "DesignOperationInput", "type Kit", "type Design"],
+  "js": {
+    "Kit": [
+      "KitFieldReadSpec + fieldRead/subscribeField/onRenamed/onDescriptionChanged",
+      "readId/readIcon/readImage/readPreview/readRemote/readHomepage/readLicense/readUri",
+      "readTypeIds/readDesignIds/readAuthorIds/readQualityIds/readTagIds/readConceptIds",
+      "__parseEntityConnectionIds helper"
+    ],
+    "Design": ["kitInnerPath/fieldRead/subscribeField/onDescriptionChanged", "readId/readIcon/readImage/readUnit/readQualitySum/readPieceIds/readConnectionIds/readAttributeIds"],
+    "factories": ["KIT_OPERATION_SPECS", "DESIGN_OPERATION_SPECS", "KIT_ARTIFACT_FIELD_SPECS", "DESIGN_ARTIFACT_FIELD_SPECS"]
+  },
+  "react": {
+    "binders": ["bindKitFieldToReact", "bindKitOpToReact"],
+    "contexts": ["🎭️Contexts > 🎒️KitRuntime (KitContextProvider/useKit) + 📐️DesignEntity (moved out of 🪢️EntityContexts)"],
+    "kitHooks": ["useKit*Field reads", "useRenameKit…useHydrateKitStoreBundleJson", "useEnsureKitChangeId callback"],
+    "designHooks": ["useDesign*Field reads", "useRenameDesign…useDeleteDesignPiecesAndConnections"]
+  },
+  "subscriptionKinds": {
+    "wired": ["kitRenamed", "changedDescription"],
+    "note": "rs Subscription.event_to_json currently maps a small subset; design name has no dedicated kind yet."
+  },
+  "verification": {
+    "tscJs": "npx tsc -p compose/js",
+    "tscReact": "npx tsc -p compose/react"
+  }
+}

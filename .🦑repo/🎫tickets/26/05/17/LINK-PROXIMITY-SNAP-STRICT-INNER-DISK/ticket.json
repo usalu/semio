@@ -1,9 +1,0 @@
-{
-  "title": "Link Proximity Snap Strict Inner Disk",
-  "emoji": "🔗",
-  "status": "closed",
-  "description": "Fix board link drag so drops on target node body use indirectConnect / LinkTargetNode when snap tolerance equals rim distance (circle nodes with opposite handles). Change nearest_link_snap_handle_world from d \u003c= tol to d \u003c tol.",
-  "summary": "Proximity snap used inclusive distance d \u003c= tol. For default circle nodes (r=40) and handle tolerance (~40 world), the target node center sits exactly on the snap ring, so nearest_link_snap_handle_world returned a handle and pointer_up committed via proximityConnect instead of indirectConnect / LinkTargetNode. Switched the snap test to strict d \u003c tol so node-center drops stay unsnapped and the existing indirect-link tests pass. Verified: cargo test -p elements_board --lib (50 passed).",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪721910f8783843b9862660a98b1c3ffa"]
-}

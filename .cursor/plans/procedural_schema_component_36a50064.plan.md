@@ -56,12 +56,12 @@ flowchart LR
 
 ## 1. Explicit null in the engine — [neural/engine/lib.rs](neural/engine/lib.rs)
 
-- Add `Null` to `Atom` (`#region 🔖Dictionary`, the `enum Atom`). It serializes to JSON `null` (untagged). Add `Atom::is_null()` and a `Value` null helper.
+- Add `Null` to `Atom` (`#region 🔖️Dictionary`, the `enum Atom`). It serializes to JSON `null` (untagged). Add `Atom::is_null()` and a `Value` null helper.
 - Update `hash_atom` (new arm) and `ValueType::matches` (null matches nothing / is sentinel-only).
 - In `validate_channel_value` (`~1295`) and `validate_homogeneous_list` (`~1276`): treat a value that is `Atom::Null` as satisfying ANY cardinality and skip it in homogeneity checks — this is how "null with the correct cardinality" is represented on every output port.
 - Add a round-trip serde test in the engine test module.
 
-## 2. Generic SchemaComponent — [neural/engine/lib.rs](neural/engine/lib.rs) (new `#region 🔖SchemaComponent`)
+## 2. Generic SchemaComponent — [neural/engine/lib.rs](neural/engine/lib.rs) (new `#region 🔖️SchemaComponent`)
 
 - `pub fn schema_component_info(schema: &Schema) -> OperatorInfo`: builds the input/output `ChannelSpec`s described above from `schema.fields`, using `derive_channel_names`. Instance port name = `schema.id`; field ports = field keys; `errors` output is `ChannelSpec::list_output("errors", vec![])`.
 - `struct SchemaComponent { schema: Schema }` implementing `Operation`:

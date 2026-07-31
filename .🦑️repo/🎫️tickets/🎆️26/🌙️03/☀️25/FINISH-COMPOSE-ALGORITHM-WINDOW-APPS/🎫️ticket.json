@@ -1,0 +1,12 @@
+{
+  "title": "Finish Compose Algorithm Window Apps",
+  "emoji": "🧮️",
+  "status": "closed",
+  "description": "Refactor compose algorithms to use elements/ui UI with AlgorithmApp and compose UI for window kinds. WindowKinds: VecInput, PiecesSelectionInput (Diagram with piece selection, no diff), DesignDiffOutput (Diagram with diff, no selection), DesignOutput (Diagram with no diff, no selection). Remove DESIGN_INPUT. Update all algorithm stories (Drag, Delete, Move, Flatten, Cluster) to use the correct window kinds.",
+  "summary": "Finished the algorithm window app contract cleanup by codifying the canonical WindowKind behaviors in compose/ui, adding regression coverage for the AlgorithmApp window mapping and default layout, and fixing the shared Vitest wiring so elements/ui, compose/ui, compose/algorithms, and compose/js tests run from real source files. Also constrained compose/js and sketchpad test blocks so they do not execute as import side effects under unrelated Vitest runs, and adjusted the affected inline tests to match runtime diff expectations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1083"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️fb40c4afc70c4f2b93aa8ebfcddfd52b", "⚪️68d3bcbdd3064d6386eca17887fa0932"]
+}

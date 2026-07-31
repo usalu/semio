@@ -1,0 +1,11 @@
+{
+  "title": "Center Stepper Value Text in Detail Panel",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "The stepper input value in the sketchpad details panel should be centered horizontally in the input field. Currently it uses text-right alignment.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1210"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️0d858f028857474f898d8836f30cece8"]
+}

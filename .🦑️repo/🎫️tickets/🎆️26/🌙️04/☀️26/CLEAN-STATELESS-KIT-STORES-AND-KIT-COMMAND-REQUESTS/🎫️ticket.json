@@ -1,0 +1,9 @@
+{
+  "title": "Clean Stateless Kit Stores And Kit Command Requests",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Implement stateless compose/js stores (KitStore, DesignStore, TypeStore facades) that only track task ids; single typed execute to compose/rs; extend Rust KitStoreHandle.execute so every call allocates a task id and emits lifecycle events; remove setField and any from public JS boundary; update compose/react hooks for taskId; extend existing tests.",
+  "summary": "Completed stateless KitStore plan: typed KitTypedShellCommand + dispatchKitTypedShellCommand; acquire/release facade per bridge; KitStore.runMutation only (no public patch/add/remove); domain facades (DesignStore, TypeStore, etc.); React kitCommandStore + runKitTypedMutation. executeComposeKitCommand now routes all mutations through acquireComposeKitCommandFacade + runMutation so sketchpad string commands share the same shell path. JS embedded tests + vitest 143 passed; React build/tests verified.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️1be43ce81c274d37854618a32ec63860", "⚪️a705d9e0c6f24e6a9c84748db9ba7b54", "⚪️db76ab5edc8b42a8ab185c3a668be0bb"]
+}

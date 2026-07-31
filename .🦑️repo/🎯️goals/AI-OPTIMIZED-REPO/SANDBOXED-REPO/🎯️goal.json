@@ -1,0 +1,15 @@
+{
+  "title": "Sandboxed Repo",
+  "description": "Goal for Sandboxed Repo",
+  "prompt": "Instructions for Sandboxed Repo",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯️aioptimizedrepo",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/403"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Fix Diffs Not Showing Correctly",
+  "status": "closed",
+  "description": "Diffs aren't showing correctly in the algorithms storybook and/or sketchpad. Need to investigate the diff rendering pipeline (designWithDiff, ComposeDiagram diff coloring, buildDiagramSnapshot) and fix the issue.",
+  "summary": "Refactored sketchpad diff status/color resolution so piece and connection rendering consistently respects both transaction edits and compose.diffStatus attributes. Removed drift between nodes, design nodes, edges, and helper hooks by routing them through shared sketchpad diff helpers. Fixed the connection color bug where added states were incorrectly treated like removed in the shared connection color path. Extended the existing sketchpad test file with a regression test covering added, removed, and modified status resolution and color mapping. Verified with a focused sketchpad Playwright run.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1305"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️9db1c7ed153f4e088b8516fccf7a97f4"]
+}

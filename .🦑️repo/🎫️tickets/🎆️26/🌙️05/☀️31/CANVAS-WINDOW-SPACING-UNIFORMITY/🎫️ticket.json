@@ -1,0 +1,12 @@
+{
+  "title": "Canvas Window Spacing Uniformity",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Fix vertical spacing between left and right canvas windows to match horizontal spacing and canvas edge insets.",
+  "summary": "Unified all shell chrome gutters to --spacing-single so navbar padding, button-group gaps, canvas edge insets, inter-window splitters, side-panel offsets, and toolbar group gaps share one unit. Canvas/Mode/HorizontalWindows/VerticalWindows, ResizableHandle, Panel, and SidePanel now use single; touch toolbar tokens aligned.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1786"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️f1e71326aa5c41a5953493a35e717620", "⚪️74e031b7101148378230c89761b370f2"]
+}

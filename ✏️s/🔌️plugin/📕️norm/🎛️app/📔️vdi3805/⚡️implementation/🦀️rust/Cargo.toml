@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-norm-vdi3805"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "VDI 3805 app — document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📔️vdi3805/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+norm_core = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "norm_core" }
+store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

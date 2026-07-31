@@ -1,7 +1,0 @@
-{
-  "title": "Add reopenTicket function to ticket API",
-  "emoji": "➕",
-  "status": "closed",
-  "description": "Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual interactions) and set the status to open.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repoticketmechanism"
-}

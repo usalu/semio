@@ -1,13 +1,13 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-only
-# #region 🔖PostCreate
+# #region 🔖️PostCreate
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 cd "$WORKSPACE"
 
 echo "Setting up compose (Bun + Nx)…"
 
-#region 🔖EmojiFonts
+#region 🔖️EmojiFonts
 configure_emoji_fonts() {
   echo "Configuring emoji font fallback..."
   sudo mkdir -p /etc/fonts
@@ -41,16 +41,16 @@ FONTCONFIG
   sudo fc-cache -f || true
   echo "Emoji font configuration updated."
 }
-#endregion 🔖EmojiFonts
+#endregion 🔖️EmojiFonts
 
-#region 🔖Ownership
+#region 🔖️Ownership
 echo "Fixing ownership of mounted config directories..."
 sudo chown -R vscode:vscode /home/vscode/.cache || true
 sudo chown -R vscode:vscode /home/vscode/.config/gh || true
 sudo chown -R vscode:vscode /home/vscode/.gitkraken || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/GitKrakenCLI || true
 sudo chown -R vscode:vscode /home/vscode/.local/share/gk || true
-#endregion 🔖Ownership
+#endregion 🔖️Ownership
 
 sudo apt-get update && sudo apt-get install -y ripgrep jq unzip || true
 configure_emoji_fonts
@@ -82,4 +82,4 @@ echo "Running workspace setup (polyglot toolchains + VSIX + hooks)…"
 bun nx run workspace:setup
 
 echo "Development environment ready!"
-# #endregion 🔖PostCreate
+# #endregion 🔖️PostCreate

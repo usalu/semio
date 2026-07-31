@@ -64,7 +64,7 @@ flowchart TB
 
 ## 1. Typed i18n port wrapping the dependency
 
-In [ui/react/index.tsx](ui/react/index.tsx) `🪁I18n Resources` region:
+In [ui/react/index.tsx](ui/react/index.tsx) `🪁️I18n Resources` region:
 
 - Define value types (`LabelValue = { label: { normal: string; beginner: string } }`, plus optional `manual`/`tutorial`/`hotkey`) and the canonical `UiTranslationSchema` tree type.
 - Define `type UiLocale = "en" | "de"` and `type UiTranslationKey = DeepLeafPaths<UiTranslationSchema>` (recursive dot-path union helper).
@@ -83,7 +83,7 @@ In [ui/react/index.tsx](ui/react/index.tsx) `🪁I18n Resources` region:
 
 ## 4. Type the compose sketchpad bundle + fix language parity
 
-- In [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) `🪁ComposeUiI18n` region type `composeSketchpadTranslationBundles` with a `ComposeSketchpadTranslationSchema` (`satisfies Record<UiLocale, ...>`).
+- In [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) `🪁️ComposeUiI18n` region type `composeSketchpadTranslationBundles` with a `ComposeSketchpadTranslationSchema` (`satisfies Record<UiLocale, ...>`).
 - Fix the en/de drift: the en `compose.sketchpad.toolbar.parent.*` entries are plain strings (line ~9996) while de uses `{ label: { normal, beginner } }` (line ~4960) — normalize both to the schema shape so parity is enforced.
 - Type `sketchpadResolveControlLabelId` (line 10060) return and register through the typed port.
 

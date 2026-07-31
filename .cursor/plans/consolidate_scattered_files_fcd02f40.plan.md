@@ -33,7 +33,7 @@ isProject: false
 
 Pure refactor. Fold scattered files into each package's single god-file using `#region` sections. HARD CONSTRAINT (per dev): no change to bundle dependencies and no change to runtime behaviour. The classifier below was validated by reading every candidate's imports, `package.json` exports, bundler/Cargo configs.
 
-Work inside the existing open ticket `2026/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES` (goal `🎯aioptimizedrepo🎯singlefilerepo`) via `ticket_reopen` — do NOT open a new one.
+Work inside the existing open ticket `2026/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES` (goal `🎯️aioptimizedrepo🎯️singlefilerepo`) via `ticket_reopen` — do NOT open a new one.
 
 ## Decision rule
 

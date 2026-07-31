@@ -1,0 +1,17 @@
+{
+  "title": "Finish Jack Play",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Complete Trinity Jack play: results reactivity, graph RETURN, LOD zoom, fixtures for table and graph results.",
+  "summary": "Finished Trinity Jack play integration: fixed results pane reactivity via subscribeSnapshot and useTrinityJackInteractionRevision; extended Jack QueryResult with table/graph kinds and subgraph_fixture; added runJackJsonWithFixture WASM export with mutation sync to docStore; implemented 6-band LOD, wheel zoom, labels, and port handles in TrinityHost; exposed LOD helpers on TrinityCanvas with selection reporting; added nakagin (table) and branch-chain (graph) fixture presets with catalogue; Results pane routes to table or TrinityCanvas based on result kind. All cargo (24) and vitest (12) tests pass; runtime verified at http://127.0.0.1:6054 with table results populated on boot.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1772"
+  },
+  "goal": "🎯️platform",
+  "plan": {
+    "client": "cursor",
+    "id": "985e7edd",
+    "local": "finish_jack_play_985e7edd.plan.md"
+  },
+  "sessions": ["⚪️eb6539d896ae4c7d87824f883e01d9a6"]
+}

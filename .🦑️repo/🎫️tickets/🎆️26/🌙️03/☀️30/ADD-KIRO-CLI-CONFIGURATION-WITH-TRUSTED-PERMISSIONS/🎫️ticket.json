@@ -1,0 +1,12 @@
+{
+  "title": "Add Kiro Cli Configuration with Trusted Permissions",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Add Kiro CLI with all trusted permissions to run and debug, following the existing naming and structure conventions. Create .kiro/agents/compose.json, .kiro/settings/mcp.json, add KiroCliEditorProvider to Go CLI, add kiro-cli to AllowedClients, add generateKiroCliConfig, and add devcontainer mount for kiro.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1168"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️0c3a2519efb340b4b33eeaf2b6ae67ba"]
+}

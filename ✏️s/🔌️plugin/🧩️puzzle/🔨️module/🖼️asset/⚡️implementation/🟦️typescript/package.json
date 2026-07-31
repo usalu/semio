@@ -1,0 +1,17 @@
+{
+  "name": "@semio-tech/puzzle-asset",
+  "version": "0.1.0",
+  "type": "module",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": ".",
+  "projectType": "library",
+  "exports": {
+    ".": "./📦️index.ts"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "bundleKind": "asset"
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Make Spatial Faces Transparent",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Make spatial faces slightly transparent so geometry behind them remains visible.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1488"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️b5eaed6c38d6445e82c2e030849768d2"]
+}

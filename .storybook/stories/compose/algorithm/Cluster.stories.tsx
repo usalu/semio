@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/algorithm/.storybook/story/Cluster.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/algorithm/.storybook/story/Cluster.stories.tsx
 // Specs: Pure UI proxy to flatDesign; cluster diff is a local story fixture.
 // Summary: IPO cluster board — piece selection + stub group diff for Storybook.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Design } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -60,7 +60,7 @@ function ClusterFrame() {
 }
 
 const meta = {
-  title: "🏘️compose🧪algorithms/Cluster",
+  title: "🏘️compose🧪️algorithms/Cluster",
   component: ClusterFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

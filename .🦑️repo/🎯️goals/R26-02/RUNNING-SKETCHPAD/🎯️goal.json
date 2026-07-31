@@ -1,0 +1,15 @@
+{
+  "title": "Running Sketchpad",
+  "description": "Running sketchpad infrastructure and apps with MVP functionality.",
+  "prompt": "",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "🎯️r2602",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/398"
+  }
+}

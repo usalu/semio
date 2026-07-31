@@ -1,0 +1,8 @@
+{
+  "title": "Selection Bounds For Diagram And Scene",
+  "status": "closed",
+  "description": "Add matching transparent axis-aligned selection bounds: SVG rect in ComposeDiagram, 3D box in ComposeScene, shared opacity/accent styling.",
+  "summary": "Added shared selection overlay styling (COMPOSE_SELECTION_BOUNDS_FILL_OPACITY / STROKE_OPACITY on var(--accent)). ComposeDiagram draws an SVG rect under edges/nodes from selected pieces and connections. ComposeScene builds an axis-aligned Box3 from piece world anchors and connection endpoints, renders SceneSelectionBounds (transparent box + Edges) behind scene content. Extended vitests for computeDiagramSelectionOverlayRect and buildSceneSelectionBoundsBox. All compose/ui vitest tests pass.",
+  "goal": "🎯️composeui",
+  "sessions": ["⚪️477fd1f315b849fa977f1f16d47a98a1"]
+}

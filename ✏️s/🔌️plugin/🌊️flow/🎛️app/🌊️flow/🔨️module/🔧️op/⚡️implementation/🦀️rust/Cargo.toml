@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-app-flow-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Flow app - operation type facade (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }

@@ -1,0 +1,12 @@
+{
+  "title": "Fix Type View 3D Model Orientation Z-Up to Y-Up",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "3D models in the Type view are not oriented correctly. compose Z (up) currently maps to Three.js Z (backward) instead of Three.js Y (up). Two bugs: (1) LoadedTypeMesh uses Design's GLTFMesh/FBXMesh/OBJMesh instead of TypeGLTFMesh/TypeFBXMesh/TypeOBJMesh. (2) Type mesh components need toThreeRotation() applied. Also fix Design mesh components which incorrectly apply toComposeRotation() to model geometry.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1035"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️36d117fea6f245c0b06348441449d2aa"]
+}

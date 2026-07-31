@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-sequence-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sequence app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+sequence = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/⚡️implementation/🦀️rust", package = "semio-s-app-sequence" }
+sequence_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-sequence-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

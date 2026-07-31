@@ -1,0 +1,14 @@
+{
+  "title": "Energy Engine Hvac Physics Modules",
+  "emoji": "✨️",
+  "status": "closed",
+  "description": "Create 10 Rust HVAC physics source files for energy_engine: hvac_topo, ideal_hvac, zone_hvac, terminal, air_system, fans, coils, evaporative, humidity_eq, heat_recovery with real physics, emoji docstrings, regions, and tests.",
+  "summary": "Created 10 HVAC physics modules for energy_engine with real psychrometric/coils/fan-law physics, emoji docstrings, regions, and inline tests. Added curves.rs and lib.rs router wiring all modules. Modules: hvac_topo (FluidNode, Branch, AirLoop, PlantLoop, topology validation), ideal_hvac (ideal_loads_deliver), zone_hvac (ZoneEquipment::simulate), terminal (AirTerminal, TerminalOutput), air_system (simulate_air_system), fans (fan_power_w), coils (heating/cooling coil output), evaporative, humidity_eq, heat_recovery. cargo test -p energy_engine was started but did not complete within the session due to workspace build-directory lock and slow dependency compilation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2060"
+  },
+  "goal": "🎯️energy",
+  "sessions": [
+    "⚪️0fc864c4f669488b80590d5927ad6380"
+  ]
+}

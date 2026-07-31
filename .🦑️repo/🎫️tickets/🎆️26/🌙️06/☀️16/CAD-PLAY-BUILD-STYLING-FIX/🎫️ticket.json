@@ -1,0 +1,11 @@
+{
+  "title": "Cad Play Build Styling Fix",
+  "emoji": "🎨️",
+  "status": "open",
+  "description": "Fix CAD play production build/deploy styling: panels overlap, wrong spacing, layout not stretching to bottom.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1706"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️12d7731f3c9f47aabe9de81abfff8ce9"]
+}

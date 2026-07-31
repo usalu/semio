@@ -1,9 +1,0 @@
-{
-  "title": "Rust Lib Legacy Operation Input Dupes",
-  "emoji": "🦀",
-  "status": "closed",
-  "description": "Remove legacy duplicate operation input DTOs and unused OperationInputOneOf / OperationInputUnion from compose/rs/lib.rs; single GraphQL contract is compose/graphql/target.schema.graphql.",
-  "summary": "Removed legacy duplicate operation input surface from compose/rs/lib.rs: deleted unused OperationInputUnion (not in target.schema.graphql), OperationInputOneOf, and *InputDto structs that mirrored CreatedFixedPieceInput / FixedPieceInput / DraggedPieceInput / RenamedKitInput / ChangedDescriptionInput. Dropped InputObject and OneofObject from the operation module async_graphql import. Added verify-log.md in the ticket folder; cargo test was not completed here due to artifact directory file lock.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪615a93c17f3c492f9273cef12cfe6b41"]
-}

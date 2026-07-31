@@ -1,0 +1,12 @@
+{
+  "title": "Rewrite ExportDesignModel to Use SharpGLTF",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Replace manual GLB construction in ExportDesignModel with SharpGLTF.Toolkit SceneBuilder/MeshBuilder/NodeBuilder API. Remove all manual binary GLB parsing/building helpers.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/895"
+  },
+  "goal": "🎯️release🎯️r25071",
+  "sessions": ["🔀️bc8244f5cdf1436e870187d2d72a267bd75b8746⚪️17735210974891350023092969367225034804"]
+}

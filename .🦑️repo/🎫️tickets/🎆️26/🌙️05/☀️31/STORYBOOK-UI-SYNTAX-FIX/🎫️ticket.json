@@ -1,0 +1,9 @@
+{
+  "title": "Storybook Ui Syntax Fix",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix Vite/esbuild transform error in ui/react/index.tsx ModeDockTabBar blocking dev:storybook:ui.",
+  "summary": "Fixed Storybook/Vite esbuild failure in ModeDockTabBar: renderTab was converted to a block body without closing `};`, which made forwardRef’s `});` parse as invalid. Restored implicit-return arrow form via `inactiveTabChromeClass(stackIndex)` helper (last tab before gap uses `modeDockInactiveTabBeforeGapClass`). Verified dev:storybook:ui serves ui/react/index.tsx (HTTP 200) and all 76 @semio-tech/ui-react tests pass.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️68c627516127424ba210fc78e02945c7"]
+}

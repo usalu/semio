@@ -1,9 +1,0 @@
-{
-  "title": "Extrude Curve Z Direction Flow",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "After selecting curves in extrude curve interaction, nothing happens. Should default extrude in Z with option to change direction.",
-  "summary": "Extrude curve now runs a full distance step after selection: default direction +Z, optional direction pick (d), vertical Z rod for distance, then kernel commit. Fixed command.finish omitting model (empty diff), materializeInlineObjectPrimitives reading raw fixture primitive arrays, and Model.fromJSON passing raw objects into materialize.",
-  "goal": "🎯cad",
-  "sessions": ["⚪8e692228c8d846339c0655872ae3f1a4"]
-}

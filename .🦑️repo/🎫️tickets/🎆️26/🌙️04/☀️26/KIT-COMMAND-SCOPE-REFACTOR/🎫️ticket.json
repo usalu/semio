@@ -1,0 +1,24 @@
+{
+  "title": "Kit Command Scope Refactor",
+  "emoji": "🔖️",
+  "status": "closed",
+  "description": "Refactor compose/rs, compose/graphql, compose/js, compose/react, compose/sketchpad so every kit mutation is scoped: kit or alternative latest checkpoint -\u003e draft -\u003e transaction -\u003e command batch. Add KitWriteScope in Rust, typed GraphQL command inputs (no JSON scalars for writes), JS KitStore scoped APIs, React scope providers/hooks, Sketchpad routing through scoped commands. Bind plan kit_command_scopes_b02844b8.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️kitapp",
+  "plan": {
+    "client": "cursor",
+    "id": "b02844b8",
+    "local": "kit_command_scopes_b02844b8.plan.md"
+  },
+  "sessions": ["⚪️07b7aef48dff49fe96e055baf4568778"],
+  "summary": "Rust: removed unscoped live kit mutations (ChangeKitCommands, ChangeKitWithInverse, Design) from LiveBatchCommandInput; only WIP undo/redo remain on live. Regenerated schema.graphql. JS: KitStore tracks session/draft/transaction anchors, buildSessionScopedTopLevelCommand + runScopedTransactionBatch for all kit/design writes and submitChangeKitCommands; undo/redo use live batch; fixed vcsState query brace, read queries for metadata/coloredConnectors, TypeStore metadata null coercion; WasmKitStoreClient exposes get/set KitWriteScope + finalize/abort transaction. React: optional kitWriteScope on KitScope, re-export KitWriteScope, test stubs updated. Engine schema test asserts kitStore.batch. Storybook composeWasm uses kitStore.batch. Rebuilt compose/rs/pkg with wasm-pack.",
+  "files": [
+    "compose/rs/lib.rs",
+    "compose/graphql/schema.graphql",
+    "compose/js/index.ts",
+    "compose/react/index.tsx",
+    "compose/engine/test.ts",
+    "compose/algorithms/.storybook/stories/kit-store/composeWasm.ts",
+    "compose/algorithms/.storybook/stories/kit-store/HistoryControls.tsx",
+    ".repo/🎫️/26/04/26/KIT-COMMAND-SCOPE-REFACTOR/ticket.json"
+  ]
+}

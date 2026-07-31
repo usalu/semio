@@ -1,7 +1,0 @@
-{
-  "title": "add-postcreatecommand-gh-config",
-  "emoji": "➕",
-  "status": "closed",
-  "description": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
-}

@@ -1,0 +1,13 @@
+{
+  "name": "basic-remote-operations",
+  "schema": "demo/v1",
+  "documentId": "fixture-basic",
+  "inbound": [
+    {
+      "kind": "externalEdits",
+      "opsFile": "🔧️01-external.ops"
+    }
+  ],
+  "expectedEvents": ["remoteOperations"],
+  "expectedEditIds": ["basic-1#0"]
+}

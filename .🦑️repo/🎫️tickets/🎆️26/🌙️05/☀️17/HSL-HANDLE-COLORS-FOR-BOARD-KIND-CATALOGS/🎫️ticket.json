@@ -1,0 +1,9 @@
+{
+  "title": "Hsl Handle Colors For Board Kind Catalogs",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Board WASM setBoardKindCatalogsJson failed on Nakagin fixture handle kind colors using modern hsl() without commas; parse_css_hex_color only accepted #hex. Extend BoardHost to parse hsl/hsla then rebuild wasm / verify board play.",
+  "summary": "BoardHost now parses hsl()/hsla() (space or comma, optional slash alpha) for handle kind catalog colors and per-handle color_fill, after existing #hex. Fixes setBoardKindCatalogsJson failure on Nakagin fixture hsl(...) strings that froze BoardCanvas. Added host_tests case; rebuilt wasm via rs/scripts/build-wasm.script.ts; Vitest 67 passed.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️ef671b64774e4422bb0fba58e9e80d3f"]
+}

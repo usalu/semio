@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 2d Play Missing Edges",
+  "emoji": "🪢️",
+  "status": "closed",
+  "description": "Edges not visible in puzzle 2d play at overview zoom.",
+  "summary": "Play edges were invisible when the dev server kept stale WASM from before the screen-space edge draw fix (world cache had scaled edge strokes to sub-pixel width). Rebuilt puzzle_2d WASM; confirmed nakagin fixture still adds 539+ vector paths at overview zoom (0.24). Vite play config no longer ignores `../rs/pkg` so wasm rebuilds trigger reload. Added vitest `nakagin fixture encodes edge vector paths at play overview zoom in wasm`. Restart puzzle 2d play dev after pulling.",
+  "goal": "🎯️puzzle",
+  "sessions": ["⚪️566708045d4b4ba2b8a0c5d4564f51a6"]
+}

@@ -1,6 +1,0 @@
-{
-  "title": "Design Toolbar Tool Tree Prompt",
-  "emoji": "🔧",
-  "status": "closed",
-  "summary": "Implemented strategy-driven kit diagram shape/snap-point geometry, migrated Kit edge + preview + proximity routing to shared anchor resolution, added geometry unit coverage and Playwright alignment assertions, and documented the finalized mechanism in README/AGENTS."
-}

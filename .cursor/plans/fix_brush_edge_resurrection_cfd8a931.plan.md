@@ -49,7 +49,7 @@ In the `filterPuzzle2dPlayStructuralDeleteBatch` describe block in [puzzle/2d/pl
 
 ## Verification
 
-- Run `bun ./script.ts test` in [puzzle/2d/play](puzzle/2d/play) and [puzzle/2d/react](puzzle/2d/react).
+- Run `bun ./📜️script.ts test` in [puzzle/2d/play](puzzle/2d/play) and [puzzle/2d/react](puzzle/2d/react).
 - Runtime check per repo rules: add a temporary `[DEBUG]` log in `applyStructuralDelete` (edge branch) and confirm in the browser that dragging a node, selecting 2+ edges, deleting, then `Brush` + Enter keeps the edges gone, leaves the fixture edge count reduced, and keeps the canvas interactive. Remove `[DEBUG]` logs after confirming.
 
 [{"id": "filter", "content": "Remove count-based burst guards from filterPuzzle2dPlayStructuralDeleteBatch in puzzle/2d/play/index.ts; keep dedup + existence check; update docstring"}, {"id": "brush-effect", "content": "Make flushStructuralDeleteQueue report applied deletes and skip stale fixtureRef sync in the brush activation effect in framework/product/playground/renderer/react/index.tsx"}, {"id": "tests", "content": "Update filterPuzzle2dPlayStructuralDeleteBatch tests to assert authoritative deletes always commit (incl. nakagin-scale)"}, {"id": "verify", "content": "Run play + react test suites and confirm runtime fix in browser with temporary [DEBUG] logs, then remove logs"}]

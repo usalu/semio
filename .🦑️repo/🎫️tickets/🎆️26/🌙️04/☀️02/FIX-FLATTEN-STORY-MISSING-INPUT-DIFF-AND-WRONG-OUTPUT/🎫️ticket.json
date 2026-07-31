@@ -1,0 +1,12 @@
+{
+  "title": "Fix Flatten Story Missing Input Diff and Wrong Output",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The flattenDesign story in compose algorithms storybook has three issues: 1) Input window shows nothing because rawDesign pieces lack center coordinates, 2) Diff window shows nothing for the same reason (diffDesign is not set, falls back to rawDesign which has no centers), 3) Output window shows the raw tower instead of the flattened result. Need to compute diffDesign from designWithDiff and use the flattened design as the base for diff visualization.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1266"
+  },
+  "goal": "🎯️algorithms",
+  "sessions": ["⚪️d7be4f5f531a45faa05629ce1eecdf39"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Rs Store Wire And Collapse Read Tiers",
-  "emoji": "🦀",
-  "status": "closed",
-  "description": "Collapse compose/rs to store-only wire types: remove *Full/*Shallow/*Metadata/*Ref DTOs for all entities; remove Read*Full/Shallow/Metadata/Id command variants; keep compose/js DTO names unchanged. Prior work: AttributeStore-only for attributes; fix kit read attribute id binding and diff merge for Vec\u003cId\u003e removed.",
-  "summary": "Stabilized compose/rs after partial AttributeStore migration: fixed Id vs AttributeRef command bindings (use *id in read matchers, kit_find_attr(g, id)), change_command duplicate Id import removed, Remove*Attribute arms compare id correctly and use clone_wire for inverse DTOs, diff AttributesDiff merge uses sort/dedup on Vec\u003cId\u003e, merge_attributes_coll_into_vec and apply_attrs use Id not .id, kit_graph attribute diff applies on write guard with pub(crate) invalidate_local_and_bubble, SQLite and test use AttributeStore::wire. cargo check --lib passes. Full removal of all *Full/*Shallow/*Metadata/*Ref types and collapse of all Read* tier commands across every entity is not done here—requires repeating the AttributeStore pattern (wire + clone_wire + serde skip on internals) per entity and rewriting read/diff/graphql surfaces; compose/js left untouched per request.",
-  "goal": "🎯aioptimizedrepo🎯singlefilerepo",
-  "sessions": ["⚪e210761703364f2ca1ad097ab568229a"]
-}

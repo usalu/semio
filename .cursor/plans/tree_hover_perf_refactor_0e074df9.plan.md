@@ -68,7 +68,7 @@ In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx):
 
 ## Validation
 
-Per repo rules, open a repo MCP ticket (reuse goal `🎯compose`) and track all touched files. Extend existing vitest files only (no new test files):
+Per repo rules, open a repo MCP ticket (reuse goal `🎯️compose`) and track all touched files. Extend existing vitest files only (no new test files):
 
 - `ui/react` Tree test: hover changes do not re-render unaffected rows; `highlightedIds` flips only matching rows (add `[DEBUG]` render counters).
 - cad play test: hover no longer changes `chromeKey` / rebuilds sections; `highlightedIds` resolves the hovered target.

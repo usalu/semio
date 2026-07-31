@@ -23,5 +23,5 @@
     },
     "types": ["node", "react", "react-dom", "vite/client"]
   },
-  "include": ["🟦extension.ts", "webview.tsx"]
+  "include": ["🟦️extension.ts", "webview.tsx"]
 }

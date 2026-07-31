@@ -43,7 +43,7 @@ Build outputs now land at `framework/os/dev/...` (see [`framework/os/dev/script.
 | `framework/os/kernel/.../js/coverage/` | 9 | coverage report (not ignored) |
 | `framework/os/renderer/wgpu/js/boot.js` | 1 | bun-built from `boot.ts` |
 
-**Keep tracked:** handwritten source/config (`*.ts`, `eslint.config.mjs`, compose stubs, ticket scripts under `.repo/🎫/`, mit-bestand presentation snapshot assets, codegen token files like `tokens.generated.ts` — those are a separate concern).
+**Keep tracked:** handwritten source/config (`*.ts`, `eslint.config.mjs`, compose stubs, ticket scripts under `.repo/🎫️/`, mit-bestand presentation snapshot assets, codegen token files like `tokens.generated.ts` — those are a separate concern).
 
 Goal association on execute: `AI-OPTIMIZED-REPO` / consistent repo hygiene (open ticket via repo MCP once auth works).
 

@@ -65,8 +65,8 @@ There is also a real bug making it worse: `SemioGlossaryListOf` ([print/tex/semi
 ## Verification
 
 1. Reopen ticket `TOC-SEMIO-WINDOW-TABLES` via repo MCP (`ticket_reopen`), since this is a direct continuation of that work.
-2. Rebuild `zwischenbericht` (light + dark) with `cd mit-bestand/bericht && bun ./script.ts build`.
-3. Confirm no `Overfull`/`Misplaced \noalign` errors and that page count / TOC entry count stay consistent with the last known-good state (11 pages, TOC spanning pages 2-3 per [verify-log.md](.repo/🎫/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md)).
+2. Rebuild `zwischenbericht` (light + dark) with `cd mit-bestand/bericht && bun ./📜️script.ts build`.
+3. Confirm no `Overfull`/`Misplaced \noalign` errors and that page count / TOC entry count stay consistent with the last known-good state (11 pages, TOC spanning pages 2-3 per [verify-log.md](.repo/🎫️/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md)).
 4. Render TOC pages and the `Netzwerk` (`Arbeitspaketzuordnung`) page to images and visually compare: left/right/bottom border present on every TOC page, padding matches, row separators match, continuation title row border is unbroken.
 5. Render the Glossary pages (`\listofglossaries`, page ~ where "Glossar" title appears) to confirm it now also uses the bordered/breakable style instead of the old flat table.
 6. Update `verify-log.md` in the ticket with the new findings and close the ticket with a summary listing the touched files.

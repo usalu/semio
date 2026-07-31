@@ -1,9 +1,0 @@
-{
-  "title": "Shorten Bauen Mit Bestand Video",
-  "emoji": "🎬",
-  "status": "closed",
-  "description": "Trim mit-bestand/präsentation/33.projektetage/public/bauen-mit-bestand.mp4 to 55s and hold last frame 5s with ffmpeg.",
-  "summary": "30s total: trim last 0.5s from original, speed 82.73s content to 28s motion (~2.96×), 2s last-frame hold.",
-  "goal": "🎯mitbestand",
-  "sessions": ["⚪e05c4ae1c73b44e795f3bea4a59e45b7", "⚪30bf3f998d884be2b083a2fa55cab93b", "⚪12a3d0089955473e9c38efe1f3f4fe79", "⚪a1ffd9c714604b07a84634a2a4063adf"]
-}

@@ -1,9 +1,0 @@
-{
-  "title": "Compose React Hook And Scope Refactor",
-  "emoji": "🪝",
-  "status": "closed",
-  "description": "Refactor compose/react hooks and scopes; align compose/js KitStore; consolidate Rust control-plane entry points; sketchpad uses React boundary only.",
-  "summary": "Rust: RPC field/add/remove use control_plane_batch_apply_with_undo; test fix for two-graph id match. JS: theKit() via read readKitFullCommand. React: ComposeKitScopedView (kitId + read + write); useTypes/Designs/Files/TagsFull from KitStore.read; schemaScanWritable rename. rs/js/react/sketchpad build+tests as in implementation-summary.md.",
-  "goal": "🎯refactorkitapitoobjectorientedwithcentralizedchangemanagement",
-  "plan": { "source": "react_hooks_refactor_bc470493" }
-}

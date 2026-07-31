@@ -1,0 +1,209 @@
+export interface PlayCanvasProps {
+  readonly fixture: FixtureV1;
+  readonly camera?: CameraState;
+  readonly cameraSeedKey?: string | number;
+  readonly proximityRelocateEnabled?: boolean;
+  readonly kindCatalogs?: KindCatalogBundle;
+  readonly kindCompatibility?: readonly KindCompatEntry[];
+  readonly blockedVortexFullIds?: ReadonlySet<string>;
+  readonly lodTag?: number;
+  readonly lodProps?: Pick<CanvasProps, "automaticLod" | "depthVariableLod" | "lod">;
+  readonly gumballConfig?: GumballConfig;
+  readonly selection?: SelectionSnapshot;
+  readonly selectedId?: string | null;
+  readonly selectedLabel?: string | null;
+  readonly selectionMode?: SelectionMode;
+  readonly selectionMethod?: SelectionMethod;
+  readonly marqueeSelectableKinds?: MarqueeSelectableKinds;
+  readonly proximityRadius?: number;
+  readonly chunkSize?: number;
+  readonly gridFactor?: number;
+  readonly showLodGrid?: boolean;
+  readonly gridSnapEnabled?: boolean;
+  readonly setSelectedId: (id: string | null) => void;
+  readonly onSelect?: (snap: SelectionSnapshot) => void;
+  readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
+  readonly onTargetVolumeRelocate?: (payload: WorldVolumeRelocatePayload) => void;
+  readonly onVoxelBrushPaint?: (cad: Vec3, scale: Vec3) => void;
+  readonly voxelBrushDimensions?: Vec3;
+  readonly fillEditTargetVolumes?: boolean;
+  readonly onIndirectConnect?: () => void;
+  readonly onProximityConnect?: () => void;
+  readonly onLodChange?: (lod: number) => void;
+  readonly onCamera?: (s: CameraState) => void;
+  readonly onAttractionCompatibleObjects?: () => void;
+  readonly onAttractionTargetRing?: () => void;
+  readonly brushActive?: boolean;
+  readonly fillActive?: boolean;
+  readonly onFillMeshesReady?: () => void;
+  readonly onBrushPlace?: (payload: BrushPlacePayload) => void;
+  readonly brushPlacementOverlapBudget?: number;
+  readonly fixtureDragDrop?: boolean;
+  readonly onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
+  readonly hoverTarget?: HoverTarget | null;
+  readonly kindHover?: Puzzle3dKindHover | null;
+  readonly onHover?: (payload: Puzzle3dHoverPayload) => void;
+  readonly onToggleSelectionHidden?: (value: boolean) => void;
+  readonly onToggleSelectionLocked?: (value: boolean) => void;
+  readonly onDeleteSelection?: () => void;
+  readonly onDuplicateSelection?: () => void;
+  readonly onSelectSameKind?: () => void;
+}
+
+/** @emoji 🎬️ Puzzle 3D play canvas: {@link Canvas3D} cabled to {@link ObjectStateProvider} and {@link Objects}. */
+export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
+  const setSelectedIdRef = reactHostPort.useRef(props.setSelectedId);
+  setSelectedIdRef.current = props.setSelectedId;
+  reactHostPort.useEffect(() => {
+    puzzle3dSelectionActionsRef.current = {
+      toggleHidden: (value) => props.onToggleSelectionHidden?.(value),
+      toggleLocked: (value) => props.onToggleSelectionLocked?.(value),
+      deleteSelection: () => props.onDeleteSelection?.(),
+      duplicateSelection: () => props.onDuplicateSelection?.(),
+      selectSameKind: () => props.onSelectSameKind?.(),
+    };
+    return () => {
+      puzzle3dSelectionActionsRef.current = {
+        toggleHidden: () => {},
+        toggleLocked: () => {},
+        deleteSelection: () => {},
+        duplicateSelection: () => {},
+        selectSameKind: () => {},
+      };
+    };
+  }, [
+    props.onDeleteSelection,
+    props.onDuplicateSelection,
+    props.onSelectSameKind,
+    props.onToggleSelectionHidden,
+    props.onToggleSelectionLocked,
+  ]);
+  const sceneChildren = reactHostPort.useMemo(
+    () => (
+      <>
+        <PuzzleReferences references={props.fixture.references ?? []} relocate={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG} />
+        <PuzzleTargetVolumes
+          targetVolumes={props.fixture.targetVolumes ?? []}
+          interactive={props.fillEditTargetVolumes === true}
+          relocate={false}
+        />
+        <Objects relocate={puzzle3dObjectGumballConfig(props.gumballConfig)} />
+        <AttractionTreeRoots />
+        <MarqueeAttractionSource />
+        <PlayTestBridge setSelectedId={(id) => setSelectedIdRef.current(id)} />
+      </>
+    ),
+    [props.fillEditTargetVolumes, props.fixture.references, props.fixture.targetVolumes, props.gumballConfig],
+  );
+  const handleRelocate = useObjectRelocate();
+  const handleConnect = useObjectConnect();
+  const onIndirectConnect = reactHostPort.useCallback(
+    (payload: AttractionPayload) => {
+      handleConnect(payload);
+      props.onIndirectConnect?.();
+    },
+    [handleConnect, props.onIndirectConnect],
+  );
+  const onProximityConnect = reactHostPort.useCallback(
+    (payload: AttractionPayload) => {
+      handleConnect(payload);
+      props.onProximityConnect?.();
+    },
+    [handleConnect, props.onProximityConnect],
+  );
+  const onAttractionCompatibleObjects = reactHostPort.useCallback(
+    (_payload: AttractionCompatibleObjectsPayload) => {
+      props.onAttractionCompatibleObjects?.();
+    },
+    [props.onAttractionCompatibleObjects],
+  );
+  const onAttractionTargetRing = reactHostPort.useCallback(
+    (_payload: AttractionTargetRingPayload) => {
+      props.onAttractionTargetRing?.();
+    },
+    [props.onAttractionTargetRing],
+  );
+  reactHostPort.useEffect(() => {
+    puzzle3dReferenceRelocateBridgeRef.current = {
+      onSelect: props.onSelect,
+      onRelocate: props.onReferenceRelocate,
+    };
+    puzzle3dTargetVolumeRelocateBridgeRef.current = {
+      onRelocate: props.onTargetVolumeRelocate,
+    };
+    puzzle3dVoxelBrushBridgeRef.current = {
+      onPaint: props.onVoxelBrushPaint,
+    };
+    return () => {
+      puzzle3dReferenceRelocateBridgeRef.current = {};
+      puzzle3dTargetVolumeRelocateBridgeRef.current = {};
+      puzzle3dVoxelBrushBridgeRef.current = {};
+    };
+  }, [props.onReferenceRelocate, props.onSelect, props.onTargetVolumeRelocate, props.onVoxelBrushPaint]);
+  return (
+    <Canvas3D
+      className="absolute inset-0"
+      camera={props.camera ?? props.fixture.camera}
+      cameraSeedKey={props.cameraSeedKey}
+      domain={props.fixture.domain}
+      chunkSize={props.chunkSize}
+      kindCatalogs={props.kindCatalogs}
+      kindCompatibility={props.kindCompatibility}
+      blockedVortexFullIds={props.blockedVortexFullIds}
+      proximityRadius={props.proximityRadius}
+      proximityRelocateEnabled={props.proximityRelocateEnabled}
+      gumballConfig={props.gumballConfig ?? PUZZLE_3D_GUMBALL_CONFIG}
+      selectionMode={props.selectionMode}
+      selectionMethod={props.selectionMethod}
+      marqueeSelectableKinds={props.marqueeSelectableKinds}
+      selection={props.selection}
+      gridFactor={props.gridFactor}
+      showLodGrid={props.showLodGrid}
+      gridSnapEnabled={props.gridSnapEnabled}
+      onCamera={props.onCamera}
+      onLodChange={props.onLodChange}
+      onSelect={props.onSelect}
+      onReferenceRelocate={props.onReferenceRelocate}
+      onTargetVolumeRelocate={props.onTargetVolumeRelocate}
+      onVoxelBrushPaint={props.onVoxelBrushPaint}
+      voxelBrushDimensions={props.voxelBrushDimensions}
+      fillEditTargetVolumes={props.fillEditTargetVolumes}
+      onConnect={handleConnect}
+      onRelocate={handleRelocate}
+      onIndirectConnect={onIndirectConnect}
+      onProximityConnect={onProximityConnect}
+      onAttractionCompatibleObjects={onAttractionCompatibleObjects}
+      onAttractionTargetRing={onAttractionTargetRing}
+      brushActive={props.brushActive}
+      fillActive={props.fillActive}
+      onFillMeshesReady={props.onFillMeshesReady}
+      onBrushPlace={props.onBrushPlace}
+      brushPlacementOverlapBudget={props.brushPlacementOverlapBudget}
+      fixtureDragDrop={props.fixtureDragDrop}
+      onFixtureDrop={props.onFixtureDrop}
+      hoverTarget={props.hoverTarget}
+      kindHover={props.kindHover}
+      onHover={props.onHover}
+      sceneFixture={props.fixture}
+      {...props.lodProps}
+    >
+      {sceneChildren}
+    </Canvas3D>
+  );
+}
+
+export function Canvas3D(props: CanvasProps & { className?: string; style?: CSSProperties }) {
+  const { children, className, style, onLodChange, domain = DEFAULT_DOMAIN, fixtureDragDrop, onFixtureDrop, camera, onCamera, ...rest } = props;
+  const rootRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const [shellLod, setShellLod] = reactHostPort.useState(() => formatLod(DEFAULT_MANUAL_LOD));
+  const [fixtureDragActive, setFixtureDragActive] = reactHostPort.useState(false);
+  const fixtureDragDepthRef = reactHostPort.useRef(0);
+  const resolvedFixtureDragDrop = fixtureDragDrop ?? Boolean(onFixtureDrop);
+  const handleLod = reactHostPort.useCallback(
+    (l: number) => {
+      const label = formatLod(l);
+      setShellLod(label);
+      onLodChange?.(l);
+    },
+    [onLodChange],
+  );

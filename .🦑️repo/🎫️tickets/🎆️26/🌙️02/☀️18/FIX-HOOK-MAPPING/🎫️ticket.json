@@ -1,0 +1,11 @@
+{
+  "title": "Fix Hook Mapping",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "fix hooks",
+  "summary": "All platform hook config generators now include ALL available events with NO matchers. Added native format generators for codex/droid/antigravity with all 13 agent events. configure command now writes 10 client configs + git hooks. All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/619"
+  },
+  "goal": "🎯️hooks"
+}

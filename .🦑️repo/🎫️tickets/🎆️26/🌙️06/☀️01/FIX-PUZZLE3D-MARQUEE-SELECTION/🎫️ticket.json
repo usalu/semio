@@ -1,0 +1,9 @@
+{
+  "title": "Fix Puzzle3d Marquee Selection",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix puzzle3d rectangle marquee selection false positives (random objects outside rectangle) and false negatives (objects fully inside not selected). Root causes: partial AABB corner projection behind camera, inflated world AABB footprint vs visible silhouette, crossing mode using arbitrary AABB corner diagonals.",
+  "summary": "Fixed puzzle3d rectangle/lasso marquee selection false positives and false negatives.\n\nRoot causes:\n- Partial AABB corner projection when vertices were behind the camera produced collapsed bogus footprints.\n- Window mode used the inflated world AABB bounding rect instead of the visible silhouette.\n- Crossing mode tested arbitrary consecutive AABB corner pairs instead of hull boundary edges.\n\nChanges in puzzle/3d/react/index.tsx:\n- Added convexHullScreenPoints, projectWorldToClientMarquee, geometry-vertex sampling with cap, and ObjectMarqueeFootprint.\n- projectObjectGroupToScreenPoints now returns { hull, anyBehindCamera } from mesh vertices (AABB fallback).\n- MarqueeCandidate carries anyBehindCamera; window mode rejects straddling objects and requires all hull points inside the marquee; crossing uses convex-hull edges.\n- Extended marquee unit tests (behind-camera exclusion, tight hull window select, hull-edge crossing, convex hull).\n\nAll 188 @semio-tech/puzzle-3d-react tests pass.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️ba9a0212cd2d4640843054901bcf8858"]
+}

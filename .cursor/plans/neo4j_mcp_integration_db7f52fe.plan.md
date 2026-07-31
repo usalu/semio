@@ -80,7 +80,7 @@ Repeat with `NEO4J_DATABASE` set to `elements`, `coda`, `reuse` for the other th
 
 ### 3. Windows native — [.devcontainer/install-native.ps1](.devcontainer/install-native.ps1)
 
-- In the `🧰MachineInstall` region, add:
+- In the `🧰️MachineInstall` region, add:
   ```powershell
   Sync-WingetPackage -Id "Neo4j.Neo4jDesktop" -Label "Neo4j Desktop"
   ```
@@ -101,7 +101,7 @@ There is currently no native sh bootstrap (only PS1 + devcontainer). Create a ne
   - macOS: `brew install --cask neo4j` (auto-bootstraps Homebrew if missing).
   - Linux: download the official `.deb` from `https://neo4j.com/download-center/` via `apt` (Ubuntu/Debian) or `.AppImage` fallback for other distros; otherwise print a one-line manual fallback URL.
 - Ensure `uv` is installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`).
-- Persist env vars idempotently to `~/.zshrc` (mac) and `~/.bashrc` + `~/.profile` (linux) inside a `#region 🔌Neo4j` marker block:
+- Persist env vars idempotently to `~/.zshrc` (mac) and `~/.bashrc` + `~/.profile` (linux) inside a `#region 🔌️Neo4j` marker block:
   ```sh
   export NEO4J_URI=bolt://localhost:7687
   export NEO4J_USERNAME=neo4j

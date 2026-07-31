@@ -48,7 +48,7 @@ Work under the reopened ticket `2026/05/30/SKETCHPAD-PLATFORM-REFACTOR` (and `FR
 
 ## Phase 1 — Framework core: Component class document
 
-File: [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts) (extend `🔖ComponentKind`/`🔖UiNode` regions; add `🔖Component` region).
+File: [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts) (extend `🔖️ComponentKind`/`🔖️UiNode` regions; add `🔖️Component` region).
 
 - Add `abstract class Component` with `componentKind: ComponentKind`, `surfaceId`, `controllerId`, an `ObservableCell`-backed model, `subscribe(listener)`, `getModel()`, and `abstract buildModel(): TModel`.
 - Add concrete base classes `Table`, `Puzzle2d`, `Puzzle3d`, `Puzzle5d`, `Cad`, `Panel`, each fixing `componentKind` and declaring its model contract:
@@ -84,7 +84,7 @@ File: [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js
 
 ## Phase 4 — Sketchpad component subclasses (pure TS)
 
-File: [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) (new `🔖SketchpadComponents` region).
+File: [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts) (new `🔖️SketchpadComponents` region).
 
 - Implement, each computing its model from the kit store client + route scope:
   - `HomeTable extends Table`, `KitTable extends Table`
@@ -113,4 +113,4 @@ File: [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js
 ## Out of scope (note for follow-ups)
 
 - Migrating playground / puzzle / cad play apps off `registerSurfaceBinding` onto the component-class model.
-- Implementing the Svelte renderer (tracked by `.repo/🎫/26/05/30/SKETCHPAD-PLATFORM-REFACTOR/follow-up-svelte-renderer.md`).
+- Implementing the Svelte renderer (tracked by `.repo/🎫️/26/05/30/SKETCHPAD-PLATFORM-REFACTOR/follow-up-svelte-renderer.md`).

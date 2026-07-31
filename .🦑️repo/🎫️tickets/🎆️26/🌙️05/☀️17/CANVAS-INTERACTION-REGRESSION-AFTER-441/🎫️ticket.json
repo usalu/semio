@@ -1,0 +1,9 @@
+{
+  "title": "Canvas Interaction Regression After 441",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "Canvas renders but pointer interaction (click, select, deselect) stopped working after commit 441 vs 440; rest of UI OK. Find root cause in diff 440..441 and fix with tests.",
+  "summary": "Root fix: removed `.lm_goldenlayout * { pointer-events: auto !important }` from elements.css — it forced every GL descendant to auto and broke all intentional pointer-events:none pass-throughs (Window options overlay, toolbars, etc.), blocking board canvas hits. Replaced with explicit pointer-events:auto only on known GL chrome (header, tabs, splitters, drag proxy, popin, controls). Prior attempts (ContextMenu ordering, overlay geometry, per-slot !important) logged in ticket important.md. Tests: bun ./📜️script.ts test in elements/client/lib/board — Rust 57, Vitest 75, Playwright 3 pass / 3 skip.",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️adec5a534eb44fcca6ba07ae721e352b", "⚪️7c3ee20793524106977555b91bfac2c0", "⚪️7a847b80983a4d1581e92bfc86d05689", "⚪️b762d22abed247cda22d167637814ff0"]
+}

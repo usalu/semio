@@ -120,7 +120,7 @@ New single package, e.g. `framework/product/playground/dev` (`package.json` + `p
 - Entry module dynamic-`import()`s the requested domain's `index.ts`, then calls one generic `bootAppStandalone(appDefinition)` in `framework/product/playground/renderer/react`, replacing the ~20 bespoke `boot<X>Play()` functions.
 - WASM/cargo prebuild divergence (flow's 8 modules, lowpoly, puzzle rust, procedural) becomes a declarative `devHost.prebuild()` hook invoked by the one shared `script.ts`.
 
-Root-level fallout: `package.json` workspaces (drop ~24 entries), `dev:*`/`build:*`/`test:*` scripts collapse to `bun ./script.ts dev <domain>` routed through the one runner, root `script.ts` `DevScript` router, `repo/lib/js/index.ts` `PLAYGROUND_PORTS` (collapse to one port/dynamic allocation), `.vscode/launch.json` entries (regenerate one parametrized launch config per domain, or one launch config with an input picker).
+Root-level fallout: `package.json` workspaces (drop ~24 entries), `dev:*`/`build:*`/`test:*` scripts collapse to `bun ./📜️script.ts dev <domain>` routed through the one runner, root `script.ts` `DevScript` router, `repo/lib/js/index.ts` `PLAYGROUND_PORTS` (collapse to one port/dynamic allocation), `.vscode/launch.json` entries (regenerate one parametrized launch config per domain, or one launch config with an input picker).
 
 ## Phase 6 — Delete the per-domain `*/play` packages
 
@@ -148,5 +148,5 @@ Special cases needing individual handling:
 
 ## Execution notes
 
-- Per repo convention this work happens inside a ticket (goal `🎯platform`/`🎯s🎯platform`, or a new `🎯os` subgoal — confirm during ticket open by reading `repo://goals`). Given the "full big-bang" scope, expect this to be tracked as one ticket with the phases above as its todos, similar in shape to the prior `S-TECHNOLOGY-EXTENSION-LOADING` ticket (8 phases, ~24 technologies touched).
+- Per repo convention this work happens inside a ticket (goal `🎯️platform`/`🎯️s🎯️platform`, or a new `🎯️os` subgoal — confirm during ticket open by reading `repo://goals`). Given the "full big-bang" scope, expect this to be tracked as one ticket with the phases above as its todos, similar in shape to the prior `S-TECHNOLOGY-EXTENSION-LOADING` ticket (8 phases, ~24 technologies touched).
 - Phases 1-3 (os core + s-as-os) unblock Phase 4 (per-domain `AppDefinition`), which unblocks Phases 5-6 (runner + deletion). Phase 2 (interaction contract) can proceed in parallel with Phase 1.

@@ -1,9 +1,0 @@
-{
-  "title": "Fix Puzzle 2d Text Labels On Zoom",
-  "emoji": "🏷️",
-  "status": "closed",
-  "description": "puzzle2d: text labels are misaligned and drift during zoom. Keep overlay paint in lockstep with every GPU frame and use WASM viewport camera when the host defers camera props.",
-  "summary": "Fixed puzzle2d caption drift during zoom: text overlay now repaints on every successful GPU frame (not only when textOverlayDirty), and overlay camera falls back to live WASM viewport when the host defers controlled camera props. Vitest 127 passed in puzzle/2d/react.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪b4878395ca704230bf1ca2439b4ca45f"]
-}

@@ -1,0 +1,11 @@
+{
+  "title": "Support React and WGPU Renderers in Playgrounds",
+  "emoji": "🎮️",
+  "status": "closed",
+  "description": "Extend all playground once with react renderer and once with wgpu renderer. by default use the react one",
+  "summary": "Split WGPU launch configurations into wasm and native variants",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1822"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad"
+}

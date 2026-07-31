@@ -1,9 +1,9 @@
-// #region 🧲Header
+// #region 🧲️Header
 // 2024-2026 Ueli Saluz <ueli@semio-tech.com>
 // Render-agnostic sketchpad product: {@link Platform} apps, {@link Component} snapshots, controller-owned {@link Store}s.
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-//#region 🔌Adapters
+//#region 🔌️Adapters
 import type { Design, Kit, Piece, PositionInput, Session, SetResult, Type } from "@semio-tech/compose-js";
 import { Design as JsDesign, Kit as JsKitEntity, Piece as JsPiece, Session as ComposeSession } from "@semio-tech/compose-js";
 import { fetchComposeFileSystemChildren, type ComposeFileSystemChildRef, type ComposeFileSystemParentRef } from "@semio-tech/compose-react";
@@ -79,9 +79,9 @@ import {
   type SearchItemSpec,
 } from "@semio-tech/framework-core";
 import { type RelationshipKind, type WiresFixture, wiresFixtureBoard, wiresKitInstanceId } from "@semio-tech/reasoning-mindmap-wires-react";
-//#endregion 🔌Adapters
+//#endregion 🔌️Adapters
 
-//#region 🪁ComposeUiI18n
+//#region 🪁️ComposeUiI18n
 import {
   createTerminologyLabelResolver,
   decodeIcon,
@@ -97,7 +97,7 @@ import {
   type UiRibbonParentCategory,
 } from "@semio-tech/ui-react";
 
-/** @emoji 🪁 Sketchpad toolbar parent labels keyed by {@link UiRibbonParentCategory}. */
+/** @emoji 🪁️ Sketchpad toolbar parent labels keyed by {@link UiRibbonParentCategory}. */
 type ComposeSketchpadToolbarParentEntries = { readonly [K in UiRibbonParentCategory]: UiLabelValue };
 
 export const composeSketchpadToolbarParentDe: ComposeSketchpadToolbarParentEntries = {
@@ -140,7 +140,7 @@ export const composeSketchpadToolbarParentEn: ComposeSketchpadToolbarParentEntri
   export: { label: { normal: "Export", beginner: "Export" } },
 };
 
-/** @emoji 🪁 Compose sketchpad i18n keys resolved from shell control ids. */
+/** @emoji 🪁️ Compose sketchpad i18n keys resolved from shell control ids. */
 export type ComposeSketchpadControlTranslationKey =
   | "compose.sketchpad.navbar.back"
   | "compose.sketchpad.navbar.forward"
@@ -1656,8 +1656,8 @@ const composeSketchpadTranslationBundles = {
           "iconPlaceholder": {
             "label": {
               "label": {
-                "normal": "🎨 oder URL zum Icon",
-                "beginner": "🎨 oder URL zum Icon"
+                "normal": "🎨️ oder URL zum Icon",
+                "beginner": "🎨️ oder URL zum Icon"
               }
             }
           },
@@ -6889,8 +6889,8 @@ const composeSketchpadTranslationBundles = {
           "iconPlaceholder": {
             "label": {
               "label": {
-                "normal": "🎨 or URL to icon",
-                "beginner": "🎨 or URL to icon"
+                "normal": "🎨️ or URL to icon",
+                "beginner": "🎨️ or URL to icon"
               }
             }
           },
@@ -10362,19 +10362,19 @@ export function sketchpadResolveControlLabelId(id: string): ComposeSketchpadCont
   return id;
 }
 
-/** @emoji 🪁 Registers compose sketchpad translation bundles and shell label resolver on the shared UI i18n instance. */
+/** @emoji 🪁️ Registers compose sketchpad translation bundles and shell label resolver on the shared UI i18n instance. */
 export function registerComposeSketchpadUiChrome(): void {
   registerUiTranslationBundles(composeSketchpadTranslationBundles);
   setControlLabelIdResolver(sketchpadResolveControlLabelId);
 }
 
 registerComposeSketchpadUiChrome();
-//#endregion 🪁ComposeUiI18n
+//#endregion 🪁️ComposeUiI18n
 
-//#region 🔖KitImport
+//#region 🔖️KitImport
 type ComposeBundleJson = Record<string, unknown>;
 
-/** @emoji 🧾 Recursively flattens `{ items: [...] }` and Relay `edges` for GraphQL install payloads. */
+/** @emoji 🧾️ Recursively flattens `{ items: [...] }` and Relay `edges` for GraphQL install payloads. */
 function composeDenormalizeBundleValue(v: unknown): unknown {
   if (v == null || typeof v !== "object") return v;
   if (Array.isArray(v)) return v.map(composeDenormalizeBundleValue);
@@ -10394,7 +10394,7 @@ function composeDenormalizeBundleValue(v: unknown): unknown {
   return flat;
 }
 
-/** @emoji 🧾 Lifts `*.kit.compose.json` (`initialKit` / `wip.initialKit`) then flattens bundle lists. */
+/** @emoji 🧾️ Lifts `*.kit.compose.json` (`initialKit` / `wip.initialKit`) then flattens bundle lists. */
 export function decodeKitComposeEnvelopeToFullFromValue(v: unknown): unknown {
   let inner: unknown = v;
   if (inner && typeof inner === "object" && !Array.isArray(inner)) {
@@ -10409,7 +10409,7 @@ export function decodeKitComposeEnvelopeToFullFromValue(v: unknown): unknown {
   return composeDenormalizeBundleValue(inner);
 }
 
-/** @emoji 🧾 Reads a kit DTO root from a decoded compose bundle value. */
+/** @emoji 🧾️ Reads a kit DTO root from a decoded compose bundle value. */
 export function sketchpadKitFromDecodedBundle(value: unknown): Kit | null {
   const denorm = decodeKitComposeEnvelopeToFullFromValue(value);
   if (denorm == null || typeof denorm !== "object" || Array.isArray(denorm)) return null;
@@ -10417,7 +10417,7 @@ export function sketchpadKitFromDecodedBundle(value: unknown): Kit | null {
   return null;
 }
 
-/** @emoji 📦 Decode gzip-or-JSON kit bytes into a live {@link Kit} via {@link Session.openInMemory}. */
+/** @emoji 📦️ Decode gzip-or-JSON kit bytes into a live {@link Kit} via {@link Session.openInMemory}. */
 export async function importKit(data: ArrayBuffer | Uint8Array | Blob | File | string): Promise<{ readonly kit: Kit; readonly session: Session; readonly portCompatSource: Kit }> {
   let bytes: Uint8Array;
   if (typeof data === "string") {
@@ -10450,12 +10450,12 @@ export async function importKit(data: ArrayBuffer | Uint8Array | Blob | File | s
   return { kit, session, portCompatSource };
 }
 
-/** @emoji 📤 Wraps a kit DTO in the `wip.initialKit` envelope used by {@link importKit}. */
+/** @emoji 📤️ Wraps a kit DTO in the `wip.initialKit` envelope used by {@link importKit}. */
 export function sketchpadKitToComposeEnvelope(kit: Kit): { readonly wip: { readonly initialKit: Kit } } {
   return { wip: { initialKit: kit } };
 }
 
-/** @emoji 💾 Triggers a browser download of kit JSON (compose envelope). */
+/** @emoji 💾️ Triggers a browser download of kit JSON (compose envelope). */
 export function sketchpadDownloadKitJson(kit: Kit, filename?: string): void {
   if (typeof document === "undefined") return;
   const json = JSON.stringify(sketchpadKitToComposeEnvelope(kit), null, 2);
@@ -10469,18 +10469,18 @@ export function sketchpadDownloadKitJson(kit: Kit, filename?: string): void {
   URL.revokeObjectURL(url);
 }
 
-/** @emoji 📋 Copies kit JSON (compose envelope) to the clipboard when available. */
+/** @emoji 📋️ Copies kit JSON (compose envelope) to the clipboard when available. */
 export async function sketchpadCopyKitJsonToClipboard(kit: Kit): Promise<boolean> {
   if (typeof navigator === "undefined" || !navigator.clipboard?.writeText) return false;
   await navigator.clipboard.writeText(JSON.stringify(sketchpadKitToComposeEnvelope(kit), null, 2));
   return true;
 }
-//#endregion 🔖KitImport
+//#endregion 🔖️KitImport
 
-//#region 🔖KitHost
+//#region 🔖️KitHost
 export type SketchpadKitPersistenceKind = "temporary" | "file" | "folder" | "remote" | "fixture";
 
-/** @emoji 🏭 Host-provided kit open factory (Electron, VS Code, browser file picker, …). */
+/** @emoji 🏭️ Host-provided kit open factory (Electron, VS Code, browser file picker, …). */
 export type SketchpadKitBackendFactory = () => Promise<ComposeKitStore>;
 
 let sketchpadKitBackendFactories: Partial<Record<SketchpadKitPersistenceKind, SketchpadKitBackendFactory>> = {};
@@ -10494,14 +10494,14 @@ function sketchpadPromptServerUrl(preset?: string): string | null {
   return window.prompt("Compose store URL", preset ?? "http://localhost:8080");
 }
 
-/** @emoji 🌐 Default browser remote kit factory ({@link Session.openHttp}). */
+/** @emoji 🌐️ Default browser remote kit factory ({@link Session.openHttp}). */
 export async function sketchpadDefaultRemoteKitFactory(): Promise<ComposeKitStore> {
   const serverUrl = sketchpadPromptServerUrl()?.trim();
   if (!serverUrl) throw new Error("compose/sketchpad: remote kit open cancelled");
   return sketchpadOpenRemoteKitStore(serverUrl);
 }
 
-/** @emoji 🌐 Opens an HTTP {@link Session} kit and returns a {@link ComposeJsKitStore}. */
+/** @emoji 🌐️ Opens an HTTP {@link Session} kit and returns a {@link ComposeJsKitStore}. */
 export async function sketchpadOpenRemoteKitStore(serverUrl: string): Promise<ComposeJsKitStore> {
   const session = await ComposeSession.openHttp(serverUrl);
   const stores = await session.stores();
@@ -10513,14 +10513,14 @@ export async function sketchpadOpenRemoteKitStore(serverUrl: string): Promise<Co
   return createComposeKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose() });
 }
 
-/** @emoji 🔧 Registers host kit open factories used by {@link SketchpadShellController} `openKit` commands. */
+/** @emoji 🔧️ Registers host kit open factories used by {@link SketchpadShellController} `openKit` commands. */
 export function configureSketchpadKitFactories(factories: Partial<Record<SketchpadKitPersistenceKind, SketchpadKitBackendFactory>>): void {
   sketchpadKitBackendFactories = { remote: sketchpadDefaultRemoteKitFactory, ...sketchpadKitBackendFactories, ...factories };
 }
 
 configureSketchpadKitFactories({});
 
-/** @emoji 📂 Picks a kit archive or JSON file in the browser (File System Access API or hidden input). */
+/** @emoji 📂️ Picks a kit archive or JSON file in the browser (File System Access API or hidden input). */
 export async function sketchpadPickKitImportFile(): Promise<File | null> {
   if (typeof window === "undefined") return null;
   const accept = {
@@ -10550,7 +10550,7 @@ export async function sketchpadPickKitImportFile(): Promise<File | null> {
   });
 }
 
-/** @emoji 📂 Opens a user-selected kit file via {@link importKit} and returns a {@link ComposeJsKitStore}. */
+/** @emoji 📂️ Opens a user-selected kit file via {@link importKit} and returns a {@link ComposeJsKitStore}. */
 export async function sketchpadBrowserFileKitFactory(): Promise<ComposeJsKitStore> {
   const file = await sketchpadPickKitImportFile();
   if (!file) throw new Error("compose/sketchpad: file kit open cancelled");
@@ -10563,7 +10563,7 @@ export async function sketchpadBrowserFileKitFactory(): Promise<ComposeJsKitStor
   return createComposeKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose(), portCompatSource });
 }
 
-/** @emoji 📁 Opens a folder kit when {@link showDirectoryPicker} is available (kit.compose.json at folder root). */
+/** @emoji 📁️ Opens a folder kit when {@link showDirectoryPicker} is available (kit.compose.json at folder root). */
 export async function sketchpadBrowserFolderKitFactory(): Promise<ComposeJsKitStore> {
   if (typeof window === "undefined" || !("showDirectoryPicker" in window)) {
     throw new Error("compose/sketchpad: folder kit open requires showDirectoryPicker");
@@ -10588,7 +10588,7 @@ export async function sketchpadBrowserFolderKitFactory(): Promise<ComposeJsKitSt
   return createComposeKitStoreFromJsStore(jsStore, { onDispose: () => void session.dispose(), portCompatSource });
 }
 
-/** @emoji 🌐 Registers browser file/folder/remote kit factories for {@link SketchpadShellController}. */
+/** @emoji 🌐️ Registers browser file/folder/remote kit factories for {@link SketchpadShellController}. */
 export function sketchpadConfigureBrowserKitFactories(): void {
   if (typeof window === "undefined") return;
   configureSketchpadKitFactories({
@@ -10656,13 +10656,13 @@ function sketchpadEnsureHomeKitFileInput(): HTMLInputElement {
   return input;
 }
 
-/** @emoji 📂 Opens the hidden home kit archive file picker (`.zip` / `.compose.zip`). */
+/** @emoji 📂️ Opens the hidden home kit archive file picker (`.zip` / `.compose.zip`). */
 export function sketchpadPromptHomeKitArchiveFile(): void {
   if (typeof document === "undefined") return;
   sketchpadEnsureHomeKitFileInput().click();
 }
 
-/** @emoji 📥 Installs document-level home drag/drop (overlay + kit import on `/`). */
+/** @emoji 📥️ Installs document-level home drag/drop (overlay + kit import on `/`). */
 export function sketchpadInstallHomeDropzone(): void {
   if (typeof window === "undefined" || sketchpadHomeDropzoneInstalled) return;
   sketchpadHomeDropzoneInstalled = true;
@@ -10710,7 +10710,7 @@ export function sketchpadInstallHomeDropzone(): void {
   window.addEventListener("drop", onDrop);
 }
 
-/** @emoji 📎 Registers a {@link ComposeKitStore} on the shell controller. */
+/** @emoji 📎️ Registers a {@link ComposeKitStore} on the shell controller. */
 export function attachSketchpadKitStore(kitId: string, store: ComposeKitStore, options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean; readonly assetBaseUrl?: string }): void {
   const ctrl = getSketchpadShellController();
   if (!ctrl) throw new Error("compose/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
@@ -10720,25 +10720,25 @@ export function attachSketchpadKitStore(kitId: string, store: ComposeKitStore, o
   }
 }
 
-/** @emoji 📎 Attaches a kit backend to the shell controller and optionally navigates to it. */
+/** @emoji 📎️ Attaches a kit backend to the shell controller and optionally navigates to it. */
 export function attachSketchpadKit(kitId: string, backend: ComposeKitStoreBackend, options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean; readonly assetBaseUrl?: string }): void {
   attachSketchpadKitStore(kitId, new ComposeKitStore(backend), options);
 }
 
-/** @emoji 🔗 Syncs platform chrome then optional browser history navigation. */
+/** @emoji 🔗️ Syncs platform chrome then optional browser history navigation. */
 function sketchpadCommitUri(platform: Platform, uri: string): void {
   applySketchpadUri(platform, uri);
   if (platform.onNavigate) platform.onNavigate(uri);
 }
 
-/** @emoji 🧭 Navigates the sketchpad {@link Platform} (updates history when in a browser). */
+/** @emoji 🧭️ Navigates the sketchpad {@link Platform} (updates history when in a browser). */
 export function navigateSketchpadTo(uri: string): void {
   const platform = getSketchpadPlatform();
   if (!platform) throw new Error("compose/sketchpad: platform not initialized — call ensureSketchpadPlatform first");
   sketchpadCommitUri(platform, uri);
 }
 
-/** @emoji 📦 Imports kit bytes/URL and registers them on the active platform. */
+/** @emoji 📦️ Imports kit bytes/URL and registers them on the active platform. */
 export async function openSketchpadKitFromImport(data: ArrayBuffer | Blob | File | string, options?: { readonly kind?: SketchpadKitPersistenceKind; readonly navigate?: boolean; readonly assetBaseUrl?: string }): Promise<string> {
   const { kit, session, portCompatSource } = await importKit(data);
   const jsStores = await session.stores();
@@ -10754,14 +10754,14 @@ export async function openSketchpadKitFromImport(data: ArrayBuffer | Blob | File
   return kit.id;
 }
 
-/** @emoji 📂 Derives the kit asset root directory from a kit import URL. */
+/** @emoji 📂️ Derives the kit asset root directory from a kit import URL. */
 export function sketchpadKitAssetBaseUrlFromImportUrl(importUrl: string): string {
   const pathOnly = importUrl.split(/[?#]/, 1)[0] ?? importUrl;
   const slash = pathOnly.lastIndexOf("/");
   return slash > 0 ? pathOnly.slice(0, slash) : "";
 }
 
-/** @emoji 🔗 Parses `COMPOSE_SKETCHPAD_PRELOAD_KITS` (comma/whitespace-separated kit URLs). */
+/** @emoji 🔗️ Parses `COMPOSE_SKETCHPAD_PRELOAD_KITS` (comma/whitespace-separated kit URLs). */
 export function sketchpadPreloadKitUrls(raw?: string): string[] {
   const source = raw ?? (typeof import.meta !== "undefined" ? ((import.meta as { env?: { COMPOSE_SKETCHPAD_PRELOAD_KITS?: string } }).env?.COMPOSE_SKETCHPAD_PRELOAD_KITS ?? "") : "");
   return source
@@ -10770,7 +10770,7 @@ export function sketchpadPreloadKitUrls(raw?: string): string[] {
     .filter(Boolean);
 }
 
-/** @emoji 📥 Preloads kits from env or an explicit URL list (skips navigation). */
+/** @emoji 📥️ Preloads kits from env or an explicit URL list (skips navigation). */
 export async function preloadSketchpadKits(urls?: readonly string[]): Promise<void> {
   const ctrl = getSketchpadShellController();
   if (!ctrl) return;
@@ -10782,16 +10782,16 @@ export async function preloadSketchpadKits(urls?: readonly string[]): Promise<vo
     }
   }
 }
-//#endregion 🔖KitHost
+//#endregion 🔖️KitHost
 
-//#region 🔖KitStore
+//#region 🔖️KitStore
 export const SKETCHPAD_SHELL_STORE_SHELL = "shell";
 export const SKETCHPAD_KIT_STORE_PREFIX = "kit:";
 
-/** @emoji 📸 Kit row snapshot for {@link ComposeKitStore}. */
+/** @emoji 📸️ Kit row snapshot for {@link ComposeKitStore}. */
 export type SketchpadKitSnapshot = { readonly kit: Kit };
 
-/** @emoji 🎯 Selection within the active kit/design route (diagrams). */
+/** @emoji 🎯️ Selection within the active kit/design route (diagrams). */
 export interface SketchpadRouteSelection {
   readonly pieceIds: readonly string[];
   readonly connectionIds: readonly string[];
@@ -10799,20 +10799,20 @@ export interface SketchpadRouteSelection {
   readonly kitWiresHoveredNodeId: string | null;
 }
 
-/** @emoji 📥 Home kit import progress surfaced in workbench chrome. */
+/** @emoji 📥️ Home kit import progress surfaced in workbench chrome. */
 export interface SketchpadImportStatus {
   readonly phase: "idle" | "importing" | "success" | "error";
   readonly label?: string;
   readonly error?: string;
 }
 
-/** @emoji 💬 In-progress feedback form draft stored on the shell snapshot. */
+/** @emoji 💬️ In-progress feedback form draft stored on the shell snapshot. */
 export interface SketchpadFeedbackDraft {
   readonly message: string;
   readonly contact: string;
 }
 
-/** @emoji 🏠 Home table UI state (expand, selection, URL-synced filters). */
+/** @emoji 🏠️ Home table UI state (expand, selection, URL-synced filters). */
 export interface SketchpadHomeUiState {
   readonly expandedRowIds: readonly string[];
   readonly selectedKitIds: readonly string[];
@@ -10824,7 +10824,7 @@ export interface SketchpadHomeUiState {
   readonly sortDescending: boolean;
 }
 
-/** @emoji 🧭 Shell chrome snapshot (navigation, panels, open kits). */
+/** @emoji 🧭️ Shell chrome snapshot (navigation, panels, open kits). */
 export interface SketchpadShellSnapshot {
   readonly navigationPath: string;
   readonly panelVisibility: { readonly topLeft: boolean; readonly topRight: boolean };
@@ -10874,7 +10874,7 @@ function sketchpadPathSupportsRouteSelectionQuery(pathOnly: string): boolean {
   return pathOnly.startsWith("/kits/");
 }
 
-/** @emoji 🔎 Parses kit/design diagram selection query params from a platform URI. */
+/** @emoji 🔎️ Parses kit/design diagram selection query params from a platform URI. */
 export function parseSketchpadRouteSelectionQuery(uri: string): SketchpadRouteSelection {
   const query = uri.includes("?") ? uri.slice(uri.indexOf("?") + 1) : "";
   const params = new URLSearchParams(query);
@@ -10886,7 +10886,7 @@ export function parseSketchpadRouteSelectionQuery(uri: string): SketchpadRouteSe
   };
 }
 
-/** @emoji 🔗 Serializes {@link SketchpadRouteSelection} into kit-route query params. */
+/** @emoji 🔗️ Serializes {@link SketchpadRouteSelection} into kit-route query params. */
 export function sketchpadRouteSelectionUriFilters(selection: SketchpadRouteSelection): string {
   const params = new URLSearchParams();
   for (const id of selection.pieceIds) params.append("piece", id);
@@ -10896,7 +10896,7 @@ export function sketchpadRouteSelectionUriFilters(selection: SketchpadRouteSelec
   return serialized.length > 0 ? `?${serialized}` : "";
 }
 
-/** @emoji 🔎 Parses home filter query params from a platform URI. */
+/** @emoji 🔎️ Parses home filter query params from a platform URI. */
 export function parseSketchpadHomeQuery(uri: string): SketchpadHomeUiState {
   const query = uri.includes("?") ? uri.slice(uri.indexOf("?") + 1) : "";
   const params = new URLSearchParams(query);
@@ -10947,18 +10947,18 @@ function sketchpadDocsRegistryFallback(): readonly SketchpadDocSection[] {
 
 let sketchpadDocsRegistryCache: readonly SketchpadDocSection[] | null = null;
 
-/** @emoji 📚 Sync docs registry (fallback until {@link sketchpadWarmDocsRegistry} runs). */
+/** @emoji 📚️ Sync docs registry (fallback until {@link sketchpadWarmDocsRegistry} runs). */
 export function sketchpadBuildDocsRegistry(): readonly SketchpadDocSection[] {
   return sketchpadDocsRegistryCache ?? sketchpadDocsRegistryFallback();
 }
 
-/** @emoji 📚 Loads the full MDX-backed docs registry when docs routes are used. */
+/** @emoji 📚️ Loads the full MDX-backed docs registry when docs routes are used. */
 export async function sketchpadWarmDocsRegistry(): Promise<void> {
   if (sketchpadDocsRegistryCache) return;
   sketchpadDocsRegistryCache = sketchpadBuildDocsRegistryFromGlob();
 }
 
-/** @emoji 🔌 Backend contract for {@link ComposeKitStore} (memory, WASM worker, HTTP, …). */
+/** @emoji 🔌️ Backend contract for {@link ComposeKitStore} (memory, WASM worker, HTTP, …). */
 export type ComposeKitStoreBackend = {
   getSnapshot(): SketchpadKitSnapshot;
   subscribe?(listener: () => void): () => void;
@@ -10991,7 +10991,7 @@ export class ComposeKitStore extends Store<SketchpadKitSnapshot> {
   }
 }
 
-/** @emoji 💾 In-memory kit store for hosts without a live {@link @semio-tech/compose-js} session yet. */
+/** @emoji 💾️ In-memory kit store for hosts without a live {@link @semio-tech/compose-js} session yet. */
 export class InMemoryComposeKitStore extends ComposeKitStore {
   constructor(kit: Kit) {
     let current = kit;
@@ -11004,7 +11004,7 @@ export class InMemoryComposeKitStore extends ComposeKitStore {
   }
 }
 
-/** @emoji 🌐 {@link ComposeKitStore} backed by {@link @semio-tech/compose-js} with live kit mutations. */
+/** @emoji 🌐️ {@link ComposeKitStore} backed by {@link @semio-tech/compose-js} with live kit mutations. */
 export class ComposeJsKitStore extends ComposeKitStore {
   constructor(
     backend: ComposeKitStoreBackend,
@@ -11015,12 +11015,12 @@ export class ComposeJsKitStore extends ComposeKitStore {
     super(backend);
   }
 
-  /** @emoji 🏛 WIP {@link JsKitEntity} handle for GraphQL kit commands. */
+  /** @emoji 🏛️ WIP {@link JsKitEntity} handle for GraphQL kit commands. */
   async jsKitEntity(): Promise<JsKitEntity> {
     return this.jsStore.wip().theKit().kit();
   }
 
-  /** @emoji 🔄 Re-reads kit DTO from rs and notifies subscribers. */
+  /** @emoji 🔄️ Re-reads kit DTO from rs and notifies subscribers. */
   async refreshFromJs(): Promise<void> {
     const kit = await sketchpadKitDtoFromJsStore(this.jsStore);
     const fromGraphql = sketchpadExtractPortCompatById(kit);
@@ -11077,7 +11077,7 @@ hasFolders { edges { node { id path description files { edges { node { id name u
 authors { edges { node { id name } } }
 hasFiles { edges { node { id name url description folderId } } }`;
 
-/** @emoji 📁 Maps GraphQL {@code folderId} onto kit file DTO {@code folder} refs. */
+/** @emoji 📁️ Maps GraphQL {@code folderId} onto kit file DTO {@code folder} refs. */
 function sketchpadFileDtoFromGraphqlNode(node: Record<string, unknown>): Record<string, unknown> {
   const folderRef = node["folder"];
   if (folderRef != null && typeof folderRef === "object" && "id" in folderRef) return node;
@@ -11104,7 +11104,7 @@ function sketchpadKitTimestampIso(value: unknown): string | undefined {
   return date.toISOString();
 }
 
-/** @emoji 🔌 Maps GraphQL {@code copatibleWith} relay edges onto {@code compatiblePorts} DTO refs. */
+/** @emoji 🔌️ Maps GraphQL {@code copatibleWith} relay edges onto {@code compatiblePorts} DTO refs. */
 export function sketchpadPortDtoFromGraphqlNode(node: Record<string, unknown>): Record<string, unknown> {
   const compatEdges = (node["copatibleWith"] as { edges?: readonly { node?: Record<string, unknown> }[] } | undefined)?.edges ?? [];
   const compatiblePorts = compatEdges
@@ -11115,7 +11115,7 @@ export function sketchpadPortDtoFromGraphqlNode(node: Record<string, unknown>): 
   return { ...node, compatiblePorts };
 }
 
-/** @emoji 📸 Materializes a kit DTO from rs GraphQL for platform snapshots. */
+/** @emoji 📸️ Materializes a kit DTO from rs GraphQL for platform snapshots. */
 export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<Kit> {
   const data = await jsStore.readKitInner(SKETCHPAD_KIT_READ_INNER);
   if (!data) return { id: "", name: "" } as Kit;
@@ -11207,7 +11207,7 @@ export async function sketchpadKitDtoFromJsStore(jsStore: JsKitStore): Promise<K
   } as Kit;
 }
 
-/** @emoji 🌐 Builds a {@link ComposeJsKitStore} from a live {@link @semio-tech/compose-js} store. */
+/** @emoji 🌐️ Builds a {@link ComposeJsKitStore} from a live {@link @semio-tech/compose-js} store. */
 export async function createComposeKitStoreFromJsStore(jsStore: JsKitStore, options?: { readonly onDispose?: () => void | Promise<void>; readonly portCompatSource?: Kit }): Promise<ComposeJsKitStore> {
   const portCompatById = sketchpadExtractPortCompatById(options?.portCompatSource ?? ({ id: "", name: "" } as Kit));
   const materializeKit = async (): Promise<Kit> => {
@@ -11238,7 +11238,7 @@ export async function createComposeKitStoreFromJsStore(jsStore: JsKitStore, opti
   );
 }
 
-/** @emoji ⚡ Runs a {@link JsKitEntity} mutation on the active js-backed kit store. */
+/** @emoji ⚡️ Runs a {@link JsKitEntity} mutation on the active js-backed kit store. */
 export async function executeSketchpadJsKitMutation(kitId: string, run: (kit: JsKitEntity) => Promise<SetResult>, storeOverride?: ComposeKitStore): Promise<SetResult> {
   const store = storeOverride ?? getSketchpadShellController()?.getKitStore(kitId);
   if (!(store instanceof ComposeJsKitStore)) {
@@ -11259,14 +11259,14 @@ export function sketchpadKitStoreId(kitId: string): string {
 
 let sketchpadShellControllerSingleton: SketchpadShellController | null = null;
 
-/** @emoji 🎛 Active sketchpad shell controller after {@link buildSketchpadPlatform}. */
+/** @emoji 🎛️ Active sketchpad shell controller after {@link buildSketchpadPlatform}. */
 export function getSketchpadShellController(): SketchpadShellController | null {
   return sketchpadShellControllerSingleton;
 }
-//#endregion 🔖KitStore
+//#endregion 🔖️KitStore
 
-//#region 🔖SketchpadRouteScope
-/** @emoji 🧭 Kit/design/type/docs scope parsed from a sketchpad URL (path + kit query params). */
+//#region 🔖️SketchpadRouteScope
+/** @emoji 🧭️ Kit/design/type/docs scope parsed from a sketchpad URL (path + kit query params). */
 export function parseSketchpadRouteScopeFromPath(pathOrUri: string): {
   readonly kitId: string | null;
   readonly designId: string | null;
@@ -11294,7 +11294,7 @@ export function parseSketchpadRouteScopeFromPath(pathOrUri: string): {
   return { kitId, designId, typeId, docsPath: "index", qualityId };
 }
 
-/** @emoji 🧭 Maps a location path to the sketchpad {@link Platform} active app id. */
+/** @emoji 🧭️ Maps a location path to the sketchpad {@link Platform} active app id. */
 export function sketchpadAppIdFromPath(path: string): string {
   const pathParts = path.split("/").filter((part) => part.length > 0);
   const isUuidPattern = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -11305,10 +11305,10 @@ export function sketchpadAppIdFromPath(path: string): string {
   if (pathParts[0] === "kits" && pathParts.length >= 2 && isUuidPattern(pathParts[1] ?? "")) return SKETCHPAD_KIT_APP_ID;
   return SKETCHPAD_KIT_APP_ID;
 }
-//#endregion 🔖SketchpadRouteScope
+//#endregion 🔖️SketchpadRouteScope
 
-//#region 🔖KitHelpers
-/** @emoji 📋 Normalizes list-or-`{ items }` blocks on kit DTO snapshots. */
+//#region 🔖️KitHelpers
+/** @emoji 📋️ Normalizes list-or-`{ items }` blocks on kit DTO snapshots. */
 function sketchpadKitItemsOf<T>(node: unknown): readonly T[] {
   if (Array.isArray(node)) return node as readonly T[];
   if (node && typeof node === "object" && Array.isArray((node as { items?: unknown[] }).items)) {
@@ -11317,27 +11317,27 @@ function sketchpadKitItemsOf<T>(node: unknown): readonly T[] {
   return [];
 }
 
-/** @emoji 🔍 Flattens kit kinds from root `types` or nested `typologies[].types`. */
+/** @emoji 🔍️ Flattens kit kinds from root `types` or nested `typologies[].types`. */
 function sketchpadKitTypeRows(kit: Kit): readonly Type[] {
   const root = sketchpadKitItemsOf<Type>(kit.types);
   if (root.length > 0) return root;
   return sketchpadKitTypologyRows(kit).flatMap((topo) => sketchpadKitItemsOf<Type>(topo.types));
 }
 
-/** @emoji 🔍 Flattens kit designs from root `designs` or nested `typologies[].designs`. */
+/** @emoji 🔍️ Flattens kit designs from root `designs` or nested `typologies[].designs`. */
 function sketchpadKitDesignRows(kit: Kit): readonly Design[] {
   const root = sketchpadKitItemsOf<Design>(kit.designs);
   if (root.length > 0) return root;
   return sketchpadKitTypologyRows(kit).flatMap((topo) => sketchpadKitItemsOf<Design>(topo.designs));
 }
 
-/** @emoji 🔍 Finds a type row on a kit snapshot. */
+/** @emoji 🔍️ Finds a type row on a kit snapshot. */
 export function findTypeInKit(kit: Kit, typeId: string | null | undefined): Type | undefined {
   if (!typeId) return undefined;
   return sketchpadKitTypeRows(kit).find((t) => t.id === typeId);
 }
 
-/** @emoji 🔍 Finds a quality row on a kit snapshot. */
+/** @emoji 🔍️ Finds a quality row on a kit snapshot. */
 export function findQualityInKit(kit: Kit, qualityId: string | null | undefined): { readonly id: string; readonly key?: string; readonly value?: string } | undefined {
   if (!qualityId) return undefined;
   return (kit.qualities ?? []).find((entry) => {
@@ -11346,41 +11346,41 @@ export function findQualityInKit(kit: Kit, qualityId: string | null | undefined)
   }) as { readonly id: string; readonly key?: string; readonly value?: string } | undefined;
 }
 
-/** @emoji 🔍 Finds a design row on a kit snapshot. */
+/** @emoji 🔍️ Finds a design row on a kit snapshot. */
 export function findDesignInKit(kit: Kit, designId: string | null | undefined): Design | undefined {
   if (!designId) return undefined;
   return sketchpadKitDesignRows(kit).find((d) => d.id === designId);
 }
 
-/** @emoji 🧭 Builds a navigation destination for sketchpad breadcrumb trails. */
+/** @emoji 🧭️ Builds a navigation destination for sketchpad breadcrumb trails. */
 function sketchpadNavigationDestination(id: string, label: string, uri: string): NavigationDestination {
   return { id, label, uri };
 }
 
-/** @emoji 🧭 Builds one navigation level (node + separator alternatives). */
+/** @emoji 🧭️ Builds one navigation level (node + separator alternatives). */
 function sketchpadNavigationLevel(node: NavigationDestination, alternatives: readonly NavigationDestination[]): NavigationLevel {
   return { node, alternatives };
 }
 
-/** @emoji 🧭 Top-level destinations reachable from Home. */
+/** @emoji 🧭️ Top-level destinations reachable from Home. */
 function sketchpadHomeNavigationAlternatives(): readonly NavigationDestination[] {
   return [sketchpadNavigationDestination("sketchpad.nav.kits", "Kits", "/"), sketchpadNavigationDestination("sketchpad.nav.documentation", "Documentation", "/docs"), sketchpadNavigationDestination("sketchpad.nav.feedback", "Feedback", "/feedback")];
 }
 
-/** @emoji 🔍 Reads an entity id from a kit row snapshot. */
+/** @emoji 🔍️ Reads an entity id from a kit row snapshot. */
 function sketchpadKitRowEntityId(entity: unknown): string | null {
   if (typeof entity !== "object" || entity === null || !("id" in entity)) return null;
   return String((entity as { id: unknown }).id);
 }
 
-/** @emoji 🔍 Reads an entity display name from a kit row snapshot. */
+/** @emoji 🔍️ Reads an entity display name from a kit row snapshot. */
 function sketchpadKitRowEntityName(entity: unknown, fallback: string): string {
   if (typeof entity !== "object" || entity === null) return fallback;
   const name = (entity as { name?: string }).name;
   return name && name.length > 0 ? name : fallback;
 }
 
-/** @emoji 🔍 Finds the typology that owns a design on a kit snapshot. */
+/** @emoji 🔍️ Finds the typology that owns a design on a kit snapshot. */
 function findSketchpadTypologyForDesign(kit: Kit, designId: string): ReturnType<typeof sketchpadKitTypologyRows>[number] | undefined {
   for (const typology of sketchpadKitTypologyRows(kit)) {
     if (typology.designs.some((design) => sketchpadKitRowEntityId(design) === designId)) return typology;
@@ -11388,7 +11388,7 @@ function findSketchpadTypologyForDesign(kit: Kit, designId: string): ReturnType<
   return undefined;
 }
 
-/** @emoji 🔍 Finds the typology that owns a type on a kit snapshot. */
+/** @emoji 🔍️ Finds the typology that owns a type on a kit snapshot. */
 function findSketchpadTypologyForType(kit: Kit, typeId: string): ReturnType<typeof sketchpadKitTypologyRows>[number] | undefined {
   for (const typology of sketchpadKitTypologyRows(kit)) {
     if (typology.types.some((type) => sketchpadKitRowEntityId(type) === typeId)) return typology;
@@ -11396,7 +11396,7 @@ function findSketchpadTypologyForType(kit: Kit, typeId: string): ReturnType<type
   return undefined;
 }
 
-/** @emoji 🧭 Lists design destinations within a typology for breadcrumb alternatives. */
+/** @emoji 🧭️ Lists design destinations within a typology for breadcrumb alternatives. */
 function sketchpadTypologyDesignDestinations(kitId: string, typology: ReturnType<typeof sketchpadKitTypologyRows>[number]): NavigationDestination[] {
   const out: NavigationDestination[] = [];
   for (const design of typology.designs) {
@@ -11407,7 +11407,7 @@ function sketchpadTypologyDesignDestinations(kitId: string, typology: ReturnType
   return out;
 }
 
-/** @emoji 🧭 Lists type destinations within a typology for breadcrumb alternatives. */
+/** @emoji 🧭️ Lists type destinations within a typology for breadcrumb alternatives. */
 function sketchpadTypologyTypeDestinations(kitId: string, typology: ReturnType<typeof sketchpadKitTypologyRows>[number]): NavigationDestination[] {
   const out: NavigationDestination[] = [];
   for (const type of typology.types) {
@@ -11418,19 +11418,19 @@ function sketchpadTypologyTypeDestinations(kitId: string, typology: ReturnType<t
   return out;
 }
 
-/** @emoji 🔍 Finds a piece row on a design snapshot. */
+/** @emoji 🔍️ Finds a piece row on a design snapshot. */
 export function findPieceInDesign(design: Design, pieceId: string | null | undefined) {
   if (!pieceId) return undefined;
   return design.pieces?.find((p) => p.id === pieceId);
 }
 
-/** @emoji 🧬 Resolves a type's parent type id from kit snapshot rows. */
+/** @emoji 🧬️ Resolves a type's parent type id from kit snapshot rows. */
 function sketchpadTypeParentId(type: Type | Record<string, unknown> | undefined): string | null {
   if (!type) return null;
   return sketchpadReadEntityId((type as Record<string, unknown>)["parent"]) ?? sketchpadReadEntityId((type as Record<string, unknown>)["parentType"]) ?? sketchpadReadEntityId((type as Record<string, unknown>)["inheritsFrom"]);
 }
 
-/** @emoji 🧬 Walks parent^{type} chain from most specific to root. */
+/** @emoji 🧬️ Walks parent^{type} chain from most specific to root. */
 function sketchpadTypeInheritanceChain(kit: Kit, typeId: string): readonly Type[] {
   const chain: Type[] = [];
   const seen = new Set<string>();
@@ -11479,12 +11479,12 @@ function sketchpadReadEntityId(ref: unknown): string | null {
   return null;
 }
 
-/** @emoji 📁 Resolves the owning folder id for a kit file row (`folder`, `folderId`, …). */
+/** @emoji 📁️ Resolves the owning folder id for a kit file row (`folder`, `folderId`, …). */
 function sketchpadKitFileFolderId(file: Record<string, unknown>): string | null {
   return sketchpadReadEntityId(file["folder"]) ?? sketchpadReadEntityId(file["folderId"]) ?? sketchpadReadEntityId(file["folder_id"]);
 }
 
-/** @emoji 📄 File ids used as representation backing blobs on kit kinds. */
+/** @emoji 📄️ File ids used as representation backing blobs on kit kinds. */
 function sketchpadKitRepresentationFileIds(kit: Kit): ReadonlySet<string> {
   const ids = new Set<string>();
   for (const type of sketchpadKitTypeRows(kit)) {
@@ -11496,12 +11496,12 @@ function sketchpadKitRepresentationFileIds(kit: Kit): ReadonlySet<string> {
   return ids;
 }
 
-/** @emoji 📄 Speckle-style representation blob basename (`e5267da44d`). */
+/** @emoji 📄️ Speckle-style representation blob basename (`e5267da44d`). */
 function sketchpadKitFileLooksLikeRepresentationBlobName(name: string): boolean {
   return name.length === 10 && /^[0-9a-f]+$/i.test(name);
 }
 
-/** @emoji 📄 True when a loose kit file is a representation backing blob, not a browsable VFS asset. */
+/** @emoji 📄️ True when a loose kit file is a representation backing blob, not a browsable VFS asset. */
 function sketchpadKitFileHiddenRepresentationBlob(file: Record<string, unknown>, representationFileIds: ReadonlySet<string>): boolean {
   const id = String(file["id"] ?? "");
   if (id && representationFileIds.has(id)) return true;
@@ -11513,23 +11513,23 @@ function sketchpadKitFileHiddenRepresentationBlob(file: Record<string, unknown>,
   return false;
 }
 
-/** @emoji 📄 True when a kit file row belongs at kit VFS root (not under a folder or representation). */
+/** @emoji 📄️ True when a kit file row belongs at kit VFS root (not under a folder or representation). */
 function sketchpadKitFileAtKitRoot(file: Record<string, unknown>, representationFileIds: ReadonlySet<string> = new Set()): boolean {
   if (sketchpadKitFileHiddenRepresentationBlob(file, representationFileIds)) return false;
   return sketchpadKitFileFolderId(file) == null;
 }
 
-/** @emoji 📁 Resolves a folder row's parent folder id (`parent`, `parentFolderId`, …). */
+/** @emoji 📁️ Resolves a folder row's parent folder id (`parent`, `parentFolderId`, …). */
 function sketchpadKitFolderParentId(folder: Record<string, unknown>): string | null {
   return sketchpadReadEntityId(folder["parent"]) ?? sketchpadReadEntityId(folder["parentFolder"]) ?? sketchpadReadEntityId(folder["parentFolderId"]) ?? sketchpadReadEntityId(folder["parent_folder_id"]);
 }
 
-/** @emoji 📁 True when a folder row belongs at kit VFS root (no parent folder). */
+/** @emoji 📁️ True when a folder row belongs at kit VFS root (no parent folder). */
 function sketchpadKitFolderAtRoot(folder: Record<string, unknown>): boolean {
   return sketchpadKitFolderParentId(folder) == null;
 }
 
-/** @emoji 📁 VFS label and path for a kit folder row (prefers `name`, then `path`, then id). */
+/** @emoji 📁️ VFS label and path for a kit folder row (prefers `name`, then `path`, then id). */
 function sketchpadKitFolderVfsFields(folder: Record<string, unknown>): { readonly name: string; readonly path: string } {
   const explicitName = typeof folder["name"] === "string" ? folder["name"].trim() : "";
   const path = typeof folder["path"] === "string" && folder["path"].trim().length > 0 ? folder["path"].trim() : explicitName.length > 0 ? `/${explicitName}` : `/${String(folder["id"] ?? "")}`;
@@ -11572,7 +11572,7 @@ function sketchpadKitVfsPushFileRow(rows: VirtualFileSystemNodeRecord[], kitId: 
   });
 }
 
-/** @emoji 📍 Normalizes a path relative to a kit asset root (supports `../representation/*.glb`). */
+/** @emoji 📍️ Normalizes a path relative to a kit asset root (supports `../representation/*.glb`). */
 export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string, baseRoot: string): string {
   if (relativePath.startsWith("/")) return relativePath;
   const segments = baseRoot.split("/").filter(Boolean);
@@ -11583,7 +11583,7 @@ export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string, bas
   return `/${segments.join("/")}`;
 }
 
-/** @emoji 🧊 Maps representation GLBs to puzzle 3d `/mesh/*` URLs (see `meshCollectionVitePlugin` in `framework/ui/styling/🟦vite-elements-assets.ts`). */
+/** @emoji 🧊️ Maps representation GLBs to puzzle 3d `/mesh/*` URLs (see `meshCollectionVitePlugin` in `framework/ui/styling/🟦️vite-elements-assets.ts`). */
 export function sketchpadPuzzle3dMeshUrlForKitFile(row: { readonly name?: string; readonly path?: string }): string | undefined {
   const path = row.path?.replace(/^\.\//, "") ?? "";
   if (path.includes("representations/") || path.includes("representation/")) {
@@ -11628,7 +11628,7 @@ export function sketchpadKitFileUrlById(kit: Kit): ReadonlyMap<string, string> {
 
 const SKETCHPAD_PLACEHOLDER_MESH_URL = "puzzle.3d.placeholder://box";
 
-/** @emoji 🧊 Picks a representation mesh URL for a design piece (placeholder when unresolved). */
+/** @emoji 🧊️ Picks a representation mesh URL for a design piece (placeholder when unresolved). */
 export function sketchpadResolvePieceMeshUrl(piece: { readonly type?: unknown; readonly blueprint?: unknown }, kit: Kit, fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit)): string {
   const typeId = sketchpadReadEntityId(piece.type ?? piece.blueprint);
   if (!typeId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
@@ -11673,7 +11673,7 @@ function sketchpadMergeKitDesignRows(target: Design, source: Design | undefined)
   } as Design;
 }
 
-/** @emoji 🔀 Overlays bundle projection types/files when GraphQL materialization omits representations. */
+/** @emoji 🔀️ Overlays bundle projection types/files when GraphQL materialization omits representations. */
 export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Kit): Kit {
   const sourceFiles = source.files ?? [];
   const targetFiles = target.files ?? [];
@@ -11702,7 +11702,7 @@ export function sketchpadMergeKitDtoFromBundleProjection(target: Kit, source: Ki
   return { ...target, files, types, typologies, designs: designs.length > 0 ? designs : target.designs } as Kit;
 }
 
-/** @emoji 📋 Lists representation rows on a kit kind. */
+/** @emoji 📋️ Lists representation rows on a kit kind. */
 export function sketchpadListTypeRepresentations(type: Type): readonly SketchpadTypeRepresentationRef[] {
   return sketchpadKitItemsOf<Record<string, unknown>>(type.representations)
     .filter((entry): entry is Record<string, unknown> => typeof entry === "object" && entry !== null && "id" in entry)
@@ -11714,14 +11714,14 @@ export function sketchpadListTypeRepresentations(type: Type): readonly Sketchpad
     }));
 }
 
-/** @emoji 🧊 Resolves the mesh URL for one type representation. */
+/** @emoji 🧊️ Resolves the mesh URL for one type representation. */
 export function sketchpadResolveRepresentationMeshUrl(representation: Pick<SketchpadTypeRepresentationRef, "file">, kit: Kit, fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit)): string {
   const fileId = sketchpadReadEntityId(representation.file);
   if (!fileId) return SKETCHPAD_PLACEHOLDER_MESH_URL;
   return fileUrls.get(fileId) ?? SKETCHPAD_PLACEHOLDER_MESH_URL;
 }
 
-/** @emoji 🧊 Picks the primary representation mesh URL for a kit kind. */
+/** @emoji 🧊️ Picks the primary representation mesh URL for a kit kind. */
 export function sketchpadResolveTypeMeshUrl(type: Type, kit: Kit, fileUrls: ReadonlyMap<string, string> = sketchpadKitFileUrlById(kit)): string {
   const reps = sketchpadListTypeRepresentations(type);
   if (reps.length === 0) return SKETCHPAD_PLACEHOLDER_MESH_URL;
@@ -11759,12 +11759,12 @@ function sketchpadPanelActionButton(label: string, action: string, args?: unknow
     action: { controllerId: "compose.sketchpad.shell", action, ...(args !== undefined ? { args } : {}) },
   };
 }
-//#endregion 🔖KitHelpers
+//#endregion 🔖️KitHelpers
 
-//#region 🔖Topology
+//#region 🔖️Topology
 const SKETCHPAD_FLAT_HANDLE_SEPARATOR = "::";
 
-/** @emoji 🔗 Re-exports {@link PLATFORM_TOPOLOGY_STORE_PREFIX} for sketchpad topology stores. */
+/** @emoji 🔗️ Re-exports {@link PLATFORM_TOPOLOGY_STORE_PREFIX} for sketchpad topology stores. */
 export const SKETCHPAD_TOPOLOGY_STORE_PREFIX = PLATFORM_TOPOLOGY_STORE_PREFIX;
 
 type SketchpadPuzzle2dFixture = {
@@ -11832,7 +11832,7 @@ type SketchpadConnectorGeometry = {
   readonly t: number;
 };
 
-/** @emoji 🔌 Lists type-local connector geometry for a design piece. */
+/** @emoji 🔌️ Lists type-local connector geometry for a design piece. */
 function sketchpadPieceConnectorGeometry(piece: { readonly id: string; readonly type?: unknown; readonly blueprint?: unknown }, kit?: Kit): readonly SketchpadConnectorGeometry[] {
   const typeId = sketchpadReadEntityId((piece as { type?: unknown; blueprint?: unknown }).type ?? piece.blueprint);
   const type = typeId && kit ? findTypeInKit(kit, typeId) : undefined;
@@ -11857,35 +11857,35 @@ function sketchpadTopologyAnchorFullId(partId: string, anchorId: string): string
   return `${partId}:${anchorId}`;
 }
 
-/** @emoji 🧩 Stable FiveD instance id for kit wires surfaces. */
+/** @emoji 🧩️ Stable FiveD instance id for kit wires surfaces. */
 export function sketchpadKitWiresInstanceId(kitId: string): string {
   return wiresKitInstanceId(kitId);
 }
 
-/** @emoji 🧩 Stable FiveD instance id for a design scene (volume). */
+/** @emoji 🧩️ Stable FiveD instance id for a design scene (volume). */
 export function sketchpadDesignSceneInstanceId(kitId: string, designId: string): string {
   return `${kitId}:${designId}:scene`;
 }
 
-/** @emoji 🧩 Stable FiveD instance id for a design diagram (flat). */
+/** @emoji 🧩️ Stable FiveD instance id for a design diagram (flat). */
 export function sketchpadDesignDiagramInstanceId(kitId: string, designId: string): string {
   return `${kitId}:${designId}:diagram`;
 }
 
-/** @emoji 🧩 Surface id prefix for per-representation type CAD windows. */
+/** @emoji 🧩️ Surface id prefix for per-representation type CAD windows. */
 export const SKETCHPAD_SURFACE_TYPE_REP_PREFIX = "compose.sketchpad.surface.type.representation";
 
-/** @emoji 🧩 Stable FiveD instance id for a type CAD scene (volume). */
+/** @emoji 🧩️ Stable FiveD instance id for a type CAD scene (volume). */
 export function sketchpadTypeSceneInstanceId(kitId: string, typeId: string): string {
   return `${kitId}:type:${typeId}:scene`;
 }
 
-/** @emoji 🧩 Surface id for one type representation CAD window. */
+/** @emoji 🧩️ Surface id for one type representation CAD window. */
 export function sketchpadTypeRepresentationSurfaceId(kitId: string, typeId: string, representationId: string): string {
   return `${SKETCHPAD_SURFACE_TYPE_REP_PREFIX}:${kitId}:${typeId}:${representationId}`;
 }
 
-/** @emoji 🔍 Parses a type representation surface id into route segments. */
+/** @emoji 🔍️ Parses a type representation surface id into route segments. */
 export function sketchpadParseTypeRepresentationSurfaceId(surfaceId: string): {
   readonly kitId: string;
   readonly typeId: string;
@@ -11897,12 +11897,12 @@ export function sketchpadParseTypeRepresentationSurfaceId(surfaceId: string): {
   return { kitId: parts[0]!, typeId: parts[1]!, representationId: parts[2]! };
 }
 
-/** @emoji 🧩 Stable FiveD instance id for one type representation scene. */
+/** @emoji 🧩️ Stable FiveD instance id for one type representation scene. */
 export function sketchpadTypeRepresentationSceneInstanceId(kitId: string, typeId: string, representationId: string): string {
   return `${kitId}:type:${typeId}:rep:${representationId}:scene`;
 }
 
-/** @emoji 🔍 Parses sketchpad FiveD {@link Puzzle5dModel.instanceId} segments. */
+/** @emoji 🔍️ Parses sketchpad FiveD {@link Puzzle5dModel.instanceId} segments. */
 export function parseSketchpadPuzzleInstanceId(instanceId: string): {
   readonly kitId: string | null;
   readonly designId: string | null;
@@ -11928,7 +11928,7 @@ export function parseSketchpadPuzzleInstanceId(instanceId: string): {
   return { kitId: null, designId: null, typeId: null, pane: null };
 }
 
-/** @emoji 🔑 Delegates to {@link platformTopologyStoreId}. */
+/** @emoji 🔑️ Delegates to {@link platformTopologyStoreId}. */
 export function sketchpadTopologyStoreId(instanceId: string): string {
   return platformTopologyStoreId(instanceId);
 }
@@ -11943,8 +11943,8 @@ function sketchpadEmptyVolumeFixture(): SketchpadVolumeFixture {
   };
 }
 
-//#region 🔖KitWires
-/** @emoji 🔗 Rust-backed reference rows for kit wires (design transitive refs, piece blueprints). */
+//#region 🔖️KitWires
+/** @emoji 🔗️ Rust-backed reference rows for kit wires (design transitive refs, piece blueprints). */
 export type SketchpadKitWiresReferenceData = {
   readonly designTransitiveTypes: ReadonlyMap<string, readonly string[]>;
   readonly designTransitiveDesigns: ReadonlyMap<string, readonly string[]>;
@@ -12093,7 +12093,7 @@ function sketchpadKitWiresEdgeId(kind: RelationshipKind, sourceId: string, targe
   return `wires-${kind}-${sourceId}-${targetId}`;
 }
 
-/** @emoji 🔗 Visible VFS nodes for kit wires, including the kit root ({@link visibleVirtualFileSystemNodesFromTree} omits it). */
+/** @emoji 🔗️ Visible VFS nodes for kit wires, including the kit root ({@link visibleVirtualFileSystemNodesFromTree} omits it). */
 export function sketchpadKitWiresVisibleNodes(root: VirtualFileSystemNodeRecord, visibleFromTree: readonly VirtualFileSystemVisibleNode[]): readonly VirtualFileSystemVisibleNode[] {
   if (visibleFromTree.some((node) => node.id === root.id)) return visibleFromTree;
   return [{ ...root, parentId: null }, ...visibleFromTree];
@@ -12158,7 +12158,7 @@ function sketchpadPieceBlueprintFromDto(piece: Piece, kit: Kit): { readonly kind
   return null;
 }
 
-/** @emoji 🔗 Loads design transitive refs and piece blueprints from the rust-backed {@link ComposeJsKitStore}. */
+/** @emoji 🔗️ Loads design transitive refs and piece blueprints from the rust-backed {@link ComposeJsKitStore}. */
 export async function sketchpadFetchKitWiresReferences(
   store: ComposeKitStore,
   kit: Kit,
@@ -12222,7 +12222,7 @@ export async function sketchpadFetchKitWiresReferences(
   return { designTransitiveTypes, designTransitiveDesigns, pieceBlueprints };
 }
 
-/** @emoji 🔗 Builds a {@link WiresFixture} from visible kit VFS nodes and rust reference data. */
+/** @emoji 🔗️ Builds a {@link WiresFixture} from visible kit VFS nodes and rust reference data. */
 export function sketchpadKitWiresFixtureFromVisible(kit: Kit, kitId: string, visible: readonly VirtualFileSystemVisibleNode[], references: SketchpadKitWiresReferenceData, expandedDesignIds: ReadonlySet<string>): WiresFixture {
   const visibleIds = new Set(visible.map((node) => node.id));
   const identityByNodeId = new Map<string, number>();
@@ -12325,7 +12325,7 @@ export function sketchpadKitWiresFixtureFromVisible(kit: Kit, kitId: string, vis
 function sketchpadTopologyPayloadForKitWires(fixture: WiresFixture): PlatformTopologyPayload {
   return sketchpadTopologyPayload(wiresFixtureBoard(fixture) as unknown as SketchpadPuzzle2dFixture, sketchpadEmptyVolumeFixture());
 }
-//#endregion 🔖KitWires
+//#endregion 🔖️KitWires
 
 type SketchpadKitDiagramNodeKind = "type" | "design" | "quality" | "port" | "file" | "folder" | "author";
 
@@ -12356,7 +12356,7 @@ function sketchpadKitDiagramPortLabel(port: Record<string, unknown>): string {
   return String(port["id"] ?? "");
 }
 
-/** @emoji 👨‍👩‍👦 Reads kit-level {@code families} rows from a denormalized bundle or projection DTO. */
+/** @emoji 👨️‍👩️‍👦️ Reads kit-level {@code families} rows from a denormalized bundle or projection DTO. */
 export function sketchpadReadKitFamilyRows(kit: Kit): readonly Record<string, unknown>[] {
   const raw = (kit as { families?: unknown }).families;
   if (raw == null) return [];
@@ -12396,7 +12396,7 @@ function sketchpadForEachKitPortRecord(kit: Kit, visit: (port: Record<string, un
   }
 }
 
-/** @emoji 🔌 Collects unique ports on kit kinds, connectors, and kit-level families. */
+/** @emoji 🔌️ Collects unique ports on kit kinds, connectors, and kit-level families. */
 export function sketchpadCollectKitPorts(kit: Kit): readonly { readonly id: string; readonly name: string }[] {
   const byId = new Map<string, { id: string; name: string }>();
   const remember = (port: Record<string, unknown>) => {
@@ -12431,7 +12431,7 @@ function sketchpadCollectKitPortRecords(kit: Kit): readonly Record<string, unkno
   return [...byId.values()];
 }
 
-/** @emoji 🔀 Merges port compat maps; later map entries override earlier ones for the same port id. */
+/** @emoji 🔀️ Merges port compat maps; later map entries override earlier ones for the same port id. */
 export function sketchpadMergePortCompatMaps(primary: ReadonlyMap<string, readonly { readonly id: string }[]>, overlay: ReadonlyMap<string, readonly { readonly id: string }[]>): Map<string, readonly { readonly id: string }[]> {
   const merged = new Map(primary);
   for (const [portId, refs] of overlay) merged.set(portId, refs);
@@ -12453,7 +12453,7 @@ export function sketchpadExtractPortCompatById(kit: Kit): Map<string, readonly {
   return map;
 }
 
-/** @emoji 🔗 Re-applies stored {@code compatiblePorts} onto a GraphQL-shaped kit DTO. */
+/** @emoji 🔗️ Re-applies stored {@code compatiblePorts} onto a GraphQL-shaped kit DTO. */
 export function sketchpadApplyPortCompatById(kit: Kit, compatById: ReadonlyMap<string, readonly { readonly id: string }[]>): Kit {
   if (compatById.size === 0) return kit;
   const enrichPort = (port: unknown): unknown => {
@@ -12505,7 +12505,7 @@ function sketchpadReadCompatiblePortIds(port: Record<string, unknown>): readonly
   return ids;
 }
 
-/** @emoji 🔗 Union-find map grouping kit ports by {@code compatiblePorts} and shared {@code code}. */
+/** @emoji 🔗️ Union-find map grouping kit ports by {@code compatiblePorts} and shared {@code code}. */
 export function sketchpadCreatePortGroupMap(ports: readonly { readonly id: string; readonly code?: string | null; readonly compatiblePorts?: readonly unknown[] }[]): Map<string, string> {
   const parent = new Map<string, string>();
   const register = (id: string) => {
@@ -12550,7 +12550,7 @@ export function sketchpadCreatePortGroupMap(ports: readonly { readonly id: strin
   return groups;
 }
 
-/** @emoji ↔️ Adds dashed type adjacency edges for types that share compatible port groups. */
+/** @emoji ↔ Adds dashed type adjacency edges for types that share compatible port groups. */
 export function sketchpadKitDiagramPushTypeCompatEdges(kit: Kit, edges: SketchpadPuzzle2dFixture["edges"], edgeIds: Set<string>): void {
   const ports = sketchpadCollectKitPortRecords(kit);
   if (ports.length === 0) return;
@@ -12591,7 +12591,7 @@ export function sketchpadKitDiagramPushTypeCompatEdges(kit: Kit, edges: Sketchpa
   }
 }
 
-/** @emoji 📄 Basename for a kit file row (prefers `name`, then url/path tail, then id). */
+/** @emoji 📄️ Basename for a kit file row (prefers `name`, then url/path tail, then id). */
 function sketchpadKitFileBasename(file: Record<string, unknown>): string {
   const name = file["name"];
   if (typeof name === "string" && name.trim().length > 0) return name.trim();
@@ -12610,14 +12610,14 @@ function sketchpadKitFileBasename(file: Record<string, unknown>): string {
   return String(file["id"] ?? "");
 }
 
-/** @emoji 📄 VFS label for a kit file: basename without extension. */
+/** @emoji 📄️ VFS label for a kit file: basename without extension. */
 function sketchpadKitFileDisplayName(basename: string): string {
   const dot = basename.lastIndexOf(".");
   if (dot <= 0) return basename;
   return basename.slice(0, dot);
 }
 
-/** @emoji 📄 VFS icon id from a file basename extension (maps in {@link resolveVirtualFileSystemSchemaIcon}). */
+/** @emoji 📄️ VFS icon id from a file basename extension (maps in {@link resolveVirtualFileSystemSchemaIcon}). */
 function sketchpadKitFileExtensionIconId(basename: string): string {
   const dot = basename.lastIndexOf(".");
   if (dot <= 0 || dot === basename.length - 1) return "file";
@@ -12820,7 +12820,7 @@ function sketchpadPieceAbsolutePose(piece: { readonly id: string }): SketchpadPi
   return row.flatPosition ?? row.position ?? (row.center || row.plane ? { center: row.center, plane: row.plane } : undefined);
 }
 
-/** @emoji 📐 Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
+/** @emoji 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
  * otherwise a `delta` (stepper nudge) is added to `current`. */
 function sketchpadResolveNumberEdit(current: number, value: unknown, delta: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -12828,7 +12828,7 @@ function sketchpadResolveNumberEdit(current: number, value: unknown, delta: unkn
   return current;
 }
 
-/** @emoji 📐 Applies one dot-path axis edit (`"center.u"`, `"plane.origin.x"`, …) from the inspector's
+/** @emoji 📐️ Applies one dot-path axis edit (`"center.u"`, `"plane.origin.x"`, …) from the inspector's
  * `ui_inspector_vec3_group`/`ui_inspector_stepper_field` dispatch onto a full {@link PositionInput} —
  * `Piece.move` always takes the complete position, so every axis edit starts from `current`. */
 function sketchpadPatchPositionField(position: PositionInput, field: string, value: unknown, delta: unknown): PositionInput {
@@ -12860,7 +12860,7 @@ function sketchpadPieceSceneOrigin(piece: { readonly id: string }, index: number
   return [index * 2, 0, 0];
 }
 
-/** @emoji 🧭 Converts compose absolute plane axes to a volume orientation quaternion. */
+/** @emoji 🧭️ Converts compose absolute plane axes to a volume orientation quaternion. */
 export function sketchpadPlaneAxesToQuaternion(plane: NonNullable<SketchpadPiecePose["plane"]>): [number, number, number, number] {
   const xAxis = plane.xAxis ?? { x: 1, y: 0, z: 0 };
   const yAxis = plane.yAxis ?? { x: 0, y: 1, z: 0 };
@@ -12910,7 +12910,7 @@ function sketchpadPieceSceneScale(piece: { readonly id: string }): [number, numb
   return [s, s, s];
 }
 
-/** @emoji 🧭 Maps kit wires node ids to sketchpad routes. */
+/** @emoji 🧭️ Maps kit wires node ids to sketchpad routes. */
 export function sketchpadPathFromWiresNodeId(kitId: string, nodeId: string, fileNodeKindId: string): string | null {
   switch (fileNodeKindId) {
     case "type":
@@ -12926,7 +12926,7 @@ export function sketchpadPathFromWiresNodeId(kitId: string, nodeId: string, file
   }
 }
 
-/** @emoji 🧭 Navigates from the first recognized kit wires selection entry. */
+/** @emoji 🧭️ Navigates from the first recognized kit wires selection entry. */
 export function sketchpadNavigateFromWiresSelection(instanceId: string, puzzle2dIds: readonly string[], controller?: SketchpadShellController): void {
   const { kitId, pane } = parseSketchpadPuzzleInstanceId(instanceId);
   if (!kitId || pane !== "kit-wires") return;
@@ -12944,7 +12944,7 @@ export function sketchpadNavigateFromWiresSelection(instanceId: string, puzzle2d
   }
 }
 
-/** @emoji 🎯 Applies FiveD puzzle2d/volume selection (kit navigation or design piece/connection selection). */
+/** @emoji 🎯️ Applies FiveD puzzle2d/volume selection (kit navigation or design piece/connection selection). */
 export function sketchpadApplyPuzzle2dSelection(instanceId: string, puzzle2dIds: readonly string[], controller?: SketchpadShellController): void {
   const scope = parseSketchpadPuzzleInstanceId(instanceId);
   const ctrl = controller ?? getSketchpadShellController();
@@ -12973,7 +12973,7 @@ export function sketchpadApplyPuzzle2dSelection(instanceId: string, puzzle2dIds:
   }
 }
 
-/** @emoji 🔍 Parses sketchpad CAD {@link CadModel.instanceId}. */
+/** @emoji 🔍️ Parses sketchpad CAD {@link CadModel.instanceId}. */
 export function parseSketchpadCadInstanceId(instanceId: string): { readonly kitId: string | null; readonly typeId: string | null } {
   const parts = instanceId.split(":");
   if (parts.length === 2) return { kitId: parts[0] ?? null, typeId: parts[1] ?? null };
@@ -13023,7 +13023,7 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
   };
 }
 
-/** @emoji 🌐 Builds a 3D design scene volume from design pieces (placeholder meshes until file URLs are wired). */
+/** @emoji 🌐️ Builds a 3D design scene volume from design pieces (placeholder meshes until file URLs are wired). */
 export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit): SketchpadVolumeFixture {
   const pieces = design.pieces ?? [];
   const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
@@ -13085,7 +13085,7 @@ function sketchpadTopologyPayloadForDesignDiagram(design: Design, kit?: Kit): Pl
   return sketchpadTopologyPayload(sketchpadDesignPuzzle2dFixtureFromDesign(design, kit), sketchpadEmptyVolumeFixture());
 }
 
-/** @emoji 🌐 Builds a single-mesh 3D volume for one type representation. */
+/** @emoji 🌐️ Builds a single-mesh 3D volume for one type representation. */
 export function sketchpadTypeVolumeFixtureForRepresentation(type: Type, representation: SketchpadTypeRepresentationRef, kit: Kit): SketchpadVolumeFixture {
   const fileUrls = sketchpadKitFileUrlById(kit);
   return {
@@ -13108,7 +13108,7 @@ export function sketchpadTypeVolumeFixtureForRepresentation(type: Type, represen
   };
 }
 
-/** @emoji 🌐 Builds a single-mesh 3D volume for a kit kind (primary representation). */
+/** @emoji 🌐️ Builds a single-mesh 3D volume for a kit kind (primary representation). */
 export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): SketchpadVolumeFixture {
   const reps = sketchpadListTypeRepresentations(type);
   if (reps.length === 0) {
@@ -13138,9 +13138,9 @@ function sketchpadTopologyPayloadForTypeScene(type: Type, kit: Kit): PlatformTop
 function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixture {
   return { schema: "puzzle.2d.fixture", camera: { x: 0, y: 0, zoom: 1 }, nodes: [], edges: [] };
 }
-//#endregion 🔖Topology
+//#endregion 🔖️Topology
 
-//#region 📁SketchpadVfs
+//#region 📁️SketchpadVfs
 /** @emoji 🗣️ Builds the kit VFS schema model fresh from the active locale + terminology, mirroring a Rust plugin's `*_labels(view_state)` resolver. */
 function sketchpadKitVirtualFileSystemSchemaModel(): VirtualFileSystemSchemaModel {
   const l = resolveComposeVfsLabels(readStoredUiChromeTerminology(), composeCurrentUiLocale());
@@ -13615,7 +13615,7 @@ function sketchpadHomeVfsChildren(openKitIds: readonly string[], kitById: (kitId
   }
   return [];
 }
-//#endregion 📁SketchpadVfs
+//#endregion 📁️SketchpadVfs
 
 export const SKETCHPAD_SHELL_CONTROLLER_ID = "compose.sketchpad.shell";
 const SKETCHPAD_EXTENSION_ID = "compose.sketchpad.builtin";
@@ -13674,7 +13674,7 @@ function sketchpadSyncTypeRepresentationComponents(platform: Platform, kitId: st
   }
 }
 
-/** @emoji 🪟 Rebuilds type-app window kinds (tab stack per representation) and topology components. */
+/** @emoji 🪟️ Rebuilds type-app window kinds (tab stack per representation) and topology components. */
 export function sketchpadSyncTypeAppChrome(platform: Platform): void {
   const typeApp = platform.apps.find((app) => app.id === SKETCHPAD_TYPE_APP_ID);
   if (!typeApp) return;
@@ -13700,7 +13700,7 @@ export function sketchpadSyncTypeAppChrome(platform: Platform): void {
   }
 }
 
-//#region 🔖SketchpadPlatformComponents
+//#region 🔖️SketchpadPlatformComponents
 abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> {
   protected route = parseSketchpadRouteScopeFromPath("/");
   private readonly detachRoute: () => void;
@@ -13747,7 +13747,7 @@ abstract class SketchpadRoutedComponent<TSnapshot> extends Component<TSnapshot> 
     }
   }
 
-  /** @emoji 🔄 Pushes kit/design data into controller-owned topology stores for FiveD surfaces. */
+  /** @emoji 🔄️ Pushes kit/design data into controller-owned topology stores for FiveD surfaces. */
   protected syncTopologyForSurface(): void {
     getSketchpadShellController()?.syncTopologyForSurface(this.surfaceId, this.route);
   }
@@ -13781,7 +13781,7 @@ function sketchpadKitWiresPreselectSnapshotsEqual(left: SketchpadKitWiresPresele
   return sketchpadSameStringIds(left.ids, [...right.ids]) && sketchpadSameStringIds(left.removedIds, [...right.removedIds]);
 }
 
-/** @emoji 🎯 Committed kit wires ids merged with an in-progress area-select preview. */
+/** @emoji 🎯️ Committed kit wires ids merged with an in-progress area-select preview. */
 export function sketchpadKitWiresEffectiveSelectionIds(committed: readonly string[], preselect: SketchpadKitWiresPreselectSnapshot): string[] {
   if (!preselect.ids.length && !preselect.removedIds.length) return [...committed];
   const out = new Set(committed);
@@ -13790,7 +13790,7 @@ export function sketchpadKitWiresEffectiveSelectionIds(committed: readonly strin
   return [...out];
 }
 
-/** @emoji 📁 Per-app virtual file system surface backed by {@link SketchpadShellController}. */
+/** @emoji 📁️ Per-app virtual file system surface backed by {@link SketchpadShellController}. */
 class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFileSystemModel> {
   private readonly detachKitWiresHover?: () => void;
   private readonly detachKitWiresSelection?: () => void;
@@ -13849,7 +13849,7 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
   }
 }
 
-/** @emoji 🔗 Kit wires surface (FiveD flat WIRES topology). */
+/** @emoji 🔗️ Kit wires surface (FiveD flat WIRES topology). */
 export class SketchpadKitWires extends SketchpadRoutedComponent<Puzzle5dModel> {
   private readonly detachKitWiresHover?: () => void;
   private readonly detachKitWiresSelection?: () => void;
@@ -13899,7 +13899,7 @@ export class SketchpadKitWires extends SketchpadRoutedComponent<Puzzle5dModel> {
   }
 }
 
-/** @emoji 🎬 Design scene (5D volume). */
+/** @emoji 🎬️ Design scene (5D volume). */
 export class SketchpadDesignScene extends SketchpadRoutedComponent<Puzzle5dModel> {
   constructor(platform: Platform) {
     super("puzzle5d", SKETCHPAD_SURFACE_DESIGN_SCENE, SKETCHPAD_SHELL_CONTROLLER_ID, { presentation: "volume", instanceId: SKETCHPAD_SURFACE_DESIGN_SCENE }, platform);
@@ -13923,7 +13923,7 @@ export class SketchpadDesignScene extends SketchpadRoutedComponent<Puzzle5dModel
   }
 }
 
-/** @emoji 📐 Design diagram (5D flat). */
+/** @emoji 📐️ Design diagram (5D flat). */
 export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dModel> {
   constructor(platform: Platform) {
     super("puzzle5d", SKETCHPAD_SURFACE_DESIGN_DIAGRAM, SKETCHPAD_SHELL_CONTROLLER_ID, { presentation: "flat", instanceId: SKETCHPAD_SURFACE_DESIGN_DIAGRAM }, platform);
@@ -13947,7 +13947,7 @@ export class SketchpadDesignDiagram extends SketchpadRoutedComponent<Puzzle5dMod
   }
 }
 
-/** @emoji 📐 Type representation CAD scene (one mesh per representation window). */
+/** @emoji 📐️ Type representation CAD scene (one mesh per representation window). */
 export class SketchpadTypeRepresentationScene extends SketchpadRoutedComponent<Puzzle5dModel> {
   readonly representationId: string;
 
@@ -14045,7 +14045,7 @@ function sketchpadDocumentSelectedIds(selection: SketchpadRouteSelection): strin
   return [...selection.pieceIds.map((id) => `sketchpad.document.piece.${id}`), ...selection.connectionIds.map((id) => `sketchpad.document.connection.${id}`), ...selection.kitWiresNodeIds.map((id) => `sketchpad.document.kit-node.${id}`)];
 }
 
-/** @emoji 🌳 Workbench document for the active sketchpad route. */
+/** @emoji 🌳️ Workbench document for the active sketchpad route. */
 function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
   const l = SKETCHPAD_PANEL_LABELS[composeCurrentUiLocale()];
   const ctrl = getSketchpadShellController();
@@ -14191,7 +14191,7 @@ function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode
   return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadDocumentSelectedIds(selection) };
 }
 
-/** @emoji 📚 Workbench catalogue of kit types for the active route. */
+/** @emoji 📚️ Workbench catalogue of kit types for the active route. */
 function buildSketchpadCataloguePanelBody(ctx: WindowBodyViewContext): UiTreeNode {
   const ctrl = getSketchpadShellController();
   const routeUri = ctrl?.navigationPath ?? ctx.platform.uri ?? "/";
@@ -14228,7 +14228,7 @@ function buildSketchpadCataloguePanelBody(ctx: WindowBodyViewContext): UiTreeNod
   ]);
 }
 
-/** @emoji 🔎 Editable inspection panel bound to {@link SketchpadRouteSelection}. */
+/** @emoji 🔎️ Editable inspection panel bound to {@link SketchpadRouteSelection}. */
 function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
   const l = SKETCHPAD_PANEL_LABELS[composeCurrentUiLocale()];
   const ctrl = getSketchpadShellController();
@@ -14484,9 +14484,9 @@ class SketchpadPlatformComponents {
     });
   }
 }
-//#endregion 🔖SketchpadPlatformComponents
+//#endregion 🔖️SketchpadPlatformComponents
 
-/** @emoji 🧭 Routes sketchpad navigation and panel chrome through {@link ActionBus}. */
+/** @emoji 🧭️ Routes sketchpad navigation and panel chrome through {@link ActionBus}. */
 export class SketchpadShellController extends VirtualFileSystemController {
   private readonly vfsRouteRootByScope = new Map<string, string>();
   private readonly shellStore: ObservableCell<SketchpadShellSnapshot>;
@@ -14524,13 +14524,13 @@ export class SketchpadShellController extends VirtualFileSystemController {
     return this.shellStore.get().routeSelection;
   }
 
-  /** @emoji 📥 Updates home kit import status for workbench feedback. */
+  /** @emoji 📥️ Updates home kit import status for workbench feedback. */
   setImportStatus(status: SketchpadImportStatus): void {
     this.shellStore.set({ ...this.shellStore.get(), importStatus: status });
     this.emit();
   }
 
-  /** @emoji 🎯 Updates diagram/scene selection and syncs `/kits/...` query params when applicable. */
+  /** @emoji 🎯️ Updates diagram/scene selection and syncs `/kits/...` query params when applicable. */
   setRouteSelection(selection: SketchpadRouteSelection): void {
     const shell = this.shellStore.get();
     const pathOnly = shell.navigationPath.split("?")[0] ?? "/";
@@ -14549,7 +14549,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     this.emit();
   }
 
-  /** @emoji 📋 Open kit ids from the shell store snapshot. */
+  /** @emoji 📋️ Open kit ids from the shell store snapshot. */
   listOpenKitIds(): readonly string[] {
     return this.shellStore.get().openKitIds;
   }
@@ -14569,7 +14569,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     this.emit();
   }
 
-  /** @emoji 🔗 VFS node kind metadata for kit wires selection navigation. */
+  /** @emoji 🔗️ VFS node kind metadata for kit wires selection navigation. */
   kitWiresNodeMetaForKit(kitId: string): ReadonlyMap<string, { readonly fileNodeKindId: string }> {
     const scopeKey = virtualFileSystemScopeKey(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID));
     const map = this.vfsNodeMetaByScope.get(scopeKey);
@@ -14583,7 +14583,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     return out;
   }
 
-  /** @emoji 📁 Awaits kit VFS children for the kit root and every expanded branch so wires identities match visible table rows. */
+  /** @emoji 📁️ Awaits kit VFS children for the kit root and every expanded branch so wires identities match visible table rows. */
   async prepareKitWiresVfsForTopology(kitId: string): Promise<void> {
     const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
     const expandedIds = this.expandedStore(scope).getSnapshot();
@@ -14591,7 +14591,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     await Promise.all([...branchIds].map((id) => this.ensureChildrenLoadedAsync(id, scope)));
   }
 
-  /** @emoji 🎯 Mirrors kit wires diagram selection onto the kit VFS table. */
+  /** @emoji 🎯️ Mirrors kit wires diagram selection onto the kit VFS table. */
   syncKitWiresSelectionToVfs(kitId: string, nodeIds: readonly string[]): void {
     const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
     if (this.vfsRouteRootByScope.get(virtualFileSystemScopeKey(scope)) !== kitId) return;
@@ -14611,12 +14611,12 @@ export class SketchpadShellController extends VirtualFileSystemController {
     this.kitWiresPreselectStore.set({ ids: [...preselect.ids], removedIds: [...preselect.removedIds] });
   }
 
-  /** @emoji 🎯 Kit VFS row ids including any in-progress wires area-select preview. */
+  /** @emoji 🎯️ Kit VFS row ids including any in-progress wires area-select preview. */
   kitWiresEffectiveSelectedRowIds(): string[] {
     return sketchpadKitWiresEffectiveSelectionIds(this.shellStore.get().routeSelection.kitWiresNodeIds, this.kitWiresPreselectStore.getSnapshot());
   }
 
-  /** @emoji 🔗 Rebuilds kit wires topology from visible VFS nodes and rust reference queries. */
+  /** @emoji 🔗️ Rebuilds kit wires topology from visible VFS nodes and rust reference queries. */
   syncKitWiresTopology(kitId: string): void {
     const store = this.getKitStore(kitId);
     const kit = store?.getSnapshot().kit;
@@ -14640,7 +14640,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     });
   }
 
-  /** @emoji 🔍 Resolves a controller-owned kit store. */
+  /** @emoji 🔍️ Resolves a controller-owned kit store. */
   getKitStore(kitId: string): ComposeKitStore | undefined {
     return this.getStore<SketchpadKitSnapshot>(sketchpadKitStoreId(kitId)) as ComposeKitStore | undefined;
   }
@@ -14650,7 +14650,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     return this.kitKinds.get(kitId);
   }
 
-  /** @emoji 📂 Returns the asset root URL for kit-relative file paths. */
+  /** @emoji 📂️ Returns the asset root URL for kit-relative file paths. */
   getKitAssetBaseUrl(kitId: string): string | undefined {
     return this.kitAssetBaseUrls.get(kitId);
   }
@@ -14705,7 +14705,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     this.emit();
   }
 
-  /** @emoji 📂 Opens a kit via host factories or in-memory import and navigates to it. */
+  /** @emoji 📂️ Opens a kit via host factories or in-memory import and navigates to it. */
   async openKit(kind: SketchpadKitPersistenceKind, options?: { readonly serverUrl?: string; readonly importUrl?: string }): Promise<string> {
     if (options?.importUrl) {
       return openSketchpadKitFromImport(options.importUrl, { kind, navigate: true });
@@ -14728,7 +14728,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     return kitId;
   }
 
-  /** @emoji 🆕 Creates an empty in-memory kit backed by {@link @semio-tech/compose-js} and opens it. */
+  /** @emoji 🆕️ Creates an empty in-memory kit backed by {@link @semio-tech/compose-js} and opens it. */
   async createTemporaryKit(name = "Untitled Kit"): Promise<string> {
     const session = await ComposeSession.openInMemory();
     const jsStore = (await session.stores())[0];
@@ -14769,7 +14769,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     this.emit();
   }
 
-  /** @emoji 🏠 Merges home UI state and syncs `/` query params when on the home route. */
+  /** @emoji 🏠️ Merges home UI state and syncs `/` query params when on the home route. */
   updateHome(home: SketchpadHomeUiState): void {
     const shell = this.shellStore.get();
     const pathOnly = shell.navigationPath.split("?")[0] ?? "/";
@@ -14782,7 +14782,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     this.emit();
   }
 
-  /** @emoji 🧭 Navigates to a path (updates shell snapshot; drives platform when mounted). */
+  /** @emoji 🧭️ Navigates to a path (updates shell snapshot; drives platform when mounted). */
   navigateTo(path: string): void {
     const pathOnly = path.split("?")[0] ?? "/";
     const shell = this.shellStore.get();
@@ -14866,7 +14866,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     return [];
   }
 
-  /** @emoji 📁 Loads kit/design VFS children from rs {@link FileSystemNode} over GraphQL. */
+  /** @emoji 📁️ Loads kit/design VFS children from rs {@link FileSystemNode} over GraphQL. */
   protected override virtualFileSystemUsesAsyncChildren(): boolean {
     return true;
   }
@@ -14915,7 +14915,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     }
   }
 
-  /** @emoji 🔄 Home vfs stays synchronous; kit/design use async rs-backed children. */
+  /** @emoji 🔄️ Home vfs stays synchronous; kit/design use async rs-backed children. */
   protected override ensureChildrenLoaded(parentId: string, scope: VirtualFileSystemScope): void {
     if (scope.appId === SKETCHPAD_KIT_APP_ID || scope.appId === SKETCHPAD_DESIGN_APP_ID) {
       super.ensureChildrenLoaded(parentId, scope);
@@ -14924,7 +14924,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     super.ensureChildrenLoaded(parentId, scope);
   }
 
-  /** @emoji 🧭 Rebinds VFS expansion and drops lazy children when the routed root entity changes (e.g. home → another open kit). */
+  /** @emoji 🧭️ Rebinds VFS expansion and drops lazy children when the routed root entity changes (e.g. home → another open kit). */
   syncVirtualFileSystemRoute(scope: VirtualFileSystemScope, rootNodeId: string): void {
     const scopeKey = virtualFileSystemScopeKey(scope);
     if (this.vfsRouteRootByScope.get(scopeKey) === rootNodeId) return;
@@ -14940,7 +14940,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
     }
   }
 
-  /** @emoji 🔄 Drops cached vfs children when the live kit changes. */
+  /** @emoji 🔄️ Drops cached vfs children when the live kit changes. */
   invalidateKitVirtualFileSystem(kitId: string): void {
     for (const appId of [SKETCHPAD_KIT_APP_ID, SKETCHPAD_DESIGN_APP_ID] as const) {
       const scope = sketchpadVfsScope(appId);
@@ -15457,7 +15457,7 @@ function applySketchpadUri(platform: Platform, uri: string): void {
   platform.notify();
 }
 
-/** @emoji 🧭 Navigation trail for the current sketchpad URI (decoupled from URL path shape). */
+/** @emoji 🧭️ Navigation trail for the current sketchpad URI (decoupled from URL path shape). */
 export function sketchpadNavigation(platform: Platform, uri: string): NavigationLevel[] {
   const pathOnly = uri.split("?")[0] ?? "/";
   const scope = parseSketchpadRouteScopeFromPath(uri);
@@ -15603,7 +15603,7 @@ export function buildSketchpadPlatformDefinition(): PlatformDefinition {
   };
 }
 
-/** @emoji 🧱 Builds the sketchpad {@link Platform} (apps, window bodies, {@link Component} registry). */
+/** @emoji 🧱️ Builds the sketchpad {@link Platform} (apps, window bodies, {@link Component} registry). */
 export async function buildSketchpadPlatform(): Promise<Platform> {
   sketchpadConfigureBrowserKitFactories();
   registerSketchpadWindowBodies();
@@ -15634,7 +15634,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
   return platform;
 }
 
-/** @emoji 🚀 Ensures the sketchpad {@link Platform} is initialized once per session. */
+/** @emoji 🚀️ Ensures the sketchpad {@link Platform} is initialized once per session. */
 export async function ensureSketchpadPlatform(): Promise<Platform> {
   if (sketchpadPlatformSingleton) return sketchpadPlatformSingleton;
   if (!sketchpadPlatformReady) {
@@ -15643,12 +15643,12 @@ export async function ensureSketchpadPlatform(): Promise<Platform> {
   return sketchpadPlatformReady;
 }
 
-/** @emoji 🔍 Returns the live sketchpad {@link Platform}, if built. */
+/** @emoji 🔍️ Returns the live sketchpad {@link Platform}, if built. */
 export function getSketchpadPlatform(): Platform | null {
   return sketchpadPlatformSingleton;
 }
 
-//#region 🧪Tests
+//#region 🧪️Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
@@ -15841,7 +15841,7 @@ if (import.meta.vitest) {
     it("preloads kits on home without navigating to kit app", async () => {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜script.ts");
+      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜️script.ts");
       const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
       const fixtureUrl = "/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json";
       const fixtureJson = JSON.stringify(readInitialKitFixtureFromPath(fixturePath));
@@ -16007,7 +16007,7 @@ if (import.meta.vitest) {
     it("materializes type representations after projection install", async () => {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜script.ts");
+      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜️script.ts");
       const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
       const assembled = readInitialKitFixtureFromPath(fixturePath);
       const bundleKit = sketchpadKitFromDecodedBundle(assembled);
@@ -16028,7 +16028,7 @@ if (import.meta.vitest) {
     it("hydrates nakagin capsule tower with 180 pieces and 179 connections", async () => {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜script.ts");
+      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜️script.ts");
       const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
       const assembled = readInitialKitFixtureFromPath(fixturePath);
       const { kit, session } = await importKit(new TextEncoder().encode(JSON.stringify(assembled)));
@@ -16132,10 +16132,10 @@ if (import.meta.vitest) {
             },
           ],
         },
-        files: [{ id: bridgeFileId, name: "🧊bridge.glb" }],
+        files: [{ id: bridgeFileId, name: "🧊️bridge.glb" }],
       } as Kit;
       expect(findTypeInKit(kit, bridgeTypeId)?.name).toBe("Bridge");
-      expect(sketchpadResolvePieceMeshUrl({ type: { id: bridgeTypeId } }, kit)).toBe("/mesh/🧊bridge.glb");
+      expect(sketchpadResolvePieceMeshUrl({ type: { id: bridgeTypeId } }, kit)).toBe("/mesh/🧊️bridge.glb");
     });
   });
 
@@ -16181,9 +16181,9 @@ if (import.meta.vitest) {
       const kit = {
         id: kitId,
         name: "K",
-        icon: "icons/🔣metabolism.svg",
+        icon: "icons/🔣️metabolism.svg",
         types: [
-          { id: typeId, name: "Beam", icon: "icons/🔣base.svg" },
+          { id: typeId, name: "Beam", icon: "icons/🔣️base.svg" },
           { id: plainTypeId, name: "Plain" },
         ],
         designs: [],
@@ -16331,33 +16331,33 @@ if (import.meta.vitest) {
     it("resolves metabolism glbs by file name for puzzle 3d even without url", () => {
       const kit = {
         id: "k",
-        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "🧊bridge.glb" }],
+        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "🧊️bridge.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/🧊bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/🧊️bridge.glb");
     });
 
     it("prefers fixture /meshes over inline blobs for metabolism glb names", () => {
       const kit = {
         id: "k",
-        files: [{ id: "f1", name: "🧊bridge.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
+        files: [{ id: "f1", name: "🧊️bridge.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/🧊bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/🧊️bridge.glb");
     });
 
     it("resolves metabolism representation glbs for puzzle 3d via /meshes", () => {
       const kit = {
         id: "k",
-        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "🧊bridge.glb" }],
+        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "🧊️bridge.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/🧊bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/🧊️bridge.glb");
     });
 
     it("resolves capsule-with-balcony representation glbs for puzzle 3d via /meshes", () => {
       const kit = {
         id: "k",
-        files: [{ id: "f-slash", path: "representations/🧊capsule-with-balcony_slash.glb", name: "🧊capsule-with-balcony_slash.glb" }],
+        files: [{ id: "f-slash", path: "representations/🧊️capsule-with-balcony_slash.glb", name: "🧊️capsule-with-balcony_slash.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("f-slash")).toBe("/mesh/🧊capsule-with-balcony_slash.glb");
+      expect(sketchpadKitFileUrlById(kit).get("f-slash")).toBe("/mesh/🧊️capsule-with-balcony_slash.glb");
     });
   });
 
@@ -16958,9 +16958,9 @@ if (import.meta.vitest) {
     it("maps parent-relative representation paths to /meshes", () => {
       const kit = {
         id: "k",
-        files: [{ id: "f1", path: "../../representation/🧊bridge.glb" }],
+        files: [{ id: "f1", path: "../../representation/🧊️bridge.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/🧊bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/🧊️bridge.glb");
     });
   });
 
@@ -17365,9 +17365,9 @@ if (import.meta.vitest) {
     });
   });
 }
-//#endregion 🧪Tests
+//#endregion 🧪️Tests
 
-//#region 🧪E2E
+//#region 🧪️E2E
 if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__) {
   const { test, expect } = await import("@playwright/test");
   test.describe("sketchpad platform", () => {
@@ -17467,9 +17467,9 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
     });
   });
 }
-//#endregion 🧪E2E
+//#endregion 🧪️E2E
 
-//#region 🔖Play
+//#region 🔖️Play
 import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
 import type { AppInstanceHostComponent, AppRendererContribution } from "@semio-tech/framework-platform-core";
 import type { OsAppInstance } from "@semio-tech/framework-os-core";
@@ -17498,13 +17498,13 @@ const SketchpadInstanceHost: AppInstanceHostComponent = ({ instance }: { readonl
   return reactHostPort.createElement(PlaygroundView, { runtime: platform, defaultAppId: instance.appId });
 };
 
-/** @emoji 🛝 Sketchpad app renderer for playground and OS shells. */
+/** @emoji 🛝️ Sketchpad app renderer for playground and OS shells. */
 export const sketchpadAppRenderer: AppRendererContribution = {
   surfaceHosts: {},
   instanceHost: SketchpadInstanceHost,
 };
 
-/** @emoji 🛝 Compose sketchpad playground app. */
+/** @emoji 🛝️ Compose sketchpad playground app. */
 export const sketchpadPlayAppDefinition = createPlaygroundApp({
   id: SKETCHPAD_PLATFORM_SPEC.id,
   label: SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()].sketchpad,
@@ -17520,9 +17520,9 @@ export const sketchpadPlayAppDefinition = createPlaygroundApp({
     return new Platform(SKETCHPAD_PLATFORM_SPEC);
   },
 });
-//#endregion 🔖Play
+//#endregion 🔖️Play
 
-//#region 🔖OsProgram
+//#region 🔖️OsProgram
 import { createTypedAppVcsHandler, mergeOsWorkflowDefinition, osBaselineArtifact, registerAppVcsHandler } from "@semio-tech/framework-os-core";
 import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
 
@@ -17546,7 +17546,7 @@ export function createComposeTypeAppVcsHandler() {
   );
 }
 
-/** @emoji 📦 S app VCS handler for compose kit documents. */
+/** @emoji 📦️ S app VCS handler for compose kit documents. */
 export function createComposeKitAppVcsHandler() {
   return createTypedAppVcsHandler<{ readonly id: string }, { readonly operation: "setId"; readonly id: string }>(
     "compose.kit",
@@ -17556,7 +17556,7 @@ export function createComposeKitAppVcsHandler() {
   );
 }
 
-/** @emoji 🧩 OS program contribution for compose sketchpad. */
+/** @emoji 🧩️ OS program contribution for compose sketchpad. */
 export const sketchpadProgramContribution: OsProgramContribution = {
   pluginId: "compose.sketchpad",
   register() {
@@ -17573,13 +17573,13 @@ export const sketchpadProgramContribution: OsProgramContribution = {
     registerAppVcsHandler(createComposeKitAppVcsHandler());
   },
 };
-//#endregion 🔖OsProgram
+//#endregion 🔖️OsProgram
 
-//#region 🔖docs-mdx
+//#region 🔖️docs-mdx
 export type SketchpadDocPage = { readonly path: string; readonly title: string };
 export type SketchpadDocSection = { readonly id: string; readonly label: string; readonly pages: readonly SketchpadDocPage[] };
 
-/** @emoji 📄 Lazy-loaded MDX module shape from the sketchpad pages bundle. */
+/** @emoji 📄️ Lazy-loaded MDX module shape from the sketchpad pages bundle. */
 export type SketchpadMdxModule = {
   readonly default: unknown;
   readonly frontmatter?: Readonly<Record<string, unknown>>;
@@ -17596,7 +17596,7 @@ function sketchpadTitleFromDocPath(relativePath: string): string {
 const SKETCHPAD_MDX_MODULE_LOADERS = import.meta.glob<SketchpadMdxModule>("./page/**/*.mdx");
 const SKETCHPAD_MDX_MODULE_PATHS = Object.keys(SKETCHPAD_MDX_MODULE_LOADERS);
 
-/** @emoji 🔍 Resolves a docs route path to a Vite MDX module key. */
+/** @emoji 🔍️ Resolves a docs route path to a Vite MDX module key. */
 export function sketchpadResolveMdxModuleKey(docsPath: string): string | null {
   const clean = docsPath.replace(/^\/+/, "").replace(/\.mdx$/, "");
   const matches = SKETCHPAD_MDX_MODULE_PATHS.filter((key) => {
@@ -17606,7 +17606,7 @@ export function sketchpadResolveMdxModuleKey(docsPath: string): string | null {
   return matches[0] ?? null;
 }
 
-/** @emoji 📥 Loads an MDX page module for a docs route (`getting-started/index`, …). */
+/** @emoji 📥️ Loads an MDX page module for a docs route (`getting-started/index`, …). */
 export async function sketchpadLoadMdxModule(docsPath: string): Promise<SketchpadMdxModule | null> {
   const moduleKey = sketchpadResolveMdxModuleKey(docsPath);
   if (!moduleKey) return null;
@@ -17626,7 +17626,7 @@ export function sketchpadMdxTitle(module: SketchpadMdxModule | null, docsPath: s
   return sketchpadTitleFromDocPath(docsPath);
 }
 
-/** @emoji 📚 Builds the sketchpad docs tree from bundled MDX pages (Vite glob). */
+/** @emoji 📚️ Builds the sketchpad docs tree from bundled MDX pages (Vite glob). */
 function sketchpadBuildDocsRegistryFromGlob(): readonly SketchpadDocSection[] {
   const sectionMap = new Map<string, SketchpadDocPage[]>();
   for (const modulePath of SKETCHPAD_MDX_MODULE_PATHS) {
@@ -17647,4 +17647,4 @@ function sketchpadBuildDocsRegistryFromGlob(): readonly SketchpadDocSection[] {
     }))
     .sort((left, right) => left.label.localeCompare(right.label));
 }
-//#endregion 🔖docs-mdx
+//#endregion 🔖️docs-mdx

@@ -1,0 +1,17 @@
+{
+  "title": "S Chrome Spawned Window Parity Restore",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Restore spawned plugin window engagement/measures/tools and premigration toolbar ribbon behavior in framework/renderer/react/os-shell.tsx",
+  "summary": "Fixed print window title-bar chrome to match OS UI: title/number now persist via xdef store and are passed expanded into the muted header renderer; gap segment uses semio@window@gap (bottom stroke only) for the U-shaped cutout; removed duplicate trailing top rule; fixed empty-number ctrl chip test. Verified on mit-bestand zwischenbericht cover page (zwischenbericht-p1-windows.png).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1874"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "8438b708",
+    "local": "s_chrome_spawned_window_parity_8438b708.plan.md"
+  },
+  "sessions": ["⚪️7f79fcb93df849498a4b86b0f1710d9e", "⚪️50df197765344da58192bbf751f91cb7", "⚪️094632d816f2437e9c6f27650fe3e4fa"]
+}

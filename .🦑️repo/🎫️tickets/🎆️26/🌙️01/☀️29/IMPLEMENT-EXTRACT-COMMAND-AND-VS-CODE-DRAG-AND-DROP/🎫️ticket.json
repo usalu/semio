@@ -1,0 +1,11 @@
+{
+  "title": "Implement Extract Command and VS Code Drag and Drop",
+  "emoji": "📤️",
+  "status": "closed",
+  "description": "Add extract command to repo CLI/GraphQL and implement drag and drop in VS Code extension codebase view",
+  "summary": "Added extract command to repo CLI and GraphQL, and implemented drag and drop (integrate/extract) in VS Code extension.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/259"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

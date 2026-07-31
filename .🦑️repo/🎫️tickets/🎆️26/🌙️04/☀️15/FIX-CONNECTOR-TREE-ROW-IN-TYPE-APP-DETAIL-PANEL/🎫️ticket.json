@@ -1,0 +1,11 @@
+{
+  "title": "Fix Connector Tree Row in Type App Detail Panel",
+  "status": "closed",
+  "description": "Fix connector tree rows in type and design app detail panels: wrong update API format, port-as-string vs object, legacy compatiblePorts on Connector, attribute.unit vs attribute.definition, commonPort object mismatch, and missing fields.",
+  "summary": "Fixed 6 bugs in connector tree rows. (1) ConnectorsListSectionForm: `{ id, diff }` → `{ connector: { guid: id }, diff }` to match ConnectorsDiffSchema. (2) Port read: removed legacy `typeof connector.port === 'string'` guard. (3) Port update: `{ port: value }` → `{ port: value ? { guid: value } : undefined }`. (4) Removed `compatiblePorts` from all Connector forms — that field is on Port not Connector. (5) ConnectorSectionForm: `attribute.unit` → `attribute.definition`. (6) ConnectorsMultipleSectionForm: `commonPort` extracted `.guid` and fixed update. Added `name`, `mandatory`, `maxChildren` fields with DE/EN translations. 199/199 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1329"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️e68e0d0c30f541dda2d00e16c3381389"]
+}

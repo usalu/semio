@@ -1,9 +1,0 @@
-{
-  "title": "Projektetage Drag Flow Pixel Offset Crash",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Fix crash when dragging dispositions in projektetage: isFlowPixelOffsetTransform reads width on undefined measuredNatural because registry.getRect returns undefined not null.",
-  "summary": "Fixed projektetage disposition drag crash after drag threshold.\n\nRoot cause: `useLayoutEffect` cleared the slide disposition registry when a transform was active, but `flowPixelOffset` used `measuredNatural !== null`, which is true for `undefined`. `isFlowPixelOffsetTransform` then read `measured.width` and threw.\n\nFix: keep last measured rect in the registry during flow transforms; guard `isFlowPixelOffsetTransform` when measured is missing; simplify the `flowPixelOffset` check. Added test for undefined measured. All 40 renderer tests pass.",
-  "goal": "🎯presentation",
-  "sessions": ["⚪af3180fe76b4421383745b2310753e91"]
-}

@@ -228,4 +228,4 @@ In every schema file:
 - `spatial/net/*` (only `AGENTS.md` present).
 - Cross-tech surfaces (`elements`, `coda`, `compose`).
 
-After the user confirms, work proceeds inside a ticket under `.repo/🎫/26/05/24/<slug>` with all intermediate logs and the fixture migration script kept there. Three delegated generalists in parallel are appropriate: (A) schemas + Expr + tests, (B) topology arrays + fixture migration + diff, (C) machine/display/commit/context restructure + downstream renderer & xstate adapter.
+After the user confirms, work proceeds inside a ticket under `.repo/🎫️/26/05/24/<slug>` with all intermediate logs and the fixture migration script kept there. Three delegated generalists in parallel are appropriate: (A) schemas + Expr + tests, (B) topology arrays + fixture migration + diff, (C) machine/display/commit/context restructure + downstream renderer & xstate adapter.

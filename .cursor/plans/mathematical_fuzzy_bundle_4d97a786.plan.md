@@ -27,7 +27,7 @@ isProject: false
 
 ## Goal and ticket
 
-- **Goal association:** `r2602/runningsketchpad` (same mathematical-framework wave as [CAUSAL-INFERENCE-FRAMEWORK-FOR-MATHEMATICAL-CRATES](.repo/🎫/26/07/19/CAUSAL-INFERENCE-FRAMEWORK-FOR-MATHEMATICAL-CRATES/ticket.json)).
+- **Goal association:** `r2602/runningsketchpad` (same mathematical-framework wave as [CAUSAL-INFERENCE-FRAMEWORK-FOR-MATHEMATICAL-CRATES](.repo/🎫️/26/07/19/CAUSAL-INFERENCE-FRAMEWORK-FOR-MATHEMATICAL-CRATES/ticket.json)).
 - On execution: `ticket_open` with title **Fuzzy Logic Mathematical Bundle**, emoji `🌫️`, client `cursor-chat`, llm `composer-2.5` (or current session model). Bind the plan id for archival on close.
 - No existing fuzzy ticket; create new (do not reopen causal).
 
@@ -45,7 +45,7 @@ One new package mirroring [mathematical/probability](mathematical/probability):
 | [mathematical/fuzzy/package.json](mathematical/fuzzy/package.json)   | nx script bridge                                            |
 
 
-Wire into root [Cargo.toml](Cargo.toml) `members` next to the other mathematical crates. Add launch entry `🧪test🧮mathematical-fuzzy` in [.vscode/launch.json](.vscode/launch.json) after `🧪test♾️mathematical-cas` (`order` ~391.77).
+Wire into root [Cargo.toml](Cargo.toml) `members` next to the other mathematical crates. Add launch entry `🧪️test🧮️mathematical-fuzzy` in [.vscode/launch.json](.vscode/launch.json) after `🧪️test♾️mathematical-cas` (`order` ~391.77).
 
 **Dependencies (only):** `mathematical_algebra`, `mathematical_random`, `serde` (derive), `thiserror`.  
 **Not used:** stub crates (`tabular` / `statistics` / `probability` / `causal`), and `neural/engine` (separate technology — ANFIS is implemented in-crate).
@@ -91,7 +91,7 @@ flowchart TB
 
 
 
-Single `lib.rs` organized as `// #region 🔖Name` sections (algebra/random style), not `pub mod` files.
+Single `lib.rs` organized as `// #region 🔖️Name` sections (algebra/random style), not `pub mod` files.
 
 ## Region / API checklist (feature-complete)
 
@@ -135,7 +135,7 @@ Typed builder covering the user’s fan example: learn “high” from sensor da
 
 ## Tests
 
-All in `// #region 🔖Tests` inside `lib.rs` (no new test files):
+All in `// #region 🔖️Tests` inside `lib.rs` (no new test files):
 
 - Fundamental: MF shapes, set operations, each inference engine on a 1–2 rule system, each defuzzifier, FCM toy 2-cluster, AHP/TOPSIS smoke, α-cut arithmetic.
 - `mod long`: ANFIS fit on a nonlinear target, evolving stream, GA/PSO improvement, hierarchical MIMO, type-2 FOU robustness check.

@@ -1,22 +1,22 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/Tree.stories.tsx
+// 🥼️ .storybook/stories/ui/Tree.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem, reactHostPort } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import type React from "react";
 import { expect, fireEvent, within } from "storybook/test";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// 🌳#region 📜Tree
+// 🌳️#region 📜️Tree
 const File = createIconComponent("file-text");
 const Folder = createIconComponent("folder");
 const Settings = createIconComponent("settings");
@@ -179,7 +179,7 @@ export const ControlTreeStory: Story = {
   render: () => <ControlTreeDemo />,
 };
 
-// #region ⏳Alternatives
+// #region ⏳️Alternatives
 
 const alternativesSections = [
   {
@@ -236,9 +236,9 @@ export const Alternatives: Story = {
   ),
 };
 
-// #endregion ⏳Alternatives
+// #endregion ⏳️Alternatives
 
-// #region 🧵DragAndDrop
+// #region 🧵️DragAndDrop
 
 const createStoryDataTransfer = () => {
   const data = new Map<string, string>();
@@ -344,6 +344,6 @@ export const DragAndDrop: Story = {
   },
 };
 
-// #endregion 🧵DragAndDrop
+// #endregion 🧵️DragAndDrop
 
-// #endregion 📜Tree
+// #endregion 📜️Tree

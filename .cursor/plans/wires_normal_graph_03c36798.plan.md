@@ -13,7 +13,7 @@ A mindmap is a normal directed graph, but WIRES currently renders through the **
 
 - `BoardHost` in [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (~~5200 lines) is self-contained and entirely handle-centric. `parse_fixture_v1` (~~3762) hard-fails without per-node `handles[]`; `edge_curve` (~3254) only resolves through handles; scene build draws handle markers; hit-test prioritizes handles; `delete_selection` cascades node→handles→edges.
 - `SceneDescriptorJson` ([infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) ~421) carries `handles` and edges reference handle ids.
-- The React layer [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) (~12.6k lines) is **not thin**: TS owns fixture parsing (`parsePuzzle2dFixture` ~1718, requires handles), kind catalogs (`#region 🔖Kinds`), theme probing (`#region 🎨ElementsUiPuzzle2dPaint`), declarative scene sync (`syncPuzzle2dScene` ~10586, binds edges to handle objects), and document observation (`#region 🔖DirectedGraphObservation`).
+- The React layer [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) (~12.6k lines) is **not thin**: TS owns fixture parsing (`parsePuzzle2dFixture` ~1718, requires handles), kind catalogs (`#region 🔖️Kinds`), theme probing (`#region 🎨️ElementsUiPuzzle2dPaint`), declarative scene sync (`syncPuzzle2dScene` ~10586, binds edges to handle objects), and document observation (`#region 🔖️DirectedGraphObservation`).
 - WIRES shoehorns this: [metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json) gives every topic a synthetic `:link` handle and connects edges handle→handle; [wires/play](reasoning/mindmap/wires/play/index.ts) boots the full puzzle 2d chrome via `PUZZLE_PLAY_ENTRY=wires`.
 
 ### Target
@@ -50,7 +50,7 @@ All graph logic and styling move to (or stay in) Rust; React only hosts the canv
 
 ### Phase 2 - Rust: normal mode in the host
 
-In [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (or lifted into [mathematical/graph/lib.rs](mathematical/graph/lib.rs) base under a `#region 🔖Host`):
+In [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (or lifted into [mathematical/graph/lib.rs](mathematical/graph/lib.rs) base under a `#region 🔖️Host`):
 
 - Add `GraphPortMode` field to `BoardHost`; default `Ported`.
 - `parse_fixture_v1`: accept `reasoning.mindmap.fixture/v1` (no `handles[]`, node-id edges) -> Normal; keep `puzzle.2d.fixture/v1` -> Ported. Edge endpoints store node ids in Normal.
@@ -63,7 +63,7 @@ In [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (or lifted into [mathematical/grap
 
 ### Phase 3 - Rust: WASM session for mindmap
 
-- Expose a Normal-mode session entry (e.g. `MindmapSession` or a `BoardSession` constructed with `GraphPortMode::Normal`) in the `#region 🔖WasmSession`, with `parseFixtureJson`/`syncDescriptorJson`/pointer/theme/catalog/events methods reused.
+- Expose a Normal-mode session entry (e.g. `MindmapSession` or a `BoardSession` constructed with `GraphPortMode::Normal`) in the `#region 🔖️WasmSession`, with `parseFixtureJson`/`syncDescriptorJson`/pointer/theme/catalog/events methods reused.
 - Build a Rust crate `reasoning/mindmap/rs` WASM target (or reuse puzzle 2d's pkg) so mindmap has its own bindings; keep `reasoning_mindmap_wires` as the kinds layer.
 
 ### Phase 4 - React: thin mindmap wrapper

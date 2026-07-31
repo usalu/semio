@@ -1,9 +1,0 @@
-{
-  "title": "Canonicalize Target Graphql Operation Fields",
-  "emoji": "🔗",
-  "status": "open",
-  "description": "Clean compose/graphql/target.schema.graphql operation field names so operation API names are action-first, e.g. createdDesign instead of designCreated.",
-  "summary": "Removed obsolete concrete operation scope types from compose/graphql/target.schema.graphql after Operation.scope was converted to Entity references. Also removed stale empty Warning and duplicate Error interfaces so the SDL remains valid.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪a1e3a60454d84391ba2f0dfb1bb9c240", "⚪febf1e57068544ea80ef9245c4a35a0e", "⚪9f41b4a0d5114ed4b806eed4ba1a96c8", "⚪b90df470b5024770ad6247236133e53d", "⚪0bef58d17c6845de91da5dacde9b3eca"]
-}

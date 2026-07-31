@@ -1,0 +1,172 @@
+W4b report — store + store_sync pack/spr storage flip (closes G5) + fleet-wide OpBinary
+bridge gap (extends W2's coverage)
+
+Landed per w3-w4-design.md's D6-D8 decisions and the design's ordered sequence (items 1-11),
+with one deliberate implementation deviation (D6-note, recorded below) and one large emergent
+scope addition (the OpBinary bridge sweep, sections 3 below) surfaced by the compiler once the
+storage flip forced every DocumentApp::Operation to actually satisfy OpBinary.
+
+=== 1. store/rs/lib.rs ===
+
+- DocumentCursor { applied_edit_ids, redo_edit_ids, checkpoint_id } + DocumentEnvelope.cursor
+  (serde-optional). OpsHeaderLine::Cursor variant (text grammar), print_ops_log emits it last,
+  replay_ops honors it (D6-note: fold initial_projection over cursor.applied_edit_ids only when
+  present; falls back to "every edit applied" otherwise — backward compatible).
+- print_document_spr/parse_document_spr: build/consume a typed protocol::HistoryLog with REAL
+  backwards/binary payloads/explicit meta/cursor (write_backwards_section: true). New mapper
+  helpers history_op_meta_from_operation_meta/operation_meta_from_history_op_meta (protocol::
+  UndoPolicy ordinal bridge — distinct from the existing semio_framework_core::UndoPolicy ordinal
+  helpers from W3, since OperationMeta.undo_policy is the OTHER kernel's UndoPolicy type; the two
+  will merge in the future kernel-unification wave).
+- Bug found+fixed during this wave: history_edit_from_edit originally wrapped EVERY edit.
+  operation_meta as Some(...) even when empty, but encode_edit requires metas.len()==ops.len()
+  when meta is Some — an externally-injected/hand-authored edit with empty operation_meta (valid,
+  since Edit.operation_meta has #[serde(default)]) would then fail to persist. Fixed: empty
+  operation_meta is now treated as absent (None), matching the "recompute via replay" contract.
+- DocumentPackFiles gains `spr: Vec<u8>`; print_document_pack now requires Operation: OpBinary
+  and fills spr via print_document_spr; parse_document_pack's signature flips from
+  (pack, ops: &str) to (pack, spr: &[u8]) and delegates entirely to parse_document_spr — this is
+  a breaking signature change (greenfield, no shim), see section 3/4 for the fleet-wide fallout.
+- DocumentCodec: print/parse fn-pointer types flip to the pack+spr seam; DocumentCodec::of gains
+  the OpBinary bound on Operation.
+- DocumentStore::new seeds applied_edit_ids/redo_edit_ids/current_checkpoint_id/current AND
+  local_actor_id from a persisted cursor when present (local_actor_id seeded from the tail
+  applied edit's actor — a gap found via the save/load/undo proof test: without it, undo on a
+  reloaded store hit VcsError::ForeignEdit because local_actor_id defaulted to None while the
+  edit's actor was Some("local")). New private sync_cursor() wired into bump() — the single
+  choke point keeping envelope.cursor in sync with live undo/redo state on every mutation.
+  set_state (used by set_envelope and checkout/switch/create-alternative) already calls bump()
+  at its tail, so it gets cursor-sync for free — no separate change needed there.
+- New store::empty_document_spr(doc_id, schema) -> Vec<u8>: encodes a bare edit-free HistoryLog,
+  for the "single .pack file dropped with no .spr sidecar" import scenario (found broken by the
+  flip in s/plugin's importStudioPackPayload handler — see section 4).
+- New tests (extending existing 🔖️TextFormatHelpers region only): ops_header_line_cursor_round_
+  trips_the_full_applied_and_redo_lists; document_text_round_trips_a_cursor_after_undo_then_
+  apply_interleaving (proves the D5 full-list rationale concretely); the save→load→undo PROOF
+  (save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position) — apply e1,e2 → undo →
+  print_document_pack → parse_document_pack → new store → projection==post-e1 →
+  redo restores e2 → undo twice reaches initial, assert_live_equals_replay after every step.
+  store: 74 -> 77 tests, all green.
+
+=== 2. store/sync/rs/lib.rs ===
+
+- FolderSqliteStorage schema flips to `document(id, schema, pack BLOB NOT NULL, spr BLOB NOT
+  NULL, updated_at)` — json column deleted (greenfield, dev DBs recreated); read/write collapse
+  to `read(id) -> Option<(Vec<u8>, Vec<u8>)>` / `write(id, schema, pack, spr)`.
+- FolderTextStorage: new spr_path(); read_pack returns DocumentPackFiles{pack, spr, ops} — a
+  present .pack with a missing .spr is a hard error (they are always written together); write_pack
+  writes all four files (.pack, .spr, .ops mirror, .<ext> dsl mirror).
+- FolderEndpoint::Sqlite now routes through store::document_codec exactly like ::Pack (was a raw
+  JSON passthrough before — the D6/D7 "pack+spr are authoritative, requires a registered codec"
+  rule now applies uniformly to both storage backends).
+- Test fallout fixed: two sqlite unit tests rewritten as pure (pack,spr) byte-blob tests (codec-
+  free, since FolderSqliteStorage itself is now schema-agnostic); folder_sqlite_storage_round_
+  trips_pack deleted as redundant (its "plain write must not clobber pack" semantic no longer
+  applies once there's only one write method). folder_text_storage_round_trips_{dsl_and_appends_
+  ops,pack}: rewritten to seed from a ZERO-edit envelope (no stale cursor) before using the
+  append_ops hot path for both edits — a live cursor pinned to an earlier edit count now
+  correctly CAPS the reconstructed projection at that count (this is the new cursor law working
+  correctly, not a bug); folder_text_storage_round_trips_pack additionally documents+verifies
+  that append_ops (text-only) does NOT affect read_pack/parse_document_pack (spr-first, never
+  reads .ops) — proven by asserting the pack path stays at the stale snapshot until a fresh
+  write_pack brings it current.
+  Two actor-level tests (folder_external_edit_delivers_remote_operations, fixtures_replay_
+  matches_expected_events) needed a registered demo/v1 codec (new ensure_demo_codec_registered()
+  helper, std::sync::Once-guarded) since FolderEndpoint::Sqlite now requires one; their
+  "out-of-band JSON injection" now round-trips through (codec.parse)/(codec.print) instead of
+  raw sqlite JSON strings.
+  New endpoint-level save→load→undo proof (folder_sqlite_storage_round_trips_undo_position_
+  through_pack_spr) closing the design's "endpoint-level" test ask.
+  store_sync: 18 -> 19 tests, all green.
+
+=== 3. Fleet-wide OpBinary bridge gap (emergent scope, not in the original design doc) ===
+
+Once print_document_pack/parse_document_pack/DocumentCodec::of required Operation: OpBinary,
+and DocumentApp::Operation's trait bound gained + OpBinary (framework/plugin/rs/lib.rs — purely
+additive, since every DslOps-derived op enum already has it since W2), the compiler surfaced
+every HAND-WRITTEN `impl OpText for X` that mirrors a DslOps-derived twin type but never got a
+matching OpBinary bridge. Fixed 17 occurrences of this exact pattern, each a 2-line forward
+(encode_op -> Twin::encode_op, decode_op -> Twin::decode_op, sometimes wrapped in an infallible
+or fallible from/to-dsl conversion already present for OpText):
+  shooting/rs (ShootingOperation -> ShootingOperationDsl)
+  animate/present/rs (PresentOperation -> PresentOperationDsl, via From/Into)
+  procedural/2d/rs, procedural/3d/rs (Procedural{2,3}dOperation -> ...Dsl, fallible conversion)
+  framework/product/os/core/rs (OsOperation -> OsOperationDsl, found during W3 already)
+  process/3d/rs (Process3dOperation -> Process3dOperationDsl)
+  infinite/board/port/directed/dag/rs (DagOperation -> DagOperationDsl)
+  trinity/ram/rs (TrinityGraphOperation -> TrinityGraphOperationDsl)
+  sequence/core/rs (SequenceOperation -> SequenceOperationDsl, fallible)
+  imperative/core/rs (ImperativeOperation -> ImperativeOperationDsl)
+  layout/rs (LayoutOperation -> LayoutOperationDsl)
+  flow/core/rs (FlowOperation -> FlowOperationDsl, fallible)
+  gis/plugin/rs (GisMapOperation -> GisMapOperationDsl)
+  mathematical/plugin/rs (MathOperation -> MathOperationDsl, fallible)
+Two occurrences of a DIFFERENT pattern — genuinely schema-less JSON escape-hatch types with no
+DslOps twin at all (documented as deliberate in their own OpText doc comments) — got a JSON-bytes
+OpBinary impl instead (serde_json::to_vec/from_slice, mirroring store::pack_rt's JSON-bridge
+treatment of DocumentPack for serde_json::Value, one level down at op-payload granularity):
+  compose/client/lib/rs (ComposeWireOperation — {kind, input: Value})
+  architect/program/rs (ProgramOperation — its own doc comment already called this an
+    "escape hatch... mirroring the same escape-hatch spirit the dsl engine's own serde_json::
+    Value/Shape::Value binding already uses")
+One GENERIC hand-written impl covering all 16 norm-family crates in one fix:
+  norm/core/rs (SetDocumentOperation<D> — single-variant whole-document-replace operation;
+    OpBinary encodes as format u8=1 + D::encode_pack() bytes, decodes via D::decode_pack(),
+    bounded on the same D: DocumentPack the OpText impl's D: DocumentDsl bound sits beside;
+    every norm family Document type gets both for free from one #[derive(dsl::DslDocument)]).
+Verified as FALSE POSITIVES (already derive DslOps directly, no mirror needed): s/rs's
+StudioOperation, s/plugin/rs's SHomeOperation — my initial grep audit flagged these but the
+compiler never did; confirmed correct on inspection.
+
+=== 4. Other fleet fallout from the pack/spr signature flip ===
+
+- framework/plugin/rs (VcsDocumentApp<A>): document_pack/load_document_pack updated for the new
+  print_document_pack/parse_document_pack signatures; load_document_pack now honors a persisted
+  cursor when present (was previously always marking every edit applied + dropping the redo
+  stack via set_envelope — switched to set_state with cursor-derived applied/redo, a real
+  correctness fix this wave's own change surfaced).
+- framework/product/os/core/rs: 3x missing `cursor: None` at OsEnvelope construction sites;
+  import_os_studio_from_pack's ops:&str param flipped to spr:&[u8]; StudioBackbonePort (an
+  independent hand-rolled FolderEndpoint-equivalent) got the identical Sqlite-codec-routing fix
+  applied to store_sync's FolderEndpoint, plus its File-variant read call fixed to pass spr.
+- s/rs (StudioStore/materialize_studio_projection): 2x missing `cursor: None`.
+- s/plugin/rs: importStudioPackPayload's single-file-drop path (no .spr sidecar) now builds a
+  bare spr via the new store::empty_document_spr helper instead of passing an empty string.
+
+=== Verification ===
+
+- cargo check --workspace --all-targets: exit 0, zero errors, after 8 rounds of iterative fixing
+  (documented above) — confirmed via 8 successive full-workspace check runs during this wave,
+  final one clean.
+- Full test run across all 32 touched crates (store, store_sync, semio-framework-os, s_studio,
+  s-plugin, compose, shooting[-plugin], animate[_present|-plugin], procedural[-plugin|_2d|_3d],
+  semio-framework-plugin, norm-plugin, process[-plugin|_3d], dag-plugin,
+  infinite_board_port_directed_dag, trinity[-plugin|_ram], sequence[-plugin|_core],
+  imperative[-plugin|_core], layout[-plugin|_rs], architect[-plugin|_program],
+  flow[-plugin|_core], gis-plugin, mathematical-plugin): every crate green EXCEPT two confirmed
+  pre-existing/unrelated failure clusters, neither touched by this wave's changes:
+    (a) compose: 12 failures, all in GraphQL kit-mutation tests (createTag/createConcept/
+        createType/createDesign/createQuality roundtrips, kit VFS, mutation-visibility) — none
+        reference OpBinary/encode_op/decode_op/pack/spr; compose/client/lib/rs/lib.rs shows signs
+        of active concurrent development (932 compiler warnings); the ComposeWireOperation
+        OpBinary impl added this wave is purely additive (zero modification to existing logic),
+        so cannot be the cause. Sample failure: "mutation not visible on re-read; before=0
+        after=0" — a systemic kit-mutation-pipeline issue, not a storage-format issue.
+    (b) gis-plugin: 3 failures, all panicking at ui/asset/icon/generated/icon_name.rs with
+        "invalid catalog icon name" — the icon-catalog generation bug already flagged as a
+        pre-existing, unrelated, repo-wide issue in this session's own earlier ticket-history
+        read (EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY's closing report cites the identical bug).
+  Neither cluster is fixed here — out of scope, and fixing them risks colliding with whatever
+  concurrent session owns that code.
+
+Cross-wave laws exercised: law 4 (composed/persisted backwards — HistoryEdit.backwards now
+round-trips through the authoritative .spr, verified by the save→load→undo proof); law 5 (live
+== replay, asserted after every step of the save→load→undo proof, both in store and in
+store_sync's endpoint-level proof); law 2 (op text/binary equivalence, now transitively verified
+for 17 more operation types via their DslOps-derived twins).
+
+W4 (protocol_history backwards+cursor persistence + store/store_sync pack/spr storage flip) is
+now COMPLETE. Next: W5 (binary causal envelopes + wire) per the approved plan at
+/Users/ueli/.claude/plans/steady-cuddling-dijkstra.md — a single-sitting wave per the plan's own
+risk note (protocol_causal type reshape + protocol_wire codec rewrite + TS twin + fixture
+regeneration must land together).

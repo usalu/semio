@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-community"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_community"
+crate-type = ["rlib"]
+path = "../../../../🕸️graph/🏘️community/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../🕸️graph/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_centrality = { path = "../../../../🕸️graph/🎯️centrality/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-centrality" }
+mathematical_graph_cliques = { path = "../../../../🕸️graph/🔺️cliques/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-cliques" }
+mathematical_random = { path = "../../../../🎲️random/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-random" }

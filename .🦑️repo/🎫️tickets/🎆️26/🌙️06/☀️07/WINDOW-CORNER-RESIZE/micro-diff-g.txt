@@ -1,0 +1,2204 @@
+diff --git a/cad/js/renderer/index.tsx b/cad/js/renderer/index.tsx
+index 6e971b0c0..c8a6d8e23 100644
+--- a/cad/js/renderer/index.tsx
++++ b/cad/js/renderer/index.tsx
+@@ -1046,6 +1046,19 @@ export function collectGeometryEdgeSegments(buckets: ReturnType<typeof geometryB
+   return out;
+ }
+ 
++/** @emoji 📐️ B-rep edge segments limited to revealed factory-geometry members. */
++export function collectGeometryEdgeSegmentsForMembers(
++  buckets: ReturnType<typeof geometryBuckets>,
++  revealedMemberKeys: ReadonlySet<string>,
++): readonly (readonly [Vec3, Vec3])[] {
++  const out: (readonly [Vec3, Vec3])[] = [];
++  for (const edge of geometryRecords(buckets.edges)) {
++    if (!revealedMemberKeys.has(`edge:${edge.id}`)) continue;
++    out.push(...polylineWireSegments(geometryEdgePoints(buckets.vertices, edge)));
++  }
++  return out;
++}
++
+ function modelObjectPickPoints(model: Model, row: SpatialObjectRecord): readonly Vec3[] {
+   const buckets = geometryBuckets(model);
+   const cellRef = Object.values(row.primitives)[0];
+@@ -1112,6 +1125,40 @@ export function buildGeometryTypologyIndex(model: Model, modelDefinitionId: stri
+   return out;
+ }
+ 
++/** @emoji 🧭️ Maps factory geometry member keys (`vertex:v0`, `solid:s0`, …) to owning object ids for reveal gating. */
++export function buildGeometryObjectIndex(model: Model, modelDefinitionId: string): ReadonlyMap<string, string> {
++  const buckets = geometryBuckets(model);
++  const out = new Map<string, string>();
++  const mapObjectPrimitive = (objectId: string, primitiveRef: string): void => {
++    const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
++    out.set(`${kind}:${primitiveRef}`, objectId);
++    if (kind === "solid") {
++      out.set(`object:${primitiveRef}`, objectId);
++      for (const key of collectSolidPrimitiveMemberIds(buckets, String(primitiveRef))) out.set(key, objectId);
++    }
++  };
++  for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
++    const objectId = String(row.id);
++    out.set(`object:${objectId}`, objectId);
++    for (const [, primitiveRef] of objectPrimitiveEntries(row)) mapObjectPrimitive(objectId, String(primitiveRef));
++  }
++  for (const solid of geometryRecords(buckets.solids)) {
++    const solidId = solid.id;
++    if (out.has(`solid:${solidId}`)) continue;
++    out.set(`solid:${solidId}`, solidId);
++    out.set(`object:${solidId}`, solidId);
++    for (const key of collectSolidPrimitiveMemberIds(buckets, solidId)) {
++      if (!out.has(key)) out.set(key, solidId);
++    }
++  }
++  for (const anchor of geometryRecords(buckets.anchors)) {
++    const attachment = anchor.attachment;
++    const mapped = out.get(`${attachment.kind}:${attachment.id}`);
++    if (mapped) out.set(`anchor:${anchor.id}`, mapped);
++  }
++  return out;
++}
++
+ function createModelObjectSpatialPickTargets(model: Model, modelDefinitionId: string): readonly SpatialPickTarget[] {
+   const targets: SpatialPickTarget[] = [];
+   for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
+@@ -2409,6 +2456,38 @@ export function spatialHoverKeysMatch(left: string | null | undefined, right: st
+   return spatialHoverKeyAliases(left).has(right);
+ }
+ 
++/** @emoji 🪪️ Stable factory-geometry member key for object-reveal lookup. */
++export function spatialPickTargetMemberKey(target: SpatialPickTarget): string {
++  if (target.kind === "object" && !target.geometryKind) return `object:${target.id}`;
++  const geometryKind = target.geometryKind ?? kernelGeometryKindForObjectPick(target.kind as SpatialGeometryPickTargetKind, target.geometryKind);
++  return `${geometryKind}:${target.id}`;
++}
++
++/** @emoji 👁️ Object ids whose factory primitives should draw (hover/selection on object or its topology). */
++export function revealedObjectIdsFromPickKeys(
++  objectIndex: ReadonlyMap<string, string>,
++  hoveredTargetKey: string | null | undefined,
++  selectedTargetKeys: ReadonlySet<string> = new Set(),
++): ReadonlySet<string> {
++  const revealed = new Set<string>();
++  const consider = (key: string | null | undefined): void => {
++    if (!key) return;
++    for (const alias of spatialHoverKeyAliases(key)) {
++      const owner = objectIndex.get(alias);
++      if (owner) revealed.add(owner);
++    }
++  };
++  consider(hoveredTargetKey);
++  for (const key of selectedTargetKeys) consider(key);
++  return revealed;
++}
++
++function spatialPickTargetObjectRevealed(target: SpatialPickTarget, objectIndex: ReadonlyMap<string, string>, revealedObjectIds: ReadonlySet<string>): boolean {
++  if (target.kind === "object" && !target.geometryKind) return true;
++  const ownerId = objectIndex.get(spatialPickTargetMemberKey(target));
++  return ownerId !== undefined && revealedObjectIds.has(ownerId);
++}
++
+ /** @emoji 🖱️ Maps a document {@link SelectionTarget} to the canvas hover key (typology object when possible). */
+ export function canvasHoverKeyForSelectionTarget(model: Model, modelDefinitionId: string, target: SelectionTarget): string {
+   if (target.kind === "object") return selectionTargetHoverKey(target);
+@@ -2460,17 +2539,23 @@ export function resolveSpatialPickTargetsToRender(
+   filterKindToggles: SpatialPickKindToggles = {},
+   pinnedTargetKeys: ReadonlySet<string> = new Set(),
+   flagsForId: (entityId: string) => SpatialEntityFlags = () => ({}),
++  objectIndex?: ReadonlyMap<string, string>,
++  revealedObjectIds?: ReadonlySet<string>,
+ ): SpatialPickTarget[] {
+   const pinnedKeys = pinnedPickTargetKeys(pinnedTargetKeys);
+   const enabledTargets = filterSpatialPickTargetsForVisibility(viewTargets, filterKindToggles);
+   const seen = new Set<string>();
+   const out: SpatialPickTarget[] = [];
++  const objectRevealActive = objectIndex !== undefined && revealedObjectIds !== undefined;
+   for (const target of enabledTargets) {
+     const key = spatialPickTargetKey(target);
+     const flags = flagsForId(target.id);
+     if (flags.hidden === true && !pinnedKeys.has(key)) {
+       continue;
+     }
++    if (objectRevealActive && !pinnedKeys.has(key) && !spatialPickTargetObjectRevealed(target, objectIndex, revealedObjectIds)) {
++      continue;
++    }
+     if (seen.has(key)) continue;
+     out.push(target);
+     seen.add(key);
+@@ -2579,11 +2664,21 @@ function SpatialPickTargetNode({
+ }
+ 
+ /** @emoji 🧵️ Draws all geometry edges for imported factory geometry (one batched `lineSegments`). */
+-function GeometryFactoryWireframeLayer({ geometry, visible = true }: { readonly geometry?: SpatialPickGeometry | null; readonly visible?: boolean }): ReactNode {
++function GeometryFactoryWireframeLayer({
++  geometry,
++  visible = true,
++  revealedMemberKeys,
++}: {
++  readonly geometry?: SpatialPickGeometry | null;
++  readonly visible?: boolean;
++  readonly revealedMemberKeys?: ReadonlySet<string> | null;
++}): ReactNode {
+   const segments = reactHostPort.useMemo(() => {
+     if (!geometry) return [] as readonly (readonly [Vec3, Vec3])[];
+-    return collectGeometryEdgeSegments(geometryBuckets(geometry));
+-  }, [geometry]);
++    const buckets = geometryBuckets(geometry);
++    if (revealedMemberKeys === null || revealedMemberKeys === undefined) return collectGeometryEdgeSegments(buckets);
++    return collectGeometryEdgeSegmentsForMembers(buckets, revealedMemberKeys);
++  }, [geometry, revealedMemberKeys]);
+   const edgeGeometry = reactHostPort.useMemo(() => {
+     if (!segments.length) return null;
+     const pos = new Float32Array(segments.length * 6);
+@@ -2644,8 +2739,12 @@ export function SpatialPickGeometryLayer({
+ }): ReactNode {
+   const modelRevision = geometry && typeof geometry === "object" && "revision" in geometry ? Number((geometry as { revision?: unknown }).revision) : 0;
+   const resolvedEntityFlagsForId = reactHostPort.useCallback(
+-    (entityId: string) => entityFlagsForId?.(entityId) ?? (geometry && typeof geometry === "object" && "metadata" in geometry ? spatialEntityFlagsForModelEntity(geometry as Model, entityId) : {}),
+-    [entityFlagsForId, geometry, modelRevision],
++    (entityId: string) =>
++      entityFlagsForId?.(entityId) ??
++      (geometry && typeof geometry === "object" && "metadata" in geometry
++        ? resolveSpatialEntityFlags(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId)
++        : {}),
++    [activeModelDefinitionId, entityFlagsForId, geometry, modelRevision],
+   );
+   const targets = reactHostPort.useMemo(() => createSpatialPickTargets(geometry, activeModelDefinitionId), [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
+   const viewTargets = reactHostPort.useMemo(() => filterSpatialPickTargetsForActiveView(targets, activeModelDefinitionId ?? null), [targets, activeModelDefinitionId]);
+@@ -2656,9 +2755,18 @@ export function SpatialPickGeometryLayer({
+     selectedTargetKeys?.forEach((key) => keys.add(key));
+     return keys;
+   }, [hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
++  const objectIndex = reactHostPort.useMemo(() => {
++    if (!geometry) return new Map<string, string>();
++    const model = geometry instanceof Model ? geometry : parseModelJson(geometry as ModelJson);
++    return model ? buildGeometryObjectIndex(model, activeModelDefinitionId ?? defaultModelDefinitionId()) : new Map<string, string>();
++  }, [geometry, modelRevision, modelDefinitionRevision, activeModelDefinitionId]);
++  const revealedObjectIds = reactHostPort.useMemo(
++    () => revealedObjectIdsFromPickKeys(objectIndex, hoveredTargetKey, pinnedTargetKeys),
++    [objectIndex, hoveredTargetKey, pinnedTargetKeys],
++  );
+   const renderedTargets = reactHostPort.useMemo(() => {
+-    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId);
+-  }, [viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId]);
++    return resolveSpatialPickTargetsToRender(viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId, objectIndex, revealedObjectIds);
++  }, [viewTargets, filterKindToggles, pinnedTargetKeys, resolvedEntityFlagsForId, objectIndex, revealedObjectIds]);
+   const selectableTargets = reactHostPort.useMemo(
+     () => filterSpatialPickTargetsForEntityFlags(filterSpatialPickTargets(viewTargets, selectionAccept, selectionKindToggles), resolvedEntityFlagsForId),
+     [viewTargets, selectionAccept, selectionKindToggles, resolvedEntityFlagsForId],
+@@ -2855,6 +2963,87 @@ export function meshTransferOrigin(mesh: MeshTransfer): Vec3 {
+   return boundsFromMeshTransfers([mesh])?.center ?? [0, 0, 0];
+ }
+ 
++/** @emoji 👁️ Options for object-scoped committed mesh visibility. */
++export interface CommittedMeshVisibilityOptions {
++  readonly flagsForId?: (entityId: string) => SpatialEntityFlags;
++  readonly typologyToggles?: SpatialTypologyToggles;
++  readonly filterKindToggles?: SpatialPickKindToggles;
++}
++
++function collectVisibleSolidRefsForObject(
++  model: Model,
++  row: SpatialObjectRecord,
++  flagsForId: (entityId: string) => SpatialEntityFlags,
++  out: Set<string>,
++): void {
++  for (const [, primitiveRef] of objectPrimitiveEntries(row)) {
++    if (resolvePrimitiveRefKind(model, primitiveRef) !== "solid") continue;
++    const solidId = String(primitiveRef);
++    if (flagsForId(solidId).hidden === true) continue;
++    out.add(solidId);
++  }
++}
++
++/** @emoji 👁️ Solid ids eligible for committed mesh draw under a model definition (object-scoped). */
++export function visibleSolidRefsForModelDefinition(
++  model: Model,
++  modelDefinitionId: string,
++  options: CommittedMeshVisibilityOptions = {},
++): ReadonlySet<string> {
++  const flagsForId = options.flagsForId ?? (() => ({}));
++  const typologyToggles = options.typologyToggles ?? {};
++  const objectVisible = options.filterKindToggles?.object !== false;
++  const scoped = listModelObjectsForModelDefinition(model, modelDefinitionId);
++  const out = new Set<string>();
++  if (scoped.length > 0) {
++    if (!objectVisible) return out;
++    for (const row of scoped) {
++      const objectId = String(row.id);
++      if (flagsForId(objectId).hidden === true) continue;
++      if (typologyToggles[row.typology] === false) continue;
++      collectVisibleSolidRefsForObject(model, row, flagsForId, out);
++    }
++    return out;
++  }
++  if (!isShapeModelDefinition(modelDefinitionId)) return out;
++  if (!objectVisible) return out;
++  for (const solidId of Object.keys(model.solids)) {
++    if (flagsForId(solidId).hidden === true) continue;
++    out.add(solidId);
++  }
++  return out;
++}
++
++/** @emoji 👁️ Filters tessellated committed meshes to visible object-owned solids. */
++export function filterCommittedMeshesForModelDefinition(
++  model: Model,
++  modelDefinitionId: string,
++  meshes: readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[],
++  options: CommittedMeshVisibilityOptions = {},
++): readonly { readonly solid: SolidRef; readonly mesh: MeshTransfer }[] {
++  const allowed = visibleSolidRefsForModelDefinition(model, modelDefinitionId, options);
++  if (allowed.size === 0) return [];
++  return meshes.filter((row) => allowed.has(String(row.solid)));
++}
++
++/** @emoji 👁️ Resolves hide/lock flags including object ownership for factory geometry members. */
++export function resolveSpatialEntityFlags(model: Model, modelDefinitionId: string, entityId: string): SpatialEntityFlags {
++  const direct = model.getEntityFlags(entityId);
++  if (direct.hidden === true || direct.locked === true) return direct;
++  const objectIndex = buildGeometryObjectIndex(model, modelDefinitionId);
++  const ownerId =
++    objectIndex.get(`object:${entityId}`) ??
++    objectIndex.get(`solid:${entityId}`) ??
++    objectIndex.get(`face:${entityId}`) ??
++    objectIndex.get(`edge:${entityId}`) ??
++    objectIndex.get(`vertex:${entityId}`) ??
++    objectIndex.get(`anchor:${entityId}`);
++  if (!ownerId) return direct;
++  const ownerFlags = model.getEntityFlags(ownerId);
++  if (ownerFlags.hidden !== true && ownerFlags.locked !== true) return direct;
++  return { ...direct, ...(ownerFlags.hidden === true ? { hidden: true } : {}), ...(ownerFlags.locked === true ? { locked: true } : {}) };
++}
++
+ /** @emoji 🧊️ Builds a Three.js `BufferGeometry` from a kernel `MeshTransfer` (face groups preserved). */
+ export function buildBufferGeometryFromMeshTransfer(data: MeshTransfer): THREE.BufferGeometry {
+   const geo = new THREE.BufferGeometry();
+@@ -3433,6 +3622,26 @@ export function InteractionSpatialView({
+   );
+   const scenePickGeometry = geometry ?? pickGeometryProp;
+   const pickGeometryRevision = scenePickGeometry && typeof scenePickGeometry === "object" && "revision" in scenePickGeometry ? Number((scenePickGeometry as { revision?: unknown }).revision) : 0;
++  const objectIndex = reactHostPort.useMemo(() => {
++    if (!scenePickGeometry) return new Map<string, string>();
++    const model = scenePickGeometry instanceof Model ? scenePickGeometry : parseModelJson(scenePickGeometry as ModelJson);
++    return model ? buildGeometryObjectIndex(model, activeModelDefinitionId ?? defaultModelDefinitionId()) : new Map<string, string>();
++  }, [scenePickGeometry, geometryRevision, modelDefinitionRevision, activeModelDefinitionId]);
++  const revealedObjectIds = reactHostPort.useMemo(() => {
++    const pinned = new Set<string>();
++    if (hoveredTargetKey) pinned.add(hoveredTargetKey);
++    if (selectedTargetKey) pinned.add(selectedTargetKey);
++    selectedTargetKeys?.forEach((key) => pinned.add(key));
++    return revealedObjectIdsFromPickKeys(objectIndex, hoveredTargetKey, pinned);
++  }, [objectIndex, hoveredTargetKey, selectedTargetKey, selectedTargetKeys]);
++  const revealedMemberKeys = reactHostPort.useMemo(() => {
++    if (revealedObjectIds.size === 0) return new Set<string>();
++    const keys = new Set<string>();
++    for (const [memberKey, ownerId] of objectIndex) {
++      if (revealedObjectIds.has(ownerId)) keys.add(memberKey);
++    }
++    return keys;
++  }, [objectIndex, revealedObjectIds]);
+   const styleForSolid = reactHostPort.useMemo(() => {
+     if (!geometry || typeof geometry !== "object" || !("objects" in geometry)) return undefined;
+     return createSolidTypologyStyleResolver(geometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId());
+@@ -3502,7 +3711,7 @@ export function InteractionSpatialView({
+           />
+         </WorldLayer>
+         <WorldLayer order={20} name="cad.factory-wireframe">
+-          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} />
++          <GeometryFactoryWireframeLayer geometry={scenePickGeometry} visible={sceneVisibility.showFactoryWireframe} revealedMemberKeys={revealedMemberKeys} />
+         </WorldLayer>
+         <WorldLayer order={30} name="cad.pick">
+           {showPickLayer ? (
+@@ -4439,7 +4648,6 @@ export function InteractionRepl({
+   const [selectionPrimitiveToggles, setSelectionPrimitiveToggles] = useHostState(selectionPrimitiveTogglesProp, onSelectionPrimitiveTogglesChange, () => chromeDefaults.selectionPrimitiveToggles);
+   const [activeModelDefinitionId, setActiveModelDefinitionId] = useHostState(activeModelDefinitionIdProp, onActiveModelDefinitionIdChange, () => chromeDefaults.activeModelDefinitionId);
+   const mdIdForView = activeModelDefinitionId ?? defaultModelDefinitionId();
+-  const committedMeshesForView = reactHostPort.useMemo(() => (modelDefinitionUsesGeometryPicking(mdIdForView) ? committedMeshes : []), [committedMeshes, mdIdForView]);
+   const [selectionMethod, setSelectionMethod] = useHostState(selectionMethodProp, onSelectionMethodChange, () => chromeDefaults.selectionMethod);
+   const [modelDefinitionRevision, setModelDefinitionRevision] = useHostState(modelDefinitionRevisionProp, onModelDefinitionRevisionChange, () => chromeDefaults.modelDefinitionRevision);
+   const modelDefinitions = reactHostPort.useMemo(() => listModelDefinitionManifests(), []);
+@@ -4508,9 +4716,20 @@ export function InteractionRepl({
+     [activeModelDefinitionId, filterPrimitiveToggles],
+   );
+   const entityFlagsForId = reactHostPort.useCallback(
+-    (entityId: string) => (pickSourceGeometry && typeof pickSourceGeometry === "object" && "metadata" in pickSourceGeometry ? spatialEntityFlagsForModelEntity(pickSourceGeometry as Model, entityId) : {}),
+-    [pickSourceGeometry, pickSourceRevision],
++    (entityId: string) =>
++      pickSourceGeometry && typeof pickSourceGeometry === "object" && "metadata" in pickSourceGeometry
++        ? resolveSpatialEntityFlags(pickSourceGeometry as Model, activeModelDefinitionId ?? defaultModelDefinitionId(), entityId)
++        : {},
++    [activeModelDefinitionId, pickSourceGeometry, pickSourceRevision],
+   );
++  const committedMeshesForView = reactHostPort.useMemo(() => {
++    if (!modelDefinitionUsesGeometryPicking(mdIdForView)) return [];
++    return filterCommittedMeshesForModelDefinition(gumballPreviewModel, mdIdForView, committedMeshes, {
++      flagsForId: entityFlagsForId,
++      typologyToggles: filterTypologyToggles,
++      filterKindToggles: sceneKindToggles,
++    });
++  }, [committedMeshes, entityFlagsForId, filterTypologyToggles, gumballPreviewModel, mdIdForView, sceneKindToggles]);
+   const selectablePickTargets = reactHostPort.useMemo(() => {
+     const filterPrimitives = filterSpatialPickTargetsForPrimitiveToggles(visiblePickTargets, selectionPrimitiveToggles);
+     const typologyFiltered = filterSpatialPickTargetsForTypologyToggles(filterPrimitives, selectionTypologyToggles, activeTypologyIds);
+@@ -6856,6 +7075,38 @@ if (import.meta.vitest) {
+       expect(resolveSpatialPickTargetsToRender(targets, {}).map(spatialPickTargetKey).sort()).toEqual(["edge:e0", "vertex:v0"]);
+     });
+ 
++    it("resolveSpatialPickTargetsToRender gates factory primitives until their object is revealed", () => {
++      const model = new Model();
++      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
++      const solidId = Object.keys(model.solids)[0]!;
++      model.objects["box-obj"] = {
++        id: "box-obj" as ObjectRef,
++        typology: "spatial.shape.primitive.box" as const,
++        primitives: { solid: solidId },
++      };
++      const objectIndex = buildGeometryObjectIndex(model, defaultModelDefinitionId());
++      const targets = createSpatialPickTargets(model, defaultModelDefinitionId());
++      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), () => ({}), objectIndex, new Set()).map(spatialPickTargetKey)).toEqual([]);
++      const revealed = revealedObjectIdsFromPickKeys(objectIndex, `object:box-obj`, new Set());
++      expect(revealed.has("box-obj")).toBe(true);
++      expect(resolveSpatialPickTargetsToRender(targets, {}, new Set(), () => ({}), objectIndex, revealed).some((row) => row.kind === "vertex")).toBe(true);
++    });
++
++    it("revealedObjectIdsFromPickKeys expands solid and member picks to the owning object", () => {
++      const model = new Model();
++      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("box")));
++      const solidId = Object.keys(model.solids)[0]!;
++      const vertexId = Object.keys(model.vertices)[0]!;
++      model.objects["box-obj"] = {
++        id: "box-obj" as ObjectRef,
++        typology: "spatial.shape.primitive.box" as const,
++        primitives: { solid: solidId },
++      };
++      const objectIndex = buildGeometryObjectIndex(model, defaultModelDefinitionId());
++      expect([...revealedObjectIdsFromPickKeys(objectIndex, `vertex:${vertexId}`, new Set())]).toEqual(["box-obj"]);
++      expect([...revealedObjectIdsFromPickKeys(objectIndex, `object:${solidId}`, new Set())]).toEqual(["box-obj"]);
++    });
++
+     it("spatialSceneColors exposes a single product-aligned palette", () => {
+       resetSpatialSceneColorCache();
+       const palette = spatialSceneColors();
+@@ -6866,6 +7117,44 @@ if (import.meta.vitest) {
+       resetSpatialSceneColorCache();
+     });
+ 
++    it("visibleSolidRefsForModelDefinition scopes building solids to visible objects only", () => {
++      const model = new Model();
++      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
++      applyModelDiff(model, M.boxModelDiff({ cornerA: [2, 0, 0], cornerB: [3, 1, 0], height: 1 }, solidRef("solid-b")));
++      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: "solid-a" } };
++      model.objects["obj-b"] = { id: "obj-b" as ObjectRef, typology: "building.building.beam", primitives: { solid: "solid-b" } };
++      model.objects["orphan"] = { id: "orphan" as ObjectRef, typology: "spatial.shape.kernel.solid", primitives: { solid: "solid-a" } };
++      const flagsForId = (id: string) => model.getEntityFlags(id);
++      expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })].sort()).toEqual(["solid-a", "solid-b"]);
++      model.setEntityFlag("obj-a", "hidden", true);
++      expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })].sort()).toEqual(["solid-b"]);
++      model.setEntityFlag("obj-b", "hidden", true);
++      expect([...visibleSolidRefsForModelDefinition(model, "aec.building", { flagsForId })]).toEqual([]);
++    });
++
++    it("filterCommittedMeshesForModelDefinition drops meshes when all objects are hidden", () => {
++      const model = new Model();
++      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
++      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: "solid-a" } };
++      model.setEntityFlag("obj-a", "hidden", true);
++      const mesh: MeshTransfer = { position: [0, 0, 0, 1, 0, 0, 0, 1, 0], normal: [0, 0, 0, 0, 0, 0, 0, 0, 0], index: [0, 1, 2], edges: [], faceGroups: [], faceInfos: [] };
++      const filtered = filterCommittedMeshesForModelDefinition(model, "aec.building", [{ solid: solidRef("solid-a"), mesh }], {
++        flagsForId: (id) => model.getEntityFlags(id),
++      });
++      expect(filtered).toEqual([]);
++    });
++
++    it("resolveSpatialEntityFlags inherits hidden state from owning object", () => {
++      const model = new Model();
++      applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solidRef("solid-a")));
++      const solidId = Object.keys(model.solids)[0]!;
++      const faceId = Object.keys(model.faces)[0]!;
++      model.objects["obj-a"] = { id: "obj-a" as ObjectRef, typology: "building.building.column", primitives: { solid: solidId } };
++      model.setEntityFlag("obj-a", "hidden", true);
++      expect(resolveSpatialEntityFlags(model, "aec.building", faceId).hidden).toBe(true);
++      expect(resolveSpatialEntityFlags(model, "aec.building", solidId).hidden).toBe(true);
++    });
++
+     it("typologyStyleToMaterialProps and typologyStyleCacheKey reflect resolved style", () => {
+       const style = resolveTypologyStyle("structure.structure.onewayreinforcedconcreteslab");
+       const props = typologyStyleToMaterialProps(style);
+diff --git a/cad/js/renderer/play/index.tsx b/cad/js/renderer/play/index.tsx
+index 260cbe5c2..5f7a2e3ef 100644
+--- a/cad/js/renderer/play/index.tsx
++++ b/cad/js/renderer/play/index.tsx
+@@ -483,14 +483,16 @@ export function buildCadPlayDocumentSections(
+       items: objectItems.length ? objectItems : [{ id: `cad-play-document.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
+     });
+   }
+-  const modelSpaceRoot: TreeDataItem = {
+-    id: "cad-play-document.modelspace",
+-    label: "ModelSpace",
+-    defaultOpen: true,
+-    items: modelBranches.length ? modelBranches : [{ id: "cad-play-document.modelspace.empty", label: "(empty)" }],
+-  };
+   return {
+-    sections: [{ id: "cad-play-document.root", defaultOpen: true, items: [modelSpaceRoot] }],
++    sections: modelBranches.length
++      ? modelBranches.map((branch) => ({
++          id: branch.id,
++          label: branch.label,
++          description: branch.description,
++          defaultOpen: branch.defaultOpen,
++          items: branch.items ?? [],
++        }))
++      : [{ id: "cad-play-document.empty", label: "ModelSpace", defaultOpen: true, items: [{ id: "cad-play-document.empty.msg", label: "(empty)" }] }],
+     highlightKeyToItemIds,
+   };
+ }
+@@ -1287,8 +1289,8 @@ function sanitizeModelDefinitionFileStem(modelDefinitionId: string): string {
+ function modelsFromCadJson(json: unknown): Record<string, Model> {
+   const bundle = json && typeof json === "object" ? (json as SpatialExchangeBundle) : null;
+   const modelSpace = parseModelSpaceJson(bundle?.modelSpace ?? json);
+-  if (modelSpace) return ensureCadPlayQuadModels(recordFromModelSpace(modelSpace));
+-  return ensureCadPlayQuadModels({
++  if (modelSpace) return ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace));
++  return ensurePlayQuadModelSlots({
+     [defaultModelDefinitionId()]: parseModelJson(bundle?.model ?? json) ?? new Model(),
+   });
+ }
+@@ -1350,14 +1352,17 @@ function ensureDerivedModelInSpace(models: Readonly<Record<string, Model>>, defi
+   return withShape;
+ }
+ 
+-/** @emoji 🌌️ Ensures play quad model slots exist without running heavy derive transforms. */
++/** @emoji 🌌️ Ensures play quad model slots exist without running derive transforms. */
+ export function ensurePlayQuadModelSlots(models: Readonly<Record<string, Model>>): Record<string, Model> {
+   const withShape = ensurePlayShapeModel(models);
+-  if (withShape[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]) return withShape;
+-  return { ...withShape, [CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]: new Model() };
++  let next = { ...withShape };
++  for (const row of CAD_PLAY_PANE_SPECS) {
++    if (!next[row.modelDefinitionId]) next[row.modelDefinitionId] = new Model();
++  }
++  return next;
+ }
+ 
+-/** @emoji 🌌️ Ensures all four CAD play quad models exist and stay derived from shape. */
++/** @emoji 🌌️ Derives missing play quad models from linked sources (explicit transfer toolbar only). */
+ export function ensureCadPlayQuadModels(models: Readonly<Record<string, Model>>): Record<string, Model> {
+   let next = ensurePlayQuadModelSlots(models);
+   next = ensureDerivedModelInSpace(next, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID);
+@@ -1370,14 +1375,12 @@ function emptyPlayModels(): Record<string, Model> {
+   return ensurePlayQuadModelSlots({});
+ }
+ 
+-function pickShapeForModelDefinition(models: Readonly<Record<string, Model>>, activeModelDefinitionId: string, liveModel: Model): Model {
+-  if (isShapeModelDefinition(activeModelDefinitionId)) {
++/** @emoji 🧭️ Resolves one pane's geometry without falling back to spatial.shape. */
++export function cadPlayPaneGeometry(models: Readonly<Record<string, Model>>, modelDefinitionId: string, liveModel: Model): Model {
++  if (isShapeModelDefinition(modelDefinitionId)) {
+     return models[defaultModelDefinitionId()] ?? liveModel;
+   }
+-  const scoped = models[activeModelDefinitionId];
+-  if (scoped && listModelObjectsForModelDefinition(scoped, activeModelDefinitionId).length > 0) return scoped;
+-  if (scoped && modelHasCommittedSolidsForDisplay(scoped)) return scoped;
+-  return models[defaultModelDefinitionId()] ?? liveModel;
++  return models[modelDefinitionId] ?? new Model();
+ }
+ 
+ //#region 🔖️CadPlayChrome
+@@ -1796,14 +1799,14 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
+ 
+   const flushedModelsByDefinitionId = reactHostPort.useMemo(() => {
+     const flushed = flushModelsRecord(modelsByDefinitionId, activeModelDefinitionId, liveModel);
+-    return ensureCadPlayQuadModels(flushed);
++    return ensurePlayQuadModelSlots(flushed);
+   }, [activeModelDefinitionId, liveModel, liveModel.revision, modelsByDefinitionId]);
+ 
+   const playModelSpace = reactHostPort.useMemo(() => modelSpaceFromRecord(flushedModelsByDefinitionId), [flushedModelsByDefinitionId]);
+ 
+   const visibleExportModel = reactHostPort.useMemo(() => flushedModelsByDefinitionId[activeModelDefinitionId] ?? liveModel, [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
+ 
+-  const pickGeometry = reactHostPort.useMemo(() => pickShapeForModelDefinition(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel), [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
++  const pickGeometry = reactHostPort.useMemo(() => cadPlayPaneGeometry(flushedModelsByDefinitionId, activeModelDefinitionId, liveModel), [activeModelDefinitionId, flushedModelsByDefinitionId, liveModel]);
+ 
+   const commitModelForDefinition = reactHostPort.useCallback((modelDefinitionId: string, model: Model) => {
+     setModelsByDefinitionId((prev) => ensurePlayQuadModelSlots({ ...prev, [modelDefinitionId]: Model.fromJSON(model.toJSON()) }));
+@@ -1825,11 +1828,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
+   const focusModelDefinition = reactHostPort.useCallback(
+     (modelDefinitionId: string) => {
+       if (modelDefinitionId === activeModelDefinitionId) return;
+-      setModelsByDefinitionId((prev) => {
+-        const flushed = ensurePlayQuadModelSlots(flushModelsRecord(prev, activeModelDefinitionId, liveModel));
+-        if (isShapeModelDefinition(modelDefinitionId)) return flushed;
+-        return ensureDerivedModelInSpace(flushed, modelDefinitionId);
+-      });
++      setModelsByDefinitionId((prev) => ensurePlayQuadModelSlots(flushModelsRecord(prev, activeModelDefinitionId, liveModel)));
+       setActiveModelDefinitionId(modelDefinitionId);
+       setModelDefinitionRevision((r) => r + 1);
+     },
+@@ -1997,7 +1996,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
+         setFileStatus(`Transfer failed: ${String(error)}`);
+         return;
+       }
+-      setModelsByDefinitionId(ensureCadPlayQuadModels(recordFromModelSpace(space)));
++      setModelsByDefinitionId(ensurePlayQuadModelSlots(recordFromModelSpace(space)));
+       setActiveModelDefinitionId(spec.target.modelDefinition);
+       setModelDefinitionRevision((r) => r + 1);
+       setFileStatus(`Transferred ${spec.source.modelDefinition} → ${spec.target.modelDefinition}.`);
+@@ -2189,7 +2188,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
+         const nextActiveModelDefinitionId = typeof envelope.activeModelDefinitionId === "string" && modelSpace.get(envelope.activeModelDefinitionId) ? envelope.activeModelDefinitionId : activeModelDefinitionIdFromSpatialJson(snapshot);
+         setShapeAssetId("");
+         setLoadedRawName(file.name);
+-        setModelsByDefinitionId(recordFromModelSpace(modelSpace));
++        setModelsByDefinitionId(ensurePlayQuadModelSlots(recordFromModelSpace(modelSpace)));
+         setActiveModelDefinitionId(nextActiveModelDefinitionId);
+         setModelDefinitionRevision((r) => r + 1);
+         setFileStatus(`Loaded model space from ${file.name}.`);
+@@ -2418,11 +2417,11 @@ function CadPlayInteractionPane({ pane, instanceId }: { readonly pane: CadPlayPa
+     [interactionId],
+   );
+   const paneModel = cadPlayPaneModel(flushedModelsByDefinitionId, pane);
++  const viewModel = paneModel;
+   const pickGeometry = reactHostPort.useMemo(
+-    () => pickShapeForModelDefinition(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
++    () => cadPlayPaneGeometry(flushedModelsByDefinitionId, modelDefinitionId, paneModel),
+     [flushedModelsByDefinitionId, modelDefinitionId, paneModel, modelDefinitionRevision],
+   );
+-  const viewModel = reactHostPort.useMemo(() => (modelHasCommittedSolidsForDisplay(paneModel) ? paneModel : pickGeometry), [paneModel, pickGeometry]);
+   const documentModel = reactHostPort.useMemo((): ModelDocument => ({ model: Model.fromJSON(viewModel.toJSON()), nodes: [] }), [viewModel, modelDefinitionRevision]);
+   const commitPaneModel = reactHostPort.useCallback((model: Model) => commitModelForDefinition(modelDefinitionId, model), [commitModelForDefinition, modelDefinitionId]);
+   const onTransformGumballCommit = reactHostPort.useCallback((diff: ModelDiff) => handleTransformGumballCommit(modelDefinitionId, diff), [handleTransformGumballCommit, modelDefinitionId]);
+@@ -3029,7 +3028,7 @@ if (import.meta.vitest) {
+       await rt.send({ kind: "set.height", value: 4, modifiers: {} });
+       await rt.send({ kind: "confirm", modifiers: {} });
+       const build = buildCadPlayDocumentSections({ [defaultModelDefinitionId()]: model }, defaultModelDefinitionId(), [], () => {});
+-      const modelBranch = build.sections[0]?.items?.[0]?.items?.[0];
++      const modelBranch = build.sections[0]?.items?.[0];
+       expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
+     });
+ 
+@@ -3061,7 +3060,7 @@ if (import.meta.vitest) {
+         primitives: { solid: String(solid) },
+       };
+       const build = buildCadPlayDocumentSections({ "spatial.shape": model }, "spatial.shape", [], () => {});
+-      const primitiveNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0]?.items?.[0];
++      const primitiveNode = build.sections[0]?.items?.[0]?.items?.[0];
+       expect(primitiveNode?.label).toContain("solid:");
+       const shellNode = primitiveNode?.items?.[0];
+       expect(shellNode?.label).toContain("shell");
+@@ -3087,7 +3086,7 @@ if (import.meta.vitest) {
+       };
+       const mdId = defaultModelDefinitionId();
+       const build = buildCadPlayDocumentSections({ [mdId]: model }, mdId, [], () => {});
+-      const objectNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
++      const objectNode = build.sections[0]?.items?.[0];
+       expect(objectNode?.label).toContain("object-imported");
+       expect(objectNode?.description).toBe("spatial.shape.kernel.solid");
+     });
+@@ -3114,6 +3113,21 @@ if (import.meta.vitest) {
+       expect(cadPlayPaneModel(models, "building").objects["site1"]).toBeDefined();
+       expect(cadPlayPaneModel(models, "shape")).not.toBe(cadPlayPaneModel(models, "building"));
+     });
++
++    it("cadPlayPaneGeometry never borrows spatial.shape for building pane", () => {
++      const models = modelsFromCadJson({
++        modelSpace: geometryConcreteForestLeft,
++        activeModelDefinitionId: defaultModelDefinitionId(),
++      });
++      const building = cadPlayPaneGeometry(models, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID, new Model());
++      const shape = cadPlayPaneGeometry(models, defaultModelDefinitionId(), new Model());
++      expect(listModelObjectsForModelDefinition(building, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID)).toHaveLength(12);
++      expect(listModelObjectsForModelDefinition(shape, defaultModelDefinitionId())).toHaveLength(1);
++      const shapeOnly = ensurePlayQuadModelSlots({ [defaultModelDefinitionId()]: shape });
++      const emptyBuilding = cadPlayPaneGeometry(shapeOnly, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID, new Model());
++      expect(listModelObjectsForModelDefinition(emptyBuilding, CAD_PLAY_BUILDING_MODEL_DEFINITION_ID)).toHaveLength(0);
++      expect(Object.keys(emptyBuilding.solids).length).toBe(0);
++    });
+   });
+ 
+   describe("CAD play model bootstrap", () => {
+@@ -3147,9 +3161,10 @@ if (import.meta.vitest) {
+       expect(typologies.has("building.building.column")).toBe(true);
+       expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+       expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
++      expect(listModelObjectsForModelDefinition(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(0);
+       expect(
+         listModelObjectsForModelDefinition(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!, CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID).length,
+-      ).toBeGreaterThan(0);
++      ).toBe(0);
+     });
+ 
+     it("ensureDerivedModelInSpace keeps spatial.shape for shape definition", () => {
+@@ -3157,11 +3172,13 @@ if (import.meta.vitest) {
+       expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
+     });
+ 
+-    it("ensurePlayQuadModelSlots seeds shape and building without derive transforms", () => {
++    it("ensurePlayQuadModelSlots seeds all play panes without derive transforms", () => {
+       const models = ensurePlayQuadModelSlots({});
+       expect(models[defaultModelDefinitionId()]).toBeInstanceOf(Model);
+       expect(models[CAD_PLAY_BUILDING_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+-      expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeUndefined();
++      expect(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
++      expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
++      expect(Object.keys(models[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!.objects).length).toBe(0);
+     });
+ 
+     it("ensureCadPlayQuadModels seeds all four play panes", () => {
+@@ -3172,24 +3189,33 @@ if (import.meta.vitest) {
+       expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
+     });
+ 
++    it("ensureCadPlayQuadModels derives missing models only when called explicitly", () => {
++      const loaded = modelsFromCadJson({
++        modelSpace: geometryConcreteForestLeft,
++        activeModelDefinitionId: defaultModelDefinitionId(),
++      });
++      expect(listModelObjectsForModelDefinition(loaded[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length).toBe(0);
++      const derived = ensureCadPlayQuadModels(loaded);
++      expect(
++        listModelObjectsForModelDefinition(derived[CAD_PLAY_ENERGY_MODEL_DEFINITION_ID]!, CAD_PLAY_ENERGY_MODEL_DEFINITION_ID).length,
++      ).toBeGreaterThan(0);
++    });
++
+     it("buildCadPlayDocumentSections lists concrete forest BIM objects across play definitions", () => {
+-      const models = ensureCadPlayQuadModels(
+-        modelsFromCadJson({
+-          modelSpace: geometryConcreteForestLeft,
+-          activeModelDefinitionId: defaultModelDefinitionId(),
+-        }),
+-      );
++      const models = modelsFromCadJson({
++        modelSpace: geometryConcreteForestLeft,
++        activeModelDefinitionId: defaultModelDefinitionId(),
++      });
+       const build = buildCadPlayDocumentSections(models, defaultModelDefinitionId(), [], () => {});
+-      const modelSpaceRoot = build.sections[0]?.items[0];
+-      const buildingBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
++      const buildingBranch = build.sections.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
+       expect(buildingBranch?.items?.length).toBe(12);
+-      const energyBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
+-      expect((energyBranch?.items?.length ?? 0) > 0).toBe(true);
+-      const structureBranch = modelSpaceRoot?.items?.find(
++      const energyBranch = build.sections.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
++      expect(energyBranch?.items?.[0]?.label).toBe("(no objects)");
++      const structureBranch = build.sections.find(
+         (row) => row.id === `cad-play-document.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
+       );
+-      expect((structureBranch?.items?.length ?? 0) > 0).toBe(true);
+-      expect(modelSpaceRoot?.items?.some((row) => row.id === `cad-play-document.model.${defaultModelDefinitionId()}`)).toBe(true);
++      expect(structureBranch?.items?.[0]?.label).toBe("(no objects)");
++      expect(build.sections.some((row) => row.id === `cad-play-document.model.${defaultModelDefinitionId()}`)).toBe(true);
+     });
+   });
+ }
+diff --git a/framework/product/playground/core/index.ts b/framework/product/playground/core/index.ts
+index df97bbf93..41bbd2d73 100644
+--- a/framework/product/playground/core/index.ts
++++ b/framework/product/playground/core/index.ts
+@@ -247,6 +247,7 @@ export interface WindowEngagement {
+   readonly options?: readonly WindowEngagementOption[];
+   readonly input?: WindowEngagementInput;
+   readonly control?: WindowEngagementControl;
++  readonly controls?: readonly WindowEngagementControl[];
+   readonly status?: readonly WindowEngagementStatus[];
+   readonly possibleEngagements?: readonly WindowEngagementPossible[];
+ }
+@@ -284,7 +285,8 @@ export function windowEngagementDigest(engagement: WindowEngagement | undefined)
+     .join("\u0002");
+   const session = engagement.sessionActive ? "1" : "0";
+   const control = windowEngagementControlDigest(engagement.control);
+-  return [session, options, input, status, possibles, control].join("\u0003");
++  const controls = (engagement.controls ?? []).map((row) => windowEngagementControlDigest(row)).join("\u0004");
++  return [session, options, input, status, possibles, control, controls].join("\u0003");
+ }
+ 
+ /** @emoji ⚖️ Returns whether two neutral engagement snapshots are equivalent for shell sync. */
+diff --git a/framework/product/playground/renderer/react/index.tsx b/framework/product/playground/renderer/react/index.tsx
+index ef5eb6448..a55bc3a19 100644
+--- a/framework/product/playground/renderer/react/index.tsx
++++ b/framework/product/playground/renderer/react/index.tsx
+@@ -819,8 +819,8 @@ export function engagementSpecControlMirror(
+     step: control.step,
+     unit: control.unit,
+     disabled: control.disabled,
+-    onChange: control.onChange ? { controllerId, command: "engagementControlChange", args: { ...commandArgs } } : undefined,
+-    onCommit: control.onCommit ? { controllerId, command: "engagementControlCommit", args: { ...commandArgs } } : undefined,
++    onChange: control.onChange ? { controllerId, command: "engagementControlChange", args: { ...commandArgs, controlId: control.id } } : undefined,
++    onCommit: control.onCommit ? { controllerId, command: "engagementControlCommit", args: { ...commandArgs, controlId: control.id } } : undefined,
+   };
+ }
+ 
+@@ -857,10 +857,11 @@ export function windowEngagementToGolden(engagement: WindowEngagement | undefine
+     onSelect: row.command ? () => bus.dispatch(row.command!.controllerId, row.command!.command, row.command!.args) : undefined,
+   }));
+   const control = windowEngagementControlToGolden(engagement.control, bus);
++  const controls = engagement.controls?.map((row) => windowEngagementControlToGolden(row, bus)).filter((row): row is EngagementControl => row !== undefined);
+   const hasContent =
+-    (options?.length ?? 0) > 0 || Boolean(input) || Boolean(control) || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
++    (options?.length ?? 0) > 0 || Boolean(input) || Boolean(control) || (controls?.length ?? 0) > 0 || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
+   if (!hasContent) return undefined;
+-  return { sessionActive: engagement.sessionActive, options, input, control, status, possibleEngagements };
++  return { sessionActive: engagement.sessionActive, options, input, control, controls, status, possibleEngagements };
+ }
+ 
+ export function windowKindsToGolden(windowKinds: readonly WindowKindRuntime[], bus: CommandBus): UIWindowKindDefinition[] {
+@@ -1650,7 +1651,8 @@ export function puzzle3dPlayEngagementMirror(engagement: EngagementSpec | null):
+     command: { controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "engagementPossibleSelect", args: { possibleId: row.id } },
+   }));
+   const control = engagementSpecControlMirror(engagement.control, PUZZLE_3D_PLAY_CONTROLLER_ID, {});
+-  return { sessionActive: engagement.sessionActive, options, input, control, status, possibleEngagements };
++  const controls = engagement.controls?.map((row) => engagementSpecControlMirror(row, PUZZLE_3D_PLAY_CONTROLLER_ID, {})).filter((row): row is WindowEngagementControl => row !== undefined);
++  return { sessionActive: engagement.sessionActive, options, input, control, controls, status, possibleEngagements };
+ }
+ 
+ function Puzzle3dPlayEngagementPublisher(props: {
+@@ -1775,9 +1777,9 @@ function Puzzle3dPlayEngagementPublisher(props: {
+   const onToggleFillEditTargetVolumes = reactHostPort.useCallback(() => {
+     bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setFillEditTargetVolumes", {});
+   }, [bus]);
+-  const onVoxelBrushSize = reactHostPort.useCallback(
+-    (size: number) => {
+-      bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setVoxelBrushSize", { size });
++  const onVoxelBrushDimension = reactHostPort.useCallback(
++    (axis: 0 | 1 | 2, value: number) => {
++      bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setVoxelBrushDimension", { axis, value });
+     },
+     [bus],
+   );
+@@ -1831,7 +1833,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
+         fillCount,
+         fillBuildProgress,
+         fillEditTargetVolumes: snap.fillEditTargetVolumes,
+-        voxelBrushSize: snap.voxelBrushSize,
++        voxelBrushDimensions: snap.voxelBrushDimensions,
+         selectedTargetVolumeCount: snap.selection.targetVolumeIds.length,
+         selectionCount,
+         onCmdLineChange: setCmdLine,
+@@ -1844,7 +1846,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
+         onFillCount,
+         onToggleFillEditTargetVolumes,
+         onDeleteSelectedTargetVolume,
+-        onVoxelBrushSize,
++        onVoxelBrushDimension,
+         onCycleBrushCandidate: () => brushSource.cycleCandidate(),
+         onPickBrushCandidate: (index) => {
+           const candidate = brushSource.candidates[index];
+@@ -1858,7 +1860,7 @@ function Puzzle3dPlayEngagementPublisher(props: {
+         brushTargetActive: brushSource.targetActive,
+         brushPlacementProbePending: brushSource.placementProbePending,
+       }),
+-    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushSize, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushSize],
++    [brushEngagementEpoch, brushSource, cmdLine, fillBuildProgress, fillCount, fillSessionReadyEpoch, onBrushTool, onCmdLineSubmit, onDeleteSelectedTargetVolume, onEngagementAbort, onFillCount, onFillTool, onRepeatLastEngagement, onSelectTool, onToggleFillEditTargetVolumes, onVoxelBrushDimension, onZoomToSelection, rememberEngagementRepeat, selectionCount, snap.activeTool, snap.fillEditTargetVolumes, snap.selection.targetVolumeIds.length, snap.voxelBrushDimensions],
+   );
+   engagementSpecRef.current = spec;
+   reactHostPort.useEffect(() => {
+@@ -1903,15 +1905,25 @@ function Puzzle3dPlayEngagementPublisher(props: {
+             break;
+           }
+           case "engagementControlChange": {
+-            const value = (args as { value?: number })?.value;
+-            const control = engagementSpecRef.current?.control;
++            const value = (args as { value?: number; controlId?: string })?.value;
++            const controlId = (args as { controlId?: string })?.controlId;
++            const spec = engagementSpecRef.current;
++            const control =
++              controlId && spec?.controls?.length
++                ? spec.controls.find((row) => row.id === controlId) ?? spec.control
++                : spec?.control;
+             if (value === undefined || !control || control.kind === "ring") break;
+             control.onChange?.(value);
+             break;
+           }
+           case "engagementControlCommit": {
+-            const value = (args as { value?: number })?.value;
+-            const control = engagementSpecRef.current?.control;
++            const value = (args as { value?: number; controlId?: string })?.value;
++            const controlId = (args as { controlId?: string })?.controlId;
++            const spec = engagementSpecRef.current;
++            const control =
++              controlId && spec?.controls?.length
++                ? spec.controls.find((row) => row.id === controlId) ?? spec.control
++                : spec?.control;
+             if (value === undefined || !control || control.kind === "ring") break;
+             control.onCommit?.(value);
+             break;
+@@ -2030,8 +2042,8 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
+     [ctrl],
+   );
+   const onVoxelBrushPaintPersist = reactHostPort.useCallback(
+-    (cad: import("../react/index.tsx").Vec3, size: number) => {
+-      ctrl?.run("paintVoxel", { cad, size });
++    (cad: import("../react/index.tsx").Vec3, scale: import("../react/index.tsx").Vec3) => {
++      ctrl?.run("paintVoxel", { cad, scale });
+     },
+     [ctrl],
+   );
+@@ -2188,7 +2200,7 @@ const Puzzle3dPlayViewportHost = reactHostPort.memo(function Puzzle3dPlayViewpor
+           onTargetVolumeRelocate={onTargetVolumeRelocatePersist}
+           onVoxelBrushPaint={onVoxelBrushPaintPersist}
+           fillEditTargetVolumes={snap.fillEditTargetVolumes}
+-          voxelBrushSize={snap.voxelBrushSize}
++          voxelBrushDimensions={snap.voxelBrushDimensions}
+           onToggleSelectionHidden={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "hidden", value })}
+           onToggleSelectionLocked={(value) => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "setSelectionFlag", { flag: "locked", value })}
+           onDeleteSelection={() => bus.dispatch(PUZZLE_3D_PLAY_CONTROLLER_ID, "deleteSelection")}
+diff --git a/puzzle/2d/play/index.ts b/puzzle/2d/play/index.ts
+index 29c5fb3db..ec5afdded 100644
+--- a/puzzle/2d/play/index.ts
++++ b/puzzle/2d/play/index.ts
+@@ -16,7 +16,6 @@ import {
+ 	createNamedLayout,
+ 	createWindowLayout,
+ 	type WindowTemplate,
+-	playgroundTreePanelRootItems,
+ 	platformFromViewContext,
+ 	type AppTools,
+ 	type ToolItem,
+@@ -468,22 +467,13 @@ function buildPuzzle2dFixtureNodeDocumentItem(
+     }
+   }
+   visiting.delete(nodeId);
+-  const nodeItems: UiTreeItemNode[] = [];
+-  if (node.handles.length > 0) {
+-    const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
+-      id: `puzzle-2d-play-document.handle.${handle.id}`,
+-      label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
+-      ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
+-      onClick: () => onSelect(handle.id),
+-      ...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, handle.id),
+-    }));
+-    nodeItems.push({
+-      id: `puzzle-2d-play-document.node.${nodeId}.handles`,
+-      label: "Handles",
+-      defaultOpen: true,
+-      items: handleItems,
+-    });
+-  }
++  const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
++    id: `puzzle-2d-play-document.handle.${handle.id}`,
++    label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
++    ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
++    onClick: () => onSelect(handle.id),
++    ...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, handle.id),
++  }));
+   return {
+     id: `puzzle-2d-play-document.node.${nodeId}`,
+     label: puzzle2dFixtureNodeDisplayLabel(node, kindCatalogs),
+@@ -492,7 +482,7 @@ function buildPuzzle2dFixtureNodeDocumentItem(
+     defaultOpen: true,
+     onClick: () => onSelect(nodeId),
+     ...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, nodeId),
+-    items: [...nodeItems, ...childItems],
++    items: [...handleItems, ...childItems],
+   };
+ }
+ 
+@@ -575,7 +565,7 @@ export function puzzle2dPlayDocumentTreeHighlightedIds(
+ 	return [];
+ }
+ 
+-/** @emoji 🌳️ Nested workbench tree: Puzzle 2D → nodes (graph) → handles; flat edges group. */
++/** @emoji 🌳️ Workbench document: Nodes and Edges sections. */
+ export function buildPuzzle2dPlayDocumentSections(
+ 	fixture: Puzzle2dFixtureV1,
+ 	selectionIds: readonly string[],
+@@ -596,12 +586,6 @@ export function buildPuzzle2dPlayDocumentSections(
+ 			nodeItems.push(item);
+ 		}
+ 	}
+-	const nodesGroup: UiTreeItemNode = {
+-		id: "puzzle-2d-play-document.nodes",
+-		label: "Nodes",
+-		defaultOpen: true,
+-		items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-document.nodes.empty", label: "(none)" }],
+-	};
+ 	const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
+ 		id: `puzzle-2d-play-document.edge.${edge.id}`,
+ 		label: puzzle2dFixtureEdgeDisplayLabel(edge, fixture, kindCatalogs),
+@@ -609,19 +593,23 @@ export function buildPuzzle2dPlayDocumentSections(
+ 		onClick: () => onSelect(edge.id),
+ 		...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, edge.id),
+ 	}));
+-	const edgesGroup: UiTreeItemNode = {
+-		id: "puzzle-2d-play-document.edges",
+-		label: "Edges",
+-		defaultOpen: true,
+-		items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-document.edges.empty", label: "(none)" }],
+-	};
+-	const puzzle2dRoot: UiTreeItemNode = {
+-		id: "puzzle-2d-play-document.puzzle2d",
+-		label: "Puzzle 2D",
+-		defaultOpen: true,
+-		items: [nodesGroup, edgesGroup],
+-	};
+-	return playgroundTreePanelRootItems("puzzle-2d-play-document.root", [puzzle2dRoot]) as UiTreeNode;
++	return {
++		type: "tree",
++		sections: [
++			{
++				id: "puzzle-2d-play-document.nodes",
++				label: "Nodes",
++				defaultOpen: true,
++				items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-document.nodes.empty", label: "(none)" }],
++			},
++			{
++				id: "puzzle-2d-play-document.edges",
++				label: "Edges",
++				defaultOpen: true,
++				items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-document.edges.empty", label: "(none)" }],
++			},
++		],
++	} as UiTreeNode;
+ }
+ //#endregion 🔖️Puzzle2dPlayDocument
+ 
+@@ -1937,8 +1925,8 @@ if (import.meta.vitest) {
+ 			});
+ 			expect(fixture).not.toBeNull();
+ 			const tree = buildPuzzle2dPlayDocumentSections(fixture!, [], () => {});
+-			const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
+-			const rootItem = nodesGroup?.items?.find((row) => row.id === "puzzle-2d-play-document.node.root");
++			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
++			const rootItem = nodesSection?.items?.find((row) => row.id === "puzzle-2d-play-document.node.root");
+ 			expect(rootItem?.items?.some((row) => row.label === "Child")).toBe(true);
+ 			expect(rootItem?.items?.some((row) => row.label === "Handles")).toBe(false);
+ 		});
+@@ -1972,13 +1960,11 @@ if (import.meta.vitest) {
+ 			});
+ 			expect(fixture).not.toBeNull();
+ 			const tree = buildPuzzle2dPlayDocumentSections(fixture!, [], () => {});
+-			const puzzle2dRoot = tree.sections[0]?.items?.[0];
+-			expect(puzzle2dRoot?.label).toBe("Puzzle 2D");
+-			const nodesGroup = puzzle2dRoot?.items?.find((row) => row.label === "Nodes");
+-			expect(nodesGroup?.items?.[0]?.id).toBe("puzzle-2d-play-document.node.root");
+-			expect(nodesGroup?.items?.[0]?.label).toBe("Root");
+-			expect(nodesGroup?.items?.[0]?.items?.[0]?.label).toBe("Handles");
+-			expect(nodesGroup?.items?.[0]?.items?.[1]?.label).toBe("Child");
++			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
++			expect(nodesSection?.items?.[0]?.id).toBe("puzzle-2d-play-document.node.root");
++			expect(nodesSection?.items?.[0]?.label).toBe("Root");
++			expect(nodesSection?.items?.[0]?.items?.[0]?.id).toBe("puzzle-2d-play-document.handle.h-root");
++			expect(nodesSection?.items?.[0]?.items?.[1]?.label).toBe("Child");
+ 		});
+ 
+ 		it("buildPuzzle2dPlayRuntime wires main mode and empty side tab slots", () => {
+@@ -2343,9 +2329,9 @@ if (import.meta.vitest) {
+ 
+ 	it("nakagin default fixture yields a populated document nodes group", () => {
+ 		const tree = buildPuzzle2dPlayDocumentSections(PUZZLE_2D_PLAY_DEFAULT_FIXTURE, [], () => {});
+-		const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
+-		expect(nodesGroup?.items?.length).toBeGreaterThan(0);
+-		expect(nodesGroup?.items?.[0]?.label).not.toBe("(none)");
++		const nodesSection = tree.sections.find((section) => section.label === "Nodes");
++		expect(nodesSection?.items?.length).toBeGreaterThan(0);
++		expect(nodesSection?.items?.[0]?.label).not.toBe("(none)");
+ 	});
+ 
+ 	describe("puzzle2dPlayKindCatalogSelectItems", () => {
+diff --git a/puzzle/3d/play/index.ts b/puzzle/3d/play/index.ts
+index e4606d3c3..7662ad13f 100644
+--- a/puzzle/3d/play/index.ts
++++ b/puzzle/3d/play/index.ts
+@@ -133,7 +133,7 @@ import {
+   PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID,
+   PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID,
+   PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID,
+-  DEFAULT_VOXEL_BRUSH_SIZE,
++  DEFAULT_VOXEL_BRUSH_DIMENSIONS,
+   VOXEL_BRUSH_SIZE_MIN,
+   VOXEL_BRUSH_SIZE_MAX,
+   VOXEL_BRUSH_SIZE_STEP,
+@@ -911,7 +911,7 @@ export const PUZZLE_3D_PLAY_IDLE_SNAPSHOT: Puzzle3dPlaySnapshot = {
+   targetRingCount: 0,
+   activeTool: "select",
+   fillEditTargetVolumes: false,
+-  voxelBrushSize: DEFAULT_VOXEL_BRUSH_SIZE,
++  voxelBrushDimensions: DEFAULT_VOXEL_BRUSH_DIMENSIONS,
+   brushPlacementOverlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
+   cameraSeedEpoch: 0,
+   hoverFocus: { hoverTarget: null, kindHover: null },
+@@ -1405,7 +1405,7 @@ export function puzzle3dPlayDocumentSelectedIds(selection: Puzzle3dPlaySelectio
+   return ids;
+ }
+ 
+-/** @emoji 🌳️ Structural document sections (no per-row selected flags; selection via {@link puzzle3dPlayDocumentSelectedIds}). */
++/** @emoji 🌳️ Structural document sections: Objects, References, Target Volumes, Attractions. */
+ export function buildPuzzle3dPlayDocumentSections(
+   fixture: FixtureV1,
+   options?: Puzzle3dPlayDocumentHoverBuildOptions,
+@@ -1422,12 +1422,6 @@ export function buildPuzzle3dPlayDocumentSections(
+         ...puzzle3dPlayDocumentEntityChrome(vortex, { kind: "vortex", fullId }, options),
+       };
+     });
+-    const vorticesGroup: UiTreeItemNode = {
+-      id: `puzzle-3d-play-document.object.${object.id}.vortices`,
+-      label: "Vortices",
+-      defaultOpen: true,
+-      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-document.object.${object.id}.vortices.empty`, label: "(none)" }],
+-    };
+     return {
+       id: `puzzle-3d-play-document.object.${object.id}`,
+       ...puzzle3dPlayFixtureTreeRowFields(object.label, object.id),
+@@ -1435,15 +1429,9 @@ export function buildPuzzle3dPlayDocumentSections(
+       command: puzzle3dPlaySelectObjectCommand(object.id),
+       ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
+       ...puzzle3dPlayDocumentEntityChrome(object, { kind: "object", id: object.id }, options),
+-      items: [vorticesGroup],
++      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-document.object.${object.id}.vortices.empty`, label: "(none)" }],
+     };
+   });
+-  const objectsGroup: UiTreeItemNode = {
+-    id: "puzzle-3d-play-document.objects",
+-    label: "Objects",
+-    defaultOpen: true,
+-    items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-document.objects.empty", label: "(none)" }],
+-  };
+   const attractionItems: UiTreeItemNode[] = fixture.attractions.map((attraction) => ({
+     id: `puzzle-3d-play-document.attraction.${attraction.id}`,
+     label: attraction.id,
+@@ -1452,12 +1440,6 @@ export function buildPuzzle3dPlayDocumentSections(
+     ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
+     ...puzzle3dPlayDocumentEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
+   }));
+-  const attractionsGroup: UiTreeItemNode = {
+-    id: "puzzle-3d-play-document.attractions",
+-    label: "Attractions",
+-    defaultOpen: true,
+-    items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-document.attractions.empty", label: "(none)" }],
+-  };
+   const referenceItems: UiTreeItemNode[] = (fixture.references ?? []).map((reference) => ({
+     id: `puzzle-3d-play-document.reference.${reference.id}`,
+     label: reference.id,
+@@ -1466,12 +1448,6 @@ export function buildPuzzle3dPlayDocumentSections(
+     ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
+     ...puzzle3dPlayDocumentEntityChrome(reference, { kind: "reference", id: reference.id }, options),
+   }));
+-  const referencesGroup: UiTreeItemNode = {
+-    id: "puzzle-3d-play-document.references",
+-    label: "References",
+-    defaultOpen: true,
+-    items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-document.references.empty", label: "(none)" }],
+-  };
+   const targetVolumeItems: UiTreeItemNode[] = (fixture.targetVolumes ?? []).map((volume) => ({
+     id: `puzzle-3d-play-document.target-volume.${volume.id}`,
+     label: volume.id,
+@@ -1479,22 +1455,35 @@ export function buildPuzzle3dPlayDocumentSections(
+     ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
+     ...puzzle3dPlayDocumentEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
+   }));
+-  const targetVolumesGroup: UiTreeItemNode = {
+-    id: "puzzle-3d-play-document.target-volumes",
+-    label: "Target Volumes",
+-    defaultOpen: true,
+-    items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-document.target-volumes.empty", label: "(none)" }],
+-  };
+-  const viewportRoot: UiTreeItemNode = {
+-    id: "puzzle-3d-play-document.viewport",
+-    label: "Puzzle 3D",
+-    defaultOpen: true,
+-    items: [objectsGroup, referencesGroup, targetVolumesGroup, attractionsGroup],
+-  };
+-  return playgroundTreePanelRootItems("puzzle-3d-play-document.root", [viewportRoot]).sections;
++  return [
++    {
++      id: "puzzle-3d-play-document.objects",
++      label: "Objects",
++      defaultOpen: true,
++      items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-document.objects.empty", label: "(none)" }],
++    },
++    {
++      id: "puzzle-3d-play-document.references",
++      label: "References",
++      defaultOpen: true,
++      items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-document.references.empty", label: "(none)" }],
++    },
++    {
++      id: "puzzle-3d-play-document.target-volumes",
++      label: "Target Volumes",
++      defaultOpen: true,
++      items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-document.target-volumes.empty", label: "(none)" }],
++    },
++    {
++      id: "puzzle-3d-play-document.attractions",
++      label: "Attractions",
++      defaultOpen: true,
++      items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-document.attractions.empty", label: "(none)" }],
++    },
++  ];
+ }
+ 
+-/** @emoji 🌳️ Nested workbench tree: Puzzle 3D → Objects → Vortices; Attractions sibling group. */
++/** @emoji 🌳️ Workbench document: Objects, References, Target Volumes, Attractions sections. */
+ export function buildPuzzle3dPlayDocumentTree(
+   fixture: FixtureV1 | null,
+   selection: Puzzle3dPlaySelection,
+@@ -1670,7 +1659,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
+   private targetRingCount: number;
+   private brushPlacementOverlapBudget: number;
+   private fillEditTargetVolumes: boolean;
+-  private voxelBrushSize: number;
++  private voxelBrushDimensions: Vec3;
+   private objectKindIds: string[] = [];
+   private vortexKindIds: string[] = [];
+   private objectKindWeights: KindWeightMap = {};
+@@ -1713,7 +1702,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
+     this.targetRingCount = 0;
+     this.brushPlacementOverlapBudget = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
+     this.fillEditTargetVolumes = false;
+-    this.voxelBrushSize = DEFAULT_VOXEL_BRUSH_SIZE;
++    this.voxelBrushDimensions = DEFAULT_VOXEL_BRUSH_DIMENSIONS;
+     this.windowEngagement = this.placeholderWindowEngagement();
+     this.syncBrushKindWeightsFromFixture();
+     this.rebuildShellMode();
+@@ -1884,7 +1873,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
+       targetRingCount: this.targetRingCount,
+       brushPlacementOverlapBudget: this.brushPlacementOverlapBudget,
+       fillEditTargetVolumes: this.fillEditTargetVolumes,
+-      voxelBrushSize: this.voxelBrushSize,
++      voxelBrushDimensions: this.voxelBrushDimensions,
+       cameraSeedEpoch: this.cameraSeedEpoch,
+       hoverFocus: this.hoverFocus,
+     };
+@@ -2016,14 +2005,14 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
+   }
+ 
+   /** @emoji 🧊️ Adds a drawn target volume and selects it for immediate edit. */
+-  paintVoxel(cad: Vec3, size?: number): void {
++  paintVoxel(cad: Vec3, scale?: Vec3): void {
+     if (!this.fixture) {
+       return;
+     }
+-    const cellSize = size ?? this.voxelBrushSize;
+-    this.patchFixture((fixture) => addVoxelToFixture(fixture, cad, cellSize));
++    const box = scale ?? this.voxelBrushDimensions;
++    this.patchFixture((fixture) => addVoxelToFixture(fixture, cad, box));
+     invalidatePuzzle3dFillForTargetVolumesChange();
+-    console.log("[DEBUG] puzzle3d paintVoxel", cad, cellSize);
++    console.log("[DEBUG] puzzle3d paintVoxel", cad, box);
+   }
+ 
+   addTargetVolume(volume: WorldVolumeProps): void {
+@@ -2531,22 +2520,29 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
+         this.notifySnapshot();
+         return;
+       }
+-      case "setVoxelBrushSize": {
+-        const size = Number((args as { size?: number }).size);
+-        if (!Number.isFinite(size)) {
++      case "setVoxelBrushDimension": {
++        const axis = Number((args as { axis?: number }).axis);
++        const value = Number((args as { value?: number }).value);
++        if (!Number.isFinite(axis) || axis < 0 || axis > 2 || !Number.isFinite(value)) {
+           return;
+         }
+-        this.voxelBrushSize = Math.min(VOXEL_BRUSH_SIZE_MAX, Math.max(VOXEL_BRUSH_SIZE_MIN, size));
++        const next = [...this.voxelBrushDimensions] as Vec3;
++        next[axis] = Math.min(VOXEL_BRUSH_SIZE_MAX, Math.max(VOXEL_BRUSH_SIZE_MIN, value));
++        this.voxelBrushDimensions = next;
+         this.notifySnapshot();
+         return;
+       }
+       case "paintVoxel": {
+         const cad = (args as { cad?: Vec3 }).cad;
+-        const size = Number((args as { size?: number }).size);
++        const scale = (args as { scale?: Vec3 }).scale;
+         if (!cad || cad.length !== 3 || cad.some((n) => !Number.isFinite(n))) {
+           return;
+         }
+-        this.paintVoxel(cad, Number.isFinite(size) ? size : undefined);
++        const resolved =
++          scale && scale.length === 3 && scale.every((n) => Number.isFinite(n))
++            ? ([scale[0], scale[1], scale[2]] as Vec3)
++            : undefined;
++        this.paintVoxel(cad, resolved);
+         return;
+       }
+       case "deleteSelectedTargetVolume": {
+@@ -3127,7 +3123,7 @@ export interface Puzzle3dPlaySnapshot {
+   readonly gumballConfig: GumballConfig;
+   readonly activeTool: Puzzle3dActiveTool;
+   readonly fillEditTargetVolumes: boolean;
+-  readonly voxelBrushSize: number;
++  readonly voxelBrushDimensions: Vec3;
+   readonly selection: Puzzle3dPlaySelection;
+   readonly selectedId: string | null;
+   readonly selectedLabel: string | null;
+@@ -4827,17 +4823,14 @@ if (import.meta.vitest) {
+       });
+       expect(fixture).not.toBeNull();
+       const tree = buildPuzzle3dPlayDocumentTree(fixture!, PUZZLE_3D_PLAY_EMPTY_SELECTION);
+-      const viewportRoot = tree.sections[0]?.items?.[0];
+-      expect(viewportRoot?.label).toBe("Puzzle 3D");
+-      const objectsGroup = viewportRoot?.items?.find((row) => row.label === "Objects");
+-      expect(objectsGroup?.items?.length).toBe(2);
+-      const firstObject = objectsGroup?.items?.[0];
++      const objectsSection = tree.sections.find((section) => section.label === "Objects");
++      expect(objectsSection?.items?.length).toBe(2);
++      const firstObject = objectsSection?.items?.[0];
+       expect(firstObject?.label).toBe("Alpha");
+-      expect(firstObject?.items?.[0]?.label).toBe("Vortices");
+-      expect(firstObject?.items?.[0]?.items?.[0]?.label).toBe("Handle A");
+-      expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("puzzle-3d-play-document.vortex.a:v1");
+-      const attractionsGroup = viewportRoot?.items?.find((row) => row.label === "Attractions");
+-      expect(attractionsGroup?.items?.[0]?.id).toBe("puzzle-3d-play-document.attraction.t1");
++      expect(firstObject?.items?.[0]?.label).toBe("Handle A");
++      expect(firstObject?.items?.[0]?.id).toBe("puzzle-3d-play-document.vortex.a:v1");
++      const attractionsSection = tree.sections.find((section) => section.label === "Attractions");
++      expect(attractionsSection?.items?.[0]?.id).toBe("puzzle-3d-play-document.attraction.t1");
+     });
+ 
+     it("buildPuzzle3dPlayDocumentSections omits per-row selected flags", () => {
+diff --git a/puzzle/3d/react/index.tsx b/puzzle/3d/react/index.tsx
+index 2b864be90..48a3f0cab 100644
+--- a/puzzle/3d/react/index.tsx
++++ b/puzzle/3d/react/index.tsx
+@@ -12,6 +12,7 @@ import {
+   gumballPointerConsumesCanvasEventRef,
+   UnifiedGumball,
+   type EngagementSpec,
++  type EngagementStepperControl,
+   type GumballConfig,
+   type GumballHandleKind,
+   type ThreeEvent,
+@@ -1125,10 +1126,10 @@ export interface CanvasProps {
+   onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
+   /** @emoji 🧊️ Commits a target-volume gumball drag to the host fixture. */
+   onTargetVolumeRelocate?: (payload: WorldVolumeRelocatePayload) => void;
+-  /** @emoji 🧱️ Paints one voxel at the snapped cursor cell while Alt is held. */
+-  onVoxelBrushPaint?: (cad: Vec3, size: number) => void;
+-  /** @emoji 🧱️ Axis-aligned voxel brush cell size (world units). */
+-  voxelBrushSize?: number;
++  /** @emoji 🧱️ Paints one voxel box at the snapped cursor cell while Alt is held. */
++  onVoxelBrushPaint?: (cad: Vec3, scale: Vec3) => void;
++  /** @emoji 🧱️ Axis-aligned voxel brush box size `[width, depth, height]` in world units. */
++  voxelBrushDimensions?: Vec3;
+   /** @emoji 🧊️ When true, target volumes are selectable and the voxel brush is active. */
+   fillEditTargetVolumes?: boolean;
+   onConnect?: (p: AttractionPayload) => void;
+@@ -1651,8 +1652,8 @@ export function applyTargetVolumeRelocateToFixture(fixture: FixtureV1, payload:
+ }
+ 
+ /** @emoji 🧊️ Removes a target volume at the snapped voxel cell. */
+-export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, size: number): FixtureV1 {
+-  const volume = findVoxelAtCell(fixture.targetVolumes ?? [], cad, size);
++export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, scale: Vec3): FixtureV1 {
++  const volume = findVoxelAtCell(fixture.targetVolumes ?? [], cad, scale);
+   if (!volume) {
+     return fixture;
+   }
+@@ -1660,50 +1661,65 @@ export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, size: numb
+ }
+ 
+ /** @emoji 🧊️ Adds one axis-aligned voxel at the snapped cursor cell when empty. */
+-export function addVoxelToFixture(fixture: FixtureV1, cad: Vec3, size: number): FixtureV1 {
+-  if (findVoxelAtCell(fixture.targetVolumes ?? [], cad, size)) {
++export function addVoxelToFixture(fixture: FixtureV1, cad: Vec3, scale: Vec3): FixtureV1 {
++  if (findVoxelAtCell(fixture.targetVolumes ?? [], cad, scale)) {
+     return fixture;
+   }
+-  return addTargetVolumeToFixture(fixture, createVoxelVolume(cad, size));
++  return addTargetVolumeToFixture(fixture, createVoxelVolume(cad, scale));
+ }
+ 
+-/** @emoji 🧱️ Snaps a CAD point to the center of a voxel cell. */
+-export function snapCadToVoxelCenter(cad: Vec3, size: number): Vec3 {
++function snapCadAxisToVoxelCenter(coord: number, size: number): number {
+   const h = size / 2;
+-  return [
+-    Math.round((cad[0] - h) / size) * size + h,
+-    Math.round((cad[1] - h) / size) * size + h,
+-    Math.round((cad[2] - h) / size) * size + h,
+-  ] as Vec3;
++  return Math.round((coord - h) / size) * size + h;
++}
++
++/** @emoji 🧱️ Snaps a CAD point to the center of an axis-aligned voxel box. */
++export function snapCadToVoxelCenter(cad: Vec3, scale: Vec3): Vec3 {
++  const sx = typeof scale === "number" ? scale : scale[0];
++  const sy = typeof scale === "number" ? scale : scale[1];
++  const sz = typeof scale === "number" ? scale : scale[2];
++  return [snapCadAxisToVoxelCenter(cad[0], sx), snapCadAxisToVoxelCenter(cad[1], sy), snapCadAxisToVoxelCenter(cad[2], sz)] as Vec3;
++}
++
++function voxelScaleVec(scale: number | Vec3): Vec3 {
++  if (typeof scale === "number") {
++    return [scale, scale, scale];
++  }
++  return [scale[0], scale[1], scale[2]];
+ }
+ 
+-/** @emoji 🧱️ Stable grid key for a voxel cell at a given brush size. */
+-export function voxelGridKey(origin: Vec3, size: number): string {
+-  const center = snapCadToVoxelCenter(origin, size);
+-  return `${center[0].toFixed(4)},${center[1].toFixed(4)},${center[2].toFixed(4)}`;
++/** @emoji 🧱️ Stable grid key for a voxel cell at a given brush box size. */
++export function voxelGridKey(cad: Vec3, scale: number | Vec3): string {
++  const box = voxelScaleVec(scale);
++  const center = snapCadToVoxelCenter(cad, box);
++  return `${center[0].toFixed(4)},${center[1].toFixed(4)},${center[2].toFixed(4)}@${box[0].toFixed(4)},${box[1].toFixed(4)},${box[2].toFixed(4)}`;
+ }
+ 
+-/** @emoji 🧱️ Builds a target-volume record for one axis-aligned voxel. */
+-export function createVoxelVolume(cad: Vec3, size: number, id?: string): WorldVolumeProps {
+-  const origin = snapCadToVoxelCenter(cad, size);
++/** @emoji 🧱️ Builds a target-volume record for one axis-aligned voxel box. */
++export function createVoxelVolume(cad: Vec3, scale: number | Vec3, id?: string): WorldVolumeProps {
++  const box = voxelScaleVec(scale);
++  const origin = snapCadToVoxelCenter(cad, box);
+   return {
+     id: id ?? `voxel-${origin.map((n) => n.toFixed(2)).join("-")}`,
+     origin,
+-    scale: size,
++    scale: box,
+   };
+ }
+ 
+ /** @emoji 🧱️ Finds an existing voxel in the fixture at the snapped cell. */
+-export function findVoxelAtCell(volumes: readonly WorldVolumeProps[], cad: Vec3, size: number): WorldVolumeProps | null {
+-  const key = voxelGridKey(cad, size);
++export function findVoxelAtCell(volumes: readonly WorldVolumeProps[], cad: Vec3, scale: number | Vec3): WorldVolumeProps | null {
++  const key = voxelGridKey(cad, scale);
+   for (const volume of volumes) {
+-    if (voxelGridKey(volume.origin, size) === key) {
++    if (voxelGridKey(volume.origin, volume.scale ?? 1) === key) {
+       return volume;
+     }
+   }
+   return null;
+ }
+ 
++export const VOXEL_BRUSH_PREVIEW_COLOR = "#38bdf8";
++export const VOXEL_BRUSH_PREVIEW_OPACITY = 0.48;
++
+ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
+   if (!raw || typeof raw !== "object") return null;
+   const r = raw as Record<string, unknown>;
+@@ -7928,7 +7944,7 @@ export interface Puzzle3dPlayEngagementInputs {
+   readonly fillCount: number;
+   readonly fillBuildProgress?: Puzzle3dFillBuildProgress;
+   readonly fillEditTargetVolumes?: boolean;
+-  readonly voxelBrushSize?: number;
++  readonly voxelBrushDimensions?: Vec3;
+   readonly selectedTargetVolumeCount?: number;
+   readonly selectionCount: number;
+   readonly onCmdLineChange: (value: string) => void;
+@@ -7941,7 +7957,7 @@ export interface Puzzle3dPlayEngagementInputs {
+   readonly onFillCount: (count: number) => void;
+   readonly onToggleFillEditTargetVolumes?: () => void;
+   readonly onDeleteSelectedTargetVolume?: () => void;
+-  readonly onVoxelBrushSize?: (size: number) => void;
++  readonly onVoxelBrushDimension?: (axis: 0 | 1 | 2, value: number) => void;
+   readonly onCycleBrushCandidate: () => void;
+   readonly onPickBrushCandidate: (index: number) => void;
+   readonly onZoomToSelection: () => void;
+@@ -7968,7 +7984,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
+     if (inputs.fillEditTargetVolumes) {
+       status.push({
+         id: "puzzle3d.fill.volumeEdit",
+-        content: "Hold Alt to paint voxels; release Alt to select voxels",
++        content: "Adjust W/D/H steppers; preview follows cursor; press Alt to place; release Alt to select voxels",
+       });
+     }
+   }
+@@ -8024,19 +8040,20 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
+     inputs.fillBuildProgress && !inputs.fillBuildProgress.done
+       ? `Fill ${inputs.fillCount} (building ${inputs.fillBuildProgress.count}/${inputs.fillBuildProgress.maxCount})`
+       : `Fill ${inputs.fillCount}`;
+-  const voxelSize = inputs.voxelBrushSize ?? DEFAULT_VOXEL_BRUSH_SIZE;
++  const dims = inputs.voxelBrushDimensions ?? DEFAULT_VOXEL_BRUSH_DIMENSIONS;
++  const voxelDimensionStepper = (axis: 0 | 1 | 2, label: string, id: string): EngagementStepperControl => ({
++    kind: "stepper",
++    id,
++    label,
++    value: dims[axis],
++    min: VOXEL_BRUSH_SIZE_MIN,
++    max: VOXEL_BRUSH_SIZE_MAX,
++    step: VOXEL_BRUSH_SIZE_STEP,
++    onChange: (value) => inputs.onVoxelBrushDimension?.(axis, value),
++  });
+   const control =
+     inputs.activeTool === "fill" && inputs.fillEditTargetVolumes
+-      ? {
+-          kind: "stepper" as const,
+-          id: "puzzle3d-voxel-size",
+-          label: "Voxel size",
+-          value: voxelSize,
+-          min: VOXEL_BRUSH_SIZE_MIN,
+-          max: VOXEL_BRUSH_SIZE_MAX,
+-          step: VOXEL_BRUSH_SIZE_STEP,
+-          onChange: inputs.onVoxelBrushSize,
+-        }
++      ? undefined
+       : inputs.activeTool === "fill"
+       ? {
+           kind: "slider" as const,
+@@ -8090,6 +8107,15 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
+       onAbort: inputs.onAbort,
+     },
+     control,
++    ...(inputs.activeTool === "fill" && inputs.fillEditTargetVolumes
++      ? {
++          controls: [
++            voxelDimensionStepper(0, "Width", "puzzle3d-voxel-width"),
++            voxelDimensionStepper(1, "Depth", "puzzle3d-voxel-depth"),
++            voxelDimensionStepper(2, "Height", "puzzle3d-voxel-height"),
++          ],
++        }
++      : {}),
+     ...(options?.length ? { options } : {}),
+     ...(status.length ? { status } : {}),
+     possibleEngagements,
+@@ -8143,8 +8169,8 @@ export const puzzle3dBrushAltPressedRef = { current: false };
+ /** @emoji 🧊️ True while fill target-volume edit mode is active. */
+ export const puzzle3dTargetVolumeToolActiveRef = { current: false };
+ 
+-/** @emoji 🧱️ Default axis-aligned voxel brush cell size (world units). */
+-export const DEFAULT_VOXEL_BRUSH_SIZE = 1;
++/** @emoji 🧱️ Default axis-aligned voxel brush box size (world units). */
++export const DEFAULT_VOXEL_BRUSH_DIMENSIONS: Vec3 = [1, 1, 1];
+ export const VOXEL_BRUSH_SIZE_MIN = 0.25;
+ export const VOXEL_BRUSH_SIZE_MAX = 8;
+ export const VOXEL_BRUSH_SIZE_STEP = 0.25;
+@@ -8178,11 +8204,11 @@ export function createVoxelBrushUiStore(initial: VoxelBrushUiSnapshot = VOXEL_BR
+ }
+ 
+ export const puzzle3dVoxelBrushUiStore = createVoxelBrushUiStore();
+-export const puzzle3dVoxelBrushSizeRef = { current: DEFAULT_VOXEL_BRUSH_SIZE };
++export const puzzle3dVoxelBrushDimensionsRef: { current: Vec3 } = { current: DEFAULT_VOXEL_BRUSH_DIMENSIONS };
+ 
+ const puzzle3dVoxelBrushBridgeRef: {
+   current: {
+-    readonly onPaint?: (cad: Vec3, size: number) => void;
++    readonly onPaint?: (cad: Vec3, scale: Vec3) => void;
+   };
+ } = { current: {} };
+ 
+@@ -8613,35 +8639,40 @@ const BrushPreviewGhost = reactHostPort.memo(function BrushPreviewGhost(props: {
+   );
+ });
+ 
+-const VoxelBrushPreview = reactHostPort.memo(function VoxelBrushPreview(props: { readonly voxelSize: number }) {
++const VoxelBrushPreview = reactHostPort.memo(function VoxelBrushPreview(props: { readonly dimensions: Vec3 }) {
+   const ui = reactHostPort.useSyncExternalStore(
+     puzzle3dVoxelBrushUiStore.subscribe,
+     puzzle3dVoxelBrushUiStore.getSnapshot,
+     puzzle3dVoxelBrushUiStore.getSnapshot,
+   );
+-  if (!ui.altPainting || !ui.cursorCad) {
++  if (!ui.cursorCad) {
+     return null;
+   }
+-  const preview = createVoxelVolume(ui.cursorCad, props.voxelSize);
++  const preview: WorldVolumeProps = {
++    ...createVoxelVolume(ui.cursorCad, props.dimensions),
++    id: "voxel-brush-preview",
++    color: VOXEL_BRUSH_PREVIEW_COLOR,
++    opacity: VOXEL_BRUSH_PREVIEW_OPACITY,
++  };
+   return <WorldVolumeLayer volumes={[preview]} interactive={false} />;
+ });
+ 
+-function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize: number }): null {
++function VoxelBrushBridge(props: { readonly enabled: boolean; readonly dimensions: Vec3 }): null {
+   const { camera, gl } = useThree();
+   const controls = useThree((state) => state.controls as { target?: Vector3 } | null | undefined);
+   const lodCtx = useLod();
+-  const lastPaintKeyRef = reactHostPort.useRef<string | null>(null);
++  const lastCommitKeyRef = reactHostPort.useRef<string | null>(null);
+   reactHostPort.useEffect(() => {
+     puzzle3dTargetVolumeToolActiveRef.current = props.enabled;
+-    puzzle3dVoxelBrushSizeRef.current = props.voxelSize;
++    puzzle3dVoxelBrushDimensionsRef.current = props.dimensions;
+     if (!props.enabled) {
+       puzzle3dVoxelBrushUiStore.setSnapshot(VOXEL_BRUSH_UI_IDLE);
+-      lastPaintKeyRef.current = null;
++      lastCommitKeyRef.current = null;
+     }
+     return () => {
+       puzzle3dTargetVolumeToolActiveRef.current = false;
+     };
+-  }, [props.enabled, props.voxelSize]);
++  }, [props.enabled, props.dimensions]);
+   reactHostPort.useEffect(() => {
+     if (!props.enabled) {
+       return;
+@@ -8657,15 +8688,15 @@ function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize
+         gridStepWorld: lodCtx.gridStepWorld,
+         gridPlaneAnchorCad: puzzle3dGridPlacementAnchorCad(controls?.target ?? null),
+       });
+-    const paintAt = (cad: Vec3): void => {
+-      const size = puzzle3dVoxelBrushSizeRef.current;
+-      const key = voxelGridKey(cad, size);
+-      if (lastPaintKeyRef.current === key) {
++    const commitAt = (cad: Vec3): void => {
++      const scale = puzzle3dVoxelBrushDimensionsRef.current;
++      const key = voxelGridKey(cad, scale);
++      if (lastCommitKeyRef.current === key) {
+         return;
+       }
+-      lastPaintKeyRef.current = key;
+-      puzzle3dVoxelBrushBridgeRef.current.onPaint?.(cad, size);
+-      console.log("[DEBUG] puzzle3d voxel brush paint", cad, size);
++      lastCommitKeyRef.current = key;
++      puzzle3dVoxelBrushBridgeRef.current.onPaint?.(cad, scale);
++      console.log("[DEBUG] puzzle3d voxel brush commit", cad, scale);
+     };
+     const setAltPainting = (altPainting: boolean): void => {
+       const prev = puzzle3dVoxelBrushUiStore.getSnapshot();
+@@ -8673,13 +8704,18 @@ function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize
+         return;
+       }
+       if (!altPainting) {
+-        lastPaintKeyRef.current = null;
++        lastCommitKeyRef.current = null;
+       }
+       puzzle3dVoxelBrushUiStore.setSnapshot({ ...prev, altPainting });
+     };
+     const onKeyDown = (event: KeyboardEvent): void => {
+-      if (event.key === "Alt") {
+-        setAltPainting(true);
++      if (event.key !== "Alt") {
++        return;
++      }
++      setAltPainting(true);
++      const cursor = puzzle3dVoxelBrushUiStore.getSnapshot().cursorCad;
++      if (cursor) {
++        commitAt(cursor);
+       }
+     };
+     const onKeyUp = (event: KeyboardEvent): void => {
+@@ -8694,19 +8730,13 @@ function VoxelBrushBridge(props: { readonly enabled: boolean; readonly voxelSize
+       const cad = pickCad(event.clientX, event.clientY);
+       const prev = puzzle3dVoxelBrushUiStore.getSnapshot();
+       puzzle3dVoxelBrushUiStore.setSnapshot({ ...prev, cursorCad: cad });
+-      if (prev.altPainting || event.altKey) {
+-        if (!prev.altPainting && event.altKey) {
+-          setAltPainting(true);
+-        }
+-        paintAt(cad);
+-      }
+     };
+     const onDown = (event: PointerEvent): void => {
+       if (event.button !== 0 || !event.altKey) {
+         return;
+       }
+       setAltPainting(true);
+-      paintAt(pickCad(event.clientX, event.clientY));
++      commitAt(pickCad(event.clientX, event.clientY));
+     };
+     window.addEventListener("keydown", onKeyDown);
+     window.addEventListener("keyup", onKeyUp);
+@@ -10984,7 +11014,7 @@ function Inner(props: CanvasProps & {
+     attractionSession,
+     fillEditTargetVolumes = false,
+     onVoxelBrushPaint,
+-    voxelBrushSize = DEFAULT_VOXEL_BRUSH_SIZE,
++    voxelBrushDimensions = DEFAULT_VOXEL_BRUSH_DIMENSIONS,
+   } = props;
+   const kindCompatibility = reactHostPort.useMemo(
+     () => resolvePuzzle3dKindCompatibility(kindCompatibilityProp, sceneFixture?.meta as Record<string, unknown> | undefined),
+@@ -11143,8 +11173,8 @@ function Inner(props: CanvasProps & {
+     >
+       {registryLodSceneCore}
+       {fixtureDropEnabled ? <FixtureDropPreview kindCatalogs={kindCatalogs} sceneFixture={sceneFixture} /> : null}
+-      <VoxelBrushBridge enabled={fillEditTargetVolumes} voxelSize={voxelBrushSize} />
+-      <VoxelBrushPreview voxelSize={voxelBrushSize} />
++      <VoxelBrushBridge enabled={fillEditTargetVolumes} dimensions={voxelBrushDimensions} />
++      <VoxelBrushPreview dimensions={voxelBrushDimensions} />
+     </LodBridge>
+   );
+   const onFillMeshesReadyRef = reactHostPort.useRef(onFillMeshesReady);
+@@ -11223,8 +11253,8 @@ export interface PlayCanvasProps {
+   readonly onSelect?: (snap: SelectionSnapshot) => void;
+   readonly onReferenceRelocate?: (payload: WorldReferenceRelocatePayload) => void;
+   readonly onTargetVolumeRelocate?: (payload: WorldVolumeRelocatePayload) => void;
+-  readonly onVoxelBrushPaint?: (cad: Vec3, size: number) => void;
+-  readonly voxelBrushSize?: number;
++  readonly onVoxelBrushPaint?: (cad: Vec3, scale: Vec3) => void;
++  readonly voxelBrushDimensions?: Vec3;
+   readonly fillEditTargetVolumes?: boolean;
+   readonly onIndirectConnect?: () => void;
+   readonly onProximityConnect?: () => void;
+@@ -11365,7 +11395,7 @@ export function PlayCanvas(props: PlayCanvasProps): React.ReactElement {
+       onReferenceRelocate={props.onReferenceRelocate}
+       onTargetVolumeRelocate={props.onTargetVolumeRelocate}
+       onVoxelBrushPaint={props.onVoxelBrushPaint}
+-      voxelBrushSize={props.voxelBrushSize}
++      voxelBrushDimensions={props.voxelBrushDimensions}
+       fillEditTargetVolumes={props.fillEditTargetVolumes}
+       onConnect={handleConnect}
+       onRelocate={handleRelocate}
+@@ -13907,13 +13937,11 @@ if (import.meta.vitest) {
+       spec.options?.find((row) => row.id === PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID)?.onPress?.();
+       expect(toggled).toBe(true);
+       expect(deleted).toBe(true);
+-      expect(spec.control?.kind).toBe("stepper");
+-      if (spec.control?.kind === "stepper") {
+-        expect(spec.control.label).toBe("Voxel size");
+-      }
++      expect(spec.control).toBeUndefined();
++      expect(spec.controls?.map((row) => row.label)).toEqual(["Width", "Depth", "Height"]);
+     });
+-    it("snapCadToVoxelCenter and addVoxelToFixture place axis-aligned cells", () => {
+-      expect(snapCadToVoxelCenter([0.2, 0.2, 0.2], 1)).toEqual([0.5, 0.5, 0.5]);
++    it("snapCadToVoxelCenter and addVoxelToFixture place axis-aligned boxes", () => {
++      expect(snapCadToVoxelCenter([0.2, 0.2, 0.2], [1, 2, 3])).toEqual([0.5, 1, 1.5]);
+       const base: FixtureV1 = {
+         schema: "puzzle.3d.fixture/v1",
+         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
+@@ -13923,10 +13951,10 @@ if (import.meta.vitest) {
+         references: [],
+         targetVolumes: [],
+       };
+-      const next = addVoxelToFixture(base, [0.2, 0.2, 0.2], 1);
++      const next = addVoxelToFixture(base, [0.2, 0.2, 0.2], [1, 2, 3]);
+       expect(next.targetVolumes).toHaveLength(1);
+-      expect(next.targetVolumes[0]?.scale).toBe(1);
+-      expect(addVoxelToFixture(next, [0.2, 0.2, 0.2], 1).targetVolumes).toHaveLength(1);
++      expect(next.targetVolumes[0]?.scale).toEqual([1, 2, 3]);
++      expect(addVoxelToFixture(next, [0.2, 0.2, 0.2], [1, 2, 3]).targetVolumes).toHaveLength(1);
+     });
+     it("buildPuzzle3dPlayEngagement shows fill build progress on the slider label and caps max", () => {
+       const spec = buildPuzzle3dPlayEngagement({
+diff --git a/puzzle/5d/play/index.ts b/puzzle/5d/play/index.ts
+index 648416bf9..0b18e7074 100644
+--- a/puzzle/5d/play/index.ts
++++ b/puzzle/5d/play/index.ts
+@@ -146,35 +146,33 @@ export interface Puzzle5dPlayDocumentSelectHandlers {
+   readonly onSelect3dAttraction: (attractionId: string) => void;
+ }
+ 
+-/** @emoji 🌳️ Puzzle 5d document: manifest → 2d + 3d composition subtrees. */
++/** @emoji 🌳️ Puzzle 5d document: flat 2d and 3d composition sections. */
++function puzzle5dPlayDocumentTreeSections(domain: "2d" | "3d", labelPrefix: string, tree: UiTreeNode): UiTreeSectionNode[] {
++  if (tree.type !== "tree") {
++    return [];
++  }
++  return tree.sections.map((section) => ({
++    ...section,
++    id: section.id.replace(/^puzzle-(?:2d|3d)-play-document\./, `puzzle-5d-play-document.${domain}.`),
++    label: `${labelPrefix} · ${section.label}`,
++  }));
++}
++
+ export function buildPuzzle5dPlayDocumentSections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayDocumentSelectHandlers): UiTreeNode {
+-  const branches: UiTreeItemNode[] = [];
++  const sections: UiTreeSectionNode[] = [];
+   if (snapshot.fixture2d) {
+-    const root2d = buildPuzzle2dPlayDocumentSections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d).sections[0]?.items?.[0];
+-    branches.push({
+-      id: "puzzle-5d-play-document.2d",
+-      label: "2d",
+-      defaultOpen: true,
+-      items: root2d?.items ?? [{ id: "puzzle-5d-play-document.2d.empty", label: "(empty)" }],
+-    });
++    const tree2d = buildPuzzle2dPlayDocumentSections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d);
++    sections.push(...puzzle5dPlayDocumentTreeSections("2d", "2d", tree2d));
+   }
+   if (snapshot.fixture3d) {
+     const selection3d = snapshot.selected3d ? { ...PUZZLE_3D_PLAY_EMPTY_SELECTION, objectIds: [snapshot.selected3d] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
+-    const root3d = buildPuzzle3dPlayDocumentTree(snapshot.fixture3d, selection3d).sections[0]?.items?.[0];
+-    branches.push({
+-      id: "puzzle-5d-play-document.3d",
+-      label: "3d",
+-      defaultOpen: true,
+-      items: root3d?.items ?? [{ id: "puzzle-5d-play-document.3d.empty", label: "(empty)" }],
+-    });
++    const tree3d = buildPuzzle3dPlayDocumentTree(snapshot.fixture3d, selection3d);
++    sections.push(...puzzle5dPlayDocumentTreeSections("3d", "3d", tree3d));
+   }
+-  const root5d: UiTreeItemNode = {
+-    id: "puzzle-5d-play-document.5d",
+-    label: snapshot.manifestLabel ?? "5d",
+-    defaultOpen: true,
+-    items: branches.length ? branches : [{ id: "puzzle-5d-play-document.5d.empty", label: "(no fixtures)" }],
+-  };
+-  return playgroundTreePanelRootItems("puzzle-5d-play-document.root", [root5d]);
++  if (!sections.length) {
++    return playgroundTreePanelRootItems("puzzle-5d-play-document.root", [{ id: "puzzle-5d-play-document.empty", label: "(no fixtures)" }]);
++  }
++  return { type: "tree", sections };
+ }
+ //#endregion 🔖️Puzzle5dPlayDocument
+ 
+@@ -1131,11 +1129,9 @@ if (import.meta.vitest) {
+         onSelect3dVortex: () => {},
+         onSelect3dAttraction: () => {},
+       });
+-      const root5d = tree.sections[0]?.items?.[0];
+-      expect(root5d?.label).toBeTruthy();
+-      const labels = root5d?.items?.map((row) => row.label);
+-      expect(labels).toContain("2d");
+-      expect(labels).toContain("3d");
++      const sectionLabels = tree.sections.map((section) => section.label);
++      expect(sectionLabels.some((label) => label?.startsWith("2d ·"))).toBe(true);
++      expect(sectionLabels.some((label) => label?.startsWith("3d ·"))).toBe(true);
+     });
+   });
+ 
+diff --git a/reasoning/mindmap/wires/play/index.ts b/reasoning/mindmap/wires/play/index.ts
+index 47c993f24..e50493d64 100644
+--- a/reasoning/mindmap/wires/play/index.ts
++++ b/reasoning/mindmap/wires/play/index.ts
+@@ -30,7 +30,7 @@ export {
+ 
+ import { Playground2d, type Puzzle2dPlayDocumentBuildOptions } from "@puzzle/2d/play";
+ import type { KindCatalogBundle, Puzzle2dFixtureV1 } from "@puzzle/2d/react";
+-import { playgroundTreePanelRootItems, type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@framework/playground/core";
++import { type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@framework/playground/core";
+ import { puzzle2dFixtureMergedKindCatalogs } from "@puzzle/2d/react";
+ import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
+ import {
+@@ -203,12 +203,6 @@ export function buildWiresPlayDocumentSections(
+       ...wiresDocumentHoverHandlers(onHover, identity.nodeId),
+     };
+   });
+-  const identitiesGroup: UiTreeItemNode = {
+-    id: "wires-play-document.identities",
+-    label: "Identities",
+-    defaultOpen: true,
+-    items: identityItems.length ? identityItems : [{ id: "wires-play-document.identities.empty", label: "(none)" }],
+-  };
+   const relationshipItems: UiTreeItemNode[] = puzzleFixture.edges.map((edge) => ({
+     id: `${WIRES_PLAY_DOCUMENT_RELATIONSHIP_PREFIX}${edge.id}`,
+     label: wiresRelationshipDocumentLabel(wiresFixture, edge.id) ?? edge.id,
+@@ -216,19 +210,23 @@ export function buildWiresPlayDocumentSections(
+     onClick: () => onSelect(edge.id),
+     ...wiresDocumentHoverHandlers(onHover, edge.id),
+   }));
+-  const relationshipsGroup: UiTreeItemNode = {
+-    id: "wires-play-document.relationships",
+-    label: "Relationships",
+-    defaultOpen: true,
+-    items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-document.relationships.empty", label: "(none)" }],
+-  };
+-  const wiresRoot: UiTreeItemNode = {
+-    id: "wires-play-document.wires",
+-    label: wiresFixture.source.kitName,
+-    defaultOpen: true,
+-    items: [identitiesGroup, relationshipsGroup],
+-  };
+-  return playgroundTreePanelRootItems("wires-play-document.root", [wiresRoot]) as UiTreeNode;
++  return {
++    type: "tree",
++    sections: [
++      {
++        id: "wires-play-document.identities",
++        label: "Identities",
++        defaultOpen: true,
++        items: identityItems.length ? identityItems : [{ id: "wires-play-document.identities.empty", label: "(none)" }],
++      },
++      {
++        id: "wires-play-document.relationships",
++        label: "Relationships",
++        defaultOpen: true,
++        items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-document.relationships.empty", label: "(none)" }],
++      },
++    ],
++  } as UiTreeNode;
+ }
+ 
+ //#region 🔖️Boot
+@@ -261,11 +259,10 @@ if (import.meta.vitest) {
+ 
+     it("buildWiresPlayDocumentSections uses Identities and Relationships groups", () => {
+       const tree = buildWiresPlayDocumentSections(WIRES_PLAY_FIXTURE, WIRES_PLAY_DEFAULT_FIXTURE, [], () => {});
+-      const root = tree.sections[0]?.items?.[0];
+-      expect(root?.label).toBe("Metabolism");
+-      const groups = root?.items ?? [];
+-      expect(groups.map((g) => g.label)).toEqual(["Identities", "Relationships"]);
+-      const rel = groups[1]?.items?.find((row) => row.id === "wires-play-document.relationship.wires-rel-is-capital");
++      const groups = tree.sections.map((section) => section.label);
++      expect(groups).toEqual(["Identities", "Relationships"]);
++      const relationshipsSection = tree.sections.find((section) => section.label === "Relationships");
++      const rel = relationshipsSection?.items?.find((row) => row.id === "wires-play-document.relationship.wires-rel-is-capital");
+       expect(rel?.label).toBe("Is: Bridge → Capital");
+     });
+ 
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp
+new file mode 100644
+index 000000000..9f0219202
+--- /dev/null
++++ b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-classic-structure.stp
+@@ -0,0 +1,177 @@
++ISO-10303-21;
++HEADER;
++/* Generated by software containing ST-Developer
++ * from STEP Tools, Inc. (www.steptools.com) 
++ */
++/* OPTION: using custom schema-name function */
++
++FILE_DESCRIPTION(
++/* description */ (''),
++/* implementation_level */ '2;1');
++
++FILE_NAME(
++/* name */ 'hexagonal-cut-concrete-forest-left-classic-structure',
++/* time_stamp */ '2026-06-07T03:13:39+02:00',
++/* author */ (''),
++/* organization */ (''),
++/* preprocessor_version */ 'ST-DEVELOPER v19.2',
++/* originating_system */ 'Rhino 8.31',
++/* authorisation */ '');
++
++FILE_SCHEMA (('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }'));
++ENDSEC;
++
++DATA;
++#10=SHAPE_REPRESENTATION_RELATIONSHIP('','',#78,#13);
++#11=SHAPE_REPRESENTATION_RELATIONSHIP('','',#78,#38);
++#12=GEOMETRIC_CURVE_SET('curve_set_0',(#24,#25,#26,#27,#28,#29,#30,#31,
++#32,#33));
++#13=GEOMETRICALLY_BOUNDED_WIREFRAME_SHAPE_REPRESENTATION(
++'wireframe_rep_0',(#12,#81),#77);
++#14=VECTOR('',#86,2.7);
++#15=VECTOR('',#87,1.35);
++#16=VECTOR('',#88,2.7);
++#17=VECTOR('',#89,2.7);
++#18=VECTOR('',#90,2.7);
++#19=VECTOR('',#91,2.7);
++#20=VECTOR('',#92,2.7);
++#21=VECTOR('',#93,5.4);
++#22=VECTOR('',#94,3.);
++#23=VECTOR('',#95,3.);
++#24=LINE('',#115,#14);
++#25=LINE('',#116,#15);
++#26=LINE('',#117,#16);
++#27=LINE('',#118,#17);
++#28=LINE('',#119,#18);
++#29=LINE('',#120,#19);
++#30=LINE('',#121,#20);
++#31=LINE('',#122,#21);
++#32=LINE('',#123,#22);
++#33=LINE('',#124,#23);
++#34=PRESENTATION_LAYER_ASSIGNMENT('structure::slab','',(#37));
++#35=PRESENTATION_LAYER_ASSIGNMENT('structure::beams','',(#24,#25,#26,#27,
++#28,#29,#30,#31));
++#36=PRESENTATION_LAYER_ASSIGNMENT('structure::columns','',(#32,#33));
++#37=SHELL_BASED_SURFACE_MODEL('shell_1',(#39));
++#38=MANIFOLD_SURFACE_SHAPE_REPRESENTATION('shell_rep_0',(#37,#82),#77);
++#39=OPEN_SHELL('',(#40));
++#40=ADVANCED_FACE('',(#41),#59,.T.);
++#41=FACE_OUTER_BOUND('',#42,.T.);
++#42=EDGE_LOOP('',(#43,#44,#45,#46));
++#43=ORIENTED_EDGE('',*,*,#49,.T.);
++#44=ORIENTED_EDGE('',*,*,#50,.T.);
++#45=ORIENTED_EDGE('',*,*,#47,.T.);
++#46=ORIENTED_EDGE('',*,*,#48,.T.);
++#47=EDGE_CURVE('',#55,#56,#51,.T.);
++#48=EDGE_CURVE('',#56,#57,#52,.T.);
++#49=EDGE_CURVE('',#57,#58,#53,.T.);
++#50=EDGE_CURVE('',#58,#55,#54,.T.);
++#51=B_SPLINE_CURVE_WITH_KNOTS('',1,(#106,#107),.UNSPECIFIED.,.F.,.F.,(2,
++2),(0.,5.4),.UNSPECIFIED.);
++#52=B_SPLINE_CURVE_WITH_KNOTS('',1,(#108,#109),.UNSPECIFIED.,.F.,.F.,(2,
++2),(-16.2000205649649,-8.10001028248244),.UNSPECIFIED.);
++#53=B_SPLINE_CURVE_WITH_KNOTS('',1,(#110,#111,#112),.UNSPECIFIED.,.F.,.F.,
++(2,1,2),(0.,2.7,5.4),.UNSPECIFIED.);
++#54=B_SPLINE_CURVE_WITH_KNOTS('',1,(#113,#114),.UNSPECIFIED.,.F.,.F.,(2,
++2),(8.10001028248244,16.2000205649649),.UNSPECIFIED.);
++#55=VERTEX_POINT('',#102);
++#56=VERTEX_POINT('',#103);
++#57=VERTEX_POINT('',#104);
++#58=VERTEX_POINT('',#105);
++#59=PLANE('',#80);
++#60=SHAPE_DEFINITION_REPRESENTATION(#61,#78);
++#61=PRODUCT_DEFINITION_SHAPE($,$,#63);
++#62=PRODUCT_DEFINITION_CONTEXT('3D Mechanical Parts',#67,'design');
++#63=PRODUCT_DEFINITION('A','First version',#64,#62);
++#64=PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE('A',
++'First version',#69,.MADE.);
++#65=PRODUCT_RELATED_PRODUCT_CATEGORY('tool','tool',(#69));
++#66=APPLICATION_PROTOCOL_DEFINITION('Draft International Standard',
++'automotive_design',1999,#67);
++#67=APPLICATION_CONTEXT(
++'data for automotive mechanical design processes');
++#68=PRODUCT_CONTEXT('3D Mechanical Parts',#67,'mechanical');
++#69=PRODUCT('Document','Document','',(#68));
++#70=(
++LENGTH_UNIT()
++NAMED_UNIT(*)
++SI_UNIT($,.METRE.)
++);
++#71=(
++NAMED_UNIT(*)
++PLANE_ANGLE_UNIT()
++SI_UNIT($,.RADIAN.)
++);
++#72=DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);
++#73=PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.01745329252),#71);
++#74=(
++CONVERSION_BASED_UNIT('DEGREES',#73)
++NAMED_UNIT(#72)
++PLANE_ANGLE_UNIT()
++);
++#75=(
++NAMED_UNIT(*)
++SI_UNIT($,.STERADIAN.)
++SOLID_ANGLE_UNIT()
++);
++#76=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(0.001),#70,
++'DISTANCE_ACCURACY_VALUE',
++'Maximum model space distance between geometric entities at asserted c
++onnectivities');
++#77=(
++GEOMETRIC_REPRESENTATION_CONTEXT(3)
++GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#76))
++GLOBAL_UNIT_ASSIGNED_CONTEXT((#75,#74,#70))
++REPRESENTATION_CONTEXT('ID1','3D')
++);
++#78=SHAPE_REPRESENTATION('Document',(#79,#81,#82),#77);
++#79=AXIS2_PLACEMENT_3D($,#100,#83,#84);
++#80=AXIS2_PLACEMENT_3D('',#101,#85,$);
++#81=AXIS2_PLACEMENT_3D($,#125,#96,#97);
++#82=AXIS2_PLACEMENT_3D($,#126,#98,#99);
++#83=DIRECTION('',(0.,0.,1.));
++#84=DIRECTION('',(1.,0.,0.));
++#85=DIRECTION('',(0.,0.,1.));
++#86=DIRECTION('',(-0.5,0.866025403784439,0.));
++#87=DIRECTION('',(1.,0.,0.));
++#88=DIRECTION('',(-0.5,-0.866025403784439,0.));
++#89=DIRECTION('',(0.5,-0.866025403784439,0.));
++#90=DIRECTION('',(-0.5,-0.866025403784438,0.));
++#91=DIRECTION('',(0.5,0.866025403784439,0.));
++#92=DIRECTION('',(0.5,0.866025403784439,0.));
++#93=DIRECTION('',(-1.,0.,0.));
++#94=DIRECTION('',(0.,0.,1.));
++#95=DIRECTION('',(0.,0.,1.));
++#96=DIRECTION('',(0.,0.,1.));
++#97=DIRECTION('',(1.,0.,0.));
++#98=DIRECTION('',(0.,0.,1.));
++#99=DIRECTION('',(1.,0.,0.));
++#100=CARTESIAN_POINT('',(0.,0.,0.));
++#101=CARTESIAN_POINT('',(18.9000205649649,4.67653718043597,3.));
++#102=CARTESIAN_POINT('',(2.7,4.67653718043597,3.));
++#103=CARTESIAN_POINT('',(0.,8.88178419700125E-16,3.));
++#104=CARTESIAN_POINT('',(8.10001028248245,-4.44089209850063E-16,3.));
++#105=CARTESIAN_POINT('',(10.8000102824825,4.67653718043597,3.));
++#106=CARTESIAN_POINT('',(2.7,4.67653718043597,3.));
++#107=CARTESIAN_POINT('',(0.,8.88178419700125E-16,3.));
++#108=CARTESIAN_POINT('',(0.,8.88178419700125E-16,3.));
++#109=CARTESIAN_POINT('',(8.10001028248245,-2.22044604925032E-16,3.));
++#110=CARTESIAN_POINT('',(8.10001028248245,1.33226762955019E-15,3.));
++#111=CARTESIAN_POINT('',(9.45001028248245,2.33826859021798,3.));
++#112=CARTESIAN_POINT('',(10.8000102824824,4.67653718043597,3.));
++#113=CARTESIAN_POINT('',(10.8000102824824,4.67653718043597,3.));
++#114=CARTESIAN_POINT('',(2.7,4.67653718043597,3.));
++#115=CARTESIAN_POINT('',(8.10001028248245,2.33826859021798,3.));
++#116=CARTESIAN_POINT('',(8.10001028248245,2.33826859021798,3.));
++#117=CARTESIAN_POINT('',(2.70001028248245,2.33826859021798,3.));
++#118=CARTESIAN_POINT('',(2.70001028248245,2.33826859021798,3.));
++#119=CARTESIAN_POINT('',(8.10001028248245,2.33826859021798,3.));
++#120=CARTESIAN_POINT('',(2.70001028248245,2.33826859021798,3.));
++#121=CARTESIAN_POINT('',(8.10001028248245,2.33826859021798,3.));
++#122=CARTESIAN_POINT('',(8.10001028248245,2.33826859021798,3.));
++#123=CARTESIAN_POINT('',(8.10001028248245,2.33826859021798,0.));
++#124=CARTESIAN_POINT('',(2.70001028248245,2.33826859021798,0.));
++#125=CARTESIAN_POINT('',(0.,0.,0.));
++#126=CARTESIAN_POINT('',(0.,0.,0.));
++ENDSEC;
++END-ISO-10303-21;
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp
+new file mode 100644
+index 000000000..124d66f79
+--- /dev/null
++++ b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest-left-energy.stp
+@@ -0,0 +1,125 @@
++ISO-10303-21;
++HEADER;
++/* Generated by software containing ST-Developer
++ * from STEP Tools, Inc. (www.steptools.com) 
++ */
++/* OPTION: using custom schema-name function */
++
++FILE_DESCRIPTION(
++/* description */ (''),
++/* implementation_level */ '2;1');
++
++FILE_NAME(
++/* name */ 'hexagonal-cut-concrete-forest-left-energy',
++/* time_stamp */ '2026-06-07T03:08:46+02:00',
++/* author */ (''),
++/* organization */ (''),
++/* preprocessor_version */ 'ST-DEVELOPER v19.2',
++/* originating_system */ 'Rhino 8.31',
++/* authorisation */ '');
++
++FILE_SCHEMA (('AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF { 1 0 10303 442 3 1 4 }'));
++ENDSEC;
++
++DATA;
++#10=SHAPE_REPRESENTATION_RELATIONSHIP('','',#53,#13);
++#11=PRESENTATION_LAYER_ASSIGNMENT('energy::slab','',(#12));
++#12=SHELL_BASED_SURFACE_MODEL('shell_1',(#14));
++#13=MANIFOLD_SURFACE_SHAPE_REPRESENTATION('shell_rep_0',(#12,#56),#52);
++#14=OPEN_SHELL('',(#15));
++#15=ADVANCED_FACE('',(#16),#34,.T.);
++#16=FACE_OUTER_BOUND('',#17,.T.);
++#17=EDGE_LOOP('',(#18,#19,#20,#21));
++#18=ORIENTED_EDGE('',*,*,#24,.T.);
++#19=ORIENTED_EDGE('',*,*,#25,.T.);
++#20=ORIENTED_EDGE('',*,*,#22,.T.);
++#21=ORIENTED_EDGE('',*,*,#23,.T.);
++#22=EDGE_CURVE('',#30,#31,#26,.T.);
++#23=EDGE_CURVE('',#31,#32,#27,.T.);
++#24=EDGE_CURVE('',#32,#33,#28,.T.);
++#25=EDGE_CURVE('',#33,#30,#29,.T.);
++#26=B_SPLINE_CURVE_WITH_KNOTS('',1,(#68,#69),.UNSPECIFIED.,.F.,.F.,(2,2),
++(0.,5.4),.UNSPECIFIED.);
++#27=B_SPLINE_CURVE_WITH_KNOTS('',1,(#70,#71),.UNSPECIFIED.,.F.,.F.,(2,2),
++(-16.2000205649649,-8.10001028248244),.UNSPECIFIED.);
++#28=B_SPLINE_CURVE_WITH_KNOTS('',1,(#72,#73,#74),.UNSPECIFIED.,.F.,.F.,
++(2,1,2),(0.,2.7,5.4),.UNSPECIFIED.);
++#29=B_SPLINE_CURVE_WITH_KNOTS('',1,(#75,#76),.UNSPECIFIED.,.F.,.F.,(2,2),
++(8.10001028248244,16.2000205649649),.UNSPECIFIED.);
++#30=VERTEX_POINT('',#64);
++#31=VERTEX_POINT('',#65);
++#32=VERTEX_POINT('',#66);
++#33=VERTEX_POINT('',#67);
++#34=PLANE('',#55);
++#35=SHAPE_DEFINITION_REPRESENTATION(#36,#53);
++#36=PRODUCT_DEFINITION_SHAPE($,$,#38);
++#37=PRODUCT_DEFINITION_CONTEXT('3D Mechanical Parts',#42,'design');
++#38=PRODUCT_DEFINITION('A','First version',#39,#37);
++#39=PRODUCT_DEFINITION_FORMATION_WITH_SPECIFIED_SOURCE('A',
++'First version',#44,.MADE.);
++#40=PRODUCT_RELATED_PRODUCT_CATEGORY('tool','tool',(#44));
++#41=APPLICATION_PROTOCOL_DEFINITION('Draft International Standard',
++'automotive_design',1999,#42);
++#42=APPLICATION_CONTEXT(
++'data for automotive mechanical design processes');
++#43=PRODUCT_CONTEXT('3D Mechanical Parts',#42,'mechanical');
++#44=PRODUCT('Document','Document','',(#43));
++#45=(
++LENGTH_UNIT()
++NAMED_UNIT(*)
++SI_UNIT($,.METRE.)
++);
++#46=(
++NAMED_UNIT(*)
++PLANE_ANGLE_UNIT()
++SI_UNIT($,.RADIAN.)
++);
++#47=DIMENSIONAL_EXPONENTS(0.,0.,0.,0.,0.,0.,0.);
++#48=PLANE_ANGLE_MEASURE_WITH_UNIT(PLANE_ANGLE_MEASURE(0.01745329252),#46);
++#49=(
++CONVERSION_BASED_UNIT('DEGREES',#48)
++NAMED_UNIT(#47)
++PLANE_ANGLE_UNIT()
++);
++#50=(
++NAMED_UNIT(*)
++SI_UNIT($,.STERADIAN.)
++SOLID_ANGLE_UNIT()
++);
++#51=UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(0.001),#45,
++'DISTANCE_ACCURACY_VALUE',
++'Maximum model space distance between geometric entities at asserted c
++onnectivities');
++#52=(
++GEOMETRIC_REPRESENTATION_CONTEXT(3)
++GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#51))
++GLOBAL_UNIT_ASSIGNED_CONTEXT((#50,#49,#45))
++REPRESENTATION_CONTEXT('ID1','3D')
++);
++#53=SHAPE_REPRESENTATION('Document',(#54,#56),#52);
++#54=AXIS2_PLACEMENT_3D($,#62,#57,#58);
++#55=AXIS2_PLACEMENT_3D('',#63,#59,$);
++#56=AXIS2_PLACEMENT_3D($,#77,#60,#61);
++#57=DIRECTION('',(0.,0.,1.));
++#58=DIRECTION('',(1.,0.,0.));
++#59=DIRECTION('',(0.,0.,1.));
++#60=DIRECTION('',(0.,0.,1.));
++#61=DIRECTION('',(1.,0.,0.));
++#62=CARTESIAN_POINT('',(0.,0.,0.));
++#63=CARTESIAN_POINT('',(18.9000205649649,4.67653718043597,3.));
++#64=CARTESIAN_POINT('',(2.7,4.67653718043597,3.));
++#65=CARTESIAN_POINT('',(0.,8.88178419700125E-16,3.));
++#66=CARTESIAN_POINT('',(8.10001028248245,-4.44089209850063E-16,3.));
++#67=CARTESIAN_POINT('',(10.8000102824825,4.67653718043597,3.));
++#68=CARTESIAN_POINT('',(2.7,4.67653718043597,3.));
++#69=CARTESIAN_POINT('',(0.,8.88178419700125E-16,3.));
++#70=CARTESIAN_POINT('',(0.,8.88178419700125E-16,3.));
++#71=CARTESIAN_POINT('',(8.10001028248245,-2.22044604925032E-16,3.));
++#72=CARTESIAN_POINT('',(8.10001028248245,1.33226762955019E-15,3.));
++#73=CARTESIAN_POINT('',(9.45001028248245,2.33826859021798,3.));
++#74=CARTESIAN_POINT('',(10.8000102824824,4.67653718043597,3.));
++#75=CARTESIAN_POINT('',(10.8000102824824,4.67653718043597,3.));
++#76=CARTESIAN_POINT('',(2.7,4.67653718043597,3.));
++#77=CARTESIAN_POINT('',(0.,0.,0.));
++ENDSEC;
++END-ISO-10303-21;
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh
+index 931e2ed78..7039e29de 100644
+Binary files a/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh and b/compose/fixtures/kit/folder/abbau-aufbau/hexagonal-cut-concrete-forest.gh differ
+diff --git a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm
+index b2345d13e..5a273f3cf 100644
+Binary files a/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm and b/compose/fixtures/kit/folder/abbau-aufbau/stockwerk.3dm differ
+diff --git a/ui/react/globals-ui.css b/ui/react/globals-ui.css
+index 02d466343..4973ef03d 100644
+--- a/ui/react/globals-ui.css
++++ b/ui/react/globals-ui.css
+@@ -84,18 +84,6 @@
+   -webkit-app-region: window-drag;
+ } */
+ 
+-/* #region ❄️TreeSpacing
+-/* Vertical rhythm is owned by TreeBranchContent (margin-top via layout effect).
+- * Section wrappers only get a divider between adjacent top-level sections.
+- */
+-
+-[data-slot="tree-section-wrapper"] + [data-slot="tree-section-wrapper"] {
+-  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+-  margin-top: 10px;
+-  padding-top: 10px;
+-}
+-/* #endregion ❄️*/
+-
+ /* #region 🎃️TreeHoverPath
+ /* Tree hover path highlight: when a row is hovered, ancestor branch containers
+  * receive [data-tree-hover-path="branch"] and ancestor/active rows receive
+diff --git a/ui/react/index.tsx b/ui/react/index.tsx
+index f41d6f039..d27c0e5ca 100644
+--- a/ui/react/index.tsx
++++ b/ui/react/index.tsx
+@@ -12978,6 +12978,8 @@ export interface EngagementSpec {
+   input?: EngagementInput;
+   /** @emoji 🎛️ Optional slider, stepper, or ring control for the active step. */
+   control?: EngagementControl;
++  /** @emoji 🎛️ Optional additional controls rendered below the primary control. */
++  controls?: readonly EngagementControl[];
+   status?: EngagementStatus[];
+   possibleEngagements?: EngagementPossible[];
+ }
+@@ -13098,7 +13100,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
+ }
+ 
+ /** @emoji 💬️ Top-aligned engagement: command input with optional right chevron for possibles; status and option buttons below. */
+-const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, control, status, possibleEngagements, className = "", active = false }) => {
++const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, control, controls, status, possibleEngagements, className = "", active = false }) => {
+   const commandPlaceholderLabel = useLabel(UI_ENGAGEMENT.command);
+   const commandActivePlaceholderLabel = useLabel(UI_ENGAGEMENT.commandActive);
+   const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.commands);
+@@ -13127,7 +13129,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
+ 
+   const hasOptions = !!options?.length;
+   const hasInput = !!input;
+-  const hasControl = !!control;
++  const hasControl = !!control || !!(controls?.length);
+   const hasStatus = !!status?.length;
+   const hasPossibles = !!possibleEngagements?.length;
+   const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
+@@ -13337,7 +13339,10 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
+           ) : null}
+         </Popover>
+       ) : null}
+-      {hasControl ? <EngagementControlView control={control!} /> : null}
++      {control ? <EngagementControlView control={control} /> : null}
++      {controls?.map((row) => (
++        <EngagementControlView key={row.id ?? row.label ?? row.kind} control={row} />
++      ))}
+       {secondaryStatus?.length ? (
+         <div data-slot="engagement-status" className="flex flex-wrap items-center justify-center gap-single text-xs text-muted-foreground">
+           {secondaryStatus.map((item) => (

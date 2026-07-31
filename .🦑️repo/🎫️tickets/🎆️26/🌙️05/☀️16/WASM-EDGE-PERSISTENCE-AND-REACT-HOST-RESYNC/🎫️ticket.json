@@ -1,0 +1,9 @@
+{
+  "title": "Wasm Edge Persistence And React Host Resync",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Fix WASM-created handle links disappearing: apply post-sync event drains in pushSceneToWasmDriver/initGpu; bump epoch on graph-mutating wasm drains so BoardHostSubtree re-runs mergeWasmHostAuthoredEdgesIntoDescriptor when React children unchanged.",
+  "summary": "Fixed WASM link edges flashing then disappearing: (1) pushSceneToWasmDriver and initGpuSurfaceOnce now applyWasmDrainToScene after syncDescriptor so post-sync WASM events are not dropped. (2) BoardRenderer bumps wasmHostSceneMergeResyncStore on graph-mutating drains (edgeCreate/edgeDelete/nodeDelete) and BoardHostSubtree subscribes via useSyncExternalStore so mergeWasmHostAuthoredEdgesIntoDescriptor+syncBoardScene re-run when React children are unchanged. (3) edgeCreate drain resolves endpoints via getObjectById. Added BoardCanvas integration test for wasm-only link without Edge JSX.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️00151dffa071470fb923a3bd7c21898c"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Interpolate Curve Finalize Display",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Fix interpolate curve command: preview shows correct Catmull-Rom curve but finalize leaves wrong points/lines.",
-  "summary": "Show interpolation through-points when a committed interpolate curve (nurbs through edge/wire) is selected or hovered. Selection highlight now reads curve.poles and renders construction point markers matching the in-command preview.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪35e8def8df2b4243b834996dabf61acb", "⚪d44f93440b474efcadd8f3cb4bddf2c3"]
-}

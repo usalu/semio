@@ -1,0 +1,12 @@
+{
+  "title": "Wgpu Window Rail Paint Parity",
+  "emoji": "🪟️",
+  "status": "open",
+  "description": "Fix WGPU renderer so per-window Command (engagement) and Window Options (measures) foldable rails are visible (paint on overlay list) and match React placement, default fold state, and visibility gating.",
+  "summary": "Follow-up fix for WGPU window rails: (1) overlay chip clicks were stolen by the window scroll-region hit registered later — chip hits are now registered after render_window_content; (2) engagement visibility gating incorrectly hid the Command chip — React always shows the chip when engagement exists, only the body is gated — collapsed chip now always renders, engagement_activated drives expand/collapse; (3) render_chrome_group gained register_hits flag so overlay chips skip duplicate/wrong control_ids.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1828"
+  },
+  "goal": "🎯️🎨️r2602🎯️🎨️runningsketchpad",
+  "sessions": ["⚪️ec047921dfd14c2abb61434733c015ab", "⚪️8ef118cc4f6941279e889431e27b004a", "⚪️466f7492f55249f6b6869e780bfbce06"]
+}

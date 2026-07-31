@@ -1,0 +1,14 @@
+{
+  "title": "Local-First Command Kernel",
+  "emoji": "🧠️",
+  "status": "closed",
+  "summary": "Local-first command kernel: kernel contracts in framework/core, hash/hlc/schema/sync crates, vcs causal undo on Edit/Checkpoint/Alternative, OpEnvelope hub transport, WIT plugin-world rewrite, sandboxed plugin host (fuel/epoch/supervisor), PluginHost invoke_command router + transactional hot-swap, render-plan validator, browser Worker isolation (opt-in). All 21 plugins build on default C-ABI; component_plugin_exports for wasip2 opt-in.",
+  "description": "Rebuild plugin architecture into a local-first, schema-validating, capability-secured command kernel with sandboxed WASI P2 plugin components. Host owns state, windows, GPU, sync, validation, scheduling, permissions, undo, and plugin supervision.",
+  "goal": "🎯️aioptimizedrepo/sandboxedrepo",
+  "plan": {
+    "client": "cursor",
+    "id": "889943fb",
+    "local": "local-first_command_kernel_889943fb.plan.md"
+  },
+  "sessions": []
+}

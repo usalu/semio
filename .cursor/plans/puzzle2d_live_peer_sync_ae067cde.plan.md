@@ -29,7 +29,7 @@ isProject: false
 
 The triptych play shell drives all panes from one shared declarative `fixture` + `selectionIds` + `sceneAuthoringEpoch` (`framework/product/playground/renderer/react/index.tsx`). Selection synced cheaply because it is a low-frequency shared-state update. Node drags are authored inside WASM and only mutate the local pane, so before commit 94 they never reached other panes.
 
-Commit 94 added the `//#region 🔖MultiViewAuthoring` global `Set<Puzzle2dRenderer>` broadcast in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx). On every `nodeMove` drain event (~60fps during a drag), each peer's `applyNodePositionSilent` does:
+Commit 94 added the `//#region 🔖️MultiViewAuthoring` global `Set<Puzzle2dRenderer>` broadcast in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx). On every `nodeMove` drain event (~60fps during a drag), each peer's `applyNodePositionSilent` does:
 
 ```2636:2637:puzzle/2d/react/index.tsx
     this.lastPushedDescriptorJson = null;
@@ -47,7 +47,7 @@ Keep live cross-pane motion, but give peers an O(moved-nodes) path instead of O(
 - Add a host method near `sync_descriptor` (lib.rs:4747) inside its `impl`:
   - `pub fn set_node_positions(&mut self, moves: &[(String, f64, f64)])` that does `if let Some(n) = self.nodes.get_mut(id) { n.x = x; n.y = y; }` for finite coords. Handle/edge/wire geometry is derived from node positions at draw time, so no extra recompute is needed (verify nothing caches node world geometry; if a redraw/dirty flag exists, set it).
 - Add a `#[wasm_bindgen(js_name = setNodePositionsJson)]` wrapper next to `sync_descriptor_json` (lib.rs:6768) that parses `[{"id","x","y"}]` and calls `set_node_positions`. Use the existing `#region` structuring.
-- Rebuild bindings so the `.d.ts` exposes `setNodePositionsJson` to TS: `bun ./script.ts wasm` in `puzzle/2d/rs`.
+- Rebuild bindings so the `.d.ts` exposes `setNodePositionsJson` to TS: `bun ./📜️script.ts wasm` in `puzzle/2d/rs`.
 
 ### 2. JS renderer: route peer moves through the incremental setter — [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx)
 
@@ -67,8 +67,8 @@ Keep live cross-pane motion, but give peers an O(moved-nodes) path instead of O(
 
 ## Verification
 
-- `bun ./script.ts wasm` in `puzzle/2d/rs` (rebuild bindings), then `cargo test` for the Rust unit tests.
-- `bun ./script.ts test` in `puzzle/2d/react` (vitest) for the JS suite.
+- `bun ./📜️script.ts wasm` in `puzzle/2d/rs` (rebuild bindings), then `cargo test` for the Rust unit tests.
+- `bun ./📜️script.ts test` in `puzzle/2d/react` (vitest) for the JS suite.
 - Manual: `bun run dev:puzzle:2d`, drag a node in one triptych pane with the Metabolism fixture and confirm all panes move live and smoothly (no jank), plus deletes still propagate.
 
 ## Ticket workflow

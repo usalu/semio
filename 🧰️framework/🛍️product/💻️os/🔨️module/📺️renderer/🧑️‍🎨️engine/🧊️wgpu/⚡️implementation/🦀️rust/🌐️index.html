@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Semio Wgpu</title>
+    <link data-trunk rel="rust" href="rs/Cargo.toml" data-wasm-opt="z" />
+    <link data-trunk rel="copy-dir" href="../../product/os/dev/plugin-modules" />
+    <link data-trunk rel="copy-dir" href="../../../ui/asset" />
+    <link data-trunk rel="copy-file" href="js/🟨️boot.js" />
+    <script type="module" src="🟨️boot.js" data-trunk-nav-ignore></script>
+    <style>
+      html,
+      body,
+      #root {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #001117;
+      }
+      canvas,
+      #semio-wgpu-canvas {
+        outline: none;
+        border: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

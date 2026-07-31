@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,13 +6,13 @@
 
 // Vite build and development configuration for the 3dm ui.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
 // Vite configuration for the 3dm React UI embedded in Rhino WebView2.
 // Configuration MUST include React and Tailwind CSS plugins.
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import mdx from "@mdx-js/rollup";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -25,8 +25,8 @@ import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { semioFaviconVitePlugin } from "../../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
-// #endregion 🔌Adapters
+import { semioFaviconVitePlugin } from "../../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
+// #endregion 🔌️Adapters
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

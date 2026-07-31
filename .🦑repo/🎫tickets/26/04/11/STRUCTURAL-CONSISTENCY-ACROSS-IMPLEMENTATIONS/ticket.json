@@ -1,8 +1,0 @@
-{
-  "title": "Structural Consistency Across Implementations",
-  "status": "closed",
-  "description": "Refactor all compose language implementations (Go, Python, TypeScript, Rust, C#) to have identical section structure (same nesting, same order, same naming) and identical function naming/order.",
-  "summary": "Bulk close",
-  "goal": "🎯aioptimizedrepo",
-  "sessions": ["⚪f92e2e8b654942a8b3fdddf7ab6458d9"]
-}

@@ -1,0 +1,7 @@
+{
+  "title": "Refactored all scripts to use npx tsx directly instead of node --import tsx",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Refactor all the scripts to be able to use tsx directly.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repofilemechanism"
+}

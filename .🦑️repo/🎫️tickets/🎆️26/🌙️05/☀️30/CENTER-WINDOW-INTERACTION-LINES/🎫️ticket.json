@@ -1,0 +1,9 @@
+{
+  "title": "Center Window Interaction Lines",
+  "emoji": "🎯️",
+  "status": "closed",
+  "description": "Display the interaction engagement lines in the center of a window instead of bottom-aligned.",
+  "summary": "Window engagement overlay (interaction options, input, status lines) is now vertically and horizontally centered via `inset-0 flex items-center justify-center` instead of bottom-aligned with spacing. Test updated to assert centered overlay classes.",
+  "goal": "🎯️ui",
+  "sessions": ["⚪️7461b19e8e5140af8697d15227052d63"]
+}

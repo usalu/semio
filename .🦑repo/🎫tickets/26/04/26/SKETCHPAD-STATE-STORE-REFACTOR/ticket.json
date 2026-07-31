@@ -1,6 +1,0 @@
-{
-  "title": "Sketchpad State Store Refactor",
-  "status": "open",
-  "description": "Single Store-style runtime: machine as authority for sketchpad + app UI; public hooks hide XState; canSet via transition probes; remove sketchpad-local useSync/useSyncDeep/useSyncExternalStore for orchestration state.",
-  "goal": "🎯r2602🎯runningsketchpad"
-}

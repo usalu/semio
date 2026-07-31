@@ -1,0 +1,17 @@
+{
+  "title": "Panel Ghost Interaction Mode",
+  "emoji": "👻️",
+  "status": "closed",
+  "description": "When UI interaction starts in a panel, active element stays visible, rest dims to 5% opacity, panel becomes click-through to canvas.",
+  "summary": "Refined automatic panel ghosting so nested dimmed UI controls in side panels and window options do not trigger global hiding. Canvas/content drags and direct tree-row interactions retain ghost behavior, including tree ancestry visibility. Added helper and GhostProvider regression coverage for sliders and window options. Focused Nx tests pass (4 relevant tests), ui-react lint passes, and the live Forms fixture kept both windows populated with no data-ghost state while the Height Factor slider value changed; browser console reported no errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1759"
+  },
+  "goal": "🎯️ui",
+  "plan": {
+    "client": "cursor",
+    "id": "dc3e8955",
+    "local": "panel-ghost-interaction_dc3e8955.plan.md"
+  },
+  "sessions": ["⚪️e98db6d2949a4f69bdf37381ac1f1138", "⚪️5a7fbeb472b744b8bdface28a8d8ae1e"]
+}

@@ -1,21 +1,21 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/UIIntroduction.stories.tsx
+// 🥼️ .storybook/stories/ui/UIIntroduction.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import type { IntroductionDefinition } from "@semio-tech/framework-core";
 import { UIIntroduction } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// 🎓#region 🎓UIIntroduction
+// 🎓️#region 🎓️UIIntroduction
 // Every step leaves `introduce: null` (full-viewport veil, no cutout) so the story renders
 // deterministically without depending on real navbar/panel/utility chrome mounting elsewhere on the page.
 const walkthrough: IntroductionDefinition = {
@@ -60,7 +60,7 @@ export const LastStep: Story = {
   },
 };
 
-// 🎉 An interaction-gated step whose checklist rows tick off one at a time — click "Complete next" to
+// 🎉️ An interaction-gated step whose checklist rows tick off one at a time — click "Complete next" to
 // watch a row's own label celebrate (conic-gradient ring, see `[data-celebrated="true"]` in `ui.css`)
 // the instant it flips from pending to done, on top of the check icon swap.
 const interactionWalkthrough: IntroductionDefinition = {
@@ -159,4 +159,4 @@ export const GestureGallery: Story = {
   name: "Gesture gallery",
   render: () => <UIIntroduction introduction={gestureGalleryWalkthrough} stepIndex={0} onStepIndexChange={() => {}} onDismiss={() => {}} />,
 };
-// #endregion 🎓UIIntroduction
+// #endregion 🎓️UIIntroduction

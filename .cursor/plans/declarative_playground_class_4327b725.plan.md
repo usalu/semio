@@ -55,7 +55,7 @@ flowchart TB
 
 ## 1. Framework core — `elements/lib/playground/core.ts`
 
-- Extend `UiNode` (region `🔖UiNode`) with declarative panel/form nodes (only valid inside side panels; window bodies stay canvas-only via `assertCanvasOnlyWindowBody`):
+- Extend `UiNode` (region `🔖️UiNode`) with declarative panel/form nodes (only valid inside side panels; window bodies stay canvas-only via `assertCanvasOnlyWindowBody`):
   - `UiSectionNode` `{ type:"section", id, label?, defaultOpen?, children }`
   - `UiFieldNode` `{ type:"field", id, label, child }`
   - `UiInputNode` `{ type:"input", id, inputKind:"text"|"number", value, placeholder?, commit?:"change"|"blur", onChange:CommandDescriptor }`
@@ -65,7 +65,7 @@ flowchart TB
   - `UiKeyValueNode` `{ type:"keyValue", entries:[{label,value}] }`
   - `UiTreeNode` `{ type:"tree", sections:[{id,label?,defaultOpen?,items}] }` where each item is `{ id,label,description?,selected?,defaultOpen?,command?:CommandDescriptor,items? }` (replaces the `onClick` callbacks used by document/kinds trees with declarative commands).
 - Move the data helper `playgroundTreePanelRootItems` from `@elements/playground/react` into core (returns declarative `UiTreeNode` sections) so `play/index.ts` files stop importing the react entry for pure data.
-- Add abstract `Playground` base (new region `🔖Playground`), React-free contract:
+- Add abstract `Playground` base (new region `🔖️Playground`), React-free contract:
   - `abstract readonly id: string`
   - `abstract createRuntime(): ProductRuntime`
   - `abstract registerBodies(): void` (registers window + side-panel bodies)
@@ -75,8 +75,8 @@ flowchart TB
 
 ## 2. Framework react — `elements/lib/playground/react/index.tsx`
 
-- Extend `UiRenderer` (region `🔖UiRenderer`) to render every new node, dispatching `onChange`/command via `commandBus.dispatch(controllerId, command, { ...args, value|pressed })`, reusing `@elements/ui` `Input`, `Select`, `Toggle`, `Label`, and the tree primitives (`staticTreePanelDefinition`) for `UiTreeNode`.
-- In `PlaygroundView` (region `🔖PlaygroundView`): build `detailsTabs` from `sideTabsToPlaygroundPanelTabs(activeApp.rightTabs, bus)` (today right tabs are only fed via `augmentPanelTabs`, line 897), and remove the `augmentPanelTabs` prop entirely (no back-compat). All panels now come from declarative `SideTabSpec` + registered side-panel bodies.
+- Extend `UiRenderer` (region `🔖️UiRenderer`) to render every new node, dispatching `onChange`/command via `commandBus.dispatch(controllerId, command, { ...args, value|pressed })`, reusing `@elements/ui` `Input`, `Select`, `Toggle`, `Label`, and the tree primitives (`staticTreePanelDefinition`) for `UiTreeNode`.
+- In `PlaygroundView` (region `🔖️PlaygroundView`): build `detailsTabs` from `sideTabsToPlaygroundPanelTabs(activeApp.rightTabs, bus)` (today right tabs are only fed via `augmentPanelTabs`, line 897), and remove the `augmentPanelTabs` prop entirely (no back-compat). All panels now come from declarative `SideTabSpec` + registered side-panel bodies.
 - Generalize surface chrome into the shell: add `PlaygroundShell` that wraps `LevelProvider`/bg and renders a generic theme/device/expertise footer driven by a small framework surface state (persisted to `localStorage`), calling `applyElementsSurfaceChrome` from `@elements/ui`. This removes the bespoke per-playground footers.
 - Add the one-line entry:
   ```ts
@@ -92,7 +92,7 @@ flowchart TB
 
 - In `play/index.ts`: add `class ScenePlayground extends Playground`. `createRuntime()` reuses `buildScenePlayRuntime()`; attach `SideTabSpec`s (document, kinds, inspector, settings) to `mainMode.leftTabs/rightTabs`; `registerBodies()` registers the window body plus new declarative side-panel bodies; `registerSurfaceHosts()` calls a library `registerSceneSurfaceHosts()`; `keybindings` = Delete/Backspace → `deleteSelection`.
 - Convert the React panels in `index.tsx` (`buildScenePlayInspectorSections`, `buildScenePlaySettingsSections`, `ScenePlayInspector*`, document/kinds defs) into declarative `UiNode` side-panel body factories in `play/index.ts` using the new `section`/`field`/`input`/`select`/`vec3`/`keyValue`/`tree` nodes (each edit dispatches an existing controller command; add controller commands where inspectors currently call `patchFixture` directly, e.g. `updateObject`, `updateVortex`, `updateAttraction`).
-- In `index.tsx` `🛝PlayHost`: keep only the React canvas adapter `ScenePlaySceneSurfaceHost` (+ `PlaySceneCanvas`/`Canvas3D` wiring) and export `registerSceneSurfaceHosts()`. Delete `PlayApp`/`PlayInner`/`ScenePlayProductShell`/`augmentPanelTabs`/keyboard bridge/footer chrome/`mountScenePlay`.
+- In `index.tsx` `🛝️PlayHost`: keep only the React canvas adapter `ScenePlaySceneSurfaceHost` (+ `PlaySceneCanvas`/`Canvas3D` wiring) and export `registerSceneSurfaceHosts()`. Delete `PlayApp`/`PlayInner`/`ScenePlayProductShell`/`augmentPanelTabs`/keyboard bridge/footer chrome/`mountScenePlay`.
 - `play/main.ts`: replace `mountScenePlay()` with `renderPlayground(new ScenePlayground())`.
 
 ## 4. Topology — `elements/lib/react/topology/`

@@ -1,10 +1,10 @@
-#region 📱Header
+#region 📱️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion 📱Header
+#endregion 📱️Header
 
 using System.Drawing;
 using System.IO;
@@ -73,7 +73,7 @@ internal static class RhinoNativeBootstrap
     private static extern bool SetDllDirectory(string lpPathName);
 }
 
-#region 📌IconResourceTests
+#region 📌️IconResourceTests
 // Tests MUST verify icon resolution supports renamed keys and placeholder fallback.
 public class IconResourceTests
 {
@@ -104,9 +104,9 @@ public class IconResourceTests
         Assert.Equal(24, bitmap.Height);
     }
 }
-#endregion 📌IconResourceTests
+#endregion 📌️IconResourceTests
 
-#region 🎠ImportRepresentationUtilityTests
+#region 🎠️ImportRepresentationUtilityTests
 // Tests MUST verify representation import utility supports base64 and data URI file blobs.
 public class ImportRepresentationUtilityTests
 {
@@ -284,9 +284,9 @@ public class ImportRepresentationUtilityTests
         Assert.Contains("at least one Rhino RepresentationObject", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
-#endregion 🎠ImportRepresentationUtilityTests
+#endregion 🎠️ImportRepresentationUtilityTests
 
-#region 🔧RepresentationObjectToGroupComponentTests
+#region 🔧️RepresentationObjectToGroupComponentTests
 // Tests MUST verify RepresentationObject To Group consumes list input from Import Representation output.
 public class RepresentationObjectToGroupComponentTests
 {
@@ -348,9 +348,9 @@ public class RepresentationObjectToGroupComponentTests
         Assert.Equal(expectedObjectCount, nativeGroup.Objects.Count(geometryItem => geometryItem is not GH_GeometryGroup));
     }
 }
-#endregion 🔧RepresentationObjectToGroupComponentTests
+#endregion 🔧️RepresentationObjectToGroupComponentTests
 
-#region 👓GroupToRepresentationObjectComponentTests
+#region 👓️GroupToRepresentationObjectComponentTests
 // Tests MUST verify Group To Representation Object consumes a single Group input and produces list RepresentationObject output.
 public class GroupToRepresentationObjectComponentTests
 {
@@ -369,7 +369,7 @@ public class GroupToRepresentationObjectComponentTests
         Assert.IsType<Param_RepresentationObject>(component.Params.Output[0]);
     }
 }
-#endregion 👓GroupToRepresentationObjectComponentTests
+#endregion 👓️GroupToRepresentationObjectComponentTests
 
 #region ⛑️KitPersistenceComponentTests
 // Tests MUST verify Load Kit, Save Kit, and Update Kit register store-backed persistence correctly.
@@ -460,7 +460,7 @@ public class NamingConventionTests
 }
 #endregion 🌩️NamingConventionTests
 
-#region 🪁ExportDesignToBlocksComponentTests
+#region 🪁️ExportDesignToBlocksComponentTests
 // Tests MUST verify ExportDesignToBlocks component registration, param structure, and ID uniqueness.
 public class ExportDesignToBlocksComponentTests
 {
@@ -515,4 +515,4 @@ public class ExportDesignToBlocksComponentTests
         Assert.Equal(GH_Exposure.primary, component.Exposure);
     }
 }
-#endregion 🪁ExportDesignToBlocksComponentTests
+#endregion 🪁️ExportDesignToBlocksComponentTests

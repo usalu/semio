@@ -1,8 +1,0 @@
-{
-  "title": "Unique Emojis and Descriptions for All Definitions",
-  "status": "closed",
-  "description": "Unique Emojis and Descriptions for All Definitions",
-  "summary": "Completed semantic section parity across compose implementations by applying canonical top-level ordering, fixing malformed nested region markers (Weak Entities and Coord) in TS/Python/C#, and validating balanced region nesting plus cross-language test/build passes.",
-  "goal": "🎯aioptimizedrepo🎯consistentrepohistory",
-  "sessions": ["⚪3b52957a673f486eb701d52314eb3858", "⚪e0870e5ef9144950b0928d1f055c5e5e"]
-}

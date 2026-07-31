@@ -35,7 +35,7 @@ flowchart TD
 
 ## Approach
 
-1. In [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx), factor the layout shell out of `PlatformView` into a reusable, product-neutral `ProductShell` component (new `//#region 🪨ProductShell`). `ProductShell` owns: `Layout` composition (navbar+canvas+footer+floating left/right `SidePanel`+toolbar overlay+mobilePanel), `ShellModeCanvas`, panel-visibility state/sizes, panel toggle group, `UISearch`/`UIFind` (Ctrl+P / Ctrl+F), and the shared helpers (`findDefaultActiveWindowKindId`, `convertFrameworkLayoutToShellLayout`).
+1. In [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx), factor the layout shell out of `PlatformView` into a reusable, product-neutral `ProductShell` component (new `//#region 🪨️ProductShell`). `ProductShell` owns: `Layout` composition (navbar+canvas+footer+floating left/right `SidePanel`+toolbar overlay+mobilePanel), `ShellModeCanvas`, panel-visibility state/sizes, panel toggle group, `UISearch`/`UIFind` (Ctrl+P / Ctrl+F), and the shared helpers (`findDefaultActiveWindowKindId`, `convertFrameworkLayoutToShellLayout`).
 2. Make `ProductShell` operate on `@semio-tech/framework-core` base types (`Platform`, resolved app fields) and accept the product-specific bits as props/slots:
 
 - resolved window-kind view defs (`UIWindowKindDefinition[]`) + active-window handling,

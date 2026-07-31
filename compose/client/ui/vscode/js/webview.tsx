@@ -1,18 +1,18 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // VS Code webview: mounts sketchpad {@link Platform} and attaches the injected kit JSON.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🛎️Entrypoint
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
 import { Kit, KitFullDtoSchema, asKitInstance } from "@semio-tech/compose-react";
 import { attachSketchpadKit, ensureSketchpadPlatform, InMemoryComposeKitStore } from "../../lib/sketchpad/js";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 declare global {
   interface Window {

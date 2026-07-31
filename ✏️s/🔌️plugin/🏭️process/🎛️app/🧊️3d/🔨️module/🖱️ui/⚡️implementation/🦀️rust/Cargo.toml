@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-process-3d-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Process 3d app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+process_3d = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d" }
+process_3d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d-engine" }
+process_3d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d-op" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

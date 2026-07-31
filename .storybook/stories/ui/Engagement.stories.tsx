@@ -1,6 +1,6 @@
-// #region 🧲Header
+// #region 🧲️Header
 // .storybook/story/elements/ui/Engagement.stories.tsx
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Engagement, Search, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";

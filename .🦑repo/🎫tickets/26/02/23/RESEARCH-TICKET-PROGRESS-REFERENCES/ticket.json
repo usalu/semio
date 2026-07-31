@@ -1,8 +1,0 @@
-{
-  "title": "Research Ticket Progress References",
-  "emoji": "🎫",
-  "status": "closed",
-  "description": "Research all locations of ticket.md, TicketPath, GetTicketFilePath, buildTicketMarkdown, updateTicketSummaryFile, ProgressTicket, TicketProgressInput, ticket_progress, ToolTicketProgress across the codebase",
-  "summary": "Comprehensive audit completed",
-  "goal": "🎯r2603"
-}

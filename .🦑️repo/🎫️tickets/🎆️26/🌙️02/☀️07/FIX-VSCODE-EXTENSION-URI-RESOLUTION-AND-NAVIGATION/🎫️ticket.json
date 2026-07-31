@@ -1,0 +1,12 @@
+{
+  "title": "Fix Vscode Extension Uri Resolution and Navigation",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The repo vscode extension should properly resolve all URIs and navigate to them. Clicking on a URI should navigate to the resource, clicking on a tree item should navigate to the resource, the `repo: Navigate to` command should navigate to the resource.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/441"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repovscodeextension",
+  "sessions": ["⚪️1772113209482945389753167534534151477"]
+}

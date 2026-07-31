@@ -123,5 +123,5 @@ React's dock shell (`Mode`, [ui/js/react/index.tsx:19543-21324](ui/js/react/inde
 
 - `cargo test` for `ui_wgpu` and `semio-framework-renderer-wgpu` (add regression tests for `hit_at` ordering with a scroll region + overlapping content hit, and for the new dock drag/resize mutations).
 - Rebuild WASM bindings for `ui_wgpu` and `semio-framework-renderer-wgpu`.
-- Run the existing wgpu E2E harness ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for plugins covering each surface: a tree-heavy program (`s` or `lowpoly`), a Table program (`vcs`/`forms`), a VFS program (`s`), and any program with a multi-window/multi-panel layout for the dock work.
+- Run the existing wgpu E2E harness ([.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for plugins covering each surface: a tree-heavy program (`s` or `lowpoly`), a Table program (`vcs`/`forms`), a VFS program (`s`), and any program with a multi-window/multi-panel layout for the dock work.
 - Screenshot-diff wgpu vs React for the same plugins to confirm tree collapse/hover/selection, table/VFS row interaction, and dock drag/resize/close chrome now match.

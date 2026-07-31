@@ -1,0 +1,12 @@
+{
+  "title": "Flow Move Duplicates Slider and Merge",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "In flow play, slider and merge (and similar) widgets duplicate visually when moved; deleting one copy removes both. Fix root cause so move updates a single node identity and delete removes one widget.",
+  "summary": "Fixed flow play slider/merge nodes appearing duplicated after move and both vanishing on delete. Root cause: spotlight/catalogue ghost nodes could persist on the canvas while real nodes were dragged, and fixture.widgets was not pruned when the DAG deleted nodes (shared widget id removed every matching DAG node at once). Cleared ghost on pointer down, add_widget, and widget drop; sync_from_dag now prunes orphan widgets; dedupe widget ids on load/build; delete_selection removes widgets from fixture; move_widget updates engine position without full DAG rebuild. Added DagHost::set_widget_position. Rebuilt flow WASM. Regression tests: drag_merge_node_preserves_single_fixture_widget, ghost_widget_cleared_on_pointer_down_and_add_widget, delete_selection_removes_widget_from_fixture.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1599"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️e699bc5517d34e448793e70e819ff17c"]
+}

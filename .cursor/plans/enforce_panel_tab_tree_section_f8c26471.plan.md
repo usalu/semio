@@ -62,7 +62,7 @@ Strict means: no `SidePanelTabConfig.panel` escape hatch, no `TreeDataSection.co
 
 ## 1. Core model (`framework/core` + `framework/product/playground/core`)
 
-- In playground core `#region 🔖UiNode` ([framework/product/playground/core/index.ts](framework/product/playground/core/index.ts) ~140-216): add `export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3Node | UiButtonNode | UiKeyValueNode;` and extend `UiTreeItemNode` with `readonly control?: UiControlNode;`. This lets every form/setting be an item.
+- In playground core `#region 🔖️UiNode` ([framework/product/playground/core/index.ts](framework/product/playground/core/index.ts) ~140-216): add `export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3Node | UiButtonNode | UiKeyValueNode;` and extend `UiTreeItemNode` with `readonly control?: UiControlNode;`. This lets every form/setting be an item.
 - Keep `UiTreeSectionNode.items` required; this is already strict (no `content`).
 - Remove `UiSectionNode`/standalone `UiFieldNode` from the side-panel body union usage (they survive only nested under an item's `control` via `UiFieldNode`-style wrapping, or are deleted if unused after migration).
 - Remove `SidePanelBodyMount`, the `mount` option, `sidePanelBodyMountByKey`, and `getSidePanelBodyMount` ([framework/product/playground/core/index.ts](framework/product/playground/core/index.ts) ~447-473). `registerSidePanelBody(bodyKey, build)` now always means "build a `UiTreeNode`". Add an assertion in the build path that `node.type === "tree"` (throw otherwise), mirroring `assertCanvasOnlyWindowBody`.

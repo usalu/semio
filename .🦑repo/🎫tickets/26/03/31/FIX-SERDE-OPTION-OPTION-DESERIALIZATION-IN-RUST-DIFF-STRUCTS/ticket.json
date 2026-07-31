@@ -1,9 +1,0 @@
-{
-  "title": "Fix Serde Option Option Deserialization in Rust Diff Structs",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Add deserialize_some helper and annotate all Option\u0026lt;Option\u0026lt;T\u0026gt;\u0026gt; fields in diff structs with serde(default, deserialize_with = \"deserialize_some\") to properly distinguish JSON null from absent fields in compose/rs/lib.rs.",
-  "summary": "Bulk close",
-  "goal": "🎯r2603",
-  "sessions": ["⚪54df3526875e4b2f9053262b3d77a437"]
-}

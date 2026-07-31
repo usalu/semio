@@ -1,0 +1,12 @@
+{
+  "title": "Compose Store Graphql Api",
+  "emoji": "🌐️",
+  "status": "closed",
+  "description": "Replace compose-store JSON-RPC with GraphQL over HTTP, wire native KitStore for backbone commands, add GraphiQL dev config in launch.json.",
+  "summary": "Finished compose-store workspace wiring: renamed the Cargo package and binary from semio-store to compose-store, added the local script.ts router for build/dev/test, routed Nx targets and VS Code launch through that router, aligned runtime readiness/env naming with COMPOSE_STORE_PORT, and fixed stale store materialization test pointers. Verified cargo run -p compose-store readiness/shutdown, cargo test -p compose-store, bun nx run @semio-tech/compose-store:build, and bun nx run @semio-tech/compose-store:test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1750"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️637b18ef72e14230bff47bba9f3e37e0", "⚪️8f78b82356844e96b23e71caf4fcc6cc", "⚪️5d106e0da1dd40f4aeedd51a3226813f", "⚪️85c684bf7a18468ba4f02b341fd04c51", "⚪️05594deaf235428f8657394725409d86"]
+}

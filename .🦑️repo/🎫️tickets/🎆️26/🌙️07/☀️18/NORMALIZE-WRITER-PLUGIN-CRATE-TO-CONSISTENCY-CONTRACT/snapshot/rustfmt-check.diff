@@ -1,0 +1,552 @@
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1:
+ //! ✍️ Writer plugin — declarative writer app bundled as a hot-swappable WASM component.
+ 
+ mod grammar {
+-//#region 🔖️Grammar
+-//! ✍️ Lightweight grammar tokenization for writer plugin scenes.
++    //#region 🔖️Grammar
++    //! ✍️ Lightweight grammar tokenization for writer plugin scenes.
+ 
+-use serde::{Deserialize, Serialize};
++    use serde::{Deserialize, Serialize};
+ 
+-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+-#[serde(rename_all = "camelCase")]
+-pub struct GrammarToken {
+-    pub class: String,
+-    pub start: usize,
+-    pub end: usize,
+-}
++    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++    #[serde(rename_all = "camelCase")]
++    pub struct GrammarToken {
++        pub class: String,
++        pub start: usize,
++        pub end: usize,
++    }
+ 
+-#[derive(Clone, Debug)]
+-struct GrammarRule {
+-    pattern: regex::Regex,
+-    class: &'static str,
+-}
++    #[derive(Clone, Debug)]
++    struct GrammarRule {
++        pattern: regex::Regex,
++        class: &'static str,
++    }
+ 
+-fn jack_rules() -> Vec<GrammarRule> {
+-    vec![
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"(?i)\b(MATCH|WHERE|RETURN|CREATE|DELETE|SET|MERGE|AND|OR)\b").expect("jack keyword"),
+-            class: "keyword",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("jack string"),
+-            class: "string",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("jack number"),
+-            class: "number",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"->|!=|[:=.,\[\]()-]").expect("jack operator"),
+-            class: "operator",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_]*\b").expect("jack ident"),
+-            class: "ident",
+-        },
+-    ]
+-}
++    fn jack_rules() -> Vec<GrammarRule> {
++        vec![
++            GrammarRule { pattern: regex::Regex::new(r"(?i)\b(MATCH|WHERE|RETURN|CREATE|DELETE|SET|MERGE|AND|OR)\b").expect("jack keyword"), class: "keyword" },
++            GrammarRule { pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("jack string"), class: "string" },
++            GrammarRule { pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("jack number"), class: "number" },
++            GrammarRule { pattern: regex::Regex::new(r"->|!=|[:=.,\[\]()-]").expect("jack operator"), class: "operator" },
++            GrammarRule { pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_]*\b").expect("jack ident"), class: "ident" },
++        ]
++    }
+ 
+-fn wire_rules() -> Vec<GrammarRule> {
+-    vec![
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"->").expect("wire keyword"),
+-            class: "keyword",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("wire string"),
+-            class: "string",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("wire number"),
+-            class: "number",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"[:@{}.,\[\]-]").expect("wire operator"),
+-            class: "operator",
+-        },
+-        GrammarRule {
+-            pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_.-]*\b").expect("wire ident"),
+-            class: "ident",
+-        },
+-    ]
+-}
++    fn wire_rules() -> Vec<GrammarRule> {
++        vec![
++            GrammarRule { pattern: regex::Regex::new(r"->").expect("wire keyword"), class: "keyword" },
++            GrammarRule { pattern: regex::Regex::new(r#"'[^']*'|"[^"]*""#).expect("wire string"), class: "string" },
++            GrammarRule { pattern: regex::Regex::new(r"\b\d+(?:\.\d+)?\b").expect("wire number"), class: "number" },
++            GrammarRule { pattern: regex::Regex::new(r"[:@{}.,\[\]-]").expect("wire operator"), class: "operator" },
++            GrammarRule { pattern: regex::Regex::new(r"\b[A-Za-z_][A-Za-z0-9_.-]*\b").expect("wire ident"), class: "ident" },
++        ]
++    }
+ 
+-/** @emoji 🎨️ Tokenizes source text for a supported writer language id. */
+-pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
+-    let rules = match language_id {
+-        "jack" => jack_rules(),
+-        "wire" => wire_rules(),
+-        _ => return Vec::new(),
+-    };
+-    let mut occupied = vec![false; text.len()];
+-    let mut tokens = Vec::new();
+-    for rule in rules {
+-        for capture in rule.pattern.find_iter(text) {
+-            let start = capture.start();
+-            let end = capture.end();
+-            if occupied[start..end].iter().any(|filled| *filled) {
+-                continue;
++    /** @emoji 🎨️ Tokenizes source text for a supported writer language id. */
++    pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
++        let rules = match language_id {
++            "jack" => jack_rules(),
++            "wire" => wire_rules(),
++            _ => return Vec::new(),
++        };
++        let mut occupied = vec![false; text.len()];
++        let mut tokens = Vec::new();
++        for rule in rules {
++            for capture in rule.pattern.find_iter(text) {
++                let start = capture.start();
++                let end = capture.end();
++                if occupied[start..end].iter().any(|filled| *filled) {
++                    continue;
++                }
++                for slot in &mut occupied[start..end] {
++                    *slot = true;
++                }
++                tokens.push(GrammarToken { class: rule.class.into(), start, end });
+             }
+-            for slot in &mut occupied[start..end] {
+-                *slot = true;
+-            }
+-            tokens.push(GrammarToken {
+-                class: rule.class.into(),
+-                start,
+-                end,
+-            });
+         }
++        tokens.sort_by_key(|token| (token.start, std::cmp::Reverse(token.end)));
++        tokens
+     }
+-    tokens.sort_by_key(|token| (token.start, std::cmp::Reverse(token.end)));
+-    tokens
++    //#endregion 🔖️Grammar
+ }
+-//#endregion 🔖️Grammar
+-}
+ 
+-
+ use grammar::{tokenize_language, GrammarToken};
+-use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
+-use writer::{empty_writer_projection, WriterCamera, WriterOp, WriterProjection};
+-use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
+-    build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
+-    tree_item, ui_declarative_sections_to_tree, ui_text, App,
+-    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt,
+-    DocumentApp, DocumentView, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiSectionNode,
+-    UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
+-    WindowEngagementOption, WindowMeasure,
+-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, create_default_layout,
++use semio_framework_plugin::{
++    build_text_editor_scene, create_default_layout, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix, tree_item, ui_declarative_sections_to_tree, ui_text, ActionArgDef, ActionArgOption,
++    ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PanelTabSpec, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene,
++    UiNode, UiSectionNode, UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
++    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+ };
+ use semio_framework_plugin::{WindowEngagementPossible, WindowEngagementStatus};
+ use serde::{Deserialize, Serialize};
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:123:
+ use serde_json::{json, Value};
+ use std::collections::HashMap;
++use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
++use writer::{empty_writer_projection, WriterCamera, WriterOp, WriterProjection};
+ 
+ //#region 🔖️Constants
+ const WRITER_PLAY_APP_ID: &str = "writer-play";
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:177:
+ 
+ impl Default for WriterEditorSettings {
+     fn default() -> Self {
+-        Self {
+-            show_line_numbers: true,
+-            font_px: default_font_px(),
+-            line_height: default_line_height(),
+-            tab_size: default_tab_size(),
+-        }
++        Self { show_line_numbers: true, font_px: default_font_px(), line_height: default_line_height(), tab_size: default_tab_size() }
+     }
+ }
+ 
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:264:
+ fn jack_ast_node(kind: &str, start: usize, end: usize, source: &str, children: Vec<JackAstNode>, label: Option<&str>) -> JackAstNode {
+     let slice = collapse_whitespace(source.get(start..end).unwrap_or(""));
+     let label = label.map(str::to_string).unwrap_or_else(|| if slice.is_empty() { kind.to_string() } else { slice });
+-    JackAstNode {
+-        id: format!("jack-ast-{kind}-{start}-{end}"),
+-        kind: kind.into(),
+-        label,
+-        start,
+-        end,
+-        children,
+-    }
++    JackAstNode { id: format!("jack-ast-{kind}-{start}-{end}"), kind: kind.into(), label, start, end, children }
+ }
+ 
+ //#region JackLexer
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:329:
+             continue;
+         }
+         match c {
+-            '(' => { tokens.push(tok(JackLexKind::LParen, start, start + 1, "")); i += 1; continue; }
+-            ')' => { tokens.push(tok(JackLexKind::RParen, start, start + 1, "")); i += 1; continue; }
+-            '[' => { tokens.push(tok(JackLexKind::LBracket, start, start + 1, "")); i += 1; continue; }
+-            ']' => { tokens.push(tok(JackLexKind::RBracket, start, start + 1, "")); i += 1; continue; }
+-            ':' => { tokens.push(tok(JackLexKind::Colon, start, start + 1, "")); i += 1; continue; }
+-            ',' => { tokens.push(tok(JackLexKind::Comma, start, start + 1, "")); i += 1; continue; }
+-            '.' => { tokens.push(tok(JackLexKind::Dot, start, start + 1, "")); i += 1; continue; }
+-            '=' => { tokens.push(tok(JackLexKind::Eq, start, start + 1, "")); i += 1; continue; }
++            '(' => {
++                tokens.push(tok(JackLexKind::LParen, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
++            ')' => {
++                tokens.push(tok(JackLexKind::RParen, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
++            '[' => {
++                tokens.push(tok(JackLexKind::LBracket, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
++            ']' => {
++                tokens.push(tok(JackLexKind::RBracket, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
++            ':' => {
++                tokens.push(tok(JackLexKind::Colon, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
++            ',' => {
++                tokens.push(tok(JackLexKind::Comma, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
++            '.' => {
++                tokens.push(tok(JackLexKind::Dot, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
++            '=' => {
++                tokens.push(tok(JackLexKind::Eq, start, start + 1, ""));
++                i += 1;
++                continue;
++            }
+             _ => {}
+         }
+         if c == '!' && bytes.get(i + 1) == Some(&b'=') {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:511:
+                     vars.push(self.expect_ident()?);
+                 }
+                 let end = vars.last().map(|v| v.end).unwrap_or(start);
+-                let children: Vec<JackAstNode> = vars
+-                    .iter()
+-                    .map(|v| jack_ast_node("var", v.start, v.end, self.source, Vec::new(), Some(v.text.as_str())))
+-                    .collect();
++                let children: Vec<JackAstNode> = vars.iter().map(|v| jack_ast_node("var", v.start, v.end, self.source, Vec::new(), Some(v.text.as_str()))).collect();
+                 Ok(jack_ast_node("delete", start, end, self.source, children, Some("DELETE")))
+             }
+             JackLexKind::KwSet => {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:731:
+         icon_id: jack_ast_tree_icon(&node.kind).map(str::to_string),
+         selected: None,
+         default_open: Some(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return")),
+-        action: Some(play_action(
+-            WRITER_PLAY_CONTROLLER_ID,
+-            "selectAstNode",
+-            Some(json!({ "id": node.id, "start": node.start, "end": node.end })),
+-        )),
++        action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "selectAstNode", Some(json!({ "id": node.id, "start": node.start, "end": node.end })))),
+         hover_action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": node.id })))),
+         unhover_action: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "setAstHover", Some(json!({ "id": Value::Null })))),
+         actions: None,
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:763:
+ 
+ /// 🎯️ Builds atomic and composite jack spans for token-wise selection (premigration `selectableSpansForJack`).
+ fn selectable_spans_for_jack(text: &str, tokens: &[GrammarToken]) -> Vec<SelectableSpan> {
+-    let mut spans: Vec<SelectableSpan> = tokens
+-        .iter()
+-        .map(|token| SelectableSpan { start: token.start, end: token.end, kind: "atomic".into(), head_end: None, tail_start: None })
+-        .collect();
++    let mut spans: Vec<SelectableSpan> = tokens.iter().map(|token| SelectableSpan { start: token.start, end: token.end, kind: "atomic".into(), head_end: None, tail_start: None }).collect();
+     for i in 0..tokens.len() {
+         if i + 2 >= tokens.len() {
+             break;
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:923:
+     out
+ }
+ 
+-const JACK_NEWLINE_AFTER_KEYWORDS: &[JackLexKind] = &[
+-    JackLexKind::KwMatch,
+-    JackLexKind::KwWhere,
+-    JackLexKind::KwReturn,
+-    JackLexKind::KwCreate,
+-    JackLexKind::KwDelete,
+-    JackLexKind::KwSet,
+-    JackLexKind::KwMerge,
+-    JackLexKind::KwAnd,
+-    JackLexKind::KwOr,
+-];
++const JACK_NEWLINE_AFTER_KEYWORDS: &[JackLexKind] = &[JackLexKind::KwMatch, JackLexKind::KwWhere, JackLexKind::KwReturn, JackLexKind::KwCreate, JackLexKind::KwDelete, JackLexKind::KwSet, JackLexKind::KwMerge, JackLexKind::KwAnd, JackLexKind::KwOr];
+ 
+ fn jack_lex_token_at_offset(tokens: &[JackLexToken], offset: usize) -> Option<&JackLexToken> {
+     for token in tokens {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1125:
+     let tree_span = runtime.tree_hovered_ast_id.as_ref().and_then(|id| jack_ast_node_by_id(&root, id)).map(|node| (node.start, node.end));
+     let editor_hovered_ast_id = runtime.editor_hover_offset.and_then(|offset| find_deepest_jack_ast_node_at(&root, offset)).map(|node| node.id.clone());
+     let highlighted = runtime.tree_hovered_ast_id.clone().or(editor_hovered_ast_id);
+-    let hover_occurrences = runtime
+-        .editor_hover_offset
+-        .and_then(|offset| jack_symbol_at_offset(&document.text, offset))
+-        .filter(|symbol| symbol.kind == JackSymbolKind::Variable)
+-        .map(|symbol| symbol.occurrences)
+-        .unwrap_or_default();
++    let hover_occurrences = runtime.editor_hover_offset.and_then(|offset| jack_symbol_at_offset(&document.text, offset)).filter(|symbol| symbol.kind == JackSymbolKind::Variable).map(|symbol| symbol.occurrences).unwrap_or_default();
+     (highlighted, tree_span, hover_occurrences)
+ }
+ 
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1137:
+ fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
+     let graph = example_graph();
+-    let items: Vec<Value> = complete(&graph, text, cursor)
+-        .into_iter()
+-        .map(|item| json!({ "label": item.label, "detail": item.detail }))
+-        .collect();
++    let items: Vec<Value> = complete(&graph, text, cursor).into_iter().map(|item| json!({ "label": item.label, "detail": item.detail })).collect();
+     serde_json::to_string(&items).ok()
+ }
+ 
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1225:
+ 
+ //#region 🔖️Panels
+ fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
+-    ActionDescriptor {
+-        controller_id: controller_id.into(),
+-        action: action.into(),
+-        args,
+-    }
++    ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args }
+ }
+ 
+ fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterPlayLabels) -> UiNode {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1236:
+     if document.language_id != "jack" {
+-        return ui_declarative_sections_to_tree(&[UiSectionNode {
+-            id: "writer-document".into(),
+-            label: Some(labels.document.into()),
+-            default_open: Some(true),
+-            children: vec![ui_text(document.id.clone()), ui_text(document.language_id.clone())],
+-        }]);
++        return ui_declarative_sections_to_tree(&[UiSectionNode { id: "writer-document".into(), label: Some(labels.document.into()), default_open: Some(true), children: vec![ui_text(document.id.clone()), ui_text(document.language_id.clone())] }]);
+     }
+     let root = parse_jack_ast(&document.text);
+     let items = if root.kind == "error" {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1246:
+-        vec![UiTreeItemNode {
+-            description: Some(root.kind.clone()),
+-            icon_id: jack_ast_tree_icon(&root.kind).map(str::to_string),
+-            ..tree_item(root.id.as_str(), root.label.as_str())
+-        }]
++        vec![UiTreeItemNode { description: Some(root.kind.clone()), icon_id: jack_ast_tree_icon(&root.kind).map(str::to_string), ..tree_item(root.id.as_str(), root.label.as_str()) }]
+     } else {
+         vec![jack_ast_to_tree_item(&root)]
+     };
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1261:
+ }
+ 
+ fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
+-    ui_declarative_sections_to_tree(&[UiSectionNode {
+-        id: "writer-catalogue".into(),
+-        label: Some(labels.language.into()),
+-        default_open: Some(true),
+-        children: vec![ui_text(labels.jack_description)],
+-    }])
++    ui_declarative_sections_to_tree(&[UiSectionNode { id: "writer-catalogue".into(), label: Some(labels.language.into()), default_open: Some(true), children: vec![ui_text(labels.jack_description)] }])
+ }
+ 
+ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabels) -> UiNode {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1287:
+             id: "writer-inspector.camera".into(),
+             label: Some(labels.camera.into()),
+             default_open: Some(false),
+-            children: vec![
+-                ui_text(format!("x: {}", document.camera.x)),
+-                ui_text(format!("y: {}", document.camera.y)),
+-                ui_text(format!("zoom: {}", document.camera.zoom)),
+-            ],
++            children: vec![ui_text(format!("x: {}", document.camera.x)), ui_text(format!("y: {}", document.camera.y)), ui_text(format!("zoom: {}", document.camera.zoom))],
+         },
+     ];
+     if document.language_id == "jack" {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1298:
+         let graph = example_graph();
+         let messages: Vec<String> = lint(&graph, &document.text).into_iter().map(|diag: Diagnostic| diag.message).take(8).collect();
+         if !messages.is_empty() {
+-            sections.push(UiSectionNode {
+-                id: "writer-inspector.diagnostics".into(),
+-                label: Some(labels.diagnostics.into()),
+-                default_open: Some(true),
+-                children: messages.into_iter().map(ui_text).collect(),
+-            });
++            sections.push(UiSectionNode { id: "writer-inspector.diagnostics".into(), label: Some(labels.diagnostics.into()), default_open: Some(true), children: messages.into_iter().map(ui_text).collect() });
+         }
+     }
+     ui_declarative_sections_to_tree(&sections)
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1318:
+     let selection_json = runtime.editor_selection.as_ref().map(|s| json!({ "start": s.start, "end": s.end }).to_string());
+ 
+     let grammar_tokens = tokenize_language(&document.text, &document.language_id);
+-    let tokens_json = if is_jack {
+-        serde_json::to_string(&semantic_tokens(&document.text)).ok()
+-    } else {
+-        serde_json::to_string(&grammar_tokens).ok()
+-    };
++    let tokens_json = if is_jack { serde_json::to_string(&semantic_tokens(&document.text)).ok() } else { serde_json::to_string(&grammar_tokens).ok() };
+ 
+     let diagnostics_json = if is_jack {
+         let graph = example_graph();
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1329:
+-        let diagnostics: Vec<Value> = lint(&graph, &document.text)
+-            .into_iter()
+-            .map(|diag: Diagnostic| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message }))
+-            .collect();
++        let diagnostics: Vec<Value> = lint(&graph, &document.text).into_iter().map(|diag: Diagnostic| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
+         Some(serde_json::to_string(&diagnostics).unwrap_or_else(|_| "[]".into()))
+     } else if runtime.lint_signal > 0 {
+         Some(json!([{ "start": 0, "end": document.text.len().max(1), "severity": "info", "message": format!("Lint pass #{}", runtime.lint_signal) }]).to_string())
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1367:
+         .to_string()
+     });
+ 
+-    let extra_carets_json = (!selection_occurrences.is_empty())
+-        .then(|| serde_json::to_string(&selection_occurrences.iter().map(|(s, _)| *s).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into()));
++    let extra_carets_json = (!selection_occurrences.is_empty()).then(|| serde_json::to_string(&selection_occurrences.iter().map(|(s, _)| *s).collect::<Vec<_>>()).unwrap_or_else(|_| "[]".into()));
+ 
+     let completions_json = is_jack.then(|| jack_completions_json(&document.text, cursor)).flatten();
+ 
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1462:
+         empty_writer_projection()
+     }
+ 
+-    fn handle_action(
+-        &mut self,
+-        action: &str,
+-        args: Option<&Value>,
+-        doc: &DocumentView<'_, WriterProjection>,
+-        _view_state: &ViewState,
+-    ) -> ActionEmit<WriterOp> {
++    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, WriterProjection>, _view_state: &ViewState) -> ActionEmit<WriterOp> {
+         // undo/redo/checkpoint/alternative never reach here — `VcsDocumentApp` intercepts them.
+         let document = doc.projection;
+         let str_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str);
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1571:
+                 self.runtime.editor_selection = Some(WriterEditorSelection { start, end });
+                 if document.language_id == "jack" {
+                     let root = parse_jack_ast(&document.text);
+-                    self.runtime.selected_ast_ids = jack_ast_node_for_selection(&root, start.min(end), start.max(end))
+-                        .map(|node| vec![node.id.clone()])
+-                        .unwrap_or_default();
++                    self.runtime.selected_ast_ids = jack_ast_node_for_selection(&root, start.min(end), start.max(end)).map(|node| vec![node.id.clone()]).unwrap_or_default();
+                 } else {
+                     self.runtime.selected_ast_ids.clear();
+                 }
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:1590:
+                 ActionEmit::default()
+             }
+             "setAstSelection" => {
+-                let ids: Vec<String> = args
+-                    .and_then(|value| value.get("ids"))
+-                    .and_then(|value| value.as_array())
+-                    .map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
+-                    .unwrap_or_default();
++                let ids: Vec<String> = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()).map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect()).unwrap_or_default();
+                 self.runtime.selected_ast_ids = ids.clone();
+                 if let Some(id) = ids.first() {
+                     if document.language_id == "jack" {
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:2101:
+         let occurrences = jack_variable_occurrences(CANONICAL_QUERY, "a");
+         assert_eq!(occurrences.len(), 3);
+         let occurrences_json: Vec<Value> = occurrences.iter().map(|(s, e)| json!({ "start": s, "end": e })).collect();
+-        let result = app.handle_action(
+-            "commitRename",
+-            Some(&json!({ "occurrences": occurrences_json, "text": "piece" })),
+-            &ViewState::default(),
+-            &meta("local"),
+-        )
+-        .expect("commit rename");
++        let result = app.handle_action("commitRename", Some(&json!({ "occurrences": occurrences_json, "text": "piece" })), &ViewState::default(), &meta("local")).expect("commit rename");
+         assert_eq!(result.operations.len(), 1);
+         let text = app.projection().expect("projection").text;
+         assert_eq!(text.matches("piece").count(), 3);
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:2131:
+         // (`normalizeEngagementActionText`), so "font 16" arrives as "Font16", "tab 4" as "Tab4",
+         // and "line numbers" as "LineNumbers".
+         let mut app = new_app::<WriterPlayApp>();
+-        let before_toggle = app
+-            .window_engagements(&ViewState::default())
+-            .get(WRITER_PLAY_WINDOW_KIND)
+-            .and_then(|engagement| engagement.options.as_ref())
+-            .and_then(|options| options.first())
+-            .and_then(|option| option.pressed)
+-            .expect("line-numbers pressed state");
++        let before_toggle =
++            app.window_engagements(&ViewState::default()).get(WRITER_PLAY_WINDOW_KIND).and_then(|engagement| engagement.options.as_ref()).and_then(|options| options.first()).and_then(|option| option.pressed).expect("line-numbers pressed state");
+ 
+         app.handle_action("engagementSubmit", Some(&json!({ "value": "Font16" })), &ViewState::default(), &meta("local")).expect("font");
+         app.handle_action("engagementSubmit", Some(&json!({ "value": "Tab4" })), &ViewState::default(), &meta("local")).expect("tab");
+Diff in /Users/ueli/Documents/semio/writer/plugin/rs/lib.rs:2148:
+         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-font-size-measure" && *value == 16.0)));
+         assert!(main.iter().any(|m| matches!(m, WindowMeasure::Slider { id, value, .. } if id == "writer-tab-size-measure" && *value == 4.0)));
+ 
+-        let after_toggle = app
+-            .window_engagements(&ViewState::default())
+-            .get(WRITER_PLAY_WINDOW_KIND)
+-            .and_then(|engagement| engagement.options.as_ref())
+-            .and_then(|options| options.first())
+-            .and_then(|option| option.pressed)
+-            .expect("line-numbers pressed state");
++        let after_toggle =
++            app.window_engagements(&ViewState::default()).get(WRITER_PLAY_WINDOW_KIND).and_then(|engagement| engagement.options.as_ref()).and_then(|options| options.first()).and_then(|option| option.pressed).expect("line-numbers pressed state");
+         assert_eq!(after_toggle, !before_toggle);
+     }
+ 

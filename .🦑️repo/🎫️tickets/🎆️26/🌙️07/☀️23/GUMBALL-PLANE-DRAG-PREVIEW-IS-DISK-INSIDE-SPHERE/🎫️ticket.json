@@ -1,0 +1,14 @@
+{
+  "title": "Gumball Plane Drag Preview Is Disk Inside Sphere",
+  "emoji": "🎛️",
+  "status": "closed",
+  "description": "The preview of the drag in the gumball for a plane is currently covering the complete screen. Make sure only the disk inside the sphere is previewed.",
+  "summary": "Fixed gumball plane hover/drag preview covering the full viewport.\n\nRoot cause: GumballPlanePreviewMesh scaled a unit square to gumballPreviewWorldExtent every frame, so the plane fill stretched across the camera frustum.\n\nFix: Plane interaction preview is now a circleGeometry disk with radius GUMBALL_RING_RADIUS (the disk inside the gumball sphere). Axis line previews still use viewport extent.\n\nVerified: UnifiedGumball math vitest passes (disk radius assertions added).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2255"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️0bb881a5ca914ace9c355664c22dd9ec"
+  ]
+}

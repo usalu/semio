@@ -100,7 +100,7 @@ This reverts the half of commit 378 that was kept "to match prior behavior" but 
 
 ## 3 Verification
 
-- Reload `bun ./script.ts dev` for the board play. Confirm no `borrow_fail` in console, all three panes reach `data-board-surface-state="ready"`, panning with middle-click (or `Shift+left-drag` on empty area), wheel zoom, and node click selection all work.
+- Reload `bun ./📜️script.ts dev` for the board play. Confirm no `borrow_fail` in console, all three panes reach `data-board-surface-state="ready"`, panning with middle-click (or `Shift+left-drag` on empty area), wheel zoom, and node click selection all work.
 - Run `bunx vitest run --config vitest.config.ts` in `elements/client/lib/board` — all existing tests must still pass.
 - Run `bunx playwright test --config play/playwright.config.ts` in `elements/client/lib/board`. With bundled Chromium (no adapter), GPU + stress tests **skip**; on a WebGPU machine run **`BOARD_PLAYWRIGHT_CHANNEL=chrome bunx playwright test …`** so both run and the stress test asserts **no** `borrow_fail` / `unsafe aliasing` / `recursive use of an object` in console after viewport resizes.
 

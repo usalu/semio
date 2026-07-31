@@ -1,0 +1,9 @@
+{
+  "title": "Nakagin Board Rectangle Footprint Matches Circle Diameter",
+  "emoji": "📏️",
+  "status": "closed",
+  "description": "Nakagin board fixture cs_* rectangles used height 1.38 vs width 0.44 (~3x cluster circle diameter). Regenerate fixture with cs_* squares sized to t_ cluster circle diameter (2*0.22).",
+  "summary": "Nakagin board `cs_*` rectangles were tall capsules (u/v height 1.38 vs width 0.44, ~3× the cluster circle diameter after scale). The generator now gives `cs_*` squares with side 2× the same u/v radius as `t_*` cluster circles (0.44), and the fixture was regenerated. Kit connections now accept `parent`/`child` as well as legacy `connected`/`connecting` so the script runs against current `metabolism.kit.compose.json`. Ran: bunx vitest run in elements/client/lib/board (46 passed).",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️d1501f1c005e4f129c53f85627bdc256"]
+}

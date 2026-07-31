@@ -1,0 +1,131 @@
+   Compiling find-msvc-tools v0.1.9
+   Compiling proc-macro2 v1.0.106
+   Compiling shlex v1.3.0
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling zmij v1.0.21
+   Compiling serde v1.0.228
+   Compiling serde_json v1.0.149
+   Compiling pkg-config v0.3.33
+   Compiling vcpkg v0.2.15
+   Compiling arrayvec v0.7.6
+   Compiling memchr v2.8.0
+   Compiling arrayref v0.3.9
+   Compiling cc v1.2.62
+   Compiling cfg-if v1.0.4
+   Compiling itoa v1.0.18
+   Compiling foldhash v0.2.0
+   Compiling thiserror v2.0.18
+   Compiling constant_time_eq v0.4.2
+   Compiling ui_styling v0.1.0 (/Users/ueli/Documents/semio/ui/styling/rs)
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling smallvec v1.15.1
+   Compiling bitflags v2.11.1
+   Compiling blake3 v1.8.5
+   Compiling libsqlite3-sys v0.36.0
+   Compiling hashbrown v0.16.1
+   Compiling fallible-iterator v0.3.0
+   Compiling hashlink v0.11.0
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/framework/hash/rs)
+   Compiling syn v2.0.117
+   Compiling rusqlite v0.38.0
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1198:36
+     |
+1198 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1198 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1198 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1445:24
+     |
+1445 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1445 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1445 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+   Compiling sourcing_curate v0.1.0 (/Users/ueli/Documents/semio/sourcing/curate/rs)
+    Finished `test` profile [unoptimized] target(s) in 59.74s
+     Running unittests lib.rs (/Users/ueli/Documents/semio/.repo/🎫️/26/07/23/GET-SOURCING-WORKING-END-TO-END/target/debug/deps/sourcing_curate-30ae48c393ef50ae)
+
+running 12 tests
+test tests::box_recipe_produces_valid_mesh ... ok
+test tests::curate_delta_clamps_to_availability_and_zero_floor ... ok
+test tests::frame_recipe_concatenates_four_pieces_into_a_valid_mesh ... ok
+test tests::curate_delta_unknown_object_is_noop ... ok
+test tests::curate_set_removes_entry_at_zero ... ok
+test tests::filtered_stock_matches_min_availability ... ok
+test tests::filtered_stock_matches_module ... ok
+test tests::filtered_stock_matches_query ... ok
+test tests::filtered_stock_matches_typology_prefix ... ok
+test tests::grid_placement_centers_around_origin ... ok
+test tests::grid_scale_normalizes_to_cell_size ... ok
+test tests::typology_contains_and_flatten ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

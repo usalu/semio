@@ -1,0 +1,11 @@
+{
+  "title": "Puzzle 3d Concrete Build Mesh Dependencies",
+  "emoji": "🧊️",
+  "status": "open",
+  "description": "Fix puzzle 3d concrete forest deployment: stop preloading nakagin meshes on all builds, copy static meshes to dist/mesh/ (not meshes/), and bundle only GLBs required by the locked fixture build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1709"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️d1cd9b7c21f74bf4985c3a6845453531"]
+}

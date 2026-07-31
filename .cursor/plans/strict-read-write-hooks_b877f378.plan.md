@@ -3,7 +3,7 @@ name: strict-read-write-hooks
 overview: Promote every read on KitStoreClient to a StoreField and every write to a StoreCommand, then collapse all React hooks to one-line wrappers around useStoreField / useStoreCommand. Operations finalize the open transaction (applied=true on success, applied=false on failure); saving (draft -> checkpoint) is a separate workspace command. Delete every legacy abstraction (HookTriad, HookRead, useDraft, useOptimistic, schema-state generators, writeKitStoreClientSchemaField, kitReadonlyTriad, useComposeReadSnap, SketchpadTriadInputRow / SketchpadTriadToggleRow). Reads and writes never share a hook surface; nothing in the new surface uses a "Row" suffix.
 todos:
  - id: ticket_open
-   content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫/26/05/08/strict-read-write-hooks/
+   content: Open MCP ticket 'Strict Read Write Hooks' under .repo/🎫️/26/05/08/strict-read-write-hooks/
    status: in_progress
  - id: phase1_storefields_storecommands
    content: "compose/js: rename SCHEMA_HOOK_IDLE_STATUS/SCHEMA_HOOK_READONLY_STATUS/USE_KIT_NAME_PENDING_STATUS to WRITE_STATUS_IDLE/WRITE_STATUS_READONLY/WRITE_STATUS_PENDING; rebuild StoreField (no public set; values pushed via constructor source callback); rebuild StoreCommand status using same source pattern (no kit/schema constants in the generic class); add KitStore.query<T>(body, parse, initial) read helper + KitStore.operation<TArgs>(name, vars, body, toVars) transactional kit-modifying helper (one per SDL OperationKind variant: RenameKit, DraggedPiece, AddedType, ...) + KitStore.command<TArgs>(...) non-transactional helper for workspace writes (attachBackbone, syncNow, importKit, ...); wire operationSucceeded -> correlator + invalidations.next() and operationFailed -> correlator; delete OperationRouter, seedFieldsFromDto, dispatchCorrelationEnvelope typed-kind branch, kitRenamed subscription, fieldCache; privatize submitChangeKitCommands and fetchFullKit; extend embedded tests"
@@ -89,12 +89,12 @@ The primitives are domain-agnostic. Nothing in here mentions kit, kit name, sche
 ```ts
 export type WriteStatus = { kind: "readonly"; pending: 0; lastError?: SetError } | { kind: "idle"; pending: 0; lastError?: SetError } | { kind: "pending"; pending: number; lastError?: SetError } | { kind: "error"; pending: 0; lastError: SetError };
 
-/** @emoji 🧊 Stable frozen identities for `useSyncExternalStore` snapshots. */
+/** @emoji 🧊️ Stable frozen identities for `useSyncExternalStore` snapshots. */
 export const WRITE_STATUS_IDLE: WriteStatus = Object.freeze({ kind: "idle", pending: 0 });
 export const WRITE_STATUS_READONLY: WriteStatus = Object.freeze({ kind: "readonly", pending: 0 });
 export const WRITE_STATUS_PENDING: WriteStatus = Object.freeze({ kind: "pending", pending: 1 });
 
-/** @emoji 📥 Read-only typed mirror. Values are pushed in by the `source` callback at construction; consumers cannot mutate. */
+/** @emoji 📥️ Read-only typed mirror. Values are pushed in by the `source` callback at construction; consumers cannot mutate. */
 export class StoreField<T> {
  constructor(initial: T, source: (push: (next: T) => void) => Unsubscribe) {
   this.subject = new BehaviorSubject<T>(initial);
@@ -112,7 +112,7 @@ export class StoreField<T> {
  // NOTE: no `set` method. The only path that writes a value is the `push` closure handed to `source`.
 }
 
-/** @emoji 📝 The only side-effect carrier. Generic over `TArgs`; knows nothing about kit / kit-name / schema hooks. */
+/** @emoji 📝️ The only side-effect carrier. Generic over `TArgs`; knows nothing about kit / kit-name / schema hooks. */
 export class StoreCommand<TArgs> {
  readonly status: StoreField<WriteStatus>;
  constructor(exec: (args: TArgs) => Promise<SetResult>) {
@@ -135,7 +135,7 @@ export class StoreCommand<TArgs> {
  private readonly exec: (args: TArgs) => Promise<SetResult>;
 }
 
-/** @emoji 🚦 request-id <-> Promise resolver. Used inside the shared mutation executor only. */
+/** @emoji 🚦️ request-id <-> Promise resolver. Used inside the shared mutation executor only. */
 export class RequestCorrelator {
  await(requestId: string): Promise<SetResult>;
  resolve(requestId: string, r: SetResult): void;
@@ -149,7 +149,7 @@ Renamed across the codebase as part of Phase 1 (none of these names embed a cons
 - `SCHEMA_HOOK_READONLY_STATUS` -> `WRITE_STATUS_READONLY`
 - `USE_KIT_NAME_PENDING_STATUS` -> `WRITE_STATUS_PENDING`
 
-Deleted in the same `#region 🧱StorePrimitives`: `OperationRouter`, `OperationEvent`, `StoreField.set` (public method gone), `KitStore.seedFieldsFromDto`, `KitStore.dispatchCorrelationEnvelope` (typed-kind branch), the dedicated `kitRenamed` GraphQL subscription, and `KitStore.fieldCache` / `cachedField` if present.
+Deleted in the same `#region 🧱️StorePrimitives`: `OperationRouter`, `OperationEvent`, `StoreField.set` (public method gone), `KitStore.seedFieldsFromDto`, `KitStore.dispatchCorrelationEnvelope` (typed-kind branch), the dedicated `kitRenamed` GraphQL subscription, and `KitStore.fieldCache` / `cachedField` if present.
 
 ```tsx
 // React-side primitives (kept; no surface change).
@@ -196,7 +196,7 @@ import { Subject } from "rxjs";
 
 private readonly invalidations = new Subject<void>();
 
-/** @emoji 🧾 GraphQL-backed read. Pushes `parse(data)` on initial fetch and on every invalidation tick. No public mutator. */
+/** @emoji 🧾️ GraphQL-backed read. Pushes `parse(data)` on initial fetch and on every invalidation tick. No public mutator. */
 private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): StoreField<T> {
   return new StoreField<T>(initial, (push) => {
     const refetch = async () => {
@@ -213,7 +213,7 @@ private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): Store
   });
 }
 
-/** @emoji 🪪 Transactional kit-modifying operation. Every SDL operation has the uniform signature `<name>(scope: <Operation>Scope!, input: <Operation>Input!): Id!`. The helper opens draft + tx, merges `{ draftId, transactionId }` into `scope`, runs the mutation, awaits `operationSucceeded` by `requestId`, then finalizes the transaction (`applied: true|false`). Maps 1:1 to a SDL `Mutation` field backed by `union OperationKind`. */
+/** @emoji 🪪️ Transactional kit-modifying operation. Every SDL operation has the uniform signature `<name>(scope: <Operation>Scope!, input: <Operation>Input!): Id!`. The helper opens draft + tx, merges `{ draftId, transactionId }` into `scope`, runs the mutation, awaits `operationSucceeded` by `requestId`, then finalizes the transaction (`applied: true|false`). Maps 1:1 to a SDL `Mutation` field backed by `union OperationKind`. */
 private operation<TScope extends Record<string, JsonValue> = Record<string, never>, TInput extends Record<string, JsonValue> = Record<string, never>>(
   fieldName: string,                  // e.g. "renameKit"
   scopeTypeName: string,              // e.g. "RenameKitScope"
@@ -244,7 +244,7 @@ private operation<TScope extends Record<string, JsonValue> = Record<string, neve
   });
 }
 
-/** @emoji 📝 Non-transactional command. Builds a StoreCommand that runs a plain GraphQL mutation (no draft / tx / correlator). Used for workspace-level writes that are not kit operations. */
+/** @emoji 📝️ Non-transactional command. Builds a StoreCommand that runs a plain GraphQL mutation (no draft / tx / correlator). Used for workspace-level writes that are not kit operations. */
 private command<TArgs, TData = JsonValue>(
   fieldName: string,
   variableSignatures: string,
@@ -691,4 +691,4 @@ if (ks0) doStuff(ks0);
 
 ## Delivery
 
-This is multi-hour work. After plan acceptance I will split into three short-lived parallel sub-agents (one per phase, in dependency order: Phase 1 -> Phase 2 -> Phase 3, with Phase 4 run by me at the end) per the workspace rule on delegation. The ticket folder is `.repo/🎫/26/05/08/strict-read-write-hooks/` (to be created). All temporary scripts and notes live inside it.
+This is multi-hour work. After plan acceptance I will split into three short-lived parallel sub-agents (one per phase, in dependency order: Phase 1 -> Phase 2 -> Phase 3, with Phase 4 run by me at the end) per the workspace rule on delegation. The ticket folder is `.repo/🎫️/26/05/08/strict-read-write-hooks/` (to be created). All temporary scripts and notes live inside it.

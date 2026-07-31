@@ -1,0 +1,3522 @@
+File: .cursor/plans/2d_references_on_grid_ff798114.plan.md
+  Changed. Length: 9999
+
+File: .cursor/plans/5d_terminology_decoupling_b99a3678.plan.md
+  Changed. Length: 6247
+
+File: .cursor/plans/alternatives-context-footer_32f553db.plan.md
+  Changed. Length: 7212
+
+File: .cursor/plans/async-parallel-geometry-flow_bebd9af5.plan.md
+  Changed. Length: 9981
+
+File: .cursor/plans/breadcrumb_navigation_mechanism_0158076e.plan.md
+  Changed. Length: 6773
+
+File: .cursor/plans/brep_suite_procedural_eaf0eeaa.plan.md
+  Changed. Length: 10522
+
+File: .cursor/plans/brush_kind_suggestion_weights_7ae14c60.plan.md
+  Changed. Length: 8338
+
+File: .cursor/plans/bun_nx_monorepo_setup_756984c2.plan.md
+  Changed. Length: 13945
+
+File: .cursor/plans/bvh_solid-overlap_brush_collision_32dd916b.plan.md
+  Changed. Length: 5999
+
+File: .cursor/plans/cad-generalize-modeldefs_0dfb6842.plan.md
+  Changed. Length: 10828
+
+File: .cursor/plans/cad_live_model_stats_9f38cfe1.plan.md
+  Changed. Length: 8660
+
+File: .cursor/plans/centralized_styling_tokens_b2c59cc8.plan.md
+  Changed. Length: 9645
+
+File: .cursor/plans/channel_3d_sync_39385f72.plan.md
+  Changed. Length: 9407
+
+File: .cursor/plans/consolidate_scattered_files_fcd02f40.plan.md
+  Changed. Length: 6300
+
+File: .cursor/plans/consolidate_storybooks_into_root_4e75d4bb.plan.md
+  Changed. Length: 5937
+
+File: .cursor/plans/core_kernel_decoupling_94aae390.plan.md
+  Changed. Length: 8769
+
+File: .cursor/plans/display_panel_mechanism_c2f7c2e6.plan.md
+  Changed. Length: 9825
+
+File: .cursor/plans/embodiment_registry_refactor_e06d5f37.plan.md
+  Changed. Length: 10247
+
+File: .cursor/plans/enforce_panel_tab_tree_section_f8c26471.plan.md
+  Changed. Length: 10023
+
+File: .cursor/plans/figure_split_tiles_9c7bbfa6.plan.md
+  Changed. Length: 8114
+
+File: .cursor/plans/fill_target_volumes_60b33937.plan.md
+  Changed. Length: 10907
+
+File: .cursor/plans/fix_3d_matrix_chain_perf_ac1d88dd.plan.md
+  Changed. Length: 3879
+
+File: .cursor/plans/fix_brep_geometric_operations_714b1f51.plan.md
+  Changed. Length: 7389
+
+File: .cursor/plans/fix_projektetage_8to9_morph_5205f0a3.plan.md
+  Changed. Length: 7180
+
+File: .cursor/plans/fix_ui_float_precision_5ecdc2c2.plan.md
+  Changed. Length: 5957
+
+File: .cursor/plans/flow_catalogue_dnd_2ffa4bf9.plan.md
+  Changed. Length: 7129
+
+File: .cursor/plans/flow_double-click_add_587cf57b.plan.md
+  Changed. Length: 7012
+
+File: .cursor/plans/flow_procedural_rich_context_menu_3757f380.plan.md
+  Changed. Length: 7796
+
+File: .cursor/plans/flow_undo_redo_6e12141c.plan.md
+  Changed. Length: 6841
+
+File: .cursor/plans/folder_structure_migration_2c56af58.plan.md
+  Changed. Length: 8142
+
+File: .cursor/plans/framework_core_abstraction_9427fd48.plan.md
+  Changed. Length: 8929
+
+File: .cursor/plans/framework_icon_interface_de631a59.plan.md
+  Changed. Length: 10653
+
+File: .cursor/plans/full_virtual_file_system_b2678c72.plan.md
+  Changed. Length: 9404
+
+File: .cursor/plans/general_display_windows_mechanism_099b80c7.plan.md
+  Changed. Length: 7272
+
+File: .cursor/plans/generalize_infinite_world_ab04cb15.plan.md
+  Changed. Length: 8195
+
+File: .cursor/plans/gis-map-infinite-canvas_74114735.plan.md
+  Changed. Length: 11763
+
+File: .cursor/plans/gis-map-reuse-pins_a017207e.plan.md
+  Changed. Length: 7986
+
+File: .cursor/plans/global-ghost-interaction_b1a1cd0d.plan.md
+  Changed. Length: 9810
+
+File: .cursor/plans/i18n_compile_enforcement_854a780a.plan.md
+  Changed. Length: 7375
+
+File: .cursor/plans/infinite_world_hide_lock_78af5297.plan.md
+  Changed. Length: 10115
+
+File: .cursor/plans/intro_disposition_morph_fb1633fa.plan.md
+  Changed. Length: 10072
+
+File: .cursor/plans/lint_scripts_js_facade_f75134e8.plan.md
+  Changed. Length: 8009
+
+File: .cursor/plans/map_vector_tiles_05c372b0.plan.md
+  Changed. Length: 8128
+
+File: .cursor/plans/nestable_neuron_kind_trees_dc2c6bb6.plan.md
+  Changed. Length: 6274
+
+File: .cursor/plans/neural_schemas_and_operators_f692e604.plan.md
+  Changed. Length: 11609
+
+File: .cursor/plans/operator-typed_brep_nodes_a382c9bc.plan.md
+  Changed. Length: 10567
+
+File: .cursor/plans/panel-ghost-interaction_dc3e8955.plan.md
+  Changed. Length: 8609
+
+File: .cursor/plans/per-kind_object_styling_6a64c4e0.plan.md
+  Changed. Length: 6472
+
+File: .cursor/plans/platform_navigation_mechanism_ff158767.plan.md
+  Changed. Length: 8447
+
+File: .cursor/plans/play_document_tabs_b3050808.plan.md
+  Changed. Length: 10584
+
+File: .cursor/plans/presentation_embodiments_and_dispositions_1f30a21b.plan.md
+  Changed. Length: 7066
+
+File: .cursor/plans/presentation_framework_69342862.plan.md
+  Changed. Length: 9694
+
+File: .cursor/plans/presentation_spec_generalization_5d0ba78d.plan.md
+  Changed. Length: 7972
+
+File: .cursor/plans/procedural_feature_complete_1603207d.plan.md
+  Changed. Length: 7163
+
+File: .cursor/plans/procedural_puzzle_selection_128fd91a.plan.md
+  Changed. Length: 10822
+
+File: .cursor/plans/projektage_reveal_presentation_44ae3b87.plan.md
+  Changed. Length: 7521
+
+File: .cursor/plans/puzzle3d_precompute_worker_afb88899.plan.md
+  Changed. Length: 8424
+
+File: .cursor/plans/puzzle3d_select_freeze_057d5e22.plan.md
+  Changed. Length: 6267
+
+File: .cursor/plans/puzzle3d_selection_context_menu_78121112.plan.md
+  Changed. Length: 8359
+
+File: .cursor/plans/puzzle3d_selection_perf_f885b9c9.plan.md
+  Changed. Length: 5859
+
+File: .cursor/plans/puzzle_2d_suggest_nodes_70a9b1ac.plan.md
+  Changed. Length: 6059
+
+File: .cursor/plans/puzzle_playground_relayer_5d67554e.plan.md
+  Changed. Length: 9892
+
+File: .cursor/plans/refactor-react-composable-contexts_ec8b0106.plan.md
+  Changed. Length: 27797
+
+File: .cursor/plans/refactor_kit_name_reads_13eb0c8b.plan.md
+  Changed. Length: 23314
+
+File: .cursor/plans/restore_einführung_intro_behaviour_385c127f.plan.md
+  Changed. Length: 4817
+
+File: .cursor/plans/shared_base_layout_shell_36c9d4cd.plan.md
+  Changed. Length: 6585
+
+File: .cursor/plans/sketchpad_platform_refactor_2590dfdf.plan.md
+  Changed. Length: 10432
+
+File: .cursor/plans/sketchpad_platform_refactor_f6665375.plan.md
+  Changed. Length: 10424
+
+File: .cursor/plans/split_puzzle_2d_bundles_17a101da.plan.md
+  Changed. Length: 8475
+
+File: .cursor/plans/theme_consistent_readable_ui_5d9cfefd.plan.md
+  Changed. Length: 4865
+
+File: .cursor/plans/token_color_consistency_b28a212a.plan.md
+  Changed. Length: 7906
+
+File: .cursor/plans/tree_hover_perf_refactor_0e074df9.plan.md
+  Changed. Length: 7106
+
+File: .cursor/plans/tree_operator_clusters_6eac66ce.plan.md
+  Changed. Length: 10391
+
+File: .cursor/plans/tree_row_remount_fix_0cbd9ac5.plan.md
+  Changed. Length: 4916
+
+File: .cursor/plans/unified_5d_topology_component_3348703f.plan.md
+  Changed. Length: 9926
+
+File: .cursor/plans/unify_nav_button_group_fdc906f3.plan.md
+  Changed. Length: 5604
+
+File: .cursor/plans/unify_selection_rectangle_e4d5c14a.plan.md
+  Changed. Length: 6494
+
+File: .cursor/plans/vector_figure-ground_styles_b663b910.plan.md
+  Changed. Length: 7196
+
+File: .cursor/plans/window_view_templates_tree_4a52c521.plan.md
+  Changed. Length: 8755
+
+File: .cursor/plans/wires_kit_relationship_view_e12b40b3.plan.md
+  Changed. Length: 8450
+
+File: .cursor/plans/wires_normal_graph_03c36798.plan.md
+  Changed. Length: 8905
+
+File: .cursor/plans/wrap_external_dependencies_1dfb5c76.plan.md
+  Changed. Length: 7816
+
+File: .github/workflows/gh-pages.yml
+  Changed. Length: 1076
+
+File: .github/workflows/play-sites.yml
+  Changed. Length: 1682
+
+File: .github/workflows/playwright.yml
+  Changed. Length: 858
+
+File: .kiro/specs/compose-js-thin-client-refactor/design.md
+  Changed. Length: 27883
+
+File: .kiro/specs/compose-js-thin-client-refactor/requirements.md
+  Changed. Length: 19894
+
+File: .ralph-tui/prd/kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core/prd.json
+  Changed. Length: 15591
+
+File: .ralph-tui/prd/kit-store-architecture-contracts-first-multi-backbone-pointer-based-rs-core/prd.md
+  Changed. Length: 15831
+
+File: .ralph-tui/progress.md
+  Changed. Length: 13270
+
+File: .repo/⚡️/🤖️/26/03/07/6e252a62-aaeb-4e91-ae79-40e129a3a191/session.json
+  Changed. Length: 215258
+
+File: .repo/⚡️/🤖️/26/03/08/0f3901a5-4667-4f83-bbd3-8c6f249ff3ac/session.json
+  Changed. Length: 639125
+
+File: .repo/⚡️/🤖️/26/03/08/13b01489-82e2-4c87-882d-30dc08cfe1c1/session.json
+  Changed. Length: 5144980
+
+File: .repo/⚡️/🤖️/26/03/08/5e3a5588-75ed-41ac-8770-86d0ff5cf733/session.json
+  Changed. Length: 2516061
+
+File: .repo/⚡️/🤖️/26/03/09/9e70e303-b9ae-4b0f-ad1b-517150847ba8/session.json
+  Changed. Length: 3099468
+
+File: .repo/⚡️/🤖️/26/03/09/b1dc2bb0-ba55-4495-8f7f-7c624d09a233/session.json
+  Changed. Length: 54566
+
+File: .repo/⚡️/🤖️/26/03/10/3a12ae34-c708-4aeb-920e-b902d2d5dd47/session.json
+  Changed. Length: 1654656
+
+File: .repo/⚡️/🤖️/26/03/10/5e3a5588-75ed-41ac-8770-86d0ff5cf733/session.json
+  Changed. Length: 2763478
+
+File: .repo/⚡️/🤖️/26/03/10/c70e3829-9c6a-4ef2-8c4a-06a8f92445f3/session.json
+  Changed. Length: 6774237
+
+File: .repo/⚡️/🤖️/26/03/11/03a052a3-eb39-416f-bdb8-667e632bb5b8/session.json
+  Changed. Length: 608599
+
+File: .repo/⚡️/🤖️/26/03/11/3b747c21-53e9-4893-9826-5e1f972d45cb/session.json
+  Changed. Length: 33875
+
+File: .repo/⚡️/🤖️/26/03/11/3db2db9f-613d-4da6-ad1d-5d6d95b71f80/session.json
+  Changed. Length: 763626
+
+File: .repo/⚡️/🤖️/26/03/11/5edd9a2c-6778-422a-a0ac-96f973ec21cd/session.json
+  Changed. Length: 64915
+
+File: .repo/⚡️/🤖️/26/03/11/612f35cf-26be-4a97-a116-cbf04a166c0a/session.json
+  Changed. Length: 277690
+
+File: .repo/⚡️/🤖️/26/03/11/753f15d0-3143-4712-883b-4ce2b5e9cfe6/session.json
+  Changed. Length: 7737496
+
+File: .repo/⚡️/🤖️/26/03/11/847b9826-512e-46f2-9d0d-8813e674e3ab/session.json
+  Changed. Length: 48211
+
+File: .repo/⚡️/🤖️/26/03/11/937d909f-d095-485d-9da8-f8c43163e530/session.json
+  Changed. Length: 72342
+
+File: .repo/⚡️/🤖️/26/03/11/9916a30f-03b1-4670-b7b8-361490a6e5c0/session.json
+  Changed. Length: 9473989
+
+File: .repo/⚡️/🤖️/26/03/11/a31feb55-552f-42e8-b68c-92b449ce7e3f/session.json
+  Changed. Length: 14577812
+
+File: .repo/⚡️/🤖️/26/03/11/c70e3829-9c6a-4ef2-8c4a-06a8f92445f3/session.json
+  Changed. Length: 819578
+
+File: .repo/⚡️/🤖️/26/03/11/f28b4366-3bff-49f5-a90b-bf8da5ba46f8/session.json
+  Changed. Length: 1464648
+
+File: .repo/⚡️/🤖️/26/03/12/059a56b0-b7f5-460f-aa89-36204d51b98d/session.json
+  Changed. Length: 11324
+
+File: .repo/⚡️/🤖️/26/03/12/0c3df518-bf23-4429-a7bb-a33c770added/session.json
+  Changed. Length: 1070906
+
+File: .repo/⚡️/🤖️/26/03/12/10a05a83-f608-4b3f-bb4d-2c262e51c605/session.json
+  Changed. Length: 58331
+
+File: .repo/⚡️/🤖️/26/03/12/44e07d73-bd99-4be1-bf2f-ec75b88b16ee/session.json
+  Changed. Length: 440522
+
+File: .repo/⚡️/🤖️/26/03/12/6bc3b8a6-f2a8-4e1f-995e-a031fe8f1efe/session.json
+  Changed. Length: 13940
+
+File: .repo/⚡️/🤖️/26/03/12/6e3e92d9-5651-4b51-b12b-2feff03cd5dd/session.json
+  Changed. Length: 1146958
+
+File: .repo/⚡️/🤖️/26/03/12/7c30d4b0-dd53-4946-a9e5-d20bc5385d86/session.json
+  Changed. Length: 91715
+
+File: .repo/⚡️/🤖️/26/03/12/8920bfa5-ca31-446a-91dd-0a6cd54d49af/session.json
+  Changed. Length: 26591
+
+File: .repo/⚡️/🤖️/26/03/12/8caf3600-99fc-4550-8008-c832ae45cc19/session.json
+  Changed. Length: 25807
+
+File: .repo/⚡️/🤖️/26/03/12/96bff79f-5392-4221-9f54-0eadab9aae26/session.json
+  Changed. Length: 335750
+
+File: .repo/⚡️/🤖️/26/03/12/9916a30f-03b1-4670-b7b8-361490a6e5c0/session.json
+  Changed. Length: 16044997
+
+File: .repo/⚡️/🤖️/26/03/12/a502bfb3-4863-4afe-ae61-694785ba6232/session.json
+  Changed. Length: 47599
+
+File: .repo/⚡️/🤖️/26/03/12/b4e946d7-2bdb-4b00-94bf-59937313ad2c/session.json
+  Changed. Length: 8786
+
+File: .repo/⚡️/🤖️/26/03/12/c728d40b-ef08-4008-acd3-927886030112/session.json
+  Changed. Length: 52746
+
+File: .repo/⚡️/🤖️/26/03/13/10e4c604-138b-45e1-8630-fff6aa9f4394/session.json
+  Changed. Length: 941954
+
+File: .repo/⚡️/🤖️/26/03/13/3468bb9e-df57-46c5-8afe-916ea3a4c73f/session.json
+  Changed. Length: 321300
+
+File: .repo/⚡️/🤖️/26/03/13/59e85690-612e-465c-8109-94b2647b1e0f/session.json
+  Changed. Length: 251364
+
+File: .repo/⚡️/🤖️/26/03/13/5ef20f12-9009-4e1e-a9aa-1b1e9e6f863a/session.json
+  Changed. Length: 173635
+
+File: .repo/⚡️/🤖️/26/03/13/9430a17c-9a89-4d3f-9feb-da578921da55/session.json
+  Changed. Length: 190327
+
+File: .repo/⚡️/🤖️/26/03/13/a09b6ff2-9ae1-4130-9a81-e6284240a119/session.json
+  Changed. Length: 174477
+
+File: .repo/⚡️/🤖️/26/03/13/a1ab0da2-0dc9-42f4-b17d-f003a653afd3/session.json
+  Changed. Length: 84141
+
+File: .repo/⚡️/🤖️/26/03/13/b492d7c9-11fd-4ef3-aa38-53a8660a4b6e/session.json
+  Changed. Length: 226501
+
+File: .repo/⚡️/🤖️/26/03/13/ba9768a0-31ee-4736-a1db-7e40491f82dc/session.json
+  Changed. Length: 15820
+
+File: .repo/⚡️/🤖️/26/03/14/070d5e3e-73df-4bda-86e6-dac0d5194484/session.json
+  Changed. Length: 41828
+
+File: .repo/⚡️/🤖️/26/03/14/38a6eeb1-e6c4-4934-bd47-fceef108f5f0/session.json
+  Changed. Length: 366958
+
+File: .repo/⚡️/🤖️/26/03/14/49a91038-10d1-4372-9aed-15436f605767/session.json
+  Changed. Length: 19422969
+
+File: .repo/⚡️/🤖️/26/03/14/512b17f7-5704-4ea2-b600-723db6eec8aa/session.json
+  Changed. Length: 11901
+
+File: .repo/⚡️/🤖️/26/03/14/53279b97-c4d8-46ad-ba8e-6fc69c42ad6d/session.json
+  Changed. Length: 467691
+
+File: .repo/⚡️/🤖️/26/03/14/537857d9-e2be-4088-8ed1-6c81a87151e3/session.json
+  Changed. Length: 73736
+
+File: .repo/⚡️/🤖️/26/03/14/78f646a9-33c7-4883-b102-ba39b4fe5837/session.json
+  Changed. Length: 442127
+
+File: .repo/⚡️/🤖️/26/03/14/796fac90-c39a-4ed0-af61-f753388de288/session.json
+  Changed. Length: 103672
+
+File: .repo/⚡️/🤖️/26/03/14/7f9f306e-4fc8-486a-91d3-bac869454325/session.json
+  Changed. Length: 560355
+
+File: .repo/⚡️/🤖️/26/03/14/9354aa9b-baac-4379-91e1-70a9c508c605/session.json
+  Changed. Length: 169436
+
+File: .repo/⚡️/🤖️/26/03/14/b27c3f58-2931-4ee8-9267-40bb34e2e878/session.json
+  Changed. Length: 876962
+
+File: .repo/⚡️/🤖️/26/03/14/ba617e65-f5f0-4776-8988-fae8d4032351/session.json
+  Changed. Length: 123810
+
+File: .repo/⚡️/🤖️/26/03/14/c57906b9-afa8-49df-a63b-12a7682b6e77/session.json
+  Changed. Length: 21676
+
+File: .repo/⚡️/🤖️/26/03/14/da099fd3-a19f-4936-ad2b-cb24c06c34e6/session.json
+  Changed. Length: 44324
+
+File: .repo/⚡️/🤖️/26/03/14/de4ff471-1110-45e4-8354-350135450f1e/session.json
+  Changed. Length: 107343
+
+File: .repo/⚡️/🤖️/26/03/14/e1c47748-e1e3-44fd-ada7-096ecea62ffa/session.json
+  Changed. Length: 85607
+
+File: .repo/⚡️/🤖️/26/03/14/f811e805-aff4-49c6-b8e4-74be5f3c099c/session.json
+  Changed. Length: 2653315
+
+File: .repo/⚡️/🤖️/26/03/16/2d7f15b6-4829-42d4-ae84-ad73be6629f5/1773667165570704190-agent-tool-ended.json
+  Changed. Length: 3822
+
+File: .repo/⚡️/🤖️/26/03/16/2d7f15b6-4829-42d4-ae84-ad73be6629f5/session.json
+  Changed. Length: 407101
+
+File: .repo/⚡️/🤖️/26/03/16/7873b094-be79-42bb-9c2f-10baca5f6f8b/session.json
+  Changed. Length: 571271
+
+File: .repo/⚡️/🤖️/26/03/16/92a2efd7-b397-492c-917d-fda4dbefc0c5/session.json
+  Changed. Length: 234795
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668774097435057-agent-tool-search-starting.json
+  Changed. Length: 30868
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668774502151190-agent-tool-code-edit-starting.json
+  Changed. Length: 32098
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668776784331287-agent-tool-code-edit-ended.json
+  Changed. Length: 32229
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668932275670691-agent-tool-code-edit-starting.json
+  Changed. Length: 32110
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773668933659947560-agent-tool-code-edit-ended.json
+  Changed. Length: 32241
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773679217593258059-agent-tool-code-edit-starting.json
+  Changed. Length: 32562
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/1773679218906558532-agent-tool-code-edit-ended.json
+  Changed. Length: 32692
+
+File: .repo/⚡️/🤖️/26/03/16/9c9573bc-7742-46ae-9c04-b0ebf0657575/session.json
+  Changed. Length: 2023537
+
+File: .repo/⚡️/🤖️/26/03/16/ab374780-ae5b-4508-902a-927030b0e874/session.json
+  Changed. Length: 37360
+
+File: .repo/⚡️/🤖️/26/03/16/ca97ddff-1fa1-443f-ac59-b56239d8fef7/session.json
+  Changed. Length: 17041645
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773671135258598131-agent-tool-ended.json
+  Changed. Length: 12496
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672054048681515-agent-tool-code-edit-ended.json
+  Changed. Length: 449430
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672082308145745-agent-tool-code-edit-ended.json
+  Changed. Length: 447248
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672107278396614-agent-tool-code-edit-ended.json
+  Changed. Length: 449044
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672126126045917-agent-tool-code-edit-ended.json
+  Changed. Length: 456543
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672147641820779-agent-tool-code-edit-ended.json
+  Changed. Length: 456263
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/1773672188964311933-agent-tool-code-edit-ended.json
+  Changed. Length: 463961
+
+File: .repo/⚡️/🤖️/26/03/16/d930e4c2-9b45-490a-9301-30ba1a727ba3/session.json
+  Changed. Length: 3040868
+
+File: .repo/⚡️/🤖️/26/03/16/dfb38fd2-7065-4f3a-8da6-eacb65c02fe3/session.json
+  Changed. Length: 180826
+
+File: .repo/⚡️/🤖️/26/03/16/f8b33493-b0ac-4b2e-a7d9-0e28cf3b6320/session.json
+  Changed. Length: 122281
+
+File: .repo/⚡️/🤖️/26/03/17/133b9d3c-28db-456a-8763-86790d721191/session.json
+  Changed. Length: 536213
+
+File: .repo/⚡️/🤖️/26/03/17/73e3ad39-89e7-4a72-a8a6-7d1432a78de6/session.json
+  Changed. Length: 73532
+
+File: .repo/⚡️/🤖️/26/03/17/8640682a-36f3-4352-99e3-436b1acb446d/session.json
+  Changed. Length: 1556291
+
+File: .repo/⚡️/🤖️/26/03/17/92a2efd7-b397-492c-917d-fda4dbefc0c5/session.json
+  Changed. Length: 527453
+
+File: .repo/⚡️/🤖️/26/03/17/998267f2-190c-44c1-8bf1-59604f486f56/session.json
+  Changed. Length: 3860126
+
+File: .repo/⚡️/🤖️/26/03/17/f6e286dc-eaba-416f-a993-64e2cabfb8a9/session.json
+  Changed. Length: 85926
+
+File: .repo/⚡️/🤖️/26/03/17/fd4c4869-8974-4940-bafc-ad20858cebe5/session.json
+  Changed. Length: 2092917
+
+File: .repo/⚡️/🤖️/26/03/18/0a94e3e1-9b57-417c-8abb-f4cb19c8f2a9/session.json
+  Changed. Length: 52043
+
+File: .repo/⚡️/🤖️/26/03/18/133b9d3c-28db-456a-8763-86790d721191/session.json
+  Changed. Length: 2406113
+
+File: .repo/⚡️/🤖️/26/03/18/73a169ae-dc8f-4fd6-bc36-579b7608be52/session.json
+  Changed. Length: 50420
+
+File: .repo/⚡️/🤖️/26/03/18/76f245c7-6d59-422a-a647-3048e6333025/session.json
+  Changed. Length: 57769
+
+File: .repo/⚡️/🤖️/26/03/18/7e075fc9-152b-4f82-869e-8303a4b88aa3/session.json
+  Changed. Length: 1893414
+
+File: .repo/⚡️/🤖️/26/03/18/81d751b1-3012-4fcd-b985-c724d080e30f/session.json
+  Changed. Length: 1227083
+
+File: .repo/⚡️/🤖️/26/03/18/85f8c7ad-fcde-4392-a907-c3bd18c89360/session.json
+  Changed. Length: 35830
+
+File: .repo/⚡️/🤖️/26/03/20/0258b50f-c97f-4c8a-9704-6fe89fe5335c/session.json
+  Changed. Length: 88223
+
+File: .repo/⚡️/🤖️/26/03/20/075b525d-1465-4fef-8cd2-d698c84ee3e3/session.json
+  Changed. Length: 24037
+
+File: .repo/⚡️/🤖️/26/03/20/0feb744b-4b73-4278-81d6-325e624d8189/session.json
+  Changed. Length: 207448
+
+File: .repo/⚡️/🤖️/26/03/20/3511369a-16bb-4fbd-bd6b-450cc1b417be/session.json
+  Changed. Length: 3297368
+
+File: .repo/⚡️/🤖️/26/03/20/5501b18e-bad6-439d-8526-5eea77678a7a/session.json
+  Changed. Length: 1322880
+
+File: .repo/⚡️/🤖️/26/03/20/57e62a0a-5673-49c8-9371-960399d13ffb/session.json
+  Changed. Length: 1865039
+
+File: .repo/⚡️/🤖️/26/03/20/68bb86f7-5559-4fd6-88d9-985e23f4d9a6/session.json
+  Changed. Length: 2563638
+
+File: .repo/⚡️/🤖️/26/03/20/8aa0450d-5bcc-4cb8-973b-b174076ba490/session.json
+  Changed. Length: 3402527
+
+File: .repo/⚡️/🤖️/26/03/20/91666a01-75df-4726-8a14-5eaf1e16f1cf/session.json
+  Changed. Length: 1268443
+
+File: .repo/⚡️/🤖️/26/03/20/b58564da-2de1-4c36-a2e5-eaf1e8a01033/session.json
+  Changed. Length: 1665428
+
+File: .repo/⚡️/🤖️/26/03/20/e392b24f-3db3-447a-afd9-8d76e27b4f79/session.json
+  Changed. Length: 27023
+
+File: .repo/⚡️/🤖️/26/03/20/fe23ca59-a260-4b18-9e20-c50f6cd5ef5c/session.json
+  Changed. Length: 12957
+
+File: .repo/⚡️/🤖️/26/03/21/0b132f3b-de28-4feb-ab55-6a3de561aea2/session.json
+  Changed. Length: 889663
+
+File: .repo/⚡️/🤖️/26/03/21/31e1711b-4bb2-4db1-b967-a79d0eab1d9d/session.json
+  Changed. Length: 465267
+
+File: .repo/⚡️/🤖️/26/03/21/5501b18e-bad6-439d-8526-5eea77678a7a/session.json
+  Changed. Length: 2828268
+
+File: .repo/⚡️/🤖️/26/03/21/90e54583-9491-4efb-be25-b687cb01b413/session.json
+  Changed. Length: 1874476
+
+File: .repo/⚡️/🤖️/26/03/21/de2516ae-184d-4f7f-a8cb-0c0b97309a2f/session.json
+  Changed. Length: 113110
+
+File: .repo/⚡️/🤖️/26/03/22/387280d9-bc69-46b9-ae00-7eb4338e0c3b/session.json
+  Changed. Length: 7843748
+
+File: .repo/⚡️/🤖️/26/03/22/440fed0a-9b53-4274-83c1-41bcfea86176/session.json
+  Changed. Length: 1444973
+
+File: .repo/⚡️/🤖️/26/03/22/4a47c3d7-3058-4e98-a8d2-65bb5497ade6/session.json
+  Changed. Length: 165532
+
+File: .repo/⚡️/🤖️/26/03/22/4ff94b43-ac0c-4759-8a93-4b2b9fa0b2cd/session.json
+  Changed. Length: 567381
+
+File: .repo/⚡️/🤖️/26/03/22/5501b18e-bad6-439d-8526-5eea77678a7a/session.json
+  Changed. Length: 278193
+
+File: .repo/⚡️/🤖️/26/03/22/550d12e7-8e8d-4e6d-a4fd-c09badc24caf/session.json
+  Changed. Length: 4411772
+
+File: .repo/⚡️/🤖️/26/03/22/69107da4-131e-4a90-8851-85e15432444c/session.json
+  Changed. Length: 12341890
+
+File: .repo/⚡️/🤖️/26/03/22/6fc6c63d-a9cc-4e1f-8d12-34492a40c6f7/session.json
+  Changed. Length: 11329380
+
+File: .repo/⚡️/🤖️/26/03/22/7384dc0c-55ea-4dcf-b087-c8eb76dd89d0/session.json
+  Changed. Length: 2335754
+
+File: .repo/⚡️/🤖️/26/03/22/af1572c0-405b-44ad-97b7-49b63ab2755f/session.json
+  Changed. Length: 31863
+
+File: .repo/⚡️/🤖️/26/03/22/b4a397fe-59c0-4aad-99c0-4d0b0990702b/session.json
+  Changed. Length: 752541
+
+File: .repo/⚡️/🤖️/26/03/22/bea68be4-fb3d-496e-8d57-86f7d55e06d8/session.json
+  Changed. Length: 1166610
+
+File: .repo/⚡️/🤖️/26/03/22/d9632079-2c68-4c95-9645-bf43f5b84145/session.json
+  Changed. Length: 266461
+
+File: .repo/⚡️/🤖️/26/03/22/fec0381e-e9eb-457d-a2f7-0edfff5f33fa/session.json
+  Changed. Length: 190442
+
+File: .repo/⚡️/🤖️/26/03/23/387280d9-bc69-46b9-ae00-7eb4338e0c3b/session.json
+  Changed. Length: 498125
+
+File: .repo/⚡️/🤖️/26/03/23/5cb65661-a3aa-43f3-922c-f138bb3fe5d4/session.json
+  Changed. Length: 133773
+
+File: .repo/⚡️/🤖️/26/03/23/91fef7ee-741b-4cde-8d7b-278274ca9d90/session.json
+  Changed. Length: 374737
+
+File: .repo/⚡️/🤖️/26/03/23/a567fbf5-424f-404d-8eed-388f8d6bc4da/session.json
+  Changed. Length: 820848
+
+File: .repo/⚡️/🤖️/26/03/23/a5d75ddb-606d-4e72-8269-f5b1a9111f0a/session.json
+  Changed. Length: 4456378
+
+File: .repo/⚡️/🤖️/26/03/23/afd726ac-3fd8-4f33-b861-fb7da3fe57de/session.json
+  Changed. Length: 4718734
+
+File: .repo/⚡️/🤖️/26/03/23/b7db7446-6258-4726-82a1-b929abf9bb6d/session.json
+  Changed. Length: 4765503
+
+File: .repo/⚡️/🤖️/26/03/23/bbe5da28-31c0-43c2-b214-cfcc94bfd831/session.json
+  Changed. Length: 4351916
+
+File: .repo/⚡️/🤖️/26/03/23/e08afd41-5e21-4a05-a068-1fe5dddf29e8/session.json
+  Changed. Length: 1951441
+
+File: .repo/⚡️/🤖️/26/03/23/eadcc598-af5e-4712-bca6-44480b5517be/session.json
+  Changed. Length: 980139
+
+File: .repo/⚡️/🤖️/26/03/23/f2a57968-9bd7-4e73-9135-e434c2b6e2cc/session.json
+  Changed. Length: 4378987
+
+File: .repo/⚡️/🤖️/26/03/24/48124f89-35f9-477c-9004-ea18b24ba1d8/session.json
+  Changed. Length: 371708
+
+File: .repo/⚡️/🤖️/26/03/24/e3dcbdae-fe22-4f1b-ae78-ed85098b8beb/session.json
+  Changed. Length: 248330
+
+File: .repo/⚡️/🤖️/26/03/25/158c8f10-9026-4b30-9097-c8a2187929a5/session.json
+  Changed. Length: 1761251
+
+File: .repo/⚡️/🤖️/26/03/25/27de0150-20b2-4cf4-b72a-2c447bffc9d6/session.json
+  Changed. Length: 199276
+
+File: .repo/⚡️/🤖️/26/03/25/41ad2822-cea5-46d9-90c6-fc8848b4805d/session.json
+  Changed. Length: 697310
+
+File: .repo/⚡️/🤖️/26/03/25/447c78d3-5131-4807-84d5-28c5a839051d/session.json
+  Changed. Length: 219335
+
+File: .repo/⚡️/🤖️/26/03/25/4948f0e9-86a4-4128-bab4-e663ab48a0a2/session.json
+  Changed. Length: 98092
+
+File: .repo/⚡️/🤖️/26/03/25/4b9c1e5a-30ef-465c-8127-1a7079b1700c/session.json
+  Changed. Length: 3140880
+
+File: .repo/⚡️/🤖️/26/03/25/4f37f1eb-7d66-46b0-992b-bcf610993c0a/session.json
+  Changed. Length: 1072934
+
+File: .repo/⚡️/🤖️/26/03/25/6b3ac757-7b6e-44e3-9f46-a8aa6d9419f7/session.json
+  Changed. Length: 1647442
+
+File: .repo/⚡️/🤖️/26/03/25/a185ef2a-c54a-49b1-bff7-c8490c47a491/session.json
+  Changed. Length: 132062
+
+File: .repo/⚡️/🤖️/26/03/25/b139c086-5eff-45f7-82d0-a538accca382/session.json
+  Changed. Length: 1374328
+
+File: .repo/⚡️/🤖️/26/03/25/d5544b66-e79d-4976-b741-e39c1e4ad0ca/session.json
+  Changed. Length: 398912
+
+File: .repo/⚡️/🤖️/26/03/25/dcbab834-fdb6-41cc-b74c-072be2f68617/session.json
+  Changed. Length: 205653
+
+File: .repo/⚡️/🤖️/26/03/25/e440961f-430b-4f4c-8495-48f613edbbdc/session.json
+  Changed. Length: 377085
+
+File: .repo/⚡️/🤖️/26/03/25/f238e093-75db-426a-acde-ec434754cb77/session.json
+  Changed. Length: 189659
+
+File: .repo/⚡️/🤖️/26/03/25/facd2ca6-08f9-4860-8a9f-ba2450676a2e/session.json
+  Changed. Length: 58616
+
+File: .repo/⚡️/🤖️/26/03/26/27e5e229-914b-4af7-ab98-821c0035b6b9/session.json
+  Changed. Length: 795105
+
+File: .repo/⚡️/🤖️/26/03/26/2c3fd112-3927-43a5-a69e-cc8264915321/session.json
+  Changed. Length: 1209433
+
+File: .repo/⚡️/🤖️/26/03/26/44fdb169-f23c-4ec7-bba2-1920f8fd0de8/session.json
+  Changed. Length: 1367140
+
+File: .repo/⚡️/🤖️/26/03/26/529a2a6a-c0ad-46f6-a490-254399a45fb4/session.json
+  Changed. Length: 1229604
+
+File: .repo/⚡️/🤖️/26/03/26/5994c176-4052-4dc5-afa5-1cd622a68add/session.json
+  Changed. Length: 970667
+
+File: .repo/⚡️/🤖️/26/03/26/62b6cf74-d7df-4163-99c9-bbc8e3b60284/session.json
+  Changed. Length: 541647
+
+File: .repo/⚡️/🤖️/26/03/26/70b126be-2822-462a-978c-2b3698f091dd/session.json
+  Changed. Length: 192225
+
+File: .repo/⚡️/🤖️/26/03/26/a6980bc3-fca2-4c8c-9aa5-5300bfc17155/session.json
+  Changed. Length: 2835362
+
+File: .repo/⚡️/🤖️/26/03/27/079c0164-b0ba-42bd-813a-af59662fcb1f/session.json
+  Changed. Length: 1413553
+
+File: .repo/⚡️/🤖️/26/03/27/09bb5cb4-8bba-4e99-9abd-4bf389d8f723/session.json
+  Changed. Length: 989687
+
+File: .repo/⚡️/🤖️/26/03/27/127fe1b0-ccbf-4e2b-88eb-3f1b71e8d1d0/session.json
+  Changed. Length: 622445
+
+File: .repo/⚡️/🤖️/26/03/27/1677775a-2943-40ad-8cbf-08ff46a30d77/session.json
+  Changed. Length: 542965
+
+File: .repo/⚡️/🤖️/26/03/27/206b0fa1-2d46-436f-a940-ff7ed9d0e68f/session.json
+  Changed. Length: 607666
+
+File: .repo/⚡️/🤖️/26/03/27/4c77eb3c-55ac-40be-8559-9c1d7e5261a9/session.json
+  Changed. Length: 447495
+
+File: .repo/⚡️/🤖️/26/03/27/649ff0bb-b3be-466c-beca-19ca21d2e10f/session.json
+  Changed. Length: 1575815
+
+File: .repo/⚡️/🤖️/26/03/27/a14e54b2-5335-4952-b183-5ee306bbc9e8/session.json
+  Changed. Length: 175363
+
+File: .repo/⚡️/🤖️/26/03/27/a9eec852-ad28-4b07-8570-5e23bbb1de9c/session.json
+  Changed. Length: 1065574
+
+File: .repo/⚡️/🤖️/26/03/27/b5287216-2374-46a4-9ed4-44e2d4c7fd3d/session.json
+  Changed. Length: 1222530
+
+File: .repo/⚡️/🤖️/26/03/27/bda67833-f5f0-4196-8c3d-00ebbc850dd8/session.json
+  Changed. Length: 279027
+
+File: .repo/⚡️/🤖️/26/03/27/d4b609e0-58f3-4396-937e-1c404264aa88/session.json
+  Changed. Length: 301234
+
+File: .repo/⚡️/🤖️/26/03/27/d9de088c-2b22-4a97-a9b3-a9cb872b5329/session.json
+  Changed. Length: 1031218
+
+File: .repo/⚡️/🤖️/26/03/27/dc6b4ac1-354a-4fe0-9912-6cf239a1676e/session.json
+  Changed. Length: 601523
+
+File: .repo/⚡️/🤖️/26/03/27/e866d6b4-2c91-4cef-a173-bc1dac1264f8/session.json
+  Changed. Length: 93283
+
+File: .repo/⚡️/🤖️/26/03/27/f33a6620-c138-44fd-b0db-274b296113a8/session.json
+  Changed. Length: 66352
+
+File: .repo/⚡️/🤖️/26/03/28/9bfdd0af-b67c-4154-95fc-22807c071658/session.json
+  Changed. Length: 1095975
+
+File: .repo/⚡️/🤖️/26/03/28/a3702cc7-6d8f-49a8-a59d-6722dd246c7e/session.json
+  Changed. Length: 921306
+
+File: .repo/⚡️/🤖️/26/03/30/08406d95-d208-48f1-a9f9-b63bdd6ba410/session.json
+  Changed. Length: 233990
+
+File: .repo/⚡️/🤖️/26/03/30/193e1b44-f0e5-4cfb-a1a9-2d359fee22fa/session.json
+  Changed. Length: 856252
+
+File: .repo/⚡️/🤖️/26/03/30/3e6fddf0-a5a3-4897-884f-a3b283f01be5/session.json
+  Changed. Length: 63567
+
+File: .repo/⚡️/🤖️/26/03/30/69812141-3147-42fa-b030-ff0c6ce46cf7/session.json
+  Changed. Length: 455570
+
+File: .repo/⚡️/🤖️/26/03/30/70c41bbc-69d4-4878-9fa5-ef6d425242f4/session.json
+  Changed. Length: 658092
+
+File: .repo/⚡️/🤖️/26/03/30/985ffcf0-7e1e-4f33-9144-89b215fa33e5/session.json
+  Changed. Length: 321808
+
+File: .repo/⚡️/🤖️/26/03/30/9bfdd0af-b67c-4154-95fc-22807c071658/session.json
+  Changed. Length: 490061
+
+File: .repo/⚡️/🤖️/26/03/30/adee9a4e-ea82-4465-aaff-39731e4ff0b6/session.json
+  Changed. Length: 595600
+
+File: .repo/⚡️/🤖️/26/03/30/be1b1e73-01b6-4dc3-9018-fc9fea0e3f88/session.json
+  Changed. Length: 1175314
+
+File: .repo/⚡️/🤖️/26/03/30/c65aaf74-9899-47f7-a07d-ee69295cfad7/session.json
+  Changed. Length: 823927
+
+File: .repo/⚡️/🤖️/26/03/30/eba0c856-1297-471c-9af7-2ee0e818329c/session.json
+  Changed. Length: 140710
+
+File: .repo/⚡️/🤖️/26/03/30/kiro-92009/session.json
+  Changed. Length: 12920562
+
+File: .repo/⚡️/🤖️/26/03/30/unknown/session.json
+  Changed. Length: 889854
+
+File: .repo/⚡️/🤖️/26/03/31/08406d95-d208-48f1-a9f9-b63bdd6ba410/session.json
+  Changed. Length: 1211319
+
+File: .repo/⚡️/🤖️/26/03/31/1e8c4362-0b02-48da-b619-382e17e4786c/session.json
+  Changed. Length: 400085
+
+File: .repo/⚡️/🤖️/26/03/31/840a8a33-94c4-435a-b29b-6889569861db/session.json
+  Changed. Length: 603167
+
+File: .repo/⚡️/🤖️/26/03/31/b61802e1-76d0-4f43-af02-8c399c185bbd/session.json
+  Changed. Length: 582786
+
+File: .repo/⚡️/🤖️/26/03/31/bda4693a-ff5f-4849-b00f-658d3dfe2f56/session.json
+  Changed. Length: 338997
+
+File: .repo/⚡️/🤖️/26/03/31/c42043f6-150b-46a2-9128-e31ffa071f88/session.json
+  Changed. Length: 1448375
+
+File: .repo/⚡️/🤖️/26/03/31/d95799ce-559d-4fe6-ada9-3b950a2613bf/session.json
+  Changed. Length: 171462
+
+File: .repo/⚡️/🤖️/26/03/31/dfa5f43c-9446-497d-9838-710cb5349699/session.json
+  Changed. Length: 891552
+
+File: .repo/⚡️/🤖️/26/04/01/0374a1a3-425d-442d-945a-8bedfe7fc3b0/session.json
+  Changed. Length: 3892312
+
+File: .repo/⚡️/🤖️/26/04/01/0f62e8d1-3163-4bb4-82b1-b43fd22974a8/session.json
+  Changed. Length: 6013622
+
+File: .repo/⚡️/🤖️/26/04/01/5028e999-bd3e-4784-a8d2-943c5e3fcfff/session.json
+  Changed. Length: 116072
+
+File: .repo/⚡️/🤖️/26/04/01/64f282c9-a704-4a25-8ad0-e40d311bbfd6/session.json
+  Changed. Length: 1513469
+
+File: .repo/⚡️/🤖️/26/04/01/69e5d1ae-c299-4bc7-a941-f09c6b8eb955/session.json
+  Changed. Length: 347310
+
+File: .repo/⚡️/🤖️/26/04/01/6ea392c9-1044-42b3-a995-48969e9ff827/session.json
+  Changed. Length: 742284
+
+File: .repo/⚡️/🤖️/26/04/01/9713bd79-a6ec-45d4-8d03-bd94714a3a3d/session.json
+  Changed. Length: 116165
+
+File: .repo/⚡️/🤖️/26/04/01/979b1c3b-2648-4fd3-ab75-6d92f06050e5/session.json
+  Changed. Length: 1062440
+
+File: .repo/⚡️/🤖️/26/04/01/c0c354c3-e2e8-4747-9d45-8820b7b9d354/session.json
+  Changed. Length: 432373
+
+File: .repo/⚡️/🤖️/26/04/01/d0a3e233-78b2-4b91-ba66-3bce7d97636c/session.json
+  Changed. Length: 618997
+
+File: .repo/⚡️/🤖️/26/04/02/517394a0-c189-44bf-95a1-0d11dfc988c7/session.json
+  Changed. Length: 1741889
+
+File: .repo/⚡️/🤖️/26/04/02/69e9881e-680e-483b-82e5-b7a8e82efff2/session.json
+  Changed. Length: 999960
+
+File: .repo/⚡️/🤖️/26/04/02/d180adc8-8787-4b04-bfb7-5af7937d4ae9/session.json
+  Changed. Length: 961754
+
+File: .repo/⚡️/🤖️/26/04/02/f147d4a0-c258-406d-81a4-f8bd5dabab93/session.json
+  Changed. Length: 320740
+
+File: .repo/⚡️/🤖️/26/04/02/f82ffa60-129e-450f-a047-be4a5c4dbacb/session.json
+  Changed. Length: 2994789
+
+File: .repo/⚡️/🤖️/26/04/03/c593eb80-2b3e-4ae5-b545-f83c94b3817c/session.json
+  Changed. Length: 1363861
+
+File: .repo/⚡️/🤖️/26/04/03/f147d4a0-c258-406d-81a4-f8bd5dabab93/session.json
+  Changed. Length: 129394
+
+File: .repo/⚡️/🤖️/26/04/06/c1986949-2eaa-4e21-8647-bd305b241057/session.json
+  Changed. Length: 829196
+
+File: .repo/⚡️/🤖️/26/04/06/e08dad37-8110-482a-b819-20af66372d97/session.json
+  Changed. Length: 513717
+
+File: .repo/⚡️/🤖️/26/04/06/eea0b986-9973-4fd1-87db-e69a705ed8eb/session.json
+  Changed. Length: 2549625
+
+File: .repo/⚡️/🤖️/26/04/07/2581ef63-31c1-41a9-80d9-88cc0b812466/session.json
+  Changed. Length: 1024877
+
+File: .repo/⚡️/🤖️/26/04/07/785791f9-db0d-477b-bcfd-e7917fd89da0/session.json
+  Changed. Length: 4506421
+
+File: .repo/⚡️/🤖️/26/04/07/b5101719-24c5-4c3b-ac0b-8edf89235cbf/session.json
+  Changed. Length: 136234
+
+File: .repo/⚡️/🤖️/26/04/08/57c1e889-12a8-47de-a22c-d401b3300932/session.json
+  Changed. Length: 3918126
+
+File: .repo/⚡️/🤖️/26/04/08/87aac6fc-7f5a-4389-8a99-94de5931d2fa/session.json
+  Changed. Length: 2570746
+
+File: .repo/⚡️/🤖️/26/04/08/a736df10-9e10-41a9-a4a7-ccdab2189f3a/session.json
+  Changed. Length: 2201712
+
+File: .repo/⚡️/🤖️/26/04/09/0cb56dcd-29ce-49e2-98cd-ff107b6abf73/session.json
+  Changed. Length: 1592938
+
+File: .repo/⚡️/🤖️/26/04/09/0ea05b04-2915-4d06-a743-e88ca262eb7a/session.json
+  Changed. Length: 1374956
+
+File: .repo/⚡️/🤖️/26/04/09/22998f82-b019-4ada-b478-747d801a304d/session.json
+  Changed. Length: 793656
+
+File: .repo/⚡️/🤖️/26/04/09/6012453d-e0fa-4780-adc3-6531e58707c5/session.json
+  Changed. Length: 517171
+
+File: .repo/⚡️/🤖️/26/04/09/7a8b4814-796a-4049-be2c-6c09e6185be4/session.json
+  Changed. Length: 358965
+
+File: .repo/⚡️/🤖️/26/04/09/93b006c1-dcf0-42f1-bf9c-1c23cb6b00b0/session.json
+  Changed. Length: 821686
+
+File: .repo/⚡️/🤖️/26/04/09/9b0a1ab1-8620-47cb-8848-ceb8b4010a72/session.json
+  Changed. Length: 1563814
+
+File: .repo/⚡️/🤖️/26/04/09/a736df10-9e10-41a9-a4a7-ccdab2189f3a/session.json
+  Changed. Length: 1193030
+
+File: .repo/⚡️/🤖️/26/04/09/b6f5a0ab-8533-4ace-9e40-6b7244c756c0/session.json
+  Changed. Length: 1822955
+
+File: .repo/⚡️/🤖️/26/04/09/c87ee712-5421-4dad-9677-63e93d7978d9/session.json
+  Changed. Length: 1178134
+
+File: .repo/⚡️/🤖️/26/04/09/ce789392-7d94-4e1f-9ed0-25a4fb357609/session.json
+  Changed. Length: 171634
+
+File: .repo/⚡️/🤖️/26/04/10/099fc909-016c-4165-b1f0-a7a6f468aee7/session.json
+  Changed. Length: 2274794
+
+File: .repo/⚡️/🤖️/26/04/12/0665d5fc-608e-429e-929b-0e676f899360/session.json
+  Changed. Length: 150017
+
+File: .repo/⚡️/🤖️/26/04/12/2f851e8d-788a-4bb5-962e-436503c9672e/session.json
+  Changed. Length: 1059895
+
+File: .repo/⚡️/🤖️/26/04/12/f51af67f-86ac-414d-b4b1-c2fa85f8525c/session.json
+  Changed. Length: 1798086
+
+File: .repo/⚡️/🤖️/26/04/13/2bdbe5fc-d0c2-49e7-967f-a0d04332ea9a/session.json
+  Changed. Length: 899342
+
+File: .repo/⚡️/🤖️/26/04/13/333e0a8d-22f3-4709-ad92-0c3097213770/session.json
+  Changed. Length: 309953
+
+File: .repo/⚡️/🤖️/26/04/13/92040f42-f5a1-40e9-bbe4-f4743d786ca0/session.json
+  Changed. Length: 1099390
+
+File: .repo/⚡️/🤖️/26/04/13/a3a9c2d4-6e55-47c1-a4df-97a5b4121a95/session.json
+  Changed. Length: 2044222
+
+File: .repo/⚡️/🤖️/26/04/13/bae02a26-67a7-4038-a9d6-b661f929a65e/session.json
+  Changed. Length: 3569441
+
+File: .repo/⚡️/🤖️/26/04/13/c6a53604-1e72-4457-930f-ce2c41da80e5/session.json
+  Changed. Length: 247405
+
+File: .repo/⚡️/🤖️/26/04/13/f51af67f-86ac-414d-b4b1-c2fa85f8525c/session.json
+  Changed. Length: 1547380
+
+File: .repo/⚡️/🤖️/26/04/14/05461ae8-622e-4ce9-b481-c11829d4f646/session.json
+  Changed. Length: 4668053
+
+File: .repo/⚡️/🤖️/26/04/14/199d18fb-e1cf-4889-ad42-d619891adbb5/session.json
+  Changed. Length: 3839751
+
+File: .repo/⚡️/🤖️/26/04/14/2aa303ff-0eb7-4102-a2f1-d7225b6fed9d/session.json
+  Changed. Length: 338160
+
+File: .repo/⚡️/🤖️/26/04/14/81013e86-1b65-46e9-9fa5-172b84325ee5/session.json
+  Changed. Length: 427286
+
+File: .repo/⚡️/🤖️/26/04/14/92040f42-f5a1-40e9-bbe4-f4743d786ca0/session.json
+  Changed. Length: 1440712
+
+File: .repo/⚡️/🤖️/26/04/14/a3a9c2d4-6e55-47c1-a4df-97a5b4121a95/session.json
+  Changed. Length: 325870
+
+File: .repo/⚡️/🤖️/26/04/14/e401f213-87ce-430d-9384-eab767d436b9/session.json
+  Changed. Length: 102927
+
+File: .repo/⚡️/🤖️/26/04/15/64eb715b-7855-480b-bb11-305c43abcf78/session.json
+  Changed. Length: 955401
+
+File: .repo/⚡️/🤖️/26/04/15/9ced9f62-24e4-4d62-86e3-51ae3cf95114/session.json
+  Changed. Length: 771123
+
+File: .repo/⚡️/🤖️/26/04/16/ea254cbd-94f9-43d8-9308-9aa8f017f8f7/session.json
+  Changed. Length: 2745687
+
+File: .repo/⚡️/🤖️/26/04/17/56d22b90-2eb0-4797-a225-68fbc11d69dd/session.json
+  Changed. Length: 6046623
+
+File: .repo/⚡️/🤖️/26/04/18/f681b145-6435-4abe-8a73-380342d33459/session.json
+  Changed. Length: 1510852
+
+File: .repo/⚡️/🤖️/26/04/19/09eb8728-9cbb-4ace-8cc9-25fa821adf38/session.json
+  Changed. Length: 1979788
+
+File: .repo/⚡️/🤖️/26/04/19/fa0c9e8f-539e-40e0-b093-9959d5b97ce7/session.json
+  Changed. Length: 4557318
+
+File: .repo/⚡️/🤖️/26/04/20/229dfebe-efcc-4c93-b545-aa41e8393780/session.json
+  Changed. Length: 827194
+
+File: .repo/⚡️/🤖️/26/04/21/229dfebe-efcc-4c93-b545-aa41e8393780/session.json
+  Changed. Length: 95895
+
+File: .repo/⚡️/🤖️/26/04/22/306a8106-3bce-411b-9ecf-e4acccea4fb8/session.json
+  Changed. Length: 929616
+
+File: .repo/⚡️/🤖️/26/04/22/74e06aba-f6ad-41fc-957d-678d2a602c08/session.json
+  Changed. Length: 205453
+
+File: .repo/⚡️/🤖️/26/04/23/68595004-1525-47c8-8e8f-e36ab3b9bba7/session.json
+  Changed. Length: 215631
+
+File: .repo/⚡️/🤖️/26/04/25/6e7397ef-4d18-45e8-9406-6e92ab687c11/session.json
+  Changed. Length: 383622
+
+File: .repo/⚡️/🤖️/26/04/25/cc2d22ac-b371-4997-b37e-2ec5df570708/session.json
+  Changed. Length: 1433101
+
+File: .repo/⚡️/🤖️/26/05/06/04a04a42-ddab-4626-9d70-c1d50fa55a9e/session.json
+  Changed. Length: 380684
+
+File: .repo/⚡️/🤖️/26/05/06/24d1e652-38c2-473d-9c4e-5a0f536b16b3/session.json
+  Changed. Length: 138456
+
+File: .repo/⚡️/🤖️/26/05/06/312eb355-9afc-48cc-9414-0c4d2fdb8120/session.json
+  Changed. Length: 1192675
+
+File: .repo/⚡️/🤖️/26/05/06/38bddf30-fd55-4fc6-91d8-b813cd688b18/session.json
+  Changed. Length: 93862
+
+File: .repo/⚡️/🤖️/26/05/06/434ed586-85b7-4ef2-aed0-43bcaae759fc/session.json
+  Changed. Length: 6759227
+
+File: .repo/⚡️/🤖️/26/05/06/85ace36f-f707-4863-9948-6a27dfe50cf7/session.json
+  Changed. Length: 618602
+
+File: .repo/⚡️/🤖️/26/05/06/93d7493d-d9dc-40a2-92b3-924540894f7e/session.json
+  Changed. Length: 81516
+
+File: .repo/⚡️/🤖️/26/05/06/afcfa2c3-ab18-43cf-96ae-aadd273304bc/session.json
+  Changed. Length: 39344
+
+File: .repo/⚡️/🤖️/26/05/06/b278a8ef-b2ea-4583-b284-e18306e3181e/session.json
+  Changed. Length: 32833
+
+File: .repo/⚡️/🤖️/26/05/06/c0aa8821-474d-4ab8-8f5f-64b4d599a976/session.json
+  Changed. Length: 2042559
+
+File: .repo/⚡️/🤖️/26/05/06/cddd7287-a286-48f4-b67f-085c701097cd/session.json
+  Changed. Length: 93390
+
+File: .repo/⚡️/🤖️/26/05/06/dce4a536-4340-48ab-bb34-be7db86fe18a/session.json
+  Changed. Length: 16735
+
+File: .repo/⚡️/🤖️/26/05/06/ffdc9bb9-9c8c-45c3-9979-87abec39a82d/session.json
+  Changed. Length: 397590
+
+File: .repo/⚡️/🤖️/26/05/11/d34db5e7-f683-4a10-826b-e71c9432212d/session.json
+  Changed. Length: 215690
+
+File: .repo/⚡️/🤖️/26/05/13/ef5b0dc3-bda2-47ee-a975-a9b35caadf3e/session.json
+  Changed. Length: 70232
+
+File: .repo/⚡️/🤖️/26/05/25/11ec9587-aa3e-4e05-b0d4-7d0fe2b6c2e0/session.json
+  Changed. Length: 88703
+
+File: .repo/⚡️/🤖️/26/05/30/1e618617-d3d2-43a7-9cd2-eda2fb5f7e0f/session.json
+  Changed. Length: 307220
+
+File: .repo/⚡️/🤖️/26/05/30/27793cb0-fa92-49ab-8d35-a7080cbce40d/session.json
+  Changed. Length: 60329
+
+File: .repo/⚡️/🤖️/26/05/30/6875cb65-2f34-44fd-b3d2-77cae4db1c53/session.json
+  Changed. Length: 72766
+
+File: .repo/⚡️/🤖️/26/05/30/90adf38d-8cff-432a-a806-37f2b91d28d1/session.json
+  Changed. Length: 85259
+
+File: .repo/🎫️/25/12/16/FIX-KIT-DIAGRAM-AVATARS-ACROSS-ALL-ARTIFACT-KINDS/ticket.json
+  Changed. Length: 878
+
+File: .repo/🎫️/26/01/26/ENSURE-ZERO-TOUCH-DEVCONTAINER-READY/plan.md
+  Changed. Length: 603
+
+File: .repo/🎫️/26/01/26/KIT-DIAGRAM-NODE-PARITY-WITH-DESIGN-APP/ticket.md
+  Changed. Length: 1244
+
+File: .repo/🎫️/26/02/03/GLOBAL-TOOLBAR-REDESIGN/ticket.md
+  Changed. Length: 1153
+
+File: .repo/🎫️/26/02/04/FIX-DESIGN-APP-SELECTION/ticket.md
+  Changed. Length: 3495
+
+File: .repo/🎫️/26/02/04/PORT-COLOR-STRATEGY-FOR-COMPATIBILITY/plan.md
+  Changed. Length: 643
+
+File: .repo/🎫️/26/02/04/PORT-COLOR-STRATEGY-FOR-COMPATIBILITY/ticket.md
+  Changed. Length: 3180
+
+File: .repo/🎫️/26/02/09/FIX-BROWSER-ATTACH-FAILURE/ticket.md
+  Changed. Length: 1650
+
+File: .repo/🎫️/26/02/09/SEPARATE-HAND-TOOL-IN-TOOLBAR/plan.md
+  Changed. Length: 588
+
+File: .repo/🎫️/26/02/11/DESIGN-APP-COMPILATION-FIX/ticket.md
+  Changed. Length: 1602
+
+File: .repo/🎫️/26/02/11/FIX-TEST-COMPILATION-ERRORS/ticket.md
+  Changed. Length: 2720
+
+File: .repo/🎫️/26/02/16/FIX-DESIGN-APP-SELECT-TOOL-SETTING-BAR-NAMES/ticket.md
+  Changed. Length: 1861
+
+File: .repo/🎫️/26/02/18/BUILD-FUNCTIONAL-PARITY-INVENTORY/ticket.md
+  Changed. Length: 27673
+
+File: .repo/🎫️/26/02/18/FIX-VS-CODE-LAUNCH-CONFIGS/ticket.json
+  Changed. Length: 1071
+
+File: .repo/🎫️/26/02/18/FIX-VS-CODE-LAUNCH-CONFIGS/ticket.md
+  Changed. Length: 1410
+
+File: .repo/🎫️/26/03/02/FIX-PLAY-DEV-DOUBLE-LAUNCH/ticket.md
+  Changed. Length: 1954
+
+File: .repo/🎫️/26/03/02/FIX-PLAY-STORYBOOK-DOUBLE-LAUNCH/ticket.md
+  Changed. Length: 2304
+
+File: .repo/🎫️/26/03/04/FIX-ALL-SKETCHPAD-AND-APPS-COMPILATION/ticket.json
+  Changed. Length: 44772
+
+File: .repo/🎫️/26/03/04/FIX-ALL-SKETCHPAD-AND-APPS-COMPILATION/ticket.md
+  Changed. Length: 1766
+
+File: .repo/🎫️/26/03/04/RESOLVE-PLAY-DEV-PORT-CONFLICT/ticket.json
+  Changed. Length: 911
+
+File: .repo/🎫️/26/03/04/RESOLVE-PLAY-DEV-PORT-CONFLICT/ticket.md
+  Changed. Length: 2293
+
+File: .repo/🎫️/26/03/09/FIX-CONNECTOR-DESCRIPTION-IN-GET-CONNECTOR-DIFF-AND-PASS-ALL-LANG-DIFF-TESTS/debug-roundtrip.ts
+  Changed. Length: 2348
+
+File: .repo/🎫️/26/03/11/IMPLEMENT-COPY-JSON-CLIPBOARD-COMMAND/ticket.md
+  Changed. Length: 5812
+
+File: .repo/🎫️/26/03/12/FIX-SKETCHPAD-TSX-SYNTAX-ERRORS/ticket.json
+  Changed. Length: 1410
+
+File: .repo/🎫️/26/03/13/FIX-COMPOSE-CODA-DESKTOP-STARTUP/ticket.json
+  Changed. Length: 1312
+
+File: .repo/🎫️/26/03/14/FIX-COMPOSE-ELEMENTS-UI-STORYBOOK-IMPORTS/ticket.json
+  Changed. Length: 1150
+
+File: .repo/🎫️/26/03/14/ONTOLOGY-AND-VALIDATION-TREE-VIEWER-FOR-CODA/ticket.json
+  Changed. Length: 1117
+
+File: .repo/🎫️/26/03/14/REFACTOR-COMPOSE-ELEMENTS-UI-TO-BE-SKETCHPAD-INDEPENDENT/ticket.json
+  Changed. Length: 1299
+
+File: .repo/🎫️/26/03/16/REMOVE-GENERAL-FRAMEWORK-IMPORTS-FROM-SKETCHPAD/ticket.json
+  Changed. Length: 1050
+
+File: .repo/🎫️/26/03/17/ABSTRACT-KIT-STORE-AND-CREATE-STUDIO-VSCODE-BUNDLES/ticket.json
+  Changed. Length: 1045
+
+File: .repo/🎫️/26/03/21/FIX-SKETCHPAD-BUILD-TESTS-CONFIGS-DESKTOP/ticket.json
+  Changed. Length: 1335
+
+File: .repo/🎫️/26/03/22/CONSOLIDATE-COMPOSE-JS-INTO-SINGLE-INDEX-TS/ticket.json
+  Changed. Length: 876
+
+File: .repo/🎫️/26/03/22/FIX-DESKTOP-WHITE-SCREEN-FROM-VITEST-MODULE-LEVEL-CALLS/ticket.json
+  Changed. Length: 1300
+
+File: .repo/🎫️/26/03/22/FIX-PLAY-SITE-NODE-MODULE-EXTERNALIZATION-ERROR/ticket.json
+  Changed. Length: 1092
+
+File: .repo/🎫️/26/03/22/FIX-SKETCHPAD-OPENING-FOR-KIT-JSON-IN-VSCODE/ticket.json
+  Changed. Length: 1174
+
+File: .repo/🎫️/26/03/22/FOLDER-KIT-STORE-READS-FROM-SQ-LITE-KIT-DB/ticket.json
+  Changed. Length: 1214
+
+File: .repo/🎫️/26/03/23/FIX-DESIGN-APP-COORDINATE-SYSTEM-MISMATCH/ticket.json
+  Changed. Length: 1580
+
+File: .repo/🎫️/26/03/23/FIX-PLAYWRIGHT-CORE-BUNDLE-ERRORS-IN-PLAY-SITE/ticket.json
+  Changed. Length: 950
+
+File: .repo/🎫️/26/03/25/FIX-COMPOSE-ALGORITHMS-STORY-INFINITE-LOADING/ticket.json
+  Changed. Length: 1020
+
+File: .repo/🎫️/26/03/25/REMOVE-CODA-AND-COMPOSE-IMPORTS-FROM-ELEMENTS-UI/ticket.json
+  Changed. Length: 918
+
+File: .repo/🎫️/26/03/25/RESTORE-DESIGN-APP-SELECTION-HOOK-REGISTRATION/ticket.json
+  Changed. Length: 1022
+
+File: .repo/🎫️/26/03/27/FIX-COMPOSE-ALGORITHMS-STORY-INFINITE-LOADING/ticket.json
+  Changed. Length: 1060
+
+File: .repo/🎫️/26/03/27/METABOLISM-FOLDER-KIT-HYDRATION-AND-DUPLICATE-MCP-TOOL-PAYLOAD-RESOURCE/ticket.json
+  Changed. Length: 1139
+
+File: .repo/🎫️/26/03/28/FIX-ALGORITHMS-STORYBOOK-ISSUES/ticket.json
+  Changed. Length: 2066
+
+File: .repo/🎫️/26/03/28/NATIVE-ALGORITHM-REST-ADAPTER/ticket.json
+  Changed. Length: 1250
+
+File: .repo/🎫️/26/03/31/FIX-MISSING-SKETCHPAD-EXPORT-AND-APP-CONFIGS/ticket.json
+  Changed. Length: 705
+
+File: .repo/🎫️/26/03/31/USE-DESIGN-WITH-DIFF-FOR-DESIGN-DIAGRAM-AND-SCENE/ticket.json
+  Changed. Length: 2331
+
+File: .repo/🎫️/26/04/01/SIMPLIFY-DRAG-OUTPUT-TO-APPLY-DESIGN-DIFF/ticket.json
+  Changed. Length: 899
+
+File: .repo/🎫️/26/04/08/IMPLEMENT-COPY-PASTE-DESIGN-ALGORITHM-ACROSS-ALL-LANGUAGES/ticket.json
+  Changed. Length: 865
+
+File: .repo/🎫️/26/04/09/REFINE-SKETCHPAD-TREE-SIBLING-SPACING/ticket.json
+  Changed. Length: 1643
+
+File: .repo/🎫️/26/04/09/SCENE-SELECTION-BOUNDS-FROM-MESHES/ticket.json
+  Changed. Length: 793
+
+File: .repo/🎫️/26/04/11/ALGORITHM-OPERATIONS-RETURN-RESULT-WITH-WARNINGS-AND-INFOS/ticket.json
+  Changed. Length: 871
+
+File: .repo/🎫️/26/04/11/CODA-ASSISTANT-NPM-WORKSPACE/ticket.json
+  Changed. Length: 639
+
+File: .repo/🎫️/26/04/11/FIX-COMPOSE-DESKTOP-WHITE-SCREEN/ticket.json
+  Changed. Length: 630
+
+File: .repo/🎫️/26/04/14/CONSOLIDATE-KIT-KINDS-AND-MERGE-STUDIO-INTO-SKETCHPAD/ticket.json
+  Changed. Length: 2616
+
+File: .repo/🎫️/26/04/14/FIX-DESKTOP-FOLDER-KIT-SKETCHPAD-FILESYSTEM-SYNC/ticket.json
+  Changed. Length: 1216
+
+File: .repo/🎫️/26/04/14/FIX-ENGINE-MCP-APP-BUILD/ticket.json
+  Changed. Length: 1688
+
+File: .repo/🎫️/26/04/14/GET-SKETCHPAD-RUNNING/ticket.json
+  Changed. Length: 1247
+
+File: .repo/🎫️/26/04/16/FIX-EMPTY-KIT-AND-DESIGN-APP-VIEWERS/ticket.json
+  Changed. Length: 1252
+
+File: .repo/🎫️/26/04/20/CREATE-COMPOSE-REACT-BUNDLE-WITH-RUST-WORKER-STORE/rust_worker_hook_pipeline_52b2f61e.plan.md
+  Changed. Length: 16424
+
+File: .repo/🎫️/26/04/22/FINISH-RUST-STORE-HOOK-MIGRATION/finish_sketchpad_rust_migration_2d46733d.plan.md
+  Changed. Length: 18089
+
+File: .repo/🎫️/26/04/22/FINISH-RUST-STORE-HOOK-MIGRATION/finish_sketchpad_rust_migration_v2_84802df9.plan.md
+  Changed. Length: 17126
+
+File: .repo/🎫️/26/04/22/FINISH-RUST-STORE-HOOK-MIGRATION/sketchpad_full_rust_migration_76777353.plan.md
+  Changed. Length: 18623
+
+File: .repo/🎫️/26/04/23/KIT-STORE-GIT-KRAKEN-STYLE-HISTORY-WINDOW/kit_store_story_0a521ca8.plan.md
+  Changed. Length: 9986
+
+File: .repo/🎫️/26/04/24/FIX-MCP-APP-BUILD-RS-WASM-ALIAS/ticket.json
+  Changed. Length: 2687
+
+File: .repo/🎫️/26/04/24/MOVE-ASSET-PORTS-INTO-FAMILIES/ticket.json
+  Changed. Length: 1385
+
+File: .repo/🎫️/26/04/24/kit-data-ssot-finish/notes.md
+  Changed. Length: 258
+
+File: .repo/🎫️/26/04/25/COMPOSE-JS-THIN-CLIENT-REFACTOR/ticket.json
+  Changed. Length: 639
+
+File: .repo/🎫️/26/04/25/GRAPHQL-COMMAND-COLLAPSE/graphql_kit_control_plane_afc09280.plan.md
+  Changed. Length: 8163
+
+File: .repo/🎫️/26/04/25/KIT-DATA-SSOT-HOOK-READ/Ticket.json
+  Changed. Length: 481
+
+File: .repo/🎫️/26/04/25/KIT-DATA-SSOT-HOOK-READ/kit_data_single-source-of-truth_refactor_392d08c9.plan.md
+  Changed. Length: 31823
+
+File: .repo/🎫️/26/04/25/KIT-DATA-SSOT-HOOK-READ/sketchpad_kit_data_hooks-only_5e48b49b.plan.md
+  Changed. Length: 19938
+
+File: .repo/🎫️/26/04/25/SKETCHPAD-KIT-SEMANTIC-SHELL/layer-parity-impl.md
+  Changed. Length: 1788
+
+File: .repo/🎫️/26/04/26/ADD-COMPOSE-GRAPHQL-SCHEMA-BUILD-COMMAND/ticket.json
+  Changed. Length: 861
+
+File: .repo/🎫️/26/04/26/CLEAN-STATELESS-KIT-STORES-AND-KIT-COMMAND-REQUESTS/clean_store_tasks_3099f002.plan.md
+  Changed. Length: 6385
+
+File: .repo/🎫️/26/04/26/ENTITY-STORE-REFACTOR/entity_stores_refactor_1b45145a.plan.md
+  Changed. Length: 4913
+
+File: .repo/🎫️/26/04/26/JS-KIT-STORE-CONTROL-PLANE-AND-ASYNC-EXPORT/single-async-kitstore-export_0b8c7452.plan.md
+  Changed. Length: 17540
+
+File: .repo/🎫️/26/04/26/JS-KIT-STORE-CONTROL-PLANE-AND-ASYNC-EXPORT/single-async-kitstore-export_ad4841bd.plan.md
+  Changed. Length: 9438
+
+File: .repo/🎫️/26/04/26/PLAY-SITE-DEV-SERVER-FIXES/ticket.json
+  Changed. Length: 1072
+
+File: .repo/🎫️/26/04/26/REACT-JS-STORE-BOUNDARY-REFACTOR/react_js_store_boundary_f503c535.plan.md
+  Changed. Length: 6364
+
+File: .repo/🎫️/26/04/26/REACT-JS-STORE-BOUNDARY-REFACTOR/ticket.json
+  Changed. Length: 1593
+
+File: .repo/🎫️/26/04/26/REMOVE-NATIVE-ALGORITHM-ADAPTERS/align_js_react_algorithms_00e8a761.plan.md
+  Changed. Length: 9088
+
+File: .repo/🎫️/26/04/26/REMOVE-NATIVE-ALGORITHM-ADAPTERS/ticket.json
+  Changed. Length: 1366
+
+File: .repo/🎫️/26/04/26/SKETCHPAD-KIT-HOOK-REFACTOR/kit_hook_refactor_c3b7b4a7.plan.md
+  Changed. Length: 5167
+
+File: .repo/🎫️/26/04/26/SKETCHPAD-KIT-HOOK-REFACTOR/ticket.json
+  Changed. Length: 715
+
+File: .repo/🎫️/26/04/26/SKETCHPAD-LAYERING-SHELL/strict_compose_layering_refactor_205dc73c.plan.md
+  Changed. Length: 23603
+
+File: .repo/🎫️/26/04/26/SKETCHPAD-LAYERING-SHELL/ticket.json
+  Changed. Length: 698
+
+File: .repo/🎫️/26/04/26/SKETCHPAD-STATE-STORE-REFACTOR/sketchpad_kit-state_removal_c891deb3.plan.md
+  Changed. Length: 12709
+
+File: .repo/🎫️/26/04/26/SKETCHPAD-STATE-STORE-REFACTOR/sketchpad_store_refactor_2f0da985.plan.md
+  Changed. Length: 6253
+
+File: .repo/🎫️/26/04/26/TYPESAFE-COMPOSE-JS-STORES/boundary-audit.md
+  Changed. Length: 2235
+
+File: .repo/🎫️/26/04/26/TYPESAFE-COMPOSE-JS-STORES/compose_layer_parity_f8c77d13.plan.md
+  Changed. Length: 8282
+
+File: .repo/🎫️/26/04/26/TYPESAFE-COMPOSE-JS-STORES/ticket.json
+  Changed. Length: 1248
+
+File: .repo/🎫️/26/04/27/COMPOSE-REACT-HOOK-AND-SCOPE-REFACTOR/implementation-summary.md
+  Changed. Length: 1611
+
+File: .repo/🎫️/26/04/27/KIT-EVENTS-FIRST-CLASS-NAMING/ticket.md
+  Changed. Length: 890
+
+File: .repo/🎫️/26/04/27/NX-MONOREPO-SETUP/ticket.json
+  Changed. Length: 1005
+
+File: .repo/🎫️/26/04/27/TYPED-SEMANTIC-KIT-EVENTS/ticket.md
+  Changed. Length: 1417
+
+File: .repo/🎫️/26/05/08/sketchpad-vite-app-panels-glob/ticket.md
+  Changed. Length: 21367
+
+File: .repo/🎫️/26/05/11/BUN-NX-ZERO-TOUCH-MONOREPO/VERIFICATION.md
+  Changed. Length: 1529
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/consumers-fixed.json
+  Changed. Length: 832
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/fix-host-imports.mjs
+  Changed. Length: 335
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/js-bfa3ec266-index.ts
+  Changed. Length: 66657
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/js-parent-index.ts
+  Changed. Length: 369227
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/no-legacy-architecture.json
+  Changed. Length: 1581
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/phases-status.json
+  Changed. Length: 2945
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/react-bfa3ec266-index.tsx
+  Changed. Length: 730830
+
+File: .repo/🎫️/26/05/12/FIELD-ONLY-KIT-READS-CQRS-CLASSES/ticket.json
+  Changed. Length: 979
+
+File: .repo/🎫️/26/05/12/JS-INDEX-KIT-SHAPE-HELPERS/agent-verify.md
+  Changed. Length: 127
+
+File: .repo/🎫️/26/05/12/REFACTOR-COMPOSE-JS-GENERAL-MECHANISMS/ticket.json
+  Changed. Length: 1515
+
+File: .repo/🎫️/26/05/12/REFACTOR-COMPOSE-JS-GENERAL-MECHANISMS/verify-log.md
+  Changed. Length: 25433
+
+File: .repo/🎫️/26/05/12/SKETCHPAD-ALIGNS-PHASE-ONE-META-REP/important.md
+  Changed. Length: 1389
+
+File: .repo/🎫️/26/05/12/SKETCHPAD-ALIGNS-PHASE-ONE-META-REP/phase-0-1-js-done.json
+  Changed. Length: 1766
+
+File: .repo/🎫️/26/05/12/SKETCHPAD-ALIGNS-PHASE-ONE-META-REP/react-blocker.json
+  Changed. Length: 1414
+
+File: .repo/🎫️/26/05/12/SKETCHPAD-FIELD-HOOKS-MIGRATION/field-only_kit_reads_refactor_09fc9816.plan.md
+  Changed. Length: 127607
+
+File: .repo/🎫️/26/05/12/SKETCHPAD-FIELD-HOOKS-MIGRATION/ticket.json
+  Changed. Length: 1008
+
+File: .repo/🎫️/26/05/13/FIX-NX-CONFIGS-AFTER-FOLDER-RESTRUCTURE/ticket.json
+  Changed. Length: 2056
+
+File: .repo/🎫️/26/05/13/REFACTOR-COMPOSE-REACT-TO-COMPOSABLE-SCHEMA-ALIGNED-CONTEXTS/index.old.tsx
+  Changed. Length: 94579
+
+File: .repo/🎫️/26/05/13/REFACTOR-COMPOSE-REACT-TO-COMPOSABLE-SCHEMA-ALIGNED-CONTEXTS/ticket.json
+  Changed. Length: 718
+
+File: .repo/🎫️/26/05/13/REFACTOR-LIB-RS-TO-GOLDEN-SCHEMA/phase_progress.md
+  Changed. Length: 2817
+
+File: .repo/🎫️/26/05/15/CENTRALIZE-ELEMENTS-STYLING/important.md
+  Changed. Length: 1192
+
+File: .repo/🎫️/26/05/16/CONNECTION-PARENT-CHILD-ENGINE-AND-HASH-ALIGNMENT/ticket.json
+  Changed. Length: 1281
+
+File: .repo/🎫️/26/05/16/GET-DEV-BOARD-PLAY-RUNNING/ticket.json
+  Changed. Length: 1482
+
+File: .repo/🎫️/26/05/16/NEO4J-COMPOSE-METABOLISM-MCP/ticket.json
+  Changed. Length: 1089
+
+File: .repo/🎫️/26/05/16/REACT-COMPOSE-STORE-KIT-LINE-HOST/ticket.json
+  Changed. Length: 1018
+
+File: .repo/🎫️/26/05/16/RS-GRAPHQL-JS-KIT-PIPELINE/ticket.json
+  Changed. Length: 925
+
+File: .repo/🎫️/26/05/16/SKETCHPAD-REACT-HOOKS-REWIRE/ticket.json
+  Changed. Length: 886
+
+File: .repo/🎫️/26/05/16/sketchpadreacthooksrewire/important.md
+  Changed. Length: 1533
+
+File: .repo/🎫️/26/05/17/ALGORITHMS-STORIES-AND-VITEST-COVERAGE/ticket.json
+  Changed. Length: 861
+
+File: .repo/🎫️/26/05/17/DISABLE-PRE-COMMIT-GIT-HOOKS/ticket.json
+  Changed. Length: 1420
+
+File: .repo/🎫️/26/05/17/NX-WINDOWS-TEST-EXECUTOR-FIX/ticket.json
+  Changed. Length: 1196
+
+File: .repo/🎫️/26/05/17/STORE-GRAPHQL-KIT-SURFACE-TESTED/ticket.json
+  Changed. Length: 863
+
+File: .repo/🎫️/26/05/18/SKETCHPAD-WORKING-AGAIN/ticket.json
+  Changed. Length: 1072
+
+File: .repo/🎫️/26/05/19/COMPOSE-JS-ENTITY-CLASS-REFACTOR/ticket.json
+  Changed. Length: 1433
+
+File: .repo/🎫️/26/05/19/COMPOSE-REACT-ONE-HOOK-PER-ENTITY-FIELD-COMMAND/ticket.json
+  Changed. Length: 1231
+
+File: .repo/🎫️/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/sketchpad-browser-e2e.ts
+  Changed. Length: 3996
+
+File: .repo/🎫️/26/05/19/GRAPH-QL-MUTATION-RESPONSE-TYPES/storybook-kit-e2e.ts
+  Changed. Length: 1428
+
+File: .repo/🎫️/26/05/19/SCENE-3D-BOARD-PENDANT/scene_3d_board_pendant_296f1e60.plan.md
+  Changed. Length: 23762
+
+File: .repo/🎫️/26/05/19/SKETCHPAD-DESIGN-SCENE-FROM-ELEMENTS/ticket.json
+  Changed. Length: 1560
+
+File: .repo/🎫️/26/05/19/SKETCHPAD-DIAGRAM-TO-ELEMENTS-BOARD/ticket.json
+  Changed. Length: 1020
+
+File: .repo/🎫️/26/05/24/SKETCHPAD-DECLARATIVE-UI-SHELL/recover-index.tsx
+  Changed. Length: 2137271
+
+File: .repo/🎫️/26/05/29/PUZZLE-PLAYGROUND-RELAYER/complete-relayer.ts
+  Changed. Length: 6047
+
+File: .repo/🎫️/26/05/29/PUZZLE-PLAYGROUND-RELAYER/extract-play-hosts.ts
+  Changed. Length: 3089
+
+File: .repo/🎫️/26/05/29/PUZZLE-PLAYGROUND-RELAYER/fix-2d-merge.ts
+  Changed. Length: 2049
+
+File: .repo/🎫️/26/05/29/PUZZLE-PLAYGROUND-RELAYER/fix-host-imports.ts
+  Changed. Length: 4496
+
+File: .repo/🎫️/26/05/29/PUZZLE-PLAYGROUND-RELAYER/move-hosts-to-renderer.ts
+  Changed. Length: 2768
+
+File: .repo/🎫️/26/05/29/PUZZLE-PLAYGROUND-RELAYER/rename-scopes.ts
+  Changed. Length: 1598
+
+File: .repo/🎫️/26/05/29/PUZZLE-PLAYGROUND-RELAYER/split-play-host.ts
+  Changed. Length: 1469
+
+File: .repo/🎫️/26/05/30/APP-SELECTION-AND-HOVER-FRAMEWORK/ticket.json
+  Changed. Length: 655
+
+File: .repo/🎫️/26/05/30/ASSETS-FIXTURES-SEPARATION/ticket.json
+  Changed. Length: 1468
+
+File: .repo/🎫️/26/05/30/CAD-PLAY-E2E-FIX/ticket.json
+  Changed. Length: 730
+
+File: .repo/🎫️/26/05/30/CAD-TRANSFORMATION-VERB-TRANSFER/ticket.json
+  Changed. Length: 934
+
+File: .repo/🎫️/26/05/30/CLEAN-CAD-PLAY-TERMINOLOGY/ticket.json
+  Changed. Length: 824
+
+File: .repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/fix-cad-play-main.ts
+  Changed. Length: 1687
+
+File: .repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/merge-geometry-brep-js.ts
+  Changed. Length: 2141
+
+File: .repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/merge-repo-lib-js.ts
+  Changed. Length: 1663
+
+File: .repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/merge-shell-index.ts
+  Changed. Length: 973
+
+File: .repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json
+  Changed. Length: 1447
+
+File: .repo/🎫️/26/05/30/CORE-KERNEL-DECOUPLING/ticket.json
+  Changed. Length: 1109
+
+File: .repo/🎫️/26/05/30/CORE-SCOPE-NO-RENDERER-SYMLINKS/rename-core-scopes.ts
+  Changed. Length: 1581
+
+File: .repo/🎫️/26/05/30/CORE-SCOPE-NO-RENDERER-SYMLINKS/ticket.json
+  Changed. Length: 1292
+
+File: .repo/🎫️/26/05/30/FIX-MODE-DOCK-TAB-BAR-FLEX/ticket.json
+  Changed. Length: 781
+
+File: .repo/🎫️/26/05/30/FIX-PLAYGROUND-PLAY-STYLING/ticket.json
+  Changed. Length: 1021
+
+File: .repo/🎫️/26/05/30/FIX-PUZZLE-3D-PLAY-DEV/ticket.json
+  Changed. Length: 797
+
+File: .repo/🎫️/26/05/30/FIX-PUZZLE-PLAY-RUNTIME-CRASHES/ticket.json
+  Changed. Length: 637
+
+File: .repo/🎫️/26/05/30/FIX-SPATIAL-PLAY-RENDER-LOOP/ticket.json
+  Changed. Length: 708
+
+File: .repo/🎫️/26/05/30/FIX-STACKED-TAB-ACTIVE-CHROME/ticket.json
+  Changed. Length: 2077
+
+File: .repo/🎫️/26/05/30/FIXTURES-TO-ASSETS/ticket.json
+  Changed. Length: 1800
+
+File: .repo/🎫️/26/05/30/FRAMEWORK-CORE-ABSTRACTION/ticket.json
+  Changed. Length: 869
+
+File: .repo/🎫️/26/05/30/LINK-ENGAGEMENT-TO-RENDERER-WINDOWS/ticket.json
+  Changed. Length: 2685
+
+File: .repo/🎫️/26/05/30/MODE-SAME-STACK-SPLIT-DROP/ticket.json
+  Changed. Length: 695
+
+File: .repo/🎫️/26/05/30/PROJEKTETAGE-REVEAL-PRESENTATION/ticket.json
+  Changed. Length: 1096
+
+File: .repo/🎫️/26/05/30/PUZZLE-2D-PLAY-END-TO-END/ticket.json
+  Changed. Length: 663
+
+File: .repo/🎫️/26/05/30/PUZZLE-BUNDLE-TERMINOLOGY-CLEANUP/ticket.json
+  Changed. Length: 957
+
+File: .repo/🎫️/26/05/30/PUZZLE-PLAYGROUND-RE-LAYERING/important.md
+  Changed. Length: 832
+
+File: .repo/🎫️/26/05/30/RENAME-LEGACY-PACKAGE-NAMES-END-TO-END/rename-path-scopes.ts
+  Changed. Length: 4271
+
+File: .repo/🎫️/26/05/30/RENAME-LEGACY-PACKAGE-NAMES-END-TO-END/ticket.json
+  Changed. Length: 1175
+
+File: .repo/🎫️/26/05/30/RENAME-PUZZLE-3D-SCENE-LEGACY-NAMES/ticket.json
+  Changed. Length: 1010
+
+File: .repo/🎫️/26/05/30/SHARED-PRODUCT-BASE-LAYOUT-SHELL/ticket.json
+  Changed. Length: 916
+
+File: .repo/🎫️/26/05/30/SKETCHPAD-PLATFORM-REFACTOR/follow-up-svelte-renderer.md
+  Changed. Length: 197
+
+File: .repo/🎫️/26/05/30/SWEEP-LEGACY-PLAY-TERMINOLOGY/ticket.json
+  Changed. Length: 1029
+
+File: .repo/🎫️/26/05/30/UNIFIED-5D-TOPOLOGY-COMPONENT/ticket.json
+  Changed. Length: 960
+
+File: .repo/🎫️/26/05/30/UNIFIED-RENDERER-NEUTRAL-STORE-ABSTRACTION/ticket.json
+  Changed. Length: 1200
+
+File: .repo/🎫️/26/05/30/UNIFIED-RENDERER-NEUTRAL-STORE-ABSTRACTION/unified_store_abstraction_0cd71f44.plan.md
+  Changed. Length: 7760
+
+File: .repo/🎫️/26/05/31/CAD-PLAY-VERTEX-EDGE-KERNEL-SOLID/debug-topology-solid.ts
+  Changed. Length: 733
+
+File: .repo/🎫️/26/05/31/CAD-UI-STYLING-CONSISTENCY/ticket.json
+  Changed. Length: 658
+
+File: .repo/🎫️/26/05/31/FIX-PLAYGROUND-CORE-RENAME-PATHS/ticket.json
+  Changed. Length: 779
+
+File: .repo/🎫️/26/05/31/I18N-COMPILE-ENFORCEMENT/ticket.json
+  Changed. Length: 769
+
+File: .repo/🎫️/26/05/31/KIT-VIRTUAL-FILE-SYSTEM-UI/kit_virtual_file_system_f1e4f894.plan.md
+  Changed. Length: 8411
+
+File: .repo/🎫️/26/05/31/PRESENTATION-FRAMEWORK-AND-PROJEKTETAGE-MIGRATION/ticket.json
+  Changed. Length: 2993
+
+File: .repo/🎫️/26/05/31/STORYBOOK-UI-MISSING-STYLES/ticket.json
+  Changed. Length: 1004
+
+File: .repo/🎫️/26/05/31/STORYBOOK-UI-SYNTAX-FIX/ticket.json
+  Changed. Length: 773
+
+File: .repo/🎫️/26/05/31/TREE-ROW-DEFAULT-ICONS/ticket.json
+  Changed. Length: 673
+
+File: .repo/🎫️/26/06/01/ALL-WINDOWS-ENGAGEMENT-TYPE-TO-ACTIVE/ticket.json
+  Changed. Length: 1160
+
+File: .repo/🎫️/26/06/01/CAD-PLAY-ENGAGEMENT-INPUT/ticket.json
+  Changed. Length: 738
+
+File: .repo/🎫️/26/06/01/EMBODIMENT-REGISTRY-REFACTOR/ticket.json
+  Changed. Length: 1087
+
+File: .repo/🎫️/26/06/01/ENGAGEMENT-CLOSE-AND-SPACE-REPEAT/ticket.json
+  Changed. Length: 769
+
+File: .repo/🎫️/26/06/01/ENGAGEMENT-ESCAPE-ABORTS-ACTIVE-SESSION/ticket.json
+  Changed. Length: 936
+
+File: .repo/🎫️/26/06/01/ENGAGEMENT-INPUT-STEALS-TYPING-FOCUS/ticket.json
+  Changed. Length: 1057
+
+File: .repo/🎫️/26/06/01/ENGAGEMENT-PASCAL-CASE/ticket.json
+  Changed. Length: 830
+
+File: .repo/🎫️/26/06/01/ENGAGEMENT-SPACE-CONFIRMS/ticket.json
+  Changed. Length: 841
+
+File: .repo/🎫️/26/06/01/FIX-DEAD-UNIVERSIT-TEN-BRIDGE-SLIDE/ticket.json
+  Changed. Length: 1001
+
+File: .repo/🎫️/26/06/01/FIX-PUZZLE3D-MARQUEE-SELECTION/ticket.json
+  Changed. Length: 1545
+
+File: .repo/🎫️/26/06/01/FULL-VIRTUAL-FILE-SYSTEM/ticket.json
+  Changed. Length: 1130
+
+File: .repo/🎫️/26/06/01/PRESENTATION-CHAPTER-DOCUMENT/ticket.json
+  Changed. Length: 767
+
+File: .repo/🎫️/26/06/01/PRESENTATION-EMBODIMENTS-AND-DISPOSITIONS/ticket.json
+  Changed. Length: 1095
+
+File: .repo/🎫️/26/06/01/PRESENTATION-SPEC-GENERALIZATION/ticket.json
+  Changed. Length: 1141
+
+File: .repo/🎫️/26/06/01/PRESENTATION-SPEC-GENERALIZATION/vitest-deck.config.ts
+  Changed. Length: 753
+
+File: .repo/🎫️/26/06/01/PROJEKTETAGE-VITE-SPEC-IMPORT/ticket.json
+  Changed. Length: 838
+
+File: .repo/🎫️/26/06/01/PUZZLE-3D-MARQUEE-FREEZE-AND-ACCURACY/puzzle3d_marquee_preview_perf_b5e92035.plan.md
+  Changed. Length: 6351
+
+File: .repo/🎫️/26/06/01/PUZZLE-3D-MARQUEE-FREEZE-AND-ACCURACY/ticket.json
+  Changed. Length: 1462
+
+File: .repo/🎫️/26/06/01/PUZZLE2D-PLAY-PANEL-TOGGLE-LATENCY/ticket.json
+  Changed. Length: 1165
+
+File: .repo/🎫️/26/06/01/PUZZLE3D-ENGAGEMENT-ZOOM-TO-SELECTION/ticket.json
+  Changed. Length: 874
+
+File: .repo/🎫️/26/06/01/REMOVE-MORPH-BRIDGE-SLIDES/ticket.json
+  Changed. Length: 795
+
+File: .repo/🎫️/26/06/01/REVEAL-NAVIGATION-PRIMARY-COLOR/ticket.json
+  Changed. Length: 639
+
+File: .repo/🎫️/26/06/01/SKETCHPAD-METABOLISM-KIT-VFS-EMPTY/ticket.json
+  Changed. Length: 793
+
+File: .repo/🎫️/26/06/01/SPLIT-PRESENTATIONS-INTO-SLIDE-FILES/ticket.json
+  Changed. Length: 1021
+
+File: .repo/🎫️/26/06/01/USER-FACING-UI-LABEL-CLEANUP/ticket.json
+  Changed. Length: 810
+
+File: .repo/🎫️/26/06/01/VFS-TABLE-SELECTABLE-WITHOUT-NAVIGATE/ticket.json
+  Changed. Length: 1125
+
+File: .repo/🎫️/26/06/01/VIRTUAL-FILE-SYSTEM-ROW-SELECTION/ticket.json
+  Changed. Length: 669
+
+File: .repo/🎫️/26/06/01/projektetagesemanticdocument/vitest.deck.config.ts
+  Changed. Length: 897
+
+File: .repo/🎫️/26/06/02/BRUSH-KIND-SUGGESTION-PERCENTAGES/ticket.json
+  Changed. Length: 1014
+
+File: .repo/🎫️/26/06/02/FIX-PUZZLE-2D-DUPLICATE-IMPORT/ticket.json
+  Changed. Length: 850
+
+File: .repo/🎫️/26/06/02/PUZZLE2D-THEME-CHROME-SYNC/theme-sync-fix.md
+  Changed. Length: 1606
+
+File: .repo/🎫️/26/06/02/PUZZLE2D-THEME-CHROME-SYNC/ticket.json
+  Changed. Length: 894
+
+File: .repo/🎫️/26/06/02/SIDE-PANEL-TOGGLE-HOTKEYS/ticket.json
+  Changed. Length: 819
+
+File: .repo/🎫️/26/06/02/UI-BROWSER-DEFAULT-SUPPRESS/ticket.json
+  Changed. Length: 687
+
+File: .repo/🎫️/26/06/02/WINDOW-ENGAGEMENT-SPACE-SUBMIT/ticket.json
+  Changed. Length: 848
+
+File: .repo/🎫️/26/06/03/DISABLE-DEFAULT-BROWSER-INTERACTIONS-IN-UI/ticket.json
+  Changed. Length: 866
+
+File: .repo/🎫️/26/06/03/FRAMEWORK-ICON-INTERFACE/ticket.json
+  Changed. Length: 1070
+
+File: .repo/🎫️/26/06/03/PRESENTATION-TILE-PLAY/presentation_tile_play_a4f7ada6.plan.md
+  Changed. Length: 9093
+
+File: .repo/🎫️/26/06/03/PRESENTATION-TILE-PLAY/ticket.json
+  Changed. Length: 1465
+
+File: .repo/🎫️/26/06/03/SPLIT-DEV-FIXTURES-PROPER-FILES/summary.md
+  Changed. Length: 1683
+
+File: .repo/🎫️/26/06/03/SPLIT-PUZZLE-2D-BUNDLES/ticket.json
+  Changed. Length: 725
+
+File: .repo/🎫️/26/06/03/UNIFY-CAD-AND-PUZZLE3D-INFINITE-WORLD/ticket.json
+  Changed. Length: 899
+
+File: .repo/🎫️/26/06/03/UNIFY-CAD-AND-PUZZLE3D-INFINITE-WORLD/unify_cad_and_puzzle3d_world_e87f468f.plan.md
+  Changed. Length: 8644
+
+File: .repo/🎫️/26/06/03/WIRES-KIT-RELATIONSHIP-VIEW/ticket.md
+  Changed. Length: 1213
+
+File: .repo/🎫️/26/06/03/WIRES-NORMAL-GRAPH/ticket.json
+  Changed. Length: 1175
+
+File: .repo/🎫️/26/06/04/fix-commit-msg/build-full-message.ts
+  Changed. Length: 14972
+
+File: .repo/🎫️/26/06/06/IMPORT-STEP-SHAPES-AS-CAD-FIXTURES/ticket.json
+  Changed. Length: 1065
+
+File: .repo/🎫️/26/06/06/INFINITE-WORLD-2D-REFERENCES/summary.md
+  Changed. Length: 755
+
+File: .repo/🎫️/26/06/06/INFINITE-WORLD-HIDE-LOCK/summary.md
+  Changed. Length: 2169
+
+File: .repo/🎫️/26/06/06/INFINITE-WORLD-HIDE-LOCK/ticket.json
+  Changed. Length: 325
+
+File: .repo/🎫️/26/06/06/PUZZLE-3D-FILL-TARGET-VOLUMES/summary.md
+  Changed. Length: 1512
+
+File: .repo/🎫️/26/06/06/PUZZLE-3D-PRECOMPUTE-WORKER/summary.md
+  Changed. Length: 1301
+
+File: .repo/🎫️/26/06/07/DAG-AND-FLOW-UI-THEME-SYNC/ticket.json
+  Changed. Length: 705
+
+File: .repo/🎫️/26/06/07/FLOW-DOUBLE-CLICK-ADD-NODE/ticket.json
+  Changed. Length: 866
+
+File: .repo/🎫️/26/06/07/FLOW-LANGUAGE-VERTICAL-SLICE/flow_language_slice_0a888bfc.plan.md
+  Changed. Length: 11768
+
+File: .repo/🎫️/26/06/07/FLOW-NODE-RENDERING-CLEANUP/flow_node_rendering_cleanup_c2bb0675.plan.md
+  Changed. Length: 7135
+
+File: .repo/🎫️/26/06/07/FLOW-NODE-RENDERING-CLEANUP/ticket.json
+  Changed. Length: 1090
+
+File: .repo/🎫️/26/06/07/FLOW-RUNTIME-LOADABLE-MODULES/flow_runtime_modules_765b25ab.plan.md
+  Changed. Length: 12148
+
+File: .repo/🎫️/26/06/07/GENERALIZE-CAD-MODEL-DEFINITIONS/ticket.json
+  Changed. Length: 1248
+
+File: .repo/🎫️/26/06/07/LAYER-GRAPH-CRATES-CANVAS-GRAPH-SEPARATION/extract_graph_canvas,_add_dag_851cf206.plan.md
+  Changed. Length: 13064
+
+File: .repo/🎫️/26/06/07/LAYER-GRAPH-CRATES-CANVAS-GRAPH-SEPARATION/validation-summary.md
+  Changed. Length: 580
+
+File: .repo/🎫️/26/06/07/ORBIT-CAMERA-MOUSE-BINDINGS/summary.md
+  Changed. Length: 343
+
+File: .repo/🎫️/26/06/07/PLAYGROUND-NAVBAR-PANEL-TOGGLE-ALIGNMENT/ticket.json
+  Changed. Length: 980
+
+File: .repo/🎫️/26/06/07/PROCEDURAL-PREVIEW-INFINITE-WORLD/procedural_brep_playground_dca1c048.plan.md
+  Changed. Length: 14516
+
+File: .repo/🎫️/26/06/07/PROCEDURAL-PREVIEW-INFINITE-WORLD/procedural_preview_infinite_world_76647a82.plan.md
+  Changed. Length: 6971
+
+File: .repo/🎫️/26/06/07/PROCEDURAL-PREVIEW-INFINITE-WORLD/ticket.json
+  Changed. Length: 1385
+
+File: .repo/🎫️/26/06/08/CLEAN-PROCEDURAL-LEGACY-CODE/ticket.json
+  Changed. Length: 1112
+
+File: .repo/🎫️/26/06/08/NEURAL-SCHEMAS-AND-OPERATORS/neural_schemas_and_operators_f692e604.plan.md
+  Changed. Length: 11623
+
+File: .repo/🎫️/26/06/08/NEURAL-SCHEMAS-AND-OPERATORS/ticket.json
+  Changed. Length: 1110
+
+File: .repo/🎫️/26/06/08/UNIFY-GLASS-UI-STYLE/ticket.json
+  Changed. Length: 1199
+
+File: .repo/🎫️/26/06/08/UNIFY-GLASS-UI-STYLE/unify_glass_ui_style_746d4311.plan.md
+  Changed. Length: 6092
+
+File: .repo/🎫️/26/06/09/ARBITRARY-BREP-CUT-AND-FUSE-IN-KERNEL/arbitrary_brep_cut_fuse_784f4043.plan.md
+  Changed. Length: 3861
+
+File: .repo/🎫️/26/06/09/FIX-MISSING-KERNEL-GEOMETRY-EXPORT-IN-BREP-JS/ticket.json
+  Changed. Length: 770
+
+File: .repo/🎫️/26/06/09/FULL-BREP-CAD-KERNEL/full_brep_cad_kernel_386d6722.plan.md
+  Changed. Length: 9434
+
+File: .repo/🎫️/26/06/09/PROCEDURAL-BIM-MODULE/procedural_bim_module_3177064c.plan.md
+  Changed. Length: 7683
+
+File: .repo/🎫️/26/06/09/fixprocedural3dpreviewtessellation/notes.md
+  Changed. Length: 874
+
+File: .repo/🎫️/26/06/11/FIX-PUZZLE3D-SIDE-PANEL-HIDE/ticket.json
+  Changed. Length: 1386
+
+File: .repo/🎫️/26/06/11/PUZZLE-3D-BRUSH-FILL-SUGGEST-CAMERA-STABLE/ticket.json
+  Changed. Length: 1213
+
+File: .repo/🎫️/26/06/11/PUZZLE-5D-2D-3D-HOVER-SYNC/ticket.json
+  Changed. Length: 901
+
+File: .repo/🎫️/26/06/11/REFERENCES-IN-CAD-MODEL-DEFINITION-DOCUMENT/summary.md
+  Changed. Length: 1298
+
+File: .repo/🎫️/26/06/11/SINGULAR-FOLDER-NAMES/fix-remaining-refs.ts
+  Changed. Length: 2485
+
+File: .repo/🎫️/26/06/11/SINGULAR-FOLDER-NAMES/rename-singular-folders.ts
+  Changed. Length: 7312
+
+File: .repo/🎫️/26/06/11/SINGULAR-FOLDER-NAMES/ticket.json
+  Changed. Length: 878
+
+File: .repo/🎫️/26/06/11/referencesincadmodeldefinitiondocument/summary.md
+  Changed. Length: 1298
+
+File: .repo/🎫️/26/06/16/ADD-IMPORT-VERARBEITUNG-SLIDE-TO-PROJEKTETAGE/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/ADD-KATALOG-SLIDE-AFTER-BAUM/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/ADD-RECHERCHE-SEQUENCE-TO-PROJEKTETAGE/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/ADD-TYPOLOGIEN-SLIDE-BEFORE-BAUM/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/ENTWURFSWERKZEUG-KATALOG-SPLIT-FRAMES/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/ENTWURFSWERKZEUG-PUZZLE-IFRAME-SLIDE/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/FIX-PROJEKTETAGE-JSON-BRANCH-NULL-CRASH/important.md
+  Changed. Length: 1240
+
+File: .repo/🎫️/26/06/16/FIX-PROJEKTETAGE-JSON-BRANCH-NULL-CRASH/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/MOVE-BAUM-SLIDE-TO-AUSGANGSLAGE/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/MOVE-CATALOGUE-SLIDES-TO-BAUTEILPORTAL/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/PROJEKTETAGE-EINGABEOBERFLCHE-ANNOTIERT-SLIDE/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/PROJEKTETAGE-EINGABEPROZESS-EINGABEARTEN-SLIDE/smoke.ts
+  Changed. Length: 3568
+
+File: .repo/🎫️/26/06/16/PROJEKTETAGE-EINGABEPROZESS-EINGABEARTEN-SLIDE/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/🎫️/26/06/16/PROJEKTETAGE-KONNEKTIVIT-T-BEISPIEL-SLIDE/smoke.ts
+  Changed. Length: 1626
+
+File: .repo/🎫️/26/06/16/PROJEKTETAGE-THANK-YOU-SLIDE/vitest.config.ts
+  Changed. Length: 643
+
+File: .repo/🎫️/26/06/16/REMOVE-EINF-HRUNG-MEDIEN-SEQUENCE/vitest.config.ts
+  Changed. Length: 1138
+
+File: .repo/💬️/ueli.md
+  Changed. Length: 617746
+
+File: .storybook/compose/algorithm/kit-store/composeWasm.ts
+  Changed. Length: 19956
+
+File: .storybook/main.ts
+  Changed. Length: 11530
+
+File: .storybook/preview.ts
+  Changed. Length: 3006
+
+File: .storybook/stories/compose/algorithm/Cluster.stories.tsx
+  Changed. Length: 3098
+
+File: .storybook/stories/compose/algorithm/CopyAndPaste.stories.tsx
+  Changed. Length: 8682
+
+File: .storybook/stories/compose/algorithm/Delete.stories.tsx
+  Changed. Length: 3725
+
+File: .storybook/stories/compose/algorithm/Drag.stories.tsx
+  Changed. Length: 3445
+
+File: .storybook/stories/compose/algorithm/FindReplaceableTypesInDesigns.stories.tsx
+  Changed. Length: 8230
+
+File: .storybook/stories/compose/algorithm/Flatten.stories.tsx
+  Changed. Length: 2306
+
+File: .storybook/stories/compose/algorithm/KitStore.stories.tsx
+  Changed. Length: 9681
+
+File: .storybook/stories/compose/algorithm/Move.stories.tsx
+  Changed. Length: 3620
+
+File: .storybook/stories/compose/ui/Design.stories.tsx
+  Changed. Length: 4494
+
+File: .storybook/stories/compose/ui/Diagram.stories.tsx
+  Changed. Length: 3952
+
+File: .storybook/stories/compose/ui/Kit.stories.tsx
+  Changed. Length: 2866
+
+File: .storybook/stories/compose/ui/Scene.stories.tsx
+  Changed. Length: 4486
+
+File: .storybook/stories/compose/ui/Type.stories.tsx
+  Changed. Length: 3226
+
+File: .storybook/stories/puzzle/2d/Board.stories.tsx
+  Changed. Length: 6846
+
+File: .storybook/stories/ui/Accordion.stories.tsx
+  Changed. Length: 2695
+
+File: .storybook/stories/ui/ActionGroup.stories.tsx
+  Changed. Length: 1913
+
+File: .storybook/stories/ui/App.stories.tsx
+  Changed. Length: 1634
+
+File: .storybook/stories/ui/Avatar.stories.tsx
+  Changed. Length: 3620
+
+File: .storybook/stories/ui/Band.stories.tsx
+  Changed. Length: 8785
+
+File: .storybook/stories/ui/Breadcrumb.stories.tsx
+  Changed. Length: 4892
+
+File: .storybook/stories/ui/Button.stories.tsx
+  Changed. Length: 2320
+
+File: .storybook/stories/ui/ButtonGroup.stories.tsx
+  Changed. Length: 1899
+
+File: .storybook/stories/ui/Canvas.stories.tsx
+  Changed. Length: 2674
+
+File: .storybook/stories/ui/Card.stories.tsx
+  Changed. Length: 3645
+
+File: .storybook/stories/ui/Collapsible.stories.tsx
+  Changed. Length: 4021
+
+File: .storybook/stories/ui/Combobox.stories.tsx
+  Changed. Length: 1951
+
+File: .storybook/stories/ui/Command.stories.tsx
+  Changed. Length: 2846
+
+File: .storybook/stories/ui/Diagram.stories.tsx
+  Changed. Length: 1597
+
+File: .storybook/stories/ui/DiagramNode.stories.tsx
+  Changed. Length: 1550
+
+File: .storybook/stories/ui/Dialog.stories.tsx
+  Changed. Length: 2799
+
+File: .storybook/stories/ui/Engagement.stories.tsx
+  Changed. Length: 2365
+
+File: .storybook/stories/ui/Footer.stories.tsx
+  Changed. Length: 1860
+
+File: .storybook/stories/ui/HoverCard.stories.tsx
+  Changed. Length: 4424
+
+File: .storybook/stories/ui/Icons.stories.tsx
+  Changed. Length: 3020
+
+File: .storybook/stories/ui/Input.stories.tsx
+  Changed. Length: 1713
+
+File: .storybook/stories/ui/Layout.stories.tsx
+  Changed. Length: 5875
+
+File: .storybook/stories/ui/Mode.stories.tsx
+  Changed. Length: 5144
+
+File: .storybook/stories/ui/Navbar.stories.tsx
+  Changed. Length: 4104
+
+File: .storybook/stories/ui/OntologyTree.stories.tsx
+  Changed. Length: 8370
+
+File: .storybook/stories/ui/Orb.stories.tsx
+  Changed. Length: 2406
+
+File: .storybook/stories/ui/Page.stories.tsx
+  Changed. Length: 2664
+
+File: .storybook/stories/ui/PageNavigation.stories.tsx
+  Changed. Length: 1610
+
+File: .storybook/stories/ui/Panel.stories.tsx
+  Changed. Length: 3812
+
+File: .storybook/stories/ui/Popover.stories.tsx
+  Changed. Length: 2389
+
+File: .storybook/stories/ui/Resizable.stories.tsx
+  Changed. Length: 3676
+
+File: .storybook/stories/ui/Ring.stories.tsx
+  Changed. Length: 2385
+
+File: .storybook/stories/ui/Scrollable.stories.tsx
+  Changed. Length: 3073
+
+File: .storybook/stories/ui/Select.stories.tsx
+  Changed. Length: 3107
+
+File: .storybook/stories/ui/Slider.stories.tsx
+  Changed. Length: 1714
+
+File: .storybook/stories/ui/Stepper.stories.tsx
+  Changed. Length: 1658
+
+File: .storybook/stories/ui/Steps.stories.tsx
+  Changed. Length: 1038
+
+File: .storybook/stories/ui/Strip.stories.tsx
+  Changed. Length: 1994
+
+File: .storybook/stories/ui/Table.stories.tsx
+  Changed. Length: 6417
+
+File: .storybook/stories/ui/Tabs.stories.tsx
+  Changed. Length: 3025
+
+File: .storybook/stories/ui/Textarea.stories.tsx
+  Changed. Length: 1647
+
+File: .storybook/stories/ui/Toggle.stories.tsx
+  Changed. Length: 2361
+
+File: .storybook/stories/ui/ToggleGroup.stories.tsx
+  Changed. Length: 2717
+
+File: .storybook/stories/ui/Toolbar.stories.tsx
+  Changed. Length: 4450
+
+File: .storybook/stories/ui/Tooltip.stories.tsx
+  Changed. Length: 2910
+
+File: .storybook/stories/ui/Tree.stories.tsx
+  Changed. Length: 14773
+
+File: .storybook/stories/ui/UI.stories.tsx
+  Changed. Length: 2504
+
+File: .storybook/stories/ui/ValidationTree.stories.tsx
+  Changed. Length: 24110
+
+File: .storybook/stories/ui/VirtualFileSystem.stories.tsx
+  Changed. Length: 7220
+
+File: .storybook/stories/ui/Window.stories.tsx
+  Changed. Length: 4591
+
+File: .storybook/withLevel.tsx
+  Changed. Length: 1375
+
+File: .storybook/withTheme.tsx
+  Changed. Length: 1268
+
+File: .vscode/launch.json
+  Changed. Length: 42270
+
+File: cad/asset/AGENTS.md
+  Changed. Length: 490
+
+File: cad/js/core/index.ts
+  Changed. Length: 433132
+
+File: cad/js/core/package.json
+  Changed. Length: 779
+
+File: cad/js/core/project.json
+  Changed. Length: 340
+
+File: cad/js/core/script.ts
+  Changed. Length: 490
+
+File: cad/js/core/vitest.config.ts
+  Changed. Length: 1473
+
+File: cad/js/kernel/brepjs/AGENTS.md
+  Changed. Length: 1684
+
+File: cad/js/kernel/brepjs/index.ts
+  Changed. Length: 173321
+
+File: cad/js/kernel/brepjs/package.json
+  Changed. Length: 1057
+
+File: cad/js/kernel/brepjs/project.json
+  Changed. Length: 585
+
+File: cad/js/kernel/brepjs/script.ts
+  Changed. Length: 721
+
+File: cad/js/kernel/brepjs/tsconfig.json
+  Changed. Length: 238
+
+File: cad/js/kernel/brepjs/vitest.config.ts
+  Changed. Length: 1079
+
+File: cad/js/machine/stately/index.ts
+  Changed. Length: 19252
+
+File: cad/js/machine/stately/package.json
+  Changed. Length: 916
+
+File: cad/js/machine/stately/project.json
+  Changed. Length: 570
+
+File: cad/js/machine/stately/script.ts
+  Changed. Length: 2373
+
+File: cad/js/machine/stately/tsconfig.json
+  Changed. Length: 282
+
+File: cad/js/machine/stately/vitest.config.ts
+  Changed. Length: 1149
+
+File: cad/js/module/aec-building-energy/index.ts
+  Changed. Length: 5123
+
+File: cad/js/module/aec-building-energy/package.json
+  Changed. Length: 638
+
+File: cad/js/module/aec-building-energy/project.json
+  Changed. Length: 387
+
+File: cad/js/module/aec-building-energy/script.ts
+  Changed. Length: 514
+
+File: cad/js/module/aec-building-energy/tsconfig.json
+  Changed. Length: 378
+
+File: cad/js/module/aec-building-energy/vitest.config.ts
+  Changed. Length: 858
+
+File: cad/js/module/aec-building-structure/index.ts
+  Changed. Length: 8642
+
+File: cad/js/module/aec-building-structure/package.json
+  Changed. Length: 710
+
+File: cad/js/module/aec-building-structure/project.json
+  Changed. Length: 393
+
+File: cad/js/module/aec-building-structure/script.ts
+  Changed. Length: 519
+
+File: cad/js/module/aec-building-structure/tsconfig.json
+  Changed. Length: 456
+
+File: cad/js/module/aec-building-structure/vitest.config.ts
+  Changed. Length: 958
+
+File: cad/js/module/aec-building/index.ts
+  Changed. Length: 2237
+
+File: cad/js/module/aec-building/package.json
+  Changed. Length: 564
+
+File: cad/js/module/aec-building/project.json
+  Changed. Length: 373
+
+File: cad/js/module/aec-building/script.ts
+  Changed. Length: 509
+
+File: cad/js/module/aec-building/tsconfig.json
+  Changed. Length: 302
+
+File: cad/js/module/aec-building/vitest.config.ts
+  Changed. Length: 740
+
+File: cad/js/module/spatial-shape/index.ts
+  Changed. Length: 5337
+
+File: cad/js/module/spatial-shape/package.json
+  Changed. Length: 621
+
+File: cad/js/module/spatial-shape/project.json
+  Changed. Length: 375
+
+File: cad/js/module/spatial-shape/script.ts
+  Changed. Length: 509
+
+File: cad/js/module/spatial-shape/tsconfig.json
+  Changed. Length: 378
+
+File: cad/js/module/spatial-shape/vitest.config.ts
+  Changed. Length: 852
+
+File: cad/js/package.json
+  Changed. Length: 346
+
+File: cad/js/query/index.ts
+  Changed. Length: 60778
+
+File: cad/js/query/package.json
+  Changed. Length: 824
+
+File: cad/js/query/project.json
+  Changed. Length: 342
+
+File: cad/js/query/script.ts
+  Changed. Length: 491
+
+File: cad/js/query/vitest.config.ts
+  Changed. Length: 1241
+
+File: cad/js/renderer/index.tsx
+  Changed. Length: 342147
+
+File: cad/js/renderer/package.json
+  Changed. Length: 2011
+
+File: cad/js/renderer/play/index.tsx
+  Changed. Length: 177883
+
+File: cad/js/renderer/play/vite.config.ts
+  Changed. Length: 3212
+
+File: cad/js/renderer/project.json
+  Changed. Length: 1810
+
+File: cad/js/renderer/script.ts
+  Changed. Length: 2160
+
+File: cad/js/renderer/vitest.config.ts
+  Changed. Length: 3136
+
+File: cad/js/runtime/index.ts
+  Changed. Length: 5788
+
+File: cad/js/runtime/package.json
+  Changed. Length: 744
+
+File: cad/js/runtime/project.json
+  Changed. Length: 349
+
+File: cad/js/runtime/script.ts
+  Changed. Length: 493
+
+File: cad/js/runtime/tsconfig.json
+  Changed. Length: 608
+
+File: cad/js/runtime/vitest.config.ts
+  Changed. Length: 1076
+
+File: coda/client/bin/assistant/mcp-app.tsx
+  Changed. Length: 5217
+
+File: coda/client/bin/assistant/package.json
+  Changed. Length: 877
+
+File: coda/client/bin/assistant/project.json
+  Changed. Length: 540
+
+File: coda/client/bin/assistant/script.ts
+  Changed. Length: 1353
+
+File: coda/client/bin/assistant/vite.mcp-app.config.ts
+  Changed. Length: 3672
+
+File: coda/client/ui/desktop/package.json
+  Changed. Length: 1462
+
+File: coda/client/ui/desktop/project.json
+  Changed. Length: 884
+
+File: coda/client/ui/desktop/renderer.tsx
+  Changed. Length: 109142
+
+File: coda/client/ui/desktop/script.ts
+  Changed. Length: 1738
+
+File: coda/client/ui/desktop/vite.renderer.config.ts
+  Changed. Length: 4640
+
+File: compose/AGENTS.md
+  Changed. Length: 11357
+
+File: asset/AGENTS.md
+  Changed. Length: 354
+
+File: asset/icon/package.json
+  Changed. Length: 378
+
+File: asset/icon/project.json
+  Changed. Length: 414
+
+File: asset/image/package.json
+  Changed. Length: 181
+
+File: asset/index.ts
+  Changed. Length: 12715
+
+File: asset/logo/package.json
+  Changed. Length: 472
+
+File: asset/logo/project.json
+  Changed. Length: 537
+
+File: asset/package.json
+  Changed. Length: 453
+
+File: asset/project.json
+  Changed. Length: 412
+
+File: compose/client/bin/engine/package.json
+  Changed. Length: 478
+
+File: compose/client/bin/engine/project.json
+  Changed. Length: 1003
+
+File: compose/client/bin/engine/vite.mcp-app.config.ts
+  Changed. Length: 5985
+
+File: compose/client/bin/store/package.json
+  Changed. Length: 328
+
+File: compose/client/bin/store/project.json
+  Changed. Length: 553
+
+File: compose/client/lib/go/package.json
+  Changed. Length: 376
+
+File: compose/client/lib/go/project.json
+  Changed. Length: 513
+
+File: compose/client/lib/js/AGENTS.md
+  Changed. Length: 1686
+
+File: compose/client/lib/js/index.ts
+  Changed. Length: 254937
+
+File: compose/client/lib/js/kit-store.worker.ts
+  Changed. Length: 2741
+
+File: compose/client/lib/js/package.json
+  Changed. Length: 910
+
+File: compose/client/lib/js/project.json
+  Changed. Length: 720
+
+File: compose/client/lib/js/script.ts
+  Changed. Length: 787
+
+File: compose/client/lib/js/tsconfig.json
+  Changed. Length: 2798
+
+File: compose/client/lib/js/vite.config.ts
+  Changed. Length: 1675
+
+File: compose/client/lib/net/Compose/package.json
+  Changed. Length: 390
+
+File: compose/client/lib/net/Compose/project.json
+  Changed. Length: 575
+
+File: compose/client/lib/py/package.json
+  Changed. Length: 342
+
+File: compose/client/lib/py/project.json
+  Changed. Length: 504
+
+File: compose/client/lib/query/README.md
+  Changed. Length: 484
+
+File: compose/client/lib/query/package.json
+  Changed. Length: 415
+
+File: compose/client/lib/query/project.json
+  Changed. Length: 1136
+
+File: compose/client/lib/query/script.ts
+  Changed. Length: 1402
+
+File: compose/client/lib/react/index.ts
+  Changed. Length: 354
+
+File: compose/client/lib/react/package.json
+  Changed. Length: 525
+
+File: compose/client/lib/rs/package.json
+  Changed. Length: 342
+
+File: compose/client/lib/rs/project.json
+  Changed. Length: 1876
+
+File: compose/client/lib/rs/script.ts
+  Changed. Length: 1418
+
+File: compose/client/lib/sketchpad/doc/index.tsx
+  Changed. Length: 1177
+
+File: compose/client/lib/sketchpad/doc/package.json
+  Changed. Length: 550
+
+File: compose/client/lib/sketchpad/doc/project.json
+  Changed. Length: 808
+
+File: compose/client/lib/sketchpad/doc/tailwind.config.ts
+  Changed. Length: 1559
+
+File: compose/client/lib/sketchpad/doc/vite.config.ts
+  Changed. Length: 3778
+
+File: compose/client/lib/sketchpad/js/AGENTS.md
+  Changed. Length: 2280
+
+File: compose/client/lib/sketchpad/js/README.md
+  Changed. Length: 412
+
+File: compose/client/lib/sketchpad/js/boot.tsx
+  Changed. Length: 7575
+
+File: compose/client/lib/sketchpad/js/index.ts
+  Changed. Length: 610950
+
+File: compose/client/lib/sketchpad/js/package.json
+  Changed. Length: 1802
+
+File: compose/client/lib/sketchpad/js/project.json
+  Changed. Length: 1734
+
+File: compose/client/lib/sketchpad/js/pw-loader.mjs
+  Changed. Length: 5873
+
+File: compose/client/lib/sketchpad/js/script.ts
+  Changed. Length: 1541
+
+File: compose/client/lib/sketchpad/js/tailwind.config.ts
+  Changed. Length: 1559
+
+File: compose/client/lib/sketchpad/js/tsconfig.json
+  Changed. Length: 1292
+
+File: compose/client/lib/sketchpad/js/vite.config.ts
+  Changed. Length: 20033
+
+File: compose/client/lib/sketchpad/js/vitest.config.ts
+  Changed. Length: 1252
+
+File: compose/client/lib/sketchpad/play/package.json
+  Changed. Length: 684
+
+File: compose/client/lib/sketchpad/play/project.json
+  Changed. Length: 900
+
+File: compose/client/lib/sketchpad/play/tailwind.config.ts
+  Changed. Length: 1555
+
+File: compose/client/lib/sketchpad/play/vite.config.ts
+  Changed. Length: 6095
+
+File: compose/client/schema/graphql/project.json
+  Changed. Length: 329
+
+File: compose/client/schema/sqlite/package.json
+  Changed. Length: 347
+
+File: compose/client/ui/3dm/Compose.Rhino/package.json
+  Changed. Length: 402
+
+File: compose/client/ui/3dm/Compose.Rhino/project.json
+  Changed. Length: 794
+
+File: compose/client/ui/3dm/ui/index.tsx
+  Changed. Length: 16026
+
+File: compose/client/ui/3dm/ui/package.json
+  Changed. Length: 1208
+
+File: compose/client/ui/3dm/ui/project.json
+  Changed. Length: 536
+
+File: compose/client/ui/3dm/ui/vite.config.ts
+  Changed. Length: 2403
+
+File: compose/client/ui/desktop/package.json
+  Changed. Length: 1208
+
+File: compose/client/ui/desktop/project.json
+  Changed. Length: 1107
+
+File: compose/client/ui/desktop/renderer.tsx
+  Changed. Length: 3422
+
+File: compose/client/ui/desktop/tailwind.config.ts
+  Changed. Length: 1552
+
+File: compose/client/ui/desktop/vite.renderer.config.ts
+  Changed. Length: 10748
+
+File: compose/client/ui/gh/Compose.Grasshopper/package.json
+  Changed. Length: 410
+
+File: compose/client/ui/gh/Compose.Grasshopper/project.json
+  Changed. Length: 829
+
+File: compose/client/ui/vscode/extension.ts
+  Changed. Length: 10188
+
+File: compose/client/ui/vscode/package.json
+  Changed. Length: 2012
+
+File: compose/client/ui/vscode/project.json
+  Changed. Length: 794
+
+File: compose/client/ui/vscode/tsconfig.json
+  Changed. Length: 1069
+
+File: compose/client/ui/vscode/vite.config.ts
+  Changed. Length: 5061
+
+File: compose/client/ui/vscode/webview.tsx
+  Changed. Length: 1285
+
+File: compose/dev/algorithm/AGENTS.md
+  Changed. Length: 1895
+
+File: compose/dev/algorithm/README.md
+  Changed. Length: 675
+
+File: compose/dev/algorithm/index.ts
+  Changed. Length: 37507
+
+File: compose/dev/algorithm/package.json
+  Changed. Length: 1597
+
+File: compose/dev/algorithm/project.json
+  Changed. Length: 1048
+
+File: compose/dev/algorithm/tsconfig.json
+  Changed. Length: 1263
+
+File: compose/dev/algorithm/vitest.config.ts
+  Changed. Length: 1374
+
+File: compose/fixture/AGENTS.md
+  Changed. Length: 359
+
+File: compose/fixture/index.ts
+  Changed. Length: 4129
+
+File: compose/fixture/package.json
+  Changed. Length: 389
+
+File: compose/fixture/project.json
+  Changed. Length: 981
+
+File: compose/fixture/script.ts
+  Changed. Length: 6614
+
+File: flow/compute.ts
+  Changed. Length: 921
+
+File: flow/core/project.json
+  Changed. Length: 281
+
+File: flow/core/script.ts
+  Changed. Length: 872
+
+File: flow/module/bim/package.json
+  Changed. Length: 479
+
+File: flow/module/bim/project.json
+  Changed. Length: 293
+
+File: flow/module/bim/script.ts
+  Changed. Length: 925
+
+File: flow/module/brep/package.json
+  Changed. Length: 483
+
+File: flow/module/brep/project.json
+  Changed. Length: 295
+
+File: flow/module/brep/script.ts
+  Changed. Length: 959
+
+File: flow/module/core/package.json
+  Changed. Length: 483
+
+File: flow/module/core/project.json
+  Changed. Length: 295
+
+File: flow/module/core/script.ts
+  Changed. Length: 937
+
+File: flow/module/dictionary/package.json
+  Changed. Length: 507
+
+File: flow/module/dictionary/project.json
+  Changed. Length: 307
+
+File: flow/module/dictionary/script.ts
+  Changed. Length: 1060
+
+File: flow/module/list/package.json
+  Changed. Length: 483
+
+File: flow/module/list/project.json
+  Changed. Length: 295
+
+File: flow/module/list/script.ts
+  Changed. Length: 988
+
+File: flow/module/logic/package.json
+  Changed. Length: 487
+
+File: flow/module/logic/project.json
+  Changed. Length: 297
+
+File: flow/module/logic/script.ts
+  Changed. Length: 949
+
+File: flow/module/math/package.json
+  Changed. Length: 483
+
+File: flow/module/math/project.json
+  Changed. Length: 295
+
+File: flow/module/math/script.ts
+  Changed. Length: 937
+
+File: flow/module/text/package.json
+  Changed. Length: 483
+
+File: flow/module/text/project.json
+  Changed. Length: 295
+
+File: flow/module/text/script.ts
+  Changed. Length: 937
+
+File: flow/play/index.ts
+  Changed. Length: 26968
+
+File: flow/play/package.json
+  Changed. Length: 980
+
+File: flow/play/project.json
+  Changed. Length: 1272
+
+File: flow/play/script.ts
+  Changed. Length: 2718
+
+File: flow/play/vite.config.ts
+  Changed. Length: 1330
+
+File: flow/play/vitest.config.ts
+  Changed. Length: 1382
+
+File: flow/react/index.tsx
+  Changed. Length: 199135
+
+File: flow/react/package.json
+  Changed. Length: 879
+
+File: flow/react/project.json
+  Changed. Length: 283
+
+File: flow/react/script.ts
+  Changed. Length: 967
+
+File: flow/react/vitest.config.ts
+  Changed. Length: 1818
+
+File: framework/core/index.ts
+  Changed. Length: 52602
+
+File: framework/core/package.json
+  Changed. Length: 568
+
+File: framework/core/project.json
+  Changed. Length: 291
+
+File: framework/core/script.ts
+  Changed. Length: 498
+
+File: framework/product/platform/core/index.ts
+  Changed. Length: 92313
+
+File: framework/product/platform/core/package.json
+  Changed. Length: 615
+
+File: framework/product/platform/core/project.json
+  Changed. Length: 323
+
+File: framework/product/platform/core/script.ts
+  Changed. Length: 517
+
+File: framework/product/platform/core/vitest.config.ts
+  Changed. Length: 416
+
+File: framework/product/platform/package.json
+  Changed. Length: 107
+
+File: framework/product/platform/renderer/react/index.tsx
+  Changed. Length: 193643
+
+File: framework/product/platform/renderer/react/package.json
+  Changed. Length: 1060
+
+File: framework/product/platform/renderer/react/project.json
+  Changed. Length: 343
+
+File: framework/product/platform/renderer/react/script.ts
+  Changed. Length: 1083
+
+File: framework/product/platform/renderer/react/vitest.config.ts
+  Changed. Length: 1357
+
+File: framework/product/playground/core/index.ts
+  Changed. Length: 49256
+
+File: framework/product/playground/core/package.json
+  Changed. Length: 566
+
+File: framework/product/playground/core/project.json
+  Changed. Length: 324
+
+File: framework/product/playground/core/script.ts
+  Changed. Length: 519
+
+File: framework/product/playground/core/vitest.config.ts
+  Changed. Length: 705
+
+File: framework/product/playground/package.json
+  Changed. Length: 109
+
+File: framework/product/playground/renderer/react/index.tsx
+  Changed. Length: 316081
+
+File: framework/product/playground/renderer/react/package.json
+  Changed. Length: 2148
+
+File: framework/product/playground/renderer/react/project.json
+  Changed. Length: 347
+
+File: framework/product/playground/renderer/react/script.ts
+  Changed. Length: 1181
+
+File: framework/product/playground/renderer/react/vitest.config.ts
+  Changed. Length: 1260
+
+File: framework/product/presentation/core/index.ts
+  Changed. Length: 106445
+
+File: framework/product/presentation/core/package.json
+  Changed. Length: 621
+
+File: framework/product/presentation/core/project.json
+  Changed. Length: 331
+
+File: framework/product/presentation/core/script.ts
+  Changed. Length: 517
+
+File: framework/product/presentation/core/vitest.config.ts
+  Changed. Length: 542
+
+File: framework/product/presentation/package.json
+  Changed. Length: 111
+
+File: framework/product/presentation/play/index.ts
+  Changed. Length: 26726
+
+File: framework/product/presentation/play/package.json
+  Changed. Length: 1127
+
+File: framework/product/presentation/play/project.json
+  Changed. Length: 1039
+
+File: framework/product/presentation/play/script.ts
+  Changed. Length: 1138
+
+File: framework/product/presentation/play/vite.config.ts
+  Changed. Length: 1095
+
+File: framework/product/presentation/play/vitest.config.ts
+  Changed. Length: 882
+
+File: framework/product/presentation/renderer/react/AGENTS.md
+  Changed. Length: 1640
+
+File: framework/product/presentation/renderer/react/index.tsx
+  Changed. Length: 376750
+
+File: framework/product/presentation/renderer/react/package.json
+  Changed. Length: 1173
+
+File: framework/product/presentation/renderer/react/project.json
+  Changed. Length: 354
+
+File: framework/product/presentation/renderer/react/script.ts
+  Changed. Length: 1061
+
+File: framework/product/presentation/renderer/react/vitest.config.ts
+  Changed. Length: 1092
+
+File: geometry/brep/js/index.ts
+  Changed. Length: 14202
+
+File: geometry/brep/js/package.json
+  Changed. Length: 581
+
+File: geometry/brep/js/project.json
+  Changed. Length: 350
+
+File: geometry/brep/js/script.ts
+  Changed. Length: 491
+
+File: geometry/brep/js/vitest.config.ts
+  Changed. Length: 589
+
+File: gis/map/play/index.ts
+  Changed. Length: 35486
+
+File: gis/map/play/package.json
+  Changed. Length: 1153
+
+File: gis/map/play/project.json
+  Changed. Length: 1561
+
+File: gis/map/play/script.ts
+  Changed. Length: 9877
+
+File: gis/map/play/vite.config.ts
+  Changed. Length: 1044
+
+File: gis/map/play/vitest.config.ts
+  Changed. Length: 839
+
+File: gis/map/react/index.tsx
+  Changed. Length: 43535
+
+File: gis/map/react/package.json
+  Changed. Length: 896
+
+File: gis/map/react/project.json
+  Changed. Length: 324
+
+File: gis/map/react/script.ts
+  Changed. Length: 605
+
+File: gis/map/react/vitest.config.ts
+  Changed. Length: 551
+
+File: gis/map/rs/script.ts
+  Changed. Length: 841
+
+File: infinite/cavas/react-renderer/index.tsx
+  Changed. Length: 7123
+
+File: infinite/cavas/react-renderer/package.json
+  Changed. Length: 767
+
+File: infinite/cavas/react-renderer/project.json
+  Changed. Length: 353
+
+File: infinite/cavas/react-renderer/script.ts
+  Changed. Length: 496
+
+File: infinite/cavas/react-renderer/vitest.config.ts
+  Changed. Length: 624
+
+File: infinite/world/AGENTS.md
+  Changed. Length: 608
+
+File: infinite/world/r3f/index.tsx
+  Changed. Length: 125609
+
+File: infinite/world/r3f/package.json
+  Changed. Length: 862
+
+File: infinite/world/r3f/project.json
+  Changed. Length: 331
+
+File: infinite/world/r3f/script.ts
+  Changed. Length: 491
+
+File: infinite/world/r3f/vitest.config.ts
+  Changed. Length: 613
+
+File: mathematical/graph/port/directed/dag/play/index.ts
+  Changed. Length: 12213
+
+File: mathematical/graph/port/directed/dag/play/package.json
+  Changed. Length: 1009
+
+File: mathematical/graph/port/directed/dag/play/project.json
+  Changed. Length: 1399
+
+File: mathematical/graph/port/directed/dag/play/script.ts
+  Changed. Length: 2045
+
+File: mathematical/graph/port/directed/dag/play/vite.config.ts
+  Changed. Length: 905
+
+File: mathematical/graph/port/directed/dag/play/vitest.config.ts
+  Changed. Length: 1069
+
+File: mathematical/graph/port/directed/dag/project.json
+  Changed. Length: 310
+
+File: mathematical/graph/port/directed/dag/react/index.tsx
+  Changed. Length: 18569
+
+File: mathematical/graph/port/directed/dag/react/package.json
+  Changed. Length: 816
+
+File: mathematical/graph/port/directed/dag/react/project.json
+  Changed. Length: 317
+
+File: mathematical/graph/port/directed/dag/react/script.ts
+  Changed. Length: 635
+
+File: mathematical/graph/port/directed/dag/react/vitest.config.ts
+  Changed. Length: 725
+
+File: mathematical/graph/port/directed/dag/script.ts
+  Changed. Length: 1123
+
+File: mit-bestand/präsentation/33.projektetage/index.ts
+  Changed. Length: 35166
+
+File: mit-bestand/präsentation/33.projektetage/package.json
+  Changed. Length: 1026
+
+File: mit-bestand/präsentation/33.projektetage/project.json
+  Changed. Length: 921
+
+File: mit-bestand/präsentation/33.projektetage/script.ts
+  Changed. Length: 990
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/Baukomponenten.ts
+  Changed. Length: 392
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/Bauteilarten.ts
+  Changed. Length: 487
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/Bauteilbeschriftungen.ts
+  Changed. Length: 1328
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/Bauteilkatalog.ts
+  Changed. Length: 675
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Ausgangslage/Typologien/Baum.ts
+  Changed. Length: 740
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Ausgangslage/Typologien/Katalog.ts
+  Changed. Length: 739
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Ausgangslage/Typologien/Typologien.ts
+  Changed. Length: 721
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/Eingabearten.ts
+  Changed. Length: 804
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/Eingabeoberfläche.ts
+  Changed. Length: 834
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/EingabeoberflächeAnnotiert.ts
+  Changed. Length: 893
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/ImportBesipiel.ts
+  Changed. Length: 1169
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/ImportVerarbeitung.ts
+  Changed. Length: 831
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/ManuellesPrüfen.ts
+  Changed. Length: 819
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/Output.ts
+  Changed. Length: 672
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Generatoren/Bauteillogik.ts
+  Changed. Length: 677
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Generatoren/Konnektivität.ts
+  Changed. Length: 2249
+
+File: mit-bestand/präsentation/33.projektetage/slide/Bauteilportal/Systematik/Generatoren/Modelle.ts
+  Changed. Length: 624
+
+File: mit-bestand/präsentation/33.projektetage/slide/Einführung/Einleitung/Einleitung.ts
+  Changed. Length: 167
+
+File: mit-bestand/präsentation/33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/Abschluss.ts
+  Changed. Length: 1200
+
+File: mit-bestand/präsentation/33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/Detail.ts
+  Changed. Length: 781
+
+File: mit-bestand/präsentation/33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/Filter.ts
+  Changed. Length: 774
+
+File: mit-bestand/präsentation/33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/Katalog.ts
+  Changed. Length: 780
+
+File: mit-bestand/präsentation/33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/Puzzle.ts
+  Changed. Length: 625
+
+File: mit-bestand/präsentation/33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/ZoomIn1.ts
+  Changed. Length: 798
+
+File: mit-bestand/präsentation/33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/ZoomIn2.ts
+  Changed. Length: 798
+
+File: mit-bestand/präsentation/33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/ZoomIn3.ts
+  Changed. Length: 798
+
+File: mit-bestand/präsentation/33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/Überblick.ts
+  Changed. Length: 798
+
+File: mit-bestand/präsentation/33.projektetage/spec.ts
+  Changed. Length: 16723
+
+File: mit-bestand/präsentation/33.projektetage/vite.config.ts
+  Changed. Length: 1581
+
+File: package.json
+  Changed. Length: 7069
+
+File: procedural/play/index.ts
+  Changed. Length: 89359
+
+File: procedural/play/package.json
+  Changed. Length: 1067
+
+File: procedural/play/project.json
+  Changed. Length: 1790
+
+File: procedural/play/script.ts
+  Changed. Length: 2406
+
+File: procedural/play/vite.config.ts
+  Changed. Length: 1840
+
+File: procedural/play/vitest.config.ts
+  Changed. Length: 1602
+
+File: procedural/react/index.tsx
+  Changed. Length: 68529
+
+File: procedural/react/package.json
+  Changed. Length: 1147
+
+File: procedural/react/project.json
+  Changed. Length: 295
+
+File: procedural/react/script.ts
+  Changed. Length: 980
+
+File: procedural/react/vitest.config.ts
+  Changed. Length: 2182
+
+File: puzzle/2d/play/index.ts
+  Changed. Length: 119615
+
+File: puzzle/2d/play/package.json
+  Changed. Length: 1143
+
+File: puzzle/2d/play/project.json
+  Changed. Length: 1047
+
+File: puzzle/2d/play/script.ts
+  Changed. Length: 2058
+
+File: puzzle/2d/play/vite.config.ts
+  Changed. Length: 1492
+
+File: puzzle/2d/play/vitest.config.ts
+  Changed. Length: 960
+
+File: puzzle/2d/react/index.tsx
+  Changed. Length: 653545
+
+File: puzzle/2d/react/package.json
+  Changed. Length: 1183
+
+File: puzzle/2d/react/project.json
+  Changed. Length: 328
+
+File: puzzle/2d/react/script.ts
+  Changed. Length: 1479
+
+File: puzzle/2d/react/vitest.config.ts
+  Changed. Length: 932
+
+File: puzzle/2d/rs/script.ts
+  Changed. Length: 865
+
+File: puzzle/3d/play/index.ts
+  Changed. Length: 234407
+
+File: puzzle/3d/play/package.json
+  Changed. Length: 1221
+
+File: puzzle/3d/play/project.json
+  Changed. Length: 1823
+
+File: puzzle/3d/play/script.ts
+  Changed. Length: 1679
+
+File: puzzle/3d/play/vite.config.ts
+  Changed. Length: 1472
+
+File: puzzle/3d/play/vitest.config.ts
+  Changed. Length: 861
+
+File: puzzle/3d/react/index.tsx
+  Changed. Length: 595717
+
+File: puzzle/3d/react/package.json
+  Changed. Length: 1161
+
+File: puzzle/3d/react/project.json
+  Changed. Length: 563
+
+File: puzzle/3d/react/script.ts
+  Changed. Length: 1070
+
+File: puzzle/3d/react/tsconfig.json
+  Changed. Length: 990
+
+File: puzzle/3d/react/vitest.config.ts
+  Changed. Length: 1476
+
+File: puzzle/3d/rs/package.json
+  Changed. Length: 593
+
+File: puzzle/3d/rs/project.json
+  Changed. Length: 728
+
+File: puzzle/3d/rs/script.ts
+  Changed. Length: 865
+
+File: puzzle/5d/play/index.ts
+  Changed. Length: 61243
+
+File: puzzle/5d/play/package.json
+  Changed. Length: 1050
+
+File: puzzle/5d/play/project.json
+  Changed. Length: 1823
+
+File: puzzle/5d/play/script.ts
+  Changed. Length: 2401
+
+File: puzzle/5d/play/vite.config.ts
+  Changed. Length: 2855
+
+File: puzzle/5d/play/vitest.config.ts
+  Changed. Length: 1593
+
+File: puzzle/5d/react/index.tsx
+  Changed. Length: 153033
+
+File: puzzle/5d/react/package.json
+  Changed. Length: 1223
+
+File: puzzle/5d/react/project.json
+  Changed. Length: 328
+
+File: puzzle/5d/react/script.ts
+  Changed. Length: 1070
+
+File: puzzle/5d/react/vitest.config.ts
+  Changed. Length: 1254
+
+File: puzzle/asset/AGENTS.md
+  Changed. Length: 378
+
+File: puzzle/asset/index.ts
+  Changed. Length: 186
+
+File: puzzle/asset/package.json
+  Changed. Length: 384
+
+File: puzzle/asset/project.json
+  Changed. Length: 409
+
+File: reasoning/mindmap/play/index.ts
+  Changed. Length: 353
+
+File: reasoning/mindmap/play/package.json
+  Changed. Length: 385
+
+File: reasoning/mindmap/play/project.json
+  Changed. Length: 140
+
+File: reasoning/mindmap/react/index.tsx
+  Changed. Length: 1347
+
+File: reasoning/mindmap/react/package.json
+  Changed. Length: 886
+
+File: reasoning/mindmap/react/project.json
+  Changed. Length: 344
+
+File: reasoning/mindmap/react/script.ts
+  Changed. Length: 489
+
+File: reasoning/mindmap/wires/play/index.ts
+  Changed. Length: 12859
+
+File: reasoning/mindmap/wires/play/package.json
+  Changed. Length: 1267
+
+File: reasoning/mindmap/wires/play/project.json
+  Changed. Length: 1031
+
+File: reasoning/mindmap/wires/play/script.ts
+  Changed. Length: 1878
+
+File: reasoning/mindmap/wires/play/vite.config.ts
+  Changed. Length: 2167
+
+File: reasoning/mindmap/wires/play/vitest.config.ts
+  Changed. Length: 1280
+
+File: reasoning/mindmap/wires/react/index.ts
+  Changed. Length: 21201
+
+File: reasoning/mindmap/wires/react/package.json
+  Changed. Length: 799
+
+File: reasoning/mindmap/wires/react/project.json
+  Changed. Length: 356
+
+File: reasoning/mindmap/wires/react/script.ts
+  Changed. Length: 498
+
+File: reasoning/mindmap/wires/react/vitest.config.ts
+  Changed. Length: 527
+
+File: repo/client/cli/package.json
+  Changed. Length: 336
+
+File: repo/client/cli/project.json
+  Changed. Length: 995
+
+File: repo/client/script.ts
+  Changed. Length: 857
+
+File: repo/client/sqlite/package.json
+  Changed. Length: 341
+
+File: repo/client/vscode/extension.ts
+  Changed. Length: 149719
+
+File: repo/client/vscode/package.json
+  Changed. Length: 29531
+
+File: repo/client/vscode/vite.config.ts
+  Changed. Length: 2273
+
+File: repo/client/vscode/vite.test.config.ts
+  Changed. Length: 2324
+
+File: repo/lib/js/README.md
+  Changed. Length: 2255
+
+File: repo/lib/js/package.json
+  Changed. Length: 416
+
+File: repo/lib/js/project.json
+  Changed. Length: 529
+
+File: repo/lib/js/script.ts
+  Changed. Length: 527
+
+File: repo/lib/js/src/index.ts
+  Changed. Length: 133226
+
+File: repo/lib/script.ts
+  Changed. Length: 1037
+
+File: repo/server/coordinator/package.json
+  Changed. Length: 751
+
+File: repo/server/coordinator/project.json
+  Changed. Length: 906
+
+File: script.ts
+  Changed. Length: 34310
+
+File: ui/asset/package.json
+  Changed. Length: 338
+
+File: ui/asset/project.json
+  Changed. Length: 518
+
+File: ui/react/index.tsx
+  Changed. Length: 926063
+
+File: ui/react/package.json
+  Changed. Length: 3594
+
+File: ui/react/project.json
+  Changed. Length: 1125
+
+File: ui/react/script.ts
+  Changed. Length: 2518
+
+File: ui/react/tailwind.config.ts
+  Changed. Length: 296
+
+File: ui/react/tsconfig.json
+  Changed. Length: 721
+
+File: ui/react/vitest.config.ts
+  Changed. Length: 604
+
+File: ui/react/vitest.setup.ts
+  Changed. Length: 391
+
+File: ui/styling/adapters.manifest.json
+  Changed. Length: 988
+
+File: ui/styling/js/index.ts
+  Changed. Length: 900
+
+File: ui/styling/js/package.json
+  Changed. Length: 1001
+
+File: ui/styling/js/project.json
+  Changed. Length: 473
+
+File: ui/styling/js/script.ts
+  Changed. Length: 663
+
+File: ui/styling/project.json
+  Changed. Length: 748
+
+File: ui/styling/py/project.json
+  Changed. Length: 456
+
+File: ui/styling/rs/project.json
+  Changed. Length: 289
+
+File: ui/styling/vite-elements-assets.ts
+  Changed. Length: 49521
+

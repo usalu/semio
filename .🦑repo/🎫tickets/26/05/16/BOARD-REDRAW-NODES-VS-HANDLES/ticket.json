@@ -1,9 +1,0 @@
-{
-  "title": "Board Redraw Nodes Vs Handles",
-  "emoji": "🔁",
-  "status": "closed",
-  "description": "Split board redraw into redraw-nodes (graph/tree layout) vs redraw-handles (snap handle angles to straight center-to-center segment intersections). UI: Graph/Tree mode, toggle to auto-snap handles after node redraw, dedicated redraw-handles button. WASM + TS + Vitest + Rust tests.",
-  "summary": "Split redraw into node layout vs handle snap: new WASM `apply_edge_handle_snap_to_fixture_v1_json` / `boardRedrawHandlesFixtureJson` sets handle angles from straight center-to-center chords (circle atan2; rectangle north-zero angle from ray direction). Node redraw JSON gains `redrawHandlesAfter`. TS exports `layoutBoardFixtureRedrawNodes` and `layoutBoardFixtureRedrawHandles`. Board play: Graph/Tree mode labels, checkbox to chain handle snap after node redraw, dedicated Redraw handles button + toolbar Link2, Redraw nodes button. Rust + Vitest coverage.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪64af77c57fe349d6b354d690781d34c4"]
-}

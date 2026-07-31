@@ -1,0 +1,8 @@
+{
+  "title": "Centralize Elements Styling",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Add @elements/styling with shared elements.css + palette; wire @elements/ui and board play through it; remove board dependency on @elements/ui.",
+  "goal": null,
+  "sessions": []
+}

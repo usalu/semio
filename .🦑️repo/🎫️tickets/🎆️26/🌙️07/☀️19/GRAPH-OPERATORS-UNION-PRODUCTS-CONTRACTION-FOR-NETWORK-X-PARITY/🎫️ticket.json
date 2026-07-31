@@ -1,0 +1,13 @@
+{
+  "title": "Graph Operators: Union, Products, Contraction for NetworkX Parity",
+  "emoji": "➕️",
+  "status": "open",
+  "description": "Implement mathematical_graph_operators (mathematical/graph/operators/rs/lib.rs) as Wave 2 of the NetworkX-3.6.1-parity effort: set operators (union/disjoint_union/compose/intersection/difference/symmetric_difference), complement/reverse, the four graph products (cartesian/tensor/strong/lexicographic) via node-pair interning, power, contraction (contracted_nodes/contracted_edge/quotient_graph), line_graph, and mycielskian. Single-file crate, generic over Storage\u003cP: PortModel, D: Directedness\u003e from the frozen mathematical_graph core, BTreeMap-based determinism, tests inline at bottom.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2136"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️31b83c6083e64f1b90f85f0f3e62b853"
+  ]
+}

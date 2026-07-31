@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-dag-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DAG app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dag = { path = "../../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/⚡️implementation/🦀️rust", package = "semio-s-app-dag" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

@@ -31,7 +31,7 @@ isProject: false
 
 ## Execution waves (each ends with cargo test + wasm rebuild + E2E)
 
-1. **Wave 0 — E2E infra**: strengthen `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts` (and the wgpu twin) with real functional assertions per touched app in later waves (non-placeholder geometry signature, scripted command-dispatch + document-state-changed checks) instead of "canvas painted" — this is what prevents another false-green.
+1. **Wave 0 — E2E infra**: strengthen `.repo/🎫️/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts` (and the wgpu twin) with real functional assertions per touched app in later waves (non-placeholder geometry signature, scripted command-dispatch + document-state-changed checks) instead of "canvas painted" — this is what prevents another false-green.
 2. **cad**: wire `kernel-3d-brep` for typology→solid generation + tessellation, replacing `typology_mesh_kind` box/cylinder mapping; load `cad/asset/play/*.model.json` for the forest-left example instead of `forest_play_document()`.
 3. **gis2d**: wire `MapHost::build_render_scene`/tile upload for real tile rendering; implement real pointer pan/zoom via `MapHost` wheel/pointer API; auto-run `fit_world_camera` on load.
 4. **puzzle2d**: restore dropped command surface by wiring `puzzle/2d/rs::BoardHost` (tools/LOD/engagement), give edges/wires real line-segment geometry in `canvas_layers_json` so `canvas-2d` renders them.

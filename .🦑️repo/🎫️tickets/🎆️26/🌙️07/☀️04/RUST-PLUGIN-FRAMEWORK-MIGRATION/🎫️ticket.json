@@ -1,0 +1,12 @@
+{
+  "title": "Rust Plugin Framework Migration",
+  "emoji": "🦀️",
+  "status": "closed",
+  "description": "Rebuild framework as Rust kernel with WASM Component plugins, declarative apps, React renderer",
+  "summary": "Migrated framework to Rust plugin OS with WIT, kernel, OS host, plugin SDK, React renderer, 25 WASM plugins; deleted TS framework and technology react packages.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1821"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️66835975334f4b9da1fa85f5fad8c136"]
+}

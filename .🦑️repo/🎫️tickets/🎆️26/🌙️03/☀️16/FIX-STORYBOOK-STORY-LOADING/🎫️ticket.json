@@ -1,0 +1,12 @@
+{
+  "title": "Fix Storybook Story Loading",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix Storybook so stories load correctly in `elements/ui` and eliminate the browser-side `Cannot read properties of undefined (reading dirname)` error caused by runtime bundling of server-only configuration modules.",
+  "summary": "Removed server-only configuration re-exports from the `@elements/ui` runtime entrypoint so Storybook no longer bundles `eslint.config.ts` and `typescript-eslint` into the browser. Verified with a successful `npm run build` in `elements/ui`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/940"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️1a3e4217f4854eff997a15e34e04a83f"]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Flatten Params Across Puzzles",
+  "emoji": "🌤️",
+  "status": "closed",
+  "description": "Add gap/shift/rise/rotation/turn/tilt (+u/v) to puzzle 2d edges, puzzle 3d attractions, puzzle 5d fasteners. Reimplement flatten algorithm independently in puzzle 2d/3d/5d matching compose rs. Rewire sketchpad host to emit local grip geometry + relative params and use puzzle 5d flatten instead of rs flatPosition.",
+  "summary": "Added gap/shift/rise/rotation/turn/tilt/u/v to puzzle 2d edges, 3d attractions, and 5d fasteners with parse/compose/project round-trip. Implemented independent flatten algorithms in puzzle 2d (flatten2d), 3d (flatten3d), and 5d (flatten5d + prepareTopologyModel) matching compose rs compute_child_plane + spanning-forest BFS. Rewired sketchpad to emit relative fixtures with local connector geometry and connection params; extended SKETCHPAD_KIT_READ_INNER for connector point/direction/t. Platform FiveD render path now runs prepareTopologyModel after compose5d. Tests added in puzzle 2d/3d/5d and sketchpad; rs flatten reference test still passes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1741"
+  },
+  "goal": "🎯️🎨️r2602🎨️runningsketchpad",
+  "sessions": ["⚪️e098204302a84a189aea8e62b00dea5e"]
+}

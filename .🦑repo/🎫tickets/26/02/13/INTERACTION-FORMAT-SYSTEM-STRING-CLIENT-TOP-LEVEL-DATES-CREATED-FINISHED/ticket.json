@@ -1,8 +1,0 @@
-{
-  "title": "Interaction format: system string, client top-level, dates.created/finished",
-  "emoji": "📋",
-  "status": "closed",
-  "description": "Interaction format: system string, client top-level, dates.created/finished",
-  "summary": "Interaction format migrated: system string, client top-level, dates.created/finished. InteractionDates.Started→Created, removed legacy system object unmarshaling, GraphQL schema updated, all ticket.json and goal.json migrated.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary"
-}

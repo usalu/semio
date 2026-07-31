@@ -32,7 +32,7 @@ isProject: false
 
 - **Paths:** [`architect/plugin`](architect/plugin) (headless) + [`architect/plugin`](architect/plugin) (standard program path; not `architect/constrain`).
 - **Depth:** Option 2A — full domain for all 65 feature areas + complete program (CRUD, analysis, exchange, reports, adjacency UI). No stubs, no empty registers.
-- **Goal:** Approving this plan authorizes opening goal `architect` (title “Architect”, due `2026-12-31`). Ticket binds to `🎯architect`.
+- **Goal:** Approving this plan authorizes opening goal `architect` (title “Architect”, due `2026-12-31`). Ticket binds to `🎯️architect`.
 - **No mixing:** Do not depend on `coda`, `compose`, `puzzle`, or `mit-bestand`. Adjacency concepts may be reimplemented cleanly; prior art in [`coda/client/lib/programming`](coda/client/lib/programming/go/main.go) is reference only.
 - **Undirected adjacency:** Store only canonical pairs `(a, b)` with `a < b`; UI edits the lower triangle; graph view is undirected. Depend on [`mathematical_graph`](mathematical/graph/rs) for topology helpers (`normalize_undirected`, `Adjacency`).
 
@@ -226,9 +226,9 @@ Lower-triangle undirected editor (no duplicate upper cells):
 
 ```
         ElemA  ElemB  ElemC  ElemD
-ElemB   [●]
-ElemC   [○]    [●]
-ElemD   [×]    [ ]    [●]
+ElemB   [●️]
+ElemC   [○️]    [●️]
+ElemD   [×]    [ ]    [●️]
 ```
 
 Rendered as a **list of pair rows** (`BlockList` or custom `UiNode::Tree` rows) ordered by `(row, col)` with `col < row`, plus a left-side **triangle glyph strip** (CSS/scene chrome) so the matrix identity is obvious. Each cell/row edits `Adjacency.kind` / weight / separations via inspector. Mutations emit `ProgramOperation::SetAdjacency` / `ClearAdjacency` with normalized endpoints.
@@ -252,10 +252,10 @@ Selection, active register, search query, saved filters, last report JSON, adjac
 3. Plugin `Cargo.toml`: `[package.metadata.component] package = "semio:architect"`, playground `6090`/`6190`.
 4. Regenerate plugin registry: `bun nx run @semio-tech/plugin-registry:generate`.
 5. Register launch configs in [`.vscode/launch.json`](.vscode/launch.json) (existing order/grouping):
-   - `🧪test🏛️architect-spine`
+   - `🧪️test🏛️architect-spine`
    - `🛠️dev🏛️architect⚛️react`
-   - `🛠️dev🏛️architect🧊wgpu🌐wasm`
-   - `🛠️dev🏛️architect🧊wgpu🖥️native`
+   - `🛠️dev🏛️architect🧊️wgpu🌐️wasm`
+   - `🛠️dev🏛️architect🧊️wgpu🖥️native`
 6. Create [`architect/AGENTS.md`](architect/AGENTS.md) once with technology frontmatter (implementation agents must not edit afterward).
 
 ## Ticket workflow (on execute)

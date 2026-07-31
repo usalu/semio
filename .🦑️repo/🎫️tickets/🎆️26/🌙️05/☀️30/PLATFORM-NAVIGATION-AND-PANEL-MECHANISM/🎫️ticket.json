@@ -1,0 +1,9 @@
+{
+  "title": "Platform Navigation And Panel Mechanism",
+  "emoji": "🧭️",
+  "status": "closed",
+  "description": "Build general platform navigation (URL-synced back/forward/up/breadcrumb + six panel slots with navbar toggles only when apps register tabs). Implement in sketchpad.",
+  "summary": "Implemented general platform navigation: PanelKind + panelTabs on core/platform, URL-synced history wrapper (back/forward/up/breadcrumb), dynamic panel toggles only when apps register tabs, options renamed to settings. Wired sketchpad with applyUri, breadcrumb labels, windows/workbench/details panel tabs; removed manual browser history wiring.",
+  "goal": "🎯️framework",
+  "sessions": ["⚪️b6b38cc297b74fd4ae79262630ff1b76"]
+}

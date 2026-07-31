@@ -1,0 +1,12 @@
+{
+  "title": "Fix Settings Panel in Sketchpad Across All Apps",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix the settings panel in the sketchpad across all apps. The screenshot shows settings rows with broken/garbled display for diagram settings (lineStyle, distance, cornerRadius, centerString) and general settings (theme, language, device, expertise, mode). Need to investigate and fix the rendering issues.",
+  "summary": "Fixed settings panel in sketchpad across all apps by resolving 4 duplicate JSON keys in English translation bundles (elements/ui/index.tsx). Duplicate 'settings' keys in home and kit app translations caused JSON.parse to overwrite full settings objects (theme, language, device, expertise, mode, diagram) with label-only stubs, making useLabel return raw key paths instead of translated labels. Removed duplicate settings/chat entries for home and kit, removed duplicate quality.title entry, updated kit settings label from 'Kit Editor' to 'Settings', added missing 'device' translations for home settings in both DE/EN, and added complete docs settings translations (theme, language, device, expertise, mode) in both DE/EN. All 134 vitest tests pass, no TypeScript errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1250"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️0a7761444721448793dc00cf3164f0ad"]
+}

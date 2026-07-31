@@ -1,0 +1,11 @@
+{
+  "title": "Clean Remaining Id Uri Lines From All Source Code",
+  "status": "closed",
+  "description": "The previous \"Enforce Emoji Descriptions With Statutes Across Languages\" ticket accidentally edited business logic and missed cleaning most source code. All id/uri reference lines like [🧰️repo📚️go💻️main🔖️eventkind](repo://p/i/repo/b/l/go/f/main.go/s/EventKind) and [🔬️coda📚️py💻️coda🔖️imports](repo://p/r/coda/b/l/py/f/coda.py/s/Imports) MUST disappear from all source code files. Also revert any business logic changes that were accidentally introduced.",
+  "summary": "Removed all identification URI lines from source code and completely removed the identification statute system from the repo CLI. Key changes: (1) Deleted ~5,500 repo:// and composerepo:// URI comment lines across 130+ source files using multiple sed passes. (2) Removed 9 identification statute constants, their metadata entries, Territory groups, breach checking code, autofix code, and helper functions (parseComposeIdentificationLink, composeMarkdownLinkPattern, replacementIdentificationLine, sectionPathForLine) from repo/cli/main.go. (3) Restored summary/requirements detection in TypeScript JSDoc, C#/Rust XML doc, and Python docstring parsing that was accidentally removed with identification code. (4) Updated test fixtures: file_fixed.cs (brace on same line for definition detection), file_fixable_expected.tsx (removed identification placeholders and blank line after region). (5) Removed identification-specific test functions and TestHeaderPolicyOldFormatId. (6) Fixed pre-existing Rust section test (wrong section format). (7) All policy-related repo CLI tests pass. JS/TS, Go, Python, Rust library tests pass with only pre-existing failures.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1288"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️553a1fc7f1b04aa9b606f4bf03279b83"]
+}

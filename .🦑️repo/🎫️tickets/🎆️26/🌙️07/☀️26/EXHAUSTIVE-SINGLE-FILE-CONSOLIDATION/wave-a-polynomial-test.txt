@@ -1,0 +1,49 @@
+    Blocking waiting for file lock on package cache
+   Compiling mathematical_number v0.1.0 (/Users/ueli/Documents/semio/mathematical/number/rs)
+   Compiling mathematical_random v0.1.0 (/Users/ueli/Documents/semio/mathematical/random/rs)
+   Compiling mathematical_polynomial v0.1.0 (/Users/ueli/Documents/semio/mathematical/polynomial/rs)
+    Finished `test` profile [unoptimized] target(s) in 4.34s
+     Running unittests lib.rs (/Users/ueli/Documents/semio/.repo/🎫️/26/07/26/EXHAUSTIVE-SINGLE-FILE-CONSOLIDATION/target-poly/debug/deps/mathematical_polynomial-517685f8ad8dd945)
+
+running 41 tests
+test algebraic::tests::from_rational_is_exact ... ok
+test factor::tests::factor_x2_minus_1 ... FAILED
+test factor::tests::factor_repeated_linear_factor ... ok
+test factor::tests::factor_nonmonic_quadratic ... ok
+test factor::tests::rational_roots_of_quadratic ... ok
+test finite::tests::equal_degree_factor_splits_product_of_two_linears ... ok
+test finite::tests::factor_mod_p_reconstructs_via_multiplication ... ok
+test factor::tests::rational_roots_with_zero_root ... ok
+test finite::tests::distinct_degree_factor_separates_degrees ... FAILED
+test finite::tests::is_irreducible_hand_cases ... FAILED
+test multivariate::tests::eval_hand_case ... ok
+test multivariate::tests::monomial_ordering_grlex_uses_total_degree_first ... ok
+test finite::tests::poly_mod_pow_matches_repeated_squaring ... ok
+test multivariate::tests::monomial_ordering_lex ... ok
+test multivariate::tests::groebner_basis_of_line_intersection ... ok
+test multivariate::tests::partial_derivative_hand_case ... ok
+test multivariate::tests::ring_ops_hand_case ... ok
+test roots::tests::cauchy_bound_contains_all_roots ... ok
+test multivariate::tests::try_div_and_lcm ... ok
+test roots::tests::isolate_roots_of_simple_quadratic ... ok
+test roots::tests::refine_root_converges_to_sqrt2 ... ok
+test roots::tests::zero_polynomial_and_constant_have_no_roots ... ok
+test univariate::tests::derivative_power_rule ... ok
+test univariate::tests::div_rem_identity_holds ... ok
+test univariate::tests::eval_horner_matches_direct_computation ... ok
+test univariate::tests::factor_x2_minus_1_via_squarefree_and_roots ... ok
+test univariate::tests::gcd_hand_case ... ok
+test univariate::tests::interpolate_reconstructs_quadratic ... FAILED
+test univariate::tests::rational_root_via_eval_hand_case ... ok
+test univariate::tests::resultant_of_coprime_linear_factors_is_nonzero ... ok
+test univariate::tests::resultant_of_shared_root_is_zero ... ok
+test univariate::tests::ring_axioms_on_small_polynomials ... ok
+test univariate::tests::squarefree_decomposition_of_repeated_factor ... ok
+test algebraic::tests::cbrt2_times_cbrt4_equals_2 has been running for over 60 seconds
+test algebraic::tests::neg_and_inv_hand_cases has been running for over 60 seconds
+test algebraic::tests::root_of_selects_correct_irreducible_factor has been running for over 60 seconds
+test algebraic::tests::sqrt2_plus_sqrt3_has_minimal_poly_degree_4 has been running for over 60 seconds
+test factor::tests::factor_irreducible_quadratic_stays_whole has been running for over 60 seconds
+test factor::tests::factor_x4_minus_1 has been running for over 60 seconds
+test roots::tests::isolate_roots_matches_known_integer_roots has been running for over 60 seconds
+test roots::tests::wilkinson_like_small_case_root_count has been running for over 60 seconds

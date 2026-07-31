@@ -1,0 +1,11 @@
+{
+  "title": "Understand Definition and Section Docstring Detection",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Read and document the current definition/section docstring detection, breach, and autofix logic in the repo CLI",
+  "summary": "Documented all definition/section docstring detection, breach, and autofix logic in repo CLI main.go.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/554"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repodefinitionmechanism"
+}

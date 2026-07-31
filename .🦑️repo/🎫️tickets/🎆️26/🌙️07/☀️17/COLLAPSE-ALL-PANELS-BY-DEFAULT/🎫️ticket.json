@@ -1,0 +1,10 @@
+{
+  "title": "Collapse All Panels By Default",
+  "emoji": "🐛️",
+  "status": "open",
+  "description": "By default all panels should be collapsed. e.g. currently puzzle 3d has arbeitsbereich wrongly uncollapsed by default",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️093a2e5dfaa24f63860a218ea94e0dd8"
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "title": "Fix Design App Connection Visibility Again",
+  "status": "closed",
+  "prompt": "Connections are not visible in the sketchpad design app. Need to investigate and fix the connection/edge rendering in the diagram.",
+  "summary": "Fixed connection visibility by restoring edges={edges} to Diagram component and removing broken CustomDesignEdgeLayer ViewportPortal. 0 TS errors, 15/15 unit tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/797"
+  },
+  "goal": "SKETCHPAD-IMPROVEMENTS",
+  "started": "2026-03-08T09:58:27.067535243Z",
+  "finished": "2026-03-08T10:03:37.996211293Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-03-08 09:58:27",
+        "finished": "2026-03-08 10:03:37"
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "25a194ed76ad1a71a5d242990f19c5ace57b0bc2",
+      "prompt": "Connections are not visible in the sketchpad design app. Need to investigate and fix the connection/edge rendering in the diagram.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx",
+              "lines": {
+                "added": 24,
+                "removed": 21
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻️compose/js/sketchpad/Design.tsx#Store#Canvas#Diagram",
+              "lines": {
+                "added": 23,
+                "removed": 21
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

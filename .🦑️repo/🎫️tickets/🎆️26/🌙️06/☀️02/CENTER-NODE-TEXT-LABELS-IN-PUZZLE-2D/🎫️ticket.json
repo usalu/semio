@@ -1,0 +1,9 @@
+{
+  "title": "Center Node Text Labels In Puzzle 2d",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "The text label on puzzle 2d nodes should be centered and not left aligned.",
+  "summary": "Changed default node caption alignment from west (`w`, left-middle) to center (`c`) via `PUZZLE_2D_NODE_TEXT_ALIGNMENT_DEFAULT`. Non-autofit overlay labels now use centered canvas text placement by default. Added unit test for default center anchor.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️3e182289ee8f461d92552f32baf835c6"]
+}

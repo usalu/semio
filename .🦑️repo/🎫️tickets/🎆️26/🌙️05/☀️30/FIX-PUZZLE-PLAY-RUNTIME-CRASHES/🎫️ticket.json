@@ -1,0 +1,9 @@
+{
+  "title": "Fix Puzzle Play Runtime Crashes",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix BoardPlayInner crashes: missing BOARD_CAMERA_ZOOM imports and ensure all hooks use reactHostPort.useRef. Verify puzzle 2d/3d play boot end-to-end.",
+  "summary": "Fixed board play host runtime crashes: imported BOARD_CAMERA_ZOOM_MIN/MAX and other missing @semio-tech/puzzle-2d-react and @semio-tech/ui-react symbols; all refs use reactHostPort.useRef. Playground renderer vitest 14/14; puzzle 2d play production build succeeds.",
+  "goal": "🎯️framework🎯️playground",
+  "sessions": ["⚪️c35ddf74115c4071bba80b6db7d7adfc"]
+}

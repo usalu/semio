@@ -93,7 +93,7 @@ Extend the existing `contextmenu` effect (~12955):
 
 ## 5. Play controller actions ([puzzle/2d/play/index.ts](puzzle/2d/play/index.ts))
 
-New commands on `Puzzle2dPlayShellController` (region `🔖Controller`, ~742):
+New commands on `Puzzle2dPlayShellController` (region `🔖️Controller`, ~742):
 
 - `setSelectionFlag { flag: "hidden" | "locked", value }` — set flag on all selected nodes/handles/edges in the fixture, then resync (mirrors 3d `applySelectionFlag`).
 - `deleteSelection` — reuse the existing structural-delete pipeline (~1590–1656).

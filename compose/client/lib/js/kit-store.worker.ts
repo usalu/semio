@@ -1,30 +1,30 @@
-//#region 🧲Header
+//#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // GNU LGPL-3.0 or later — GraphQL WASM worker: JSON `execute` / `subscribe` only (no JS-side DTO marshaling).
 // Bundled by Vite so `@semio-tech/compose-rs-wasm` resolves; Blob workers cannot import bare specifiers.
-//#endregion 🧲Header
+//#endregion 🧲️Header
 
 /// <reference lib="webworker" />
 
-/** @emoji 🧪 Empty in-memory WASM store URI (worker must not import full `@semio-tech/compose-js` index). */
+/** @emoji 🧪️ Empty in-memory WASM store URI (worker must not import full `@semio-tech/compose-js` index). */
 const RS_WASM_EMPTY_STORE_URI = "dev://empty" as const;
 
-//#region 🧷WasmHandle
+//#region 🧷️WasmHandle
 type WasmKitHandle = {
   execute: (body: string) => Promise<string>;
   subscribe: (body: string, onEvent: (eventJson: string) => void) => Promise<void>;
 };
 
 let handle: WasmKitHandle | null = null;
-//#endregion 🧷WasmHandle
+//#endregion 🧷️WasmHandle
 
-//#region 📤Wire
+//#region 📤️Wire
 function post(out: unknown): void {
   self.postMessage(JSON.stringify(out));
 }
-//#endregion 📤Wire
+//#endregion 📤️Wire
 
-//#region 🧵OnMessage
+//#region 🧵️OnMessage
 self.onmessage = async (ev: MessageEvent<string>) => {
   let msg: {
     operation?: string;
@@ -75,4 +75,4 @@ self.onmessage = async (ev: MessageEvent<string>) => {
     post({ operator: "error", reqId: msg.reqId, message: String(e) });
   }
 };
-//#endregion 🧵OnMessage
+//#endregion 🧵️OnMessage

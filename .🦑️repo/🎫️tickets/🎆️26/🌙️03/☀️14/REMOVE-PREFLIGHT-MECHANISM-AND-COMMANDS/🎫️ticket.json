@@ -1,0 +1,12 @@
+{
+  "title": "Remove Preflight Mechanism And Commands",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Completely remove the preflight mechanism, preflight command wiring, and all associated references from the monorepo.",
+  "summary": "Removed remaining preflight/pre-checkpoint references across monorepo configs/docs/tests, cleaned compose package scripts, updated repo specs and hook test naming, and validated with targeted grep and tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/877"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["🔀️35d98e0a276242f4c63c9eacb0f1cd76c444ca2c⚪️17734468866812932003920524695810547886"]
+}

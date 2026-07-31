@@ -1,0 +1,12 @@
+{
+  "title": "Structural Refactor of Store Architecture to Domain Level Abstractions",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Structurally refactor the sketchpad store architecture to eliminate Yjs Map/Array primitives from the public API. RMap/RArray/RDoc become internal implementation details. Stores expose domain-typed APIs only. All Rx type aliases removed. Observer utilities internalized. The term 'yjs' should not appear in sketchpad code. The 'what' (kit synchronization) matters, not the 'how' (Yjs CRDTs).",
+  "summary": "Completed structural refactor of store architecture removing all Yjs/Rx terminology and replacing with domain-level Sync abstractions.\n\nChanges:\n1. studio.ts: Rewrote entirely - RMap→SyncMap, RArray→SyncArray, RDoc→SyncDoc interfaces. YjsDoc→CrdtDoc (internal). createYjsDocFactory→createSyncDocFactory. YDocBinaryPersistenceProvider→SyncBinaryPersistenceProvider. Removed export of Y, IndexeddbPersistence, Doc.\n2. shared.ts: All Rx/Yjs types renamed (RxPath→SyncPath, RxAttributes→SyncAttributes, etc). XState bridge renamed (createRxSyncActor→createSyncActor, YjsSyncContext→StoreSyncContext, yTransact→syncTransact). Event types Y_UPDATE→SYNC_UPDATE. RemoteProviders.yProvider→syncProvider.\n3. Sketchpad.tsx: All 73+ Rx type aliases renamed (RxKit→SyncKit, RxDesign→SyncDesign, etc). All store classes renamed (RxCoordStore→SyncCoordStore, etc). All r-prefixed members renamed (rMap→syncMap, rDoc→syncDoc, rKit→syncKit, etc). All y-prefixed locals renamed. All Yjs comments removed. Fixed kitApp name collision.\n4. Kit.tsx: All RMap/RArray→SyncMap/SyncArray. All Rx types renamed. All r/y-prefixed vars renamed.\n5. index.ts: Updated exports (YDocBinaryPersistenceProvider→SyncBinaryPersistenceProvider, RxProviderFactory→SyncProviderFactory).\n6. compose.ts: Fixed pre-existing ArrayBuffer/Uint8Array type errors for gltf-transform API.\n\nBuild: Successfully builds. Tests: All 22 vitest tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/964"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️e2efe17c1ff940ba912f1f979f2e3b11"]
+}

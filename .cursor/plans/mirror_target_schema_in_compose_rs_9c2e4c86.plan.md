@@ -3,7 +3,7 @@ name: Mirror Target Schema In compose/rs
 overview: Bring `compose/rs`'s generated GraphQL SDL to full structural parity with the extended `compose/graphql/target.schema.graphql` (Relay scaffolding, owner/owned unions, hashing, Modification/Diff/Diffs per entity) and refactor `compose/rs` internals to resolve resources strictly via `Arc`/`Weak` pointers — no `Id` lookups inside resolvers.
 todos:
  - id: ticket
-   content: Open ticket in repo MCP for this work and record working tree under .repo/🎫/YY/MM/DD/
+   content: Open ticket in repo MCP for this work and record working tree under .repo/🎫️/YY/MM/DD/
    status: completed
  - id: foundation
    content: "Phase 1 (sequential): add Node/Entity/WeakEntity/StrongEntity/Artifact/Document/Modification/Diff interfaces, PageInfo, EntityEdge/EntityConnectionInterface, global OwnerEntity/OwnedEntityConnection/ChangeOwned/DiffOwner/DiffsOwner/Input unions, plus entity_relay!/entity_diffs!/entity_owner! macros. Single edit pass on lib.rs."
@@ -66,7 +66,7 @@ isProject: false
 ### Mechanism in Rust (async-graphql 7)
 
 - Interfaces: declare with `#[derive(Interface)]` enum wrappers (e.g. `EntityIface { Tag(Arc<Tag>), Concept(Arc<Concept>), … }`) and add `#[graphql(field(name = "id", type = "Id"), field(name = "hash", type = "String"), field(name = "entityOwner", type = "OwnerEntity"), field(name = "ownedEntities", type = "OwnedEntityConnection"))]`. The same enum doubles as the `EntityConnection` `nodes` element (Relay accepts interface-typed connections).
-- Per-entity Edge/Connection: macro `entity_relay!(Tag)` to expand to `TagEdge { cursor, node }`, `TagConnection { edges, pageInfo, hash }`. New file region `//#region 🪢 relay` in `lib.rs` with the macro definition (per CLAUDE.md no new files).
+- Per-entity Edge/Connection: macro `entity_relay!(Tag)` to expand to `TagEdge { cursor, node }`, `TagConnection { edges, pageInfo, hash }`. New file region `//#region 🪢️ relay` in `lib.rs` with the macro definition (per CLAUDE.md no new files).
 - Modification/Diff/Diffs: macro `entity_diffs!(Tag, fields = [name, description, icon, order])` expanding to `TagModification { name: Option<String>, description: Option<String>, removeDescription: Option<bool>, … }`, `TagDiff { before, modification, after }`, `TagDiffs { removed, diffs, added }` plus their edge/connection. Diff/Modification structs are `WeakEntity` (`id` = blake3 hash of contents, `hash` = same).
 - Owner/owned unions: `#[derive(Union)] enum TagOwner { Kit(Arc<Kit>), Type(Arc<Type>), Representation(Arc<Representation>) }`. Global `OwnerEntity` and `OwnedEntityConnection` unions list every concrete entity (auto-generated from the same source list as `entity_relay!`).
 - `hash` everywhere: extend the existing [`crate::hash::h`](compose/rs/lib.rs:340) helper. Every `#[Object]` impl gets `async fn hash(&self) -> String { self.compute_hash().await }`. Add `compute_hash` to entities currently missing it (`Concept`, `Tag`, `Quality`, `Author`, `Attribute`, `Benchmark`, `Prop`, `Stat`, `Layer`, `Group`, `File`, `Folder`, `Location`, `Side`, `Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Position`).
@@ -82,12 +82,12 @@ isProject: false
 
 ### Schema region layout in `lib.rs`
 
-Extend the existing `//#region 🌐 gql` ([lib.rs:3467](compose/rs/lib.rs:3467)) with hierarchical sub-regions matching `target.schema.graphql`'s region tree:
+Extend the existing `//#region 🌐️ gql` ([lib.rs:3467](compose/rs/lib.rs:3467)) with hierarchical sub-regions matching `target.schema.graphql`'s region tree:
 
-- `//#region 🪪 interfaces` — `Node`, `Entity`, `WeakEntity`, `StrongEntity`, `Artifact`, `Document`, `Modification`, `Diff`, `Operation` interface enums + `EntityEdge`, `EntityConnectionInterface`, `PageInfo`.
-- `//#region 🌐 unions` — global `EntityOwner`/`OwnerEntity`, `OwnedEntityConnection`, `ChangeOwned`, `DiffOwner`, `DiffsOwner`, `Input`, `AnyOperation`.
-- `//#region 🪢 relay-macros` — `entity_relay!`, `entity_diffs!`, `entity_owner!` macros.
-- `//#region 📐 geom-relay`, `🏷️ meta-relay`, `🏠 type-relay`, `🏘 design-relay`, `📦 kit-relay`, `🌿 vcs-relay`, `⚙️ operation-relay` — invoke macros for each entity group.
+- `//#region 🪪️ interfaces` — `Node`, `Entity`, `WeakEntity`, `StrongEntity`, `Artifact`, `Document`, `Modification`, `Diff`, `Operation` interface enums + `EntityEdge`, `EntityConnectionInterface`, `PageInfo`.
+- `//#region 🌐️ unions` — global `EntityOwner`/`OwnerEntity`, `OwnedEntityConnection`, `ChangeOwned`, `DiffOwner`, `DiffsOwner`, `Input`, `AnyOperation`.
+- `//#region 🪢️ relay-macros` — `entity_relay!`, `entity_diffs!`, `entity_owner!` macros.
+- `//#region 📐️ geom-relay`, `🏷️ meta-relay`, `🏠️ type-relay`, `🏘️ design-relay`, `📦️ kit-relay`, `🌿️ vcs-relay`, `⚙️ operation-relay` — invoke macros for each entity group.
 
 ### Phasing (delegated)
 
@@ -96,7 +96,7 @@ Because the work spans ~1000 GraphQL types and ~5000 lines of Rust, after the fo
 ### Validation
 
 - After each phase: `cargo check -p compose --target wasm32-unknown-unknown --no-default-features` plus native `cargo build -p compose` to confirm both targets compile.
-- After each phase: regenerate `compose/graphql/schema.graphql` via the existing test harness (`crate::gql::sdl`) and `diff` against `compose/graphql/target.schema.graphql` ignoring whitespace/comments. Track the unmatched-type count in the ticket folder under `.repo/🎫/.../diff-report.md` after every wave.
+- After each phase: regenerate `compose/graphql/schema.graphql` via the existing test harness (`crate::gql::sdl`) and `diff` against `compose/graphql/target.schema.graphql` ignoring whitespace/comments. Track the unmatched-type count in the ticket folder under `.repo/🎫️/.../diff-report.md` after every wave.
 - Final pass: zero unmatched named types between `schema.graphql` and `target.schema.graphql`; zero `*_by_id` calls inside any `#[Object]` impl (verified with `rg "_by_id\(" compose/rs/lib.rs` scoped to resolver blocks).
 
 ### Out of scope

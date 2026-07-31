@@ -1,9 +1,0 @@
-{
-  "title": "Link Proximity Snap Screen And Commit",
-  "emoji": "🔗",
-  "status": "closed",
-  "description": "Fix proximity connect at detail/micro LOD for rectangular nodes: use screen-space snap tolerance during drag; strict commit disk on pointer-up so node-center drops still use indirectConnect; keep tests green.",
-  "summary": "Proximity link snap used world distance with d\u003ctol, which shrinks the snap halo at high zoom and broke detail/micro drags toward rectangular handle anchors. Drag phase now uses screen-pixel distance to the anchor (HANDLE_HIT + LINK_EXTRA + handle radius×zoom) with inclusive \u003c=. Pointer-up only commits proximityConnect when the cursor is within a tight screen disk (HANDLE_HIT + LINK_COMMIT_SNAP_TIGHT_PX + radius×zoom), otherwise the existing node-hit path runs so sole-handle drops on node centers still emit indirectConnect. Added regression test board_host_link_drag_snap_micro_zoom_rectangle_compatible_handles and set_micro_lod helper. cargo test -p elements_board --lib: 59 passed.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪defa681da76c4e72b0aea142acfb137a"]
-}

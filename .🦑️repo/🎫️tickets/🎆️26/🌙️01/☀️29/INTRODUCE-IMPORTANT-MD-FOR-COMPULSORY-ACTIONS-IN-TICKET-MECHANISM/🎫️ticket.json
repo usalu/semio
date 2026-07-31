@@ -1,0 +1,11 @@
+{
+  "title": "Introduce Important Md For Compulsory Actions In Ticket Mechanism",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Extend the ticket mechanism to include an `important.md` file for compulsory actions. This file must be created on ticket open, and ticket close must fail if the file is not empty.",
+  "summary": "Added deletion of important.md file when closing a ticket after successful validation. The file is now automatically cleaned up after confirming it's empty (ignoring whitespace).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/267"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoticketmechanism"
+}

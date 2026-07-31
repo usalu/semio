@@ -1,9 +1,0 @@
-{
-  "title": "Board LOD Later And Grid Factor Option",
-  "emoji": "📐",
-  "status": "closed",
-  "description": "LOD normal max zoom raised so detail starts later; grid steps use gridFactor (default 10); BoardRenderer/BoardCanvas/WASM expose gridFactor.",
-  "summary": "LOD detail band starts at higher zoom (normalMaxZoom 1.25). LOD grid tiers scale by gridFactor (default 10) on Rust host + WASM setGridFactor; BoardRenderer options and BoardCanvas prop gridFactor wired (constructor + useLayoutEffect). wasm-pack and Vitest pass; full board package test fails here on native cargo (wgpu DX12 windows crate conflict).",
-  "goal": "🎯r2602",
-  "sessions": ["⚪3481f5cb5a8a4e26959fb05bd70d9869"]
-}

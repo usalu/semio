@@ -1,22 +1,22 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/UIDialog.stories.tsx
+// 🥼️ .storybook/stories/ui/UIDialog.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import type { ActionArgDef, DialogDefinition } from "@semio-tech/framework-core";
 import { UIDialog } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 // 🗨️#region 🗨️UIDialog
-/** @emoji 🎛 Minimal `renderField` — `UIDialog` is injected this renderer so `ui-react` never has to import from `framework/os/renderer` (see the prop's docstring on `UIDialogProps`). A real shell renders the full staged-arg control set; this story only needs text/number/toggle. */
+/** @emoji 🎛️ Minimal `renderField` — `UIDialog` is injected this renderer so `ui-react` never has to import from `framework/os/renderer` (see the prop's docstring on `UIDialogProps`). A real shell renders the full staged-arg control set; this story only needs text/number/toggle. */
 function renderStoryField(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void) {
   if (def.control.kind === "toggle") {
     return (

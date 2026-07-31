@@ -1,9 +1,0 @@
-{
-  "title": "Cad Play Per Model Interactions",
-  "emoji": "🎮",
-  "status": "closed",
-  "description": "Wire interaction sessions and window engagement for every spatial play quad pane (shape, building, energy, structure-classic), not only shape.",
-  "summary": "Fixed box interaction stuck in first_corner after start. Root cause: loadSpatialInteraction() called compileInteraction() on every call, producing a new InteractionSpec reference each React render. useInteractionRuntime(spec, opts) recreated the runtime every render while void rt.send() and engagement onPress closures still targeted the previous instance, so pointer.down and engagement options had no effect. Fix: cache compiled specs per interaction id in loadSpatialInteraction; memoize spec by interactionId in CadPlayInteractionPane; route InteractionRepl sends through rtRef; prior ShellModeCanvas body cache and ground-pick fixes retained. Tests: cad/js/core 338, cad/js/renderer 51.",
-  "goal": "🎯r26-02/🎯runningsketchpad",
-  "sessions": ["⚪d19897e17db5407b954e458cc1d50e23", "⚪82d17a656a5d4092b94eb3ff60c43d38", "⚪18bbf0ab2e764c619f9eb2ad150031e8", "⚪edd7aab041214cb7845203ef1fb87b0e"]
-}

@@ -30,14 +30,14 @@ interface Scalar implements Primitive {
 union FieldIs = Scalar | Class | Command | Interface
 
 """
-🔳 OwningKitHost — Kit hosts for `OWNS` members (`Data`/`Derived`/`Reference`) and `Method`; `Command` also uses incoming `HAS` from `Module(operation)` (`parentModule`). Singular `direction: IN` fields model at most one parent.
+🔳️ OwningKitHost — Kit hosts for `OWNS` members (`Data`/`Derived`/`Reference`) and `Method`; `Command` also uses incoming `HAS` from `Module(operation)` (`parentModule`). Singular `direction: IN` fields model at most one parent.
 """
 interface OwningKitHost {
   name: String!
 }
 
 """
-📦 Data — Embedded kit member; `IS` targets a `Scalar` (or other `FieldIs` as modeled). `soleOwnerKey` when set holds the owning `Command.name` for argument clones (exclusive `OWNS`, never shared across commands).
+📦️ Data — Embedded kit member; `IS` targets a `Scalar` (or other `FieldIs` as modeled). `soleOwnerKey` when set holds the owning `Command.name` for argument clones (exclusive `OWNS`, never shared across commands).
 """
 type Data implements Node @node {
   name: String!
@@ -53,7 +53,7 @@ type Data implements Node @node {
 }
 
 """
-⚡ Derived — Kit member for computed values; `cached` distinguishes cached vs on-the-fly computed.
+⚡️ Derived — Kit member for computed values; `cached` distinguishes cached vs on-the-fly computed.
 """
 type Derived implements Node @node {
   name: String!
@@ -69,7 +69,7 @@ type Derived implements Node @node {
 }
 
 """
-🔗 Reference — Referential kit member; `IS` targets `Class`, `Command`, `Interface`, or `Scalar` as modeled.
+🔗️ Reference — Referential kit member; `IS` targets `Class`, `Command`, `Interface`, or `Scalar` as modeled.
 """
 type Reference implements Node @node {
   name: String!
@@ -112,7 +112,7 @@ type Command implements Node & OwningKitHost @node {
 }
 
 """
-🔧 Method — Operation body under a `Class` or `Command`; **at most one** incoming `OWNS` from that kit host (`ownsHost`).
+🔧️ Method — Operation body under a `Class` or `Command`; **at most one** incoming `OWNS` from that kit host (`ownsHost`).
 """
 type Method implements Node @node {
   name: String!

@@ -1,0 +1,16 @@
+{
+  "title": "Fix Aggregator Introduction Panel Cutouts and Step Order",
+  "emoji": "🎓️",
+  "status": "closed",
+  "description": "The Entwerfen mit Bestand Aggregator introduction is still adhoc: (1) the Katalog step must cut out the uncollapsed panel (not only the tab chip), (2) the add-component step's info box must sit to the right of the panel instead of on top of it, (3) adding a component must come before the move-utility step. Fix at the introduction mechanism root (panelTab cutout = visible panel) and rewrite the brand tour order/placement accordingly.",
+  "summary": "Drag-and-drop add step now unveils all world-3d windows as interactive drop targets. IntroductionStepDefinition gained optional cutouts (validated like the primary anchor); UIIntroduction punches multi-rect veil holes from step.cutouts plus shell-supplied additionalCutoutSelectors; the shell auto-includes every world-3d window kind for panelFirstDraggable. Brand/puzzle add-object steps declare puzzle3d-main cutout. Runtime verified on Aggregator: first catalogue row pulses and puzzle3d-main stays unveiled (veilAtProbe/veilAtDrag false).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2201"
+  },
+  "goal": "🎯️r2603",
+  "sessions": [
+    "⚪️864a0269c1fa44a8b19ec2a8468a538f",
+    "⚪️af95a989aecf433d82814477b539e6e5",
+    "⚪️6d994ed4d0aa4debab679869ea6922d3"
+  ]
+}

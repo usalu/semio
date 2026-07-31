@@ -113,7 +113,7 @@ In the existing `describe` block around `defaultInteractionReplChromeState` and 
 
 ### 9. Ticket bookkeeping
 
-The ticket `2026/05/26/REFACTOR-SPATIAL-SELECTION` is already open (`.repo/🎫/26/05/26/REFACTOR-SPATIAL-SELECTION/ticket.json`). Reuse it; close via repo MCP `ticket_close` after the tests above pass.
+The ticket `2026/05/26/REFACTOR-SPATIAL-SELECTION` is already open (`.repo/🎫️/26/05/26/REFACTOR-SPATIAL-SELECTION/ticket.json`). Reuse it; close via repo MCP `ticket_close` after the tests above pass.
 
 ## Out of scope
 

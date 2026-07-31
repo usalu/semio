@@ -1,12 +1,12 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/ContextMenu.stories.tsx
+// 🥼️ .storybook/stories/ui/ContextMenu.stories.tsx
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Button, ContextMenu, ContextMenuController, type ContextMenuItem } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 
 const sampleItems: ContextMenuItem[] = [
   { id: "rename", label: "Rename", shortcut: "F2" },
-  { id: "duplicate", label: "Duplicate", shortcut: "⌘D" },
+  { id: "duplicate", label: "Duplicate", shortcut: "⌘️D" },
   { id: "visible", label: "Visible", checked: true },
   { id: "sep-1", label: "", separator: true },
   {
@@ -41,7 +41,7 @@ const sampleItems: ContextMenuItem[] = [
     ],
   },
   { id: "sep-2", label: "", separator: true },
-  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫" },
+  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫️" },
 ];
 
 export const Default: Story = {
@@ -59,24 +59,36 @@ export const NoItems: Story = {
   },
 };
 
+export const TextSelection: Story = {
+  name: "Text Selection (Copy Menu)",
+  args: {
+    items: [],
+    children: (
+      <div className="flex size-48 select-text items-center justify-center border p-single text-sm text-element">
+        Select this sentence, then right-click for Copy / Select all.
+      </div>
+    ),
+  },
+};
+
 // #endregion 🖱️ContextMenu
 
-// #region 🎯ContextMenuController
+// #region 🎯️ContextMenuController
 const controllerItems: ContextMenuItem[] = [
   { id: "focus", label: "Focus", shortcut: "F" },
   { id: "select", label: "Select", checked: false },
   { id: "sep", label: "", separator: true },
-  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫" },
+  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫️" },
 ];
 
 const numberedPreviewItems: ContextMenuItem[] = [
   { id: "suggestion-0", label: "Capsule · port", icon: "box", shortcut: "1", checked: true },
   { id: "suggestion-1", label: "Box · port", icon: "box", shortcut: "2", checked: false },
   { id: "sep", label: "", separator: true },
-  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫" },
+  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫️" },
 ];
 
-/** @emoji 🎯 Controlled fixed-position menu — mirrors how puzzle 2d canvas surfaces open a right-click menu at pointer coordinates. */
+/** @emoji 🎯️ Controlled fixed-position menu — mirrors how puzzle 2d canvas surfaces open a right-click menu at pointer coordinates. */
 const ControlledContextMenuDemo = () => {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
@@ -109,7 +121,7 @@ export const Controlled: ControllerStory = {
   render: () => <ControlledContextMenuDemo />,
 };
 
-/** @emoji 🔢 Numbered suggestion rows — press `1`/`2` to preview, Enter to accept the highlighted row. */
+/** @emoji 🔢️ Numbered suggestion rows — press `1`/`2` to preview, Enter to accept the highlighted row. */
 const NumberedPreviewContextMenuDemo = () => {
   const [open, setOpen] = useState(true);
   const [checkedId, setCheckedId] = useState("suggestion-0");
@@ -138,4 +150,4 @@ export const NumberedPreview: ControllerStory = {
   render: () => <NumberedPreviewContextMenuDemo />,
 };
 
-// #endregion 🎯ContextMenuController
+// #endregion 🎯️ContextMenuController

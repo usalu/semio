@@ -18,7 +18,7 @@ The current puzzle 2D React path (`canvas-2d-host.tsx`) re-parses a hand-rolled 
     }
 ```
 
-`render_frame_gpu` calls `host.build_vector_scene()` (full LOD, theme colors, bezier edges, icons — the exact fidelity that's missing today) and presents it via `cavas::gpu_session::CanvasGpuSession` (a real `wgpu` WebGPU surface). This compiles to `@semio-tech/puzzle-2d-rs` (`puzzle/2d/rs/script.ts` → `bun script.ts wasm`) but **nothing in the framework currently imports it** — it's dead code.
+`render_frame_gpu` calls `host.build_vector_scene()` (full LOD, theme colors, bezier edges, icons — the exact fidelity that's missing today) and presents it via `cavas::gpu_session::CanvasGpuSession` (a real `wgpu` WebGPU surface). This compiles to `@semio-tech/puzzle-2d-rs` (`puzzle/2d/rs/script.ts` → `bun 📜️script.ts wasm`) but **nothing in the framework currently imports it** — it's dead code.
 
 - The program (`puzzle/plugin/rs/d2/mod.rs`) instead serializes a crude flat `canvas_layers_json` (id/kind/color/xy/wh) every render, and the previous ticket's `canvasPointerDown/Move/Up/Wheel` handlers round-trip _every pointer event_ through the WASM plugin boundary, replaying it against a second `BoardHost` and re-serializing the whole scene — this is the performance bottleneck and the reason styling can never match the Rust renderer's real fidelity.
 
@@ -80,7 +80,7 @@ Puzzle 2D renders 3 panes (Overview/Detail/Selection) from one fixture. Only Ove
 **6. Build/deps wiring**:
 
 - Add `"@semio-tech/puzzle-2d-rs": "workspace:*"` to `framework/renderer/react/package.json` (matching `gis-2d-rs`), run `bun install` to update `bun.lock`.
-- Register `puzzle/2d/rs`'s `bun script.ts wasm` build in whatever aggregate dev-build step already builds `gis/2d/rs` (check `framework/product/os/dev/script.ts`) so the pkg is produced automatically.
+- Register `puzzle/2d/rs`'s `bun 📜️script.ts wasm` build in whatever aggregate dev-build step already builds `gis/2d/rs` (check `framework/product/os/dev/script.ts`) so the pkg is produced automatically.
 
 ## Verification
 

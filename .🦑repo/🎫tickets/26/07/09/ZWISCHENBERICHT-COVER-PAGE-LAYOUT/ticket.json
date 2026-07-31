@@ -1,8 +1,0 @@
-{
-  "title": "Zwischenbericht Cover Page Layout",
-  "emoji": "🎫",
-  "status": "closed",
-  "description": "zwischenbericht cover layout: split cover title into row of two windows for Zukunft Bau and Titel, add subtitle row",
-  "summary": "Fixed zwischenbericht compile hang. Root cause was tier_header storing unexpanded \\tl_use:N \\l_semio_window_number_tl into the same tl (infinite recursion in header_muted_use), plus expl3/LaTeX2e boundary bugs in register_write (\\alph{semio@window@slot}) and kind number capture (\\semio@window@kind@number via edef). Fixes: removed redundant tier_header calls; added semio_window_kind_number_set:n in pure expl3; fixed register_write to use int_to_alph:n/int_use:c. Full zwischenbericht light+dark PDFs now build in ~30s.",
-  "goal": "🎯r2602/🎯runningsketchpad"
-}

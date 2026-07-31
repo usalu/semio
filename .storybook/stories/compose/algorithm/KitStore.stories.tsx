@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 // compose-algorithms/Kit/Store — drive compose WASM KitStoreHandle in Storybook
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion
@@ -65,7 +65,7 @@ const DEFAULT_LAYOUT = {
         ],
       },
       {
-        // 🌳 GitKraken-style kit tree sits next to VCS controls so committing + visualising share screen space.
+        // 🌳️ GitKraken-style kit tree sits next to VCS controls so committing + visualising share screen space.
         kind: "stack" as const,
         size: 24,
         children: [{ kind: "window" as const, windowKindId: "ks-tree", title: "Kit tree" }],
@@ -276,7 +276,7 @@ function KitStoreFrame() {
 }
 
 const meta = {
-  title: "🏘️compose🧪algorithms/Store",
+  title: "🏘️compose🧪️algorithms/Store",
   component: KitStoreFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

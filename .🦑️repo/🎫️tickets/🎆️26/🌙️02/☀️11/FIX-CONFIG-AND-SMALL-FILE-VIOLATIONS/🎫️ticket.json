@@ -1,0 +1,11 @@
+{
+  "title": "Fix Config and Small File Breachs",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix orphan definitions and missing summary/spec comments in 20 config and small files across the monorepo",
+  "summary": "Added section regions and summary+spec comments to 20 config and small files: 5 PostCSS configs (desktop/docs/play/sketchpad/js), 4 Tailwind configs (desktop/docs/play/sketchpad), forge.config.ts, preload.ts, codegen.ts, test-search.ts, play/index.tsx, sketchpad/index.tsx, and 5 Vite configs (js/play/sketchpad/vscode/vscode-test). Each file now wraps all orphan code in a named section region with section-level and definition-level summary+spec comments.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/513"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo🎯️consistentsections"
+}

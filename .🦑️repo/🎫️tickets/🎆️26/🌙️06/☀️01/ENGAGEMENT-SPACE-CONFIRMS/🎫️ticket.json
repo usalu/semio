@@ -1,0 +1,9 @@
+{
+  "title": "Engagement Space Confirms",
+  "emoji": "⌨️",
+  "status": "closed",
+  "description": "Engagement and possible engagements must not contain spaces. Spacebar confirms (same as Enter), not insert a space character.",
+  "summary": "Engagement command text no longer accepts whitespace; Space confirms like Enter instead of inserting a character.\n\n- ui/react: engagementCommandTextWithoutSpaces on draft/onChange/routed keys; Space and Enter share confirm handler; routeWindowEngagementKeydown ignores Space.\n- cad/js/renderer: replNormalizeCommandText always strips whitespace; global Space in engagement mode calls submitEngagementLine instead of appending a space.\n\nTests: @semio-tech/ui-react 89 passed, @semio-tech/cad-js-renderer 66 passed.",
+  "goal": "🎯️ui",
+  "sessions": ["⚪️7fe55f78956649579aaebae6ed1c03ab"]
+}

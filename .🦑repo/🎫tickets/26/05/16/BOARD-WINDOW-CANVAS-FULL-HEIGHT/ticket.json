@@ -1,9 +1,0 @@
-{
-  "title": "Board Window Canvas Full Height",
-  "emoji": "📐",
-  "status": "closed",
-  "description": "Board canvas inside Golden Layout UI windows did not stretch to full pane height because Window was not a flex container while UICanvas portal wrapper used flex-1. Fix Window root to flex column + min-h-0 so BoardCanvas height:100% resolves.",
-  "summary": "Golden Layout portals wrap window content in a flex-1 column shell, but Window was only `relative h-full` (not a flex container), so flex-1 never expanded and BoardCanvas stayed content-height. Window root is now `flex flex-col min-h-0` so the portal shell fills the pane and the board canvas resizes to the full UI window height.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪3e4e12d0018e43bc8141765095e92133"]
-}

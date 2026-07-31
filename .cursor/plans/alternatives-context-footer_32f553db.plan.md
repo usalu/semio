@@ -3,7 +3,7 @@ name: alternatives-context-footer
 overview: Add a `KitAlternativeSelection` context in `@semio-tech/compose-react` for switching between `the kit` and named alternatives (null = the kit), and render a left-most footer dropdown in the kit, design, and type apps that drives that selection. All kit state stays in `compose/rs` — JS only holds the user-visible selection and forwards it to the rs read/write scope.
 todos:
  - id: react-context
-   content: Add KitAlternativeSelectionContext + Provider + useKitAlternativeSelection / useKitAlternatives hooks in compose/react/index.tsx (new 🌱KitAlternativeSelection region).
+   content: Add KitAlternativeSelectionContext + Provider + useKitAlternativeSelection / useKitAlternatives hooks in compose/react/index.tsx (new 🌱️KitAlternativeSelection region).
    status: completed
  - id: react-kitscope-wire
    content: Inside KitScope, when caller omits kitReadScope, derive it from the selection (null → theKit, id → alternative); reset kitWriteScope on selection change so rs re-bootstraps.
@@ -40,7 +40,7 @@ flowchart LR
 
 ## compose/react ([compose/react/index.tsx](compose/react/index.tsx))
 
-New region `🌱KitAlternativeSelection` placed just above the existing `⚛️Context` region:
+New region `🌱️KitAlternativeSelection` placed just above the existing `⚛️Context` region:
 
 - `type KitAlternativeSummary = { id: string; name: string }` — minimal projection used by the dropdown.
 - `KitAlternativeSelectionContext = createContext<{ selectedAlternativeId: string | null; setSelectedAlternativeId: (id: string | null) => void; alternatives: ReadonlyArray<KitAlternativeSummary> }>` with a frozen default `{ selectedAlternativeId: null, setSelectedAlternativeId: no_operation, alternatives: [] }`.
@@ -58,7 +58,7 @@ No new exports from `compose/js` are needed; the read/write scope branches alrea
 
 ## compose/sketchpad ([compose/sketchpad/index.tsx](compose/sketchpad/index.tsx))
 
-New region `🌱AlternativeSelector` (near the existing `🎮Footer` region around line 16495):
+New region `🌱️AlternativeSelector` (near the existing `🎮️Footer` region around line 16495):
 
 - `KitAlternativeFooterSelector: FC` — uses `useKitAlternativeSelection()` + `useKitAlternatives()` from `@semio-tech/compose-react`, renders a `Select` (already imported from `@compose/elements`) with options `[{ id: null, label: "the kit" }, ...alternatives]`. Registers a single footer item:
 

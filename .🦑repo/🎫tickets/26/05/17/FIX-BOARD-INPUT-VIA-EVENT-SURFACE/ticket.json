@@ -1,9 +1,0 @@
-{
-  "title": "Fix Board Input Via Event Surface",
-  "emoji": "🧊",
-  "status": "closed",
-  "description": "Canvas frozen, no interaction after commit 5957bf92a (message 435). Analyze diff and restore pointer/event handling.",
-  "summary": "CSS pointer pass-through was still insufficient: listeners were bound only to the WebGPU canvas, so any hit target that was not that canvas (overlay quirks, compositing, or host UI) dropped all input. BoardRenderer now accepts optional eventSurface (defaults to canvas); BoardCanvas wraps both canvases in a div and passes it so pointer/wheel/contextmenu listeners sit on the wrapper and receive bubbled events from overlay or GPU canvas. Focus and setPointerCapture use the same surface. Vitest asserts the event surface mount.",
-  "goal": "🎯r2602/🎯runningsketchpad",
-  "sessions": ["⚪7c14ece8853e4cc290e58a9f32cbb0f4", "⚪b5d07e03343c4028bbb80d4db68daabc"]
-}

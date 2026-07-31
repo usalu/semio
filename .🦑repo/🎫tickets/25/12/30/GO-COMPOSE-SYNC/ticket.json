@@ -1,7 +1,0 @@
-{
-  "title": "GO-COMPOSE-SYNC",
-  "emoji": "🐹",
-  "status": "closed",
-  "description": "Synchronize Go Library with TypeScript - extend Go tests to match TS/C# tests for validation, import/export, and flatten, then implement missing features",
-  "goal": "🎯aioptimizedrepo"
-}

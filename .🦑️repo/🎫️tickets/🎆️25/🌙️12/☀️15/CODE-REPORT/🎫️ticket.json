@@ -1,0 +1,7 @@
+{
+  "title": "Generate code.json code-quality report",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "\"The analyze script should be extended to create a report for the codebase producing code.json (for typescript, python, c#). It should check for: Comments in the code. Missing License headers. Regions that dont close (every #region 🔖️REGIONNAME needs to have a corresponding #endregion 🔖️REGIONNAME).\"",
+  "goal": "🎯️r2602🎯️updateddocs🎯️updateddevdocs🎯️updatedagentsmd"
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Fix Sketchpad Scene Hover Updating Hovered Pieces",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Regression fix: restore sketchpad design app scene hover so hovered pieces state updates consistently across actor/store consumers. Extend the existing embedded sketchpad test coverage and verify the change.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1118"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️d5fae5b7bc35448eb6065f4d7cd89090"]
+}

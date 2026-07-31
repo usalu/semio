@@ -1,9 +1,0 @@
-{
-  "title": "Board Typst Split Emoji Fontbook",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Split Typst font pools: typst:/math uses typst_assets only; emoji: uses typst_assets + NotoColorEmoji-subset so COLR font does not break math icon compilation.",
-  "summary": "Noto Color Emoji was merged into the single Typst FontBook used for all icon Typst compiles, which broke `typst:`/math (empty compile → no icon). Split into two static pools: `typst_assets` only for `board_typst_markup_to_svg`, and `typst_assets` + Noto subset + `board_typst_markup_to_svg_for_icon_emoji` for the `emoji:` branch only.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪9c7284c541314eb3bfb822d68005c32d"]
-}

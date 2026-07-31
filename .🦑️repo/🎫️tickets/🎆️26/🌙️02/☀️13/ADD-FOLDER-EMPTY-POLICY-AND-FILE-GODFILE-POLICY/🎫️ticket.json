@@ -1,0 +1,11 @@
+{
+  "title": "Add Folder Empty Policy and File Godfile Policy",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Add a new Folder policy with Illegal/Empty statute (autofixable by removing empty folders). Extend the File policy with Illegal/Use Godfile statute that checks files against .repo/files.json godfile list.",
+  "summary": "Added two new policies to repo CLI: (1) Folder policy with BreachFolderIllegalEmpty (autofixable, removes empty folders) and (2) File policy with BreachFileIllegalUseGodfile (checks files against .repo/files.json). Both policies only run for ScopeRepo, skip excluded dirs (.git, .repo, node_modules, .venv, .nx), and have 8 passing tests. Also created .repo/files.json godfile with 4670 tracked files, added autofix routing in Fix function for folder-level breachs, and fixed a pre-existing build error with interactionResourceType.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/563"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism"
+}

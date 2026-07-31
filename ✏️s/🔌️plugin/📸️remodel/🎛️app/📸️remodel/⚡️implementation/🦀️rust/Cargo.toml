@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-remodel"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Remodel app — document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"

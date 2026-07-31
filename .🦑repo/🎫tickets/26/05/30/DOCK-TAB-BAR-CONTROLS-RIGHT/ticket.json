@@ -1,9 +1,0 @@
-{
-  "title": "Dock Tab Bar Controls Right",
-  "emoji": "🪟",
-  "status": "closed",
-  "description": "Shared maximize control for tab stacks on the right; tabs grow from the left (not per active tab, not right-aligned tabs).",
-  "summary": "Reordered mode dock tab bar so tabs grow from the left (justify-start, no ml-auto) and the shared maximize cap sits on the right after the canvas gap. Multi-tab chrome grid now places before/active/after tabs first, then gap, then controls; added right-side control cap border tokens and tests for placement and a single maximize button per stack.",
-  "goal": "🎯ui",
-  "sessions": ["⚪ec78862df1cb4d54b6bae66dccd59809"]
-}

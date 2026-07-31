@@ -1,0 +1,12 @@
+{
+  "title": "Flow Node Border and Text Element Color",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Flow nodes still show emphasized border and text at default; fix root cause in theme sync or DAG paint.",
+  "summary": "Fixed flow node border and text using emphasized colors at default. Root cause: labelFill used readableForegroundHex(canvas) and Canvas 2D overlay used the same readable-foreground for all captions. Vello theme and overlay now default to element gray; emphasized on hover/selection. Vello skips duplicate caption paint when JS overlay owns labels.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1585"
+  },
+  "goal": "🎯️ui🎯️theming",
+  "sessions": ["⚪️3e510dae674149b9867246dbb8574512"]
+}

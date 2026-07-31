@@ -1,0 +1,15 @@
+{
+  "title": "Show 3D Gumball Only When Transform Utility Active",
+  "emoji": "🎛️",
+  "status": "closed",
+  "description": "Puzzle 3D currently defaults the host-unset active utility to `move`, so selecting an object shows the gumball even when no transform utility is pressed in the utility bar (and Escape-cleared utilities fall back to move again). Only show the gumball when move/rotate/scale is explicitly active.",
+  "summary": "Fixed Puzzle 3D gumball still showing when transform looks inactive.\n\nRoot causes beyond the earlier empty-default fix: (1) collapsing the Transform utility collection left move/rotate/scale pressed while the ribbon looked idle; (2) the world host defaulted missing transformMode to move; (3) transformMode was always emitted (fallback move) even for non-transform utilities.\n\nChanges: UtilityTree keeps the ribbon path synced to the pressed leaf and deactivates the utility when its owning collection is collapsed; WorldInstancesLayer requires gumballActive plus an explicit move/rotate/scale transformMode; puzzle 3d/5d only emit transformMode when a transform utility is active. Rebuilt puzzle WASM.\n\nVerified: puzzle gumball_active_only_for_transform test; framework isWorldTransformGumballMode + findPressedUtilityLeafId tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2203"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️b78f32fec185486f8ec641c416d98838",
+    "⚪️6d5887518b2441c48c3f5748a84bc952"
+  ]
+}

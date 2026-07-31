@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/BlockListHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/BlockListHost.stories.tsx
 // Specs: Host the framework renderer's `BlockListHost` with zero WASM engine — the Blockly-like step/block
 // editor is pure `dnd-kit` + declarative JSON, so a story-local reducer round-trips `addStep`/`removeStep`/
 // `moveStep`/`addBlock`/`removeBlock`/`moveBlock` for real.
@@ -7,7 +7,7 @@
 // Clicking a palette entry's `addBlock` (no `stepId` — `PalettePanel`'s click handler only ever sends `{ kind }`)
 // targets the *last* step, matching the only sane host-app default when the plugin protocol itself doesn't say which step.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
@@ -42,7 +42,7 @@ function storyPaletteLabel(palette: readonly StoryPaletteEntry[], kind: string):
   return palette.find((entry) => entry.blockKind === kind)?.label ?? kind;
 }
 
-/** @emoji 🧩 Story-local mirror of the `addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock` handling a real host app performs against `BlockListHost`'s dispatched actions (`dispatchBlockListAction`). */
+/** @emoji 🧩️ Story-local mirror of the `addStep`/`removeStep`/`moveStep`/`addBlock`/`removeBlock`/`moveBlock` handling a real host app performs against `BlockListHost`'s dispatched actions (`dispatchBlockListAction`). */
 function reduceStoryBlockListAction(state: StoryBlockListState, descriptor: ActionDescriptor): StoryBlockListState {
   const args = (descriptor.args ?? {}) as Record<string, unknown>;
   switch (descriptor.action) {
@@ -146,7 +146,7 @@ function BlockListStoryEmptyHost(): ReactElement {
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/BlockListHost",
+  title: "🛠️framework🔌️hosts/BlockListHost",
   component: BlockListStoryHost,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -156,7 +156,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🧩 Two steps, a palette of three block kinds — "Add Step" (`addStep`), a palette click (`addBlock`, targets the last step), a block's delete button (`removeBlock`), and drag-reorder (`moveStep`/`moveBlock`) all round-trip. */
+/** 🧩️ Two steps, a palette of three block kinds — "Add Step" (`addStep`), a palette click (`addBlock`, targets the last step), a block's delete button (`removeBlock`), and drag-reorder (`moveStep`/`moveBlock`) all round-trip. */
 export const Editable: Story = {
   args: { initialSteps: STORY_INITIAL_STEPS },
 };

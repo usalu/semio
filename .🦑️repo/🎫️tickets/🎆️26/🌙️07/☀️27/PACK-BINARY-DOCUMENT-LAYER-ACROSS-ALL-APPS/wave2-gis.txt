@@ -1,0 +1,75 @@
+WAVE 2 — family: gis
+================================================================================
+File touched: gis/plugin/rs/lib.rs only.
+
+--------------------------------------------------------------------------------
+1. Document kinds covered
+--------------------------------------------------------------------------------
+
+- Gis2dPlayApp (app_2d module) — Projection = GisMapDocument, schema "gis.map"
+  (domain::GIS_MAP_SCHEMA). Codec registered via
+  register_document_codec_for_app::<Gis2dPlayApp>(GIS_MAP_SCHEMA).
+
+- Gis3dPlayApp (app_3d module) — Projection = Gis3dTerrainDocument, schema
+  "gis.terrain" (domain::GIS_3D_TERRAIN_SCHEMA). Codec registered via
+  register_document_codec_for_app::<crate::app_3d::Gis3dPlayApp>(crate::domain::GIS_3D_TERRAIN_SCHEMA).
+
+Both registration calls were added inside app_2d::register_gis2d_exports(), which is the
+gis plugin's ONE native setup hook (semio_plugin!'s `setup: app_2d::register_gis2d_exports`,
+shared across all apps declared in the bundle — app_3d has no native registration fn of its
+own, so its codec registration was added here too rather than inventing a second hook).
+
+--------------------------------------------------------------------------------
+2. Test-law calls added (existing tests extended, no new test files)
+--------------------------------------------------------------------------------
+
+app_2d::tests (DslTests region):
+  - gis_map_document_dsl_round_trips_bundled_reuse_example: added assert_dsl_pack_equivalence(&default_document())
+  - gis_map_document_dsl_round_trips_empty_document: added assert_dsl_pack_equivalence(&GisMapDocument::default())
+  - gis_map_document_dsl_round_trips_synthetic_value_shapes: added assert_dsl_pack_equivalence(&document) (nested/array/bool/null value-shape fixture)
+  - gis_map_document_text_round_trips_through_store: added assert_document_pack_round_trip(&store)
+
+app_3d::tests (DslTests region):
+  - gis3d_terrain_document_dsl_round_trips_bundled_reuse_example: added assert_dsl_pack_equivalence(&default_terrain_document())
+  - gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration: added assert_dsl_pack_equivalence(&Gis3dTerrainDocument { exaggeration: 2.75 })
+  - gis3d_terrain_document_text_round_trips_through_store: added assert_document_pack_round_trip(&store)
+
+--------------------------------------------------------------------------------
+3. Fixture conversion (gis/2d/example/reuse.graph.gis.json)
+--------------------------------------------------------------------------------
+
+Already done by prior/concurrent work, not by this wave-2 pass: the file no longer exists as
+JSON anywhere under gis/**. What's present is gis/2d/example/reuse.map.gismap — real DSL text
+(`positions [id:TEXT data:VAL] { ... }` grammar), already wired via
+`include_str!("../../2d/example/reuse.map.gismap")` as REUSE_MAP_EXAMPLE_TEXT in app_2d, and
+gis/plugin/rs/lib.rs already carries a comment (`//#region 🔖️Dsl`, domain module) noting the
+hand-rolled text lexer/parser was removed once this example was "regenerated through the
+derive-generated printer." Confirmed via repo-wide grep: the only remaining references to the
+old `reuse.graph.gis.json` name are in .nx cache and unrelated tickets' backup dirs, none live.
+No action needed/taken; noted rather than guessed.
+
+--------------------------------------------------------------------------------
+4. Pack-completeness lint allowlist entry now satisfied
+--------------------------------------------------------------------------------
+
+  gis/plugin/rs/lib.rs
+
+This is the only gis family entry in root script.ts's POLICY_PACK_COMPLETENESS_ALLOWLIST; it now
+has assert_dsl_pack_equivalence/assert_document_pack_round_trip calls beside every existing
+assert_dsl_round_trip/assert_document_text_round_trip call for both document kinds in the file,
+so wave 3 can remove this line from the allowlist.
+
+--------------------------------------------------------------------------------
+5. cargo test -p gis-plugin — final status
+--------------------------------------------------------------------------------
+
+32 passed, 3 failed, 0 ignored (35 total). All 7 newly-added pack-law assertions pass. The 3
+failures (app_2d::tests::gis2d_labels_translate_inspector_and_layers_in_german,
+catalogue_lists_layer_toggles, document_lists_map_layers) panic at
+`ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1380` with "invalid catalog icon
+name" — entirely unrelated to pack/DSL work (icon catalog lookups in gis2d's layer-toggle UI),
+and outside this family's touchable directories (gis/** only) to fix. `git status` at session
+start shows ui/styling/**, ui/wgpu/rs/lib.rs already modified (M, unstaged) by another concurrent
+session (the "UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM" ticket visible in repo status) — matches the
+known "Concurrent Cargo Workspace Churn" pattern, not caused by this wave-2 change. Not
+investigated/fixed further per family scope (gis/** only).

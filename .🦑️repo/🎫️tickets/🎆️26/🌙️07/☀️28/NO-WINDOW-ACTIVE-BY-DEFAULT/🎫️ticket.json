@@ -1,0 +1,14 @@
+{
+  "title": "No Window Active by Default",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "UI: By default no window should be active. The aggregator currently preactivates the Perspective window; remove all implicit initial window activation while preserving explicit user activation and persisted/tutorial-restored focus.",
+  "summary": "Removed layout-derived window focus from the React OS renderer. Default layouts now seed structure without focus; boot, session/app switches, named layouts, and mode layouts start unfocused; default ViewState no longer claims the first window kind; tutorial snapshots restore only explicit focusedWindowId values. Extended the existing renderer tests. Verified targeted tests (3 passed), renderer lint, and the live Aggregator DOM with Top and Perspective present and zero active window markers. The broader suite retains three unrelated failures, and the normal dev build retains an unrelated OpBinary compile error.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2373"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️8bf1b3344a6a4568abfe47352d9654d2"
+  ]
+}

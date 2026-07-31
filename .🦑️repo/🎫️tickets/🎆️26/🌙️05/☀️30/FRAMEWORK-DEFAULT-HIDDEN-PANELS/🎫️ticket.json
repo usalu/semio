@@ -1,0 +1,9 @@
+{
+  "title": "Framework Default Hidden Panels",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "By default, framework side panels should be hidden. Wire Platform.initialPanelVisibility into views and sync toggles with Platform.panelVisibility.",
+  "summary": "CAD play no longer passes initialPanelVisibility={{ true, true }} to PlaygroundView; side panels start hidden like the framework default.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️9f6598b4c0e04f81be848569490ece9c", "⚪️26199b9c857d409e9810c5e304be942c"]
+}

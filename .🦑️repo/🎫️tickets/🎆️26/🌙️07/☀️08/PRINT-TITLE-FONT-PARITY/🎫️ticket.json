@@ -1,0 +1,12 @@
+{
+  "title": "Print Title Font Parity",
+  "emoji": "🔤️",
+  "status": "closed",
+  "description": "All print titles should use the same font as body text.",
+  "summary": "All print titles now use Anta (`SemioSans`) like body text. Removed Kelly Slab from title pages, aliased `\\SemioSerif` to `\\SemioSans`, and dropped the unused Kelly Slab font download from `PRINT_FONTS`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1866"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️6cff2be8150a497f8a359796398381d1"]
+}

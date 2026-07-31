@@ -1,0 +1,9 @@
+{
+  "title": "Vertical Rod Cursor Projection",
+  "emoji": "📍️",
+  "status": "closed",
+  "description": "CAD preview only updates when pointer is inside the green vertical drag tube. Cursor should always project onto the Z axis (including negative Z) via canvas raycast.",
+  "summary": "Vertical-rod and height-drag previews only updated when the pointer hit the thin cylinder/plane meshes. Added canvas-level ray projection (`SpatialConstrainedPointerBridge`) so pointer.move always maps to the world-Z line through `origin` (negative Z allowed) or the YZ height wall; rod/wall meshes are visual-only.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️a5a126fecc684a71b64b415cd92625dd"]
+}

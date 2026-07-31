@@ -1,0 +1,12 @@
+{
+  "title": "Mcp Design Viewer Refetches Full Show Design From Server",
+  "emoji": "🖥️",
+  "status": "closed",
+  "description": "Cursor truncates structuredContent; add callServerTool(show_design) refetch with delayed retries and merge richer payloads by score like kit viewer.",
+  "summary": "McpDesignViewer now mirrors McpKitViewer: ontoolinput/partial/onhostcontextchanged trigger refetch; staggered callServerTool({ name: \"show_design\", arguments: {} }) to recover full JSON when host only surfaces truncated structuredContent (one piece/one diagram node). mergeDiagramPayload keeps highest scoreMcpDiagramPayload; host context scans all tool-result keys and picks best. Selection resets when payload score changes. Rebuilt dist/mcp-app.html.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1155"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli",
+  "sessions": ["⚪️52ce0c4057264c9bba3ccdded49a3131"]
+}

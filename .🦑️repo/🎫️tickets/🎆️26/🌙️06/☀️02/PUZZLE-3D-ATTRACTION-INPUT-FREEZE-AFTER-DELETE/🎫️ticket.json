@@ -1,0 +1,12 @@
+{
+  "title": "Puzzle 3D Attraction Input Freeze After Delete",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "After brush + delete object, camera freezes (orbit disabled), selection broken, only hover works. Escape does not recover. Root cause: attraction drag / indirect-pick session not cancelled when fixture structure changes or Escape pressed.",
+  "summary": "Fixed puzzle 3D freeze after brush + delete: attraction drag/indirect-pick left orbit and selection gated because cancelAttractionDrag never ran when vortices were removed. Added AttractionStaleSessionGuard on structure epoch, Escape cancels session, brush tool blocks and clears attraction drag. Tests: puzzle3dAttractionSessionIsStale + 258/258 react tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1520"
+  },
+  "goal": "🎯️puzzle3d🎯️puzzle3dplay",
+  "sessions": ["⚪️a954b4592b5f4fa2a7c0ab3dfb616a7d"]
+}

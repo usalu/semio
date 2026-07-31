@@ -1,9 +1,0 @@
-{
-  "title": "Tree Row Default Icons",
-  "emoji": "🌲",
-  "status": "closed",
-  "description": "All tree items and tree sections must display an icon before the text. Use default folder/file icons when no explicit icon is provided.",
-  "summary": "Tree sections and items now always render a `data-slot=\"tree-icon\"` glyph before the label. Explicit `icon` props are preserved; otherwise sections and expandable rows use `FolderIcon`, leaves use `DocumentIcon` (12px, muted). Added vitest coverage for default icons on section/group/leaf rows. All 86 @semio-tech/ui-react tests pass.",
-  "goal": "🎯framework",
-  "sessions": ["⚪d175cc7fd6b841c3923db191a79a0aba"]
-}

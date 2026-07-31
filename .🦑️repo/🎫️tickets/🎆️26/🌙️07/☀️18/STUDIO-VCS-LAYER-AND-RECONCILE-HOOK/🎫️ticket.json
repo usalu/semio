@@ -1,0 +1,14 @@
+{
+  "title": "Studio VCS Layer and Reconcile Hook",
+  "emoji": "🗄️",
+  "status": "closed",
+  "description": "Add a generic, app-agnostic multi-document \"studio\" composition layer plus a generic post-materialization reconciliation hook to vcs/rs/lib.rs. Introduce a StudioMember trait (blanket-implemented for DocumentVcsStore\u003cP,Op\u003e) so a studio host can hold multiple heterogeneous VCS-backed documents; a dogfooded StudioHistoryProjection/StudioHistoryOp meta-document (schema \"os.studio.history\") that itself is a DocumentVcs document kind, tracking StudioCheckpoint/StudioAlternative/StudioMemberPin; a StudioVcsHost that owns the meta-store plus a registry of StudioMember documents, with commit_studio_checkpoint (commits all dirty members, pins them, records a meta checkpoint), switch_studio_alternative/checkout_studio_checkpoint (fan out per-member checkout), and derived local-only undo/redo across members ordered by HybridLogicalTimestamp (not recorded in the meta-doc). Add a defaulted `reconcile` hook to the Operation\u003cP\u003e trait, called at the tail of materialize_document_projection and the remote-ingestion path, surfacing a StudioConflict (reuse if it already exists, else define minimal). Extend the existing //#region 🧪️Tests region with round-trip tests: multi-member studio checkpoint commit, checkout/switch-alternative fan-out, undo-ordering-by-HLT, no-op reconcile default regression. This crate has no app-specific knowledge; a sibling ticket (\"0D\") also touches vcs/rs/lib.rs in a different region (🔖️BlobStore) concurrently, so region placement must not clobber theirs.",
+  "summary": "Created six physics modules for energy_engine with real SI-unit calculations, emoji docstrings, regions, and #[cfg(test)] coverage (27 tests, all passing): geometry (area, tilt/azimuth, zone volume, planarity, Mat4 transforms), material (U/R-value, thermal mass, equivalent layer), envelope (CTF conduction, adaptive convection, surface balance solve), fenestration (layered glazing, frame/divider, shades, condensation), solar (incidence, shading, absorption, interior distribution), daylight (illuminance map, glare, dimming). Wired modules into lib.rs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2044"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️189e75b6ca6f41efb2fbbb54fd02dd42"
+  ]
+}

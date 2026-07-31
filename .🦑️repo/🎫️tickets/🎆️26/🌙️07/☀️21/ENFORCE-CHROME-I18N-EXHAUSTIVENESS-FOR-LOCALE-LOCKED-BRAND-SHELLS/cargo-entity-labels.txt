@@ -1,0 +1,3310 @@
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+   Compiling kernel_3d_brepkit v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/brep/rs)
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:238:28
+    |
+238 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+238 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+238 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:241:28
+    |
+241 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+241 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+241 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:28
+     |
+1384 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:106
+     |
+1384 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:28
+     |
+1427 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:106
+     |
+1427 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1198:36
+     |
+1198 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1198 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1198 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1445:24
+     |
+1445 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1445 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1445 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+   Compiling reasoning_mindmap v0.1.0 (/Users/ueli/Documents/semio/reasoning/mindmap/rs)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/framework/plugin/rs)
+   Compiling puzzle_3d v0.1.0 (/Users/ueli/Documents/semio/puzzle/3d/rs)
+   Compiling semio-framework-sync v0.1.0 (/Users/ueli/Documents/semio/framework/sync/rs)
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:334:28
+    |
+334 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+334 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+334 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:363:36
+    |
+363 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+363 -             terminology_documents: std::collections::HashMap::new(),
+363 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3823:17
+     |
+3823 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3823 -     let action: serde_json::Value =
+3823 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3825:18
+     |
+3825 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3825 -     let context: serde_json::Value =
+3825 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3853:18
+     |
+3853 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3853 -     let command: serde_json::Value =
+3853 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3855:18
+     |
+3855 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3855 -     let context: serde_json::Value =
+3855 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:187:16
+    |
+187 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+187 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+187 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:188:17
+    |
+188 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+188 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+188 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:198:16
+    |
+198 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+198 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+198 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:199:17
+    |
+199 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+199 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:251:41
+    |
+251 |     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+251 -     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+251 +     pub fn receive(&mut self, envelope: OpEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:855:37
+    |
+855 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |                                     ^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+855 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+855 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |
+
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/framework/product/os/core/rs)
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+warning: `semio-framework-sync` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-sync` to apply 6 suggestions)
+   Compiling puzzle_5d v0.1.0 (/Users/ueli/Documents/semio/puzzle/5d/rs)
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:386:27
+    |
+386 |         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |                           ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+386 -         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+386 +         let mut document: Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:387:17
+    |
+387 |         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+387 -         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+387 +         let op: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:32
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut Value, patch: &serde_json::Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:59
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut serde_json::Value, patch: &Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:14
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:53
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (serde_json::Value::Object(target_map), Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:411:77
+    |
+411 |                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+    |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+411 -                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+411 +                         let entry = target_map.entry(key.clone()).or_insert(Value::Null);
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:47
+    |
+598 |     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate:...
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:126
+    |
+598 | ...ode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:2490:41
+     |
+2490 |     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2490 -     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+2490 +     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:21
+     |
+3633 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:72
+     |
+3633 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:127
+     |
+3633 | ...tance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:177
+     |
+3633 | ...e::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:29
+     |
+3642 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:82
+     |
+3642 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:139
+     |
+3642 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:191
+     |
+3642 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:33
+     |
+3656 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:86
+     |
+3656 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:143
+     |
+3656 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:195
+     |
+3656 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3664:30
+     |
+3664 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3664 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3664 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3682:30
+     |
+3682 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3682 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3682 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:4418:36
+     |
+4418 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4418 -             terminology_documents: std::collections::HashMap::new(),
+4418 +             terminology_documents: HashMap::new(),
+     |
+
+   Compiling puzzle_2d v0.1.0 (/Users/ueli/Documents/semio/puzzle/2d/rs)
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:20:18
+   |
+20 |     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |                  ^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+20 -     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+20 +     let fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:22:15
+   |
+22 |     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |               ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+22 -     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+22 +     let opts: Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unused imports: `ThemedSvgLookup` and `board_typst_markup_to_svg`
+  --> puzzle/2d/rs/lib.rs:51:88
+   |
+51 | ...icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:84:6
+   |
+84 | impl graph::GraphExtension for Puzzle2dExtension {}
+   |      ^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+84 - impl graph::GraphExtension for Puzzle2dExtension {}
+84 + impl GraphExtension for Puzzle2dExtension {}
+   |
+
+warning: function `resolve_node_icon_svg_from_encoding` is never used
+  --> puzzle/2d/rs/lib.rs:35:4
+   |
+35 | fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `board_resolve_icon_kind` is never used
+  --> puzzle/2d/rs/lib.rs:52:12
+   |
+52 |     pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-framework-os` (lib) generated 25 warnings (run `cargo fix --lib -p semio-framework-os` to apply 25 suggestions)
+warning: `puzzle_2d` (lib) generated 6 warnings (run `cargo fix --lib -p puzzle_2d` to apply 4 suggestions)
+   Compiling puzzle-plugin v0.1.0 (/Users/ueli/Documents/semio/puzzle/plugin/rs)
+warning: unused imports: `PluginBundle` and `build_canvas_2d_scene`
+  --> puzzle/plugin/rs/lib.rs:8:9
+   |
+ 8 | ...   build_canvas_2d_scene, build_board2d_scene, create_default_layout,
+   |       ^^^^^^^^^^^^^^^^^^^^^
+ 9 | ...   MeasureSelectItem, WindowEngagementStatus,
+10 | ...   ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, R...
+   |                                                                                                                                                                                                                                                                                                                                                                               ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2100:37
+     |
+2100 |                 window_kind_labels: std::collections::HashMap::from([
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2100 -                 window_kind_labels: std::collections::HashMap::from([
+2100 +                 window_kind_labels: HashMap::from([
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2105:35
+     |
+2105 |                 panel_tab_labels: std::collections::HashMap::new(),
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2105 -                 panel_tab_labels: std::collections::HashMap::new(),
+2105 +                 panel_tab_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2106:30
+     |
+2106 |                 mode_labels: std::collections::HashMap::new(),
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2106 -                 mode_labels: std::collections::HashMap::new(),
+2106 +                 mode_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2109:33
+     |
+2109 | ...   example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concr...
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2109 -                 example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+2109 +                 example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2122:47
+     |
+2122 |     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2122 -     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2122 +     fn puzzle2d_action_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2167:48
+     |
+2167 |     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2167 -     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2167 +     fn puzzle2d_utility_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unused imports: `UiControlNode` and `world3d_meshes_json_from_urls`
+    --> puzzle/plugin/rs/lib.rs:2730:185
+     |
+2730 | ...mera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, w...
+     |                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2731 | ...n, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWin...
+     |       ^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:7716:42
+     |
+7716 |     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+     |                                          ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7716 -     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+7716 +     fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:7748:88
+     |
+7748 |     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+     |                                                                                        ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7748 -     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+7748 +     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:9064:51
+     |
+9064 |             let mut active_utility_by_window_id = std::collections::HashMap::new();
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9064 -             let mut active_utility_by_window_id = std::collections::HashMap::new();
+9064 +             let mut active_utility_by_window_id = HashMap::new();
+     |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11894:37
+      |
+11894 |                 window_kind_labels: std::collections::HashMap::from([
+      |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11894 -                 window_kind_labels: std::collections::HashMap::from([
+11894 +                 window_kind_labels: HashMap::from([
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11898:35
+      |
+11898 |                 panel_tab_labels: std::collections::HashMap::new(),
+      |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11898 -                 panel_tab_labels: std::collections::HashMap::new(),
+11898 +                 panel_tab_labels: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11899:30
+      |
+11899 |                 mode_labels: std::collections::HashMap::new(),
+      |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11899 -                 mode_labels: std::collections::HashMap::new(),
+11899 +                 mode_labels: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11902:33
+      |
+11902 | ...   example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_for...
+      |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11902 -                 example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+11902 +                 example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11915:47
+      |
+11915 |     fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11915 -     fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+11915 +     fn puzzle5d_action_labels(is_de: bool) -> HashMap<String, String> {
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11976:48
+      |
+11976 |     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11976 -     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+11976 +     fn puzzle5d_utility_labels(is_de: bool) -> HashMap<String, String> {
+      |
+
+warning: unused import: `std::sync::LazyLock`
+     --> puzzle/plugin/rs/lib.rs:12335:5
+      |
+12335 | use std::sync::LazyLock;
+      |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PluginBundle` and `install_plugin_bundle`
+     --> puzzle/plugin/rs/lib.rs:12337:30
+      |
+12337 | use semio_framework_plugin::{install_plugin_bundle, PluginBundle};
+      |                              ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+     --> puzzle/plugin/rs/lib.rs:12162:17
+      |
+12162 |             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+      |                 ----^^^
+      |                 |
+      |                 help: remove this `mut`
+      |
+      = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> puzzle/plugin/rs/lib.rs:7787:17
+     |
+7787 |             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+     |                 ----^^^
+     |                 |
+     |                 help: remove this `mut`
+
+warning: function `fixture_wires` is never used
+   --> puzzle/plugin/rs/lib.rs:940:8
+    |
+940 |     fn fixture_wires(fixture: &Value) -> &[Value] {
+    |        ^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `fixture_handles` is never used
+   --> puzzle/plugin/rs/lib.rs:944:8
+    |
+944 |     fn fixture_handles(fixture: &Value) -> Vec<Value> {
+    |        ^^^^^^^^^^^^^^^
+
+warning: function `fixture_endpoint_xy` is never used
+   --> puzzle/plugin/rs/lib.rs:948:8
+    |
+948 |     fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `pane_from_surface_id` is never used
+    --> puzzle/plugin/rs/lib.rs:1035:8
+     |
+1035 |     fn pane_from_surface_id(surface_id: &str) -> &'static str {
+     |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `suggestion` and `select` are never read
+    --> puzzle/plugin/rs/lib.rs:1173:9
+     |
+1151 |     struct Puzzle2dLabels {
+     |            -------------- fields in this struct
+...
+1173 |         suggestion: &'static str,
+     |         ^^^^^^^^^^
+...
+1178 |         select: &'static str,
+     |         ^^^^^^
+
+warning: fields `fill`, `edit_volumes`, and `voxel` are never read
+    --> puzzle/plugin/rs/lib.rs:4755:9
+     |
+4741 |     struct Puzzle3dLabels {
+     |            -------------- fields in this struct
+...
+4755 |         fill: &'static str,
+     |         ^^^^
+...
+4760 |         edit_volumes: &'static str,
+     |         ^^^^^^^^^^^^
+4761 |         volume_brush: &'static str,
+4762 |         voxel: &'static str,
+     |         ^^^^^
+
+warning: function `puzzle3d_kind_weight_sum` is never used
+    --> puzzle/plugin/rs/lib.rs:5789:8
+     |
+5789 |     fn puzzle3d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `puzzle3d_kind_weight_measures` is never used
+    --> puzzle/plugin/rs/lib.rs:5865:8
+     |
+5865 |     fn puzzle3d_kind_weight_measures(prefix: &str, kind_ids: &[String], weights: &HashMap<String, f64>, action: &str) -> Vec<Windo...
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `select` is never read
+    --> puzzle/plugin/rs/lib.rs:9231:9
+     |
+9224 |     struct Puzzle5dLabels {
+     |            -------------- field in this struct
+...
+9231 |         select: &'static str,
+     |         ^^^^^^
+
+warning: `puzzle-plugin` (lib test) generated 30 warnings (run `cargo fix --lib -p puzzle-plugin --tests` to apply 21 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 11.79s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests lib.rs (.repo/🎫️/26/07/21/ENFORCE-CHROME-I18N-EXHAUSTIVENESS-FOR-LOCALE-LOCKED-BRAND-SHELLS/target/debug/deps/puzzle_plugin-0367ef4feeceb600)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 101 filtered out; finished in 0.00s
+
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1198:36
+     |
+1198 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1198 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1198 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1445:24
+     |
+1445 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1445 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1445 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:334:28
+    |
+334 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+334 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+334 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:363:36
+    |
+363 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+363 -             terminology_documents: std::collections::HashMap::new(),
+363 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3823:17
+     |
+3823 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3823 -     let action: serde_json::Value =
+3823 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3825:18
+     |
+3825 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3825 -     let context: serde_json::Value =
+3825 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3853:18
+     |
+3853 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3853 -     let command: serde_json::Value =
+3853 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3855:18
+     |
+3855 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3855 -     let context: serde_json::Value =
+3855 +     let context: Value =
+     |
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:238:28
+    |
+238 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+238 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+238 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:241:28
+    |
+241 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+241 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+241 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:28
+     |
+1384 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:106
+     |
+1384 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:28
+     |
+1427 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:106
+     |
+1427 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:187:16
+    |
+187 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+187 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+187 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:188:17
+    |
+188 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+188 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+188 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:198:16
+    |
+198 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+198 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+198 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:199:17
+    |
+199 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+199 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:251:41
+    |
+251 |     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+251 -     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+251 +     pub fn receive(&mut self, envelope: OpEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:855:37
+    |
+855 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |                                     ^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+855 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+855 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |
+
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+warning: `semio-framework-sync` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-sync` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:386:27
+    |
+386 |         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |                           ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+386 -         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+386 +         let mut document: Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:387:17
+    |
+387 |         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+387 -         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+387 +         let op: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:32
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut Value, patch: &serde_json::Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:59
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut serde_json::Value, patch: &Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:14
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:53
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (serde_json::Value::Object(target_map), Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:411:77
+    |
+411 |                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+    |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+411 -                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+411 +                         let entry = target_map.entry(key.clone()).or_insert(Value::Null);
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:47
+    |
+598 |     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate:...
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:126
+    |
+598 | ...ode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:2490:41
+     |
+2490 |     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2490 -     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+2490 +     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:21
+     |
+3633 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:72
+     |
+3633 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:127
+     |
+3633 | ...tance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:177
+     |
+3633 | ...e::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:29
+     |
+3642 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:82
+     |
+3642 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:139
+     |
+3642 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:191
+     |
+3642 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:33
+     |
+3656 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:86
+     |
+3656 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:143
+     |
+3656 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:195
+     |
+3656 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3664:30
+     |
+3664 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3664 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3664 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3682:30
+     |
+3682 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3682 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3682 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:4418:36
+     |
+4418 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4418 -             terminology_documents: std::collections::HashMap::new(),
+4418 +             terminology_documents: HashMap::new(),
+     |
+
+warning: `semio-framework-os` (lib) generated 25 warnings (run `cargo fix --lib -p semio-framework-os` to apply 25 suggestions)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling puzzle_3d v0.1.0 (/Users/ueli/Documents/semio/puzzle/3d/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+   Compiling puzzle_5d v0.1.0 (/Users/ueli/Documents/semio/puzzle/5d/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+   Compiling reasoning_mindmap v0.1.0 (/Users/ueli/Documents/semio/reasoning/mindmap/rs)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+   Compiling puzzle_2d v0.1.0 (/Users/ueli/Documents/semio/puzzle/2d/rs)
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:20:18
+   |
+20 |     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |                  ^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+20 -     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+20 +     let fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:22:15
+   |
+22 |     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |               ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+22 -     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+22 +     let opts: Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unused imports: `ThemedSvgLookup` and `board_typst_markup_to_svg`
+  --> puzzle/2d/rs/lib.rs:51:88
+   |
+51 | ...icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:84:6
+   |
+84 | impl graph::GraphExtension for Puzzle2dExtension {}
+   |      ^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+84 - impl graph::GraphExtension for Puzzle2dExtension {}
+84 + impl GraphExtension for Puzzle2dExtension {}
+   |
+
+warning: function `resolve_node_icon_svg_from_encoding` is never used
+  --> puzzle/2d/rs/lib.rs:35:4
+   |
+35 | fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `board_resolve_icon_kind` is never used
+  --> puzzle/2d/rs/lib.rs:52:12
+   |
+52 |     pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `puzzle_2d` (lib) generated 6 warnings (run `cargo fix --lib -p puzzle_2d` to apply 4 suggestions)
+   Compiling puzzle-plugin v0.1.0 (/Users/ueli/Documents/semio/puzzle/plugin/rs)
+warning: unused imports: `PluginBundle` and `build_canvas_2d_scene`
+  --> puzzle/plugin/rs/lib.rs:8:9
+   |
+ 8 | ...   build_canvas_2d_scene, build_board2d_scene, create_default_layout,
+   |       ^^^^^^^^^^^^^^^^^^^^^
+ 9 | ...   MeasureSelectItem, WindowEngagementStatus,
+10 | ...   ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, R...
+   |                                                                                                                                                                                                                                                                                                                                                                               ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2100:37
+     |
+2100 |                 window_kind_labels: std::collections::HashMap::from([
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2100 -                 window_kind_labels: std::collections::HashMap::from([
+2100 +                 window_kind_labels: HashMap::from([
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2105:35
+     |
+2105 |                 panel_tab_labels: std::collections::HashMap::new(),
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2105 -                 panel_tab_labels: std::collections::HashMap::new(),
+2105 +                 panel_tab_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2106:30
+     |
+2106 |                 mode_labels: std::collections::HashMap::new(),
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2106 -                 mode_labels: std::collections::HashMap::new(),
+2106 +                 mode_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2109:33
+     |
+2109 | ...   example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concr...
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2109 -                 example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+2109 +                 example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2122:47
+     |
+2122 |     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2122 -     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2122 +     fn puzzle2d_action_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2167:48
+     |
+2167 |     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2167 -     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2167 +     fn puzzle2d_utility_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unused imports: `UiControlNode` and `world3d_meshes_json_from_urls`
+    --> puzzle/plugin/rs/lib.rs:2730:185
+     |
+2730 | ...mera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, w...
+     |                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2731 | ...n, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWin...
+     |       ^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:7716:42
+     |
+7716 |     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+     |                                          ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7716 -     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+7716 +     fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:7748:88
+     |
+7748 |     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+     |                                                                                        ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7748 -     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+7748 +     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:9064:51
+     |
+9064 |             let mut active_utility_by_window_id = std::collections::HashMap::new();
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9064 -             let mut active_utility_by_window_id = std::collections::HashMap::new();
+9064 +             let mut active_utility_by_window_id = HashMap::new();
+     |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11894:37
+      |
+11894 |                 window_kind_labels: std::collections::HashMap::from([
+      |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11894 -                 window_kind_labels: std::collections::HashMap::from([
+11894 +                 window_kind_labels: HashMap::from([
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11898:35
+      |
+11898 |                 panel_tab_labels: std::collections::HashMap::new(),
+      |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11898 -                 panel_tab_labels: std::collections::HashMap::new(),
+11898 +                 panel_tab_labels: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11899:30
+      |
+11899 |                 mode_labels: std::collections::HashMap::new(),
+      |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11899 -                 mode_labels: std::collections::HashMap::new(),
+11899 +                 mode_labels: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11902:33
+      |
+11902 | ...   example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_for...
+      |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11902 -                 example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+11902 +                 example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11915:47
+      |
+11915 |     fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11915 -     fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+11915 +     fn puzzle5d_action_labels(is_de: bool) -> HashMap<String, String> {
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11976:48
+      |
+11976 |     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11976 -     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+11976 +     fn puzzle5d_utility_labels(is_de: bool) -> HashMap<String, String> {
+      |
+
+warning: unused import: `std::sync::LazyLock`
+     --> puzzle/plugin/rs/lib.rs:12335:5
+      |
+12335 | use std::sync::LazyLock;
+      |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PluginBundle` and `install_plugin_bundle`
+     --> puzzle/plugin/rs/lib.rs:12337:30
+      |
+12337 | use semio_framework_plugin::{install_plugin_bundle, PluginBundle};
+      |                              ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+     --> puzzle/plugin/rs/lib.rs:12162:17
+      |
+12162 |             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+      |                 ----^^^
+      |                 |
+      |                 help: remove this `mut`
+      |
+      = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> puzzle/plugin/rs/lib.rs:7787:17
+     |
+7787 |             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+     |                 ----^^^
+     |                 |
+     |                 help: remove this `mut`
+
+warning: function `fixture_wires` is never used
+   --> puzzle/plugin/rs/lib.rs:940:8
+    |
+940 |     fn fixture_wires(fixture: &Value) -> &[Value] {
+    |        ^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `select` is never read
+    --> puzzle/plugin/rs/lib.rs:9231:9
+     |
+9224 |     struct Puzzle5dLabels {
+     |            -------------- field in this struct
+...
+9231 |         select: &'static str,
+     |         ^^^^^^
+
+warning: fields `fill`, `edit_volumes`, and `voxel` are never read
+    --> puzzle/plugin/rs/lib.rs:4755:9
+     |
+4741 |     struct Puzzle3dLabels {
+     |            -------------- fields in this struct
+...
+4755 |         fill: &'static str,
+     |         ^^^^
+...
+4760 |         edit_volumes: &'static str,
+     |         ^^^^^^^^^^^^
+4761 |         volume_brush: &'static str,
+4762 |         voxel: &'static str,
+     |         ^^^^^
+
+warning: function `puzzle3d_kind_weight_sum` is never used
+    --> puzzle/plugin/rs/lib.rs:5789:8
+     |
+5789 |     fn puzzle3d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `puzzle3d_kind_weight_measures` is never used
+    --> puzzle/plugin/rs/lib.rs:5865:8
+     |
+5865 |     fn puzzle3d_kind_weight_measures(prefix: &str, kind_ids: &[String], weights: &HashMap<String, f64>, action: &str) -> Vec<Windo...
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `fixture_handles` is never used
+   --> puzzle/plugin/rs/lib.rs:944:8
+    |
+944 |     fn fixture_handles(fixture: &Value) -> Vec<Value> {
+    |        ^^^^^^^^^^^^^^^
+
+warning: function `fixture_endpoint_xy` is never used
+   --> puzzle/plugin/rs/lib.rs:948:8
+    |
+948 |     fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `pane_from_surface_id` is never used
+    --> puzzle/plugin/rs/lib.rs:1035:8
+     |
+1035 |     fn pane_from_surface_id(surface_id: &str) -> &'static str {
+     |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `suggestion` and `select` are never read
+    --> puzzle/plugin/rs/lib.rs:1173:9
+     |
+1151 |     struct Puzzle2dLabels {
+     |            -------------- fields in this struct
+...
+1173 |         suggestion: &'static str,
+     |         ^^^^^^^^^^
+...
+1178 |         select: &'static str,
+     |         ^^^^^^
+
+warning: `puzzle-plugin` (lib test) generated 30 warnings (run `cargo fix --lib -p puzzle-plugin --tests` to apply 21 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 5.37s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests lib.rs (.repo/🎫️/26/07/21/ENFORCE-CHROME-I18N-EXHAUSTIVENESS-FOR-LOCALE-LOCKED-BRAND-SHELLS/target/debug/deps/puzzle_plugin-0367ef4feeceb600)
+
+running 1 test
+test d3::tests::document_and_kinds_trees_use_german_reuse_section_labels ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 100 filtered out; finished in 0.01s
+
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1198:36
+     |
+1198 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1198 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1198 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1445:24
+     |
+1445 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1445 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1445 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:238:28
+    |
+238 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+238 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+238 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:241:28
+    |
+241 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+241 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+241 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:28
+     |
+1384 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:106
+     |
+1384 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:28
+     |
+1427 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:106
+     |
+1427 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:187:16
+    |
+187 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+187 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+187 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:188:17
+    |
+188 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+188 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+188 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:198:16
+    |
+198 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+198 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+198 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:199:17
+    |
+199 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+199 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:251:41
+    |
+251 |     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+251 -     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+251 +     pub fn receive(&mut self, envelope: OpEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:855:37
+    |
+855 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |                                     ^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+855 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+855 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:334:28
+    |
+334 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+334 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+334 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:363:36
+    |
+363 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+363 -             terminology_documents: std::collections::HashMap::new(),
+363 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3823:17
+     |
+3823 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3823 -     let action: serde_json::Value =
+3823 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3825:18
+     |
+3825 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3825 -     let context: serde_json::Value =
+3825 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3853:18
+     |
+3853 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3853 -     let command: serde_json::Value =
+3853 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3855:18
+     |
+3855 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3855 -     let context: serde_json::Value =
+3855 +     let context: Value =
+     |
+
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+warning: `semio-framework-sync` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-sync` to apply 6 suggestions)
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:386:27
+    |
+386 |         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |                           ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+386 -         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+386 +         let mut document: Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:387:17
+    |
+387 |         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |                 ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+387 -         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+387 +         let op: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:32
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut Value, patch: &serde_json::Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:404:59
+    |
+404 |     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    |                                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+404 -     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+404 +     fn merge_json(target: &mut serde_json::Value, patch: &Value) {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:14
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:406:53
+    |
+406 |             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+406 +             (serde_json::Value::Object(target_map), Value::Object(patch_map)) => {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:411:77
+    |
+411 |                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+    |                                                                             ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+411 -                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+411 +                         let entry = target_map.entry(key.clone()).or_insert(Value::Null);
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:47
+    |
+598 |     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate:...
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+   --> framework/product/os/core/rs/lib.rs:598:126
+    |
+598 | ...ode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+598 -     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+598 +     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> OsMediaGraphNode {
+    |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:2490:41
+     |
+2490 |     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2490 -     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+2490 +     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:21
+     |
+3633 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:72
+     |
+3633 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:127
+     |
+3633 | ...tance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3633:177
+     |
+3633 | ...e::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3633 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+3633 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:29
+     |
+3642 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:82
+     |
+3642 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:139
+     |
+3642 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3642:191
+     |
+3642 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3642 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3642 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:33
+     |
+3656 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:86
+     |
+3656 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:143
+     |
+3656 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3656:195
+     |
+3656 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3656 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+3656 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3664:30
+     |
+3664 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3664 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3664 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:3682:30
+     |
+3682 |             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3682 -             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+3682 +             let descriptor = os_resource_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> framework/product/os/core/rs/lib.rs:4418:36
+     |
+4418 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4418 -             terminology_documents: std::collections::HashMap::new(),
+4418 +             terminology_documents: HashMap::new(),
+     |
+
+warning: `semio-framework-os` (lib) generated 25 warnings (run `cargo fix --lib -p semio-framework-os` to apply 25 suggestions)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling puzzle_3d v0.1.0 (/Users/ueli/Documents/semio/puzzle/3d/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+   Compiling puzzle_5d v0.1.0 (/Users/ueli/Documents/semio/puzzle/5d/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+   Compiling reasoning_mindmap v0.1.0 (/Users/ueli/Documents/semio/reasoning/mindmap/rs)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+   Compiling puzzle_2d v0.1.0 (/Users/ueli/Documents/semio/puzzle/2d/rs)
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:20:18
+   |
+20 |     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |                  ^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+20 -     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+20 +     let fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:22:15
+   |
+22 |     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |               ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+22 -     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+22 +     let opts: Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unused imports: `ThemedSvgLookup` and `board_typst_markup_to_svg`
+  --> puzzle/2d/rs/lib.rs:51:88
+   |
+51 | ...icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:84:6
+   |
+84 | impl graph::GraphExtension for Puzzle2dExtension {}
+   |      ^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+84 - impl graph::GraphExtension for Puzzle2dExtension {}
+84 + impl GraphExtension for Puzzle2dExtension {}
+   |
+
+warning: function `resolve_node_icon_svg_from_encoding` is never used
+  --> puzzle/2d/rs/lib.rs:35:4
+   |
+35 | fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `board_resolve_icon_kind` is never used
+  --> puzzle/2d/rs/lib.rs:52:12
+   |
+52 |     pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `puzzle_2d` (lib) generated 6 warnings (run `cargo fix --lib -p puzzle_2d` to apply 4 suggestions)
+   Compiling puzzle-plugin v0.1.0 (/Users/ueli/Documents/semio/puzzle/plugin/rs)
+warning: unused imports: `PluginBundle` and `build_canvas_2d_scene`
+  --> puzzle/plugin/rs/lib.rs:8:9
+   |
+ 8 | ...   build_canvas_2d_scene, build_board2d_scene, create_default_layout,
+   |       ^^^^^^^^^^^^^^^^^^^^^
+ 9 | ...   MeasureSelectItem, WindowEngagementStatus,
+10 | ...   ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, R...
+   |                                                                                                                                                                                                                                                                                                                                                                               ^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2100:37
+     |
+2100 |                 window_kind_labels: std::collections::HashMap::from([
+     |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2100 -                 window_kind_labels: std::collections::HashMap::from([
+2100 +                 window_kind_labels: HashMap::from([
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2105:35
+     |
+2105 |                 panel_tab_labels: std::collections::HashMap::new(),
+     |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2105 -                 panel_tab_labels: std::collections::HashMap::new(),
+2105 +                 panel_tab_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2106:30
+     |
+2106 |                 mode_labels: std::collections::HashMap::new(),
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2106 -                 mode_labels: std::collections::HashMap::new(),
+2106 +                 mode_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2109:33
+     |
+2109 | ...   example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concr...
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2109 -                 example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+2109 +                 example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2122:47
+     |
+2122 |     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2122 -     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2122 +     fn puzzle2d_action_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:2167:48
+     |
+2167 |     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2167 -     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2167 +     fn puzzle2d_utility_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unused imports: `UiControlNode` and `world3d_meshes_json_from_urls`
+    --> puzzle/plugin/rs/lib.rs:2730:185
+     |
+2730 | ...mera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, w...
+     |                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2731 | ...n, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWin...
+     |       ^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:7716:42
+     |
+7716 |     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+     |                                          ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7716 -     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+7716 +     fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:7748:88
+     |
+7748 |     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+     |                                                                                        ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7748 -     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+7748 +     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+     |
+
+warning: unnecessary qualification
+    --> puzzle/plugin/rs/lib.rs:9064:51
+     |
+9064 |             let mut active_utility_by_window_id = std::collections::HashMap::new();
+     |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9064 -             let mut active_utility_by_window_id = std::collections::HashMap::new();
+9064 +             let mut active_utility_by_window_id = HashMap::new();
+     |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11894:37
+      |
+11894 |                 window_kind_labels: std::collections::HashMap::from([
+      |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11894 -                 window_kind_labels: std::collections::HashMap::from([
+11894 +                 window_kind_labels: HashMap::from([
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11898:35
+      |
+11898 |                 panel_tab_labels: std::collections::HashMap::new(),
+      |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11898 -                 panel_tab_labels: std::collections::HashMap::new(),
+11898 +                 panel_tab_labels: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11899:30
+      |
+11899 |                 mode_labels: std::collections::HashMap::new(),
+      |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11899 -                 mode_labels: std::collections::HashMap::new(),
+11899 +                 mode_labels: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11902:33
+      |
+11902 | ...   example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_for...
+      |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11902 -                 example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+11902 +                 example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11915:47
+      |
+11915 |     fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11915 -     fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+11915 +     fn puzzle5d_action_labels(is_de: bool) -> HashMap<String, String> {
+      |
+
+warning: unnecessary qualification
+     --> puzzle/plugin/rs/lib.rs:11976:48
+      |
+11976 |     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+11976 -     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+11976 +     fn puzzle5d_utility_labels(is_de: bool) -> HashMap<String, String> {
+      |
+
+warning: unused import: `std::sync::LazyLock`
+     --> puzzle/plugin/rs/lib.rs:12335:5
+      |
+12335 | use std::sync::LazyLock;
+      |     ^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PluginBundle` and `install_plugin_bundle`
+     --> puzzle/plugin/rs/lib.rs:12337:30
+      |
+12337 | use semio_framework_plugin::{install_plugin_bundle, PluginBundle};
+      |                              ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+     --> puzzle/plugin/rs/lib.rs:12162:17
+      |
+12162 |             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+      |                 ----^^^
+      |                 |
+      |                 help: remove this `mut`
+      |
+      = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> puzzle/plugin/rs/lib.rs:7787:17
+     |
+7787 |             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+     |                 ----^^^
+     |                 |
+     |                 help: remove this `mut`
+
+warning: field `select` is never read
+    --> puzzle/plugin/rs/lib.rs:9231:9
+     |
+9224 |     struct Puzzle5dLabels {
+     |            -------------- field in this struct
+...
+9231 |         select: &'static str,
+     |         ^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `fill`, `edit_volumes`, and `voxel` are never read
+    --> puzzle/plugin/rs/lib.rs:4755:9
+     |
+4741 |     struct Puzzle3dLabels {
+     |            -------------- fields in this struct
+...
+4755 |         fill: &'static str,
+     |         ^^^^
+...
+4760 |         edit_volumes: &'static str,
+     |         ^^^^^^^^^^^^
+4761 |         volume_brush: &'static str,
+4762 |         voxel: &'static str,
+     |         ^^^^^
+
+warning: function `fixture_wires` is never used
+   --> puzzle/plugin/rs/lib.rs:940:8
+    |
+940 |     fn fixture_wires(fixture: &Value) -> &[Value] {
+    |        ^^^^^^^^^^^^^
+
+warning: function `puzzle3d_kind_weight_sum` is never used
+    --> puzzle/plugin/rs/lib.rs:5789:8
+     |
+5789 |     fn puzzle3d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `puzzle3d_kind_weight_measures` is never used
+    --> puzzle/plugin/rs/lib.rs:5865:8
+     |
+5865 |     fn puzzle3d_kind_weight_measures(prefix: &str, kind_ids: &[String], weights: &HashMap<String, f64>, action: &str) -> Vec<Windo...
+     |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `fixture_handles` is never used
+   --> puzzle/plugin/rs/lib.rs:944:8
+    |
+944 |     fn fixture_handles(fixture: &Value) -> Vec<Value> {
+    |        ^^^^^^^^^^^^^^^
+
+warning: function `fixture_endpoint_xy` is never used
+   --> puzzle/plugin/rs/lib.rs:948:8
+    |
+948 |     fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `pane_from_surface_id` is never used
+    --> puzzle/plugin/rs/lib.rs:1035:8
+     |
+1035 |     fn pane_from_surface_id(surface_id: &str) -> &'static str {
+     |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `suggestion` and `select` are never read
+    --> puzzle/plugin/rs/lib.rs:1173:9
+     |
+1151 |     struct Puzzle2dLabels {
+     |            -------------- fields in this struct
+...
+1173 |         suggestion: &'static str,
+     |         ^^^^^^^^^^
+...
+1178 |         select: &'static str,
+     |         ^^^^^^
+
+warning: `puzzle-plugin` (lib test) generated 30 warnings (run `cargo fix --lib -p puzzle-plugin --tests` to apply 21 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 4.99s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests lib.rs (.repo/🎫️/26/07/21/ENFORCE-CHROME-I18N-EXHAUSTIVENESS-FOR-LOCALE-LOCKED-BRAND-SHELLS/target/debug/deps/puzzle_plugin-0367ef4feeceb600)
+
+running 2 tests
+test d3::tests::app_labels_overlay_is_german_reuse_branded_for_aggregator ... ok
+test d3::tests::app_labels_overlay_stays_english_native_without_brand_locks ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 99 filtered out; finished in 0.00s
+

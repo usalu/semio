@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/algorithm/.storybook/story/Flatten.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/algorithm/.storybook/story/Flatten.stories.tsx
 // Specs: Pure UI proxy to flatDesign + flattenedDesign + flattenDesign via shared story hooks.
 // Summary: IPO flatten board — flat diff base, full flatten output, forward diff panel.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Design } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -43,7 +43,7 @@ function FlattenFrame() {
 }
 
 const meta = {
-  title: "🏘️compose🧪algorithms/Flatten",
+  title: "🏘️compose🧪️algorithms/Flatten",
   component: FlattenFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

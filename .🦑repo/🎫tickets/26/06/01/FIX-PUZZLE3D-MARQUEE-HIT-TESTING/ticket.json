@@ -1,9 +1,0 @@
-{
-  "title": "Fix Puzzle3d Marquee Hit Testing",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Marquee selection still buggy after prior fix. Rework hit testing to use screen-space bounding boxes (window contains / crossing intersects) from per-mesh projected corners, fix overlay/projection coordinate alignment, remove stale footprint cache.",
-  "summary": "Reworked puzzle3d marquee selection to match puzzle2d semantics and fix remaining bugs.\n\nProblems:\n- Hit tests used convex hull / per-point containment and anyBehindCamera rejection, which disagreed with visible selection.\n- Group world AABB footprints were inflated vs mesh silhouettes.\n- Stale footprint caches and mismatched overlay (root) vs projection (canvas) client coordinates.\n\nFix:\n- MarqueeCandidate now carries screenBounds (client-space axis-aligned rect from in-front projected mesh bbox corners only).\n- Window: screenRectContainsRect; crossing: screenRectIntersectsRect; lasso uses polygonContainsScreenRect / screenRectIntersectsPolygon.\n- Removed prefetch/footprint caches; fresh projection on marquee activation with camera.updateMatrixWorld.\n- Overlay uses canvas clientOrigin from gl.domElement.getBoundingClientRect aligned with projection.\n\n196 tests pass.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪f3d8e97c03504c2da9ac0f80426738b0"]
-}

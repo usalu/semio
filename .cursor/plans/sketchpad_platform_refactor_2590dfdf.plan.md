@@ -89,7 +89,7 @@ flowchart TB
 - Replace `board`/`scene3d` surface node kinds in the `UiNode` union (93-101) with `puzzle2d`/`puzzle3d`/`puzzle5d`/`cad` (keep `table`, `panel`). Each carries `componentKind`, `surfaceId`, `controllerId`, optional `paneId`, and an opaque `props?: JsonValue`/binding id.
 - Replace builders `buildScene3dWindowBody`/`buildBoardWindowBody` (104-116) with `buildPuzzle2dWindowBody`/`buildPuzzle3dWindowBody`/`buildPuzzle5dWindowBody`/`buildCadWindowBody`; keep `buildTableWindowBody`.
 - Update `isCanvasOnlyWindowBody`/`assertCanvasOnlyWindowBody` (118-133) and the error message to the new kind set.
-- All new code uses `//#region 🔖...` structuring per repo rules; docstrings start with an emoji.
+- All new code uses `//#region 🔖️...` structuring per repo rules; docstrings start with an emoji.
 
 ## B. framework/platform/renderer/react ([framework/platform/renderer/react/index.tsx](framework/platform/renderer/react/index.tsx))
 

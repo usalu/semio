@@ -1,0 +1,11 @@
+{
+  "title": "Extended Source Code Headers",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Requirements section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
+  "summary": "Refactored all source code headers to new standardized format with nested License and Requirements subregions.\n\nCore changes:\n- Updated LanguagePlugin interface: FormatHeader now takes (filePath, summary, contributors, license, requirements) args\n- Replaced headerFmt string field with supportsHeaders bool in BaseLanguage\n- Rewrote FormatHeader to programmatically build headers with nested #region License / #region Requirements\n- Updated all 11 language constructors (TS, Go, Py, C#, Rust, Ruby, Shell, TOML, YAML, SQL, GraphQL)\n- Rewrote generateFileHeader and AGPLLicenseText() helper\n- Added 3 new statutes: missing-summary, missing-license-region, missing-requirements-region\n- Updated headerPolicy to validate License and Requirements subregions exist inside Header\n- Updated sectionPolicy to exempt License/Requirements children of Header from empty-section breachs\n- Batch-updated 80+ source code file headers across the entire repo\n- Updated all test fixtures (file_fixed.*, file_invalid.*, file_fixable*, file_empty_region.tsx)\n- Fixed emoji variation selector (U+FE0E) issues in fixture files\n- Added 4 new tests: TestFormatHeaderStructure, TestFormatHeaderEmptyRequirements, TestFormatHeaderAllLanguages, TestHeaderPolicyMissingSubregions\n- Added Requirements content to main.go and main_test.go headers\n- Updated AGENTS.md SRS Code Hygiene section with new header requirements\n- Updated README.md Code Hygiene Hooks section with new header format documentation\n- Removed stale fix_main_breachs.go and fix_main_issues.go scripts from other agents\n- All header-related tests pass (pre-existing TestFormatResult_Bundle/Folder failures are unrelated emoji variation issues)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/448"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repofilemechanism"
+}

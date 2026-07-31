@@ -1,0 +1,8 @@
+{
+  "title": "Fix Sketchpad Drag Diff Coloring Mismatch",
+  "status": "closed",
+  "description": "In the sketchpad, dragging a piece causes all other pieces to turn yellow (modified). The algorithms storybook drag works correctly - only the explicitly changed pieces/connections are colored. Need to trace the sketchpad drag diff flow and fix the mismatch.",
+  "summary": "Bulk close",
+  "goal": "🎯️compose",
+  "sessions": ["⚪️6f62b1db5f7343699f7a35252a2c54e7"]
+}

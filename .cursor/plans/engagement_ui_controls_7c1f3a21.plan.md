@@ -59,7 +59,7 @@ Discriminated union added to `ui/react`:
 
 Default choices: numeric value entry (height/distance/radius/scalar) → `stepper`; angle entry (rotate) → `ring` dial; discrete option selection (transitions, brush candidates) → `ring`.
 
-## 1. UI layer — `ui/react/index.tsx` (`#region 🧭Shell`)
+## 1. UI layer — `ui/react/index.tsx` (`#region 🧭️Shell`)
 
 - Add interfaces `EngagementSliderControl`, `EngagementStepperControl`, `EngagementRingControl`, union `EngagementControl` (near `EngagementOption` ~`11741`), each docstring starting with an emoji.
 - Add `control?: EngagementControl` to `EngagementSpec` (`12122`) and export the new types.
@@ -69,7 +69,7 @@ Default choices: numeric value entry (height/distance/radius/scalar) → `steppe
 - Include in the `if (!hasOptions && !hasInput && !hasStatus)` early-return guard so a control alone keeps the overlay visible.
 - Storybook: add a `WithControl` story variant in `.storybook/story/ui/Engagement.stories.tsx`.
 
-## 2. Playground core — `framework/product/playground/core/index.ts` (`#region 🔖WindowEngagement`)
+## 2. Playground core — `framework/product/playground/core/index.ts` (`#region 🔖️WindowEngagement`)
 
 - Add `WindowEngagementControl` union mirroring the UI union but callback-as-`CommandDescriptor` (slider/stepper `onChange`/`onCommit` dispatch `{ value }`; ring `onSelect` dispatch `{ id }` or per-option command).
 - Add `control?: WindowEngagementControl` to `WindowEngagement` (`185`).

@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-sourcing-curate-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing curate app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+sourcing = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+sourcing_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate-engine" }

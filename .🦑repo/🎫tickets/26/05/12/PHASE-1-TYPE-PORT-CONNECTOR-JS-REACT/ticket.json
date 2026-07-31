@@ -1,9 +1,0 @@
-{
-  "title": "Phase 1 Type Port Connector Js React",
-  "emoji": "🧰",
-  "status": "closed",
-  "description": "Execute plan Phase 1 for Type, Port, Connector only: schema-1:1 fields + TypeOperationInput/PortOperationInput/ConnectorOperationInput in compose/js (regions 🧰Type, 🔘Port, 🔗Connector) and compose/react matching regions. Artifact phase-1-type-port-connector.json in ticket folder.",
-  "summary": "Phase 1 Type/Port/Connector: JS regions add schema-aligned reads on Type/Port/Connector plus existing mutations; React regions add field hooks and TypeOperationInput/PortOperationInput/ConnectorOperationInput op hooks. Kit read helpers added for HooksKit tsc. Artifact phase-1-type-port-connector.json records exports and verification (bunx tsc --noEmit on js+react).",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪d6da8a29264d419f8b9d5a3dd88dbd39"]
-}

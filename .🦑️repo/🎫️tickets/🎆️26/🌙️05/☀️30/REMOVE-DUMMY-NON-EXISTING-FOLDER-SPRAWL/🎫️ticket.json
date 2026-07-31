@@ -1,0 +1,12 @@
+{
+  "title": "Remove Dummy Non Existing Folder Sprawl",
+  "emoji": "🧹️",
+  "status": "closed",
+  "description": "Stop vite elementsAssets closeBundle from creating cad/js/renderer/play/dummy-non-existing-folder copies of ui/assets; remove sprawl and harden plugin.",
+  "summary": "The `dummy-non-existing-folder` trees were accidental copies of `ui/assets` created by `elementsAssetsVitePlugin` `closeBundle` when Vite used a non-`dist` `build.outDir` (e.g. `--outDir dummy-non-existing-folder`). Split the plugin into serve vs build-only hooks, always copy assets to `\u003cviteRoot\u003e/dist/assets`, spread plugins in all play vite configs, pin `outDir: dist` on cad renderer play, fix Nx `cwd` to `cad/js/renderer`, and remove the stray folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1507"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️f25fcd54d2e3452f8c422d06168f54ec"]
+}

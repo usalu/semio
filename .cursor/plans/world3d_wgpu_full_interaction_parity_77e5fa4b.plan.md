@@ -56,7 +56,7 @@ Rows 0-1 (left/right) are correct; rows 2-5 must be `m[c][3] ± m[c][1]` (bottom
 
 1. **`frustum_planes`** ([ui/wgpu/rs/scene3d.rs](ui/wgpu/rs/scene3d.rs)) - correct rows 2-5 as above. Add a regression test using the concrete-forest camera (position `[30,-30,20]`, target `[7,0,3]`, fov 45): a unit box at the target must be visible; boxes far above/below/behind must be culled. Also assert each of the 6 planes contains the camera look-at point.
 2. **Orbit reset bug** ([framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs), `sync_world3d_state`) - the orbit controller is re-seeded from `camera_json` whenever any scene JSON changes (hover/selection), snapping the camera back mid-interaction. Diff `camera_json` separately and only reset `state.orbit` when it actually changed.
-3. **E2E body check** ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) - call the existing `assertBodyContent(page, pluginId)` inside `smokePlugin` so an empty 3D body fails the test instead of passing on chrome pixels.
+3. **E2E body check** ([.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) - call the existing `assertBodyContent(page, pluginId)` inside `smokePlugin` so an empty 3D body fails the test instead of passing on chrome pixels.
 
 ## Phase B - Camera navigation parity (premigration mapping)
 

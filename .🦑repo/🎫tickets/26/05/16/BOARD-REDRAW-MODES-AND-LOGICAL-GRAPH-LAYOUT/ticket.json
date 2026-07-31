@@ -1,9 +1,0 @@
-{
-  "title": "Board Redraw Modes And Logical Graph Layout",
-  "emoji": "📐",
-  "status": "closed",
-  "description": "Generalize board layout simulation into Redraw modes: force-graph and hierarchical-tree share tick-based redraw plumbing; each accepts logical fixture nodes without required x,y (seed positions in WASM). Unify TS API and board play settings UI (shared vs per-mode params).",
-  "summary": "Hierarchical-tree redraw now uses a Buchheim (Walker-style) tidy-tree in WASM: spanning forest from directed edges with min-depth parent choice, synthetic multi-root for multi-tree graphs, scaled to layerSpacing/siblingGap and mapped by direction (down/up/right/left). TS/Rust docstrings note the algorithm. wasm-pack rebuilt; Vitest 55 tests and cargo test 26 tests passed.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪3493d810ae3e4f2ca7329c3d4dba203e", "⚪8c7374b02d40499d9714126846f86dd8", "⚪4d61b62012284dd8b844577a14071cb7"]
-}

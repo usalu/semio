@@ -1,0 +1,11 @@
+{
+  "variant": "cad",
+  "plugins": [
+    {
+      "pluginId": "cad",
+      "moduleUrl": "/plugin-modules/cad/cad_plugin.js",
+      "contributes": [],
+      "consumes": []
+    }
+  ]
+}

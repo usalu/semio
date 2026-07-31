@@ -1,0 +1,11 @@
+{
+  "title": "Spatial Play Document Objects",
+  "emoji": "🌳️",
+  "status": "open",
+  "description": "Bind typology object rows on interaction commit so spatial play document lists created boxes instead of (no objects).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1493"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️c938a928d0fa491e91a35868cd7af610"]
+}

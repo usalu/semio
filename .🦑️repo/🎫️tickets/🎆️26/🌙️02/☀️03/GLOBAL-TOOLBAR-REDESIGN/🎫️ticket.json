@@ -1,0 +1,9 @@
+{
+  "title": "Global Toolbar Redesign",
+  "emoji": "🔧️",
+  "status": "closed",
+  "summary": "Restored Kit diagram-window selection by re-enabling React Flow element selection/focus flags on the Diagram in js/compose/sketchpad/Kit.tsx, so direct diagram interactions again update shared Kit selection state.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/326"
+  }
+}

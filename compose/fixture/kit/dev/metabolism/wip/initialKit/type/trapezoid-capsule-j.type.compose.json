@@ -158,7 +158,7 @@
           "y": -0.9890159,
           "z": 0
         },
-        "description": "🩻 The middle of the main entrance door of the upper entrance floor.",
+        "description": "🩻️ The middle of the main entrance door of the upper entrance floor.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -309,9 +309,9 @@
       }
     ]
   },
-  "icon": "icons/trapezoid-🔣capsule_J.svg",
+  "icon": "icons/trapezoid-🔣️capsule_J.svg",
   "image": "images/trapezoid-capsule_J.png",
-  "description": "🪓 An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
+  "description": "🪓️ An apartment capsule of the variant J with a balcony for one person. It has the entrance on theside and has the view to the front.",
   "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
     "items": [

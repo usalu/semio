@@ -1,0 +1,12 @@
+{
+  "title": "Semantic Kit Command Events",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "compose/rs: enforce external kit modification exclusively through semantic commands. Commands are async and return only request ids; success/result/error is delivered over events. Ensure compose/js stores track requests and emit correct events consumed by compose/react. Extend existing tests only and verify relevant Rust/JS/React checks pass.",
+  "summary": "Routed compose/js fallback and worker mutation helpers through GraphQL semantic mutations, added client-scoped kit command request ids with accepted/succeeded/failed lifecycle events, exposed lifecycle type guards, and wired compose/react KitScope to record those events and related errors for hooks. Added the missing JS in-memory store glue exports used by React and extended existing embedded JS/React tests for request tracking and lifecycle consumption. Verified JS tests, React tests/build, and Rust cargo tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1379"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️kitapp",
+  "sessions": ["⚪️dd75cbe965dc4c97ab9e29f4198b884d"]
+}

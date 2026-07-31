@@ -1,0 +1,14 @@
+{
+  "title": "Remove Icon Dependencies",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Remove Lucide npm packages and make UI icon codegen read only committed SVGs under ui/asset/icon/. Clean stale lucide-react references.",
+  "summary": "Removed Lucide npm packages (`lucide`, `lucide-static`) and refactored `ui/asset/script.ts` to codegen icon bindings directly from committed SVGs under `ui/asset/icon/` — no node_modules vendor step. Renamed `normalizeLucideSvg` to `normalizeCatalogSvg`, removed `VENDORED_ICON_IDS` and `vendorIcons`, and updated README generation for the new in-repo workflow. Cleaned stale `lucide-react` references from Coda Vite optimizeDeps and repo CLI dependency allowlists. Verified `bun install`, `bun nx run @semio-tech/ui-asset:build`, and 154-icon catalog generation succeed without any icon npm packages.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2238"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️designapp",
+  "sessions": [
+    "⚪️e7485fa886ee4096ac7fc1faf22716e9"
+  ]
+}

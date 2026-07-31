@@ -1,0 +1,21 @@
+{
+  "title": "Flow Graph Navbar Toggle Theming",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Flow nodes/handles/edges must match navbar toggle theming: element gray default, hover fill + emphasized content, selected primary fill + emphasized stroke/text.",
+  "summary": "Fixed computation channel row hover/selection fill not reaching node edges: input_port_row_hit_bounds and output_port_row_hit_bounds now use computation_channel_row_divider_x_span (node edge ↔ center divider) instead of narrow label-column bounds, so paint_computation_channel_row_highlights and channel-row picking share full-row width. Moved ComputationChannelRowSide enum earlier; updated/extended tests for full-span bounds and detail LOD hover probes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1591"
+  },
+  "goal": "🎯️ui🎯️theming",
+  "sessions": [
+    "⚪️3fdee907306f4d59a2f38e25fee4f3fd",
+    "⚪️dd736698f6884fbebbeabb08bdc0bc51",
+    "⚪️9172168a82ad43a1a66b8e9b66a30fa4",
+    "⚪️f959b45cc13c4441b37f27936f99c829",
+    "⚪️b30efb44193a4e51b55f1a9d0bb620f0",
+    "⚪️041ff71a949c44e28521db11b96a9bcc",
+    "⚪️e7ebe451c3884a3791f8a84e9e6997b9",
+    "⚪️7e6cc1b8747a4304abf128aff97f2c3c"
+  ]
+}

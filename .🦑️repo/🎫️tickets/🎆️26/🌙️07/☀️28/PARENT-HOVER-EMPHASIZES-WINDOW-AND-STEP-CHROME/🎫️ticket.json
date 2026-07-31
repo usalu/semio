@@ -1,0 +1,21 @@
+{
+  "title": "Parent Hover Emphasizes Window and Step Chrome",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "When hovering a window or introduction step unit, emphasize identity chrome (name/icon/drag handle) via CSS parent rules—matching tree-row hover scope—without changing leaf data-hover-scope behavior for direct chip hover.",
+  "summary": "Follow-up unified the introduction footer controls with their WindowChrome dialog surface. Immediate Button, Toggle, Action, and app-panel control-group shells inside a silhouette chip now drop their duplicate glass background and backdrop filter, leaving the parent chip as the single level paint while preserving control hover fills and internal dividers. The React regression now covers both Back and Next at dialog level, and the CSS contract covers the transparent nested shell. Verified ui-styling 24/24 and focused ui-react 1/1; full ui-react remains at the unchanged 470/479 baseline with nine unrelated failures. Live Aggregator verification is blocked by an unrelated missing DocumentStore::dispatch_json build error, and Storybook by unrelated Vite dependency-optimization errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2371"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "517da4cd",
+    "local": "parent_hover_chrome_517da4cd.plan.md"
+  },
+  "sessions": [
+    "⚪️9c6a2c873ed44425b3eb282a27fd2bec",
+    "⚪️ac449686eff940f9a6aafa43a49d447c",
+    "⚪️944fe8fede3049b88c569504787ce059"
+  ]
+}

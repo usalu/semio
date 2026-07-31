@@ -1,10 +1,10 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 package compose
 
@@ -841,9 +841,9 @@ func TestFlatten(t *testing.T) {
 	}
 }
 
-// #region 🌳Flatten Merkle Hash Tests
+// #region 🌳️Flatten Merkle Hash Tests
 
-// 🌳flattenMerkleMutation representations a single kit mutation described by the shared merkle cases asset.
+// 🌳️flattenMerkleMutation representations a single kit mutation described by the shared merkle cases asset.
 type flattenMerkleMutation struct {
 	Kind           string          `json:"kind"`
 	PieceId      string          `json:"pieceId"`
@@ -852,7 +852,7 @@ type flattenMerkleMutation struct {
 	Value          json.RawMessage `json:"value"`
 }
 
-// 🌳flattenMerkleExpect captures the optional assertions bundled with each merkle case.
+// 🌳️flattenMerkleExpect captures the optional assertions bundled with each merkle case.
 type flattenMerkleExpect struct {
 	PlaneHashesChangedAny       *bool    `json:"planeHashesChangedAny,omitempty"`
 	CenterHashesChangedAny      *bool    `json:"centerHashesChangedAny,omitempty"`
@@ -864,7 +864,7 @@ type flattenMerkleExpect struct {
 	CenterHashesStableIncludes  []string `json:"centerHashesStableIncludes,omitempty"`
 }
 
-// 🌳flattenMerkleCase represents a single entry in flatten-merkle.cases.compose.json.
+// 🌳️flattenMerkleCase represents a single entry in flatten-merkle.cases.compose.json.
 type flattenMerkleCase struct {
 	Name       string                  `json:"name"`
 	Kit        string                  `json:"kit"`
@@ -873,7 +873,7 @@ type flattenMerkleCase struct {
 	Expect     flattenMerkleExpect     `json:"expect"`
 }
 
-// 🌳flattenMerkleParity captures the cross-language reference hashes block.
+// 🌳️flattenMerkleParity captures the cross-language reference hashes block.
 type flattenMerkleParity struct {
 	Kit            string   `json:"kit"`
 	DesignPath     []string `json:"designPath"`
@@ -884,13 +884,13 @@ type flattenMerkleParity struct {
 	} `json:"expectedHashes"`
 }
 
-// 🌳flattenMerkleAsset mirrors the shared flatten-merkle cases asset.
+// 🌳️flattenMerkleAsset mirrors the shared flatten-merkle cases asset.
 type flattenMerkleAsset struct {
 	Parity flattenMerkleParity `json:"parity"`
 	Cases  []flattenMerkleCase `json:"cases"`
 }
 
-// 🌳flattenMerkleFindDesignByPath walks the kit to resolve a design by its ordered name path.
+// 🌳️flattenMerkleFindDesignByPath walks the kit to resolve a design by its ordered name path.
 func flattenMerkleFindDesignByPath(kit map[string]interface{}, designPath []string) map[string]interface{} {
 	if len(designPath) == 0 {
 		return nil
@@ -936,7 +936,7 @@ func flattenMerkleFindDesignByPath(kit map[string]interface{}, designPath []stri
 	return current
 }
 
-// 🌳flattenMerkleSetPath assigns a value inside a nested JSON map using a dotted path, creating intermediate maps as needed.
+// 🌳️flattenMerkleSetPath assigns a value inside a nested JSON map using a dotted path, creating intermediate maps as needed.
 func flattenMerkleSetPath(obj map[string]interface{}, path string, value interface{}) {
 	keys := strings.Split(path, ".")
 	current := obj
@@ -951,7 +951,7 @@ func flattenMerkleSetPath(obj map[string]interface{}, path string, value interfa
 	current[keys[len(keys)-1]] = value
 }
 
-// 🌳flattenMerkleApplyMutations applies the mutation list in-place on a kit map prior to rehashing.
+// 🌳️flattenMerkleApplyMutations applies the mutation list in-place on a kit map prior to rehashing.
 func flattenMerkleApplyMutations(t *testing.T, design map[string]interface{}, mutations []flattenMerkleMutation) {
 	for _, m := range mutations {
 		var value interface{}
@@ -999,7 +999,7 @@ func flattenMerkleApplyMutations(t *testing.T, design map[string]interface{}, mu
 	}
 }
 
-// 🌳flattenMerkleLoadKitAsMap reads a kit asset into a generic JSON map so mutations can touch arbitrary nested fields.
+// 🌳️flattenMerkleLoadKitAsMap reads a kit asset into a generic JSON map so mutations can touch arbitrary nested fields.
 func flattenMerkleLoadKitAsMap(t *testing.T, filename string) map[string]interface{} {
 	t.Helper()
 	data, err := os.ReadFile(filepath.Join(AssetsPath, filename))
@@ -1013,7 +1013,7 @@ func flattenMerkleLoadKitAsMap(t *testing.T, filename string) map[string]interfa
 	return m
 }
 
-// 🌳flattenMerkleKitFromMap remarshals a JSON map back through the typed Kit structs for hashing.
+// 🌳️flattenMerkleKitFromMap remarshals a JSON map back through the typed Kit structs for hashing.
 func flattenMerkleKitFromMap(t *testing.T, m map[string]interface{}) Kit {
 	t.Helper()
 	data, err := json.Marshal(m)
@@ -1027,7 +1027,7 @@ func flattenMerkleKitFromMap(t *testing.T, m map[string]interface{}) Kit {
 	return kit
 }
 
-// 🌳flattenMerkleDesignId resolves the design id by path from a typed kit.
+// 🌳️flattenMerkleDesignId resolves the design id by path from a typed kit.
 func flattenMerkleDesignId(t *testing.T, kit Kit, designPath []string) string {
 	t.Helper()
 	var current *Design
@@ -1046,7 +1046,7 @@ func flattenMerkleDesignId(t *testing.T, kit Kit, designPath []string) string {
 	return current.Id
 }
 
-// 🌳flattenMerkleChangedSets returns the piece ids whose plane/center hash differs between two runs.
+// 🌳️flattenMerkleChangedSets returns the piece ids whose plane/center hash differs between two runs.
 func flattenMerkleChangedSets(before, after map[string]FlatMerkleHashes) (changedPlane, changedCenter map[string]bool) {
 	changedPlane = map[string]bool{}
 	changedCenter = map[string]bool{}
@@ -1209,7 +1209,7 @@ func TestFlattenMerkle(t *testing.T) {
 	})
 }
 
-// 🌳sortedKeys returns a deterministic sorted slice of map keys for readable error messages.
+// 🌳️sortedKeys returns a deterministic sorted slice of map keys for readable error messages.
 func sortedKeys(m map[string]bool) []string {
 	out := make([]string, 0, len(m))
 	for k := range m {
@@ -1219,7 +1219,7 @@ func sortedKeys(m map[string]bool) []string {
 	return out
 }
 
-// #endregion 🌳Flatten Merkle Hash Tests
+// #endregion 🌳️Flatten Merkle Hash Tests
 
 func TestChange(t *testing.T) {
 	t.Run("Metabolism", func(t *testing.T) {
@@ -1359,7 +1359,7 @@ func TestDelete(t *testing.T) {
 				t.Fatal("Design 'nakagin capsule tower' not found")
 			}
 
-			// 🔷Load selection
+			// 🔷️Load selection
 			type Selection struct {
 				Pieces      []PieceId      `json:"pieces"`
 				Connections []ConnectionId `json:"connections"`
@@ -1376,7 +1376,7 @@ func TestDelete(t *testing.T) {
 				connectionIds[i] = c.Id
 			}
 
-			// 🔶Load expected diff
+			// 🔶️Load expected diff
 			var expectedDiff DesignDiff
 			loadJSON(t, "nakagin-capsule-tower.deleted.design.diff.compose.json", &expectedDiff)
 
@@ -1713,7 +1713,7 @@ func TestMove(t *testing.T) {
 	})
 }
 
-// #region 🔍Find Replaceable Types In Designs Tests
+// #region 🔍️Find Replaceable Types In Designs Tests
 func TestFindReplaceableTypesInDesigns(t *testing.T) {
 	var frAsset findReplaceableCasesAsset
 	loadJSON(t, "find-replaceable-types.cases.compose.json", &frAsset)
@@ -2024,7 +2024,7 @@ func TestFindReplaceableTypesInDesigns(t *testing.T) {
 	})
 }
 
-// #endregion 🔍Find Replaceable Types In Designs Tests
+// #endregion 🔍️Find Replaceable Types In Designs Tests
 
 func TestCopyAndPaste(t *testing.T) {
 	t.Run("Nakagin Capsule Tower", func(t *testing.T) {
@@ -3051,7 +3051,7 @@ func TestKitWorkflowKinds(t *testing.T) {
 	})
 }
 
-// #region 🏰Kit Filter Tests
+// #region 🏰️Kit Filter Tests
 // Tests for FilterKit MUST verify correct subset extraction.
 
 func TestFilterKit(t *testing.T) {
@@ -3227,7 +3227,7 @@ func TestFilterKit(t *testing.T) {
 	}
 }
 
-// #endregion 🏰Kit Filter Tests
+// #endregion 🏰️Kit Filter Tests
 
 // #region 🗝️Hash Tests
 
@@ -3372,7 +3372,7 @@ func TestHashKitDiff(t *testing.T) {
 
 // #endregion 🗝️Hash Tests
 
-// #region 🎉DesignWithDiff Tests
+// #region 🎉️DesignWithDiff Tests
 
 func TestDesignWithDiff(t *testing.T) {
 	var asset designWithDiffCasesAsset
@@ -3435,9 +3435,9 @@ func TestDesignWithDiff(t *testing.T) {
 	}
 }
 
-// #endregion 🎉DesignWithDiff Tests
+// #endregion 🎉️DesignWithDiff Tests
 
-// #region 📊MaxChildren Tests
+// #region 📊️MaxChildren Tests
 
 func TestMaxChildrenPortSerialization(t *testing.T) {
 	mc := 3
@@ -3556,9 +3556,9 @@ func containsHelper(s, substr string) bool {
 	return false
 }
 
-// #endregion 📊MaxChildren Tests
+// #endregion 📊️MaxChildren Tests
 
-// #region 🎑Performance Benchmarks
+// #region 🎑️Performance Benchmarks
 // Standard benchmarks migrated from compose_benchmark.go; run with `go test -bench=. -benchmem .` from this directory.
 
 func benchLoadKitFile(b *testing.B, filename string) Kit {
@@ -3757,6 +3757,6 @@ func BenchmarkValidateKit_Metabolism(b *testing.B) {
 	appendBenchmarkCsv("go", "Validation/Metabolism", time.Since(start).Seconds()/float64(b.N))
 }
 
-// #endregion 🎑Performance Benchmarks
+// #endregion 🎑️Performance Benchmarks
 
 // #endregion 🛡️KitKind Tests

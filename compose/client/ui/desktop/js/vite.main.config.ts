@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,16 +6,16 @@
 
 // Vite build configuration for the Electron main process.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region 🗄️Configuration
 // Vite configuration for the Electron main process.
 // Configuration MUST export a valid Vite config object.
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { defineConfig } from "vite";
 import path from "path";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 // Default Vite configuration for the Electron main process.
 // Export MUST define a valid Vite config.

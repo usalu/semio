@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/WorldTerrainLayer.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/WorldTerrainLayer.stories.tsx
 // Specs: Host the framework renderer's `WorldTerrainLayer` (chunked DEM-tile terrain mesh) against the real
 // prebuilt `framework/surface/terrain/rs` `TerrainSession` WASM engine.
 // Summary: `WorldTerrainLayer` renders bare r3f primitives (`<group>`/`<mesh>`) — normally mounted inside
@@ -9,7 +9,7 @@
 // group rather than depending on a live tile server. `parameters.wasm: ["terrain"]` gates first paint on
 // `WASM_LOADERS.terrain` (see `.storybook/preview.tsx`) resolving.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Canvas } from "@react-three/fiber";
@@ -45,7 +45,7 @@ function WorldTerrainLayerStoryHost({ terrainJson, cameraPosition, cameraTarget 
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/WorldTerrainLayer",
+  title: "🛠️framework🔌️hosts/WorldTerrainLayer",
   component: WorldTerrainLayerStoryHost,
   parameters: { layout: "fullscreen", wasm: ["terrain"] },
   // r3f's continuous render loop (`requestAnimationFrame` tick in `TerrainTileRenderer`/`Canvas`) makes this

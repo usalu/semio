@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -11,15 +11,15 @@
 
 // VS Code extension providing a sketchpad-based custom editor for compose kit JSON files.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// #region 🛕KitFileDetection
+// #region 🛕️KitFileDetection
 // Kit file detection MUST match the naming conventions used across the compose workspace.
 // Specs: Matches `*.kit.json`, `kit_*.json`, `kit-*.json`, and nested `.compose/kit.json` files.
 // Detection is path-based so the extension can route known kit files into the custom editor
@@ -40,9 +40,9 @@ export function isLikelyKitJsonFilePath(filePath: string): boolean {
   if (/^kit[_-].+\.json$/u.test(baseName)) return true;
   return false;
 }
-// #endregion 🛕KitFileDetection
+// #endregion 🛕️KitFileDetection
 
-// #region 🌈SketchpadDist
+// #region 🌈️SketchpadDist
 // Sketchpad asset resolution MUST support both packaged extensions and local development.
 // Specs: The extension first prefers bundled `sketchpad-dist`, then falls back to the
 // workspace sketchpad build at `../sketchpad/dist`. Resolution succeeds only when webview.html exists.
@@ -73,7 +73,7 @@ export function resolveSketchpadDistPath(extensionPath: string): string | null {
 
   return null;
 }
-// #endregion 🌈SketchpadDist
+// #endregion 🌈️SketchpadDist
 
 // #region ⏲️MessageProtocol
 // Message protocol between extension host and sketchpad webview.
@@ -93,7 +93,7 @@ type WebviewToExtensionMessage = { kind: "kit.save"; content: string } | { kind:
 
 // #endregion ⏲️MessageProtocol
 
-// #region 📜KitEditor
+// #region 📜️KitEditor
 // Kit editor MUST provide a custom editor for compose kit JSON files using the sketchpad webview.
 // Specs: Opens known compose kit file conventions in a webview panel that loads the sketchpad app.
 // File changes are bridged between the VS Code filesystem and the webview via messaging.
@@ -132,13 +132,13 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
     html = html.replace(/href="\//g, `href="${baseUri.toString()}/`);
 
     // Inject the kit data loading script before closing </body> tag.
-    // 🆕The webview script will listen for messages and create a JsonFileKitStore.
+    // 🆕️The webview script will listen for messages and create a JsonFileKitStore.
     const kitBootScript = `
 <script>
   (function() {
     // Bridge between VS Code extension and sketchpad webview.
     // The webview receives kit JSON via postMessage and uses it
-    // 🔁to initialize/update an in-memory kit store.
+    // 🔁️to initialize/update an in-memory kit store.
     const vscode = acquireVsCodeApi();
 
     // Store the initial kit content for the sketchpad to pick up.
@@ -161,7 +161,7 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
     html = html.replace(/<\/head>/, `${kitBootScript}\n</head>`);
     webviewPanel.webview.html = html;
 
-    // 🔷Track whether we are applying our own edit to avoid feedback loops.
+    // 🔷️Track whether we are applying our own edit to avoid feedback loops.
     let isApplyingEdit = false;
 
     // ♻️Listen for document changes (from external sources like git, other editors).
@@ -217,7 +217,7 @@ class KitEditorProvider implements vscode.CustomTextEditorProvider {
 </body></html>`;
   }
 }
-// #endregion 📜KitEditor
+// #endregion 📜️KitEditor
 
 // #region 🏷️Activation
 // MUST register the custom editor provider on activation.

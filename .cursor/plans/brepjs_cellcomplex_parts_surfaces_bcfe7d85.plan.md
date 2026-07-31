@@ -49,7 +49,7 @@ isProject: false
 
 ### 1. Atomic decomposition (mirrors `BOPAlgo_MakerVolume`)
 
-In a new `#region 🧊AtomicDecomposition`:
+In a new `#region 🧊️AtomicDecomposition`:
 
 - `function decomposeCells(cells: Map<CellRef, ValidSolid>): AtomicDecomposition` where
   - For each cell `Ci`, run `split(Ci, otherCellsAsCompound)` (brepjs `split` from `topology/booleanFns`). This returns Ci cut into atomic non-overlapping pieces along every interface with other cells. Iterate the resulting compound's solids via `shape(result).solids()` / `getFaces`.
@@ -72,7 +72,7 @@ type AtomicPart = {
 
 ### 2. SelfMerge: topology augmentation
 
-In a new `#region 🪡SelfMergeDiff`:
+In a new `#region 🪡️SelfMergeDiff`:
 
 - `function selfMergeTopologyDiff(topo, atomics, snapTol): TopologyDiff`
   - Walk every atomic part's faces; for each `Face` collect ordered loop vertices via `getVertices`/`vertexPosition`.
@@ -102,7 +102,7 @@ In `surfaceViewsFromAtomics(topo, atomics)`:
 
 ### 5. Wiring into `BrepjsKernel`
 
-In the existing `#region 🔌BrepjsKernel`:
+In the existing `#region 🔌️BrepjsKernel`:
 
 - Replace `computeSurfaceViews` body:
 
@@ -122,13 +122,13 @@ async computeSurfaceViews(topo: TopologyGraph): Promise<SurfaceView[]> {
 
 ### 6. Idempotent merge keys
 
-In `#region 🪡SelfMergeDiff`:
+In `#region 🪡️SelfMergeDiff`:
 
 - Quantize positions by `derivedModelScale(topo) * 1e-5` (same tolerance used elsewhere) and hash to a stable base36 key. Vertex/edge/face ids embed this key so reruns of `decomposeCells` on the same input produce the same ids and `applyTopologyDiff` is a no-operation.
 
 ### 7. Ticket bookkeeping
 
-- Open a new ticket via repo mcp `ticket_open` titled e.g. "Brepjs CellComplex Parts and Surfaces" under goal `🎯r2602/🎯runningsketchpad` (or the most appropriate goal returned by `repo://goals`). All scratch/log files go inside that ticket folder.
+- Open a new ticket via repo mcp `ticket_open` titled e.g. "Brepjs CellComplex Parts and Surfaces" under goal `🎯️r2602/🎯️runningsketchpad` (or the most appropriate goal returned by `repo://goals`). All scratch/log files go inside that ticket folder.
 
 ### 8. Tests
 
@@ -140,8 +140,8 @@ In `#region 🪡SelfMergeDiff`:
 
 ## Files touched
 
-- [spatial/js/kernel-brepjs/index.ts](spatial/js/kernel-brepjs/index.ts): new regions `🧊AtomicDecomposition`, `🪡SelfMergeDiff`, replace `🪞DerivedBooleanViews` and the surface-view fallbacks; rewire `BrepjsKernel.computeSurfaceViews` / `computePartViews`; extend existing tests in `#region 🧪Tests`.
-- `.repo/🎫/26/05/25/<new-slug>/ticket.json`: new ticket file created by `ticket_open`; close with `ticket_close` when done.
+- [spatial/js/kernel-brepjs/index.ts](spatial/js/kernel-brepjs/index.ts): new regions `🧊️AtomicDecomposition`, `🪡️SelfMergeDiff`, replace `🪞️DerivedBooleanViews` and the surface-view fallbacks; rewire `BrepjsKernel.computeSurfaceViews` / `computePartViews`; extend existing tests in `#region 🧪️Tests`.
+- `.repo/🎫️/26/05/25/<new-slug>/ticket.json`: new ticket file created by `ticket_open`; close with `ticket_close` when done.
 
 ## Mermaid: pipeline
 

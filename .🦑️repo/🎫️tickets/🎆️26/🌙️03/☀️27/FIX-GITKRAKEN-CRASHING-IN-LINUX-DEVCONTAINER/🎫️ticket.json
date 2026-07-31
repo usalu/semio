@@ -1,0 +1,12 @@
+{
+  "title": "Fix Gitkraken Crashing in Linux Devcontainer",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "GitKraken keeps crashing/becoming unresponsive in the Linux devcontainer. Root cause: Docker containers default to 64MB /dev/shm which is insufficient for Electron/Chromium apps, and missing GPU/rendering flags for headless Xvfb environment. Fix the launch script and devcontainer config.",
+  "summary": "Fixed GitKraken crashing in Linux devcontainer. Root cause: Docker defaults /dev/shm to 64MB which is insufficient for Electron/Chromium IPC. Fixes: (1) Added --shm-size=1gb to devcontainer.json runArgs for next container rebuild. (2) Added --disable-gpu and --disable-dev-shm-usage flags to gitkraken-launch.sh and post-attach.sh auto-start, making Chromium use /tmp instead of /dev/shm and skip GPU acceleration in headless Xvfb. (3) Simplified WSL/non-WSL branching in launch script since --no-sandbox is needed in both environments. Verified: GitKraken stays alive with 10 stable processes and no growing zombie count.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1115"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️6d646e468be143119bdc812374086930"]
+}

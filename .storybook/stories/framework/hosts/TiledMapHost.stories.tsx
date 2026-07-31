@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/TiledMapHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/TiledMapHost.stories.tsx
 // Specs: Host the framework renderer's `TiledMapHost` against the real prebuilt `framework/surface/tiled-map/rs`
 // `MapSession` WASM engine.
 // Summary: A debug-readout host mounts `TiledMapHost` against a `TiledMapScene`; tile URLs point at a
@@ -7,7 +7,7 @@
 // `tileMiss`, never thrown) and filtered by the accompanying playwright spec, so no real network dependency
 // is introduced. `parameters.wasm: ["tiled-map"]` gates first paint on `WASM_LOADERS["tiled-map"]` resolving.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useState, type ReactElement } from "react";
@@ -59,7 +59,7 @@ function TiledMapStoryHost({ scene, controllerId, surfaceId }: { readonly scene:
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/TiledMapHost",
+  title: "🛠️framework🔌️hosts/TiledMapHost",
   component: TiledMapStoryHost,
   parameters: { layout: "fullscreen", wasm: ["tiled-map"] },
   tags: ["autodocs"],

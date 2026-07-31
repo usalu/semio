@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,21 +6,21 @@
 // Bundles React, @semio-tech/ui-react, and @representationcontextprotocol/ext-apps into one inlined HTML file.
 // Summary: Vite build config bundling the MCP App into a single inlined HTML file.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { createWorkspaceViteResolveConfig } from "../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
-// #endregion 🔌Adapters
+import { createWorkspaceViteResolveConfig } from "../../../../../framework/module/ui/styling/🟦️vite-elements-assets.ts";
+// #endregion 🔌️Adapters
 
 const repoRoot = path.resolve(__dirname, "../../../../../");
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
-// #region 🪵ZodJitlessPlugin
+// #region 🪵️ZodJitlessPlugin
 // Specs: Zod v4 (dependency of @representationcontextprotocol/ext-apps) uses `new Function()`
 // for JIT-compiled object parsing which violates CSP `script-src` in MCP App hosts.
 // This plugin patches Zod's `allowsEval` check and `Doc.compile()` to never use
@@ -44,9 +44,9 @@ function zodJitlessPlugin(): Plugin {
   };
 }
 
-// #endregion 🪵ZodJitlessPlugin
+// #endregion 🪵️ZodJitlessPlugin
 
-// #region 🎺StubHeavyDepsPlugin
+// #region 🎺️StubHeavyDepsPlugin
 // Specs: compose/ui/index.tsx imports 3D and semio-assets modules at module scope.
 // Stubbing those modules keeps the MCP App bundle small, but the stubs must be JSON-safe
 // (so Vite doesn't try to parse stubbed `*.json` as real JSON).
@@ -57,10 +57,10 @@ function zodJitlessPlugin(): Plugin {
 // that doesn't provide those exact exports can crash the bundle before React mounts.
 // We only stub semio assets and unrelated heavy deps.
 // flattenDesign uses native adjacency BFS (no cytoscape) for 2D layout (diagram centers + planes).
-// 🔧Stubbing it breaks the diagram entirely because cy.elements() returns undefined → TypeError.
+// 🔧️Stubbing it breaks the diagram entirely because cy.elements() returns undefined → TypeError.
 const STUBBED_PREFIXES = ["@semio-tech/semio-asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
-// #region 🧱MeshoptNoopPlugin
+// #region 🧱️MeshoptNoopPlugin
 // Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module
 // scope. The MCP App host iframe CSP blocks wasm-eval, causing a rejection that can crash the
 // scene. This plugin patches the resolved MeshoptDecoder file to return {supported:false}
@@ -86,7 +86,7 @@ export default MeshoptDecoder;
   };
 }
 
-// #endregion 🧱MeshoptNoopPlugin
+// #endregion 🧱️MeshoptNoopPlugin
 
 function stubHeavyDepsPlugin(): Plugin {
   return {
@@ -119,7 +119,7 @@ function stubHeavyDepsPlugin(): Plugin {
   };
 }
 
-// #endregion 🎺StubHeavyDepsPlugin
+// #endregion 🎺️StubHeavyDepsPlugin
 
 export default defineConfig({
   root: __dirname,

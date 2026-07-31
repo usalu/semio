@@ -1,9 +1,0 @@
-{
-  "title": "Emoji Prefix All Renamable Filenames",
-  "emoji": "📁",
-  "status": "closed",
-  "summary": "Repo meta paths (.🦑repo + emoji+name) end-to-end: binary, MCP, gitignore, devcontainer, tooling skips, docs.",
-  "description": "Continued emoji+name path consistency for repo client binary per plan repo_emoji_path_consistency_21004b8c.",
-  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
-  "plan_id": "repo_emoji_path_consistency_21004b8c"
-}

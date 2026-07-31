@@ -1,0 +1,12 @@
+{
+  "title": "Add sumQualityInDesign Function Across All Languages And UIs",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Add a new function sumQualityInDesign(kit, designId, qualityId) and add a test Design/Quality/Sum where you use Nakagin Capsule Tower and sum up the effective floor area. Implement it for every programming language (Python, Go, Rust, TypeScript, C#) and UI (sketchpad, grasshopper).",
+  "summary": "Implemented sumQualityInDesign function across all programming languages and UIs. The function sums the values of a quality across all pieces in a design, checking piece-level props first then falling back to type-level props. Added Design/Quality/Sum test using Nakagin Capsule Tower and the effective floor area quality (expected sum: 2349.53). All tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/849"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["🔀️68ae08219bbd3a68d8a72d460e05c86376d98380⚪️17733053566891520926945610569446577670"]
+}

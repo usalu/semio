@@ -205,7 +205,7 @@ Extend that block (no new files) with:
 
 - Read `repo://goals` first; associate with the existing live-subscription / subscriptions goal (e.g. the goal that owns the live-query refactor) — fall back to creating a new ticket under that goal if none exists.
 - `ticket_open` with title `"Extend EventBus With Field-Level on*Change"` before any code edits.
-- All temp logs / scratch under `.repo/🎫/26/05/12/EVENTBUS-FIELD-CHANGE/`.
+- All temp logs / scratch under `.repo/🎫️/26/05/12/EVENTBUS-FIELD-CHANGE/`.
 - `ticket_close` with the file list (`compose/js/index.ts`, ticket folder) once `tsc --noEmit` and `vitest run` in `compose/js` pass.
 
 ## Out of scope (explicit follow-ups)

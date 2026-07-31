@@ -76,8 +76,8 @@ Add a new region below the existing window-chrome styles (same file, since it sh
 
 ## 3. Verification
 
-- `bun ./script.ts generate` in `print/` to regenerate `semio-tokens.sty` with the new metrics.
-- `bun ./script.ts test` in `print/` to rebuild all twelve template PDFs (six templates × light/dark).
+- `bun ./📜️script.ts generate` in `print/` to regenerate `semio-tokens.sty` with the new metrics.
+- `bun ./📜️script.ts test` in `print/` to rebuild all twelve template PDFs (six templates × light/dark).
 - Visually inspect at least one light and one dark PDF (e.g. `forschungsbericht.pdf` / `forschungsbericht-dark.pdf`) to confirm: navbar bottom-edge-only border with flush icon+title and a bordered chip on the right; footer top-edge-only border with a bordered icon+label chip on the left and a plain page number on the right; colors/spacing match the existing window chrome exactly; dark theme resolves via the existing `semio-chrome-*` aliasing with no extra work.
 
 ## Ticket

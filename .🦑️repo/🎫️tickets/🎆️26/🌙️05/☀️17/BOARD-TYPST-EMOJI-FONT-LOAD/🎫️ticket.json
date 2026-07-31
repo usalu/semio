@@ -1,0 +1,9 @@
+{
+  "title": "Board Typst Emoji Font Load",
+  "emoji": "😀️",
+  "status": "closed",
+  "description": "Fix board WASM Typst emoji icon rendering: load rs/assets/NotoColorEmoji-subset.ttf into board_icon_codec font list and set Typst text font for emoji: branch so glyphs are not tofu.",
+  "summary": "Board `emoji:` icons compile with Typst but only `typst_assets` fonts were registered, so emoji codepoints fell back to U+FFFD (tofu). Loaded bundled `rs/assets/NotoColorEmoji-subset.ttf` into the shared Typst font list and set `#set text(font: \"Noto Color Emoji\")` for the emoji branch. Added Rust regression test `board_icon_codec_resolves_emoji_prefix_without_tofu`.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️297daa5b8487465d988be7fe12965076"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Play Site Dev Server Fixes",
-  "emoji": "▶️",
-  "status": "closed",
-  "description": "Fix compose/sites/play Vite dev: duplicate Connector import in compose/sketchpad/index.tsx; missing @semio-tech/compose-rs-wasm resolve when bundling @semio-tech/compose-js (add alias in play vite.config.ts like js/react).",
-  "summary": "Fixed compose/sites/play Vite dev: (1) Removed duplicate `Connector` binding in compose/sketchpad/index.tsx — it was both `import type` and a value import; kept type-only. (2) Added resolve.alias `@semio-tech/compose-rs-wasm` → compose/rs/pkg in compose/sites/play/vite.config.ts so dynamic imports from @semio-tech/compose-js resolve like react/js builds. (3) Dropped obsolete qualityConfig import/register from compose/sites/play/index.tsx (Quality app removed from sketchpad). Verified with `npx vite build` from compose/sites/play (NODE_OPTIONS=--max-old-space-size=12288) — build completed successfully.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪5ce92221ac8c4434a2011d5a629468d0"]
-}

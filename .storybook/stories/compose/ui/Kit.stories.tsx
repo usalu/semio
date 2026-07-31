@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/ui/.storybook/story/Kit.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/ui/.storybook/story/Kit.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup.
 // Summary: Default uses full Metabolism kit (GLTF blobs in files) so embedded viewers render; ShallowKitArtifactsOnly keeps shallow JSON for metadata-only.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Kit as ComposeKit } from "@semio-tech/compose-react";
 import { MetabolismKit as metabolismFullKit } from "@semio-tech/semio-asset";

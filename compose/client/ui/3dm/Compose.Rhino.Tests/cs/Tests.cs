@@ -1,4 +1,4 @@
-#region 📱Header
+#region 📱️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,15 +6,15 @@
 
 // Unit tests for the Compose.Rhino bridge registry and layer service.
 
-#endregion 📱Header
+#endregion 📱️Header
 
-#region ⌛Imports
+#region ⌛️Imports
 using Xunit;
 using Newtonsoft.Json.Linq;
 using Compose.Rhino;
-#endregion ⌛Imports
+#endregion ⌛️Imports
 
-#region 🎩BridgeRegistryTests
+#region 🎩️BridgeRegistryTests
 // Tests for BridgeRegistry routing, error handling, and method dispatch.
 
 public class BridgeRegistryTests
@@ -97,9 +97,9 @@ public class BridgeRegistryTests
     }
 }
 
-#endregion 🎩BridgeRegistryTests
+#endregion 🎩️BridgeRegistryTests
 
-#region 🛕LayerServiceTests
+#region 🛕️LayerServiceTests
 // Tests for LayerService path construction.
 
 public class LayerServiceTests
@@ -126,9 +126,9 @@ public class LayerServiceTests
     }
 }
 
-#endregion 🛕LayerServiceTests
+#endregion 🛕️LayerServiceTests
 
-#region 🌀BridgeProtocolTests
+#region 🌀️BridgeProtocolTests
 // Tests for BridgeRequest/BridgeResponse serialization.
 
 public class BridgeProtocolTests
@@ -179,4 +179,4 @@ public class BridgeProtocolTests
     }
 }
 
-#endregion 🌀BridgeProtocolTests
+#endregion 🌀️BridgeProtocolTests

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Puzzle 3D Vortex Selection",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Fix issue where hovered and selected vortices stay frozen and are added like in additive selection instead of selective selection mode",
+  "summary": "Fixed hovered and selected vortices in selective selection mode so they do not stay frozen and do not accumulate like in additive mode",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2006"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️a57f49aee69c4d7fb2e2af05a393b4b0"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Show Engagement Only When Window Active",
+  "emoji": "💬️",
+  "status": "closed",
+  "description": "Show engagement overlay only when the window is globally active.",
+  "summary": "Window only mounts the engagement overlay when `active` is true; inactive windows keep engagement data on the descriptor but hide the overlay. Added regression test; Storybook InWindow story passes `active`.",
+  "goal": "🎯️ui",
+  "sessions": ["⚪️c5a9752bdbd346f196a69f57bfa541c9"]
+}

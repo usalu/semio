@@ -1,13 +1,13 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-only
-#region 🔖PostStart
+#region 🔖️PostStart
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 SSH_SIGNING_KEY="${HOME}/.ssh/id_ed25519_signing"
 SSH_SIGNING_PUBLIC_KEY="${SSH_SIGNING_KEY}.pub"
 SSH_AGENT_SOCKET="${HOME}/.ssh/compose-ssh-agent.sock"
 SSH_AGENT_ENV="${HOME}/.ssh/compose-ssh-agent.env"
-#region 🔖EmojiFonts
+#region 🔖️EmojiFonts
 configure_emoji_fonts() {
   sudo mkdir -p /etc/fonts
   sudo tee /etc/fonts/local.conf >/dev/null <<'FONTCONFIG'
@@ -65,21 +65,21 @@ configure_emoji_fonts() {
 </fontconfig>
 FONTCONFIG
   sudo fc-cache -f
-  echo "✅ Emoji font fallback configured."
+  echo "✅️ Emoji font fallback configured."
 }
-#endregion 🔖EmojiFonts
-#region 🔖Startup
-#region 🔖StashCleanup
+#endregion 🔖️EmojiFonts
+#region 🔖️Startup
+#region 🔖️StashCleanup
 # Drop all spurious git stash entries. Stashing is forbidden in concurrent editing workflows.
 cd "$WORKSPACE"
 stash_count=$(git stash list 2>/dev/null | wc -l)
 if [ "$stash_count" -gt 0 ]; then
   git stash clear
-  echo "✅ Cleared $stash_count spurious git stash entries."
+  echo "✅️ Cleared $stash_count spurious git stash entries."
 fi
-#endregion 🔖StashCleanup
-#endregion 🔖Startup
-#region 🔖Ownership
+#endregion 🔖️StashCleanup
+#endregion 🔖️Startup
+#region 🔖️Ownership
 sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
@@ -93,12 +93,12 @@ sudo chown -R vscode:vscode /home/vscode/.cursor-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.antigravity-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.windsurf-server 2>/dev/null || true
-echo "✅ Fixed ownership for persisted volume mounts."
-#endregion 🔖Ownership
-#region 🔖EmojiFonts
+echo "✅️ Fixed ownership for persisted volume mounts."
+#endregion 🔖️Ownership
+#region 🔖️EmojiFonts
 configure_emoji_fonts
-#endregion 🔖EmojiFonts
-#region 🔖Neo4jEnv
+#endregion 🔖️EmojiFonts
+#region 🔖️Neo4jEnv
 configure_neo4j_compose_env() {
   local profile_script="/etc/profile.d/99-compose-neo4j-mcp.sh"
   sudo tee "$profile_script" >/dev/null <<'NEO4JPROFILE'
@@ -109,28 +109,28 @@ export NEO4J_DATABASE=compose
 export NEO4J_TELEMETRY=false
 NEO4JPROFILE
   sudo chmod 0644 "$profile_script" || true
-  local marker="#region 🔌Neo4jMcp"
+  local marker="#region 🔌️Neo4jMcp"
   local bashrc="${HOME}/.bashrc"
   if [ -f "$bashrc" ] && ! grep -Fq "$marker" "$bashrc" 2>/dev/null; then
     cat >>"$bashrc" <<'BASHRC'
 
-#region 🔌Neo4jMcp
+#region 🔌️Neo4jMcp
 if [ -f /etc/profile.d/99-compose-neo4j-mcp.sh ]; then
   # shellcheck source=/dev/null
   . /etc/profile.d/99-compose-neo4j-mcp.sh
 fi
-#endregion 🔌Neo4jMcp
+#endregion 🔌️Neo4jMcp
 BASHRC
   fi
   if [ -f /etc/profile.d/99-compose-neo4j-mcp.sh ]; then
     # shellcheck source=/dev/null
     . /etc/profile.d/99-compose-neo4j-mcp.sh
   fi
-  echo "✅ Neo4j MCP env (bolt://localhost:7687 in the compose devcontainer) installed for login shells and this session."
+  echo "✅️ Neo4j MCP env (bolt://localhost:7687 in the compose devcontainer) installed for login shells and this session."
 }
 
 configure_neo4j_compose_env
-#endregion 🔖Neo4jEnv
+#endregion 🔖️Neo4jEnv
 #region 🗄️Neo4jService
 migrate_neo4j_community_graph_compose() {
   local databases="/var/lib/neo4j/data/databases"
@@ -143,7 +143,7 @@ migrate_neo4j_community_graph_compose() {
   if [ ! -d "${databases}/neo4j" ]; then
     return 0
   fi
-  echo "🧾 Neo4j Community: clearing /var/lib/neo4j/data so the sole standard database is named compose (replacing legacy neo4j)."
+  echo "🧾️ Neo4j Community: clearing /var/lib/neo4j/data so the sole standard database is named compose (replacing legacy neo4j)."
   sudo neo4j stop >/dev/null 2>&1 || true
   sudo rm -rf /var/lib/neo4j/data/*
 }
@@ -192,7 +192,7 @@ APOCCONF
 
 start_neo4j_server() {
   if command -v nc >/dev/null 2>&1 && nc -z localhost 7687 2>/dev/null; then
-    echo "✅ Neo4j is already running at bolt://localhost:7687."
+    echo "✅️ Neo4j is already running at bolt://localhost:7687."
     return 0
   fi
 
@@ -217,12 +217,12 @@ wait_for_neo4j_bolt() {
 }
 
 if configure_neo4j_server && start_neo4j_server && wait_for_neo4j_bolt; then
-  echo "✅ Neo4j is running inside the compose devcontainer at bolt://localhost:7687."
+  echo "✅️ Neo4j is running inside the compose devcontainer at bolt://localhost:7687."
 else
   echo "⚠️ Neo4j was not reachable at bolt://localhost:7687 during post-start."
 fi
 #endregion 🗄️Neo4jService
-#region 🧾Neo4jCypherPersistence
+#region 🧾️Neo4jCypherPersistence
 extra_neo4j_graph_names_from_env() {
   [ -z "${NEO4J_EXTRA_GRAPH_DATABASES:-}" ] && return 0
   local _ifs=$IFS
@@ -241,7 +241,7 @@ ensure_neo4j_schema_files() {
   while IFS= read -r ex; do
     [ -n "$ex" ] && technologies+=("$ex")
   done < <(extra_neo4j_graph_names_from_env)
-  local schema_dir="$WORKSPACE/.🦑repo/🛂manifest"
+  local schema_dir="$WORKSPACE/.🦑️repo/🛂️manifest"
   mkdir -p "$schema_dir"
   for technology in "${technologies[@]}"; do
     local schema_file="$schema_dir/$technology.cypher"
@@ -257,7 +257,7 @@ EOF
 
 neo4j_schema_cypher_uri() {
   local technology="$1"
-  printf 'file:///workspaces/semio/.🦑repo/🛂manifest/%s.cypher' "$technology"
+  printf 'file:///workspaces/semio/.🦑️repo/🛂️manifest/%s.cypher' "$technology"
 }
 
 reload_neo4j_from_repo_cypher() {
@@ -275,7 +275,7 @@ reload_neo4j_from_repo_cypher() {
     echo "⚠️ Neo4j APOC Cypher reload skipped because required APOC procedures are unavailable."
     return 0
   fi
-  echo "🧾 Neo4j: clearing graph in database ${graph_db}, then loading generated .🦑repo/🛂manifest/*.cypher (from bun run generate) …"
+  echo "🧾️ Neo4j: clearing graph in database ${graph_db}, then loading generated .🦑️repo/🛂️manifest/*.cypher (from bun run generate) …"
   cypher-shell -a bolt://localhost:7687 -u "${NEO4J_USERNAME:-neo4j}" -p "${NEO4J_PASSWORD:-password}" -d "$graph_db" --format plain "MATCH (n) DETACH DELETE n;" >/dev/null || {
     echo "⚠️ Neo4j wipe failed; skipping cypher file import."
     return 0
@@ -287,7 +287,7 @@ reload_neo4j_from_repo_cypher() {
     [ -n "$ex" ] && technologies+=("$ex")
   done < <(extra_neo4j_graph_names_from_env)
   for technology in "${technologies[@]}"; do
-    local schema_file="$WORKSPACE/.🦑repo/🛂manifest/$technology.cypher"
+    local schema_file="$WORKSPACE/.🦑️repo/🛂️manifest/$technology.cypher"
     local schema_uri
     schema_uri="$(neo4j_schema_cypher_uri "$technology")"
     if grep -Ev '^[[:space:]]*(//|:|$)' "$schema_file" >/dev/null 2>&1; then
@@ -295,16 +295,16 @@ reload_neo4j_from_repo_cypher() {
       imported=$((imported + 1))
     fi
   done
-  echo "✅ Neo4j reloaded database ${graph_db} from repo ($imported non-empty cypher files applied)."
+  echo "✅️ Neo4j reloaded database ${graph_db} from repo ($imported non-empty cypher files applied)."
   if command -v bun >/dev/null 2>&1 && [ -n "${WORKSPACE:-}" ]; then
-    (cd "$WORKSPACE" && NEO4J_DATABASE="$graph_db" bun ./script.ts purge neo4j) || echo "⚠️ Neo4j legacy-property prune skipped."
+    (cd "$WORKSPACE" && NEO4J_DATABASE="$graph_db" bun ./📜️script.ts purge neo4j) || echo "⚠️ Neo4j legacy-property prune skipped."
   fi
 }
 
 ensure_neo4j_schema_files
 reload_neo4j_from_repo_cypher || echo "⚠️ Neo4j APOC Cypher reload skipped."
-#endregion 🧾Neo4jCypherPersistence
-#region 🔖ClaudeAuth
+#endregion 🧾️Neo4jCypherPersistence
+#region 🔖️ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"
 CLAUDE_JSON="${CLAUDE_DIR}/.claude.json"
@@ -332,18 +332,18 @@ fi
 if [ -f "$CLAUDE_JSON_BACKUP" ] && [ ! -e "$CLAUDE_JSON_BACKUP_LINK" ]; then
   ln -s "$CLAUDE_JSON_BACKUP" "$CLAUDE_JSON_BACKUP_LINK"
 fi
-echo "✅ Normalized Claude Code auth storage."
-#endregion 🔖ClaudeAuth
-#region 🔖GitOwnership
+echo "✅️ Normalized Claude Code auth storage."
+#endregion 🔖️ClaudeAuth
+#region 🔖️GitOwnership
 if [ -f "$WORKSPACE/.gitmodules" ]; then
   while IFS= read -r path; do
     [ -n "$path" ] || continue
     sudo chown -R vscode:vscode "$WORKSPACE/$path" 2>/dev/null || true
   done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 fi
-echo "✅ Fixed ownership for workspace + submodules."
-#endregion 🔖GitOwnership
-#region 🔖GitSafe
+echo "✅️ Fixed ownership for workspace + submodules."
+#endregion 🔖️GitOwnership
+#region 🔖️GitSafe
 git config --global --add safe.directory "$WORKSPACE"
 if [ -f "$WORKSPACE/.gitmodules" ]; then
   while IFS= read -r path; do
@@ -351,22 +351,22 @@ if [ -f "$WORKSPACE/.gitmodules" ]; then
     git config --global --add safe.directory "$WORKSPACE/$path"
   done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 fi
-echo "✅ Marked workspace + submodules as safe.directory for git."
-#endregion 🔖GitSafe
-#region 🔐GitSshSigning
+echo "✅️ Marked workspace + submodules as safe.directory for git."
+#endregion 🔖️GitSafe
+#region 🔐️GitSshSigning
 ensure_shell_loads_ssh_agent() {
   local bashrc="${HOME}/.bashrc"
-  local marker="#region 🔐ComposeSshAgent"
+  local marker="#region 🔐️ComposeSshAgent"
   if [ -f "$bashrc" ] && grep -Fq "$marker" "$bashrc"; then
     return 0
   fi
   cat >>"$bashrc" <<'SHELLRC'
 
-#region 🔐ComposeSshAgent
+#region 🔐️ComposeSshAgent
 if [ -f "$HOME/.ssh/compose-ssh-agent.env" ]; then
   . "$HOME/.ssh/compose-ssh-agent.env" >/dev/null 2>&1 || true
 fi
-#endregion 🔐ComposeSshAgent
+#endregion 🔐️ComposeSshAgent
 SHELLRC
 }
 
@@ -402,21 +402,21 @@ configure_git_ssh_signing() {
     start_ssh_signing_agent
   fi
   ensure_shell_loads_ssh_agent
-  echo "✅ Configured SSH commit signing agent."
+  echo "✅️ Configured SSH commit signing agent."
   if ! SSH_AUTH_SOCK="$SSH_AGENT_SOCKET" ssh-add -l 2>/dev/null | grep -Fq "$(ssh-keygen -lf "$SSH_SIGNING_PUBLIC_KEY" | awk '{print $2}')"; then
     echo "⚠️  Unlock signing once per container session with: ssh-add $SSH_SIGNING_KEY"
   fi
 }
 
 configure_git_ssh_signing
-#endregion 🔐GitSshSigning
-#region 🔖PythonVenv
+#endregion 🔐️GitSshSigning
+#region 🔖️PythonVenv
 if [ -f "$WORKSPACE/.venv/bin/activate" ]; then
   source "$WORKSPACE/.venv/bin/activate"
-  echo "✅ Activated Python virtual environment."
+  echo "✅️ Activated Python virtual environment."
 else
-  echo "ℹ️ Python virtual environment is not present for this container OS yet."
+  echo "ℹ Python virtual environment is not present for this container OS yet."
 fi
-#endregion 🔖PythonVenv
-echo "✅ Environment ready."
-#endregion 🔖PostStart
+#endregion 🔖️PythonVenv
+echo "✅️ Environment ready."
+#endregion 🔖️PostStart

@@ -1,0 +1,12 @@
+{
+  "title": "Optimize Hover Selection Granular Selectors",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Optimize Hover Selection Granular Selectors",
+  "summary": "Fixed the two remaining hover/selection performance bottlenecks: (1) useDesignAppIsPieceHovered changed from full hover object subscription to inline granular boolean selector returning boolean directly from XState state, (2) useDesignAppSelectedConnector changed from full selection object subscription to inline granular selector with custom compare function for stable references. Vite build passes, 105 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1131"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️9f6bad690f404be8a7f5c09e08f29747"]
+}

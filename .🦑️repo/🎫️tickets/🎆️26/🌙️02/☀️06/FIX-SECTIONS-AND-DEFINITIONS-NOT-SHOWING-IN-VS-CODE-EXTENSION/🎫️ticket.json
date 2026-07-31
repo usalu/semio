@@ -1,0 +1,11 @@
+{
+  "title": "Fix Sections and Definitions Not Showing in VS Code Extension",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The VS Code extension tree view shows no sections when expanding a file because the GraphQL Range type mismatch between schema.graphql (Range { start: Int\\!, end: Int\\! }) and the Go schema builder (Range { start: Position\\!, end: Position\\! }). The query fails with 'Field start of type Position\\! must have a sub selection'.",
+  "summary": "Fixed sections, definitions, and navigation in VS Code extension tree view. Range type aligned, File.definitions resolver implemented, Definition.file/section resolvers added, and openFileAtLine now correctly converts 1-based line numbers to VS Code positions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/409"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repovscodeextension"
+}

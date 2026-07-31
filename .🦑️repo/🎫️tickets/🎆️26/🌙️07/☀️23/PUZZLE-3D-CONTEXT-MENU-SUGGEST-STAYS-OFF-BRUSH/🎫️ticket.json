@@ -1,0 +1,14 @@
+{
+  "title": "Puzzle 3D Context Menu Suggest Stays Off Brush",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "puzzle 3d: When suggesting objects via context menu dont change the active tool and dont get into brush mode. It is just a single suggestion.",
+  "summary": "Context-menu / Alt+right-click \"Suggest objects\" is now a one-shot placement: openVortexSuggestions no longer switches into brush, acceptSuggestion no longer resets the host utility/tool, and world_brush_preview_json still emits the ghost while the suggestion popup is open. Extended regressions cover no SetActiveUtility/SetActiveTool effects, preserved transform utility across open+accept, live hover preview without brush mode, and successful accept while staying in select. Verified with focused puzzle-plugin lib tests (open/close/preserve/hover/accept).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2270"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️ae3d74b556664a1ca00bbac86c8c4517"
+  ]
+}

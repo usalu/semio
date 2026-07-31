@@ -1,0 +1,9 @@
+{
+  "title": "Vfs Table Selectable Without Navigate",
+  "emoji": "📁️",
+  "status": "closed",
+  "description": "Virtual file system table must have selectable file nodes. In sketchpad, clicking a row directly navigates — this must not happen on click; selection only.",
+  "summary": "Fixed VFS double-click navigation not firing for home kits (Metabolism) and docs pages.\n\nRoot cause: @dnd-kit pointer listeners on draggable rows swallowed double-click; home kit rows were draggable despite canDrag:false on nodes.\n\n- Table: route double-click via click detail\u003e=2 before drag handlers; optional pointerActivationDelayMs (200ms on VFS) so dblclick wins over drag.\n- Platform VFS: respect model canDrag; navigate via onNavigate or shell navigate command.\n- Sketchpad: disable dragDrop on home VFS; home kit/docs navigateUri tests.\n- E2E: home metabolism dblclick opens kit.\n\nTests: @semio-tech/ui-react 97 passed; sketchpad home vfs unit test passed.",
+  "goal": "🎯️ui",
+  "sessions": ["⚪️30517ce7a8ab4be8b834609c48efc13c", "⚪️b8b01b943ea54b139f8c9d63e20bbfab", "⚪️2688c8b641ca4fec8a926c8ff397a245"]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Single Side Panel Tree Mechanism",
+  "emoji": "🌲️",
+  "status": "closed",
+  "description": "Remove the divergent React-component side-panel registry in the platform React renderer so every side panel can only be a declarative tree registered and rendered through one central mechanism.",
+  "summary": "Removed the renderer-level React sidePanelBodyByKey map and duplicate registerSidePanelBody. The platform renderer now re-exports the core declarative registerSidePanelBody/unregisterSidePanelBody. sideTabsToPanelTabs only maps getSidePanelBodyFactory hits to DeclarativeSidePanelTreeDefinition or a missing-panel tree — the legacy ReactBody wrapper escape hatch is gone. Tests updated to use declarative tree builders; added coverage for sideTabsToPanelTabs, non-tree rejection, settings tab tree definitions, and PlatformView tree markup. Verification script confirms settings tabs and non-tree rejection at runtime.",
+  "goal": "🎯️ui🎯️react",
+  "plan": {
+    "client": "cursor",
+    "id": "ff8a1f6f",
+    "local": "single_side_panel_tree_mechanism_ff8a1f6f.plan.md"
+  },
+  "files": ["framework/product/platform/renderer/react/index.tsx", ".repo/🎫️/26/06/30/SINGLE-SIDE-PANEL-TREE-MECHANISM/ticket.json", ".repo/🎫️/26/06/30/SINGLE-SIDE-PANEL-TREE-MECHANISM/verify_side_panel_trees.tsx"]
+}

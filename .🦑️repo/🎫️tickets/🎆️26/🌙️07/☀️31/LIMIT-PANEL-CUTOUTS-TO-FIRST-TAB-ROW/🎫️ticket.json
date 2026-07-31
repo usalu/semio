@@ -1,0 +1,14 @@
+{
+  "title": "Limit Panel Cutouts to First Tab Row",
+  "emoji": "🗂️",
+  "status": "closed",
+  "description": "UI: Panel cutouts should only be rendered on the first tab line. Additional wrapped tab rows below should render as simple horizontal lines, followed by the tree/body content; they must not add nested cutouts beneath the first line.",
+  "summary": "Limited panel silhouette cutouts to the root tab row. Open panels now render only depth 0 inside WindowChrome titleChips; deeper active-path tab rows render as full-width, content-facing lines inside the panel body immediately before the scrollable tree, with ordering mirrored for bottom anchors. Added a DOM regression test proving the child row is outside data-window-silhouette-chip and precedes the tree. Verification: targeted contract 1/1 passed; all Panel-filtered tests 34/34 passed; git diff --check passed. Package-wide quick tests reached 477/486 with nine unrelated existing failures; typecheck/lint/Storybook remain blocked by existing generated-manifest, icon/type, ESLint-rule, and pre-rename Storybook import issues. Preserved the Storybook failure log in the ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2402"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️e934e6fd411a416e801cc8dc969f2a3d"
+  ]
+}

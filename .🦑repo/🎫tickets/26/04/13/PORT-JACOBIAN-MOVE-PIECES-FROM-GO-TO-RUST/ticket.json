@@ -1,8 +1,0 @@
-{
-  "title": "Port Jacobian Move Pieces From Go To Rust",
-  "status": "closed",
-  "description": "Port Jacobian Move Pieces From Go To Rust",
-  "summary": "Ported Jacobian-based move_pieces_in_design from Go to Rust. Added plane_to_matrix4, connection_placement_translation_basis, child_connector_origin_world, connection_with_numeric_delta, solve_connection_origin_min_norm, connection_diff_translation_fallback, and connection_diff_from_structural_move_vector helper functions. Updated move_pieces_in_design to accept Kit reference and resolve types/connectors for Jacobian computation. Updated move test to load metabolism kit and handle optional connection diff fields. All 63 Rust lib tests pass.",
-  "goal": "🎯r2603",
-  "sessions": ["⚪f4233fc0100c464299cdeb39ef0909bc"]
-}

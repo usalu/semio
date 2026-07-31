@@ -1,0 +1,9 @@
+{
+  "title": "Indirect Connect Ring And Handle Polish",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Board indirect-connect ring: keep ring gap constant in CSS px vs zoom; draw indirect handles with secondary theme colors (not selected/primary) but same stroke weight as normal handles; indirect handle radius = 0.8 of node extent (circle radius or half min rect side). Touch elements/client/lib/board/rs/lib.rs only; extend existing tests.",
+  "summary": "Indirect-connect ghost ring keeps a constant ~28 CSS px gap from the node rim by scaling world offset with 1/zoom. Ghost handles use theme secondary handle fill/stroke with the same 2px stroke as normal handles (append_handle_marker paint override). Marker radius is 0.8× node half-extent (circle radius or half the shorter rectangle side); hit/cull use the new radius. Added host_tests for screen-gap stability across zoom and marker radius on the link test scene.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️de8493ee93274410a4d8766626c92913"]
+}

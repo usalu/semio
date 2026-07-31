@@ -1,8 +1,0 @@
-{
-  "title": "Restructure Monorepo Configs",
-  "emoji": "🏗️",
-  "status": "closed",
-  "description": "Adjust configs for Project/Bundle layout",
-  "summary": "Restructured monorepo to use project/bundle layout. Updated config files and README.",
-  "goal": "🎯aioptimizedrepo"
-}

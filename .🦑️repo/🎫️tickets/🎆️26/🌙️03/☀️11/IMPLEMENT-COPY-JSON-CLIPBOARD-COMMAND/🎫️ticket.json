@@ -1,0 +1,10 @@
+{
+  "title": "Implement Copy Json Clipboard Command",
+  "status": "closed",
+  "description": "Implement a sketchpad command that copies the current JSON payload to clipboard and wire it into the command menu with locale labels and test coverage.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/835"
+  },
+  "goal": "🎯️sketchpadimprovements"
+}

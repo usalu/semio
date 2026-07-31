@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/scopes.ts
+// #region 🧲️Header
+// 💻️ .storybook/scopes.ts
 // Specs: Single source of truth for the root Storybook's composable scope system.
 // Summary: Replaces the three hardcoded `ui`/`puzzle`/`compose` stacks in `main.ts` with a data-driven
 // registry every consumer derives from: story globs, workspace aliases, watch-ignores, static-dir
@@ -7,14 +7,14 @@
 // Pure data + pure functions only — no Vite/Storybook imports — so `script.ts` (bun, CLI validation)
 // and `playwright.config.ts` can import it without dragging in the Vite/MDX module graph.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Plugin } from "vite";
 import type { PlaygroundAssetSpec } from "../framework/product/os/module/plugin/registry/generated/playgrounds.ts";
 
 export type { PlaygroundAssetSpec };
 
-// #region 🔖ScopeModel
+// #region 🔖️ScopeModel
 /** @emoji 🗂️ One composable Storybook slice. `id` is hierarchical and mirrors `stories/<id>/` exactly. */
 export type StoryScope = {
   readonly id: string;
@@ -31,9 +31,9 @@ export type StoryScope = {
   /** Lazy scope-gated Vite plugins (only imported when this scope is active). */
   readonly vitePlugins?: () => Promise<Plugin[]>;
 };
-// #endregion 🔖ScopeModel
+// #endregion 🔖️ScopeModel
 
-// #region 🔖ScopeRegistry
+// #region 🔖️ScopeRegistry
 const repoRelative = (path: string) => path;
 
 /** @emoji 🗂️ Every registered Storybook scope. Add a row here + `stories/<id>/` to add a new slice — no other file needs to know about it. */
@@ -50,32 +50,32 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "styling",
-    titlePrefix: "🎨styling",
+    titlePrefix: "🎨️styling",
     sourceRoots: [repoRelative("framework/module/ui/styling")],
   },
   {
     id: "puzzle",
-    titlePrefix: "🧩puzzle",
+    titlePrefix: "🧩️puzzle",
     sourceRoots: [repoRelative("s/plugin/puzzle/module/asset")],
   },
   {
     id: "puzzle/2d",
-    titlePrefix: "🧩puzzle🩻2d",
+    titlePrefix: "🧩️puzzle🩻️2d",
     sourceRoots: [repoRelative("s/plugin/puzzle/app/2d"), repoRelative("s/plugin/puzzle/module/asset")],
   },
   {
     id: "puzzle/3d",
-    titlePrefix: "🧩puzzle🧊3d",
+    titlePrefix: "🧩️puzzle🧊️3d",
     sourceRoots: [repoRelative("s/plugin/puzzle/app/3d"), repoRelative("s/plugin/puzzle/module/asset"), repoRelative("framework/product/os/module/infinite/world/r3f")],
   },
   {
     id: "puzzle/5d",
-    titlePrefix: "🧩puzzle🕐5d",
+    titlePrefix: "🧩️puzzle🕐️5d",
     sourceRoots: [repoRelative("s/plugin/puzzle/app/5d"), repoRelative("s/plugin/puzzle/module/asset")],
   },
   {
     id: "block",
-    titlePrefix: "🧱block",
+    titlePrefix: "🧱️block",
     sourceRoots: [repoRelative("s/plugin/block")],
   },
   {
@@ -97,7 +97,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     // Directory is singular (`stories/compose/algorithm/`) though the story `title`s read "algorithms" (plural) —
     // the id must match the real directory (glob-matched), the titlePrefix documents the human-facing title.
     id: "compose/algorithm",
-    titlePrefix: "🏘️compose🧪algorithms",
+    titlePrefix: "🏘️compose🧪️algorithms",
     sourceRoots: [repoRelative("compose/dev/algorithm"), repoRelative("compose/client/lib/rs"), repoRelative("compose/fixture")],
     aliases: {
       "@semio-tech/compose-algorithm": "compose/dev/algorithm/js/index.ts",
@@ -110,7 +110,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "framework/hosts",
-    titlePrefix: "🛠️framework🔌hosts",
+    titlePrefix: "🛠️framework🔌️hosts",
     sourceRoots: [repoRelative("framework/product/os/module/renderer/js/react"), repoRelative("framework/js"), repoRelative("framework/module/surface"), repoRelative("framework/module/editor"), repoRelative("framework/product/os/module/flow/core/rs")],
     aliases: {
       "@semio-tech/framework-renderer-react": "framework/product/os/module/renderer/js/react/index.tsx",
@@ -147,12 +147,12 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "cad",
-    titlePrefix: "📐cad",
+    titlePrefix: "📐️cad",
     sourceRoots: [repoRelative("s/plugin/cad/module/renderer"), repoRelative("s/plugin/cad/asset"), repoRelative("s/plugin/cad/fixture")],
   },
   {
     id: "coda",
-    titlePrefix: "🧠coda",
+    titlePrefix: "🧠️coda",
     sourceRoots: [repoRelative("compose/client/ui/desktop")],
     aliases: {
       "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
@@ -160,19 +160,19 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   },
   {
     id: "animate",
-    titlePrefix: "🎬animate",
+    titlePrefix: "🎬️animate",
     sourceRoots: [repoRelative("s/plugin/animate/app/present/js/renderer/react")],
   },
 ];
-// #endregion 🔖ScopeRegistry
+// #endregion 🔖️ScopeRegistry
 
-// #region 🔖ScopeResolution
-/** @emoji 🎯 A scope token matches a registered scope's id or any of its descendants (`compose` matches `compose/ui`). */
+// #region 🔖️ScopeResolution
+/** @emoji 🎯️ A scope token matches a registered scope's id or any of its descendants (`compose` matches `compose/ui`). */
 function scopeTokenMatches(token: string, scopeId: string): boolean {
   return scopeId === token || scopeId.startsWith(`${token}/`);
 }
 
-/** @emoji 🧵 Parses `STORYBOOK_SCOPE` (comma-separated scope ids/prefixes) into the active `StoryScope[]`. Empty → every scope. Throws listing registered ids on an unknown token. */
+/** @emoji 🧵️ Parses `STORYBOOK_SCOPE` (comma-separated scope ids/prefixes) into the active `StoryScope[]`. Empty → every scope. Throws listing registered ids on an unknown token. */
 export function resolveActiveScopes(expr: string): StoryScope[] {
   const tokens = expr
     .split(",")
@@ -188,14 +188,14 @@ export function resolveActiveScopes(expr: string): StoryScope[] {
   return STORY_SCOPES.filter((s) => tokens.some((token) => scopeTokenMatches(token, s.id)));
 }
 
-/** @emoji 📖 One story glob per active scope id (parent globs already subsume children via `**`, so a de-duplicated top-level set suffices). */
+/** @emoji 📖️ One story glob per active scope id (parent globs already subsume children via `**`, so a de-duplicated top-level set suffices). */
 export function buildScopeStoryGlobs(activeScopes: readonly StoryScope[]): string[] {
   const ids = activeScopes.map((s) => s.id);
   const topLevel = ids.filter((id) => !ids.some((other) => other !== id && scopeTokenMatches(other, id)));
   return topLevel.map((id) => `./stories/${id}/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`);
 }
 
-/** @emoji 🔗 Merges auto-derived workspace aliases with each active scope's irregular `aliases`. Throws on a key registered with two different values (config-time conflict, not silent last-wins). */
+/** @emoji 🔗️ Merges auto-derived workspace aliases with each active scope's irregular `aliases`. Throws on a key registered with two different values (config-time conflict, not silent last-wins). */
 export function buildScopeAliases(activeScopes: readonly StoryScope[], workspaceAliases: Readonly<Record<string, string>>): Record<string, string> {
   const alias: Record<string, string> = { ...workspaceAliases };
   for (const scope of activeScopes) {
@@ -217,11 +217,11 @@ export function buildScopeWatchIgnores(activeScopes: readonly StoryScope[]): str
   return inactiveRoots.map((root) => `**/${root}/**`);
 }
 
-/** @emoji 🎯 True when `prefix` is (a prefix of) an active scope id — used by `preview.tsx` to gate scope-specific behavior via `__STORYBOOK_ACTIVE_SCOPES__`. */
+/** @emoji 🎯️ True when `prefix` is (a prefix of) an active scope id — used by `preview.tsx` to gate scope-specific behavior via `__STORYBOOK_ACTIVE_SCOPES__`. */
 export function scopeActive(activeScopeIds: readonly string[], prefix: string): boolean {
   return activeScopeIds.some((id) => scopeTokenMatches(prefix, id));
 }
-// #endregion 🔖ScopeResolution
+// #endregion 🔖️ScopeResolution
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;

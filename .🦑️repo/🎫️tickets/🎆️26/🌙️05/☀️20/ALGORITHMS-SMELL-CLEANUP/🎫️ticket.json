@@ -1,0 +1,9 @@
+{
+  "title": "Algorithms Smell Cleanup",
+  "emoji": "🧹️",
+  "status": "closed",
+  "description": "Remove code smells from compose algorithm stories and dev/algorithms: drop unused params, shared selection helpers, typed fixtures, useAlgorithmAsyncRun everywhere, no as any.",
+  "summary": "Final algorithms cleanup: removed invalid useMetabolismPresetKit; added mergeKitWithStoryDesign, storyDesignPlain, pieceIdsFromWire exports; FindReplaceable uses findReplaceableTypesForSelection (no Kit.ensure); CopyAndPaste uses Kit.pasteAnchoringOptions and mergeKitWithStoryDesign; Drag/Move/Delete use useReconciledPieceSelection and pieceIdsFromWire where applicable. Vitest 5/5 in compose/dev/algorithms.",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️d7bb3ea164894ad896339c9f07e9bc80", "⚪️8f837a735f9a4a758134ec42a392f91c"]
+}

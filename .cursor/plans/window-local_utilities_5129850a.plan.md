@@ -114,7 +114,7 @@ In `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)`:
 
 ### 6. Ticket
 
-On execution: open a new ticket under goal `🎯r2602` (same as [PER-WINDOW-LOCAL-OPTIONS](.repo/🎫/26/07/22/PER-WINDOW-LOCAL-OPTIONS/ticket.json) / [INTRODUCE-TOOLS-TO-APP-MODES](.repo/🎫/26/07/22/INTRODUCE-TOOLS-TO-APP-MODES/ticket.json)). No existing ticket covers cross-window utility/gumball leakage ([SHOW-3D-GUMBALL…](.repo/🎫/26/07/21/SHOW-3D-GUMBALL-ONLY-WHEN-TRANSFORM-UTILITY-ACTIVE/ticket.json) only fixed inactive-looking transform).
+On execution: open a new ticket under goal `🎯️r2602` (same as [PER-WINDOW-LOCAL-OPTIONS](.repo/🎫️/26/07/22/PER-WINDOW-LOCAL-OPTIONS/ticket.json) / [INTRODUCE-TOOLS-TO-APP-MODES](.repo/🎫️/26/07/22/INTRODUCE-TOOLS-TO-APP-MODES/ticket.json)). No existing ticket covers cross-window utility/gumball leakage ([SHOW-3D-GUMBALL…](.repo/🎫️/26/07/21/SHOW-3D-GUMBALL-ONLY-WHEN-TRANSFORM-UTILITY-ACTIVE/ticket.json) only fixed inactive-looking transform).
 
 ## Out of scope
 

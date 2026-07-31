@@ -1,14 +1,14 @@
-// #region 🧲Header
-// 💻 compose/dev/algorithm/🧪vitest.config.ts
+// #region 🧲️Header
+// 💻️ compose/dev/algorithm/🧪️vitest.config.ts
 // Specs: Vitest for @semio-tech/compose-algorithm index (embedded tests + WASM-backed runner smoke).
 // Summary: Mirrors compose/js wasm resolution; `@semio-tech/semio-asset` and `@semio-tech/compose-fixture` aliases.
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const composeWasmBg = path.resolve(__dirname, "../../../client/lib/rs/pkg/compose_bg.wasm");

@@ -1,0 +1,14 @@
+{
+  "title": "Mark Active Window In Mode",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "Mode dock tabs in single-window stacks all looked selected because styling used stack-local activeId only. Global activeWindowId must mark the focused tab and window.",
+  "summary": "Mode dock tabs now use global activeWindowId for focus styling (bg-active-base on the active tab; stack-local activeId only affects which tab is shown in a multi-tab stack). Added data-stack-active vs data-active on tabs, data-active on stacks, ring-active-base on the focused Window, and onPointerDownCapture so canvas clicks activate the window. Extended vitest and Mode.stories QuadLayout play assertions.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [],
+  "files": {
+    "created": [".repo/🎫️/26/05/30/MARK-ACTIVE-WINDOW-IN-MODE/ticket.json"],
+    "updated": ["ui/react/index.tsx", ".storybook/stories/ui/Mode.stories.tsx"],
+    "removed": []
+  }
+}

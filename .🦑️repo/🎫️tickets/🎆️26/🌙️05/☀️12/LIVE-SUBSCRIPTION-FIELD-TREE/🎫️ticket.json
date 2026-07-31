@@ -1,0 +1,16 @@
+{
+  "title": "Live Subscription Field Tree",
+  "emoji": "🔗️",
+  "status": "open",
+  "description": "Implement live-query Subscription mirroring Query in compose/graphql/target.schema.graphql; add id-based accessors on Kit, Design, Type, Folder, Piece, Connection, Connector, Port, File, Tag, Concept, Quality, Prop, Stat, Group, Session; promote Checkpoint change/edit id to required. Plan: live_subscription_field_tree_3bc375ea.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1414"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "3bc375ea",
+    "source": "c:\\git\\compose\\.cursor\\plans\\live_subscription_field_tree_3bc375ea.plan.md"
+  },
+  "sessions": ["⚪️0be3b4108521486e9f13a9df3dc4615c"]
+}

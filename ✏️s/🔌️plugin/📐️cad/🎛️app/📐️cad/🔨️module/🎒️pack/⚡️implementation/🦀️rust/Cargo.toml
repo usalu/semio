@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-cad-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Cad app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+cad_document = { path = "../../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/⚡️implementation/🦀️rust", package = "semio-s-app-cad" }
+pack = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+serde_json = "1.0.140"

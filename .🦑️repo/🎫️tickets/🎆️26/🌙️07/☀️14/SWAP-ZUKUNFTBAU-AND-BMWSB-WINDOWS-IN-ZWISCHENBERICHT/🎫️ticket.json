@@ -1,0 +1,12 @@
+{
+  "title": "Swap Zukunftbau and BMWSB Windows in Zwischenbericht",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Swap the zukunftbau window with the bmwsb window in the mit-bestand/bericht LaTeX templates",
+  "summary": "Swapped Zukunft Bau logo window and BMWSB logo window in the LaTeX cover pages layout",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1985"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️c27350f19a954e369afda282bce02a39"]
+}

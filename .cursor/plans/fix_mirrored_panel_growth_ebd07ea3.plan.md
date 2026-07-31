@@ -87,7 +87,7 @@ Leave `dir="rtl"` on the panel/pane root and `FlowProvider` for trees/ribbons/ch
 
 ### 5. Ticket workflow (on implement)
 
-- Goal: `🎯r2602` (same as recent panel chrome work).
+- Goal: `🎯️r2602` (same as recent panel chrome work).
 - Open a new ticket (related to, but not the same as, `FIX-PANEL-TAB-BODY-CHROME-GAP`).
 - Temp logs/notes under the ticket folder; close with summary + touched files when done.
 - Verify with targeted vitest on the new/extended cases (do not claim pass without running).

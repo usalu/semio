@@ -96,10 +96,10 @@ Note: there is currently unstaged, unrelated WIP in the same file (glossary mech
 
 ## Ticket workflow
 
-The bug reintroduces exactly what ticket `.repo/🎫/26/07/08/TOC-SEMIO-WINDOW-TABLES/` (status `closed`) claimed to fix — its closing summary describes the correct materialize/render logic that is no longer in the file. Per repo rules, reopen this ticket with `ticket_reopen` rather than opening a new one, then close it again with an updated summary once verified.
+The bug reintroduces exactly what ticket `.repo/🎫️/26/07/08/TOC-SEMIO-WINDOW-TABLES/` (status `closed`) claimed to fix — its closing summary describes the correct materialize/render logic that is no longer in the file. Per repo rules, reopen this ticket with `ticket_reopen` rather than opening a new one, then close it again with an updated summary once verified.
 
 ## Verification
 
 1. Rebuild `zwischenbericht` PDF (`mit-bestand/bericht` build, then `print/script.ts test`, or equivalent per `print/script.ts`) — this is slow (was >8 min in a prior agent run), run with a generous timeout/background.
-2. Extract text from PDF page 2 (the TOC page) with `pdfjs-dist`, reusing the check pattern from `.repo/🎫/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md`: confirm `Ergebnisse`, `Forschungsfragen`, and nested numbering like `1.2.1` all appear, and that the row count roughly matches the 110 entries in `dist/zwischenbericht.sctoc`.
+2. Extract text from PDF page 2 (the TOC page) with `pdfjs-dist`, reusing the check pattern from `.repo/🎫️/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md`: confirm `Ergebnisse`, `Forschungsfragen`, and nested numbering like `1.2.1` all appear, and that the row count roughly matches the 110 entries in `dist/zwischenbericht.sctoc`.
 3. Save verification screenshot(s)/notes inside the reopened ticket folder per repo rules (temp files/logs must live under the ticket folder, never deleted).

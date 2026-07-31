@@ -1,0 +1,8 @@
+{
+  "title": "Move Schema Graphql to Compose Repo Graphql",
+  "emoji": "📦️",
+  "status": "closed",
+  "description": "Move schema.graphql and queries from repo/cli to repo/graphql. Fix the typo directory repo/grapqhl. Update all references.",
+  "summary": "Also fixed VSCode extension codegen.ts schema path reference.",
+  "goal": "🎯️aioptimizedrepo🎯️reposerver"
+}

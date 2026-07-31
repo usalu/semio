@@ -1,4 +1,4 @@
-# #region 📊Header
+# #region 📊️Header
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -13,9 +13,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# #endregion 📊Header
+# #endregion 📊️Header
 
-# #region 🔌Adapters
+# #region 🔌️Adapters
 # Third-party and stdlib imports for store, assistant, GraphQL, REST, MCP, and engine modules.
 from __future__ import annotations
 
@@ -172,9 +172,9 @@ from semio_core import (
     validateKitDict,
 )
 
-# #endregion 🔌Adapters
+# #endregion 🔌️Adapters
 
-# #region 🪨Store
+# #region 🪨️Store
 # Store MUST provide the data access layer for kit operations via code-based routing.
 
 codeGrammar = (
@@ -203,7 +203,7 @@ class OperationKind(enum.Enum):
 
 
 class Operation(typing.TypedDict, total=False):
-    """👷Typed operation dict produced by OperationBuilder from parsed code grammar.
+    """👷️Typed operation dict produced by OperationBuilder from parsed code grammar.
     `kind` is always present. Other fields depend on the kind.
     """
 
@@ -217,7 +217,7 @@ class Operation(typing.TypedDict, total=False):
 
 
 class TransactionChange(typing.TypedDict):
-    """💿A single recorded change within a transaction.
+    """💿️A single recorded change within a transaction.
     """
 
     kind: str
@@ -228,7 +228,7 @@ class TransactionChange(typing.TypedDict):
 
 
 class Transaction(typing.TypedDict):
-    """🪪An active MCP session transaction tracking kit changes for rollback.
+    """🪪️An active MCP session transaction tracking kit changes for rollback.
     """
 
     active: bool
@@ -237,7 +237,7 @@ class Transaction(typing.TypedDict):
 
 
 class OperationBuilder(lark.Transformer):
-    """📐Lark transformer that builds operation dicts from parsed code grammar trees.
+    """📐️Lark transformer that builds operation dicts from parsed code grammar trees.
     Callers MUST pass a valid parse tree from codeParser.
     """
 
@@ -272,7 +272,7 @@ class OperationBuilder(lark.Transformer):
 
 
 class StoreKind(enum.Enum):
-    """🏪The kind of the store.
+    """🏪️The kind of the store.
     Callers MUST use one of the defined store kinds when selecting a backend.
     """
 
@@ -282,7 +282,7 @@ class StoreKind(enum.Enum):
 
 
 class CommandKind(enum.Enum):
-    """🔧 The kind of the command.
+    """🔧️ The kind of the command.
     Callers MUST use a valid CommandKind when calling Store.execute.
     """
 
@@ -303,7 +303,7 @@ class Store(abc.ABC):
         self.uri = uri
 
     def execute(self, command: CommandKind = CommandKind.QUERY, code: str = "", input: str = "") -> typing.Any:
-        """❕ Execute a command on the store."""
+        """❕️ Execute a command on the store."""
         codeTree = codeParser.parse(code)
         operation = OperationBuilder().transform(codeTree)
         if command == CommandKind.QUERY:
@@ -324,22 +324,22 @@ class Store(abc.ABC):
 
     @abc.abstractmethod
     def get(cls: "Store", operation: Operation) -> typing.Any:
-        """🔍 Get an entity from the store."""
+        """🔍️ Get an entity from the store."""
         pass
 
     @abc.abstractmethod
     def put(cls: "Store", operation: Operation, input: str) -> typing.Any:
-        """📥 Put an entity in the store."""
+        """📥️ Put an entity in the store."""
         pass
 
     @abc.abstractmethod
     def update(cls: "Store", operation: Operation, input: str) -> typing.Any:
-        """🔄 Update an entity in the store."""
+        """🔄️ Update an entity in the store."""
         pass
 
     @abc.abstractmethod
     def delete(cls: "Store", operation: Operation) -> typing.Any:
-        """🗑 Delete an entity from the store."""
+        """🗑️ Delete an entity from the store."""
         pass
 
 
@@ -371,7 +371,7 @@ class DatabaseStore(Store, abc.ABC):
     @classmethod
     @abc.abstractmethod
     def fromUri(cls, uri: str) -> "DatabaseStore":
-        """🔧 Get a store from the uri."""
+        """🔧️ Get a store from the uri."""
         pass
 
     def postDeleteKit(self) -> None:
@@ -495,7 +495,7 @@ class DatabaseStore(Store, abc.ABC):
                     raise FeatureNotYetSupported()
 
     def apply_diff(self, kitUri: str, diff: dict) -> dict:
-        """🔷Apply a kit diff directly via SQL. Loads kit JSON, applies diff, stores back.
+        """🔷️Apply a kit diff directly via SQL. Loads kit JSON, applies diff, stores back.
         Returns the updated kit dict.
         """
         with self._connect() as conn:
@@ -513,7 +513,7 @@ class DatabaseStore(Store, abc.ABC):
 
 
 class SSLMode(enum.Enum):
-    """🔒 The security level of the session
+    """🔒️ The security level of the session
     Callers MUST select the appropriate SSL mode for the target database security policy.
     """
 
@@ -526,7 +526,7 @@ class SSLMode(enum.Enum):
 
 
 def cacheDir(remoteUri: str) -> str:
-    """📂Returns the local cache directory path for a remote kit URI.
+    """📂️Returns the local cache directory path for a remote kit URI.
     Callers MUST provide a valid remote URI string.
     """
     cacheDir = os.path.expanduser("~/.semio/cache")
@@ -535,7 +535,7 @@ def cacheDir(remoteUri: str) -> str:
 
 
 def cache(remoteUri: str) -> str:
-    """📦Cache a remote kit and delete the existing cache if it was already cached.
+    """📦️Cache a remote kit and delete the existing cache if it was already cached.
     Callers MUST provide a URI starting with http and ending with .zip.
     """
     if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
@@ -573,7 +573,7 @@ def cache(remoteUri: str) -> str:
 
 
 class SqliteStore(DatabaseStore):
-    """📄SQLite-backed store that persists kit data as JSON in a local .semio database file.
+    """📄️SQLite-backed store that persists kit data as JSON in a local .semio database file.
     Callers MUST use fromUri to construct instances with a valid local path.
     """
 
@@ -616,7 +616,7 @@ class SqliteStore(DatabaseStore):
 
 
 class PostgresStore(DatabaseStore):
-    """🔌PostgreSQL-backed store for remote database connections.
+    """🔌️PostgreSQL-backed store for remote database connections.
     Callers MUST NOT use this class until PostgreSQL support is implemented.
     """
 
@@ -628,14 +628,14 @@ class PostgresStore(DatabaseStore):
         raise FeatureNotYetSupported()
 
 
-# #region 🪩Auth
+# #region 🪩️Auth
 # Auth MUST provide credential management for remote server authentication using Bearer tokens.
 
 AUTH_FILE = os.path.join(os.path.expanduser(USER_FOLDER), "auth.json")
 
 
 def _load_auth() -> dict:
-    """🔶Load auth credentials from the auth file.
+    """🔶️Load auth credentials from the auth file.
     Returns dict mapping serverUrl -> {token, email}.
     """
     if os.path.exists(AUTH_FILE):
@@ -645,7 +645,7 @@ def _load_auth() -> dict:
 
 
 def _save_auth(auth: dict) -> None:
-    """🔹Save auth credentials to the auth file.
+    """🔹️Save auth credentials to the auth file.
     Callers MUST provide a dict mapping serverUrl -> {token, email}.
     """
     os.makedirs(os.path.dirname(AUTH_FILE), exist_ok=True)
@@ -654,7 +654,7 @@ def _save_auth(auth: dict) -> None:
 
 
 def login(serverUrl: str, email: str, password: str) -> dict:
-    """🔐 Login to a remote server and store the auth token.
+    """🔐️ Login to a remote server and store the auth token.
     Callers MUST provide a valid server URL, email and password.
     Returns {ok, serverUrl, email, token} on success.
     """
@@ -683,7 +683,7 @@ def login(serverUrl: str, email: str, password: str) -> dict:
 
 
 def logout(serverUrl: str) -> dict:
-    """🔓 Logout from a remote server and remove the stored token.
+    """🔓️ Logout from a remote server and remove the stored token.
     Callers MUST provide a valid server URL.
     Returns {ok, serverUrl} on success.
     """
@@ -695,7 +695,7 @@ def logout(serverUrl: str) -> dict:
 
 
 def getAuthToken(serverUrl: str) -> str:
-    """🔑 Get the stored auth token for a server.
+    """🔑️ Get the stored auth token for a server.
     Raises AuthTokenNotFound if no token is stored.
     """
     serverUrl = serverUrl.rstrip("/")
@@ -707,7 +707,7 @@ def getAuthToken(serverUrl: str) -> str:
 
 
 def getAuthStatus(serverUrl: str) -> dict:
-    """📋 Get the auth status for a server.
+    """📋️ Get the auth status for a server.
     Returns {authenticated, serverUrl, email} without raising.
     """
     serverUrl = serverUrl.rstrip("/")
@@ -718,7 +718,7 @@ def getAuthStatus(serverUrl: str) -> dict:
     return {"authenticated": False, "serverUrl": serverUrl, "email": ""}
 
 
-# #endregion 🪩Auth
+# #endregion 🪩️Auth
 
 
 class RemoteStore(Store):
@@ -736,7 +736,7 @@ class RemoteStore(Store):
 
     @classmethod
     def fromUri(cls, uri: str) -> "RemoteStore":
-        """🔧 Construct a RemoteStore from a remote URI.
+        """🔧️ Construct a RemoteStore from a remote URI.
         URI format: serverUrl + /api/kits/ + encodedKitUri
         """
         if "/api/kits/" not in uri:
@@ -748,23 +748,23 @@ class RemoteStore(Store):
         return cls(uri, serverUrl, kitUri)
 
     def _headers(self) -> dict:
-        """📨Get authorization headers for remote requests."""
+        """📨️Get authorization headers for remote requests."""
         token = getAuthToken(self.serverUrl)
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
     def _api_url(self, path: str = "") -> str:
-        """🌐Build API URL for a kit operation."""
+        """🌐️Build API URL for a kit operation."""
         base = f"{self.serverUrl}/api/kits/{encode(self.kitUri)}"
         if path:
             return f"{base}/{path}"
         return base
 
     def initialize(self) -> None:
-        """💻Remote kits are initialized on the server side."""
+        """💻️Remote kits are initialized on the server side."""
         pass
 
     def get(self, operation: Operation) -> typing.Any:
-        """🔍 Get an entity from the remote store."""
+        """🔍️ Get an entity from the remote store."""
         kind = operation["kind"]
         try:
             if kind == OperationKind.KIT:
@@ -783,7 +783,7 @@ class RemoteStore(Store):
             raise ServerUnreachable(self.serverUrl)
 
     def put(self, operation: Operation, input: KitInput | DesignInput | TypeInput) -> typing.Any:
-        """📥 Put an entity in the remote store."""
+        """📥️ Put an entity in the remote store."""
         kind = operation["kind"]
         try:
             if kind == OperationKind.KIT:
@@ -830,11 +830,11 @@ class RemoteStore(Store):
             raise ServerUnreachable(self.serverUrl)
 
     def update(self, operation: Operation, input: str) -> typing.Any:
-        """🔄 Update an entity in the remote store."""
+        """🔄️ Update an entity in the remote store."""
         raise FeatureNotYetSupported()
 
     def delete(self, operation: Operation) -> typing.Any:
-        """🗑 Delete an entity from the remote store."""
+        """🗑️ Delete an entity from the remote store."""
         kind = operation["kind"]
         try:
             if kind == OperationKind.KIT:
@@ -868,7 +868,7 @@ class RemoteStore(Store):
 
 @functools.lru_cache
 def StoreFactory(uri: str) -> Store:
-    """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created.
+    """🏭️ Get a store from the uri. This store doesn't need to exist yet as long as it can be created.
     Callers MUST provide either an absolute local path, an http URL ending in .zip (cached), or a remote server URI.
     Remote server URIs have the format: http(s)://server/api/kits/encodedKitUri
     """
@@ -887,7 +887,7 @@ def StoreFactory(uri: str) -> Store:
 
 
 def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
-    """🔤Parses a code string into a store instance and operation dict.
+    """🔤️Parses a code string into a store instance and operation dict.
     Callers MUST provide a valid code string matching the code grammar.
     """
     codeTree = codeParser.parse(code)
@@ -897,7 +897,7 @@ def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
 
 
 def get(code: str, cache=False) -> typing.Any:
-    """🔍 Get an entity from the store.
+    """🔍️ Get an entity from the store.
     Callers MUST provide a valid code string with an encoded kit URI.
     """
     store, operation = storeAndOperationFromCode(code)
@@ -905,7 +905,7 @@ def get(code: str, cache=False) -> typing.Any:
 
 
 def put(code: str, input: str) -> typing.Any:
-    """📥 Put an entity in the store.
+    """📥️ Put an entity in the store.
     Callers MUST provide a valid code string and matching input data.
     """
     store, operation = storeAndOperationFromCode(code)
@@ -913,28 +913,28 @@ def put(code: str, input: str) -> typing.Any:
 
 
 def delete(code: str) -> typing.Any:
-    """🗑 Delete an entity from the store.
+    """🗑️ Delete an entity from the store.
     Callers MUST provide a valid code string referencing an existing entity.
     """
     store, operation = storeAndOperationFromCode(code)
     return store.delete(operation)
 
 
-# #endregion 🪨Store
+# #endregion 🪨️Store
 
 # #region 🎗️Assistant
 # Assistant MUST provide AI-powered design prediction using OpenAI structured outputs.
 
 
 def encodeForPrompt(context: str):
-    """📝Sanitizes a context string for use in AI prompts by replacing delimiters.
+    """📝️Sanitizes a context string for use in AI prompts by replacing delimiters.
     Callers MUST pass a string that will be embedded in a prompt template.
     """
     return context.replace(";", ",").replace("\n", " ")
 
 
 def replaceDefault(context: str, default: str):
-    """🔸Substitutes an empty context string with the provided default value.
+    """🔸️Substitutes an empty context string with the provided default value.
     Callers MUST provide a non-None default string.
     """
     if context == "":
@@ -943,7 +943,7 @@ def replaceDefault(context: str, default: str):
 
 
 def encodeType(type: TypeContext):
-    """🎨Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
+    """🎨️Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
     Callers MUST provide a valid TypeContext with populated connectors.
     """
     typeClone = type.representation_copy(deep=True)
@@ -956,7 +956,7 @@ def encodeType(type: TypeContext):
 
 
 def decodeDesign(design: dict):
-    """📩Decodes a raw AI response dict into a DesignPrediction representation.
+    """📩️Decodes a raw AI response dict into a DesignPrediction representation.
     Callers MUST provide a dict with pieces and connections arrays.
     """
     decodedDesign = {
@@ -1004,7 +1004,7 @@ def decodeDesign(design: dict):
 
 
 def healDesign(design: DesignPrediction, types: list[TypeContext]):
-    """🩺 Heal a design by replacing missing type variants with the first variant.
+    """🩺️ Heal a design by replacing missing type variants with the first variant.
     TODO: Replace prototype healing with one that makes more for every single property.
     Callers MUST provide a design with pieces referencing types available in the types list.
     """
@@ -1234,7 +1234,7 @@ designResponseFormat = json.loads(
 
 
 def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
-    """🔮 Predict a design based on a description, the types that should be used and an optional base design.
+    """🔮️ Predict a design based on a description, the types that should be used and an optional base design.
     Callers MUST ensure the openaiClient is initialized before calling.
     """
     if openaiClient is None:
@@ -1329,20 +1329,20 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
 
 # #endregion 🎗️Assistant
 
-# #region 🎬Graphql
-# Graphql MUST serve the hand-written SDL next to this module (compose/engine/🔗schema.graphql) with bound resolvers (schema-first).
+# #region 🎬️Graphql
+# Graphql MUST serve the hand-written SDL next to this module (compose/engine/🔗️schema.graphql) with bound resolvers (schema-first).
 
 
 def _engine_bundle_dir() -> pathlib.Path:
-    # Directory containing engine entrypoint and bundled 🔗schema.graphql (source tree).
+    # Directory containing engine entrypoint and bundled 🔗️schema.graphql (source tree).
     return pathlib.Path(__file__).resolve().parent
 
 
 def _graphql_schema_file() -> pathlib.Path:
-    # Path to the engine HTTP GraphQL SDL (PyInstaller places 🔗schema.graphql at bundle root).
+    # Path to the engine HTTP GraphQL SDL (PyInstaller places 🔗️schema.graphql at bundle root).
     if getattr(sys, "frozen", False):
-        return pathlib.Path(sys._MEIPASS) / "🔗schema.graphql"
-    return _engine_bundle_dir() / "🔗schema.graphql"
+        return pathlib.Path(sys._MEIPASS) / "🔗️schema.graphql"
+    return _engine_bundle_dir() / "🔗️schema.graphql"
 
 
 def _openapi_schema_file() -> pathlib.Path:
@@ -1424,9 +1424,9 @@ graphqlSchema = graphql_schema
 graphql_http_app = GraphQL(graphql_schema, debug=True)
 
 
-# #endregion 🎬Graphql
+# #endregion 🎬️Graphql
 
-# #region 🌟Rest
+# #region 🌟️Rest
 # Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
@@ -1441,7 +1441,7 @@ rest.add_middleware(
 
 
 class NativeAlgorithmExecuteBody(pydantic.BaseRepresentation):
-    """🔺Request body for POST /api/native-algorithms/execute.
+    """🔺️Request body for POST /api/native-algorithms/execute.
     """
 
     language: typing.Literal["python", "go", "rust", "csharp"]
@@ -1454,13 +1454,13 @@ class NativeAlgorithmExecuteBody(pydantic.BaseRepresentation):
 
 
 def _semio_repo_root() -> pathlib.Path:
-    """🔻Return the semio/ directory containing go, rs, py bundles.
+    """🔻️Return the semio/ directory containing go, rs, py bundles.
     """
     return pathlib.Path(__file__).resolve().parent.parent
 
 
 def _normalize_csharp_json_keys(value: typing.Any) -> typing.Any:
-    """🔠Match Storybook: first character of each object key lowercased for C# Newtonsoft payloads.
+    """🔠️Match Storybook: first character of each object key lowercased for C# Newtonsoft payloads.
     """
     if isinstance(value, list):
         return [_normalize_csharp_json_keys(v) for v in value]
@@ -1474,7 +1474,7 @@ def _normalize_csharp_json_keys(value: typing.Any) -> typing.Any:
 
 
 def _go_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
-    """🔬Run semio/algorithm/native-bridges/go and return parsed JSON result.
+    """🔬️Run semio/algorithm/native-bridges/go and return parsed JSON result.
     """
     go_root = _semio_repo_root() / "algorithms" / "native-bridges" / "go"
     proc = subprocess.run(
@@ -1495,7 +1495,7 @@ def _go_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
 
 
 def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
-    """⬛Run semio/algorithm/native-bridges/rs and return parsed JSON result.
+    """⬛️Run semio/algorithm/native-bridges/rs and return parsed JSON result.
     """
     rs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "rs"
     proc = subprocess.run(
@@ -1515,7 +1515,7 @@ def _rust_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
 
 
 def _csharp_native_bridge(payload: dict[str, typing.Any]) -> typing.Any:
-    """🔷Run semio/algorithm/native-bridges/csharp and return parsed JSON result.
+    """🔷️Run semio/algorithm/native-bridges/csharp and return parsed JSON result.
     """
     cs_root = _semio_repo_root() / "algorithms" / "native-bridges" / "csharp"
     proc = subprocess.run(
@@ -1594,7 +1594,7 @@ def _build_design_viewer_html() -> str:
 
 
 def _build_kit_viewer_html() -> str:
-    """⬜Build the embeddable kit viewer HTML (SemioKit-only MCP shell) from the same bundle as the design viewer.
+    """⬜️Build the embeddable kit viewer HTML (SemioKit-only MCP shell) from the same bundle as the design viewer.
     Sets #root data-mcp-viewer to kit so mcp-app.tsx mounts McpKitViewer from @compose/ui.
     Callers MUST use the returned HTML for the /app/kit-viewer endpoint and ui://semio/kit-viewer resource.
     """
@@ -1605,7 +1605,7 @@ def _build_kit_viewer_html() -> str:
 
 
 def _build_scene_viewer_html() -> str:
-    """🟥Build the embeddable scene viewer HTML from the same bundle, mounting McpSceneViewer (3D only).
+    """🟥️Build the embeddable scene viewer HTML from the same bundle, mounting McpSceneViewer (3D only).
     """
     html = _build_design_viewer_html()
     if "MCP App not built" in html:
@@ -1614,7 +1614,7 @@ def _build_scene_viewer_html() -> str:
 
 
 def _build_diagram_viewer_html() -> str:
-    """🟧Build the embeddable diagram viewer HTML from the same bundle, mounting McpDiagramViewer (2D only).
+    """🟧️Build the embeddable diagram viewer HTML from the same bundle, mounting McpDiagramViewer (2D only).
     """
     html = _build_design_viewer_html()
     if "MCP App not built" in html:
@@ -1900,12 +1900,12 @@ def custom_openapi():
 rest.openapi = custom_openapi
 
 
-# #region 🧩Auth Endpoints
+# #region 🧩️Auth Endpoints
 # Auth endpoints MUST expose login, logout and status for remote server authentication.
 
 
 class LoginRequest(pydantic.BaseRepresentation):
-    """📜Login request body.
+    """📜️Login request body.
     """
 
     serverUrl: str
@@ -1914,7 +1914,7 @@ class LoginRequest(pydantic.BaseRepresentation):
 
 
 class LoginResponse(pydantic.BaseRepresentation):
-    """🟪Login response body.
+    """🟪️Login response body.
     """
 
     ok: bool
@@ -1924,14 +1924,14 @@ class LoginResponse(pydantic.BaseRepresentation):
 
 
 class LogoutRequest(pydantic.BaseRepresentation):
-    """🟫Logout request body.
+    """🟫️Logout request body.
     """
 
     serverUrl: str
 
 
 class AuthStatusResponse(pydantic.BaseRepresentation):
-    """💠Auth status response body.
+    """💠️Auth status response body.
     """
 
     authenticated: bool
@@ -1976,9 +1976,9 @@ async def rest_auth_status(serverUrl: str) -> AuthStatusResponse:
         return fastapi.Response(content=str(e), status_code=500)
 
 
-# #endregion 🧩Auth Endpoints
+# #endregion 🧩️Auth Endpoints
 
-# #endregion 🌟Rest
+# #endregion 🌟️Rest
 
 # #region ⛩️Mcp
 # Mcp MUST expose stateful kit operations via Representation Context Protocol.
@@ -1997,7 +1997,7 @@ _DIAGRAM_APP_RESOURCE_META = {"ui": {"resourceUri": _DIAGRAM_APP_RESOURCE_URI}, 
 
 
 def _mcp_app_html_resource_meta() -> dict[str, typing.Any]:
-    """🎁Resource _meta for MCP App HTML: hosts apply _meta.ui.csp to the sandbox (see .🦑repo/✍️/mcp-app.md)."""
+    """🎁️Resource _meta for MCP App HTML: hosts apply _meta.ui.csp to the sandbox (see .🦑️repo/✍️/mcp-app.md)."""
     origins = [
         f"http://127.0.0.1:{PORT}",
         f"http://localhost:{PORT}",
@@ -2030,7 +2030,7 @@ _mcp_app_file_blobs: dict[str, str] = {}
 
 
 def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
-    """🔳Load kit dict from a remote server via REST API.
+    """🔳️Load kit dict from a remote server via REST API.
     Callers MUST have called login() first to authenticate with the server.
     """
     token = getAuthToken(serverUrl)
@@ -2054,7 +2054,7 @@ def _load_kit_from_remote(serverUrl: str, kitUri: str) -> dict:
 
 
 def _load_reference_kit_json_for_folder(folder: pathlib.Path) -> dict | None:
-    """🧭Load nearby canonical kit JSON used to restore links omitted by folder stores."""
+    """🧭️Load nearby canonical kit JSON used to restore links omitted by folder stores."""
     for json_path in (
         folder / "kit.semio.json",
         folder / "kit.json",
@@ -2069,7 +2069,7 @@ def _load_reference_kit_json_for_folder(folder: pathlib.Path) -> dict | None:
 
 
 def _merge_reference_collection_links(current_items: list[dict], reference_items: list[dict], link_keys: tuple[str, ...]) -> list[dict]:
-    """🔗Copy relationship fields from canonical JSON when imported folder records omit them."""
+    """🔗️Copy relationship fields from canonical JSON when imported folder records omit them."""
     reference_by_id = {item.get("id"): item for item in reference_items if isinstance(item, dict) and item.get("id")}
     merged: list[dict] = []
     for item in current_items:
@@ -2087,7 +2087,7 @@ def _merge_reference_collection_links(current_items: list[dict], reference_items
 
 
 def _merge_reference_kit_links(current: dict, reference: dict | None) -> dict:
-    """🧩Merge canonical relationship data into a folder-loaded kit without replacing live records."""
+    """🧩️Merge canonical relationship data into a folder-loaded kit without replacing live records."""
     if not reference:
         return current
     merged = copy.deepcopy(current)
@@ -2100,7 +2100,7 @@ def _merge_reference_kit_links(current: dict, reference: dict | None) -> dict:
 
 
 def _load_kit_from_path(path: str) -> dict:
-    """📁Load kit dict from path (JSON file or folder with .semio/kit.db or kit JSON).
+    """📁️Load kit dict from path (JSON file or folder with .semio/kit.db or kit JSON).
     """
     p = pathlib.Path(path).resolve()
     if p.is_file() and p.suffix == ".json":
@@ -2130,7 +2130,7 @@ def _load_kit_from_path(path: str) -> dict:
 
 
 def _session_id(ctx) -> typing.Any | None:
-    """🔲Get session identifier from context for per-session isolation."""
+    """🔲️Get session identifier from context for per-session isolation."""
     return ctx.session if ctx and hasattr(ctx, "session") else None
 
 
@@ -2198,7 +2198,7 @@ def _hydrate_design_from_kit_disk_if_shallow(design: dict[str, typing.Any], kit_
 
 
 def _get_session_design(ctx) -> dict[str, typing.Any]:
-    """💼Get current design from session. Raises if start_working_in_design was not called."""
+    """💼️Get current design from session. Raises if start_working_in_design was not called."""
     sid = _session_id(ctx)
     if sid is None or sid not in _mcp_session_designs:
         raise ValueError("Call start_working_in_design(id) first to set the design for this session.")
@@ -2222,7 +2222,7 @@ def _get_session_type(ctx) -> dict[str, typing.Any]:
 
 
 def _clone_kit(kit: dict | None) -> dict | None:
-    """📸Create a deep copy of a kit dict for safe transaction snapshots."""
+    """📸️Create a deep copy of a kit dict for safe transaction snapshots."""
     if kit is None:
         return None
     return copy.deepcopy(kit)
@@ -2259,7 +2259,7 @@ def _sync_session_design_and_type(sid: int | None):
 
 
 def _get_active_transaction(sid: int | None) -> Transaction | None:
-    """◻️Return the active transaction for a session, if any."""
+    """◻Return the active transaction for a session, if any."""
     if sid is None:
         return None
     transaction = _mcp_session_transactions.get(sid)
@@ -2269,7 +2269,7 @@ def _get_active_transaction(sid: int | None) -> Transaction | None:
 
 
 def _record_transaction_kit_change(sid: int | None, before_kit: dict | None, after_kit: dict | None):
-    """◼️Record a kit change in the active transaction using forward/backward diffs."""
+    """◼Record a kit change in the active transaction using forward/backward diffs."""
     if sid is None or sid in _mcp_session_transaction_rollback:
         return
     transaction = _get_active_transaction(sid)
@@ -2298,7 +2298,7 @@ def _record_transaction_kit_change(sid: int | None, before_kit: dict | None, aft
 
 
 def _apply_kit_diff_to_copy(base: dict, diff: dict) -> dict:
-    """🧮Apply a kit diff and return a dict even when the core applier mutates in place."""
+    """🧮️Apply a kit diff and return a dict even when the core applier mutates in place."""
     target = _clone_kit(base)
     applied = applyKitDiffDict(target, diff)
     return target if applied is None else applied
@@ -2314,7 +2314,7 @@ def _set_session_kit(ctx, kit: dict):
 
 
 def _clear_session_kit(ctx):
-    """🔵Clear session kit and record the change if a transaction is active."""
+    """🔵️Clear session kit and record the change if a transaction is active."""
     sid = _session_id(ctx)
     before = _mcp_session_kits.get(sid)
     _record_transaction_kit_change(sid, before, None)
@@ -2345,14 +2345,14 @@ def _replace_design_in_session_kit(ctx: Context, design: dict) -> dict:
 
 
 def _mutate_current_design(ctx: Context, mutator: typing.Callable[[dict], None]) -> dict:
-    """🔴Clone, mutate, and persist the current design in the current session kit."""
+    """🔴️Clone, mutate, and persist the current design in the current session kit."""
     design = copy.deepcopy(_get_session_design(ctx))
     mutator(design)
     return _replace_design_in_session_kit(ctx, design)
 
 
 def _rollback_session_transaction(sid: int):
-    """🟠Rollback all transaction changes in reverse order."""
+    """🟠️Rollback all transaction changes in reverse order."""
     transaction = _get_active_transaction(sid)
     if transaction is None:
         return
@@ -2377,7 +2377,7 @@ def _rollback_session_transaction(sid: int):
 
 @mcp.tool(meta=_KIT_APP_RESOURCE_META)
 def start_working_in_local_kit(path: str, ctx: Context) -> CallToolResult:
-    """🟡Load a local kit into the session. Must be called before any kit operations.
+    """🟡️Load a local kit into the session. Must be called before any kit operations.
 
     Accepts an absolute path to a kit folder containing .semio/kit.db, a JSON file, or a split store folder containing wip/initialKit/kit.semio.json.
     """
@@ -2396,7 +2396,7 @@ def start_working_in_local_kit(path: str, ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_KIT_APP_RESOURCE_META)
 def start_new_kit(name: str, version: str, ctx: Context) -> CallToolResult:
-    """📌Create a new in-memory kit for the session with the given name and version."""
+    """📌️Create a new in-memory kit for the session with the given name and version."""
     try:
         sid = _session_id(ctx)
         kit = {
@@ -2419,7 +2419,7 @@ def start_new_kit(name: str, version: str, ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_KIT_APP_RESOURCE_META)
 def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> CallToolResult:
-    """🟢Load a remote kit into the session. Requires a prior login call. Must be called before any kit operations."""
+    """🟢️Load a remote kit into the session. Requires a prior login call. Must be called before any kit operations."""
     try:
         kit = _load_kit_from_remote(serverUrl, kitUri)
         sid = _session_id(ctx)
@@ -2433,7 +2433,7 @@ def start_working_in_remote_kit(serverUrl: str, kitUri: str, ctx: Context) -> Ca
         return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-# #region 🎎MCP Auth Tools
+# #region 🎎️MCP Auth Tools
 # MCP Auth Tools MUST expose login, logout and status for remote server authentication.
 
 
@@ -2446,7 +2446,7 @@ def mcp_login(serverUrl: str, email: str, password: str) -> dict:
 
 
 def mcp_logout(serverUrl: str) -> dict:
-    """➖Logout from a remote semio hub and remove the stored token."""
+    """➖️Logout from a remote semio hub and remove the stored token."""
     try:
         return logout(serverUrl)
     except Exception as e:
@@ -2454,18 +2454,18 @@ def mcp_logout(serverUrl: str) -> dict:
 
 
 def mcp_auth_status(serverUrl: str) -> dict:
-    """🟣Get the authentication status for a remote semio hub."""
+    """🟣️Get the authentication status for a remote semio hub."""
     try:
         return getAuthStatus(serverUrl)
     except Exception as e:
         return {"error": str(e)}
 
 
-# #endregion 🎎MCP Auth Tools
+# #endregion 🎎️MCP Auth Tools
 
 
 def validate_kit(kit: dict) -> dict:
-    """🟤Validate a kit dict and return any validation problems."""
+    """🟤️Validate a kit dict and return any validation problems."""
     try:
         result = validateKitDict(kit)
         return result.representation_dump() if hasattr(result, "representation_dump") else {"problems": []}
@@ -2474,7 +2474,7 @@ def validate_kit(kit: dict) -> dict:
 
 
 def flatten_design(kit: dict, design_id: str) -> dict:
-    """⚪Flatten a design by computing absolute planes for all pieces."""
+    """⚪️Flatten a design by computing absolute planes for all pieces."""
     try:
         return flattenDesignDict(kit, design_id)
     except Exception as e:
@@ -2482,7 +2482,7 @@ def flatten_design(kit: dict, design_id: str) -> dict:
 
 
 def get_kit_diff(before: dict, after: dict) -> dict:
-    """⚫Compute the diff between two kit states."""
+    """⚫️Compute the diff between two kit states."""
     try:
         return getKitDiffDict(before, after)
     except Exception as e:
@@ -2490,7 +2490,7 @@ def get_kit_diff(before: dict, after: dict) -> dict:
 
 
 def apply_kit_diff(base: dict, diff: dict) -> dict:
-    """🩵Apply a diff to a kit dict."""
+    """🩵️Apply a diff to a kit dict."""
     try:
         return _apply_kit_diff_to_copy(base, diff)
     except Exception as e:
@@ -2498,7 +2498,7 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
 
 
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
-    """🩶Compute the inverse of a diff for undo operations."""
+    """🩶️Compute the inverse of a diff for undo operations."""
     try:
         return inverseKitDiffDict(original, applied_diff)
     except Exception as e:
@@ -2506,7 +2506,7 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
 
 
 def get_kit_change(before: dict, after: dict) -> dict:
-    """🩷Compute forward and backward diffs between two kit states for undo/redo."""
+    """🩷️Compute forward and backward diffs between two kit states for undo/redo."""
     try:
         return changeToDict(getKitChange(before, after))
     except Exception as e:
@@ -2514,7 +2514,7 @@ def get_kit_change(before: dict, after: dict) -> dict:
 
 
 def get_design_change(before: dict, after: dict) -> dict:
-    """💜Compute forward and backward diffs between two design states for undo/redo."""
+    """💜️Compute forward and backward diffs between two design states for undo/redo."""
     try:
         return changeToDict(getDesignChange(before, after))
     except Exception as e:
@@ -2522,7 +2522,7 @@ def get_design_change(before: dict, after: dict) -> dict:
 
 
 def pieces_metadata(kit: dict, design_id: str) -> dict:
-    """💙Get metadata for all pieces in a design including plane, center, fixedPieceId, parentPieceId, depth, and path."""
+    """💙️Get metadata for all pieces in a design including plane, center, fixedPieceId, parentPieceId, depth, and path."""
     try:
         return piecesMetadataDict(kit, design_id)
     except Exception as e:
@@ -2530,7 +2530,7 @@ def pieces_metadata(kit: dict, design_id: str) -> dict:
 
 
 def get_primitive_design(kit: dict, design_id: str) -> dict:
-    """💚Get the root design of a design family."""
+    """💚️Get the root design of a design family."""
     try:
         return getPrimitiveDesignDict(kit, design_id)
     except Exception as e:
@@ -2538,7 +2538,7 @@ def get_primitive_design(kit: dict, design_id: str) -> dict:
 
 
 def get_design_family(kit: dict, design_id: str) -> list:
-    """🌳Get all designs in a design family tree."""
+    """🌳️Get all designs in a design family tree."""
     try:
         return getDesignFamilyDict(kit, design_id)
     except Exception as e:
@@ -2546,7 +2546,7 @@ def get_design_family(kit: dict, design_id: str) -> list:
 
 
 def get_design_siblings(kit: dict, design_id: str) -> list:
-    """💛Get all sibling designs sharing the same parent, excluding the given design."""
+    """💛️Get all sibling designs sharing the same parent, excluding the given design."""
     try:
         return getDesignSiblingsDict(kit, design_id)
     except Exception as e:
@@ -2554,7 +2554,7 @@ def get_design_siblings(kit: dict, design_id: str) -> list:
 
 
 def get_design_children(kit: dict, design_id: str) -> list:
-    """🧡Get all direct child designs of a design."""
+    """🧡️Get all direct child designs of a design."""
     try:
         return getDesignChildrenDict(kit, design_id)
     except Exception as e:
@@ -2578,7 +2578,7 @@ def can_use_design_as_piece(kit: dict, container_design_id: str, piece_design_id
 
 
 def find_same_family_design_pieces(kit: dict, design_id: str) -> list:
-    """🤍Find pieces in a design that reference designs from the same family."""
+    """🤍️Find pieces in a design that reference designs from the same family."""
     try:
         return findSameFamilyDesignPiecesDict(kit, design_id)
     except Exception as e:
@@ -2586,7 +2586,7 @@ def find_same_family_design_pieces(kit: dict, design_id: str) -> list:
 
 
 def get_primitive_type(kit: dict, type_id: str) -> dict:
-    """🖤Get the root type of a type family."""
+    """🖤️Get the root type of a type family."""
     try:
         return getPrimitiveTypeDict(kit, type_id)
     except Exception as e:
@@ -2594,7 +2594,7 @@ def get_primitive_type(kit: dict, type_id: str) -> dict:
 
 
 def get_type_family(kit: dict, type_id: str) -> list:
-    """🤎Get all types in a type family tree."""
+    """🤎️Get all types in a type family tree."""
     try:
         return getTypeFamilyDict(kit, type_id)
     except Exception as e:
@@ -2602,7 +2602,7 @@ def get_type_family(kit: dict, type_id: str) -> list:
 
 
 def get_type_siblings(kit: dict, type_id: str) -> list:
-    """💗Get all sibling types sharing the same parent, excluding the given type."""
+    """💗️Get all sibling types sharing the same parent, excluding the given type."""
     try:
         return getTypeSiblingsDict(kit, type_id)
     except Exception as e:
@@ -2610,7 +2610,7 @@ def get_type_siblings(kit: dict, type_id: str) -> list:
 
 
 def get_type_children(kit: dict, type_id: str) -> list:
-    """💖Get all direct child types of a type."""
+    """💖️Get all direct child types of a type."""
     try:
         return getTypeChildrenDict(kit, type_id)
     except Exception as e:
@@ -2618,7 +2618,7 @@ def get_type_children(kit: dict, type_id: str) -> list:
 
 
 def are_types_in_same_family(kit: dict, type_id_a: str, type_id_b: str) -> dict:
-    """💝Check if two types belong to the same family."""
+    """💝️Check if two types belong to the same family."""
     try:
         return {"result": areTypesInSameFamilyDict(kit, type_id_a, type_id_b)}
     except Exception as e:
@@ -2626,7 +2626,7 @@ def are_types_in_same_family(kit: dict, type_id_a: str, type_id_b: str) -> dict:
 
 
 def find_piece_type_in_design(kit: dict, design_id: str, piece_id: str) -> dict:
-    """💘Get the type of a specific piece in a design."""
+    """💘️Get the type of a specific piece in a design."""
     try:
         return findPieceTypeInDesignDict(kit, design_id, piece_id)
     except Exception as e:
@@ -2634,7 +2634,7 @@ def find_piece_type_in_design(kit: dict, design_id: str, piece_id: str) -> dict:
 
 
 def find_used_connectors_by_piece_in_design(kit: dict, design_id: str, piece_id: str) -> list:
-    """💕Get all connectors of a piece that are used in connections."""
+    """💕️Get all connectors of a piece that are used in connections."""
     try:
         return findUsedConnectorsByPieceInDesignDict(kit, design_id, piece_id)
     except Exception as e:
@@ -2642,7 +2642,7 @@ def find_used_connectors_by_piece_in_design(kit: dict, design_id: str, piece_id:
 
 
 def find_replaceable_types_for_piece_in_design(kit: dict, design_id: str, piece_id: str, variants: list[str] = None) -> list:
-    """🧹Find all types that can replace a piece while maintaining connection compatibility. Optionally filter by variant parent IDs."""
+    """🧹️Find all types that can replace a piece while maintaining connection compatibility. Optionally filter by variant parent IDs."""
     try:
         return findReplaceableTypesForPieceInDesignDict(kit, design_id, piece_id, variants)
     except Exception as e:
@@ -2650,7 +2650,7 @@ def find_replaceable_types_for_piece_in_design(kit: dict, design_id: str, piece_
 
 
 def find_replaceable_types_for_pieces_in_design(kit: dict, design_id: str, piece_ids: list[str], variants: list[str] = None) -> list:
-    """🔖Find types that can replace multiple pieces while maintaining all external connections."""
+    """🔖️Find types that can replace multiple pieces while maintaining all external connections."""
     try:
         return findReplaceableTypesForPiecesInDesignDict(kit, design_id, piece_ids, variants)
     except Exception as e:
@@ -2658,7 +2658,7 @@ def find_replaceable_types_for_pieces_in_design(kit: dict, design_id: str, piece
 
 
 def create_clustered_design(original_design: dict, cluster_piece_ids: list[str], design_name: str) -> dict:
-    """🆕Create a new design from a subset of pieces. Returns the clustered design and external connections."""
+    """🆕️Create a new design from a subset of pieces. Returns the clustered design and external connections."""
     try:
         return createClusteredDesignDict(original_design, cluster_piece_ids, design_name)
     except Exception as e:
@@ -2666,7 +2666,7 @@ def create_clustered_design(original_design: dict, cluster_piece_ids: list[str],
 
 
 def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[str], clustered_design: dict, external_connections: list[dict]) -> dict:
-    """🔖Compute a design diff that replaces clustered pieces with a single design reference."""
+    """🔖️Compute a design diff that replaces clustered pieces with a single design reference."""
     try:
         return replaceClusterWithDesignDict(original_design, cluster_piece_ids, clustered_design, external_connections)
     except Exception as e:
@@ -2674,7 +2674,7 @@ def replace_cluster_with_design(original_design: dict, cluster_piece_ids: list[s
 
 
 def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
-    """🔖Get groups of selected pieces that can be clustered into new designs."""
+    """🔖️Get groups of selected pieces that can be clustered into new designs."""
     try:
         return getClusterableGroupsDict(design, selected_piece_ids)
     except Exception as e:
@@ -2682,7 +2682,7 @@ def get_clusterable_groups(design: dict, selected_piece_ids: list[str]) -> list:
 
 
 def expand_design_pieces(design: dict, kit: dict) -> dict:
-    """🔖Recursively expand design references by inlining their pieces and connections."""
+    """🔖️Recursively expand design references by inlining their pieces and connections."""
     try:
         return expandDesignPiecesDict(design, kit)
     except Exception as e:
@@ -2690,7 +2690,7 @@ def expand_design_pieces(design: dict, kit: dict) -> dict:
 
 
 def find_attribute_value(entity: dict, name: str, default_value: str = None) -> dict:
-    """🔖Find an attribute value on an entity by key name."""
+    """🔖️Find an attribute value on an entity by key name."""
     try:
         sentinel = ... if default_value is None else default_value
         result = findAttributeValueDict(entity, name, sentinel)
@@ -2701,7 +2701,7 @@ def find_attribute_value(entity: dict, name: str, default_value: str = None) -> 
 
 @functools.lru_cache(maxsize=1024)
 def _find_bundled_design_metadata(id: str) -> dict | None:
-    """🧷Find bundled design metadata by id for reconstructing stateful tool payloads."""
+    """🧷️Find bundled design metadata by id for reconstructing stateful tool payloads."""
     assets_dir = _engine_bundle_dir().parent / "assets" / "semio"
     for kit_path in (assets_dir / "metabolism" / "wip" / "initialKit" / "kit.semio.json", assets_dir / "metabolism.shallow.kit.semio.json", assets_dir / "metabolism.meta.kit.semio.json"):
         if not kit_path.exists():
@@ -2719,7 +2719,7 @@ def _find_bundled_design_metadata(id: str) -> dict | None:
 
 @mcp.tool()
 def read_current_kit(ctx: Context) -> dict:
-    """📖Read the current session kit."""
+    """📖️Read the current session kit."""
     try:
         return _get_session_kit(ctx)
     except Exception as e:
@@ -2775,7 +2775,7 @@ def add_current_design_author(id: str, ctx: Context) -> dict:
 
 @mcp.tool()
 def add_current_design_prop(id: str, quality_id: str, value: str, unit: str, ctx: Context) -> dict:
-    """📍Add a prop entry to the current design."""
+    """📍️Add a prop entry to the current design."""
     try:
 
         def mutate(current_design: dict):
@@ -2926,7 +2926,7 @@ def add_current_design_connection(
 
 @mcp.tool(meta=_APP_RESOURCE_META)
 def start_working_in_design(id: str, ctx: Context) -> CallToolResult:
-    """🔖Select a design by ID within the current kit. Requires start_working_in_local_kit to have been called first."""
+    """🔖️Select a design by ID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
         kit = _get_session_kit(ctx)
         design = next((d for d in kit.get("designs", []) if d.get("id") == id), None)
@@ -2940,7 +2940,7 @@ def start_working_in_design(id: str, ctx: Context) -> CallToolResult:
 
 
 def _read_current_design(ctx: Context) -> dict:
-    """🔖Read the current design set via start_working_in_design."""
+    """🔖️Read the current design set via start_working_in_design."""
     try:
         return _get_session_design(ctx)
     except Exception as e:
@@ -2949,13 +2949,13 @@ def _read_current_design(ctx: Context) -> dict:
 
 @mcp.tool()
 def read_current_design(ctx: Context) -> dict:
-    """🔖Read the current design that was set via start_working_in_design or start_new_design."""
+    """🔖️Read the current design that was set via start_working_in_design or start_new_design."""
     return _read_current_design(ctx)
 
 
 @mcp.tool()
 def finish_working_in_design(ctx: Context) -> dict:
-    """🔖Clear the current design from session state."""
+    """🔖️Clear the current design from session state."""
     try:
         sid = _session_id(ctx)
         _mcp_session_designs.pop(sid, None)
@@ -2966,7 +2966,7 @@ def finish_working_in_design(ctx: Context) -> dict:
 
 @mcp.tool()
 def start_working_in_type(id: str, ctx: Context) -> dict:
-    """🔖Select a type by ID within the current kit. Requires start_working_in_local_kit to have been called first."""
+    """🔖️Select a type by ID within the current kit. Requires start_working_in_local_kit to have been called first."""
     try:
         kit = _get_session_kit(ctx)
         t = next((t for t in kit.get("types", []) if t.get("id") == id), None)
@@ -2980,7 +2980,7 @@ def start_working_in_type(id: str, ctx: Context) -> dict:
 
 
 def _read_current_type(ctx: Context) -> dict:
-    """🔖Read the current type set via start_working_in_type."""
+    """🔖️Read the current type set via start_working_in_type."""
     try:
         return _get_session_type(ctx)
     except Exception as e:
@@ -2989,13 +2989,13 @@ def _read_current_type(ctx: Context) -> dict:
 
 @mcp.tool()
 def read_current_type(ctx: Context) -> dict:
-    """🔖Read the current type that was set via start_working_in_type."""
+    """🔖️Read the current type that was set via start_working_in_type."""
     return _read_current_type(ctx)
 
 
 @mcp.tool()
 def finish_working_in_type(ctx: Context) -> dict:
-    """🔖Clear the current type from session state."""
+    """🔖️Clear the current type from session state."""
     try:
         sid = _session_id(ctx)
         _mcp_session_types.pop(sid, None)
@@ -3006,7 +3006,7 @@ def finish_working_in_type(ctx: Context) -> dict:
 
 @mcp.tool()
 def finish_working_in_kit(ctx: Context) -> dict:
-    """🔖Clear the current kit, design, type, mode, and source from session state."""
+    """🔖️Clear the current kit, design, type, mode, and source from session state."""
     try:
         sid = _session_id(ctx)
         _clear_session_kit(ctx)
@@ -3021,7 +3021,7 @@ def finish_working_in_kit(ctx: Context) -> dict:
 
 @mcp.tool()
 def start_transaction(ctx: Context) -> dict:
-    """🔭Start a session-scoped transaction. Only one active transaction is allowed per session."""
+    """🔭️Start a session-scoped transaction. Only one active transaction is allowed per session."""
     try:
         sid = _session_id(ctx)
         if _get_active_transaction(sid) is not None:
@@ -3037,7 +3037,7 @@ def start_transaction(ctx: Context) -> dict:
 
 
 def finalize_transaction(ctx: Context) -> dict:
-    """🔖Finalize the active session transaction and keep all applied changes."""
+    """🔖️Finalize the active session transaction and keep all applied changes."""
     try:
         sid = _session_id(ctx)
         transaction = _get_active_transaction(sid)
@@ -3051,7 +3051,7 @@ def finalize_transaction(ctx: Context) -> dict:
 
 
 def abort_transaction(ctx: Context) -> dict:
-    """🔖Abort the active session transaction and rollback all recorded changes in reverse order."""
+    """🔖️Abort the active session transaction and rollback all recorded changes in reverse order."""
     try:
         sid = _session_id(ctx)
         transaction = _get_active_transaction(sid)
@@ -3071,19 +3071,19 @@ def abort_transaction(ctx: Context) -> dict:
 
 @mcp.tool()
 def transaction_finalize(ctx: Context) -> dict:
-    """🔖Finalize the active session transaction and keep all applied changes."""
+    """🔖️Finalize the active session transaction and keep all applied changes."""
     return finalize_transaction(ctx)
 
 
 @mcp.tool()
 def transaction_abort(ctx: Context) -> dict:
-    """🔖Abort the active session transaction and rollback all recorded changes in reverse order."""
+    """🔖️Abort the active session transaction and rollback all recorded changes in reverse order."""
     return abort_transaction(ctx)
 
 
 @mcp.tool()
 def sum_quality_in_design(design_id: str, quality_id: str, ctx: Context) -> dict:
-    """🔖Sum the values of a quality across all pieces in a design, using piece-level props with fallback to type-level props."""
+    """🔖️Sum the values of a quality across all pieces in a design, using piece-level props with fallback to type-level props."""
     try:
         kit = _get_session_kit(ctx)
         return {"result": sumQualityInDesignDict(kit, design_id, quality_id)}
@@ -3091,25 +3091,25 @@ def sum_quality_in_design(design_id: str, quality_id: str, ctx: Context) -> dict
         return {"error": str(e)}
 
 
-# #region 🔬MCP Selection Tools
+# #region 🔬️MCP Selection Tools
 # MCP Selection Tools MUST manage session-scoped piece/connection selection state.
 
 
 def _get_session_selection(ctx) -> dict[str, list[str]]:
-    """🔖Get current selection from session."""
+    """🔖️Get current selection from session."""
     sid = _session_id(ctx)
     return _mcp_session_selection.get(sid, {"pieceIds": [], "connectionIds": []})
 
 
 def _set_session_selection(ctx, selection: dict[str, list[str]]):
-    """🔖Set selection in session."""
+    """🔖️Set selection in session."""
     sid = _session_id(ctx)
     _mcp_session_selection[sid] = selection
 
 
 @mcp.tool()
 def read_current_selection(ctx: Context) -> dict:
-    """🔖Read the current piece and connection selection for this session. Returns pieceIds and connectionIds."""
+    """🔖️Read the current piece and connection selection for this session. Returns pieceIds and connectionIds."""
     try:
         return _get_session_selection(ctx)
     except Exception as e:
@@ -3118,7 +3118,7 @@ def read_current_selection(ctx: Context) -> dict:
 
 @mcp.tool()
 def set_current_selection(ctx: Context, piece_ids: list[str] | None = None, connection_ids: list[str] | None = None) -> dict:
-    """🔖Set the current piece and connection selection for this session."""
+    """🔖️Set the current piece and connection selection for this session."""
     try:
         _set_session_selection(
             ctx,
@@ -3134,7 +3134,7 @@ def set_current_selection(ctx: Context, piece_ids: list[str] | None = None, conn
 
 @mcp.tool()
 def clear_current_selection(ctx: Context) -> dict:
-    """🔖Clear the current piece and connection selection for this session."""
+    """🔖️Clear the current piece and connection selection for this session."""
     try:
         sid = _session_id(ctx)
         _mcp_session_selection.pop(sid, None)
@@ -3143,9 +3143,9 @@ def clear_current_selection(ctx: Context) -> dict:
         return {"error": str(e)}
 
 
-# #endregion 🔬MCP Selection Tools
+# #endregion 🔬️MCP Selection Tools
 
-# #region 👓MCP App Tools
+# #region 👓️MCP App Tools
 # MCP App Tools MUST expose kit/design/diagram/scene visualization and selection intents as MCP tools.
 # Each tool declares the resource URI matching its viewer: kit-viewer, design-viewer, scene-viewer, or diagram-viewer.
 # Both nested (_meta.ui.resourceUri) and flat (_meta["ui/resourceUri"]) keys are required for
@@ -3153,7 +3153,7 @@ def clear_current_selection(ctx: Context) -> dict:
 
 
 def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = False) -> CallToolResult:
-    """🔖Build tools/call result with full payload in text content and a fetchUrl fallback for hosts that truncate.
+    """🔖️Build tools/call result with full payload in text content and a fetchUrl fallback for hosts that truncate.
     """
     token = uuid.uuid4().hex
     _mcp_app_payloads[token] = payload
@@ -3191,7 +3191,7 @@ def _as_mcp_app_tool_result(payload: dict[str, typing.Any], *, is_error: bool = 
 
 
 def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
-    """🏺Serializable kit viewer payload (diagram lists empty; kitArtifacts populated)."""
+    """🏺️Serializable kit viewer payload (diagram lists empty; kitArtifacts populated)."""
     return {
         "points": [],
         "lines": [],
@@ -3202,12 +3202,12 @@ def _build_kit_only_app_payload(kit: dict) -> dict[str, typing.Any]:
 
 
 def _build_kit_only_app_response(kit: dict) -> CallToolResult:
-    """🔖MCP Apps kit-viewer tool response with kit artifact data only (no diagram)."""
+    """🔖️MCP Apps kit-viewer tool response with kit artifact data only (no diagram)."""
     return _as_mcp_app_tool_result(_build_kit_only_app_payload(kit))
 
 
 def _connector_port_ref_string(value: object) -> str:
-    """🔖Normalize connector.port (string or PortId object) to a id string for kit artifact JSON."""
+    """🔖️Normalize connector.port (string or PortId object) to a id string for kit artifact JSON."""
     if value is None:
         return ""
     if isinstance(value, str):
@@ -3220,7 +3220,7 @@ def _connector_port_ref_string(value: object) -> str:
 
 
 def _entity_id_ref(value: object) -> dict | None:
-    """🔖Normalize an entity reference into a id object for artifact links."""
+    """🔖️Normalize an entity reference into a id object for artifact links."""
     if isinstance(value, dict) and value.get("id"):
         return {"id": value.get("id")}
     if isinstance(value, str) and value:
@@ -3229,7 +3229,7 @@ def _entity_id_ref(value: object) -> dict | None:
 
 
 def _infer_design_parent_ref(design: dict, designs: list[dict]) -> dict | None:
-    """🪢Infer omitted design parent links for exported flat variants."""
+    """🪢️Infer omitted design parent links for exported flat variants."""
     explicit = _entity_id_ref(design.get("parent"))
     if explicit:
         return explicit
@@ -3240,7 +3240,7 @@ def _infer_design_parent_ref(design: dict, designs: list[dict]) -> dict | None:
 
 
 def _infer_type_parent_ref(kind: dict, kinds: list[dict]) -> dict | None:
-    """🧬Infer omitted type parent links from shared family roots."""
+    """🧬️Infer omitted type parent links from shared family roots."""
     explicit = _entity_id_ref(kind.get("parent"))
     if explicit:
         return explicit
@@ -3263,7 +3263,7 @@ def _infer_type_parent_ref(kind: dict, kinds: list[dict]) -> dict | None:
 
 
 def _build_kit_artifact_data(kit: dict) -> dict:
-    """🔖Build a minimal kit artifact payload for UI selection (designs, kinds, kit ports, connectors).
+    """🔖️Build a minimal kit artifact payload for UI selection (designs, kinds, kit ports, connectors).
 
     Specs: ``ports`` MUST list kit-level Port entities only; ``connectors`` MUST list flattened
     type Connector rows (never label connectors as ports).
@@ -3347,7 +3347,7 @@ def _build_kit_artifact_data(kit: dict) -> dict:
 
 
 def _build_diagram_data(kit: dict, design_id: str, design_diff: dict | None = None, design: dict | None = None) -> dict:
-    """🔖Compute pre-rendered diagram points and lines from kit/design data.
+    """🔖️Compute pre-rendered diagram points and lines from kit/design data.
     """
     if design is None:
         design = next((d for d in kit.get("designs", []) if d.get("id") == design_id), None)
@@ -3478,7 +3478,7 @@ def _build_diagram_data(kit: dict, design_id: str, design_diff: dict | None = No
 
 
 def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> dict:
-    """🔖Enrich design pieces with flattened plane/center data from flattenDesignDict."""
+    """🔖️Enrich design pieces with flattened plane/center data from flattenDesignDict."""
     design_id = design.get("id")
     design_for_enrichment = designWithDiffDict(design, design_diff) if design_diff else design
     try:
@@ -3527,13 +3527,13 @@ def _enrich_design(kit: dict, design: dict, design_diff: dict | None = None) -> 
 
 
 def _is_gltf_file(file: dict) -> bool:
-    """🔖Return True if this kit file is a GLB or GLTF by name."""
+    """🔖️Return True if this kit file is a GLB or GLTF by name."""
     name = (file.get("name") or "").lower()
     return name.endswith(".glb") or name.endswith(".gltf")
 
 
 def _select_best_representation_file_ids(kit: dict, design: dict | None) -> set[str]:
-    """🔖Return file IDs for the GLB/GLTF representation file to inline per type used in the design.
+    """🔖️Return file IDs for the GLB/GLTF representation file to inline per type used in the design.
     Mirrors JS buildScenePieceAssets: picks the untagged (or first) representation, then falls back
     to any representation with a GLB/GLTF file if the best representation's file isn't a GLB/GLTF."""
     if not design:
@@ -3564,7 +3564,7 @@ def _select_best_representation_file_ids(kit: dict, design: dict | None) -> set[
 
 
 def _strip_kit_blobs(kit: dict, design: dict | None = None) -> dict:
-    """💾Deep copy kit, cache file blobs in _mcp_app_file_blobs, and replace blob with url for UI transport.
+    """💾️Deep copy kit, cache file blobs in _mcp_app_file_blobs, and replace blob with url for UI transport.
     GLB/GLTF blobs for the design's selected type representations are kept inline as data URLs to avoid CSP/HTTP
     issues in sandboxed iframes. All other blobs are stripped and served via HTTP endpoint."""
     inline_ids = _select_best_representation_file_ids(kit, design)
@@ -3592,7 +3592,7 @@ _SPLIT_SCENE_DIAGRAM_MODES = {"show-design", "show-scene"}
 
 
 def _mcp_app_surface_for_mode(mode: str) -> str:
-    """📊Stable viewer surface for MCP Apps: design = SemioDesign (scene+diagram); scene = SemioScene; diagram = SemioDiagram only."""
+    """📊️Stable viewer surface for MCP Apps: design = SemioDesign (scene+diagram); scene = SemioScene; diagram = SemioDiagram only."""
     if mode in ("show-design", "show-diff"):
         return "design"
     if mode == "show-scene":
@@ -3601,7 +3601,7 @@ def _mcp_app_surface_for_mode(mode: str) -> str:
 
 
 def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> dict[str, typing.Any]:
-    """🔖Build mode-appropriate payload: diagram data for diagram modes, design/kit for scene/design modes.
+    """🔖️Build mode-appropriate payload: diagram data for diagram modes, design/kit for scene/design modes.
     Diagram-only modes omit kit (~2.3MB of GLB blobs) to stay under host payload truncation limits.
     The JS diagram renderer uses Python-enriched piece centers from enriched_design instead."""
     kit = _get_session_kit(ctx)
@@ -3638,7 +3638,7 @@ def _build_app_payload(mode: str, ctx, design_diff: dict | None = None, capabili
 
 
 def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabilities: dict | None = None) -> CallToolResult:
-    """🧱MCP Apps tool response with pre-computed diagram data and structuredContent for the appropriate viewer.
+    """🧱️MCP Apps tool response with pre-computed diagram data and structuredContent for the appropriate viewer.
     """
     return _as_mcp_app_tool_result(_build_app_payload(mode, ctx, design_diff=design_diff, capabilities=capabilities))
 
@@ -3651,7 +3651,7 @@ def _build_app_response(mode: str, ctx, design_diff: dict | None = None, capabil
     meta=_mcp_app_html_resource_meta(),
 )
 def design_viewer_resource() -> str:
-    """🔖Serve the MCP App design viewer HTML built from @compose/ui.
+    """🔖️Serve the MCP App design viewer HTML built from @compose/ui.
     """
     return _build_design_viewer_html()
 
@@ -3664,7 +3664,7 @@ def design_viewer_resource() -> str:
     meta=_mcp_app_html_resource_meta(),
 )
 def kit_viewer_resource() -> str:
-    """🔖Serve the MCP kit viewer HTML (SemioKit-only shell) built from @compose/ui.
+    """🔖️Serve the MCP kit viewer HTML (SemioKit-only shell) built from @compose/ui.
     """
     return _build_kit_viewer_html()
 
@@ -3677,7 +3677,7 @@ def kit_viewer_resource() -> str:
     meta=_mcp_app_html_resource_meta(),
 )
 def scene_viewer_resource() -> str:
-    """🔖Serve the MCP scene viewer HTML (SemioScene 3D only shell) built from @compose/ui.
+    """🔖️Serve the MCP scene viewer HTML (SemioScene 3D only shell) built from @compose/ui.
     """
     return _build_scene_viewer_html()
 
@@ -3690,14 +3690,14 @@ def scene_viewer_resource() -> str:
     meta=_mcp_app_html_resource_meta(),
 )
 def diagram_viewer_resource() -> str:
-    """🔖Serve the MCP diagram viewer HTML (SemioDiagram 2D only shell) built from @compose/ui.
+    """🔖️Serve the MCP diagram viewer HTML (SemioDiagram 2D only shell) built from @compose/ui.
     """
     return _build_diagram_viewer_html()
 
 
 @mcp.tool(meta=_APP_RESOURCE_META)
 def show_design(ctx: Context) -> CallToolResult:
-    """🔖Show the current design in the split design viewer (scene + 2D diagram). Requires an active kit and design session."""
+    """🔖️Show the current design in the split design viewer (scene + 2D diagram). Requires an active kit and design session."""
     try:
         return _build_app_response("show-design", ctx)
     except Exception as e:
@@ -3706,7 +3706,7 @@ def show_design(ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_DIAGRAM_APP_RESOURCE_META)
 def show_diagram(ctx: Context) -> CallToolResult:
-    """🔖Show the current design as a 2D diagram only (no 3D scene panel). Requires an active kit and design session."""
+    """🔖️Show the current design as a 2D diagram only (no 3D scene panel). Requires an active kit and design session."""
     try:
         return _build_app_response("show-diagram", ctx)
     except Exception as e:
@@ -3715,7 +3715,7 @@ def show_diagram(ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_SCENE_APP_RESOURCE_META)
 def show_scene(ctx: Context) -> CallToolResult:
-    """🔖Show the current design in the 3D scene viewer. Requires an active kit and design session."""
+    """🔖️Show the current design in the 3D scene viewer. Requires an active kit and design session."""
     try:
         return _build_app_response("show-scene", ctx)
     except Exception as e:
@@ -3724,7 +3724,7 @@ def show_scene(ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_APP_RESOURCE_META)
 def show_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
-    """🔖Show a diff of the current design in the split design viewer (scene + 2D diagram) with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
+    """🔖️Show a diff of the current design in the split design viewer (scene + 2D diagram) with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
         return _build_app_response("show-diff", ctx, design_diff=design_diff)
     except Exception as e:
@@ -3733,7 +3733,7 @@ def show_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
 
 @mcp.tool(meta=_DIAGRAM_APP_RESOURCE_META)
 def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> CallToolResult:
-    """🔖Show a diff of the current design as a 2D diagram only with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
+    """🔖️Show a diff of the current design as a 2D diagram only with diff coloring. Uses an empty diff if none is provided. Requires an active kit and design session."""
     try:
         return _build_app_response("show-diagram-diff", ctx, design_diff=design_diff)
     except Exception as e:
@@ -3742,7 +3742,7 @@ def show_diagram_diff(ctx: Context, design_diff: dict | None = None) -> CallTool
 
 @mcp.tool(meta=_DIAGRAM_APP_RESOURCE_META)
 def select_pieces(ctx: Context) -> CallToolResult:
-    """📬Open a piece selection view where only pieces can be selected. Requires an active kit and design session."""
+    """📬️Open a piece selection view where only pieces can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
             "select-pieces",
@@ -3758,7 +3758,7 @@ def select_pieces(ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_DIAGRAM_APP_RESOURCE_META)
 def select_connections(ctx: Context) -> CallToolResult:
-    """🔖Open a connection selection view where only connections can be selected. Requires an active kit and design session."""
+    """🔖️Open a connection selection view where only connections can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
             "select-connections",
@@ -3774,7 +3774,7 @@ def select_connections(ctx: Context) -> CallToolResult:
 
 @mcp.tool(meta=_DIAGRAM_APP_RESOURCE_META)
 def select_pieces_and_connections(ctx: Context) -> CallToolResult:
-    """🔖Open a combined selection view where both pieces and connections can be selected. Requires an active kit and design session."""
+    """🔖️Open a combined selection view where both pieces and connections can be selected. Requires an active kit and design session."""
     try:
         return _build_app_response(
             "select-pieces-and-connections",
@@ -3788,12 +3788,12 @@ def select_pieces_and_connections(ctx: Context) -> CallToolResult:
         return _as_mcp_app_tool_result({"error": str(e)}, is_error=True)
 
 
-# #endregion 👓MCP App Tools
+# #endregion 👓️MCP App Tools
 
 
 # #endregion ⛩️Mcp
 
-# #region 🔔Engine
+# #region 🔔️Engine
 # Engine MUST mount REST, GraphQL, and MCP sub-applications and manage the server lifecycle.
 
 
@@ -3814,7 +3814,7 @@ engine.mount("/mcp", mcp.streamable_http_app())
 
 
 def start_engine():
-    """🔖Starts the uvicorn server hosting the engine application.
+    """🔖️Starts the uvicorn server hosting the engine application.
     Callers MUST invoke this in a separate process to avoid blocking the UI.
     """
     # TODO: Make loguru work on extra uvicorn engine process.
@@ -3830,7 +3830,7 @@ def start_engine():
 
 
 def restart_engine():
-    """🔖Terminates the running engine process and starts a new one.
+    """🔖️Terminates the running engine process and starts a new one.
     Callers MUST ensure a PySide6 QApplication instance is running.
     """
     import PySide6.QtWidgets
@@ -3844,7 +3844,7 @@ def restart_engine():
 
 
 def run(dev_mode: bool | None = None):
-    """🔖Main entry point that starts the engine with optional dev mode and system tray UI.
+    """🔖️Main entry point that starts the engine with optional dev mode and system tray UI.
     Callers MUST invoke this from the __main__ block or dev function.
     """
     logger.debug("Starting engine")
@@ -3909,48 +3909,48 @@ def run(dev_mode: bool | None = None):
 
 
 def preDev():
-    """🔖Runs before dev()
+    """🔖️Runs before dev()
     Callers MUST NOT add blocking operations in this hook.
     """
 
 
 def dev():
-    """🐛Starts the engine in development mode with debugging enabled.
+    """🐛️Starts the engine in development mode with debugging enabled.
     Callers MUST have debugpy available when using this entry point.
     """
     run(dev_mode=True)
 
 
-# #region 🥼Tests
+# #region 🥼️Tests
 # Pytest suite lives in this module so the engine and tests share one unit of compilation.
-# #region 🔌Adapters
+# #region 🔌️Adapters
 import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
 from starlette.testclient import TestClient
-# #endregion 🔌Adapters
+# #endregion 🔌️Adapters
 
 engine = sys.modules[__name__]
 sys.modules["engine"] = engine
 
 
 def _mcp_app_tool_payload(result: object) -> dict:
-    """🔖Unpack kit/design MCP app tool returns (CallToolResult with structuredContent)."""
+    """🔖️Unpack kit/design MCP app tool returns (CallToolResult with structuredContent)."""
     assert isinstance(result, CallToolResult), result
     assert result.structuredContent is not None
     return result.structuredContent
 
 
-# #region 👓Constants
+# #region 👓️Constants
 FIXTURES_DIR = pathlib.Path(__file__).resolve().parent.parent.parent.parent / "fixtures"
 KIT_METABOLISM_PATH = FIXTURES_DIR / "stores" / "metabolism" / "wip" / "initialKit" / "kit.semio.json"
 METABOLISM_DIR = FIXTURES_DIR / "kit" / "dev" / "metabolism"
 
-# #endregion 👓Constants
+# #endregion 👓️Constants
 
 
-# #region 🧸Fixtures
+# #region 🧸️Fixtures
 @pytest.fixture
 def kitMetabolismJson() -> dict:
     with open(KIT_METABOLISM_PATH, "r", encoding="utf-8") as f:
@@ -3982,10 +3982,10 @@ def graphqlClient() -> TestClient:
     return TestClient(engine.engine)
 
 
-# #endregion 🧸Fixtures
+# #endregion 🧸️Fixtures
 
 
-# #region 📹Encoding Tests
+# #region 📹️Encoding Tests
 class TestEncoding:
     def test_encode_basic(self):
         assert engine.encode("hello") == "hello"
@@ -4009,10 +4009,10 @@ class TestEncoding:
             assert engine.decode(engine.encode(s)) == s
 
 
-# #endregion 📹Encoding Tests
+# #endregion 📹️Encoding Tests
 
 
-# #region 💧OperationBuilder Tests
+# #region 💧️OperationBuilder Tests
 class TestOperationBuilder:
     def test_parse_kit_operation(self):
         code = "C%3A%5Ctest%5Ckit"
@@ -4042,10 +4042,10 @@ class TestOperationBuilder:
         assert "kitUri" in operation
 
 
-# #endregion 💧OperationBuilder Tests
+# #endregion 💧️OperationBuilder Tests
 
 
-# #region 🎲Store Tests
+# #region 🎲️Store Tests
 class TestSqliteStore:
     def test_store_factory_absolute_path(self, tempKitPath: pathlib.Path):
         engine.StoreFactory.cache_clear()
@@ -4073,10 +4073,10 @@ class TestSqliteStore:
         assert store.initialized()
 
 
-# #endregion 🎲Store Tests
+# #endregion 🎲️Store Tests
 
 
-# #region 🔔StoreKind Tests
+# #region 🔔️StoreKind Tests
 class TestStoreKind:
     def test_store_kind_values(self):
         assert engine.StoreKind.DATABASE.value == "database"
@@ -4084,10 +4084,10 @@ class TestStoreKind:
         assert engine.StoreKind.GRAPHQL.value == "graphql"
 
 
-# #endregion 🔔StoreKind Tests
+# #endregion 🔔️StoreKind Tests
 
 
-# #region 📍CommandKind Tests
+# #region 📍️CommandKind Tests
 class TestCommandKind:
     def test_command_kind_values(self):
         assert engine.CommandKind.QUERY.value == "query"
@@ -4096,10 +4096,10 @@ class TestCommandKind:
         assert engine.CommandKind.DELETE.value == "delete"
 
 
-# #endregion 📍CommandKind Tests
+# #endregion 📍️CommandKind Tests
 
 
-# #region 🔊REST API Tests
+# #region 🔊️REST API Tests
 class TestRestApi:
     def test_get_kit_not_found(self, restClient: TestClient, tempKitPath: pathlib.Path):
         nonExistentPath = str(tempKitPath / "nonexistent")
@@ -4108,10 +4108,10 @@ class TestRestApi:
         assert response.status_code in [400, 404, 500]
 
 
-# #endregion 🔊REST API Tests
+# #endregion 🔊️REST API Tests
 
 
-# #region 🥁GraphQL Tests
+# #region 🥁️GraphQL Tests
 class TestGraphQL:
     def test_graphql_schema_exists(self):
         assert engine.graphqlSchema is not None
@@ -4124,7 +4124,7 @@ class TestGraphQL:
         assert "node" in qt.fields
 
 
-# #endregion 🥁GraphQL Tests
+# #endregion 🥁️GraphQL Tests
 
 
 # #region 🎖️MCP Tests
@@ -4133,7 +4133,7 @@ class TestMcp:
         assert engine.mcp is not None
 
     def test_mcp_kit_tools_reference_kit_viewer_resource(self):
-        """🧪Kit-loading tools declare ui://semio/kit-viewer; design tools use design-viewer; diagram tools use diagram-viewer; scene tools use scene-viewer."""
+        """🧪️Kit-loading tools declare ui://semio/kit-viewer; design tools use design-viewer; diagram tools use diagram-viewer; scene tools use scene-viewer."""
         tools = {t.name: t for t in engine.mcp._tool_manager.list_tools()}
         for name in ("start_working_in_local_kit", "start_new_kit", "start_working_in_remote_kit"):
             assert tools[name].meta["ui"]["resourceUri"] == "ui://semio/kit-viewer"
@@ -4146,7 +4146,7 @@ class TestMcp:
             assert tools[name].meta["ui"]["resourceUri"] == "ui://semio/diagram-viewer"
 
     def test_mcp_app_html_resources_include_ui_csp_meta(self):
-        """🔖MCP App HTML resources expose _meta.ui.csp so hosts allow network access to the engine (see .🦑repo//mcp-app.md)."""
+        """🔖️MCP App HTML resources expose _meta.ui.csp so hosts allow network access to the engine (see .🦑️repo//mcp-app.md)."""
         resources = {str(r.uri): r for r in engine.mcp._resource_manager.list_resources()}
         for uri in ("ui://semio/design-viewer", "ui://semio/kit-viewer", "ui://semio/scene-viewer", "ui://semio/diagram-viewer"):
             r = resources[uri]
@@ -4494,7 +4494,7 @@ class TestMcp:
         assert abs(result.get("result") - 41.0) < 0.001
 
     def test_start_working_in_local_kit_loads_from_path(self):
-        """🔖start_working_in_local_kit loads kit from metabolism JSON path."""
+        """🔖️start_working_in_local_kit loads kit from metabolism JSON path."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
         assert isinstance(result, CallToolResult)
@@ -4503,7 +4503,7 @@ class TestMcp:
         assert mock_ctx.session in engine._mcp_session_kits
 
     def test_start_working_in_local_kit_loads_from_folder(self):
-        """🔖start_working_in_local_kit loads kit from a split store folder containing wip/initialKit/kit.semio.json."""
+        """🔖️start_working_in_local_kit loads kit from a split store folder containing wip/initialKit/kit.semio.json."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(METABOLISM_DIR), mock_ctx)
         assert isinstance(result, CallToolResult)
@@ -4537,7 +4537,7 @@ class TestMcp:
         assert any(design.get("name") == "Nakagin Capsule Tower" for design in kit.get("designs", []))
 
     def test_metabolism_folder_path_returns_metabolism_and_nakagin_design_scene_and_diagram(self):
-        """🔖start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin id) returns design+kit and diagram points/lines."""
+        """🔖️start_working_in_local_kit(metabolism dir) exposes Metabolism; start_working_in_design(nakagin id) returns design+kit and diagram points/lines."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         metabolism_path = METABOLISM_DIR.resolve()
         workspace_default = pathlib.Path("/workspaces/semio/compose/fixture/kit/dev/metabolism")
@@ -4562,7 +4562,7 @@ class TestMcp:
         assert "lines" in d_payload and isinstance(d_payload["lines"], list) and len(d_payload["lines"]) > 0
 
     def test_build_kit_artifact_data_preserves_parent_dependencies(self):
-        """🔖_build_kit_artifact_data keeps nested design and type parent refs for breadcrumb chains."""
+        """🔖️_build_kit_artifact_data keeps nested design and type parent refs for breadcrumb chains."""
         payload = engine._build_kit_artifact_data(
             {
                 "id": "kit-id",
@@ -4591,7 +4591,7 @@ class TestMcp:
         assert payload["types"][1]["description"] == "Child kind"
 
     def test_build_kit_artifact_data_splits_kit_ports_and_type_connectors(self):
-        """🔖kitArtifacts.ports lists Port entities; kitArtifacts.connectors lists flattened Connector rows."""
+        """🔖️kitArtifacts.ports lists Port entities; kitArtifacts.connectors lists flattened Connector rows."""
         payload = engine._build_kit_artifact_data(
             {
                 "name": "K",
@@ -4616,7 +4616,7 @@ class TestMcp:
         assert payload["connectors"][0]["port"] == "port-entity"
 
     def test_start_working_in_local_kit_clears_design_and_type(self):
-        """🔖start_working_in_local_kit clears any previously set design and type."""
+        """🔖️start_working_in_local_kit clears any previously set design and type."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_designs[sid] = {"id": "old-design"}
@@ -4626,7 +4626,7 @@ class TestMcp:
         assert sid not in engine._mcp_session_types
 
     def test_start_working_in_local_kit_and_sum_quality_metabolism(self, kitMetabolismJson: dict):
-        """🔖start_working_in_local_kit then sum_quality_in_design for Nakagin effective floor area."""
+        """🔖️start_working_in_local_kit then sum_quality_in_design for Nakagin effective floor area."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
         design = next(d for d in kitMetabolismJson.get("designs", []) if d.get("name") == "Nakagin Capsule Tower" and not d.get("parent"))
@@ -4635,7 +4635,7 @@ class TestMcp:
         assert abs(result.get("result") - 2349.53) < 0.01
 
     def test_start_working_in_design(self, kitMetabolismJson: dict):
-        """🔖start_working_in_design selects a design by ID from the session kit and opens the MCP app payload (scene + diagram)."""
+        """🔖️start_working_in_design selects a design by ID from the session kit and opens the MCP app payload (scene + diagram)."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4655,7 +4655,7 @@ class TestMcp:
         assert engine._mcp_session_designs[sid]["id"] == design["id"]
 
     def test_start_working_in_design_not_found(self, kitMetabolismJson: dict):
-        """❌start_working_in_design returns error for unknown ID."""
+        """❌️start_working_in_design returns error for unknown ID."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
         result = engine.start_working_in_design("nonexistent-id", mock_ctx)
@@ -4665,7 +4665,7 @@ class TestMcp:
         assert "error" in payload
 
     def test_read_current_design(self, kitMetabolismJson: dict):
-        """🔖read_current_design returns the design set by start_working_in_design."""
+        """🔖️read_current_design returns the design set by start_working_in_design."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4676,13 +4676,13 @@ class TestMcp:
         assert result.get("name") == "Nakagin Capsule Tower"
 
     def test_read_current_design_without_start(self):
-        """🔖read_current_design returns error if no design was set."""
+        """🔖️read_current_design returns error if no design was set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.read_current_design(mock_ctx)
         assert "error" in result
 
     def test_finish_working_in_design(self, kitMetabolismJson: dict):
-        """🔖finish_working_in_design clears the current design from session."""
+        """🔖️finish_working_in_design clears the current design from session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4694,7 +4694,7 @@ class TestMcp:
         assert sid not in engine._mcp_session_designs
 
     def test_start_working_in_type(self, kitMetabolismJson: dict):
-        """🔖start_working_in_type selects a type by ID from the session kit."""
+        """🔖️start_working_in_type selects a type by ID from the session kit."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4706,14 +4706,14 @@ class TestMcp:
         assert engine._mcp_session_types[sid]["id"] == t["id"]
 
     def test_start_working_in_type_not_found(self, kitMetabolismJson: dict):
-        """🔖start_working_in_type returns error for unknown ID."""
+        """🔖️start_working_in_type returns error for unknown ID."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine._mcp_session_kits[mock_ctx.session] = kitMetabolismJson
         result = engine.start_working_in_type("nonexistent-id", mock_ctx)
         assert "error" in result
 
     def test_read_current_type(self, kitMetabolismJson: dict):
-        """🔖read_current_type returns the type set by start_working_in_type."""
+        """🔖️read_current_type returns the type set by start_working_in_type."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4723,13 +4723,13 @@ class TestMcp:
         assert result.get("id") == t["id"]
 
     def test_read_current_type_without_start(self):
-        """🔖read_current_type returns error if no type was set."""
+        """🔖️read_current_type returns error if no type was set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.read_current_type(mock_ctx)
         assert "error" in result
 
     def test_finish_working_in_type(self, kitMetabolismJson: dict):
-        """🔖finish_working_in_type clears the current type from session."""
+        """🔖️finish_working_in_type clears the current type from session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4741,7 +4741,7 @@ class TestMcp:
         assert sid not in engine._mcp_session_types
 
     def test_finish_working_in_kit(self, kitMetabolismJson: dict):
-        """🔖finish_working_in_kit clears kit, design, and type from session."""
+        """🔖️finish_working_in_kit clears kit, design, and type from session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4927,13 +4927,13 @@ class TestMcp:
         assert "layers" not in current_design
 
     def test_read_current_selection_default_empty(self):
-        """🔖read_current_selection returns empty lists when no selection is set."""
+        """🔖️read_current_selection returns empty lists when no selection is set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.read_current_selection(mock_ctx)
         assert result == {"pieceIds": [], "connectionIds": []}
 
     def test_set_current_selection_pieces(self):
-        """🔖set_current_selection stores piece ids in session."""
+        """🔖️set_current_selection stores piece ids in session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.set_current_selection(mock_ctx, piece_ids=["p1", "p2"])
         assert result.get("ok") is True
@@ -4942,7 +4942,7 @@ class TestMcp:
         assert sel["connectionIds"] == []
 
     def test_set_current_selection_connections(self):
-        """🔖set_current_selection stores connection ids in session."""
+        """🔖️set_current_selection stores connection ids in session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.set_current_selection(mock_ctx, connection_ids=["c1", "c2"])
         assert result.get("ok") is True
@@ -4951,7 +4951,7 @@ class TestMcp:
         assert sel["connectionIds"] == ["c1", "c2"]
 
     def test_set_current_selection_both(self):
-        """🔖set_current_selection stores both piece and connection ids."""
+        """🔖️set_current_selection stores both piece and connection ids."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.set_current_selection(mock_ctx, piece_ids=["p1"], connection_ids=["c1"])
         assert result.get("ok") is True
@@ -4960,7 +4960,7 @@ class TestMcp:
         assert sel["connectionIds"] == ["c1"]
 
     def test_clear_current_selection(self):
-        """🚚clear_current_selection removes selection from session."""
+        """🚚️clear_current_selection removes selection from session."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         engine.set_current_selection(mock_ctx, piece_ids=["p1"])
         result = engine.clear_current_selection(mock_ctx)
@@ -4969,7 +4969,7 @@ class TestMcp:
         assert sel == {"pieceIds": [], "connectionIds": []}
 
     def test_show_design_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_design returns CallToolResult with design, kit, mode=show-design, and diagram points/lines for the split viewer."""
+        """🔖️show_design returns CallToolResult with design, kit, mode=show-design, and diagram points/lines for the split viewer."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -4988,7 +4988,7 @@ class TestMcp:
         assert f":{engine.PORT}/api/app/payload/" in data["fetchUrl"]
 
     def test_show_diagram_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_diagram returns design, mode=show-diagram and diagram data."""
+        """🔖️show_diagram returns design, mode=show-diagram and diagram data."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5002,7 +5002,7 @@ class TestMcp:
         assert "lines" in data and isinstance(data["lines"], list)
 
     def test_show_scene_returns_scene_data(self, kitMetabolismJson: dict):
-        """🔖show_scene returns design, kit, mode=show-scene, and diagram points/lines for context."""
+        """🔖️show_scene returns design, kit, mode=show-scene, and diagram points/lines for context."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5019,7 +5019,7 @@ class TestMcp:
         assert f":{engine.PORT}/api/app/payload/" in data["fetchUrl"]
 
     def test_show_diff_returns_design_diff(self, kitMetabolismJson: dict):
-        """🔖show_diff returns design, kit, designDiff, mode=show-diff (no diagram points/lines)."""
+        """🔖️show_diff returns design, kit, designDiff, mode=show-diff (no diagram points/lines)."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5036,7 +5036,7 @@ class TestMcp:
         assert "lines" not in data
 
     def test_show_diagram_diff_returns_diagram_diff(self, kitMetabolismJson: dict):
-        """🔖show_diagram_diff returns design, designDiff, mode=show-diagram-diff with diagram data."""
+        """🔖️show_diagram_diff returns design, designDiff, mode=show-diagram-diff with diagram data."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5052,7 +5052,7 @@ class TestMcp:
         assert "lines" in data and isinstance(data["lines"], list)
 
     def test_shallow_kit_hydrates_nakagin_design_from_disk(self):
-        """🔖metabolism.shallow.kit.semio.json lists designs without pieces; load nakagin-capsule-tower.shallow.design.semio.json by id."""
+        """🔖️metabolism.shallow.kit.semio.json lists designs without pieces; load nakagin-capsule-tower.shallow.design.semio.json by id."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         shallow_kit_path = FIXTURES_DIR / "metabolism.shallow.kit.semio.json"
         engine.start_working_in_local_kit(str(shallow_kit_path), mock_ctx)
@@ -5061,7 +5061,7 @@ class TestMcp:
         assert len(d.get("pieces", [])) > 50
 
     def test_hydrate_design_searches_parent_of_folder_kit(self):
-        """🔎*.design.semio.json for Nakagin lives next to the metabolism folder, not inside it."""
+        """🔎️*.design.semio.json for Nakagin lives next to the metabolism folder, not inside it."""
         shallow = {"id": "9a890dd4-0a9c-48ac-920a-9e62666465ef", "name": "Nakagin Capsule Tower", "pieces": []}
         out = engine._hydrate_design_from_kit_disk_if_shallow(
             shallow,
@@ -5071,7 +5071,7 @@ class TestMcp:
         assert len(out.get("pieces", [])) > 50
 
     def test_show_diff_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_diff returns design data and default capabilities in structuredContent (no diagram points/lines)."""
+        """🔖️show_diff returns design data and default capabilities in structuredContent (no diagram points/lines)."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5085,7 +5085,7 @@ class TestMcp:
         assert data["capabilities"]["connectionSelection"] is False
 
     def test_show_diagram_diff_returns_diagram_json(self, kitMetabolismJson: dict):
-        """🔖show_diagram_diff returns diagram data in structuredContent."""
+        """🔖️show_diagram_diff returns diagram data in structuredContent."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5097,7 +5097,7 @@ class TestMcp:
         assert "lines" in data
 
     def test_show_diagram_diff_flattens_the_diffed_design(self):
-        """🔖show_diagram_diff must flatten the design after applying the diff so diagram centers come from the diffed design."""
+        """🔖️show_diagram_diff must flatten the design after applying the diff so diagram centers come from the diffed design."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         kit = {
@@ -5119,7 +5119,7 @@ class TestMcp:
         assert piece["center"] == {"u": 12, "v": -4}
 
     def test_show_diff_with_design_diff_adds_pieces(self, kitMetabolismJson: dict):
-        """➕show_diff with design_diff includes designDiff in payload."""
+        """➕️show_diff with design_diff includes designDiff in payload."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5133,7 +5133,7 @@ class TestMcp:
         assert any(p["id"] == "added-1" for p in added)
 
     def test_select_pieces_capabilities(self, kitMetabolismJson: dict):
-        """🔖select_pieces sets pieceSelection capability."""
+        """🔖️select_pieces sets pieceSelection capability."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5145,7 +5145,7 @@ class TestMcp:
         assert data["capabilities"]["connectionSelection"] is False
 
     def test_select_connections_capabilities(self, kitMetabolismJson: dict):
-        """🔖select_connections sets connectionSelection capability."""
+        """🔖️select_connections sets connectionSelection capability."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5157,7 +5157,7 @@ class TestMcp:
         assert data["capabilities"]["connectionSelection"] is True
 
     def test_select_pieces_and_connections_capabilities(self, kitMetabolismJson: dict):
-        """🔖select_pieces_and_connections sets both selection capabilities."""
+        """🔖️select_pieces_and_connections sets both selection capabilities."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5169,7 +5169,7 @@ class TestMcp:
         assert data["capabilities"]["connectionSelection"] is True
 
     def test_app_tools_require_kit_and_design(self):
-        """🔖All app tools return CallToolResult with error in structuredContent when kit or design is not set."""
+        """🔖️All app tools return CallToolResult with error in structuredContent when kit or design is not set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         # Ensure clean state
@@ -5183,7 +5183,7 @@ class TestMcp:
             assert "error" in data, f"{tool_fn.__name__} should require kit+design"
 
     def test_show_design_pieces_have_required_fields(self, kitMetabolismJson: dict):
-        """🔖show_design design pieces contain id field."""
+        """🔖️show_design design pieces contain id field."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5195,7 +5195,7 @@ class TestMcp:
             assert "id" in piece
 
     def test_selection_isolated_between_sessions(self):
-        """🔖Selection state is isolated between different sessions."""
+        """🔖️Selection state is isolated between different sessions."""
         ctx_a = type("MockCtx", (), {"session": object()})()
         ctx_b = type("MockCtx", (), {"session": object()})()
         engine.set_current_selection(ctx_a, piece_ids=["p1"])
@@ -5206,7 +5206,7 @@ class TestMcp:
 
 class TestAppEndpoint:
     def test_app_design_viewer_returns_html(self):
-        """🔖GET /app/design-viewer returns the built MCP App HTML that uses @compose/ui."""
+        """🔖️GET /app/design-viewer returns the built MCP App HTML that uses @compose/ui."""
         client = TestClient(engine.rest)
         response = client.get("/app/design-viewer")
         assert response.status_code == 200
@@ -5214,7 +5214,7 @@ class TestAppEndpoint:
         assert "semio design viewer" in response.text
 
     def test_app_design_viewer_csp_header(self):
-        """🔗The app endpoint includes Content-Security-Policy allowing iframe embedding and wasm-unsafe-eval for Three.js scene."""
+        """🔗️The app endpoint includes Content-Security-Policy allowing iframe embedding and wasm-unsafe-eval for Three.js scene."""
         client = TestClient(engine.rest)
         response = client.get("/app/design-viewer")
         csp = response.headers["content-security-policy"]
@@ -5224,7 +5224,7 @@ class TestAppEndpoint:
         assert "worker-src blob:" in csp
 
     def test_app_kit_viewer_csp_header(self):
-        """🔖The kit-viewer endpoint includes the same CSP as design-viewer."""
+        """🔖️The kit-viewer endpoint includes the same CSP as design-viewer."""
         client = TestClient(engine.rest)
         response = client.get("/app/kit-viewer")
         csp = response.headers["content-security-policy"]
@@ -5232,14 +5232,14 @@ class TestAppEndpoint:
         assert "'wasm-unsafe-eval'" in csp
 
     def test_app_design_viewer_html_structure(self):
-        """🔖The HTML contains root element for the React MCP App from @compose/ui."""
+        """🔖️The HTML contains root element for the React MCP App from @compose/ui."""
         client = TestClient(engine.rest)
         response = client.get("/app/design-viewer")
         html = response.text
         assert 'id="root"' in html
 
     def test_app_design_viewer_excludes_embedded_js_tests(self):
-        """🔖The MCP App bundle excludes @compose/js embedded tests so sketchpad-only code cannot crash viewer startup."""
+        """🔖️The MCP App bundle excludes @compose/js embedded tests so sketchpad-only code cannot crash viewer startup."""
         client = TestClient(engine.rest)
         response = client.get("/app/design-viewer")
         html = response.text
@@ -5248,7 +5248,7 @@ class TestAppEndpoint:
         assert "KIT_DIAGRAM_NODE_SCALE" not in html
 
     def test_app_kit_viewer_returns_html(self):
-        """🔖GET /app/kit-viewer returns the built MCP App HTML that mounts McpKitViewer from @compose/ui."""
+        """🔖️GET /app/kit-viewer returns the built MCP App HTML that mounts McpKitViewer from @compose/ui."""
         client = TestClient(engine.rest)
         response = client.get("/app/kit-viewer")
         assert response.status_code == 200
@@ -5257,7 +5257,7 @@ class TestAppEndpoint:
         assert 'data-mcp-viewer="kit"' in response.text
 
     def test_app_scene_viewer_returns_html(self):
-        """🔖GET /app/scene-viewer returns the built MCP App HTML that mounts McpSceneViewer from @compose/ui."""
+        """🔖️GET /app/scene-viewer returns the built MCP App HTML that mounts McpSceneViewer from @compose/ui."""
         client = TestClient(engine.rest)
         response = client.get("/app/scene-viewer")
         assert response.status_code == 200
@@ -5265,7 +5265,7 @@ class TestAppEndpoint:
         assert 'data-mcp-viewer="scene"' in response.text
 
     def test_app_diagram_viewer_returns_html(self):
-        """🔖GET /app/diagram-viewer returns the built MCP App HTML that mounts McpDiagramViewer from @compose/ui."""
+        """🔖️GET /app/diagram-viewer returns the built MCP App HTML that mounts McpDiagramViewer from @compose/ui."""
         client = TestClient(engine.rest)
         response = client.get("/app/diagram-viewer")
         assert response.status_code == 200
@@ -5276,7 +5276,7 @@ class TestAppEndpoint:
 # #endregion 🎖️MCP Tests
 
 
-# #region 🔐Cache Tests
+# #region 🔐️Cache Tests
 class TestCache:
     def test_cache_dir_encoding(self):
         remoteUri = "https://example.com/kit.zip"
@@ -5294,10 +5294,10 @@ class TestCache:
             engine.cache(nonZipUri)
 
 
-# #endregion 🔐Cache Tests
+# #endregion 🔐️Cache Tests
 
 
-# #region 🔧SSLMode Tests
+# #region 🔧️SSLMode Tests
 class TestSSLMode:
     def test_ssl_mode_values(self):
         assert engine.SSLMode.DISABLE.value == "disable"
@@ -5308,7 +5308,7 @@ class TestSSLMode:
         assert engine.SSLMode.VERIFY_FULL.value == "verify-full"
 
 
-# #endregion 🔧SSLMode Tests
+# #endregion 🔧️SSLMode Tests
 
 
 # #region 🌤️Error Classes Tests
@@ -5381,7 +5381,7 @@ class TestEngineConfiguration:
 # #endregion 🌥️Engine Configuration Tests
 
 
-# #region 🐍Integration Tests
+# #region 🐍️Integration Tests
 class TestIntegration:
     def test_store_initialization_and_semio_check(self, tempKitPath: pathlib.Path):
         store = engine.SqliteStore.fromUri(str(tempKitPath))
@@ -5396,10 +5396,10 @@ class TestIntegration:
         assert resultOperation["kitUri"] == str(tempKitPath)
 
 
-# #endregion 🐍Integration Tests
+# #endregion 🐍️Integration Tests
 
 
-# #region 🩻Auth Error Classes Tests
+# #region 🩻️Auth Error Classes Tests
 class TestAuthErrors:
     def test_authentication_error(self):
         error = engine.AuthenticationError()
@@ -5426,13 +5426,13 @@ class TestAuthErrors:
         assert "not valid" in str(error)
 
 
-# #endregion 🩻Auth Error Classes Tests
+# #endregion 🩻️Auth Error Classes Tests
 
 
 # #region ⚗️Auth Credential Management Tests
 class TestAuthCredentials:
     def test_load_auth_empty(self, tmp_path):
-        """🔖_load_auth returns empty dict when no auth file exists."""
+        """🔖️_load_auth returns empty dict when no auth file exists."""
         with patch.object(engine, "AUTH_FILE", str(tmp_path / "auth.json")):
             result = engine._load_auth()
             assert result == {}
@@ -5447,7 +5447,7 @@ class TestAuthCredentials:
             assert loaded == auth_data
 
     def test_get_auth_token_found(self, tmp_path):
-        """🔖getAuthToken returns the stored token for a server."""
+        """🔖️getAuthToken returns the stored token for a server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5455,7 +5455,7 @@ class TestAuthCredentials:
             assert token == "tok123"
 
     def test_get_auth_token_not_found(self, tmp_path):
-        """🔖getAuthToken raises AuthTokenNotFound when no token exists."""
+        """🔖️getAuthToken raises AuthTokenNotFound when no token exists."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
@@ -5463,7 +5463,7 @@ class TestAuthCredentials:
                 engine.getAuthToken("https://server.com")
 
     def test_get_auth_token_strips_trailing_slash(self, tmp_path):
-        """🔖getAuthToken strips trailing slash from server URL."""
+        """🔖️getAuthToken strips trailing slash from server URL."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5471,7 +5471,7 @@ class TestAuthCredentials:
             assert token == "tok123"
 
     def test_get_auth_status_authenticated(self, tmp_path):
-        """🔖getAuthStatus returns authenticated=True when token exists."""
+        """🔖️getAuthStatus returns authenticated=True when token exists."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5480,7 +5480,7 @@ class TestAuthCredentials:
             assert status["email"] == "user@test.com"
 
     def test_get_auth_status_not_authenticated(self, tmp_path):
-        """🔖getAuthStatus returns authenticated=False when no token exists."""
+        """🔖️getAuthStatus returns authenticated=False when no token exists."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
@@ -5489,7 +5489,7 @@ class TestAuthCredentials:
             assert status["email"] == ""
 
     def test_login_success(self, tmp_path):
-        """🔖login stores token on successful server response."""
+        """🔖️login stores token on successful server response."""
         auth_file = str(tmp_path / "auth.json")
         mock_response = MagicMock()
         mock_response.json.return_value = {"token": "new-token-123"}
@@ -5504,14 +5504,14 @@ class TestAuthCredentials:
             assert loaded["https://server.com"]["token"] == "new-token-123"
 
     def test_login_connection_error(self, tmp_path):
-        """🔖login raises ServerUnreachable on connection error."""
+        """🔖️login raises ServerUnreachable on connection error."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
             with pytest.raises(engine.ServerUnreachable):
                 engine.login("https://unreachable.com", "user@test.com", "pass")
 
     def test_login_401_error(self, tmp_path):
-        """🔖login raises InvalidAuthToken on 401 response."""
+        """🔖️login raises InvalidAuthToken on 401 response."""
         auth_file = str(tmp_path / "auth.json")
         mock_response = MagicMock()
         mock_response.status_code = 401
@@ -5522,7 +5522,7 @@ class TestAuthCredentials:
                 engine.login("https://server.com", "user@test.com", "wrong-pass")
 
     def test_logout_removes_token(self, tmp_path):
-        """🔖logout removes the stored token for a server."""
+        """🔖️logout removes the stored token for a server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5532,7 +5532,7 @@ class TestAuthCredentials:
             assert "https://server.com" not in loaded
 
     def test_logout_nonexistent_server(self, tmp_path):
-        """🔖logout succeeds even if server was never logged in."""
+        """🔖️logout succeeds even if server was never logged in."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
@@ -5546,7 +5546,7 @@ class TestAuthCredentials:
 # #region 🖲️RemoteStore Tests
 class TestRemoteStore:
     def test_from_uri_valid(self):
-        """🔖RemoteStore.fromUri parses server URL and kit URI from remote URI."""
+        """🔖️RemoteStore.fromUri parses server URL and kit URI from remote URI."""
         uri = "https://server.com/api/kits/my-kit"
         store = engine.RemoteStore.fromUri(uri)
         assert store.serverUrl == "https://server.com"
@@ -5554,7 +5554,7 @@ class TestRemoteStore:
         assert store.uri == uri
 
     def test_from_uri_with_encoded_kit(self):
-        """🔖RemoteStore.fromUri handles encoded kit URI."""
+        """🔖️RemoteStore.fromUri handles encoded kit URI."""
         encodedKit = engine.encode("/path/to/kit")
         uri = f"https://server.com/api/kits/{encodedKit}"
         store = engine.RemoteStore.fromUri(uri)
@@ -5562,12 +5562,12 @@ class TestRemoteStore:
         assert store.kitUri == "/path/to/kit"
 
     def test_from_uri_invalid(self):
-        """🔖RemoteStore.fromUri raises RemoteKitUriNotValid for bad URIs."""
+        """🔖️RemoteStore.fromUri raises RemoteKitUriNotValid for bad URIs."""
         with pytest.raises(engine.RemoteKitUriNotValid):
             engine.RemoteStore.fromUri("https://server.com/bad/path")
 
     def test_get_kit_success(self, tmp_path):
-        """🔖RemoteStore.get retrieves kit from remote server."""
+        """🔖️RemoteStore.get retrieves kit from remote server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5581,7 +5581,7 @@ class TestRemoteStore:
                 assert result.name == "TestKit"
 
     def test_get_kit_unauthorized(self, tmp_path):
-        """🔖RemoteStore.get raises InvalidAuthToken on 401."""
+        """🔖️RemoteStore.get raises InvalidAuthToken on 401."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "expired-token", "email": "user@test.com"}})
@@ -5595,7 +5595,7 @@ class TestRemoteStore:
                     store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_get_kit_not_found(self, tmp_path):
-        """🔖RemoteStore.get raises KitNotFound on 404."""
+        """🔖️RemoteStore.get raises KitNotFound on 404."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5609,7 +5609,7 @@ class TestRemoteStore:
                     store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_get_kit_connection_error(self, tmp_path):
-        """🔖RemoteStore.get raises ServerUnreachable on connection error."""
+        """🔖️RemoteStore.get raises ServerUnreachable on connection error."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5619,7 +5619,7 @@ class TestRemoteStore:
                     store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_get_kit_no_auth(self, tmp_path):
-        """🔖RemoteStore.get raises AuthTokenNotFound when not logged in."""
+        """🔖️RemoteStore.get raises AuthTokenNotFound when not logged in."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
@@ -5628,7 +5628,7 @@ class TestRemoteStore:
                 store.get({"kind": engine.OperationKind.KIT, "kitUri": "my-kit"})
 
     def test_put_kit_success(self, tmp_path):
-        """🔖RemoteStore.put creates a kit on the remote server."""
+        """🔖️RemoteStore.put creates a kit on the remote server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5640,7 +5640,7 @@ class TestRemoteStore:
                 assert result is None
 
     def test_put_type_success(self, tmp_path):
-        """🔖RemoteStore.put creates a type on the remote server."""
+        """🔖️RemoteStore.put creates a type on the remote server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5657,7 +5657,7 @@ class TestRemoteStore:
                 assert "types/" in call_args[0][0]
 
     def test_put_design_success(self, tmp_path):
-        """🔖RemoteStore.put creates a design on the remote server."""
+        """🔖️RemoteStore.put creates a design on the remote server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5686,7 +5686,7 @@ class TestRemoteStore:
                 assert result is None
 
     def test_delete_type_success(self, tmp_path):
-        """🔖RemoteStore.delete removes a type from the remote server."""
+        """🔖️RemoteStore.delete removes a type from the remote server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5700,7 +5700,7 @@ class TestRemoteStore:
                 assert "types/" in call_args[0][0]
 
     def test_delete_design_success(self, tmp_path):
-        """🔖RemoteStore.delete removes a design from the remote server."""
+        """🔖️RemoteStore.delete removes a design from the remote server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok123", "email": "user@test.com"}})
@@ -5714,14 +5714,14 @@ class TestRemoteStore:
                 assert "designs/" in call_args[0][0]
 
     def test_initialize_noop(self, tmp_path):
-        """🔖RemoteStore.initialize is a no-operation (server-side initialization)."""
+        """🔖️RemoteStore.initialize is a no-operation (server-side initialization)."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
             store.initialize()  # Should not raise
 
     def test_update_not_supported(self, tmp_path):
-        """🔁RemoteStore.update raises FeatureNotYetSupported."""
+        """🔁️RemoteStore.update raises FeatureNotYetSupported."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")
@@ -5732,10 +5732,10 @@ class TestRemoteStore:
 # #endregion 🖲️RemoteStore Tests
 
 
-# #region ⛅StoreFactory Remote Tests
+# #region ⛅️StoreFactory Remote Tests
 class TestStoreFactoryRemote:
     def test_store_factory_remote_uri(self, tmp_path):
-        """🔖StoreFactory returns RemoteStore for remote server URIs."""
+        """🔖️StoreFactory returns RemoteStore for remote server URIs."""
         engine.StoreFactory.cache_clear()
         uri = "https://server.com/api/kits/my-kit"
         store = engine.StoreFactory(uri)
@@ -5744,31 +5744,31 @@ class TestStoreFactoryRemote:
         assert store.kitUri == "my-kit"
 
     def test_store_factory_invalid_remote_uri(self):
-        """🔖StoreFactory raises RemoteKitUriNotValid for http URIs without /api/kits/."""
+        """🔖️StoreFactory raises RemoteKitUriNotValid for http URIs without /api/kits/."""
         engine.StoreFactory.cache_clear()
         with pytest.raises(engine.RemoteKitUriNotValid):
             engine.StoreFactory("https://server.com/some/other/path")
 
     def test_store_factory_local_still_works(self, tempKitPath: pathlib.Path):
-        """🔖StoreFactory still returns SqliteStore for local absolute paths."""
+        """🔖️StoreFactory still returns SqliteStore for local absolute paths."""
         engine.StoreFactory.cache_clear()
         store = engine.StoreFactory(str(tempKitPath))
         assert isinstance(store, engine.SqliteStore)
 
     def test_store_factory_relative_path_raises(self):
-        """🔖StoreFactory raises LocalKitUriIsNotAbsolute for relative paths."""
+        """🔖️StoreFactory raises LocalKitUriIsNotAbsolute for relative paths."""
         engine.StoreFactory.cache_clear()
         with pytest.raises(engine.LocalKitUriIsNotAbsolute):
             engine.StoreFactory("relative/path")
 
 
-# #endregion ⛅StoreFactory Remote Tests
+# #endregion ⛅️StoreFactory Remote Tests
 
 
-# #region 🐼MCP Auth Tools Tests
+# #region 🐼️MCP Auth Tools Tests
 class TestMcpAuth:
     def test_mcp_login(self, tmp_path):
-        """🔖mcp_login calls login and returns result."""
+        """🔖️mcp_login calls login and returns result."""
         auth_file = str(tmp_path / "auth.json")
         mock_response = MagicMock()
         mock_response.json.return_value = {"token": "mcp-token"}
@@ -5779,14 +5779,14 @@ class TestMcpAuth:
             assert result["token"] == "mcp-token"
 
     def test_mcp_login_error(self, tmp_path):
-        """🔖mcp_login returns error dict on connection failure."""
+        """🔖️mcp_login returns error dict on connection failure."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.post", side_effect=engine.requests.exceptions.ConnectionError):
             result = engine.mcp_login("https://unreachable.com", "user@test.com", "pass")
             assert "error" in result
 
     def test_mcp_logout(self, tmp_path):
-        """🔖mcp_logout calls logout and returns result."""
+        """🔖️mcp_logout calls logout and returns result."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
@@ -5794,7 +5794,7 @@ class TestMcpAuth:
             assert result["ok"] is True
 
     def test_mcp_auth_status_authenticated(self, tmp_path):
-        """🔖mcp_auth_status returns authenticated status."""
+        """🔖️mcp_auth_status returns authenticated status."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
@@ -5802,7 +5802,7 @@ class TestMcpAuth:
             assert result["authenticated"] is True
 
     def test_mcp_auth_status_not_authenticated(self, tmp_path):
-        """🔖mcp_auth_status returns not authenticated status."""
+        """🔖️mcp_auth_status returns not authenticated status."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
@@ -5810,13 +5810,13 @@ class TestMcpAuth:
             assert result["authenticated"] is False
 
 
-# #endregion 🐼MCP Auth Tools Tests
+# #endregion 🐼️MCP Auth Tools Tests
 
 
-# #region 📎MCP Remote Kit Tests
+# #region 📎️MCP Remote Kit Tests
 class TestMcpRemoteKit:
     def test_start_working_in_remote_kit_success(self, tmp_path):
-        """🔖start_working_in_remote_kit fetches kit from remote server."""
+        """🔖️start_working_in_remote_kit fetches kit from remote server."""
         auth_file = str(tmp_path / "auth.json")
         kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
         mock_response = MagicMock()
@@ -5835,7 +5835,7 @@ class TestMcpRemoteKit:
             assert "/api/kits/" in engine._mcp_session_kit_source[sid]
 
     def test_start_working_in_remote_kit_no_auth(self, tmp_path):
-        """🔖start_working_in_remote_kit returns error when not logged in."""
+        """🔖️start_working_in_remote_kit returns error when not logged in."""
         auth_file = str(tmp_path / "auth.json")
         mock_ctx = type("MockCtx", (), {"session": object()})()
         with patch.object(engine, "AUTH_FILE", auth_file):
@@ -5846,7 +5846,7 @@ class TestMcpRemoteKit:
             assert "error" in _mcp_app_tool_payload(result)
 
     def test_start_working_in_remote_kit_connection_error(self, tmp_path):
-        """🔖start_working_in_remote_kit returns error on connection failure."""
+        """🔖️start_working_in_remote_kit returns error on connection failure."""
         auth_file = str(tmp_path / "auth.json")
         mock_ctx = type("MockCtx", (), {"session": object()})()
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
@@ -5857,7 +5857,7 @@ class TestMcpRemoteKit:
             assert "error" in _mcp_app_tool_payload(result)
 
     def test_start_working_in_remote_kit_clears_previous_state(self, tmp_path):
-        """🔖start_working_in_remote_kit clears design, type, and sets mode to remote."""
+        """🔖️start_working_in_remote_kit clears design, type, and sets mode to remote."""
         auth_file = str(tmp_path / "auth.json")
         kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
         mock_response = MagicMock()
@@ -5876,7 +5876,7 @@ class TestMcpRemoteKit:
             assert engine._mcp_session_kit_mode[sid] == "remote"
 
     def test_start_working_in_local_kit_sets_mode_local(self):
-        """🔖start_working_in_local_kit sets session mode to local."""
+        """🔖️start_working_in_local_kit sets session mode to local."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         result = engine.start_working_in_local_kit(str(KIT_METABOLISM_PATH), mock_ctx)
         assert isinstance(result, CallToolResult)
@@ -5886,7 +5886,7 @@ class TestMcpRemoteKit:
         assert engine._mcp_session_kit_mode[sid] == "local"
 
     def test_get_session_kit_mode_default(self):
-        """🔖_get_session_kit_mode returns 'local' when not set."""
+        """🔖️_get_session_kit_mode returns 'local' when not set."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = engine._session_id(mock_ctx)
         engine._mcp_session_kit_mode.pop(sid, None)
@@ -5894,7 +5894,7 @@ class TestMcpRemoteKit:
         assert mode == "local"
 
     def test_get_session_kit_mode_remote(self, tmp_path):
-        """🔖_get_session_kit_mode returns 'remote' for remote kit sessions."""
+        """🔖️_get_session_kit_mode returns 'remote' for remote kit sessions."""
         auth_file = str(tmp_path / "auth.json")
         kit_data = {"name": "RemoteKit", "version": "1.0.0", "designs": [], "types": []}
         mock_response = MagicMock()
@@ -5908,7 +5908,7 @@ class TestMcpRemoteKit:
             assert mode == "remote"
 
     def test_finish_working_in_kit_clears_mode_and_source(self, kitMetabolismJson: dict):
-        """🔖finish_working_in_kit clears mode and source in addition to kit, design, type."""
+        """🔖️finish_working_in_kit clears mode and source in addition to kit, design, type."""
         mock_ctx = type("MockCtx", (), {"session": object()})()
         sid = mock_ctx.session
         engine._mcp_session_kits[sid] = kitMetabolismJson
@@ -5920,7 +5920,7 @@ class TestMcpRemoteKit:
         assert sid not in engine._mcp_session_kit_source
 
     def test_all_mcp_tools_work_after_remote_kit_login(self, tmp_path):
-        """🔖All existing MCP tools work after start_working_in_remote_kit (design/type operations)."""
+        """🔖️All existing MCP tools work after start_working_in_remote_kit (design/type operations)."""
         auth_file = str(tmp_path / "auth.json")
         kit_data = {
             "name": "RemoteKit",
@@ -5973,13 +5973,13 @@ class TestMcpRemoteKit:
         assert result["ok"] is True
 
 
-# #endregion 📎MCP Remote Kit Tests
+# #endregion 📎️MCP Remote Kit Tests
 
 
-# #region 🌎REST Auth Endpoints Tests
+# #region 🌎️REST Auth Endpoints Tests
 class TestRestAuthEndpoints:
     def test_rest_login_endpoint(self, restClient: TestClient, tmp_path):
-        """🔖POST /auth/login endpoint calls login and returns token."""
+        """🔖️POST /auth/login endpoint calls login and returns token."""
         auth_file = str(tmp_path / "auth.json")
         mock_response = MagicMock()
         mock_response.json.return_value = {"token": "rest-token"}
@@ -5999,7 +5999,7 @@ class TestRestAuthEndpoints:
             assert data["token"] == "rest-token"
 
     def test_rest_logout_endpoint(self, restClient: TestClient, tmp_path):
-        """🔖POST /auth/logout endpoint removes token."""
+        """🔖️POST /auth/logout endpoint removes token."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
@@ -6009,7 +6009,7 @@ class TestRestAuthEndpoints:
             assert data["ok"] is True
 
     def test_rest_auth_status_endpoint(self, restClient: TestClient, tmp_path):
-        """🔖GET /auth/status endpoint returns auth status."""
+        """🔖️GET /auth/status endpoint returns auth status."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
@@ -6020,7 +6020,7 @@ class TestRestAuthEndpoints:
             assert data["email"] == "user@test.com"
 
     def test_rest_auth_status_not_authenticated(self, restClient: TestClient, tmp_path):
-        """🔖GET /auth/status returns not authenticated for unknown server."""
+        """🔖️GET /auth/status returns not authenticated for unknown server."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
@@ -6030,13 +6030,13 @@ class TestRestAuthEndpoints:
             assert data["authenticated"] is False
 
 
-# #endregion 🌎REST Auth Endpoints Tests
+# #endregion 🌎️REST Auth Endpoints Tests
 
 
-# #region 🐙Load Kit From Remote Tests
+# #region 🐙️Load Kit From Remote Tests
 class TestLoadKitFromRemote:
     def test_load_kit_from_remote_success(self, tmp_path):
-        """🔖_load_kit_from_remote fetches kit from server."""
+        """🔖️_load_kit_from_remote fetches kit from server."""
         auth_file = str(tmp_path / "auth.json")
         kit_data = {"name": "RemoteKit", "version": "1.0.0"}
         mock_response = MagicMock()
@@ -6048,7 +6048,7 @@ class TestLoadKitFromRemote:
             assert result["name"] == "RemoteKit"
 
     def test_load_kit_from_remote_connection_error(self, tmp_path):
-        """🔖_load_kit_from_remote raises ServerUnreachable on connection error."""
+        """🔖️_load_kit_from_remote raises ServerUnreachable on connection error."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file), patch("engine.requests.get", side_effect=engine.requests.exceptions.ConnectionError):
             engine._save_auth({"https://server.com": {"token": "tok", "email": "user@test.com"}})
@@ -6056,7 +6056,7 @@ class TestLoadKitFromRemote:
                 engine._load_kit_from_remote("https://server.com", "my-kit")
 
     def test_load_kit_from_remote_401(self, tmp_path):
-        """🔖_load_kit_from_remote raises InvalidAuthToken on 401."""
+        """🔖️_load_kit_from_remote raises InvalidAuthToken on 401."""
         auth_file = str(tmp_path / "auth.json")
         mock_response = MagicMock()
         mock_response.status_code = 401
@@ -6068,7 +6068,7 @@ class TestLoadKitFromRemote:
                 engine._load_kit_from_remote("https://server.com", "my-kit")
 
     def test_load_kit_from_remote_404(self, tmp_path):
-        """🔖_load_kit_from_remote raises KitNotFound on 404."""
+        """🔖️_load_kit_from_remote raises KitNotFound on 404."""
         auth_file = str(tmp_path / "auth.json")
         mock_response = MagicMock()
         mock_response.status_code = 404
@@ -6080,7 +6080,7 @@ class TestLoadKitFromRemote:
                 engine._load_kit_from_remote("https://server.com", "my-kit")
 
     def test_load_kit_from_remote_no_token(self, tmp_path):
-        """🔖_load_kit_from_remote raises AuthTokenNotFound without login."""
+        """🔖️_load_kit_from_remote raises AuthTokenNotFound without login."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             engine._save_auth({})
@@ -6088,11 +6088,11 @@ class TestLoadKitFromRemote:
                 engine._load_kit_from_remote("https://server.com", "my-kit")
 
 
-# #endregion 🐙Load Kit From Remote Tests
+# #endregion 🐙️Load Kit From Remote Tests
 
-# #endregion 🥼Tests
+# #endregion 🥼️Tests
 
 if __name__ == "__main__":
     run()
 
-# #endregion 🔔Engine
+# #endregion 🔔️Engine

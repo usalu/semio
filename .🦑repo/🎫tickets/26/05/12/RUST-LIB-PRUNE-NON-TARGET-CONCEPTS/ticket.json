@@ -1,9 +1,0 @@
-{
-  "title": "Rust Lib Prune Non Target Concepts",
-  "emoji": "🧹",
-  "status": "closed",
-  "description": "Prune compose/rs/lib.rs: remove or consolidate types (Row, Patch, collection diffs, etc.) that are not in compose/graphql/target.schema.graphql; align with golden SDL only.",
-  "summary": "Reverted incorrect kit-diff renames (Delta/BodyDelta/Scalars/Transform/InsertPayload/UpdateEntry) back to metabolism-aligned names (CollectionDiff, Row, Patch, DesignDiff, DesignScalarDiff). Kept operation::Diff; clarified in Rustdoc that it is not the SDL geometric Diff interface. Added audit-note.md.",
-  "goal": "🎯r2602runningsketchpadmacrodrivenentityfamilyrefactor",
-  "sessions": ["⚪cf7097b3234843998b82af16d3b9dacf"]
-}

@@ -52,7 +52,7 @@ Extend the matching `WidgetNode`/`ControlNode` variants in [ui/wgpu/rs/widgets.r
 
 ## 2. Widget-level parity fixes (`ui/wgpu/rs/widgets.rs` + shell wiring)
 
-- **Section**: collapse is dead - header registers hit id `section.{id}` but `handle_shell_hit` in [framework/renderer/wgpu/rs/shell.rs](framework/renderer/wgpu/rs/shell.rs) only matches `section.chevron.*`. Add a `section.` branch (or emit `section.chevron.{id}`), seed `collapsed_sections` from `default_open`, and replace unicode `"▸"/"▾"` with the `chevron-right`/`chevron-down` atlas icons used by tree sections.
+- **Section**: collapse is dead - header registers hit id `section.{id}` but `handle_shell_hit` in [framework/renderer/wgpu/rs/shell.rs](framework/renderer/wgpu/rs/shell.rs) only matches `section.chevron.*`. Add a `section.` branch (or emit `section.chevron.{id}`), seed `collapsed_sections` from `default_open`, and replace unicode `"▸️"/"▾️"` with the `chevron-right`/`chevron-down` atlas icons used by tree sections.
 - **Select**: dropdown never opens because `open_selects` is never written. Toggle `open_selects[id]` on `HitKind::Select` click in `handle_shell_hit`, close on outside click/escape (reuse `dismiss_overlays`), and dispatch `on_change` with `{ value }` args when a `DropdownItem` is clicked. Render the open dropdown into the overlay layer so it isn't clipped by panel scissors.
 - **Input**: on `HitKind::Input` click call `input.focus_input(id, current_value)` (shell currently only sets `focused_id`, so the buffer starts empty). On Enter/blur dispatch the input's `on_change`/`commit` command with `{ value: text_buffer }`.
 - **Slider / Ring**: begin an `InputState` drag when pressing a `HitKind::Slider` hit (same pattern as `dock.split.` / panel resize in `handle_pointer_button`), map drag position to value (honoring `step` for Slider), and dispatch `on_change` with `{ value }` on release (and throttled during drag to match React's continuous updates).
@@ -97,6 +97,6 @@ Wgpu commits edits via `setDocument` on Enter/Escape; React's `TextEditorHost` d
 ## 6. Verification
 
 - `cargo build` native + wasm32 for `ui_wgpu` and `semio-framework-renderer-wgpu`; run native dock/tree unit tests.
-- Rebuild wasm bindings (`bun ./script.ts wasm` in `framework/renderer/wgpu`).
+- Rebuild wasm bindings (`bun ./📜️script.ts wasm` in `framework/renderer/wgpu`).
 - E2E via the existing harness for plugins covering each component class: `s` (VFS + catalogue tree + stack/inputs), `vcs` or `forms` (TableScene), `draw` (Slider + Field controls), `flow` (text editor + node graph).
 - Screenshot-diff wgpu vs React shell for `s` and `forms` to confirm table/VFS/tree/control chrome parity.

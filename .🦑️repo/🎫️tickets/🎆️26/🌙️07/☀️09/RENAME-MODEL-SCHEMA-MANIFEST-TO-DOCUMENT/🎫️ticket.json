@@ -1,0 +1,12 @@
+{
+  "title": "Rename Model Schema Manifest To Document",
+  "emoji": "📄️",
+  "status": "closed",
+  "description": "Rename framework kernel and app terminology from model to document for schema manifests: ModelHandle/ModelId/ModelVersion/ModelDiff/ModelKind, ResourceKind::Model, model_projection/model_projection_schema, WIT migrate-model/read-model/write-model, and remaining play.model body keys (shooting).",
+  "summary": "Completed plugin binding regeneration for the model→document rename.\n\n- Restored missing WIT exports (list-tools, window-engagements, window-measures) so wasm32 plugin builds succeed.\n- Rebuilt all plugin-modules via `bun ./📜️script.ts plugin`; generated JS now uses migrate-document / MigrateDocument* throughout plugin-modules.\n- Fixed trinity-plugin wasm build: added missing SurfaceKind::Canvas2d on Parameters window_kind in app_rewrite.rs.\n- Transpiled remaining vcs and writer plugins; synced plugin-modules into renderer-modules/wgpu/plugin-modules (stale migrate-model copies removed).\n\nVerification: no migrate-model/MigrateModel references remain under framework/; @semio-tech/framework-renderer-react tests pass (27).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1872"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️799a7706eae548b1b0449b3ea3c1732c", "⚪️73b2d6b4ca76477c9a353a1ab8adff4b"]
+}

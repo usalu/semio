@@ -57,7 +57,7 @@ Per repo rules: read `repo://goals`, then `ticket_open` a new ticket (e.g. `Plat
 
 ## 1. Core panel-kind model — `framework/core/index.ts`
 
-- Add a `PanelKind` type + groupings in the `🔖SideTab` region:
+- Add a `PanelKind` type + groupings in the `🔖️SideTab` region:
   - `export type PanelKind = "windows" | "overview" | "workbench" | "details" | "settings" | "chat";`
   - `LEFT_PANEL_KINDS = ["windows","overview","workbench"]`, `RIGHT_PANEL_KINDS = ["details","settings","chat"]`, plus a `panelSide(kind)` helper.
 - Extend `SideTabSpec` (line 279) with required `readonly panel: PanelKind;`.
@@ -86,7 +86,7 @@ General URL-sync (the "general mechanism"):
 - Add an internal `PlatformViewHistory` wrapper (new component near `useUIHistory`, 1364) that: seeds `useUIHistory` from `window.location`, on mount + on every `navigate/goBack/goForward/goUp` calls `platform.applyUri(uri)` + `history.pushState`, adds a single `popstate` listener, and passes `uri/onNavigate/canGoBack/onGoBack/...` into `PlatformView`.
 - Change `ReactUI.mount` (3194-3203) / `mountPlatform` to render the history wrapper, so every product gets URL-synced nav for free.
 
-Extend the existing `🧪Tests` regions (no new test files): toggles hidden when a kind has no tabs; breadcrumb segments render + navigate; `settings` id replaces `options`; history wrapper applies uri on popstate.
+Extend the existing `🧪️Tests` regions (no new test files): toggles hidden when a kind has no tabs; breadcrumb segments render + navigate; `settings` id replaces `options`; history wrapper applies uri on popstate.
 
 ## 4. Playground product — `framework/product/playground/core/core.ts`
 

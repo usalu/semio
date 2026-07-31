@@ -1,0 +1,9 @@
+{
+  "title": "Flow Channel Cardinality",
+  "emoji": "🔢️",
+  "status": "closed",
+  "description": "All flow channels must declare cardinality (! ? * + or exact digit), display the symbol in front of the port label, treat collection cardinalities as homogeneous list dictionaries, and enforce count + schema homogeneity at runtime evaluation and connection time.",
+  "summary": "Added Cardinality enum to neural ChannelSpec with symbol serde (! ? * + or digit), default ExactlyOne, and ZeroOrMore for list channels. Runtime validates collection list homogeneity (numeric indices only) in collect_neuron_input and Registry::dispatch. IoPortSpec carries cardinality through flow bridge; label_with_cardinality prefixes symbols in GPU and overlay paint. FlowChannelSpecV1 and flowChannelCompatible enforce cardinality range containment. List module list outputs use * cardinality. Updated demo.dag.json fixture and tests across neural, dag, list, and flow/react.",
+  "goal": "🎯️flow",
+  "sessions": []
+}

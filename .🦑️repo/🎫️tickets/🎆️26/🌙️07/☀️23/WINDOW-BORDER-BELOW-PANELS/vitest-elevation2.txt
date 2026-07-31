@@ -1,0 +1,184 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern elevates the mode-dock-stack
+
+> bun ./script.ts test --testNamePattern "elevates the mode-dock-stack"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯️ |@semio-tech/ui-react| index.tsx (340 tests | 1 failed | 339 skipped) 1132ms
+     × elevates the mode-dock-stack silhouette and paints the SVG border when introducing a docked window 1131ms
+
+⎯ Failed Tests 1 ⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > UIIntroduction veil and elevation > elevates the mode-dock-stack silhouette and paints the SVG border when introducing a docked window
+AssertionError: expected undefined to be 'introduced' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"h-layout-story w-layout-story-md"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex h-full min-h-0 w-full flex-col"[39m
+          [33mdata-slot[39m=[32m"mode"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas p-single"[39m
+            [33mdata-slot[39m=[32m"mode-body"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent"[39m
+              [33mdata-active[39m=[32m"true"[39m
+              [33mdata-introduction-elevated[39m=[32m"true"[39m
+              [33mdata-slot[39m=[32m"mode-dock-stack"[39m
+              [33mdata-stack-path[39m=[32m""[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent"[39m
+                [33mdata-slot[39m=[32m"mode-dock-tabbar"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex min-h-medium min-w-0 shrink items-stretch relative z-[2] border-t border-x !border-b-0 border-active-base bg-window"[39m
+                  [33mdata-slot[39m=[32m"mode-dock-tab-cap"[39m
+                [36m>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden"[39m
+                    [33mdata-slot[39m=[32m"mode-dock-tabs"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"group flex max-w-[12rem] shrink-0 cursor-pointer items-center gap-half px-single text-xs select-none transition-colors bg-active-base border-active-base text-emphasized hover:not-data-[handle-hovered=true]:bg-active-base/90 hover:not-data-[handle-hovered=true]:border-active-base hover:not-data-[handle-hovered=true]:text-emphasized"[39m
+                      [33mdata-active[39m=[32m"true"[39m
+                      [33mdata-hover-scope[39m=[32m"true"[39m
+                      [33mdata-slot[39m=[32m"mode-dock-tab"[39m
+                      [33mdata-stack-active[39m=[32m"true"[39m
+                      [33mdata-window-id[39m=[32m"framework.window.main"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"truncate"[39m
+                      [36m>[39m
+                        [0mMain[0m
+                      [36m</span>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"inline-flex shrink-0 cursor-grab touch-none items-center justify-center transition-colors hover:text-emphasized active:cursor-grabbing text-emphasized"[39m
+                        [33mdata-slot[39m=[32m"drag-handle"[39m
+                      [36m>[39m
+                        [36m<span[39m
+                          [33maria-hidden[39m=[32m"true"[39m
+                          [33mclass[39m=[32m"inline-flex shrink-0 items-center justify-center [&>svg]:size-full"[39m
+                          [33mdata-icon[39m=[32m"grip-vertical"[39m
+                          [33mdata-icon-kind[39m=[32m"catalog"[39m
+                          [33mstyle[39m=[32m"width: calc(3.75 * var(--ui-spacing)); height: calc(3.75 * var(--ui-spacing));"[39m
+                        [36m>[39m
+                          [36m<svg[39m
+                            [33mfill[39m=[32m"none"[39m
+                            [33mstroke[39m=[32m"currentColor"[39m
+                            [33mstroke-linecap[39m=[32m"round"[39m
+                            [33mstroke-linejoin[39m=[32m"round"[39m
+                            [33mstroke-width[39m=[32m"2"[39m
+                            [33mviewBox[39m=[32m"0 0 24 24"[39m
+                            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                          [36m>[39m
+                            [0m
+  [0m
+                            [36m<circle[39m
+                              [33mcx[39m=[32m"9"[39m
+                              [33mcy[39m=[32m"12"[39m
+                              [33mr[39m=[32m"1"[39m
+                            [36m/>[39m
+                            [0m
+  [0m
+                            [36m<circle[39m
+                              [33mcx[39m=[32m"9"[39m
+                              [33mcy[39m=[32m"5"[39m
+                              [33mr[39m=[32m"1"[39m
+                            [36m/>[39m
+                            [0m
+  [0m
+                            [36m<circle[39m
+                              [33mcx[39m=[32m"9"[39m
+                              [33mcy[39m=[32m"19"[39m
+                              [33mr[39m=[32m"1"[39m
+                            [36m/>[39m
+                            [0m
+  [0m
+                            [36m<circle[39m
+                              [33mcx[39m=[32m"15"[39m
+                              [33mcy[39m=[32m"12"[39m
+                              [33mr[39m=[32m"1"[39m
+                            [36m/>[39m
+                            [0m
+  [0m
+                            [36m<circle[39m
+                              [33mcx[39m=[32m"15"[39m
+                              [33mcy[39m=[32m"5"[39m
+                              [33mr[39m=[32m"1"[39m
+                            [36m/>[39m
+                            [0m
+  [0m
+                            [36m<circle[39m
+                              [33mcx[39m=[32m"15"[39m
+                              [33mcy[39m=[32m"19"[39m
+                              [33mr[39m=[32m"1"[39m
+                            [36m/>[39m
+                            [0m
+[0m
+                          [36m</svg>[39m
+                        [36m</span>[39m
+                      [36m</span>[39m
+                    [36m</div>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"relative min-h-medium min-w-0 flex-1 cursor-grab bg-canvas active:cursor-grabbing z-[1] border-x-0 border-t-0 border-b border-active-base"[39m
+                  [33mdata-slot[39m=[32m"mode-dock-tab-gap"[39m
+                [36m/>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 border-active-base bg-window text-element"[39m
+                  [33mdata-slot[39m=[32m"mode-dock-controls-cap"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"flex h-medium w-auto...
+
+- Expected:
+"introduced"
+
++ Received:
+undefined
+
+ ❯️ index.tsx:25518:113
+    25516|       expect(resolveWindowSilhouetteBorderKind(container.querySelector…
+    25517|       await waitFor(() => {
+    25518|         expect(container.querySelector('[data-slot="mode-dock-silhouet…
+       |                                                                                                                 ^
+    25519|       });
+    25520|       const stack = container.querySelector('[data-slot="mode-dock-sta…
+ ❯️ runWithExpensiveErrorDiagnosticsDisabled ../../../node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯️ checkCallback ../../../node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯️ Timeout.checkRealTimersCallback ../../../node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 339 skipped (340)
+   Start at  17:02:49
+   Duration  9.13s (transform 2.06s, setup 210ms, import 6.84s, tests 1.13s, environment 668ms)
+
+Warning: command "bun ./script.ts test --testNamePattern "elevates the mode-dock-stack"" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/ui-react failed
+
+Failed tasks:
+
+- @semio-tech/ui-react:test
+
+Hint: run the command with --verbose for more details.
+

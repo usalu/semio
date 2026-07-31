@@ -1,0 +1,12 @@
+{
+  "title": "Plugin Web Worker Isolation",
+  "emoji": "🔒️",
+  "status": "closed",
+  "description": "Implement browser Web Worker isolation for plugins: wasm32-wasip2 build option, plugin-worker.js template generation, boot.ts worker loading with SEMIO_PLUGIN_WORKERS flag and 5s timeout kill/restart.",
+  "summary": "Added optional wasm32-wasip2 plugin builds via SEMIO_PLUGIN_WASIP2=1 (default remains wasm32-unknown-unknown with wasm-bindgen). Each plugin build now emits plugin-worker.js with manifest/createApp/handleCommand/render/destroy/tools/windowEngagements/windowMeasures message protocol. boot.ts loads plugins through isolated Web Workers when window.SEMIO_PLUGIN_WORKERS is true, with 5s message timeout that terminates and restarts the worker; otherwise falls back to direct module import.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1859"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️3356f558b8704c40b3b70dd710255c6d"]
+}

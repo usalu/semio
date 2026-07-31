@@ -108,7 +108,7 @@ flowchart LR
 
 ## Build & verify
 
-- Rebuild wasm via the existing `@semio-tech/gis-map-rs` `wasm` script (`runWasmPackWebBuild`); run `🛠️dev🌐gis📍map` (port 6040) and confirm runtime via `[DEBUG]` logs that vector tiles fetch/decode and the chooser switches modes. No new `launch.json` entries needed (dev/test commands already exist).
+- Rebuild wasm via the existing `@semio-tech/gis-map-rs` `wasm` script (`runWasmPackWebBuild`); run `🛠️dev🌐️gis📍️map` (port 6040) and confirm runtime via `[DEBUG]` logs that vector tiles fetch/decode and the chooser switches modes. No new `launch.json` entries needed (dev/test commands already exist).
 
 ## Ticket
 

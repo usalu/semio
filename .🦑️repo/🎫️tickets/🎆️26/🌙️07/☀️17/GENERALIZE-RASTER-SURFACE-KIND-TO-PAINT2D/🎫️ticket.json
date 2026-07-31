@@ -1,0 +1,13 @@
+{
+  "title": "Generalize Raster Surface Kind to Paint2d",
+  "emoji": "🖌️",
+  "status": "open",
+  "description": "Rename the framework SurfaceKind::Raster variant (wire \"raster\") to SurfaceKind::Paint2d (wire \"paint-2d\"), and RasterScene -\u003e Paint2dScene, across ui/wgpu/rs/lib.rs, framework/core/js/index.ts, framework/renderer/react/ui-interpreter.tsx + its raster-host.tsx (renamed to paint-2d-host.tsx), framework/renderer/wgpu/rs/lib.rs native renderer, and the owning raster/plugin/rs/lib.rs call sites. This is a framework-purity fix: the generic SurfaceKind enum must not encode app identity. Update the UiComponentSceneNode field raster -\u003e paint_2d (JSON \"paint2d\") to match the existing per-surface-kind field naming convention. Inline test updates in framework/renderer/react/index.test.ts. Flag anything that can't be cleanly generalized (e.g. os-shell.tsx's createRasterSession directly importing the raster app's own WASM package into framework/renderer/react) for later architecture audit. Part of a sequential wave of surface-generalization tickets under GENERALIZE-APPS-ONTO-FRAMEWORK-PRIMITIVES (parent ticket not yet materialized at ticket_open time).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2035"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️1371b4691cfb4867b9c3b4cbc41fbfeb"
+  ]
+}

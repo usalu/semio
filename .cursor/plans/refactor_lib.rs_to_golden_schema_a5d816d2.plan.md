@@ -163,7 +163,7 @@ lib.rs
 
 Each phase is a `ticket_open`/`ticket_close` cycle on its own ticket. Phases are sequential because they all touch `lib.rs`; within a phase, when independent regions can be edited disjointly, sub-tasks may be delegated to `generalPurpose` subagents in parallel.
 
-- Phase 0 — Ticket + scaffold: open the umbrella ticket under goal `🎯runningsketchpad`; freeze macro DSL; gut `lib.rs` to scalars + macros + empty regions; existing runtime moved out into `tmp_legacy_runtime.rs.txt` inside the ticket folder for porting reference.
+- Phase 0 — Ticket + scaffold: open the umbrella ticket under goal `🎯️runningsketchpad`; freeze macro DSL; gut `lib.rs` to scalars + macros + empty regions; existing runtime moved out into `tmp_legacy_runtime.rs.txt` inside the ticket folder for porting reference.
 - Phase 1 — Foundation: scalars (`Timestamp`, `Color`), the three ladder macros (`entity_full!`, `entity_lite!`, `entity_bare!`) plus operation/union/enum/interface helpers, all general interfaces (`Node`, `Entity`, …, `Operation`, `Backbone`, `BackboneCommand`, `Provider`, `ProviderCommand`) and `PageInfo` + their Edge/Connection (lite-ladder).
 - Phase 2 — Geom: Vector/Point/Coordinate/Offset/Plane/Position/Location with **full 12-ladders** + GraphQL inputs.
 - Phase 3 — Meta: Attribute + Place/Family/Folder/File/Author/Prop/Benchmark/Quality/Tag/Concept/Stat with **full 12-ladders**. (parallel: subagent A = Attribute+Place+Family+Folder+File+Author; subagent B = Prop+Benchmark+Quality+Tag+Concept+Stat).

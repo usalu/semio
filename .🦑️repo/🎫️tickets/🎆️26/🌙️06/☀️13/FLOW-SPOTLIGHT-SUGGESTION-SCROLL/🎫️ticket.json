@@ -1,0 +1,12 @@
+{
+  "title": "Flow Spotlight Suggestion Scroll",
+  "emoji": "🔍️",
+  "status": "closed",
+  "description": "Make the flow canvas spotlight suggestion list scrollable when expanded via the chevron control.",
+  "summary": "Made the flow spotlight suggestion list scrollable when expanded via the chevron. Restructured FlowSpotlight as a flex column with a dedicated scroll container (min-h-0, overflow-y-auto, viewport-capped max-height), wheel event isolation so canvas zoom does not steal scroll, and scrollIntoView for keyboard-active items. Added flowSpotlightSuggestionListScrollClass helper and unit tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1683"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️8f8b1def38034b6d932fe045dd8fa583"]
+}

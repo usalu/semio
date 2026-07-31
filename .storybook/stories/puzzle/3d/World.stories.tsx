@@ -1,22 +1,22 @@
-// #region 🧲Header
-// 💻 .storybook/story/puzzle/3d/World.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/story/puzzle/3d/World.stories.tsx
 // Specs: Host the framework renderer's `World3dHost` for Storybook + Playwright selection/camera checks, driven by the *real* puzzle-3d example fixtures.
-// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the subset of `puzzle3d-play`'s (`puzzle/plugin/rs/lib.rs`'s `d3` module, `handle_action`) object/vortex pick + camera + delete/duplicate actions the story exercises, so the controlled scene ⇄ session loop round-trips without a running dev server — mirrors `../puzzle/2d/Board.stories.tsx`'s pattern. Fixture data comes from the real `puzzle/3d/example/*.puzzle3d` DSL-text fixtures (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-3d-rs`'s `puzzle3dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
+// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the subset of `puzzle3d-play`'s (`puzzle/plugin/rs/lib.rs`'s `d3` module, `handle_action`) object/vortex pick + camera + delete/duplicate actions the story exercises, so the controlled scene ⇄️ session loop round-trips without a running dev server — mirrors `../puzzle/2d/Board.stories.tsx`'s pattern. Fixture data comes from the real `puzzle/3d/example/*.puzzle3d` DSL-text fixtures (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-3d-rs`'s `puzzle3dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
 // Real GLB mesh assets referenced by `meshUrl` in these fixtures aren't part of this Storybook scope's asset pipeline (no `mesh-collection` route is registered for `puzzle/3d`, and the GLBs themselves don't exist in this checkout) — object instances are therefore built *without* a mesh `url`, so `World3dHost` renders its built-in neutral placeholder box per object instead of attempting (and failing) a GLTF fetch. Reference-plane images do exist on disk, so those load for real via a Vite asset import.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { World3dHost } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
+import { World3dHost } from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx";
 
-import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/app/3d/example/concrete-forest.puzzle3d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/app/3d/example/nakagin-capsule-tower.puzzle3d?raw";
+import concreteForestFixtureDsl from "../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🧩️concrete-forest.puzzle3d?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🧩️nakagin-capsule-tower.puzzle3d?raw";
 
-import abbauAufbauReferenceUrl from "../../../../framework/product/os/module/infinite/fixture/abbau-aufbau-masterarbeit-grundriss.jpg";
-import rathausAhlenReferenceUrl from "../../../../framework/product/os/module/infinite/fixture/rathaus-ahlen-grundriss.png";
+import abbauAufbauReferenceUrl from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🧫️fixture/🖼️abbau-aufbau-masterarbeit-grundriss.jpg";
+import rathausAhlenReferenceUrl from "../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🧫️fixture/🖼️rathaus-ahlen-grundriss.png";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];
@@ -77,7 +77,7 @@ const STORY_REFERENCE_URL_OVERRIDES: Record<string, string> = {
 //#endregion ReferenceAssetOverrides
 
 //#region WasmFixtureLoader
-/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-3d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
+/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-3d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
 type Puzzle3dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle3dParseDslJson: (dslText: string) => string };
 let puzzle3dWasmModulePromise: Promise<Puzzle3dWasmModule> | null = null;
 function loadPuzzle3dWasm(): Promise<Puzzle3dWasmModule> {
@@ -120,7 +120,7 @@ function applyStoryWorldMerge(current: readonly string[], id: string, merge: str
   return [...set];
 }
 
-/** @emoji 🧩 Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/plugin/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
+/** @emoji 🧩️ Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/plugin/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
 function reduceStoryWorld3dAction(state: StoryWorld3dState, action: string, args: Record<string, unknown> | undefined): StoryWorld3dState {
   const { fixture, runtime } = state;
   switch (action) {
@@ -193,7 +193,7 @@ function buildStoryWorld3dSceneNode(state: StoryWorld3dState): UiComponentSceneN
   const { fixture, runtime } = state;
   const selectedIds = new Set(runtime.selectedIds);
 
-  // 📦 No `url`/`data` on purpose (see header docstring) — falls back to `World3dHost`'s neutral placeholder box per instance.
+  // 📦️ No `url`/`data` on purpose (see header docstring) — falls back to `World3dHost`'s neutral placeholder box per instance.
   const meshes = fixture.objects.map((object) => ({ id: object.id }));
 
   const instances = fixture.objects.map((object) => ({
@@ -288,7 +288,7 @@ function World3dStoryHost({ fixtureDsl }: { readonly fixtureDsl: string }): Reac
 //#endregion StoryHost
 
 const meta = {
-  title: "🧩puzzle🧊3d",
+  title: "🧩️puzzle🧊️3d",
   component: World3dStoryHost,
   parameters: {
     layout: "fullscreen",
@@ -300,14 +300,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🌲 The real Concrete Forest 3D world fixture (`puzzle/3d/example/concrete-forest.puzzle3d`) — 1 object, 2 locked/hidden reference planes. */
+/** 🌲️ The real Concrete Forest 3D world fixture (`puzzle/3d/example/concrete-forest.puzzle3d`) — 1 object, 2 locked/hidden reference planes. */
 export const ConcreteForest: Story = {
   args: {
     fixtureDsl: concreteForestFixtureDsl,
   },
 };
 
-/** 🏯 The real Nakagin Capsule Tower 3D world fixture (`puzzle/3d/example/nakagin-capsule-tower.puzzle3d`) — 180 objects. */
+/** 🏯️ The real Nakagin Capsule Tower 3D world fixture (`puzzle/3d/example/nakagin-capsule-tower.puzzle3d`) — 180 objects. */
 export const NakaginCapsuleTower: Story = {
   args: {
     fixtureDsl: nakaginCapsuleTowerFixtureDsl,

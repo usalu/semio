@@ -94,7 +94,7 @@ Naming follows repo rules: `kind` not `type` in code identifiers; GraphQL field 
 
 ## Files
 
-- [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs): rename/extend in-memory accessors and GraphQL resolvers in the `🏠 type`, `🏘 design`, `⭕ piece`, `🔗 connection`/`⛓️ side`, `📦 kit`, `💾 representation` regions; add `is_*` Piece accessors and `has_*` containment + transitive rollups. Extend the in-file Rust tests.
+- [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs): rename/extend in-memory accessors and GraphQL resolvers in the `🏠️ type`, `🏘️ design`, `⭕️ piece`, `🔗️ connection`/`⛓️ side`, `📦️ kit`, `💾️ representation` regions; add `is_*` Piece accessors and `has_*` containment + transitive rollups. Extend the in-file Rust tests.
 - [compose/client/schema/graphql/schema.graphql](compose/client/schema/graphql/schema.graphql): regenerated only.
 - [compose/client/lib/js/index.ts](compose/client/lib/js/index.ts): rename/add accessor specs on `Kit`, `Design`, `Type`, `Piece`, `Side`, `Connection`, `Representation`; extend the existing "derived reference accessors" prototype tests (around `index.ts:4851`).
 

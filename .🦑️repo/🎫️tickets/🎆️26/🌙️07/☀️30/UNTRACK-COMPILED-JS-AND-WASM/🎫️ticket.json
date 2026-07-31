@@ -1,0 +1,18 @@
+{
+  "title": "Untrack Compiled Js and Wasm",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Stop version-controlling OS-dev WASM/JS/native build outputs (~3700 files) by fixing stale .gitignore paths after the product-tree move, then removing those paths from the git index while keeping local build trees and handwritten source.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2381"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "plan": {
+    "client": "cursor",
+    "id": "3333f70c",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/untrack_compiled_artifacts_3333f70c.plan.md"
+  },
+  "sessions": [
+    "⚪️41500c70441348f79aafe6a0cd4e774d"
+  ]
+}

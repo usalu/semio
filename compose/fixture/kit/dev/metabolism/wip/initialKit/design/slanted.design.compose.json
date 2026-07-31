@@ -8259,7 +8259,7 @@
   },
   "icon": "icons/nakagin-capsule-tower_slanted.svg",
   "image": "images/nakagin-capsule-tower_slanted.png",
-  "description": "🚕 A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
+  "description": "🚕️ A sloped variant of the Nakagin Capsule Tower where the capsules have balconies and the towers are graduated in opposing directions. Each tower has a direction and every floor is stepped in this direction.",
   "createdAt": "2025-11-23T01:10:21.875Z",
   "updatedAt": "2025-11-23T01:10:21.875Z",
   "families": {

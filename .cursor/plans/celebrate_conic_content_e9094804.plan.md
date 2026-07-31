@@ -68,7 +68,7 @@ Extend existing celebrate / shell CSS tests in `[ui/js/react/index.tsx](ui/js/re
 
 ### 4. Ticket
 
-On implementation: reopen or open a ticket under `🎯r2602/🎯runningsketchpad` (same goal as [FIX-WINDOW-CELEBRATE-CONIC-GRADIENT](.repo/🎫/26/07/24/FIX-WINDOW-CELEBRATE-CONIC-GRADIENT/ticket.json)), keep temp notes in the ticket folder, close with summary + touched files.
+On implementation: reopen or open a ticket under `🎯️r2602/🎯️runningsketchpad` (same goal as [FIX-WINDOW-CELEBRATE-CONIC-GRADIENT](.repo/🎫️/26/07/24/FIX-WINDOW-CELEBRATE-CONIC-GRADIENT/ticket.json)), keep temp notes in the ticket folder, close with summary + touched files.
 
 ## Out of scope
 

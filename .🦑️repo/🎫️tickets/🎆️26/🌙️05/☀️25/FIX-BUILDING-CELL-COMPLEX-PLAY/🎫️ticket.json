@@ -1,0 +1,9 @@
+{
+  "title": "Fix Building Cell Complex Play",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Reconvert temp building BREPs into proper spatial.topology/v1 cell complexes (one complex, all solids as cells, cluster asset) centered at origin for spatial play visibility.",
+  "summary": "Re-ran convert-buildings.ts from temp/*_Building.json: array buckets, one cellComplex per asset listing all B-rep solids, cluster pointing at the complex, vertices centered at centroid. Added validateTopologyCellComplexes, CONTAINS traversal for cell/cellComplex in query, TopologyFactoryWireframeLayer for visible edges in play, default tall-building asset, convert-building-fixtures script command. All @spatial/js-core, @spatial/js-query, @spatial/js-renderer-r3f tests pass.",
+  "goal": "🎯️r2603",
+  "sessions": []
+}

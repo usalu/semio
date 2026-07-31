@@ -50,7 +50,7 @@ One shared resolver in `@semio-tech/ui-styling/js`, fed by a generated TS token 
 
 ### 1. Token map generation
 
-- Extend [ui/styling/script.ts](ui/styling/script.ts) `generateStylingArtifacts()` to also emit a generated TS module (e.g. `ui/styling/js/tokens.generated.ts`) exporting `STYLING_TOKENS: Record<string,string>` (hex by key, from `tokens.json`) alongside existing CSS/C# outputs. Keep regeneration via `bun ./script.ts generate`.
+- Extend [ui/styling/script.ts](ui/styling/script.ts) `generateStylingArtifacts()` to also emit a generated TS module (e.g. `ui/styling/js/tokens.generated.ts`) exporting `STYLING_TOKENS: Record<string,string>` (hex by key, from `tokens.json`) alongside existing CSS/C# outputs. Keep regeneration via `bun ./📜️script.ts generate`.
 - Register the styling generate command in [.vscode/launch.json](.vscode/launch.json) following existing grouping (currently missing).
 
 ### 2. Shared resolver (new region in [ui/styling/js/index.ts](ui/styling/js/index.ts))
@@ -84,7 +84,7 @@ Note: no new tokens are added (per chosen "resolve" mechanism); `references` (wa
 
 ### 6. Regenerate + verify
 
-- Run `bun ./script.ts generate` in `ui/styling`; rebuild puzzle/2d/rs (build.rs re-reads tokens.json).
+- Run `bun ./📜️script.ts generate` in `ui/styling`; rebuild puzzle/2d/rs (build.rs re-reads tokens.json).
 - Run affected vitest suites and confirm runtime (boot wires play, check edge/node colors via `[DEBUG]` logs) before declaring done.
 
 ## Repo workflow

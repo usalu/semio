@@ -1,9 +1,0 @@
-{
-  "title": "Board Icon Bbox Cache And Clear Api",
-  "emoji": "🖼️",
-  "status": "closed",
-  "description": "Fix board node SVG icons: correct get_or_build_icon_scene call (content-hash cache, not icon_kind key), add WASM/TS clearIconVectorCache for runtime catalog updates, path-walk bbox for centering; run wasm-pack + vitest.",
-  "summary": "Icon fit uses resolved SVG string for Vello scene cache (v6 key: full string hash + len + fg/bg); fixed get_or_build_icon_scene call to pass \u0026svg not catalog id. Content bbox moved to svg_icon_vello09::svg_icon_content_bounds (path abs bounds walk + root/viewBox fallbacks) for correct centering under nested transforms. Added std::hash::Hasher import for DefaultHasher::finish. WASM BoardSession.clearIconVectorCache + BoardRenderer.clearIconVectorCache() for forced refresh after runtime catalog edits. wasm32 cargo check + wasm-pack release + Vitest 58 passed; native cargo test still fails on Windows wgpu-hal duplicate windows crates (pre-existing).",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪adb41db267f94f14b841725f604d9bc9"]
-}

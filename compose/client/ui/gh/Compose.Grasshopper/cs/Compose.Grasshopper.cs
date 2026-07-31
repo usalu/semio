@@ -1,4 +1,4 @@
-#region 📱Header
+#region 📱️Header
 
 // 2023-2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,9 +6,9 @@
 
 // Main Grasshopper program providing domain components for Rhino.
 
-#endregion 📱Header
+#endregion 📱️Header
 
-#region ⌛Imports
+#region ⌛️Imports
 // Callers MUST import all required namespaces listed here.
 using System.Drawing;
 using System.Collections;
@@ -53,14 +53,14 @@ using TagDiffUpdate = Compose.TagModification;
 using TypeDiffUpdate = Compose.TypeModification;
 using static Compose.Grasshopper.Compatibility;
 
-#endregion ⌛Imports
+#endregion ⌛️Imports
 
-#region ✨Namespace
+#region ✨️Namespace
 // Implementations MUST reside in this namespace.
 namespace Compose.Grasshopper;
-#endregion ✨Namespace
+#endregion ✨️Namespace
 
-#region 🧩Compatibility
+#region 🧩️Compatibility
 // Callers MUST use these shims to bridge stale Grasshopper source assumptions to the current Compose and Rhino APIs.
 
 public static class Compatibility
@@ -87,9 +87,9 @@ public sealed class Param_RepresentationObject : Param_GenericObject
     public override Guid ComponentGuid => new("8CF6C13F-C86A-4EB2-9B48-5E7B16A750C5");
 }
 
-#endregion 🧩Compatibility
+#endregion 🧩️Compatibility
 
-#region 🎠Constants
+#region 🎠️Constants
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -103,7 +103,7 @@ public class Compose_GrasshopperInfo : GH_AssemblyInfo
     public override string Name => Compose.Constants.Name;
     public override Bitmap Icon => IconResources.ResolveOrPlaceholder("compose_24x24");
     public override Bitmap AssemblyIcon => IconResources.ResolveOrPlaceholder("compose_24x24");
-    public override string Description => "compose within 🦗.";
+    public override string Description => "compose within 🦗️.";
     public override Guid Id => new("FE587CBF-5F7D-4091-AA6D-D9D30CF80B64");
     public override string Version => Constants.Version;
     public override string AuthorName => "Ueli Saluz";
@@ -120,16 +120,16 @@ public class ComposeCategoryIcon : GH_AssemblyPriority
     }
 }
 
-#endregion 🎠Constants
+#endregion 🎠️Constants
 
 #region 🌡️IconResources
 // Callers MUST resolve icon resources through this helper to support renamed keys and placeholders.
 public static class IconResources
 {
-    //#region 📸Private
+    //#region 📸️Private
     // Private MUST provide the private functionality.
     private static readonly Lazy<Dictionary<string, string>> canonicalResourceNames = new(BuildCanonicalResourceNames, true);
-    //#endregion 📸Private
+    //#endregion 📸️Private
 
     //#region ⚙️Public
     // Public MUST provide the public functionality.
@@ -145,7 +145,7 @@ public static class IconResources
     }
     //#endregion ⚙️Public
 
-    //#region 🪨PrivateHelpers
+    //#region 🪨️PrivateHelpers
     // PrivateHelpers MUST provide the privatehelpers functionality.
     private static Bitmap? ResolveResource(string resourceName)
     {
@@ -191,11 +191,11 @@ public static class IconResources
         graphics.Clear(Color.FromArgb(52, 58, 64));
         return bitmap;
     }
-    //#endregion 🪨PrivateHelpers
+    //#endregion 🪨️PrivateHelpers
 }
 #endregion 🌡️IconResources
 
-#region 🎇Utility
+#region 🎇️Utility
 // Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
@@ -800,7 +800,7 @@ public static class Utility
         return true;
     }
 
-    //#region 🎢ImportedRhinoObjectResolution
+    //#region 🎢️ImportedRhinoObjectResolution
     /// <summary>
     /// Resolves a single imported Rhino representation object by metadata identifier.
     ///
@@ -833,7 +833,7 @@ public static class Utility
 
         return null;
     }
-    //#endregion 🎢ImportedRhinoObjectResolution
+    //#endregion 🎢️ImportedRhinoObjectResolution
 
     public static List<Attribute> ToAttributesList(AttributesDiff? attributesDiff)
     {
@@ -1070,9 +1070,9 @@ public static class Utility
     }
 }
 
-#endregion 🎇Utility
+#endregion 🎇️Utility
 
-#region 🧰RhinoRepresentationData
+#region 🧰️RhinoRepresentationData
 // Callers MUST use this wrapper to preserve imported Rhino representation metadata in Grasshopper.
 
 public sealed class RepresentationUserText : Dictionary<string, string>
@@ -1140,9 +1140,9 @@ public sealed class RhinoRepresentationObjectData
     public bool IsValid => RhinoObject is not null || SourceRhinoObject is not null || UserText.Count > 0;
 }
 
-#endregion 🧰RhinoRepresentationData
+#endregion 🧰️RhinoRepresentationData
 
-#region 💧Converters
+#region 💧️Converters
 // Implementations MUST convert between compose and Grasshopper data types.
 
 public static class RhinoConverter
@@ -1190,9 +1190,9 @@ public static class RhinoConverter
     }
 }
 
-#endregion 💧Converters
+#endregion 💧️Converters
 
-#region 🔓Bases
+#region 🔓️Bases
 // Implementations MUST extend these abstract base classes for Goo, Param, and Component.
 
 /// Generic Grasshopper data wrapper for compose entity types.
@@ -2225,9 +2225,9 @@ public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntity
     protected EntityDiffComponent() : base() { }
 }
 
-#endregion 🔓Bases
+#endregion 🔓️Bases
 
-#region 🧲Attribute
+#region 🧲️Attribute
 // Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeGoo : Goo<Attribute>
@@ -2516,7 +2516,7 @@ public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeD
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B98");
 }
 
-#endregion 🧲Attribute
+#endregion 🧲️Attribute
 
 #region 🌥️Coordinate
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
@@ -2706,7 +2706,7 @@ public class DeserializeLocationComponent : DeserializeComponent<LocationParam, 
 
 #endregion ⏲️Location
 
-#region 🤸Author
+#region 🤸️Author
 // Implementations MUST provide author identity with name and contact.
 
 public class AuthorGoo : Goo<Author>
@@ -2835,9 +2835,9 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
 }
 
-#endregion 🤸Author
+#endregion 🤸️Author
 
-#region 🪨File
+#region 🪨️File
 // Implementations MUST reference a file with URI and optional content.
 
 public class FileGoo : Goo<File>
@@ -3232,9 +3232,9 @@ public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam
     public override Guid ComponentGuid => new("30E7F8A9-B0C1-D2E3-F4A5-B6C7D8E9F0A4");
 }
 
-#endregion 🪨File
+#endregion 🪨️File
 
-#region 🪩Folder
+#region 🪩️Folder
 // Implementations MUST reference a folder with name and optional parent.
 
 public class FolderGoo : Goo<Folder>
@@ -3626,9 +3626,9 @@ public class DeserializeFoldersDiffComponent : DeserializeComponent<FoldersDiffP
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AC");
 }
 
-#endregion 🪩Folder
+#endregion 🪩️Folder
 
-#region 💾Benchmark
+#region 💾️Benchmark
 // Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkGoo : Goo<Benchmark>
@@ -3741,7 +3741,7 @@ public class DeserializeBenchmarkComponent : DeserializeComponent<BenchmarkParam
     public override Guid ComponentGuid => new("60A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
-#endregion 💾Benchmark
+#endregion 💾️Benchmark
 
 #region 🖨️QualityKind
 // Implementations MUST categorize quality metrics by kind.
@@ -3759,7 +3759,7 @@ public class QualityKindParam : EnumParam<QualityKindGoo, QualityKind>
 
 #endregion 🖨️QualityKind
 
-#region 🎊Quality
+#region 🎊️Quality
 // Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityGoo : Goo<Quality>
@@ -4213,9 +4213,9 @@ public class DeserializeQualityDiffComponent : DeserializeComponent<QualityDiffP
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4DD");
 }
 
-#endregion 🎊Quality
+#endregion 🎊️Quality
 
-#region 🪄Tag
+#region 🪄️Tag
 // Implementations MUST provide lightweight labels for categorizing entities.
 
 public class TagGoo : Goo<Tag>
@@ -4366,9 +4366,9 @@ public class TagIdParam : IdParam<TagIdGoo, TagId>
     public override Guid ComponentGuid => new("80F6A7B8-C9D0-E1F2-A3B4-C5D6E7F8A9B4");
 }
 
-#endregion 🪄Tag
+#endregion 🪄️Tag
 
-#region 🎆Prop
+#region 🎆️Prop
 // Implementations MUST bind a property name to an expression value.
 
 public class PropGoo : Goo<Prop>
@@ -4474,9 +4474,9 @@ public class DeserializePropComponent : DeserializeComponent<PropParam, PropGoo,
     public override Guid ComponentGuid => new("70A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
-#endregion 🎆Prop
+#endregion 🎆️Prop
 
-#region 🧊Representation
+#region 🧊️Representation
 // Implementations MUST reference a 3D representation with URI, MIME type, and local plane.
 
 public class RepresentationGoo : Goo<Representation>
@@ -4845,9 +4845,9 @@ public class DeserializeRepresentationsDiffComponent : DeserializeComponent<Repr
     public override Guid ComponentGuid => new("70E5F6A7-B8C9-D0E1-F2A3-B4C5D6E7F8AF");
 }
 
-#endregion 🧊Representation
+#endregion 🧊️Representation
 
-#region 🦀Connector
+#region 🦀️Connector
 // Implementations MUST define located interface points on a type.
 
 public class ConnectorGoo : Goo<Connector>
@@ -5308,9 +5308,9 @@ public class DeserializePortsDiffComponent : DeserializeComponent<ConnectorsDiff
     public override Guid ComponentGuid => new("1A29F6ED-464D-490F-B072-3412B467F1C3");
 }
 
-#endregion 🦀Connector
+#endregion 🦀️Connector
 
-#region 🎑Concept
+#region 🎑️Concept
 // Implementations MUST link a semantic concept name to description and icon.
 
 public class ConceptGoo : Goo<Concept>
@@ -5456,9 +5456,9 @@ public class ConceptIdParam : IdParam<ConceptIdGoo, ConceptId>
     public override Guid ComponentGuid => new("90A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C5");
 }
 
-#endregion 🎑Concept
+#endregion 🎑️Concept
 
-#region 🎀Port
+#region 🎀️Port
 // Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortGoo : Goo<Port>
@@ -5609,9 +5609,9 @@ public class PortIdParam : IdParam<PortIdGoo, PortId>
     public override Guid ComponentGuid => new("78187B1A-F476-44D9-A382-DE2C47019DB8");
 }
 
-#endregion 🎀Port
+#endregion 🎀️Port
 
-#region 🤖Type
+#region 🤖️Type
 // Implementations MUST compose ports, connectors, and representations into a parametric type.
 
 public class TypeGoo : Goo<Type>
@@ -6170,9 +6170,9 @@ public class DeserializeTypesDiffComponent : DeserializeComponent<TypesDiffParam
     public override Guid ComponentGuid => new("E0F2A3B4-C5D6-E7F8-A9B0-C1D2E3F4A5B9");
 }
 
-#endregion 🤖Type
+#endregion 🤖️Type
 
-#region ⏳Layer
+#region ⏳️Layer
 // Implementations MUST organize pieces into named layers within a design.
 
 public class LayerGoo : Goo<Layer>
@@ -6287,9 +6287,9 @@ public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerG
     public override Guid ComponentGuid => new("90A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
-#endregion ⏳Layer
+#endregion ⏳️Layer
 
-#region 🔍Group
+#region 🔍️Group
 // Implementations MUST group pieces by name within a design.
 
 public class GroupGoo : Goo<ComposeGroup>
@@ -6401,9 +6401,9 @@ public class DeserializeGroupComponent : DeserializeComponent<GroupParam, GroupG
     public override Guid ComponentGuid => new("A0A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
-#endregion 🔍Group
+#endregion 🔍️Group
 
-#region 🎈Piece
+#region 🎈️Piece
 // Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceGoo : Goo<Piece>
@@ -6901,9 +6901,9 @@ public class DeserializePiecesDiffComponent : DeserializeComponent<PiecesDiffPar
     public override Guid ComponentGuid => new("F0A3B4C5-D6E7-F8A9-B0C1-D2E3F4A5B6CA");
 }
 
-#endregion 🎈Piece
+#endregion 🎈️Piece
 
-#region 🎺Side
+#region 🎺️Side
 // Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideGoo : Goo<Side>
@@ -7095,9 +7095,9 @@ public class DeserializeSideDiffComponent : DeserializeComponent<SideDiffParam, 
     public override Guid ComponentGuid => new("B2C9D0E1-F2A3-B4C5-D6E7-F8A9B0C1D2E6");
 }
 
-#endregion 🎺Side
+#endregion 🎺️Side
 
-#region 💡Connection
+#region 💡️Connection
 // Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionGoo : Goo<Connection>
@@ -7615,9 +7615,9 @@ public class DeserializeConnectionsDiffComponent : DeserializeComponent<Connecti
     public override Guid ComponentGuid => new("00B4C5D6-E7F8-A9B0-C1D2-E3F4A5B6C7DB");
 }
 
-#endregion 💡Connection
+#endregion 💡️Connection
 
-#region 🪵Stat
+#region 🪵️Stat
 // Implementations MUST associate statistical metrics with a design.
 
 public class StatGoo : Goo<Stat>
@@ -7734,9 +7734,9 @@ public class DeserializeStatComponent : DeserializeComponent<StatParam, StatGoo,
     public override Guid ComponentGuid => new("80A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C7");
 }
 
-#endregion 🪵Stat
+#endregion 🪵️Stat
 
-#region 🧬Design
+#region 🧬️Design
 // Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignGoo : Goo<Design>
@@ -8317,9 +8317,9 @@ public class DeserializeDesignsDiffComponent : DeserializeComponent<DesignsDiffP
     public override Guid ComponentGuid => new("10C5D6E7-F8A9-B0C1-D2E3-F4A5B6C7D8EC");
 }
 
-#endregion 🧬Design
+#endregion 🧬️Design
 
-#region 🧳Kit
+#region 🧳️Kit
 // Implementations MUST collect types and designs into a reusable library.
 
 public class KitGoo : Goo<Kit>
@@ -8968,9 +8968,9 @@ public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, 
     public override Guid ComponentGuid => new("50A9B0C1-D2E3-F4A5-B6C7-D8E9F0A1B2C6");
 }
 
-#endregion 🧳Kit
+#endregion 🧳️Kit
 
-#region 🎲Change
+#region 🎲️Change
 // Implementations MUST expose params and passthrough components for compose change entities.
 
 public class AuthorDiffGoo : DiffGoo<AuthorDiff> { public AuthorDiffGoo() { } public AuthorDiffGoo(AuthorDiff value) : base(value) { } }
@@ -9420,9 +9420,9 @@ public class KitChangeComponent : ChangeComponent<KitParam, KitGoo, Kit, KitDiff
     protected override string IconResourceName => "kitdiff_24x24";
 }
 
-#endregion 🎲Change
+#endregion 🎲️Change
 
-#region 📌Scripting
+#region 📌️Scripting
 // Callers MUST use these helpers for C# script component integration.
 
 public abstract class ScriptingComponent : Component
@@ -9821,9 +9821,9 @@ public class TruncateTextComponent : ScriptingComponent
     }
 }
 
-#endregion 📌Scripting
+#endregion 📌️Scripting
 
-#region ⭐Engine
+#region ⭐️Engine
 // Local kit persistence uses compose-gql via Compose.Store.StoreKitIO (same as Compose).
 
 public readonly struct Unit
@@ -9866,7 +9866,7 @@ public readonly struct UpdateKitOutput
     }
 }
 
-/// <summary>📁 Resolves kit folder from GH data access or document path.</summary>
+/// <summary>📁️ Resolves kit folder from GH data access or document path.</summary>
 public static class KitDirectoryResolver
 {
     public static string Resolve(IGH_DataAccess DA, int directoryParamIndex, GH_Document? document)
@@ -9882,7 +9882,7 @@ public static class KitDirectoryResolver
     }
 }
 
-/// <summary>💾 In-process kit cache for Update Kit when the same folder was loaded in-session.</summary>
+/// <summary>💾️ In-process kit cache for Update Kit when the same folder was loaded in-session.</summary>
 public static class KitRuntimeState
 {
     public static Kit? StaticKit { get; private set; }
@@ -10055,7 +10055,7 @@ public class SaveKitComponent : PersistenceComponent<Kit, Kit>
 
 public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKitOutput>
 {
-    public UpdateKitComponent() : base("Update Kit", "Kit↻", "Apply a kit diff and persist the result to the local kit folder (compose-gql).") { }
+    public UpdateKitComponent() : base("Update Kit", "Kit↻️", "Apply a kit diff and persist the result to the local kit folder (compose-gql).") { }
     protected override string RunDescription => "True to update the kit.";
     protected override string SuccessDescription => "True if the kit was successfully updated. False otherwise.";
     public override Guid ComponentGuid => new("B7104D9E-E2BD-4FBE-9D04-A4527B978AEE");
@@ -10110,7 +10110,7 @@ public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKi
 
 #endregion ⛑️Persistence
 
-#endregion ⭐Engine
+#endregion ⭐️Engine
 
 public class FlattenDesignComponent : ScriptingComponent
 {
@@ -10153,7 +10153,7 @@ public class FlattenDesignComponent : ScriptingComponent
     }
 }
 
-/// <summary>📤Exports the 3D representation of a design to a format (.glb by default).</summary>
+/// <summary>📤️Exports the 3D representation of a design to a format (.glb by default).</summary>
 public class ExportDesignRepresentationComponent : ScriptingComponent
 {
     public ExportDesignRepresentationComponent() : base("Export Design Representation", "ExpMdl", "Exports the 3D representation of a design to a format.") { }
@@ -11183,12 +11183,12 @@ public class SumQualityInDesignComponent : ScriptingComponent
     }
 }
 
-#region ⏰ExportDesignToBlocks
+#region ⏰️ExportDesignToBlocks
 // Exports a design to native Rhino block definitions and instances.
 // Every type becomes a block definition, every piece becomes a block instance.
 
 /// <summary>
-/// 📤Exports a design to native Rhino block instances.
+/// 📤️Exports a design to native Rhino block instances.
 /// Every type becomes a block definition and every piece becomes a block instance.
 /// Piece planes are computed via BFS over connections using connector geometry.
 /// </summary>
@@ -11342,7 +11342,7 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
             }
             #endregion 🖇️ExportDesignToBlocks_PlanePropagation
 
-            #region ⏰ExportDesignToBlocks_BlockDefinitions
+            #region ⏰️ExportDesignToBlocks_BlockDefinitions
             // Create block definitions per type in the active Rhino document
             var doc = RhinoDoc.ActiveDoc;
             if (doc == null)
@@ -11417,9 +11417,9 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                 }
                 typeBlockIndices[typeId] = blockIdx;
             }
-            #endregion ⏰ExportDesignToBlocks_BlockDefinitions
+            #endregion ⏰️ExportDesignToBlocks_BlockDefinitions
 
-            #region 🎯ExportDesignToBlocks_BlockInstances
+            #region 🎯️ExportDesignToBlocks_BlockInstances
             // Create block instances per piece
             var blockInstances = new List<IGH_GeometricGoo>();
             var pieceIds = new List<string>();
@@ -11445,7 +11445,7 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
                 pieceIds.Add(piece.Id);
                 typeNamesList.Add(typesDict.TryGetValue(typeId, out var tp) ? tp.Name : typeId);
             }
-            #endregion 🎯ExportDesignToBlocks_BlockInstances
+            #endregion 🎯️ExportDesignToBlocks_BlockInstances
 
             DA.SetDataList(0, blockInstances);
             DA.SetDataList(1, pieceIds);
@@ -11458,4 +11458,4 @@ public class ExportDesignToBlocksComponent : ScriptingComponent
     }
 }
 
-#endregion ⏰ExportDesignToBlocks
+#endregion ⏰️ExportDesignToBlocks

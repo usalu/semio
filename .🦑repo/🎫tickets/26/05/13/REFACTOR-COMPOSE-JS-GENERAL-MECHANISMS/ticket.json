@@ -1,9 +1,0 @@
-{
-  "title": "Refactor Compose JS General Mechanisms",
-  "emoji": "🌿",
-  "status": "closed",
-  "description": "Remove Draft; merge lane state into Graph (main saved/unsaved edits) and Alternative; transactions become unsaved_edits; materialize/record by change_lane_id; Edit owns Graph or Alternative via EditOwner; strip KitReadPoint draft* fields; update kit_backbone projection and tests/golden lane keys.",
-  "summary": "Refactored compose/js/index.ts toward the single-source general-mechanism shape by adding reusable declarative field and operation installers, then migrating repeated JS entity readers and mutations onto those installers. Covered node(id)-backed entities (Author, Family, File, Folder, Stat, Prop) and kit-path entities (Quality, Tag, Concept, Representation). Added a focused embedded test proving the new declarative installer wiring for Tag. Validation: editor diagnostics clean; focused embedded Vitest run passed. Full embedded suite still has two pre-existing fixture failures because golden asset files are absent from this workspace layout.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪0c416a93961244cb924e0e46306b0989"]
-}

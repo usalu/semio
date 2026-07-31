@@ -69,10 +69,10 @@ Fix: make the second `compilePrintDocument` call unconditional in `compilePrintD
 1. Reopen ticket `26/07/08/TOC-SEMIO-WINDOW-TABLES` per repo convention.
 2. Apply the one-line fix in `print/tex/semio-window.sty` (line 71).
 3. Restructure `compilePrintDocumentWithPanels` in `print/script.ts` for an unconditional second pass.
-4. Rebuild `mit-bestand/bericht` zwischenbericht (light + dark) via `bun ./script.ts build`.
+4. Rebuild `mit-bestand/bericht` zwischenbericht (light + dark) via `bun ./📜️script.ts build`.
 5. Run `bun print/script.ts test` to rebuild all templates (paper, report, forschungsbericht, kompaktbericht, flyer) and confirm no regressions.
 6. Verify via PDF text extraction (pdfjs) that TOC pages contain actual row text (e.g. "Ergebnisse", "Forschungsfragen und Vorgehen", nested paragraph numbers) with correct dot-count indentation, and that other `\listof*` registers populate where used.
-7. Update `.repo/🎫/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md` with findings and close the ticket.</plan>
+7. Update `.repo/🎫️/26/07/08/TOC-SEMIO-WINDOW-TABLES/verify-log.md` with findings and close the ticket.</plan>
    <todos>
    <todo id="fix-vxx" content="Fix missing \exp_args:Vxx at semio_window_register_body_add call site in print/tex/semio-window.sty"/>
    <todo id="fix-second-pass" content="Make the second compile pass in compilePrintDocumentWithPanels (print/script.ts) unconditional, not gated on Panel manifest"/>

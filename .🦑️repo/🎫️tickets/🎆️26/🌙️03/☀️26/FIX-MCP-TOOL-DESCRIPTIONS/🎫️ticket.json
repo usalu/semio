@@ -1,0 +1,9 @@
+{
+  "title": "Fix MCP Tool Descriptions",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "All MCP tool descriptions in both the repo CLI (Go) and compose engine (Python) are not properly formulated. They contain garbage like emoji-prefixed tracking links in docstrings and vague/generic parameter descriptions. Clean up all tool, prompt, and parameter descriptions to be clear, concise, and professional.",
+  "summary": "Cleaned up all MCP tool, prompt, and parameter descriptions in both repo CLI (Go) and compose engine (Python). Removed emoji-prefixed tracking links from all Python docstrings. Replaced vague descriptions with clear, concise text.",
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️8546a6d26a4e4e9ba173d3424631518a"]
+}

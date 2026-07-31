@@ -1,9 +1,0 @@
-{
-  "title": "Projektetage Affiliation Abbreviation Morph Order",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Projektetage Affiliation Abbreviation Morph Order",
-  "summary": "Affiliations step 3 now morphs full university names into place via hidden data-id anchors before showing abbreviated labels, matching presentation morph rules.\n\n- Added affiliationEmbodimentMorphLabels and AffiliationsEmbodiment.morphLineLabels in core; intro step-3 embodiment carries prior labels for marks that switch to shortName.\n- AffiliationsMorphView renders a morph-source h4 (paired by reveal.js) plus a visible abbreviated h4 without data-id.\n- CSS keeps morph sources in layout but opacity-0 for correct FLIP pairing.\n- Extended intro DOM tests; core and react renderer tests pass.",
-  "goal": "🎯aioptimizedrepo",
-  "sessions": ["⚪2d3b8df70ad244f49f190f0feb821620"]
-}

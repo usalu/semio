@@ -1,12 +1,12 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/HoverCard.stories.tsx
+// 🥼️ .storybook/stories/ui/HoverCard.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Aside, Avatar, AvatarFallback, AvatarImage, Button, Card, CardGrid, HoverCard, HoverCardContent, HoverCardTrigger } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
@@ -53,7 +53,7 @@ const HoverCardExamples = () => (
   </div>
 );
 
-// 🔷#region 🔧HoverCard
+// 🔷️#region 🔧️HoverCard
 const CalendarDays = createIconComponent("calendar-days");
 
 const meta = {
@@ -73,9 +73,9 @@ export const Default: Story = {
   render: () => <HoverCardExamples />,
 };
 
-// #endregion 🔧HoverCard
+// #endregion 🔧️HoverCard
 
-// 💻#region 📣Aside
+// 💻️#region 📣️Aside
 export const AsideNote: Story = {
   render: () => (
     <div className="w-96 space-y-4">
@@ -94,13 +94,13 @@ export const AsideNote: Story = {
     </div>
   ),
 };
-// #endregion 📣Aside
+// #endregion 📣️Aside
 
-// 🔷#region 🎬Card
+// 🔷️#region 🎬️Card
 export const CardDefault: Story = {
   render: () => (
     <div className="w-96">
-      <Card title="Capsule J" icon="🏠">
+      <Card title="Capsule J" icon="🏠️">
         A residential capsule unit with 2.5m × 4.0m footprint, designed for modular living.
       </Card>
     </div>
@@ -110,10 +110,10 @@ export const CardDefault: Story = {
 export const CardGridDefault: Story = {
   render: () => (
     <CardGrid>
-      <Card title="Capsule J" icon="🏠">
+      <Card title="Capsule J" icon="🏠️">
         Residential unit
       </Card>
-      <Card title="Capsule K" icon="🏢">
+      <Card title="Capsule K" icon="🏢️">
         Commercial unit
       </Card>
       <Card title="Base" icon="🏛️">
@@ -125,4 +125,4 @@ export const CardGridDefault: Story = {
     </CardGrid>
   ),
 };
-// #endregion 🎬Card
+// #endregion 🎬️Card

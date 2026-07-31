@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-db-conflict"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db conflict detection — touched-region intersection, bloom filters, command-kind matrix, protocol-declared resolution"
+
+[lints]
+workspace = true
+[lib]
+name = "db_conflict"
+path = "../../../⚔️conflict/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+db_core = { path = "../../../🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-db-core" }
+db_state = { path = "../../../🔘️state/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-db-state" }
+protocol = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }

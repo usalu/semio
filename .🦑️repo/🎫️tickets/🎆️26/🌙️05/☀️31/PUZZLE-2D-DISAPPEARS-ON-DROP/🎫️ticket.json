@@ -1,0 +1,9 @@
+{
+  "title": "Puzzle 2d Disappears On Drop",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix puzzle 2d disappearing when dropping a palette shape.",
+  "summary": "Fixed puzzle 2d canvas going blank after palette drop: host reconciler teardown no longer emits structural nodeDelete storms; play shell queues filtered deletes and suppresses fixture→canvas delete sync while the graph is mutating; palette seeds merge via meta or palette-seed-* id instead of replacing the whole fixture. Tests: puzzle/2d/react 85/85, play 5/5, framework mergePalette vitest pass.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️a307cd454ed144efa0c2706a85a32a0b"]
+}

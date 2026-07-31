@@ -1,0 +1,11 @@
+{
+  "title": "Enforce Uniform Comment and Docstring Format",
+  "emoji": "💬️",
+  "status": "closed",
+  "description": "Enforce uniform comment/docstring format across all languages: no blank lines in comments/docstrings, fix header format, add missing C# and Rust docstrings, abstract format for all languages, enforce section/definition ordering with identification/summary/requirements/todos/docs structure",
+  "summary": "Fixed SectionIdValueToUriPath and DefinitionIdValueToUriPath to apply PathToUriPath on file path portions, ensuring consistent uppercase file paths in section/definition URIs. Updated helper function test expectations. All non-deadlocking tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/556"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repopolicymechanism"
+}

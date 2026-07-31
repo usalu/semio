@@ -1,4 +1,4 @@
-# #region 🔖Header
+# #region 🔖️Header
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 # AGPL-3.0
 # Kubernetes manifests for compose-hub only: Namespace, compose-hub Deployment (`db`-backed, CW6b),
@@ -7,17 +7,17 @@
 # Specs: kubectl apply -f k8s.yaml after replacing the Secret placeholder. Hub is single-replica by
 # default (in-process SessionDirectory + a single-writer local `db::Database`) — `Recreate` strategy
 # ensures the old pod releases the PVC before the new one mounts it.
-# #endregion 🔖Header
+# #endregion 🔖️Header
 
-# #region 🔖Namespace
+# #region 🔖️Namespace
 apiVersion: v1
 kind: Namespace
 metadata:
   name: compose-hub
-# #endregion 🔖Namespace
+# #endregion 🔖️Namespace
 
 ---
-# #region 🔖Secrets
+# #region 🔖️Secrets
 apiVersion: v1
 kind: Secret
 metadata:
@@ -26,10 +26,10 @@ metadata:
 type: Opaque
 stringData:
   COMPOSE_ADMIN_TOKEN: "REPLACE_ME_admin_token"
-# #endregion 🔖Secrets
+# #endregion 🔖️Secrets
 
 ---
-# #region 🔖Config
+# #region 🔖️Config
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -38,10 +38,10 @@ metadata:
 data:
   RUST_LOG: "compose_hub=info,tower_http=info"
   COMPOSE_HUB_DB_PROFILE: "prod"
-# #endregion 🔖Config
+# #endregion 🔖️Config
 
 ---
-# #region 🔖HubData
+# #region 🔖️HubData
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -52,10 +52,10 @@ spec:
   resources:
     requests:
       storage: 20Gi
-# #endregion 🔖HubData
+# #endregion 🔖️HubData
 
 ---
-# #region 🔖HubService
+# #region 🔖️HubService
 apiVersion: v1
 kind: Service
 metadata:
@@ -68,10 +68,10 @@ spec:
     - name: http
       port: 8788
       targetPort: 8788
-# #endregion 🔖HubService
+# #endregion 🔖️HubService
 
 ---
-# #region 🔖HubDeployment
+# #region 🔖️HubDeployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -139,10 +139,10 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: compose-hub-data
-# #endregion 🔖HubDeployment
+# #endregion 🔖️HubDeployment
 
 ---
-# #region 🔖Ingress
+# #region 🔖️Ingress
 # Specs: Terminates HTTP for compose-hub (HTTP API, WebSocket, embedded /admin). Requires an ingress controller (e.g. nginx). Replace host with your cluster DNS name.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -166,4 +166,4 @@ spec:
                 name: hub
                 port:
                   number: 8788
-# #endregion 🔖Ingress
+# #endregion 🔖️Ingress

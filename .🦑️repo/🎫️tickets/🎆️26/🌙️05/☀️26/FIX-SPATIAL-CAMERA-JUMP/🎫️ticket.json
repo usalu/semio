@@ -1,0 +1,11 @@
+{
+  "title": "Fix Spatial Camera Jump",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Fix spatial camera behavior so creating geometry such as a box does not jump the camera to the created object, and panning does not snap back to a frozen prior camera viewpoint. Inspect the spatial renderer/play camera state, make scoped edits to existing files, and validate with targeted tests or runtime checks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1490"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️0c71cb78dade426b9b29b3949f9263d0"]
+}

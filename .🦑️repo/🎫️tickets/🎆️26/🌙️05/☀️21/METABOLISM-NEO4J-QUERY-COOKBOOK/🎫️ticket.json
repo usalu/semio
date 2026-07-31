@@ -1,0 +1,8 @@
+{
+  "title": "Metabolism Neo4j Query Cookbook",
+  "emoji": "🔍️",
+  "status": "open",
+  "description": "Validate and publish copy-paste-ready Cypher queries for the live metabolism Neo4j database (Nakagin tower, tambours, c0/c1 towers). All queries must execute without errors.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️6c8ac4b0a6c346d5b0295b25c553440e"]
+}

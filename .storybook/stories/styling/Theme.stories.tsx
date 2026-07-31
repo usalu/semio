@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/stories/styling/Theme.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/styling/Theme.stories.tsx
 // Specs: Docs gallery for every builtin `UiTheme` × light/dark appearance × `ThemePaletteGroup`.
 // Summary: Iterates `builtinUiThemes()` (re-exported by `@semio-tech/ui-react` from `@semio-tech/ui-styling`) and resolves each theme's `board`/`map`/`canvas`/`chrome` paints via `resolveThemeAppearancePalettes` into swatch grids — a read-only gallery, not a component under test.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
@@ -12,13 +12,13 @@ import { builtinUiThemes } from "@semio-tech/ui-react";
 import { resolveThemeAppearancePalettes, type ThemeAppearanceName, type ThemePaletteGroup, type UiTheme } from "@semio-tech/ui-styling";
 import { galleryCardStyle, galleryPageStyle, SwatchGrid } from "../../styling/index.tsx";
 
-//#region 🔖Groups
+//#region 🔖️Groups
 const PALETTE_GROUPS: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome"];
 const APPEARANCES: readonly ThemeAppearanceName[] = ["light", "dark"];
-//#endregion 🔖Groups
+//#endregion 🔖️Groups
 
-//#region 🔖ThemeAppearanceCard
-/** @emoji 🌓 One theme resolved for one appearance — every palette group's swatches stacked in a bordered card. */
+//#region 🔖️ThemeAppearanceCard
+/** @emoji 🌓️ One theme resolved for one appearance — every palette group's swatches stacked in a bordered card. */
 function ThemeAppearanceCard({ theme, appearance }: { readonly theme: UiTheme; readonly appearance: ThemeAppearanceName }): ReactElement {
   const palettes = resolveThemeAppearancePalettes(theme, appearance);
   return (
@@ -30,9 +30,9 @@ function ThemeAppearanceCard({ theme, appearance }: { readonly theme: UiTheme; r
     </div>
   );
 }
-//#endregion 🔖ThemeAppearanceCard
+//#endregion 🔖️ThemeAppearanceCard
 
-//#region 🔖ThemeSection
+//#region 🔖️ThemeSection
 function ThemeSection({ theme }: { readonly theme: UiTheme }): ReactElement {
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -47,9 +47,9 @@ function ThemeSection({ theme }: { readonly theme: UiTheme }): ReactElement {
     </section>
   );
 }
-//#endregion 🔖ThemeSection
+//#endregion 🔖️ThemeSection
 
-//#region 🔖Gallery
+//#region 🔖️Gallery
 /** @emoji 🖼️ Every builtin theme (semio + any `framework/ui/styling/theme/*.theme.json` premade) rendered light+dark. `component` is this gallery itself — the story exercises `builtinUiThemes()`/`resolveThemeAppearancePalettes` data, not a UI widget. */
 function ThemeGallery(): ReactElement {
   const themes = builtinUiThemes();
@@ -61,10 +61,10 @@ function ThemeGallery(): ReactElement {
     </div>
   );
 }
-//#endregion 🔖Gallery
+//#endregion 🔖️Gallery
 
 const meta = {
-  title: "🎨styling/Theme",
+  title: "🎨️styling/Theme",
   component: ThemeGallery,
   parameters: {
     layout: "fullscreen",
@@ -76,7 +76,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-//#region 🔖Stories
+//#region 🔖️Stories
 export const AllThemes: Story = {};
 
 export const SemioOnly: Story = {
@@ -102,4 +102,4 @@ export const BoardGroupAcrossThemes: Story = {
     </div>
   ),
 };
-//#endregion 🔖Stories
+//#endregion 🔖️Stories

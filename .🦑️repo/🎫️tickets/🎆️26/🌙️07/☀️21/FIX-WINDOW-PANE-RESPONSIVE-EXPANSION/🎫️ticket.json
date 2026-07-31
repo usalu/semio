@@ -1,0 +1,15 @@
+{
+  "title": "Fix Window Pane Responsive Expansion",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "Fix the unresponsive window pane layout shown in Puzzle 3D: the bottom-right utilities pane tree overlaps behind its toggles. Ensure every window pane grows and constrains content responsively according to its anchor: top panes top-to-bottom, bottom panes bottom-to-top, and middle panes symmetrically in both relevant directions. Add coverage in existing tests and verify runtime behavior.",
+  "summary": "Fixed the remaining Aggregator/Puzzle 3D Fill utility overlap at its root. Live DOM measurements showed the variable utility-options RibbonZone computing to the fixed 22.4px h-medium token while its Fill tree required 61px; h-auto could not override the custom height token due stylesheet ordering. Added an explicit variableHeight RibbonZone contract that omits h-medium entirely, lets intrinsic option content set the row height, and marks the row for verification. Up/down Ribbon rows are now non-shrinking, so constrained utility bodies scroll rather than collapsing rows into the toggle toolbar. Updated existing UI and renderer tests for the exact class contract and retained upward tree ordering. Targeted UI tests (3) and renderer tests (2) pass, as do UI lint with existing inline config disabled and renderer lint. Live reproduction and pre-fix measurements succeeded; post-fix browser reload was blocked by the browser URL policy, so the final contract was verified through targeted tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2200"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️55aef361873441548719756236424e0a",
+    "⚪️e2beddd15df14455b81bbf70795d3a6a"
+  ]
+}

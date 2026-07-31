@@ -1,0 +1,12 @@
+{
+  "title": "Print Window Gray Color",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "All print windows should use normal gray color same as paragraph headings instead of different tier colors (primary/secondary/tertiary).",
+  "summary": "Print windows now use the same muted gray chrome as paragraph headings instead of tier colors (primary/secondary/tertiary). Window title bars render via `\\semio@window@header@muted` using `\\semio@heading@cap@muted`, and tier `tcolorbox` styles no longer override `colframe` with brand colors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1864"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️d68864aedc124640b739db241abf60e0"]
+}

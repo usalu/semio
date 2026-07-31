@@ -1,0 +1,13 @@
+{
+  "title": "Media Flow Planner",
+  "emoji": "🗺️",
+  "status": "open",
+  "description": "Implement a PURE, side-effect-free scheduling function `plan_media_flow` (Rust, in framework/product/os/core/rs/lib.rs) plus its TypeScript twin `planMediaFlow` (in framework/product/os/core/js/index.ts) for the S/Semios media graph dataflow. Given an OsMediaGraph and a set of dirty instance ids, compute the downstream closure of dirty instances by walking graph edges, emitting one MediaFlowDelivery per traversed edge, propagating dirtiness to consumer instances so multi-hop chains resolve in one pass, in topological order. Add Rust unit tests (single edge, chain, diamond, no-op, dead-end) and a Rust\u003c-\u003eTS parity fixture set + tests on both sides. Do NOT wire this into any live driver/UI (that's a later ticket) - planner + parity tests only. Must not touch OsMediaGraphEdge struct definition or s/plugin/rs/lib.rs connect handlers (owned by concurrent sibling ticket R1b).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2162"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️f18721696f9e4a52bdd3d90c6de709a7"
+  ]
+}

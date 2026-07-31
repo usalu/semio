@@ -1,0 +1,8 @@
+{
+  "title": "Playground Static Iframe Sites",
+  "emoji": "🛝️",
+  "status": "closed",
+  "description": "All playgrounds build to static iframe-embeddable sites. Latest canonical hosts in repo CNAME files; versioned subdomains (v{n}.play…) deployed outside git.",
+  "summary": "Unified playground static-site contract: base ./, public/.nojekyll + CNAME per play, frame-ancestors * for iframe embed, shared createPlaygroundPlayViteConfig preset. Hosts: play.semio-tech.com (sketchpad), play.cad/2d/3d/5d.semio-tech.com. Versioned v{n}.* deployed at release, repo keeps latest only. CI workflow play-sites.yml builds all five. Tests 15/15; verified 2d + cad dist artifacts."
+  "goal": "framework/playground"
+}

@@ -61,15 +61,15 @@ Node labels are exactly the compose GraphQL types: `Kit`, `Design`, `Piece`, `Bl
 - Internal layout uses `mod` regions inside `lib.rs` per the repo's "regions in a single file" rule (mirrors how [compose/client/lib/rs/lib.rs](compose/client/lib/rs/lib.rs) is structured):
 
 ```rust
-//#region 🔖Lexer
-//#region 🔖Parser
-//#region 🔖Ast
-//#region 🔖Schema      // hand-crafted typesafe mirror of GraphQL surface
-//#region 🔖Planner    // architect AST -> GraphQL operation plan
-//#region 🔖Executor   // drives multi-roundtrip Transport
-//#region 🔖Transport  // async callback trait + wasm/native bridges
-//#region 🔖Api        // public Rust + wasm_bindgen entry points
-//#region 🔖Errors
+//#region 🔖️Lexer
+//#region 🔖️Parser
+//#region 🔖️Ast
+//#region 🔖️Schema      // hand-crafted typesafe mirror of GraphQL surface
+//#region 🔖️Planner    // architect AST -> GraphQL operation plan
+//#region 🔖️Executor   // drives multi-roundtrip Transport
+//#region 🔖️Transport  // async callback trait + wasm/native bridges
+//#region 🔖️Api        // public Rust + wasm_bindgen entry points
+//#region 🔖️Errors
 ```
 
 ## 3. Crate setup

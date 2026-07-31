@@ -1,0 +1,12 @@
+{
+  "title": "Render Plan Validator",
+  "emoji": "🛡️",
+  "status": "closed",
+  "description": "Add RenderPlanLimits struct and validate_ui_node to framework/renderer/wgpu/rs/lib.rs, call validation before render_ui_node and render_component_scene, add unit test for oversized payloads.",
+  "summary": "The RenderPlanLimits struct and validate_ui_node/validate_component_scene wiring were already implemented (limits at framework/renderer/wgpu/rs/lib.rs:3737, validate_component_scene:3787, validate_ui_node:4022, called before render_ui_node and render_component_scene with error widgets on rejection). This ticket's remaining gap was test coverage: added validate_component_scene_rejects_oversized_mesh_count, validate_ui_node_rejects_oversized_node_count, and validate_ui_node_rejects_oversized_tree_depth to the existing render_plan_validator_tests module (lib.rs ~4505), alongside the pre-existing oversized-JSON-payload test. All 4 tests pass via `cargo test -p semio-framework-renderer-wgpu --lib render_plan_validator_tests`. No production code changes were needed; this closes out the validator work started in this ticket.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1858"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": ["⚪️51826ac4f1e24e1cbef99ad716dc7d43", "⚪️4897cd3e236643049f543edd8047a1f4", "⚪️4ba6e8c889754b259c7f81baadea79ec"]
+}

@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/coda/CodaTrees.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/coda/CodaTrees.stories.tsx
 // Specs: `OntologyTree`/`ValidationTree` (from `@semio-tech/coda-desktop/renderer`) already have stories under
 // `.storybook/stories/ui/OntologyTree.stories.tsx` and `.storybook/stories/ui/ValidationTree.stories.tsx` —
 // read first. Those cover `OntologyNodeKind`s And/Or/Not/SomeValuesFrom/ExactCardinality/DataSomeValuesFrom/Class
@@ -11,17 +11,17 @@
 // file fills exactly that gap: one `OntologyTree` story for the 6 missing kinds, one `ValidationTree` story
 // putting Min/Max cardinality badges + the same 6 kinds through real truth/witness evaluation.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import type { Meta, StoryObj } from "@storybook/react";
 import type { OntologyTreeNode, ValidationReport } from "@semio-tech/coda-desktop/renderer";
 import { OntologyTree, ValidationTree } from "@semio-tech/coda-desktop/renderer";
 import type { ComponentType, ReactNode } from "react";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-// #region 🎨CodaThemeWrapper
-/** @emoji 🎨 Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/OntologyTree.stories.tsx`). */
+// #region 🎨️CodaThemeWrapper
+/** @emoji 🎨️ Coda-specific CSS variables the tree components read (mirrors `.storybook/stories/ui/OntologyTree.stories.tsx`). */
 const CodaThemeWrapper = ({ children }: { children: ReactNode }) => (
   <div
     style={{
@@ -45,7 +45,7 @@ const CodaThemeWrapper = ({ children }: { children: ReactNode }) => (
     {children}
   </div>
 );
-// #endregion 🎨CodaThemeWrapper
+// #endregion 🎨️CodaThemeWrapper
 
 // #region 🕳️UncoveredOntologyKindsFixture
 /** @emoji 🕳️ A Wohnung (residential unit) class expression exercising the 6 `OntologyNodeKind`s no existing story touches. */
@@ -72,9 +72,9 @@ const uncoveredKindsOntology: OntologyTreeNode = {
 };
 // #endregion 🕳️UncoveredOntologyKindsFixture
 
-// #region 🌳OntologyTreeStory
+// #region 🌳️OntologyTreeStory
 const ontologyMeta = {
-  title: "🧠coda/OntologyTree",
+  title: "🧠️coda/OntologyTree",
   component: OntologyTree,
   parameters: { layout: "padded" },
   tags: ["autodocs"],
@@ -93,4 +93,4 @@ export const UncoveredKinds: OntologyStory = {
     defaultExpanded: true,
   },
 };
-// #endregion 🌳OntologyTreeStory
+// #endregion 🌳️OntologyTreeStory

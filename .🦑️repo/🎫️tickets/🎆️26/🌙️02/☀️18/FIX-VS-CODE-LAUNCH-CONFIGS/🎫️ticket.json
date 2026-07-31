@@ -1,0 +1,11 @@
+{
+  "title": "Fix VSCode Launch Configs",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix incorrect VSCode launch.json and tasks.json configs: wrong repo/vscode dev task type/path, wrong nx project paths for compose/logo (assets/logo), compose/icons (assets/icons), compose/net (net/Compose), remove non-existent grasshopper/yak projects, add missing compose/sketchpad.",
+  "summary": "Fixed incorrect VSCode launch.json and tasks.json configs: fixed repo/vscode dev task from npm type with wrong path js/vscode to shell npx nx dev repo; fixed nx project refs for compose/logo (@semio-tech/semio-logo, root at assets/logo), compose/icons (@semio-tech/semio-icons, root at assets/icons), compose/net (@semio-tech/compose-net, root at compose/net/Compose); removed non-existent compose/grasshopper and compose/yak projects; added missing compose/sketchpad (build, preflight, dev, publish) configs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/609"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repovscodeextension"
+}

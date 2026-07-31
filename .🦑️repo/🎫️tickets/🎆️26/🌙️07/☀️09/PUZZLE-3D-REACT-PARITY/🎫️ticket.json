@@ -1,0 +1,27 @@
+{
+  "title": "Puzzle 3D React Parity",
+  "emoji": "🧩️",
+  "status": "closed",
+  "description": "Restore premigration parity for puzzle 3D in the React renderer: GLB coordinate frame, hover/select/gumball/marquee protocol, scene layers (vortices/attractions/target volumes/references/brush preview), and Select/Brush/Fill window engagements.",
+  "summary": "Round 3: user reported the app broken end-to-end (\"Keine Plugins geladen\" boot error). Root-caused and fixed two app-wide bugs, plus one more discovered during re-verification — none scoped to this ticket originally, but all fully blocking it.\n\nBug 1 (total boot failure): os-shell.tsx's plugin registry filter compared the raw playground variant id (\"puzzle3d\") directly against crate-level plugin ids (\"puzzle\"), never matching, so every dev server for every plugin threw \"No plugins loaded\" before attempting any load. Fixed by resolving the variant id via the already-imported resolvePluginRegistryId before filtering, matching the pattern already used two lines below for the primary-app lookup.\n\nBug 2 (dead fill slider, and actually every engagement control app-wide): traced via temporary debug instrumentation through the full dispatch chain down to the raw wasm JSON response. ui/wgpu/rs's WindowEngagementControl enum's #[serde(rename_all = \"camelCase\")] only renames the enum's tag value, not the fields inside each struct-like variant (a serde subtlety - rename_all_fields or per-field rename is needed for that) — so on_change/on_commit/on_select shipped as snake_case over the wire while every TS consumer only read the camelCase name, silently dropping the callback. This explains why the slider's own thumb moved (Radix's local state) but the committed value never did. Fixed by adding explicit #[serde(rename = \"...\")] to the 7 affected fields, mirroring the string already present in each field's adjacent ts-rs type-gen attribute.\n\nBug 3 (3D scene crash, found while re-verifying): a newly-added selection-halo/edge-outline feature in world-3d-host.tsx mutated a Three.js Object3D's children (via .add()) from inside root.traverse() over that same tree — since the added node is itself a Mesh, traverse recursed into it and added another halo to that, forever, crashing every scene with real objects. Fixed by splitting into a collect-then-mutate two-pass structure.\n\nLive-verified after all three fixes: app boots correctly, fill 20 command line still works, and critically the fill slider's arrow-key nudges now correctly commit the value (0→1, 0→3 in separate clean test runs) — the user's core complaint. Concrete Forest and Nakagin both render without crashing. Brush hover produces the ghost preview and populates real placement candidates in the engagement bar. Alt+right-click's suggestion popup could not be exercised live due to synthetic-event limitations simulating r3f's native pointer-capture gesture, but its underlying action logic is covered by 4 passing Rust unit tests from Round 2.\n\nTest results: puzzle-plugin d3 13/13 pass; infinite-world-r3f 70/70 pass; framework-renderer-react 105/106 pass (1 unrelated pre-existing failure in an unrelated plugin-contributions test); ui/js/react 219/230 pass (11 unrelated pre-existing tree-view-component failures, confirmed via grep none reference the Slider). Puzzle wasm rebuilt clean after every fix.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1873"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "c0683e18",
+    "local": "puzzle_3d_react_parity_c0683e18.plan.md"
+  },
+  "sessions": [
+    "⚪️a96627df0fb248c3be63325d64f489fb",
+    "⚪️996981b38f874a57a7bf71f5c9fc1741",
+    "⚪️0faf10db782a4e19804f9b72bf1c9194",
+    "⚪️c9c86e83cb984232b75b486c58216a3e",
+    "⚪️18e3a6ef83d742a5a18952b50d91c9ad",
+    "⚪️7a5bac9d344b4d14a54c738af2a94ab0",
+    "⚪️7a723b81ab504817b5395031c28e44b9",
+    "⚪️4e26c470b7fd4562aa4627a939acb54e",
+    "⚪️2ed7a65274264d8989d7a807423ad1fb"
+  ]
+}

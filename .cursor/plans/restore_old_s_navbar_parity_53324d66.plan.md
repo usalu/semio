@@ -76,14 +76,14 @@ The underlying settings/display panel-tab infrastructure already exists and is r
 - Keep `mod+[`/`mod+]`/`mod+up` (history) and `mod+p`/`mod+f` (search/find) keybindings and their dialogs functional -- only the visible navbar buttons are removed, per the "drop from the navbar" framing. If full removal (including keybindings/dialogs) is actually wanted, flag that as a follow-up.
 - Clean up now-unused helpers/imports if nothing else references them (`uriToBreadcrumbItems`, `Breadcrumb` import, `navigateFromBreadcrumb`).
 
-### 4. Update E2E for the removed breadcrumb -- `.repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`
+### 4. Update E2E for the removed breadcrumb -- `.repo/🎫️/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`
 
 - The "breadcrumb home navigation" step currently clicks `[data-slot="breadcrumb-link"]`. Since the breadcrumb is removed, switch this step to click the existing "← Home" content-area button (`studioHomeBar` in `os-shell.tsx`, matches old S's exact pattern), which is the same mechanism old S used.
 
 ## Verification
 
 - `bun nx run @semio-tech/framework-renderer-react:test` (vitest).
-- Re-run S studio E2E (`S_STUDIO_URL=http://127.0.0.1:6070/ node .repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`) with the updated home-navigation step.
+- Re-run S studio E2E (`S_STUDIO_URL=http://127.0.0.1:6070/ node .repo/🎫️/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`) with the updated home-navigation step.
 - Manually smoke-test at least 2 non-S playgrounds (e.g. `draw`, `puzzle2d` via `SEMIO_PLUGIN=draw`) to confirm: example dropdown now appears and switches fixtures, the 4-icon panel toggle group works, and mode buttons render for apps with multiple modes.
 
 ## Out of scope / follow-up

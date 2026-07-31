@@ -1,8 +1,0 @@
-{
-  "ok": false,
-  "title": "Entwerfen mit Bestand · Aggregator",
-  "glb": null,
-  "r3f": [],
-  "errorCount": 6,
-  "shot": ".repo/🎫/26/07/25/FIX-PUZZLE-3D-OBJECTS-NOT-RENDERING/aggregator-viewport.png"
-}

@@ -1,0 +1,1404 @@
+:root {
+	--r-background-color: var(--base);
+	--r-main-font: var(--font-sans);
+	--r-main-font-size: 2.625rem;
+	--r-block-margin: 1.25rem;
+	--r-heading-margin: 0 0 1.25rem 0;
+	--r-heading-line-height: 1.2;
+	--r-heading-font-weight: 400;
+	--r-heading1-size: 2.5em;
+	--r-heading2-size: 1.6em;
+	--r-heading3-size: 1.3em;
+	--r-heading4-size: 1em;
+	--r-presentation-morph-title-size: 1.35em;
+	--r-presentation-morph-secondary-size: 1.15em;
+	--r-main-color: var(--foreground);
+	--r-heading-font: var(--font-sans);
+	--r-heading-color: var(--foreground);
+	--r-heading-text-transform: none;
+	--r-heading-letter-spacing: normal;
+	--r-link-color: var(--color-primary);
+	--r-link-color-hover: var(--color-secondary);
+	--r-selection-background-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+	--r-controls-color: var(--color-primary);
+}
+
+.reveal {
+	font-family: var(--font-sans);
+	font-size: var(--r-main-font-size);
+}
+
+/* #region 🔖️RevealTypography */
+/** Applies reveal heading scale (normally provided by a reveal theme) so layout matches eg-ice-25
+ *  and the @ui/react Tailwind preflight reset (which collapses headings to `inherit`) is overridden. */
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+	margin: var(--r-heading-margin);
+	color: var(--r-heading-color);
+	font-family: var(--r-heading-font);
+	font-weight: var(--r-heading-font-weight);
+	line-height: var(--r-heading-line-height);
+	letter-spacing: var(--r-heading-letter-spacing);
+	text-transform: var(--r-heading-text-transform);
+	word-wrap: break-word;
+}
+
+.reveal h1 {
+	font-size: var(--r-heading1-size);
+}
+
+.reveal h2 {
+	font-size: var(--r-heading2-size);
+}
+
+.reveal h3 {
+	font-size: var(--r-heading3-size);
+}
+
+.reveal h4 {
+	font-size: var(--r-heading4-size);
+}
+
+.reveal h5,
+.reveal h6 {
+	font-size: 1em;
+}
+
+.reveal p {
+	margin: var(--r-block-margin) 0;
+	line-height: 1.3;
+}
+
+.reveal .presentation-morph-text--title {
+	font-size: var(--r-presentation-morph-title-size);
+}
+
+.reveal .presentation-morph-text--secondary {
+	font-size: var(--r-presentation-morph-secondary-size);
+}
+/* #endregion 🔖️RevealTypography */
+
+.reveal a {
+	color: var(--color-primary);
+}
+
+.reveal .slides {
+	text-align: center;
+}
+
+.reveal .slides > section > section.presentation-arrangement--interactive {
+	text-align: initial;
+	overflow: visible;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--positioned
+	> .presentation-arrangement-surface {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+}
+
+.reveal .slides > section > section.presentation-arrangement--positioned {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: initial;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.reveal .slides > section > section.presentation-arrangement--positioned > .presentation-arrangement-surface {
+	position: relative;
+	flex: 1 1 auto;
+	align-self: stretch;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}
+
+/* #region 🔖️Interaction */
+.reveal .presentation-interaction-layer {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	touch-action: none;
+}
+
+.reveal .presentation-arrangement-canvas,
+.reveal .presentation-interactive-disposition {
+	position: relative;
+	z-index: 1;
+	overflow: visible;
+}
+
+.reveal .presentation-interactive-disposition {
+	touch-action: none;
+	user-select: none;
+	cursor: default;
+}
+
+.reveal .presentation-interactive-disposition--selected {
+	z-index: 2;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text:hover:not(.presentation-interactive-disposition--selected)
+	:is(h1, h2, h3, h4, p, .presentation-morph-text),
+.reveal
+	.presentation-interactive-disposition--kind-authors:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet:hover:not(.presentation-interactive-disposition--selected)
+	li {
+	color: var(--color-primary);
+	transition: color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-authors.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	.presentation-interactive-disposition__content {
+	background-color: var(--color-primary);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-text.presentation-interactive-disposition--selected
+	:is(h1, h2, h3, h4, p, .presentation-morph-text),
+.reveal
+	.presentation-interactive-disposition--kind-authors.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-affiliations.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	.presentation-morph-text,
+.reveal
+	.presentation-interactive-disposition--kind-bullet.presentation-interactive-disposition--selected
+	li {
+	color: var(--active-foreground);
+	transition: color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-figure:hover:not(.presentation-interactive-disposition--selected)
+	:is(.presentation-disposition-frame, .presentation-morph-slot--figure)::after,
+.reveal
+	.presentation-interactive-disposition--kind-video:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:hover:not(.presentation-interactive-disposition--selected)
+	.presentation-morph-anchor::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: color-mix(in oklab, var(--color-primary) 22%, transparent);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected
+	.presentation-morph-slot--figure::after,
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	pointer-events: none;
+	background: color-mix(in oklab, var(--color-primary) 40%, transparent);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor {
+	background-color: var(--color-primary);
+	transition: background-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-video.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-morph-anchor::after {
+	content: none;
+}
+
+.reveal .presentation-interactive-disposition--kind-video .presentation-morph-anchor,
+.reveal .presentation-interactive-disposition--kind-pdf .presentation-morph-anchor {
+	position: relative;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--enlarged,
+.reveal
+	.presentation-arrangement-surface
+	> .presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--pinned),
+.reveal
+	.slides
+	> section.presentation-arrangement--interactive
+	> .presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--pinned) {
+	display: flex;
+	position: absolute;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	background: color-mix(in oklab, var(--base) 94%, transparent);
+}
+
+.reveal .presentation-interactive-disposition--enlarged {
+	z-index: 50;
+}
+
+.reveal .presentation-interactive-disposition--enlarged .presentation-interactive-disposition__content {
+	flex: 1 1 auto;
+	width: 100%;
+	height: 100%;
+	max-width: 100%;
+	max-height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition--enlarged .presentation-interactive-disposition__chrome {
+	z-index: 2;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	:is(.presentation-disposition-frame, .presentation-morph-slot) {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--enlarged:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-figure-crop-fill {
+	width: 100% !important;
+	height: 100% !important;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged:not(
+		.presentation-interactive-disposition--offset
+	)
+	.presentation-interactive-disposition__content
+	.presentation-morph-anchor,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged:not(
+		.presentation-interactive-disposition--offset
+	)
+	.presentation-interactive-disposition__content
+	.presentation-media-pdf-document {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition--pinned,
+.reveal .presentation-interactive-disposition--offset {
+	cursor: move;
+}
+
+.reveal .presentation-interactive-disposition--offset {
+	transform-origin: center center;
+	will-change: transform;
+}
+
+.reveal .presentation-interactive-disposition--canvas-framed.presentation-interactive-disposition--pinned {
+	overflow: visible;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	:is(.presentation-disposition-frame, .presentation-morph-slot:not(.presentation-morph-slot--figure)) {
+	position: static !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	.presentation-interactive-disposition--canvas-framed:not(.presentation-interactive-disposition--offset)
+	.presentation-interactive-disposition__content
+	.presentation-morph-slot--figure:not(.presentation-figure-scroll-content) {
+	position: relative !important;
+	left: auto !important;
+	top: auto !important;
+	width: 100% !important;
+	height: 100% !important;
+	transform: none !important;
+}
+
+.reveal
+	.presentation-interactive-disposition--measuring
+	.presentation-interactive-disposition__content
+	:is(h1, h2, h3, h4, p) {
+	display: block;
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--interactive:not(.presentation-arrangement--positioned)
+	> .presentation-interactive-disposition--pinned
+	.presentation-interactive-disposition__content {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-interactive-disposition__content {
+	position: relative;
+}
+
+.reveal .presentation-interactive-disposition__chrome {
+	position: absolute;
+	inset: 0;
+	z-index: 3;
+	pointer-events: none;
+}
+
+.reveal .presentation-interactive-disposition--canvas-framed .presentation-interactive-disposition__chrome {
+	box-sizing: border-box;
+}
+
+.reveal .presentation-interactive-disposition--gesturing .presentation-interactive-disposition__chrome {
+	pointer-events: none;
+	visibility: visible;
+	opacity: 1;
+}
+
+.reveal .presentation-interaction-handle {
+	position: absolute;
+	z-index: 4;
+	width: var(--size-tiny);
+	height: var(--size-tiny);
+	margin: calc(-1 * var(--spacing-single)) 0 0 calc(-1 * var(--spacing-single));
+	border-radius: var(--spacing-single);
+	background: var(--color-primary);
+	border: var(--stroke-hairline) solid var(--base);
+	pointer-events: auto;
+	box-sizing: border-box;
+}
+
+.reveal .presentation-interaction-handle--nw {
+	left: 0;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--n {
+	left: 50%;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--ne {
+	left: 100%;
+	top: 0;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--e {
+	left: 100%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interaction-handle--se {
+	left: 100%;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nwse-resize;
+}
+
+.reveal .presentation-interaction-handle--s {
+	left: 50%;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ns-resize;
+}
+
+.reveal .presentation-interaction-handle--sw {
+	left: 0;
+	top: 100%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: nesw-resize;
+}
+
+.reveal .presentation-interaction-handle--w {
+	left: 0;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	margin: 0;
+	cursor: ew-resize;
+}
+
+.reveal .presentation-interactive-disposition > .presentation-interaction-actions {
+	position: absolute;
+	top: var(--spacing-single);
+	right: var(--spacing-single);
+	z-index: 90;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--spacing-single);
+	pointer-events: none;
+}
+
+.reveal .presentation-interactive-disposition--enlarged > .presentation-interaction-actions {
+	z-index: 90;
+}
+
+.reveal .presentation-interaction-enlarge,
+.reveal .presentation-interaction-reset {
+	position: static;
+	pointer-events: auto;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
+	background: var(--panel);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.reveal .presentation-interaction-enlarge:hover,
+.reveal .presentation-interaction-reset:hover {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-normal-color);
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-morph-anchor {
+	position: relative;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--enlarged
+	.presentation-pdf-page-nav,
+.reveal
+	.presentation-interactive-disposition--kind-pdf.presentation-interactive-disposition--selected
+	.presentation-pdf-page-nav {
+	position: absolute;
+	left: 50%;
+	bottom: 0.75rem;
+	z-index: 3;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 0.5rem;
+	transform: translateX(-50%);
+	pointer-events: auto;
+}
+
+.reveal .presentation-pdf-page-nav__button {
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
+	background: color-mix(in oklab, var(--panel) 92%, transparent);
+	color: var(--foreground);
+	font-size: 1.125rem;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.reveal .presentation-pdf-page-nav__button:hover:not(:disabled) {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-normal-color);
+}
+
+.reveal .presentation-pdf-page-nav__button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.reveal .presentation-interaction-slide-reset-host {
+	position: absolute;
+	top: 0;
+	right: 0;
+	z-index: 70;
+	width: 5rem;
+	height: 5rem;
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-slide-reset {
+	position: absolute;
+	top: var(--spacing-single);
+	right: var(--spacing-single);
+	z-index: 1;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: var(--stroke-hairline) solid var(--border-normal-color);
+	border-radius: var(--spacing-single);
+	background: var(--panel);
+	color: var(--foreground);
+	font-size: 0.75rem;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 1;
+	pointer-events: auto;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		border-color 0.15s ease;
+}
+
+.reveal
+	.presentation-interactive-disposition--kind-video:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-video,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-pdf,
+.reveal
+	.presentation-interactive-disposition--kind-pdf:not(.presentation-interactive-disposition--selected):not(
+		.presentation-interactive-disposition--enlarged
+	)
+	.presentation-media-pdf
+	canvas {
+	pointer-events: none;
+}
+
+.reveal .presentation-interaction-slide-reset-host:hover .presentation-interaction-slide-reset,
+.reveal .presentation-interaction-slide-reset-host:focus-within .presentation-interaction-slide-reset,
+.reveal
+	.presentation-interaction-slide-reset-host.presentation-interaction-slide-reset-host--near
+	.presentation-interaction-slide-reset {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.reveal .presentation-interaction-slide-reset-host:hover .presentation-interaction-slide-reset:hover,
+.reveal
+	.presentation-interaction-slide-reset-host.presentation-interaction-slide-reset-host--near
+	.presentation-interaction-slide-reset:hover,
+.reveal
+	.presentation-interaction-slide-reset-host:focus-within
+	.presentation-interaction-slide-reset:hover {
+	background: var(--hover-panel);
+	color: var(--foreground);
+	border-color: var(--border-normal-color);
+}
+
+/* #endregion 🔖️Interaction */
+
+.reveal .presentation-arrangement-canvas {
+	position: relative;
+	width: var(--layout-deck-width);
+	height: var(--layout-deck-height);
+	max-width: 100%;
+	max-height: 100%;
+	flex: 0 0 auto;
+	margin: 0 auto;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition:not(.presentation-target-ghost):not(.presentation-source-ghost),
+.reveal .presentation-arrangement-canvas > .presentation-interactive-row-band {
+	pointer-events: auto;
+}
+
+.reveal .presentation-interactive-row-band {
+	position: absolute;
+	z-index: 0;
+	box-sizing: border-box;
+	cursor: default;
+	touch-action: none;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition[data-row-band] {
+	z-index: 1;
+}
+
+.reveal
+	.presentation-arrangement-canvas
+	> .presentation-interactive-disposition[data-id]:not(
+		.presentation-interactive-disposition--canvas-framed.presentation-interactive-disposition--pinned
+	):not(.presentation-interactive-disposition--gesturing) {
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
+.reveal .presentation-arrangement-canvas > .presentation-interactive-disposition--gesturing {
+	z-index: 20;
+}
+
+.reveal .presentation-disposition-frame {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-morph-anchor {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-media-figure,
+.reveal .presentation-media-video,
+.reveal .presentation-media-iframe {
+	display: block;
+	max-height: 100%;
+	max-width: 100%;
+	width: 100%;
+	height: 100%;
+	border: 0;
+	background: var(--color-background);
+}
+
+.reveal .presentation-markdown-morph {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-markdown-prose {
+	width: 100%;
+	margin: 0;
+}
+
+.reveal .presentation-markdown-prose--top-left > :first-child {
+	margin-top: 0;
+}
+
+.reveal .presentation-json-morph {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+}
+
+.reveal .presentation-json-tree {
+	font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+	font-size: 0.72rem;
+	line-height: 1.45;
+	color: var(--color-foreground);
+}
+
+.reveal .presentation-json-line {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0;
+	width: 100%;
+	text-align: left;
+}
+
+.reveal .presentation-json-toggle {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+
+.reveal .presentation-json-caret {
+	display: inline-block;
+	width: 1.1ch;
+	color: color-mix(in srgb, var(--color-foreground) 55%, transparent);
+}
+
+.reveal .presentation-json-key {
+	color: color-mix(in srgb, var(--color-primary, #7dd3fc) 88%, white);
+}
+
+.reveal .presentation-json-colon {
+	color: color-mix(in srgb, var(--color-foreground) 55%, transparent);
+}
+
+.reveal .presentation-json-string {
+	color: color-mix(in srgb, #86efac 90%, white);
+}
+
+.reveal .presentation-json-number {
+	color: color-mix(in srgb, #fcd34d 90%, white);
+}
+
+.reveal .presentation-json-boolean,
+.reveal .presentation-json-null {
+	color: color-mix(in srgb, #f9a8d4 90%, white);
+}
+
+.reveal .presentation-json-meta,
+.reveal .presentation-json-preview,
+.reveal .presentation-json-unknown {
+	color: color-mix(in srgb, var(--color-foreground) 68%, transparent);
+}
+
+.reveal .presentation-media-teaser {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-media-teaser__content {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+}
+
+.reveal .presentation-media-teaser__veil {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: auto;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+	background-color: color-mix(in srgb, var(--panel, var(--color-background)) 42%, transparent);
+}
+
+.reveal .presentation-media-teaser__label {
+	font-size: var(--r-heading2-size);
+	font-weight: 500;
+	color: var(--foreground);
+	text-align: center;
+	padding: 0.5em 1em;
+	max-width: 90%;
+}
+
+.reveal .presentation-media-figure,
+.reveal .presentation-media-video {
+	object-fit: cover;
+}
+
+.reveal .presentation-figure-scroll-viewport {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	box-sizing: border-box;
+	overscroll-behavior: contain;
+}
+
+.reveal .presentation-figure-scroll-viewport--overlay {
+	position: relative;
+	overflow: hidden;
+	--scrollbar-thumb-active: var(--accent, var(--muted-foreground));
+}
+
+.reveal .presentation-figure-scroll-scroller {
+	width: 100%;
+	height: 100%;
+	min-width: 0;
+	min-height: 0;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.reveal .presentation-figure-scroll-scroller::-webkit-scrollbar {
+	display: none;
+}
+
+.reveal .presentation-figure-scroll-scroller--axis-x {
+	overflow-x: auto;
+	overflow-y: hidden;
+}
+
+.reveal .presentation-figure-scroll-scroller--axis-y {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.reveal .presentation-figure-scroll-viewport--axis-both {
+	overflow: hidden;
+}
+
+.reveal .presentation-figure-scroll-scroller--axis-both {
+	overflow: auto;
+}
+
+.reveal .presentation-figure-scroll-bar {
+	position: absolute;
+	pointer-events: auto;
+	z-index: 1;
+}
+
+.reveal .presentation-figure-scroll-bar--axis-y {
+	top: 0;
+	right: 0;
+	bottom: 0;
+	width: var(--scrollbar-size, var(--spacing-double));
+}
+
+.reveal .presentation-figure-scroll-bar--axis-x {
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: var(--scrollbar-size, var(--spacing-double));
+}
+
+.reveal .presentation-figure-scroll-bar-thumb {
+	position: absolute;
+	left: 0;
+	top: 0;
+	pointer-events: auto;
+	opacity: 0;
+	background-color: var(--scrollbar-thumb, var(--border-color));
+	transition:
+		opacity 120ms ease,
+		background-color 120ms ease;
+}
+
+.reveal .presentation-figure-scroll-bar:hover .presentation-figure-scroll-bar-thumb,
+.reveal .presentation-figure-scroll-bar--dragging .presentation-figure-scroll-bar-thumb {
+	opacity: 1;
+}
+
+.reveal .presentation-figure-scroll-bar--axis-y .presentation-figure-scroll-bar-thumb {
+	width: 100%;
+}
+
+.reveal .presentation-figure-scroll-bar--axis-x .presentation-figure-scroll-bar-thumb {
+	height: 100%;
+}
+
+.reveal .presentation-figure-scroll-bar-thumb:hover {
+	background-color: var(--scrollbar-thumb-hover, var(--muted-foreground));
+}
+
+.reveal .presentation-figure-scroll-bar-thumb:active {
+	background-color: var(--scrollbar-thumb-active, var(--accent, var(--muted-foreground)));
+}
+
+.reveal .presentation-figure-scroll-viewport--axis-x {
+	overflow: hidden;
+}
+
+.reveal .presentation-figure-scroll-viewport--axis-y {
+	overflow: hidden;
+}
+
+.reveal .presentation-morph-slot.presentation-figure-scroll-content {
+	display: block;
+	flex-shrink: 0;
+	align-items: unset;
+	justify-content: unset;
+	overflow: visible;
+}
+
+.reveal .presentation-figure-scroll-media {
+	display: block;
+	flex-shrink: 0;
+	max-width: none;
+	max-height: none;
+	object-fit: unset;
+}
+
+.reveal .presentation-disposition-frame--figure-scroll {
+	display: block;
+	overflow: hidden;
+}
+
+.reveal .presentation-disposition-frame:has(.presentation-figure-scroll-viewport) {
+	display: block;
+	overflow: hidden;
+	align-items: unset;
+	justify-content: unset;
+}
+
+.reveal .presentation-morph-anchor:has(.presentation-figure-scroll-viewport) {
+	display: block;
+	overflow: hidden;
+	align-items: unset;
+	justify-content: unset;
+}
+
+.reveal .slides section[data-auto-animate] .presentation-figure-scroll-viewport {
+	overflow: hidden;
+}
+
+.reveal .presentation-figure-crop-fill {
+	width: 100%;
+	height: 100%;
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size, cover);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal .presentation-morph-slot--figure:not(.presentation-figure-scroll-content) {
+	overflow: hidden;
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size, cover);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal .presentation-morph-slot--figure.presentation-figure-scroll-content {
+	background-repeat: no-repeat;
+	background-size: var(--presentation-figure-bg-size, cover);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"]
+	.presentation-morph-crop-from.presentation-morph-slot--figure,
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="pending"]
+	.presentation-morph-crop-from
+	.presentation-morph-slot--figure {
+	background-size: var(--presentation-figure-bg-size, cover);
+	background-position: var(--presentation-figure-bg-position);
+}
+
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-from.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-from
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+.reveal
+	.slides
+	section[data-auto-animate="pending"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section[data-auto-animate="pending"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size, cover));
+	background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
+}
+
+.reveal
+	.slides
+	section[data-auto-animate="running"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section[data-auto-animate="running"]:not(.presentation-arrangement--many-to-one-morph)
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-grid-to-focus var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+@keyframes presentation-figure-crop-morph-grid-to-focus {
+	from {
+		background-size: var(--presentation-figure-bg-grid-size, var(--presentation-figure-bg-size, cover));
+		background-position: var(--presentation-figure-bg-grid-position, var(--presentation-figure-bg-position));
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+}
+
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-to.presentation-morph-slot--figure[data-auto-animate-target],
+.reveal
+	.slides
+	section.presentation-arrangement--many-to-one-morph[data-auto-animate="running"]
+	.presentation-morph-crop-to
+	.presentation-morph-slot--figure[data-auto-animate-target] {
+	animation: presentation-figure-crop-morph-from-rest var(--presentation-auto-animate-duration, 1s) ease forwards;
+}
+
+@keyframes presentation-figure-crop-morph-to-rest {
+	from {
+		background-size: var(--presentation-figure-bg-size-morph, cover);
+		background-position: var(--presentation-figure-bg-position-morph);
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+}
+
+@keyframes presentation-figure-crop-morph-from-rest {
+	from {
+		background-size: var(--presentation-figure-bg-size, cover);
+		background-position: var(--presentation-figure-bg-position);
+	}
+	to {
+		background-size: var(--presentation-figure-bg-size-morph, cover);
+		background-position: var(--presentation-figure-bg-position-morph);
+	}
+}
+
+@keyframes presentation-target-ghost-frame {
+	from {
+		left: var(--presentation-morph-frame-left);
+		top: var(--presentation-morph-frame-top);
+		width: var(--presentation-morph-frame-width);
+		height: var(--presentation-morph-frame-height);
+	}
+	to {
+		left: var(--presentation-frame-left);
+		top: var(--presentation-frame-top);
+		width: var(--presentation-frame-width);
+		height: var(--presentation-frame-height);
+	}
+}
+
+.reveal .presentation-figure-crop-frame,
+.reveal .presentation-morph-slot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	background-repeat: no-repeat;
+	box-sizing: border-box;
+	z-index: 1;
+}
+
+.reveal .presentation-morph-slot h2 {
+	margin: 0;
+	width: 100%;
+	text-align: center;
+}
+
+.reveal .presentation-morph-slot-placeholder {
+	opacity: 0;
+}
+
+@keyframes presentation-target-ghost-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes presentation-morph-one-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+.reveal .presentation-target-ghost {
+	opacity: 0;
+	visibility: visible;
+	z-index: 0;
+	pointer-events: none !important;
+}
+
+.reveal .presentation-morph-target:not(.opacity-20) {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .presentation-morph-target.opacity-20 {
+	opacity: 0.2;
+	visibility: visible;
+}
+
+.reveal .presentation-source-ghost {
+	opacity: 0 !important;
+	visibility: hidden !important;
+	z-index: 0;
+	pointer-events: none !important;
+}
+
+.reveal .presentation-morph-one {
+	opacity: 1;
+	visibility: visible;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-target-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none !important;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-target-ghost {
+	visibility: visible !important;
+	pointer-events: none;
+	animation: presentation-target-ghost-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-source-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none;
+	animation: none !important;
+}
+
+.reveal .slides section[data-auto-animate="running"] .presentation-source-ghost {
+	opacity: 1 !important;
+	visibility: visible !important;
+	pointer-events: none;
+}
+
+.reveal .slides section[data-auto-animate="pending"] .presentation-morph-one[data-auto-animate-target],
+.reveal .slides section[data-auto-animate="running"] .presentation-morph-one[data-auto-animate-target] {
+	animation: presentation-morph-one-fade-out var(--presentation-auto-animate-duration, 1s) ease forwards !important;
+	pointer-events: none !important;
+}
+
+.reveal .presentation-disposition-frame--overlay {
+	z-index: 1;
+	background-color: var(--base);
+}
+
+.reveal .presentation-disposition-frame:has(.presentation-media-pdf-document:not(.presentation-media-pdf-document--scroll)) {
+	overflow: hidden;
+}
+
+.reveal .presentation-media-pdf-document {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.reveal .presentation-media-pdf-document--scroll {
+	display: block;
+	flex-shrink: 0;
+	overflow: visible;
+}
+
+.reveal .presentation-media-pdf {
+	display: block;
+	flex-shrink: 0;
+	background: #fff;
+	line-height: 0;
+}
+
+.reveal .presentation-media-pdf canvas {
+	display: block;
+	width: auto;
+	height: auto;
+}
+
+.reveal .slides section[data-auto-animate] [data-id^="goal"] h2 {
+	white-space: nowrap;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro {
+	--r-heading-margin: 0 0 0.12em 0;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-text-morph-block {
+	width: fit-content;
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+.reveal
+	.slides
+	> section
+	> section.presentation-arrangement--intro:not(.presentation-arrangement--positioned)
+	:is(h1, h2, h3, h4, p) {
+	display: block;
+	margin: 0;
+	line-height: 1.1;
+	width: auto;
+	max-width: 100%;
+	margin-inline: auto;
+	text-wrap: balance;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-rows {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	row-gap: 0.15em;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-line {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	column-gap: 0.35em;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-authors + .presentation-intro-affiliations {
+	margin-top: 0.35em;
+}
+
+.reveal .slides > section > section.presentation-arrangement--intro .presentation-intro-affiliations .presentation-affiliation-row {
+	width: fit-content;
+	max-width: 100%;
+}
+
+.reveal .progress span {
+	background: var(--color-primary);
+}
+
+/* #region 🔖️RevealChrome */
+.reveal-viewport {
+	background-color: var(--base);
+	color: var(--foreground);
+}
+
+.reveal .controls,
+.reveal.has-dark-background .controls,
+.reveal.has-light-background .controls {
+	color: var(--color-primary);
+}
+
+.reveal .progress {
+	background-color: color-mix(in srgb, var(--foreground) 18%, transparent);
+	color: var(--color-primary);
+}
+
+.reveal .slide-number,
+.reveal .slide-number a {
+	font-family: var(--font-sans);
+	font-size: var(--text-sm);
+	line-height: 1.2;
+	color: var(--foreground);
+	background-color: color-mix(in srgb, var(--panel) 88%, transparent);
+	padding: var(--spacing-single) var(--spacing-double);
+}
+
+.reveal .jump-to-slide-input {
+	font-family: var(--font-sans);
+	color: var(--foreground);
+}
+
+.reveal.has-dark-background .jump-to-slide-input,
+.reveal.has-light-background .jump-to-slide-input {
+	color: var(--foreground);
+}
+/* #endregion 🔖️RevealChrome */

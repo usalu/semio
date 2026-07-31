@@ -1,9 +1,0 @@
-{
-  "title": "Presentation Authors Spacing",
-  "emoji": "👤",
-  "status": "closed",
-  "description": "Add whitespace between author names in presentation intro.",
-  "summary": "Intro author names ran together because intro CSS targeted data-auto-animate-id=\"intro\" while morph slides use intro--m0. Updated globals.css selectors to [data-auto-animate-id^=\"intro--\"] and added gap-x-[0.35em] on presentation-intro-line in AuthorsMorphView and AffiliationsMorphView. Extended intro DOM test to assert morph id prefix and gap class.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪f4d8263178304e85a782c586877c5bb4"]
-}

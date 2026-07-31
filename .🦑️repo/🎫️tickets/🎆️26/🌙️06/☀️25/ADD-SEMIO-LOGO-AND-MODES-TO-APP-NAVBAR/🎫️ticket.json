@@ -1,0 +1,9 @@
+{
+  "title": "Add Semio Logo and Modes to App Navbar",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Show Semio Logo, app name, and mode button group in the navbar of all products (platform, playground).",
+  "summary": "Aligned the mode button group completely to the right of the navbar in both Platform and Playground views by pushing it last. Fixed SemioLogo SVG viewBox boundary cropping by setting it to -2 -2 204 204. Changed PlatformView navbar logo title to use platform.name (e.g., Sketchpad) instead of the active sub-app's label.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️472f0af537214214b79147c49bec40ec"]
+}

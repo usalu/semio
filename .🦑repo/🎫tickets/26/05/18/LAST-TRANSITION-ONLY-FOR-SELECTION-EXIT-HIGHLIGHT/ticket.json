@@ -1,9 +1,0 @@
-{
-  "title": "Last Transition Only For Selection Exit Highlight",
-  "emoji": "🎯",
-  "status": "closed",
-  "description": "Selection exit secondary chrome should reflect only the most recent selection change (deselected ids in that step), not accumulate all historical exits. Align delete_selection with the same rule.",
-  "summary": "Selection exit secondary styling now reflects only the most recent change: `set_selection_exit_last_transition` replaces the highlight set with `prev \\ next` each time instead of accumulating leavers across steps. `delete_selection` snapshots selection before mutations, applies the same rule, then prunes dead ids before emitting select.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪9855e942b20b47d9afa9c3745c1f2aa6"]
-}

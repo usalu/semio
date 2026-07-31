@@ -1,0 +1,11 @@
+{
+  "title": "Fix All Policy Breachs in Sketchpad Tsx",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix all 433 policy breachs in compose/js/sketchpad/Sketchpad.tsx including section summaries, definition summaries, and orphan definitions.",
+  "summary": "Fixed all 433 policy breachs in Sketchpad.tsx: 371 DEFINITION-MISSING-SUMMARY (added summary comments above all exported definitions), 61 SECTION-MISSING-SUMMARY (added section summaries after region markers), 1 SECTION-ORPHAN-DEFINITION (wrapped getToolbarGroupIcon in Utilities region). Final analyze confirms 0 target breachs remaining. 62 CODE-COMMENT-INLINE breachs exist but were not in scope.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/538"
+  },
+  "goal": "🎯️fixjsbreachs"
+}

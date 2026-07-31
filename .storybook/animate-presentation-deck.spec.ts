@@ -1,11 +1,11 @@
-// #region 🧲Header
-// 💻 .storybook/animate-presentation-deck.spec.ts
+// #region 🧲️Header
+// 💻️ .storybook/animate-presentation-deck.spec.ts
 // Specs: End-to-end check for the animate scope's `PresentationDeck` 3-slide reveal.js story.
 // Summary: Loads `animate--three-slide-deck` inside the aggregated Storybook static build, asserts a clean boot
 // (no page/console errors, `.reveal .slides` mounted with 3 `section`s) and that reveal.js keyboard navigation
 // (ArrowRight) advances `Reveal.getIndices().h` from the title slide onward.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { expect, test, type Page } from "@playwright/test";
 

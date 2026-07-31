@@ -1,4 +1,4 @@
-#region 🧲Header
+#region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,14 +6,14 @@
 
 // Core .NET library implementing the compose domain representation and serialization.
 
-#endregion 🧲Header
+#endregion 🧲️Header
 
 
 
 
 
 
-#region 🔌Adapters
+#region 🔌️Adapters
 // Third-party imports MUST stay in this region; domain code uses port types below.
 using System.Collections;
 using System.Collections.Immutable;
@@ -51,10 +51,10 @@ using SharpGLTF.Scenes;
 using GltfRepresentation = SharpGLTF.Schema2.ModelRoot;
 using GltfNode = SharpGLTF.Schema2.Node;
 
-#endregion 🔌Adapters
+#endregion 🔌️Adapters
 
-#region 🔌Ports
-/// <summary>📜 JSON codec port implemented by Newtonsoft in 🔌Adapters.</summary>
+#region 🔌️Ports
+/// <summary>📜️ JSON codec port implemented by Newtonsoft in 🔌️Adapters.</summary>
 public interface IComposeJsonCodec
 {
     string Serialize(object value);
@@ -67,13 +67,13 @@ public interface IComposeJsonCodec
     T? DeserializeKitDiffValidation<T>(string json);
 }
 
-/// <summary>📜 Active JSON codec for domain serialization (defaults to Newtonsoft adapter).</summary>
+/// <summary>📜️ Active JSON codec for domain serialization (defaults to Newtonsoft adapter).</summary>
 public static class ComposeJson
 {
     public static IComposeJsonCodec Codec { get; set; } = NewtonsoftComposeJsonCodec.Instance;
 }
 
-/// <summary>📜 Newtonsoft-backed JSON codec adapter.</summary>
+/// <summary>📜️ Newtonsoft-backed JSON codec adapter.</summary>
 public sealed class NewtonsoftComposeJsonCodec : IComposeJsonCodec
 {
     public static readonly NewtonsoftComposeJsonCodec Instance = new();
@@ -146,18 +146,18 @@ public sealed class NewtonsoftComposeJsonCodec : IComposeJsonCodec
         }
     }
 }
-#endregion 🔌Ports
+#endregion 🔌️Ports
 
 
 
 
 
 
-#region 🏠Namespace
+#region 🏠️Namespace
 // Implementations MUST reside in this namespace.
 namespace Compose
 {
-#endregion 🏠Namespace
+#endregion 🏠️Namespace
 
 
 
@@ -230,7 +230,7 @@ public enum DiffStatus
 
 
 
-#region 📦Utilities
+#region 📦️Utilities
 // Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
@@ -390,9 +390,9 @@ public static class Utility
 
     public static T? Deserialize<T>(string json) => ComposeJson.Codec.DeserializeRepresentation<T>(json);
 
-    #region 🧬KitDocumentJson
+    #region 🧬️KitDocumentJson
 
-    /// <summary>📁 Reads split <c>kit.compose.json</c> shells with sibling <c>types/</c> and <c>designs/</c> sidecars merged for hydration.</summary>
+    /// <summary>📁️ Reads split <c>kit.compose.json</c> shells with sibling <c>types/</c> and <c>designs/</c> sidecars merged for hydration.</summary>
     public static string ReadKitFixtureJson(string kitJsonPath)
     {
         var initialKitDir = Path.GetDirectoryName(Path.GetFullPath(kitJsonPath))
@@ -461,7 +461,7 @@ public static class Utility
         }
     }
 
-    /// <summary>📦 Flattens persisted kit workspace JSON (<c>wip.initialKit</c>, <c>{ hash, items }</c> buckets, <c>updatedAt</c>) into the JSON shape <see cref="Kit"/> bindings expect.</summary>
+    /// <summary>📦️ Flattens persisted kit workspace JSON (<c>wip.initialKit</c>, <c>{ hash, items }</c> buckets, <c>updatedAt</c>) into the JSON shape <see cref="Kit"/> bindings expect.</summary>
     public static string NormalizeKitDocumentJson(string json)
     {
         var root = JToken.Parse(json) as JObject ?? throw new JsonSerializationException("Kit JSON root must be an object.");
@@ -518,7 +518,7 @@ public static class Utility
         }
     }
 
-    /// <summary>📦 Deserializes a <see cref="Kit"/> after <see cref="NormalizeKitDocumentJson"/>; maps <c>pose</c> onto <see cref="Piece.Plane"/> / <see cref="Piece.Center"/>.</summary>
+    /// <summary>📦️ Deserializes a <see cref="Kit"/> after <see cref="NormalizeKitDocumentJson"/>; maps <c>pose</c> onto <see cref="Piece.Plane"/> / <see cref="Piece.Center"/>.</summary>
     public static Kit? DeserializeKit(string json)
     {
         var normalized = NormalizeKitDocumentJson(json);
@@ -545,7 +545,7 @@ public static class Utility
         }
     }
 
-    /// <summary>📐 Maps JSON <c>pose</c> onto <see cref="Piece.Plane"/> / <see cref="Piece.Center"/> for a piece list container.</summary>
+    /// <summary>📐️ Maps JSON <c>pose</c> onto <see cref="Piece.Plane"/> / <see cref="Piece.Center"/> for a piece list container.</summary>
     public static void ApplyPiecePoseFromNormalizedJson(List<Piece> pieces, JObject container)
     {
         if (container["pieces"] is not JArray jsonPieces) return;
@@ -611,7 +611,7 @@ public static class Utility
         }
     }
 
-    /// <summary>🔁 Maps canonical diff wire <c>updated</c> arrays to <see cref="PiecesDiff.Modified"/> binding <c>modified</c>.</summary>
+    /// <summary>🔁️ Maps canonical diff wire <c>updated</c> arrays to <see cref="PiecesDiff.Modified"/> binding <c>modified</c>.</summary>
     public static string NormalizeEntityDiffWireJson(string json)
     {
         var root = JToken.Parse(json);
@@ -639,7 +639,7 @@ public static class Utility
         }
     }
 
-    #endregion 🧬KitDocumentJson
+    #endregion 🧬️KitDocumentJson
 
     public static string GenerateRandomId(int seed)
     {
@@ -743,7 +743,7 @@ public static class Utility
 #region ❄️Expressions
 // Implementations MUST evaluate expression trees through the Operator.Apply contract.
 
-/// <summary>🌳Abstract base for all expression tree nodes.</summary>
+/// <summary>🌳️Abstract base for all expression tree nodes.</summary>
 /// <remarks>
 /// </remarks>
 public abstract class Symbol { }
@@ -1799,14 +1799,14 @@ public class Expression
 
 #endregion ❄️Expressions
 
-#endregion 📦Utilities
+#endregion 📦️Utilities
 
 
 
 
 
 
-#region 🔓Entitying
+#region 🔓️Entitying
 // Implementations MUST extend Entity for equality, validation, and diff support.
 
 /// Abstract generic base class providing equality, hashing, cloning, and validation.
@@ -1865,14 +1865,14 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
     }
 }
 
-#endregion 🔓Entitying
+#endregion 🔓️Entitying
 
 
 
 
 
 
-#region ✨ComposeValidation
+#region ✨️ComposeValidation
 // Callers MUST use ValidationResult to report kit-level validation issues.
 
 public class ComposeValidationFix
@@ -2150,7 +2150,7 @@ public static class ComposeValidator
     }
 }
 
-#endregion ✨ComposeValidation
+#endregion ✨️ComposeValidation
 
 
 
@@ -2159,7 +2159,7 @@ public static class ComposeValidator
 
 #region 🖥️Weak Entities
 
-#region 📺Coordinate
+#region 📺️Coordinate
 // Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
 public class Coordinate : Entity<Coordinate>
@@ -2174,10 +2174,10 @@ public class Coordinate : Entity<Coordinate>
     }
 }
 
-#endregion 📺Coordinate
+#endregion 📺️Coordinate
 
 
-#region 📦MoveVector
+#region 📦️MoveVector
 // Implementations MUST carry gap/shift/rise deltas in the piece plane frame for move operations.
 
 public class MoveVector
@@ -2187,7 +2187,7 @@ public class MoveVector
     public double Rise { get; set; }
 }
 
-#endregion 📦MoveVector
+#endregion 📦️MoveVector
 
 
 
@@ -2248,7 +2248,7 @@ public class Vector : Entity<Vector>
 
 
 
-#region ◻️Plane
+#region ◻Plane
 // Implementations MUST define a 3D plane by origin and X/Y direction vectors.
 
 public class Plane : Entity<Plane>
@@ -2279,7 +2279,7 @@ public class Plane : Entity<Plane>
     }
 }
 
-#endregion ◻️Plane
+#endregion ◻Plane
 
 
 
@@ -2431,7 +2431,7 @@ public class KitModification
     public KitId Kit { get; set; } = new();
     public KitDiff? Diff { get; set; }
 }
-/// <summary>💿Change holds the data fields for a Change record.</summary>
+/// <summary>💿️Change holds the data fields for a Change record.</summary>
 public class Change<TEntity, TDiff>
 {
     public TDiff Forward { get; set; } = default!;
@@ -2464,9 +2464,9 @@ public class StatChange : Change<Stat, StatDiff> { }
 public class DesignChange : Change<Design, DesignDiff> { }
 public class KitChange : Change<Kit, KitDiff> { }
 
-#region 🎯ComposeReport
+#region 🎯️ComposeReport
 
-/// <summary>📋Human-readable note on a ComposeReport.</summary>
+/// <summary>📋️Human-readable note on a ComposeReport.</summary>
 public sealed class OperationNote
 {
     [JsonProperty("code")]
@@ -2475,7 +2475,7 @@ public sealed class OperationNote
     public string Message { get; set; } = "";
 }
 
-/// <summary>📋Canonical algorithm output: ok, diff, warnings, infos, errors.</summary>
+/// <summary>📋️Canonical algorithm output: ok, diff, warnings, infos, errors.</summary>
 public sealed class ComposeReport<TDiff>
 {
     [JsonProperty("ok")]
@@ -2496,9 +2496,9 @@ public sealed class ComposeReport<TDiff>
         new() { Ok = false, Diff = default, Warnings = new List<OperationNote>(), Infos = new List<OperationNote>(), Errors = errors };
 }
 
-#endregion 🎯ComposeReport
+#endregion 🎯️ComposeReport
 
-#region 💎Attribute
+#region 💎️Attribute
 // Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeId : Entity<AttributeId>
@@ -2624,10 +2624,10 @@ public class Attribute : Entity<Attribute>
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
 
-#endregion 💎Attribute
+#endregion 💎️Attribute
 
 
-#region 📍Location
+#region 📍️Location
 // Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationId : Entity<LocationId>
@@ -2651,7 +2651,7 @@ public class Location : Entity<Location>
     public override string ToString() => $"Loc({ToHumanIdString()})";
 }
 
-#endregion 📍Location
+#endregion 📍️Location
 
 
 
@@ -2783,7 +2783,7 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 
 
 
-#region 📄File
+#region 📄️File
 // Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileId : Entity<FileId>
@@ -2890,14 +2890,14 @@ public class File : Entity<File>
     public static implicit operator File(FileDiff diff) => new() { Id = diff.Id ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, Blob = diff.Blob, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, ModificationdAt = diff.ModificationdAt ?? default, ModificationdBy = diff.ModificationdBy };
     public static implicit operator FileDiff(File file) => new() { Id = file.Id, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, Blob = file.Blob, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, ModificationdAt = file.ModificationdAt, ModificationdBy = file.ModificationdBy };
 }
-#endregion 📄File
+#endregion 📄️File
 
 
 
 
 
 
-#region 📁Folder
+#region 📁️Folder
 // Implementations MUST reference a folder with name and optional parent.
 
 public class FolderId : Entity<FolderId>
@@ -3007,14 +3007,14 @@ public class Folder : Entity<Folder>
     }
 }
 
-#endregion 📁Folder
+#endregion 📁️Folder
 
 
 
 
 
 
-#region 📏Benchmark
+#region 📏️Benchmark
 // Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkId : Entity<BenchmarkId>
@@ -3072,7 +3072,7 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 📏Benchmark
+#endregion 📏️Benchmark
 
 
 
@@ -3100,7 +3100,7 @@ public enum QualityKind
 
 
 
-#region 🔬Quality
+#region 🔬️Quality
 // Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityId : Entity<QualityId>
@@ -3184,14 +3184,14 @@ public class Quality : Entity<Quality>
 
 }
 
-#endregion 🔬Quality
+#endregion 🔬️Quality
 
 
 
 
 
 
-#region ⚓Port
+#region ⚓️Port
 // Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortId : Entity<PortId>
@@ -3307,14 +3307,14 @@ public class Port : Entity<Port>
     }
 }
 
-#endregion ⚓Port
+#endregion ⚓️Port
 
 
 
 
 
 
-#region 📊Prop
+#region 📊️Prop
 // Implementations MUST bind a property name to an expression value.
 
 public class PropId : Entity<PropId>
@@ -3361,7 +3361,7 @@ public class PropDiff : Entity<PropDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 📊Prop
+#endregion 📊️Prop
 
 
 
@@ -3432,7 +3432,7 @@ public class TagsDiff : Entity<TagsDiff>
 
 
 
-#region 💡Concept
+#region 💡️Concept
 // Implementations MUST link a semantic concept name to description and icon.
 
 public class ConceptId : Entity<ConceptId>
@@ -3499,14 +3499,14 @@ public class ConceptsDiff : Entity<ConceptsDiff>
     }
 }
 
-#endregion 💡Concept
+#endregion 💡️Concept
 
 
 
 
 
 
-#region 🗿Representation
+#region 🗿️Representation
 // Implementations MUST reference a 3D representation with URI, MIME type, and local plane.
 
 public class RepresentationId : Entity<RepresentationId>
@@ -3660,14 +3660,14 @@ public class Representation : Entity<Representation>
     }
 }
 
-#endregion 🗿Representation
+#endregion 🗿️Representation
 
 
 
 
 
 
-#region 🔌Connector
+#region 🔌️Connector
 // Implementations MUST define located interface points on a type.
 
 public class ConnectorId : Entity<ConnectorId>
@@ -3952,7 +3952,7 @@ public class Connector : Entity<Connector>
     }
 }
 
-#endregion 🔌Connector
+#endregion 🔌️Connector
 
 
 
@@ -4005,7 +4005,7 @@ public class Typology : Entity<Typology>
 
 #endregion 🏛️Typology
 
-#region 🧱Type
+#region 🧱️Type
 // Implementations MUST compose ports, connectors, and representations into a parametric type.
 
 public class TypeId : Entity<TypeId>
@@ -4383,14 +4383,14 @@ public class Type : Entity<Type>
     }
 }
 
-#endregion 🧱Type
+#endregion 🧱️Type
 
 
 
 
 
 
-#region 🎨Layer
+#region 🎨️Layer
 // Implementations MUST organize pieces into named layers within a design.
 
 public class LayerId : Entity<LayerId>
@@ -4445,14 +4445,14 @@ public class LayerDiff : Entity<LayerDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 🎨Layer
+#endregion 🎨️Layer
 
 
 
 
 
 
-#region 🧩Piece
+#region 🧩️Piece
 // Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceId : Entity<PieceId>
@@ -4616,14 +4616,14 @@ public class Piece : Entity<Piece>
     }
 }
 
-#endregion 🧩Piece
+#endregion 🧩️Piece
 
 
 
 
 
 
-#region 👥Group
+#region 👥️Group
 // Implementations MUST group pieces by name within a design.
 
 public class GroupId : Entity<GroupId>
@@ -4674,13 +4674,13 @@ public class GroupDiff : Entity<GroupDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion 👥Group
+#endregion 👥️Group
 
 
 
 
 
-#region ↔️Side
+#region ↔Side
 // Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideDiff : Entity<SideDiff>
@@ -4774,14 +4774,14 @@ public class Side : Entity<Side>
     public override string ToString() => $"Sde({Piece.Id}" + (Connector.Id != "" ? ":" + Connector.Id : "") + ")";
 }
 
-#endregion ↔️Side
+#endregion ↔Side
 
 
 
 
 
 
-#region 🔗Connection
+#region 🔗️Connection
 // Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionId : Entity<ConnectionId>
@@ -5056,14 +5056,14 @@ public class Connection : Entity<Connection>
     }
 }
 
-#endregion 🔗Connection
+#endregion 🔗️Connection
 
 
 
 
 
 
-#region 📈Stat
+#region 📈️Stat
 // Implementations MUST associate statistical metrics with a design.
 
 public class StatId : Entity<StatId>
@@ -5118,14 +5118,14 @@ public class StatDiff : Entity<StatDiff>
     public bool ShouldSerializeMaxExcluded() => _setProperties.Contains("MaxExcluded");
 }
 
-#endregion 📈Stat
+#endregion 📈️Stat
 
 
 
 
 
 
-#region 📐Design
+#region 📐️Design
 // Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignsDiff : Entity<DesignsDiff>
@@ -7084,7 +7084,7 @@ text {
     }
 
     /// <summary>
-    /// 📋Copies a selection of pieces and connections from a design into a standalone design.
+    /// 📋️Copies a selection of pieces and connections from a design into a standalone design.
     /// </summary>
     /// <remarks>
     /// Specs: A selection is a set of piece ids and connection ids.
@@ -7227,7 +7227,7 @@ text {
     }
 
     /// <summary>
-    /// 📋Pastes a copied design into a target design, returning a DesignDiff.
+    /// 📋️Pastes a copied design into a target design, returning a DesignDiff.
     /// </summary>
     /// <remarks>
     /// Specs: Anchoring determines the reference point within the bounding rectangle of the source.
@@ -7579,7 +7579,7 @@ text {
     }
 }
 
-#endregion 📐Design
+#endregion 📐️Design
 
 
 
@@ -7589,7 +7589,7 @@ text {
 #region ⏱️Kit
 // Implementations MUST collect types and designs into a reusable library.
 
-#region 🧬KitKind
+#region 🧬️KitKind
 // KitKind discriminates the five persistence/transport forms of a Kit.
 
 /// <summary>
@@ -7618,14 +7618,14 @@ public enum KitKind
     Transport
 }
 
-/// <summary>🔷Helpers for KitKind.</summary>
+/// <summary>🔷️Helpers for KitKind.</summary>
 public static class KitKinds
 {
-    /// <summary>🔑All valid KitKind values.</summary>
+    /// <summary>🔑️All valid KitKind values.</summary>
     public static readonly KitKind[] All = (KitKind[])Enum.GetValues(typeof(KitKind));
 }
 
-#endregion 🧬KitKind
+#endregion 🧬️KitKind
 
 public class KitDiff : Entity<KitDiff>
 {
@@ -8234,7 +8234,7 @@ public partial class Kit : Entity<Kit>
         };
     }
 
-    #region 📻Design Family Helpers
+    #region 📻️Design Family Helpers
     // Callers MUST use these helpers to traverse design parent-child hierarchies.
 
     public static Design FindDesignById(Kit kit, string designId)
@@ -8293,9 +8293,9 @@ public partial class Kit : Entity<Kit>
             .ToList();
     }
 
-    #endregion 📻Design Family Helpers
+    #endregion 📻️Design Family Helpers
 
-    #region 🧊Type Family Helpers
+    #region 🧊️Type Family Helpers
     // Callers MUST use these helpers to traverse type parent-child hierarchies.
 
     public static Type FindTypeById(Kit kit, string typeId)
@@ -8341,9 +8341,9 @@ public partial class Kit : Entity<Kit>
         return primitiveA.Id == primitiveB.Id;
     }
 
-    #endregion 🧊Type Family Helpers
+    #endregion 🧊️Type Family Helpers
 
-    #region 🔍Kit Finders
+    #region 🔍️Kit Finders
     // Callers MUST use these methods to locate entities within a kit by ID.
 
     public static File FindFile(Kit kit, string fileId)
@@ -8546,19 +8546,19 @@ public partial class Kit : Entity<Kit>
         return sum;
     }
 
-    #endregion 🔍Kit Finders
+    #endregion 🔍️Kit Finders
 
-    #region 🎠Filter
+    #region 🎠️Filter
     // Filter MUST provide functions to produce a minimal kit subset scoped to a single design.
 
-    /// <summary>🧩Glob filter with include and exclude patterns for name-based entity filtering.</summary>
+    /// <summary>🧩️Glob filter with include and exclude patterns for name-based entity filtering.</summary>
     public class GlobFilter
     {
         public List<string>? Include { get; set; }
         public List<string>? Exclude { get; set; }
     }
 
-    /// <summary>🧹General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.</summary>
+    /// <summary>🧹️General-purpose kit filter combining design-based transitive filtering with glob-based name filtering.</summary>
     public class KitFilter
     {
         public string? DesignId { get; set; }
@@ -8574,7 +8574,7 @@ public partial class Kit : Entity<Kit>
         public GlobFilter? Folders { get; set; }
     }
 
-    /// <summary>🔤Matches a name against a glob pattern supporting * and ?. Case-insensitive.</summary>
+    /// <summary>🔤️Matches a name against a glob pattern supporting * and ?. Case-insensitive.</summary>
     public static bool GlobMatch(string name, string pattern)
     {
         var regexStr = "^";
@@ -8591,7 +8591,7 @@ public partial class Kit : Entity<Kit>
         return System.Text.RegularExpressions.Regex.IsMatch(name, regexStr, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 
-    /// <summary>🧪Checks if a name passes a GlobFilter.</summary>
+    /// <summary>🧪️Checks if a name passes a GlobFilter.</summary>
     public static bool MatchesGlobFilter(string name, GlobFilter? filter)
     {
         if (filter == null) return true;
@@ -8600,7 +8600,7 @@ public partial class Kit : Entity<Kit>
         return true;
     }
 
-    /// <summary>📐Filters a kit to only include entities related to a specific design.</summary>
+    /// <summary>📐️Filters a kit to only include entities related to a specific design.</summary>
     /// <remarks>
     /// Removes types not used by pieces, designs not used by pieces, ports not used by connectors of used types,
     /// files not used by selected representations, and keeps at most one representation per type according to the optional tags.
@@ -8728,7 +8728,7 @@ public partial class Kit : Entity<Kit>
         };
     }
 
-    /// <summary>❓General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.</summary>
+    /// <summary>❓️General-purpose kit filter combining optional design-based transitive filtering with glob-based name filtering.</summary>
     /// <remarks>
     /// </remarks>
     public static Kit FilterKit(Kit kit, KitFilter filter)
@@ -8770,7 +8770,7 @@ public partial class Kit : Entity<Kit>
         };
     }
 
-    #endregion 🎠Filter
+    #endregion 🎠️Filter
 }
 
 #endregion ⏱️Kit
@@ -8781,10 +8781,10 @@ public partial class Kit
 }
 
 
-#region 🔑Meta And Shallow
+#region 🔑️Meta And Shallow
 // Meta classes strip List<> and heavy blob properties. Shallow classes replace List<> properties with Meta item lists.
 
-#region 🎼Sub-entity Meta
+#region 🎼️Sub-entity Meta
 
 public class AttributeMeta
 {
@@ -8965,9 +8965,9 @@ public class StatMeta
     public bool? MaxExcluded { get; set; }
 }
 
-#endregion 🎼Sub-entity Meta
+#endregion 🎼️Sub-entity Meta
 
-#region 🪁TypeMetaShallow
+#region 🪁️TypeMetaShallow
 
 public class TypeMeta
 {
@@ -9013,9 +9013,9 @@ public class TypeShallow
     public List<AttributeMeta> Attributes { get; set; } = new();
 }
 
-#endregion 🪁TypeMetaShallow
+#endregion 🪁️TypeMetaShallow
 
-#region ✨DesignMetaShallow
+#region ✨️DesignMetaShallow
 
 public class DesignMeta
 {
@@ -9064,7 +9064,7 @@ public class DesignShallow
     public List<ConceptId> Concepts { get; set; } = new();
 }
 
-#endregion ✨DesignMetaShallow
+#endregion ✨️DesignMetaShallow
 
 #region 🏗️KitMetaShallow
 
@@ -9112,7 +9112,7 @@ public class KitShallow
 
 #endregion 🏗️KitMetaShallow
 
-#region 📎Meta And Shallow Conversions
+#region 📎️Meta And Shallow Conversions
 
 public static class MetaShallowConversions
 {
@@ -9427,9 +9427,9 @@ public static class MetaShallowConversions
     };
 }
 
-#endregion 📎Meta And Shallow Conversions
+#endregion 📎️Meta And Shallow Conversions
 
-#endregion 🔑Meta And Shallow
+#endregion 🔑️Meta And Shallow
 
 
 
@@ -10645,7 +10645,7 @@ public static class Hashing
         return w.Digest();
     }
 
-    // #region 🔗Hash Diffs
+    // #region 🔗️Hash Diffs
     // Deterministic SHA-256 Merkle hash functions for all diff types.
     // Fields are ordered alphabetically by JSON field name. Id is excluded from
     // diff hashes. Null markers (field name + WriteBool(false)) indicate explicit
@@ -10726,7 +10726,7 @@ public static class Hashing
         return w.Digest();
     }
 
-    // #region 🐹Hash Diff Value Types
+    // #region 🐹️Hash Diff Value Types
 
     public static string HashCoordinateDiff(Coordinate c)
     {
@@ -10778,7 +10778,7 @@ public static class Hashing
         return w.Digest();
     }
 
-    // #endregion 🐹Hash Diff Value Types
+    // #endregion 🐹️Hash Diff Value Types
 
     // #region ⚗️Hash Diff Entities
 
@@ -11638,9 +11638,9 @@ public static class Hashing
 
     // #endregion ⚗️Hash Diff Entities
 
-    // #endregion 🔗Hash Diffs
+    // #endregion 🔗️Hash Diffs
 
-    // #region 🌳Flatten Merkle Hashes
+    // #region 🌳️Flatten Merkle Hashes
     // Per-piece merkle hashes for plane/center so cached flatten calls can reuse unchanged chains.
 
     internal static string HashFlatPlaneRoot(string id, Plane? plane)
@@ -11720,7 +11720,7 @@ public static class Hashing
         return w.Digest();
     }
 
-    // #endregion 🌳Flatten Merkle Hashes
+    // #endregion 🌳️Flatten Merkle Hashes
 }
 
 #endregion 🖥️Hash
@@ -11729,7 +11729,7 @@ public static class Hashing
 
 
 
-#region 🎪Api
+#region 🎪️Api
 // Callers MUST use these methods to communicate with the compose engine.
 
 public class PredictDesignBody
@@ -11854,14 +11854,14 @@ public class ServerException : Exception
     public ServerException(string message) : base(message) { }
 }
 
-#endregion 🎪Api
+#endregion 🎪️Api
 
 
 
 
 
 
-#region 📦Kit Diff Validation
+#region 📦️Kit Diff Validation
 
 public sealed class KitDiffValidationNote
 {
@@ -11881,17 +11881,17 @@ public sealed class KitDiffValidationResult
     public KitDiff? Diff { get; set; }
 }
 
-#endregion 📦Kit Diff Validation
+#endregion 📦️Kit Diff Validation
 
 
-#region 🔍Find Replaceable Types In Designs
+#region 🔍️Find Replaceable Types In Designs
 // Find Replaceable Types In Designs MUST find all types and designs that can replace selected pieces in a design.
 // Specs: For each external connection, get ALL connector ports of the other piece's type, compute compatible port set, candidate must have connector in set for every connection.
 
 public partial class Kit
 {
     /// <summary>
-    /// 🔍Finds all types and designs whose root type can replace the selected pieces in a design.
+    /// 🔍️Finds all types and designs whose root type can replace the selected pieces in a design.
     /// </summary>
     /// <remarks>
     /// Specs: Returns (typeIds, designIds). For connected pieces, checks port compatibility per external connection.
@@ -12090,20 +12090,20 @@ public partial class Kit
     }
 }
 
-#endregion 🔍Find Replaceable Types In Designs
+#endregion 🔍️Find Replaceable Types In Designs
 
 
 #region 🌤️Flatten Design
 // Callers MUST use FlattenDesign to compute a DesignDiff that assigns world-space planes to all pieces.
 
-/// <summary>🌳Per-piece merkle hash pair used to cache flattenDesign results and skip recomputation when inputs are unchanged.</summary>
+/// <summary>🌳️Per-piece merkle hash pair used to cache flattenDesign results and skip recomputation when inputs are unchanged.</summary>
 public sealed class FlatMerkleHashes
 {
     public string PlaneHash { get; set; } = "";
     public string CenterHash { get; set; } = "";
 }
 
-/// <summary>🧠FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center so incremental flatten calls can reuse unchanged values.</summary>
+/// <summary>🧠️FlatMerkleCacheEntry bundles a piece's merkle hashes with its cached plane/center so incremental flatten calls can reuse unchanged values.</summary>
 public sealed class FlatMerkleCacheEntry
 {
     public string PlaneHash { get; set; } = "";
@@ -12446,7 +12446,7 @@ public partial class Kit
         return ComposeReport<DesignChange>.Success(change, new List<OperationNote>(), new List<OperationNote>());
     }
 
-    #region 🌳Flatten Merkle Hashes
+    #region 🌳️Flatten Merkle Hashes
     // Per-piece {PlaneHash, CenterHash} merkle hashes so incremental FlattenDesign calls can reuse cached planes/centers when the chain inputs are unchanged.
 
     public static Dictionary<string, FlatMerkleHashes> ComputeFlatHashes(Kit kit, string designId)
@@ -12650,7 +12650,7 @@ public partial class Kit
         return (report, nextCache);
     }
 
-    #endregion 🌳Flatten Merkle Hashes
+    #endregion 🌳️Flatten Merkle Hashes
 
     public static DesignDiff ReplaceClusterWithDesign(Design originalDesign, List<string> clusterPieceIds, Design clusteredDesign, List<Connection> externalConnections)
     {
@@ -12690,13 +12690,13 @@ public partial class Kit
 
 #endregion 🌤️Flatten Design
 
-#region 🔩Kit Representation Export
+#region 🔩️Kit Representation Export
 // Callers MUST use ExportDesignRepresentation to produce a valid 3D file from a design.
 
 public partial class Kit
 {
 
-    /// <summary>📺Supported export formats keyed by file extension.</summary>
+    /// <summary>📺️Supported export formats keyed by file extension.</summary>
     public static Dictionary<string, string> ExportRepresentationFormats => new()
     {
         { ".glb", "GL Transmission Format Binary" },
@@ -12907,7 +12907,7 @@ public partial class Kit
         return ExportSceneBuilderToFormat(sceneBuilder, format);
     }
 
-    #region 🔧Kit Representation Export Helpers
+    #region 🔧️Kit Representation Export Helpers
 
     private static System.Numerics.Matrix4x4 ExportPlaneToMatrix4x4(Plane p)
     {
@@ -13140,7 +13140,7 @@ public partial class Kit
     #region ❄️Geometric Insights
     // Key performance indicators for GLB/GLTF representation geometry. Representation MUST be glb/gltf.
 
-    /// <summary>🔷Geometric KPIs for a GLB/GLTF representation in compose coordinate system (compose x=glb x, compose y=-glb x, compose z=glb y).</summary>
+    /// <summary>🔷️Geometric KPIs for a GLB/GLTF representation in compose coordinate system (compose x=glb x, compose y=-glb x, compose z=glb y).</summary>
     public class GeometricInsights
     {
         public Point? BoundingBoxMin { get; set; }
@@ -13423,17 +13423,17 @@ public partial class Kit
             ExportNodeToStlTriangles(child, worldMatrix, triangles);
     }
 
-    #endregion 🔧Kit Representation Export Helpers
+    #endregion 🔧️Kit Representation Export Helpers
 }
 
-#endregion 🔩Kit Representation Export
+#endregion 🔩️Kit Representation Export
 
 
 
 
 
 
-#region 🎪ZipRoundtrip
+#region 🎪️ZipRoundtrip
 // Callers MUST use these methods to import and export kits as ZIP archives.
 
 public class KitImportResult
@@ -13539,16 +13539,16 @@ public static class ZipRoundtrip
 
 }
 
-#endregion 🎪ZipRoundtrip
+#endregion 🎪️ZipRoundtrip
 
 
 
 
 
-#region 📋TransportKit
+#region 📋️TransportKit
 // Callers MUST use TransportKit to wrap serialized kit payloads for transport.
 
-/// <summary>📋 Wraps static JSON kit payloads for serialization and deserialization.</summary>
+/// <summary>📋️ Wraps static JSON kit payloads for serialization and deserialization.</summary>
 public class TransportKit
 {
     public string Json { get; }
@@ -13570,16 +13570,16 @@ public class TransportKit
     }
 }
 
-#endregion 📋TransportKit
+#endregion 📋️TransportKit
 
 
 
 
 
-#region 🔄ISyncKit
+#region 🔄️ISyncKit
 // Callers MUST implement ISyncKit for synchronized kit workflows.
 
-/// <summary>🔄 Contract for synchronized kit workflows.</summary>
+/// <summary>🔄️ Contract for synchronized kit workflows.</summary>
 public interface ISyncKit
 {
     Kit Kit { get; }
@@ -13589,16 +13589,16 @@ public interface ISyncKit
     void Close();
 }
 
-#endregion 🔄ISyncKit
+#endregion 🔄️ISyncKit
 
 
 
 
 
-#region 🧪DevKit
+#region 🧪️DevKit
 // Callers MUST use DevKit for synchronized JSON file kit workflows.
 
-/// <summary>📝 Synchronized JSON file kit.</summary>
+/// <summary>📝️ Synchronized JSON file kit.</summary>
 public class DevKit : ISyncKit
 {
     private readonly Kit _kit;
@@ -13639,16 +13639,16 @@ public class DevKit : ISyncKit
     public static Kit EditDevKit(string path, KitDiff diff) => Edit(path, diff);
 }
 
-#endregion 🧪DevKit
+#endregion 🧪️DevKit
 
 
 
 
 
-#region 🏡LocalKit
+#region 🏡️LocalKit
 // Callers MUST use LocalKit for synchronized local folder kit workflows.
 
-/// <summary>📂 Synchronized local folder kit (materialized via compose-gql).</summary>
+/// <summary>📂️ Synchronized local folder kit (materialized via compose-gql).</summary>
 public class LocalKit : ISyncKit
 {
     private readonly Kit _kit;
@@ -13687,14 +13687,14 @@ public class LocalKit : ISyncKit
     public static Kit EditLocalKit(string folderPath, KitDiff diff) => Edit(folderPath, diff);
 }
 
-#endregion 🏡LocalKit
+#endregion 🏡️LocalKit
 
 
 
 
 
 
-#region 📷FileKit
+#region 📷️FileKit
 // Callers MUST use FileKit for JSON file kit import, export, and edit operations.
 
 public static class FileKit
@@ -13711,14 +13711,14 @@ public static class FileKit
     }
 }
 
-#endregion 📷FileKit
+#endregion 📷️FileKit
 
 
 
 
 
 
-#region 🏰FolderKit
+#region 🏰️FolderKit
 // Callers MUST use FolderKit for local folder kit import, export, and edit operations.
 
 public static class FolderKit
@@ -13807,14 +13807,14 @@ public static class FolderKit
     }
 }
 
-#endregion 🏰FolderKit
+#endregion 🏰️FolderKit
 
 
 
 
 
 
-#region 📐ArchiveKit
+#region 📐️ArchiveKit
 // Callers MUST use ArchiveKit for ZIP archive import, export, and edit operations.
 
 public class ArchiveKit
@@ -13839,14 +13839,14 @@ public class ArchiveKit
     }
 }
 
-#endregion 📐ArchiveKit
+#endregion 📐️ArchiveKit
 
 
 
 
 
 
-#region 🎆RemoteKit
+#region 🎆️RemoteKit
 // Callers MUST use RemoteKit for HTTP-based JSON and ZIP kit import and in-memory edits.
 
 public class RemoteKit : ISyncKit
@@ -13907,14 +13907,14 @@ public class RemoteKit : ISyncKit
     }
 }
 
-#endregion 🎆RemoteKit
+#endregion 🎆️RemoteKit
 
 
 
 
 
 
-#region 🔤TemporaryKit
+#region 🔤️TemporaryKit
 // Callers MUST use TemporaryKit for in-memory kit edits without persistence.
 
 public static class TemporaryKit
@@ -13929,14 +13929,14 @@ public static class TemporaryKit
     public static Kit EditTemporaryKit(Kit kit, KitDiff diff) => Edit(kit, diff);
 }
 
-#endregion 🔤TemporaryKit
+#endregion 🔤️TemporaryKit
 
 
 
 
 
 
-#region 📦KitImporter
+#region 📦️KitImporter
 // Callers MUST use ImportFromZip for high-level kit import.
 
 public static class KitImporter
@@ -13947,14 +13947,14 @@ public static class KitImporter
     }
 }
 
-#endregion 📦KitImporter
+#endregion 📦️KitImporter
 
 
 
 
 
 
-#region 🪁KitExporter
+#region 🪁️KitExporter
 // Callers MUST use ExportToZip for high-level kit export.
 
 public static class KitExporter
@@ -13965,9 +13965,9 @@ public static class KitExporter
     }
 }
 
-#endregion 🪁KitExporter
+#endregion 🪁️KitExporter
 
-//#region 🔀ComposeDiff
+//#region 🔀️ComposeDiff
 /// <summary>Kit diff validation, <see cref="AreKitsEqual"/> (normalized JSON), and canonical <see cref="KitDiff"/> JSON comparison.</summary>
 public static class ComposeDiff
 {
@@ -14412,10 +14412,10 @@ public static class ComposeDiff
         }
     }
 }
-//#endregion 🔀ComposeDiff
+//#endregion 🔀️ComposeDiff
 
 
-//#region 🔧KitInPlaceDiff
+//#region 🔧️KitInPlaceDiff
 /// <summary>In-place application of a <see cref="KitDiff"/> to a <see cref="Kit"/> (host-side, no persistence).</summary>
 public static class KitInPlaceDiff
 {
@@ -14932,10 +14932,10 @@ public static class KitInPlaceDiff
             connections.AddRange(diff.Added);
     }
 }
-//#endregion 🔧KitInPlaceDiff
+//#endregion 🔧️KitInPlaceDiff
 
 
-//#region 📥KitState
+//#region 📥️KitState
 /// <summary>Replace all fields of an existing <see cref="Kit"/> instance in-place (used by transport sync without computing a <see cref="KitDiff"/>).</summary>
 public static class KitState
 {
@@ -14970,19 +14970,19 @@ public static class KitState
         target.ModificationdAt = source.ModificationdAt;
     }
 }
-//#endregion 📥KitState
+//#endregion 📥️KitState
 
 
 //#region 🗄️Store
 namespace Store
 {
     //#region Events
-/// <summary>📡 Command notifications for a {@link StoreSession} (mirrors compose/js {@code EventBus} command kinds).</summary>
+/// <summary>📡️ Command notifications for a {@link StoreSession} (mirrors compose/js {@code EventBus} command kinds).</summary>
 public sealed class StoreEventBus
 {
     private readonly Dictionary<string, List<Action>> _kindHandlers = new(StringComparer.Ordinal);
 
-    /// <summary>📡 Fires after any kit command mutation succeeds.</summary>
+    /// <summary>📡️ Fires after any kit command mutation succeeds.</summary>
     public event Action? CommandSucceeded;
 
     public void SubscribeKind(string kind, Action handler)
@@ -15018,7 +15018,7 @@ public sealed class StoreEventBus
     }
 }
 
-/// <summary>📡 Subscribes {@link StoreSession} bus events.</summary>
+/// <summary>📡️ Subscribes {@link StoreSession} bus events.</summary>
 public static class StoreEventBridge
 {
     public static void SubscribeCommandSucceeded(StoreSession session, Action handler) =>
@@ -15027,7 +15027,7 @@ public static class StoreEventBridge
     //#endregion Events
 
     //#region StoreGraphqlSelection
-/// <summary>📬 Kit command selection helpers — mirrors <c>compose/js/graphql-kit-selection.ts</c>.</summary>
+/// <summary>📬️ Kit command selection helpers — mirrors <c>compose/js/graphql-kit-selection.ts</c>.</summary>
 internal static class StoreGraphqlSelection
 {
     internal static string WithResponse(string kitSelection, string responseSelection)
@@ -15147,11 +15147,11 @@ internal static class StoreGraphqlSelection
     //#endregion StoreGraphqlSelection
 
     //#region StoreGraphql
-//#region 🌐Wire
-/// <summary>🌐 GraphQL-over-HTTP wire helpers aligned with <c>compose/js</c> (<c>graphqlWirePostBodyJson</c>, operation-kind guard).</summary>
+//#region 🌐️Wire
+/// <summary>🌐️ GraphQL-over-HTTP wire helpers aligned with <c>compose/js</c> (<c>graphqlWirePostBodyJson</c>, operation-kind guard).</summary>
 public static class StoreGraphqlWire
 {
-    /// <summary>🧵 Canonical POST body: <c>query</c>, <c>variables</c>, <c>operationName</c> always present.</summary>
+    /// <summary>🧵️ Canonical POST body: <c>query</c>, <c>variables</c>, <c>operationName</c> always present.</summary>
     public static string PostBodyJson(string query, JObject? variables = null, string? operationName = null) =>
         ComposeJson.Codec.Serialize(new JObject
         {
@@ -15160,7 +15160,7 @@ public static class StoreGraphqlWire
             ["operationName"] = operationName == null ? JValue.CreateNull() : operationName,
         });
 
-    /// <summary>🛑 Enforces golden-schema split: <c>Query</c> vs <c>Mutation</c> roots only.</summary>
+    /// <summary>🛑️ Enforces golden-schema split: <c>Query</c> vs <c>Mutation</c> roots only.</summary>
     public static void AssertOperationKind(string document, string kind)
     {
         var rest = document.TrimStart();
@@ -15181,7 +15181,7 @@ public static class StoreGraphqlWire
             throw new IOException($"graphql: expected {kind}, got {head}");
     }
 
-    /// <summary>📬 Unwraps <c>data</c> or throws on GraphQL <c>errors</c>.</summary>
+    /// <summary>📬️ Unwraps <c>data</c> or throws on GraphQL <c>errors</c>.</summary>
     public static JToken UnwrapData(JToken response)
     {
         if (response is not JObject o) throw new IOException("graphql: response is not an object");
@@ -15195,36 +15195,36 @@ public static class StoreGraphqlWire
         return data;
     }
 }
-//#endregion 🌐Wire
+//#endregion 🌐️Wire
 
-//#region 🌐Documents
-/// <summary>🌐 Golden-schema GraphQL documents aligned with <c>compose/js</c> (<c>schema.golden.graphql</c>).</summary>
+//#region 🌐️Documents
+/// <summary>🌐️ Golden-schema GraphQL documents aligned with <c>compose/js</c> (<c>schema.golden.graphql</c>).</summary>
 public static class StoreGraphql
 {
-    /// <summary>📬 <c>Response</c> selection on command mutation leaves.</summary>
+    /// <summary>📬️ <c>Response</c> selection on command mutation leaves.</summary>
     public const string ResponseSelection =
         "ok errors { kind message requestId } result { ... on IdResult { value } }";
 
-    /// <summary>🧭 Store entry query — mirrors <c>KIT_SESSION_QUERY_ENTRY</c> in compose/js.</summary>
+    /// <summary>🧭️ Store entry query — mirrors <c>KIT_SESSION_QUERY_ENTRY</c> in compose/js.</summary>
     public const string KitSessionQueryEntry =
         "query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }";
 
-    /// <summary>🧵 GraphQL string literal for variables.</summary>
+    /// <summary>🧵️ GraphQL string literal for variables.</summary>
     public static string GqlString(string s) => ComposeJson.Codec.Serialize(s);
 
-    /// <summary>🧵 GraphQL ID list literal.</summary>
+    /// <summary>🧵️ GraphQL ID list literal.</summary>
     public static string GqlIdList(IEnumerable<string> ids) =>
         "[" + string.Join(", ", ids.Select(GqlString)) + "]";
 
-    /// <summary>📖 <c>session.stores → wip.theKit.kit</c> read (theKit head).</summary>
+    /// <summary>📖️ <c>session.stores → wip.theKit.kit</c> read (theKit head).</summary>
     public static string KitSessionWipKitQuery(string kitSelection) =>
         $"query KitSessionWipStore {{ session {{ stores {{ edges {{ cursor node {{ wip {{ theKit {{ kit {{ {kitSelection} }} }} }} }} }} }} }} }}";
 
-    /// <summary>📖 <c>session.stores → node</c> store branch read.</summary>
+    /// <summary>📖️ <c>session.stores → node</c> store branch read.</summary>
     public static string SessionStoreNodeQuery(string innerOnStore) =>
         $"query Stores {{ session {{ stores {{ edges {{ cursor node {{ {innerOnStore} }} }} }} }} }}";
 
-    /// <summary>📖 WIP materialization: <c>initialKit</c>, <c>theKit.kit</c>, checkpoint anchors.</summary>
+    /// <summary>📖️ WIP materialization: <c>initialKit</c>, <c>theKit.kit</c>, checkpoint anchors.</summary>
     public static string KitWipMaterializationQuery() =>
         @"query KitMaterialization {
   session {
@@ -15280,14 +15280,14 @@ public static class StoreGraphql
     public static (string Query, JObject Variables) RenameKitMutation(string storeId, string changeId, string newName) =>
         ScopedKitMutation(storeId, changeId, $"rename(newName: {GqlString(newName)})");
 
-    /// <summary>📬 Appends {@link ResponseSelection} to the innermost kit command field (mirrors compose/js <c>withResponseSelection</c>).</summary>
+    /// <summary>📬️ Appends {@link ResponseSelection} to the innermost kit command field (mirrors compose/js <c>withResponseSelection</c>).</summary>
     public static string WithResponseSelection(string kitSelection) =>
         StoreGraphqlSelection.WithResponse(kitSelection, ResponseSelection);
 }
-//#endregion 🌐Documents
+//#endregion 🌐️Documents
 
-//#region 🌐JsonPaths
-/// <summary>🧩 JSON-path helpers for golden <c>session → stores → wip → theKit → kit</c> reads.</summary>
+//#region 🌐️JsonPaths
+/// <summary>🧩️ JSON-path helpers for golden <c>session → stores → wip → theKit → kit</c> reads.</summary>
 public static class StoreGraphqlJson
 {
     public static string WipPath(int storeIndex = 0) => $"session.stores.edges[{storeIndex}].node.wip";
@@ -15332,7 +15332,7 @@ public static class StoreGraphqlJson
     public static string? ResponseResultId(JToken? responseNode) =>
         responseNode?["result"]?["value"]?.Value<string>();
 
-    /// <summary>📬 Throws when <c>Response.ok</c> is false.</summary>
+    /// <summary>📬️ Throws when <c>Response.ok</c> is false.</summary>
     public static void AssertResponseOk(JToken? responseNode, string label)
     {
         if (responseNode is not JObject o) return;
@@ -15343,7 +15343,7 @@ public static class StoreGraphqlJson
         }
     }
 
-    /// <summary>📬 Finds the first <c>Response</c> node under <c>unsavedChange.kit</c> (supports aliased design commands).</summary>
+    /// <summary>📬️ Finds the first <c>Response</c> node under <c>unsavedChange.kit</c> (supports aliased design commands).</summary>
     public static JToken? FindKitCommandResponse(JToken mutationData)
     {
         var kit = mutationData.SelectToken("session.store.theKit.unsavedChange.kit");
@@ -15362,11 +15362,11 @@ public static class StoreGraphqlJson
         return null;
     }
 }
-//#endregion 🌐JsonPaths
+//#endregion 🌐️JsonPaths
     //#endregion StoreGraphql
 
     //#region StoreClient
-/// <summary>🌐 Thin HTTP GraphQL client to <c>compose-gql</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>compose/js</c> <see cref="StoreSession.OpenHttp"/>.</summary>
+/// <summary>🌐️ Thin HTTP GraphQL client to <c>compose-gql</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>compose/js</c> <see cref="StoreSession.OpenHttp"/>.</summary>
 public sealed class StoreClient : IDisposable
 {
     private readonly string _binaryPath;
@@ -15463,7 +15463,7 @@ public sealed class StoreClient : IDisposable
         }
     }
 
-    /// <summary>📦 <c>POST /install</c> — exactly one install field per <c>compose-gql</c>.</summary>
+    /// <summary>📦️ <c>POST /install</c> — exactly one install field per <c>compose-gql</c>.</summary>
     internal void Install(JObject body)
     {
         var json = body.ToString(Formatting.None);
@@ -15475,7 +15475,7 @@ public sealed class StoreClient : IDisposable
         WarmGraphqlSession();
     }
 
-    /// <summary>🧾 Warm-path after install — <c>session.start</c> + store cursor probe (compose/js <c>warmGraphqlRead</c>).</summary>
+    /// <summary>🧾️ Warm-path after install — <c>session.start</c> + store cursor probe (compose/js <c>warmGraphqlRead</c>).</summary>
     internal void WarmGraphqlSession()
     {
         try
@@ -15489,7 +15489,7 @@ public sealed class StoreClient : IDisposable
         _ = ExecuteQuery(StoreGraphql.SessionStoresCursorsQuery());
     }
 
-    /// <summary>🪢 First <c>Session.stores.edges[].cursor</c> (store command scope id, typically <c>e0</c>).</summary>
+    /// <summary>🪢️ First <c>Session.stores.edges[].cursor</c> (store command scope id, typically <c>e0</c>).</summary>
     internal string DefaultStoreId()
     {
         var data = ExecuteQuery(StoreGraphql.SessionStoresCursorsQuery());
@@ -15499,7 +15499,7 @@ public sealed class StoreClient : IDisposable
         return id;
     }
 
-    /// <summary>📖 <c>POST /graphql</c> query root (<c>type Query</c>).</summary>
+    /// <summary>📖️ <c>POST /graphql</c> query root (<c>type Query</c>).</summary>
     internal JToken ExecuteQuery(string query, JObject? variables = null, string? operationName = null)
     {
         StoreGraphqlWire.AssertOperationKind(query, "query");
@@ -15549,7 +15549,7 @@ public sealed class StoreClient : IDisposable
     }
 }
 
-/// <summary>🧭 Thin GraphQL session over <see cref="StoreClient" /> (aligned with compose/js <c>Session</c> store surface).</summary>
+/// <summary>🧭️ Thin GraphQL session over <see cref="StoreClient" /> (aligned with compose/js <c>Session</c> store surface).</summary>
 public sealed class StoreSession : IDisposable
 {
     private readonly StoreClient _client;
@@ -15563,13 +15563,13 @@ public sealed class StoreSession : IDisposable
         Events = new StoreEventBus();
     }
 
-    /// <summary>📡 Command and field-change bus for this session.</summary>
+    /// <summary>📡️ Command and field-change bus for this session.</summary>
     public StoreEventBus Events { get; }
 
-    /// <summary>📦 WIP kit under <c>session.stores → wip.theKit.kit</c>.</summary>
+    /// <summary>📦️ WIP kit under <c>session.stores → wip.theKit.kit</c>.</summary>
     public WipKit Kit => _kit ??= new WipKit(this);
 
-    /// <summary>🌐 Opens against an existing <c>compose-gql</c> base URL (optional install-create first).</summary>
+    /// <summary>🌐️ Opens against an existing <c>compose-gql</c> base URL (optional install-create first).</summary>
     public static StoreSession OpenHttp(string baseUrl, JObject? installCreateDto = null)
     {
         var c = new StoreClient(baseUrl: baseUrl);
@@ -15581,25 +15581,25 @@ public sealed class StoreSession : IDisposable
         return session;
     }
 
-    /// <summary>🪢 Store command scope id (<c>Session.stores.edges[].cursor</c>, typically <c>e0</c>).</summary>
+    /// <summary>🪢️ Store command scope id (<c>Session.stores.edges[].cursor</c>, typically <c>e0</c>).</summary>
     public string StoreId => _storeId ??= _client.DefaultStoreId();
 
-    //#region 🎬 install commands
-    /// <summary>📦 <c>POST /install</c> with <c>create.dto</c>.</summary>
+    //#region 🎬️ install commands
+    /// <summary>📦️ <c>POST /install</c> with <c>create.dto</c>.</summary>
     public void InstallCreate(JObject dto) =>
         _client.Install(new JObject { ["create"] = new JObject { ["dto"] = dto } });
 
-    /// <summary>📥 <c>POST /install</c> with normalized initial-kit projection (<see cref="StoreKitIO.KitToInstallProjection"/>).</summary>
+    /// <summary>📥️ <c>POST /install</c> with normalized initial-kit projection (<see cref="StoreKitIO.KitToInstallProjection"/>).</summary>
     public void InstallProjection(Kit kit) =>
         InstallCreate(StoreKitIO.KitToInstallProjection(kit));
 
-    /// <summary>📦 <c>POST /install</c> with <c>importFile.path</c>.</summary>
+    /// <summary>📦️ <c>POST /install</c> with <c>importFile.path</c>.</summary>
     public void InstallImportFile(string path) =>
         _client.Install(new JObject { ["importFile"] = new JObject { ["path"] = Path.GetFullPath(path) } });
-    //#endregion 🎬 install commands
+    //#endregion 🎬️ install commands
 
-    //#region 🎬 session commands
-    /// <summary>🎬 <c>session.store.theKit.startNewChange</c>.</summary>
+    //#region 🎬️ session commands
+    /// <summary>🎬️ <c>session.store.theKit.startNewChange</c>.</summary>
     public string StartNewChange()
     {
         _activeChangeId = MutateStartNewChange();
@@ -15608,7 +15608,7 @@ public sealed class StoreSession : IDisposable
     }
 
     internal string EnsureChangeId() => _activeChangeId ??= MutateStartNewChange();
-    //#endregion 🎬 session commands
+    //#endregion 🎬️ session commands
 
     private string MutateStartNewChange()
     {
@@ -15674,7 +15674,7 @@ public static class StorePaths
     //#endregion StoreClient
 
     //#region StoreKit
-/// <summary>📦 WIP {@code theKit.kit} handle: getters for reads, methods for commands, events for field changes (compose/js {@link Kit}).</summary>
+/// <summary>📦️ WIP {@code theKit.kit} handle: getters for reads, methods for commands, events for field changes (compose/js {@link Kit}).</summary>
 public sealed class WipKit
 {
     private const string KitObjectSelection =
@@ -15684,38 +15684,38 @@ public sealed class WipKit
 
     internal WipKit(StoreSession session) => _session = session;
 
-    //#region 📖 getters
-    /// <summary>📖 Golden <c>wip.theKit.kit.id</c>.</summary>
+    //#region 📖️ getters
+    /// <summary>📖️ Golden <c>wip.theKit.kit.id</c>.</summary>
     public string Id => GetScalar("id") ?? throw new IOException("graphql: missing kit.id");
 
-    /// <summary>📖 Golden <c>wip.theKit.kit.name</c>.</summary>
+    /// <summary>📖️ Golden <c>wip.theKit.kit.name</c>.</summary>
     public string Name => GetScalar("name") ?? "";
 
-    /// <summary>📖 Golden <c>wip.theKit.kit.description</c>.</summary>
+    /// <summary>📖️ Golden <c>wip.theKit.kit.description</c>.</summary>
     public string Description => GetScalar("description") ?? "";
 
-    /// <summary>📖 Materialized WIP branch (<c>initialKit</c>, <c>theKit.kit</c>, checkpoints).</summary>
+    /// <summary>📖️ Materialized WIP branch (<c>initialKit</c>, <c>theKit.kit</c>, checkpoints).</summary>
     public JToken Materialization => _session.ReadMaterialization();
 
-    /// <summary>📖 Full <c>kit { id name … }</c> object under the store cursor.</summary>
+    /// <summary>📖️ Full <c>kit { id name … }</c> object under the store cursor.</summary>
     public JObject Object =>
         _session.ReadKitObject(KitObjectSelection) ?? throw new IOException("graphql: missing wip.theKit.kit");
-    //#endregion 📖 getters
+    //#endregion 📖️ getters
 
-    //#region 📡 field-change events
-    /// <summary>📡 <c>kit.name</c> changed after a successful command.</summary>
+    //#region 📡️ field-change events
+    /// <summary>📡️ <c>kit.name</c> changed after a successful command.</summary>
     public event Action<string>? NameChanged;
 
-    /// <summary>📡 <c>kit.description</c> changed after a successful command.</summary>
+    /// <summary>📡️ <c>kit.description</c> changed after a successful command.</summary>
     public event Action<string>? DescriptionChanged;
-    //#endregion 📡 field-change events
+    //#endregion 📡️ field-change events
 
-    //#region 🎬 commands
-    /// <summary>🎬 <c>kit.rename</c> on the open unsaved change.</summary>
+    //#region 🎬️ commands
+    /// <summary>🎬️ <c>kit.rename</c> on the open unsaved change.</summary>
     public void Rename(string newName) =>
         RunKitCommand($"rename(newName: {StoreGraphql.GqlString(newName)})", "kitRenamed");
 
-    /// <summary>🎬 <c>kit.changeDescription</c>.</summary>
+    /// <summary>🎬️ <c>kit.changeDescription</c>.</summary>
     public void ChangeDescription(string newDescription) =>
         RunKitCommand($"changeDescription(newDescription: {StoreGraphql.GqlString(newDescription)})", "changedDescription");
 
@@ -15769,9 +15769,9 @@ public sealed class WipKit
     public void DeleteDesigns(IEnumerable<string> ids) =>
         RunKitCommand($"deleteDesigns(ids: {StoreGraphql.GqlIdList(ids)})");
 
-    /// <summary>🎬 Ensures {@code startNewChange} and returns the change id for subsequent commands.</summary>
+    /// <summary>🎬️ Ensures {@code startNewChange} and returns the change id for subsequent commands.</summary>
     public string EnsureChangeId() => _session.EnsureChangeId();
-    //#endregion 🎬 commands
+    //#endregion 🎬️ commands
 
     private string? GetScalar(string field) =>
         StoreGraphqlJson.WipTheKitKitScalar(_session.ReadKitSelection(field), field, _session.StoreId)?.Value<string>();
@@ -15799,12 +15799,12 @@ public sealed class WipKit
     //#endregion StoreKit
 
     //#region StoreKitIO
-/// <summary>📦 Load/save kits through <c>compose-gql</c> GraphQL (<c>POST /install</c> + <c>POST /graphql</c>); equality via normalized JSON compare.</summary>
+/// <summary>📦️ Load/save kits through <c>compose-gql</c> GraphQL (<c>POST /install</c> + <c>POST /graphql</c>); equality via normalized JSON compare.</summary>
 public static class StoreKitIO
 {
     public static JObject KitToJObject(Kit kit) => JObject.Parse(Utility.Serialize(kit));
 
-    /// <summary>📥 <c>POST /install</c> projection JSON: design pieces use <c>pose.plane</c> + <c>pose.center</c> (<c>u</c>/<c>v</c>) for compose-gql hydration.</summary>
+    /// <summary>📥️ <c>POST /install</c> projection JSON: design pieces use <c>pose.plane</c> + <c>pose.center</c> (<c>u</c>/<c>v</c>) for compose-gql hydration.</summary>
     public static JObject KitToInstallProjection(Kit kit)
     {
         var dto = KitToJObject(kit);
@@ -15885,7 +15885,7 @@ public static class StoreKitIO
         return true;
     }
 
-    /// <summary>🧾 After install/import, verifies materialized <c>wip.theKit.kit.name</c> via golden GraphQL when store is up.</summary>
+    /// <summary>🧾️ After install/import, verifies materialized <c>wip.theKit.kit.name</c> via golden GraphQL when store is up.</summary>
     private static void AssertGraphqlKitNameMatches(StoreSession session, string expectedName)
     {
         var actual = session.Kit.Name;
@@ -16001,7 +16001,7 @@ public static class StoreKitIO
         }
     }
 
-    /// <summary>🔁 Apply <paramref name="diff"/> to <paramref name="baseKit"/> or folder snapshot, persist via <see cref="SaveKitToFolder"/>, return updated kit.</summary>
+    /// <summary>🔁️ Apply <paramref name="diff"/> to <paramref name="baseKit"/> or folder snapshot, persist via <see cref="SaveKitToFolder"/>, return updated kit.</summary>
     public static Kit ApplyKitDiffAndSaveToFolder(string folderPath, KitDiff diff, Kit? baseKit = null)
     {
         var kit = Kit.ApplyDiff(baseKit ?? LoadKitFromFolder(folderPath), diff);

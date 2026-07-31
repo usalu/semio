@@ -33,7 +33,7 @@ Add a `.repo/config.toml` that the repo CLI reads to control hook logging. Make 
 
 All session-file logging is in the repo CLI (`repo/client/cli/main.go`), driven by hook events:
 
-- [repo/client/cli/main.go](repo/client/cli/main.go) `writeHookArtifacts` (~line 43660): the single entry that builds the `.repo/⚡/🤖/YY/MM/DD/<session>/` dir and calls the writers.
+- [repo/client/cli/main.go](repo/client/cli/main.go) `writeHookArtifacts` (~line 43660): the single entry that builds the `.repo/⚡️/🤖️/YY/MM/DD/<session>/` dir and calls the writers.
 - `writeSessionHookLog` (~line 43694): writes `session.json` events, attaches raw `native.event` input and `response` block, and tracks plan steps.
 - `logRepoOperationHook` (~line 44212): appends derived `agent.<operation>.<phase>` events into `session.json`.
 
@@ -43,7 +43,7 @@ There is no TOML decode library in [repo/client/cli/go.mod](repo/client/cli/go.m
 
 ```toml
 [logging]
-# Write per-session session.json hook logs under .repo/⚡/🤖/...
+# Write per-session session.json hook logs under .repo/⚡️/🤖️/...
 session = false
 # Include derived agent.<operation>.<phase> events (only applies when session = true)
 operations = true
@@ -78,7 +78,7 @@ detail = "standard"
 ### Tests (extend [repo/client/cli/main_test.go](repo/client/cli/main_test.go), no new files)
 
 - Add helper `writeRepoLoggingConfig(t, root string, lg LoggingConfig)` that writes `<root>/.repo/config.toml`.
-- New `TestRepoConfig` covering: defaults when file absent; parse of all keys; default-off => `RunHook` writes no `.repo/⚡` files; `detail` levels control presence of `native`/`response`; `operations=false` suppresses derived events; `plan=false` suppresses plan tracking.
+- New `TestRepoConfig` covering: defaults when file absent; parse of all keys; default-off => `RunHook` writes no `.repo/⚡️` files; `detail` levels control presence of `native`/`response`; `operations=false` suppresses derived events; `plan=false` suppresses plan tracking.
 - Update existing session-asserting tests (e.g. `TestSessionJsonTracksPlan`, the agent-event/session and `logRepoOperationHook` tests around lines 16560-17560) to enable logging via the helper, and pass `LoggingConfig` to the now-parameterized `writeSessionHookLog`/`logRepoOperationHook` direct calls. Tests asserting raw `native` use `detail = "full"`.
 - Run `nx`/`go test ./repo/cli` focused hook + config tests and confirm pass (do not claim pass without running).
 

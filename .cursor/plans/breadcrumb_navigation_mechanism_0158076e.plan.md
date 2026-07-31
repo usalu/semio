@@ -37,7 +37,7 @@ flowchart LR
 
 ## 1. Framework core model — [framework/core/index.ts](framework/core/index.ts)
 
-Replace the `🔖PlatformBreadcrumb` region (lines 742-750) and the `breadcrumb` hook (line 770):
+Replace the `🔖️PlatformBreadcrumb` region (lines 742-750) and the `breadcrumb` hook (line 770):
 
 - Add `NavigationDestination` (`id`, `label: unknown`, `uri: string`) and `NavigationLevel` (`node: NavigationDestination`, `alternatives: readonly NavigationDestination[]`).
 - Replace `Platform.breadcrumb?: (uri) => readonly PlatformBreadcrumbItem[]` with `Platform.navigation?: (uri: string) => readonly NavigationLevel[]`.
@@ -61,7 +61,7 @@ Replace the `🔖PlatformBreadcrumb` region (lines 742-750) and the `breadcrumb`
     - For a design route: `Designs` (alternatives = sibling designs in the typology -> `/kits/{kitId}/design/{designId}`), `{Design}`. For a type route: `Types` / `{Type}` analogously.
   - **Docs** (`/doc/...`): `Home`, `Documentation` (alternatives = doc sections via `sketchpadBuildDocsRegistry`), then section/page from `docsPath`.
   - **Feedback** (`/feedback`): `Home`, `Feedback`.
-- Add small helpers near `🔖KitHelpers` (line 11216): resolve a design's/type's owning typology by scanning `sketchpadKitTypologyRows`, and list designs/types within a typology.
+- Add small helpers near `🔖️KitHelpers` (line 11216): resolve a design's/type's owning typology by scanning `sketchpadKitTypologyRows`, and list designs/types within a typology.
 
 ## 4. Tests (extend existing inline `import.meta.vitest` regions; no new files)
 

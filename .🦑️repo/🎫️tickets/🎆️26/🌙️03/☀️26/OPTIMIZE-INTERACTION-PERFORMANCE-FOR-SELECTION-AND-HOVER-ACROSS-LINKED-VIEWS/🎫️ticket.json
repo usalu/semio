@@ -1,0 +1,12 @@
+{
+  "title": "Optimize Interaction Performance for Selection and Hover Across Linked Views",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Optimize interaction performance for selection and hover across linked views (scene and diagram window). Reduce latency, avoid unnecessary updates, synchronize states efficiently, and keep interactions smooth, responsive, and scalable under heavy complexity.",
+  "summary": "Implemented 7 key performance optimizations for hover/selection interaction across linked views (scene + diagram): 1) Granular boolean selectors for useDesignAppIsPieceHovered, useDesignAppIsConnectionHovered, useDesignAppIsPieceSelected, useDesignAppIsConnectionSelected, useDesignAppIsPortHovered, useDesignAppIsPiecePortSelected — returns boolean directly from XState selector instead of subscribing to full hover/selection object. 2) Stable hover setter in useDesignAppHover — removed value dependency, reads lazily from actor.getSnapshot(). 3) Custom areHoverStatesEqual comparator for useSelector in useDesignAppHover. 4) queueMicrotask replaces setTimeout(0) in all 10 hover command dispatchers. 5) O(1) lookups in computeHoverData with Set-based operations. 6) Lazy selection access in ModelPiece scene component. 7) Stable useDesignAppSelectedConnector with inline granular selector. Build verified: Vite build succeeds, 0 new errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1109"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️64dd23f07eba40cd9b17df742afc18a3"]
+}

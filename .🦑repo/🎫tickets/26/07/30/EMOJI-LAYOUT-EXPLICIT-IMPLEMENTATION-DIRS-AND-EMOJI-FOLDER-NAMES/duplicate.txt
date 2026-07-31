@@ -1,2 +1,0 @@
-This ticket duplicated an existing one. Work continues at:
-.repo/🎫/26/07/29/MOVE-ALL-APPS-INTO-THE-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES-EMOJI-LAYOUT

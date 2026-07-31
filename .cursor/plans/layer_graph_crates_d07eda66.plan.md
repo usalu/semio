@@ -120,7 +120,7 @@ Create `mathematical/graph/port/directed/Cargo.toml` (name `mathematical_graph_p
 
 - Update [.vscode/launch.json](.vscode/launch.json) and any rs debug configs that reference the old crate path/name. Rebuild to refresh `Cargo.lock`.
 - Run `cargo test` across all graph crates + `puzzle_2d` + `dag`; run affected vitest; boot `dev:puzzle` and `dev:dag`, confirming runtime via `[DEBUG]` logs / the existing Playwright probe.
-- Route all temp logs/probes into the existing ticket folder `.repo/🎫/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/`; reopen that ticket via repo MCP rather than opening a new one; close with the full file list when green.
+- Route all temp logs/probes into the existing ticket folder `.repo/🎫️/26/06/07/EXTRACT-GENERIC-GRAPH-CANVAS-FROM-PUZZLE-2D-AND-ADD-DAG/`; reopen that ticket via repo MCP rather than opening a new one; close with the full file list when green.
 
 ## Risks
 

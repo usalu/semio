@@ -1,9 +1,0 @@
-{
-  "title": "Celebrate Tab Label Foreground",
-  "emoji": "🎉",
-  "status": "closed",
-  "description": "Panel/chrome tab labels nested under a wrapper div are missed by CelebrateContent direct-child span selector, so celebrate paints icons but not label text.",
-  "summary": "Stamped data-slot=inline-label on panel/mode-dock/pane/button/action label spans. CelebrateContent now paints inline-label (and tree-label) with background-clip:text and transparent text-fill so nested chrome tab labels get the spinning conic like icons. Proof script and CSS contract test updated.",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "sessions": []
-}

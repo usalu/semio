@@ -48,9 +48,9 @@ export const S_PLAY_LAYOUT = createDefaultLayout([S_PLAY_WINDOW_MEDIA_GRAPH, S_P
 
 ## Changes in [s/react/index.tsx](s/react/index.tsx)
 
-- Delete the `//#region 🔖ProgramLauncher` block (`SProgramLauncherPanel`).
-- Delete the `//#region 🔖History` block (`SStudioHistoryPanel`) and its now-unused imports `HistoryTable` (`@semio-tech/vcs-react`), `buildOsHistoryColumns` (`@semio-tech/framework-os-core`).
-- Delete the `//#region 🔖AppHost` block (`SAppHostSurface`).
+- Delete the `//#region 🔖️ProgramLauncher` block (`SProgramLauncherPanel`).
+- Delete the `//#region 🔖️History` block (`SStudioHistoryPanel`) and its now-unused imports `HistoryTable` (`@semio-tech/vcs-react`), `buildOsHistoryColumns` (`@semio-tech/framework-os-core`).
+- Delete the `//#region 🔖️AppHost` block (`SAppHostSurface`).
 - Keep `SMediaGraphCanvas` as-is (including its optional `onOpenInstance` prop/`handlePointerUp` — this is a generic, reusable DagCanvas capability; S play's call site simply stops passing it, per above).
 - Check `useStudioStore`/`useDispatchStudioCommand`/`useStudioProjection`/`useStudioGeneration` are still used by `SMediaGraphCanvas` or elsewhere after deletions (they are used by the deleted panels too — confirm at least one remaining consumer, otherwise these become dead and should be removed too).
 

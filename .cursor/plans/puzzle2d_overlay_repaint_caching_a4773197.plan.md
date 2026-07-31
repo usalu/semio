@@ -15,7 +15,7 @@ todos:
    content: Stop routing marquee preselect through shell React state in the play pane (drop controlled preselection/onPreselect); add puzzle2dBroadcastPreselectSilent peer mirror and call it from updatePreselection emit path
    status: completed
  - id: tests
-   content: "Extend vitest: textOverlayDirty cases (camera/selection/epoch/theme dirty, hover-only not dirty) and preselect peer broadcast without full syncDescriptorJson; run bun ./script.ts test"
+   content: "Extend vitest: textOverlayDirty cases (camera/selection/epoch/theme dirty, hover-only not dirty) and preselect peer broadcast without full syncDescriptorJson; run bun ./📜️script.ts test"
    status: completed
 isProject: false
 ---
@@ -56,7 +56,7 @@ In `Puzzle2dRenderer`:
   - dirty after a camera change, after a selection change, after a content-epoch bump, after a theme change;
   - NOT dirty when only a hover drain occurred (no camera/selection/epoch change).
 - Add a peer test that a `preselect` drain mirrors onto a peer pane via `syncPreselectionSilent` without a full `syncDescriptorJson` (mirrors the existing selection-broadcast test).
-- Run `bun ./script.ts test` in `puzzle/2d/react`; no Rust changes required.
+- Run `bun ./📜️script.ts test` in `puzzle/2d/react`; no Rust changes required.
 
 ## Out of scope
 

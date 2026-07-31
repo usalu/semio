@@ -1,4 +1,4 @@
-#region 📱Header
+#region 📱️Header
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,9 +6,9 @@
 
 // Rhino 8 program hosting a WebView2 panel for importing compose kits and representations.
 
-#endregion 📱Header
+#endregion 📱️Header
 
-#region 🔌Adapters
+#region 🔌️Adapters
 // Host SDK imports (RhinoCommon, WebView2, Newtonsoft) MUST stay in this region.
 using System;
 using System.Collections.Generic;
@@ -39,23 +39,23 @@ using RhinoLayer = global::Rhino.DocObjects.Layer;
 using Type = Compose.Type;
 using File = Compose.File;
 
-#endregion 🔌Adapters
+#endregion 🔌️Adapters
 
-#region 🔌Ports
-/// <summary>🦏 Rhino document host port (RhinoCommon adapter in 🔌Adapters).</summary>
+#region 🔌️Ports
+/// <summary>🦏️ Rhino document host port (RhinoCommon adapter in 🔌️Adapters).</summary>
 public interface IRhinoDocumentHost
 {
     RhinoDoc ActiveDoc { get; }
 }
 
-/// <summary>🌐 WebView2 host port for embedded React UI.</summary>
+/// <summary>🌐️ WebView2 host port for embedded React UI.</summary>
 public interface IWebViewHost
 {
     Task NavigateAsync(string uri);
 }
-#endregion 🔌Ports
+#endregion 🔌️Ports
 
-#region ⭐AssemblyAttributes
+#region ⭐️AssemblyAttributes
 // Assembly-level attributes required by Rhino to identify this program.
 // The Id is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
 #if RHINO_PLUGIN
@@ -69,14 +69,14 @@ public interface IWebViewHost
 [assembly: PlugInDescription(DescriptionType.WebSite, "https://compose.tech")]
 [assembly: PlugInDescription(DescriptionType.Icon, "Compose.Rhino.🖼️compose_32x32.ico")]
 #endif
-#endregion ⭐AssemblyAttributes
+#endregion ⭐️AssemblyAttributes
 
-#region ✨Namespace
+#region ✨️Namespace
 // Implementations MUST reside in this namespace.
 namespace Compose.Rhino;
-#endregion ✨Namespace
+#endregion ✨️Namespace
 
-#region 🎠Constants
+#region 🎠️Constants
 // Consumers MUST use these shared constants for configuration.
 
 public static class Constants
@@ -86,13 +86,13 @@ public static class Constants
     public const string PanelId = "D3A4E2C1-7B8F-4D5E-9A1C-6F2B3E4D5A6B";
 }
 
-#endregion 🎠Constants
+#endregion 🎠️Constants
 
-#region 🔬BridgeProtocol
+#region 🔬️BridgeProtocol
 // Bridge protocol types for JSON-RPC style communication between React UI and C#.
 
 /// <summary>
-/// 📨Incoming request from the React UI to native C#.
+/// 📨️Incoming request from the React UI to native C#.
 /// </summary>
 public class BridgeRequest
 {
@@ -103,7 +103,7 @@ public class BridgeRequest
 }
 
 /// <summary>
-/// 📩Outgoing response from native C# to the React UI.
+/// 📩️Outgoing response from native C# to the React UI.
 /// </summary>
 public class BridgeResponse
 {
@@ -114,7 +114,7 @@ public class BridgeResponse
 }
 
 /// <summary>
-/// ❌Error detail for a failed bridge response.
+/// ❌️Error detail for a failed bridge response.
 /// </summary>
 public class BridgeError
 {
@@ -124,7 +124,7 @@ public class BridgeError
 }
 
 /// <summary>
-/// 📡Outgoing event from native C# to the React UI.
+/// 📡️Outgoing event from native C# to the React UI.
 /// </summary>
 public class BridgeEvent
 {
@@ -132,13 +132,13 @@ public class BridgeEvent
     [JsonProperty("payload")] public object? Payload { get; set; }
 }
 
-#endregion 🔬BridgeProtocol
+#endregion 🔬️BridgeProtocol
 
-#region ⛹BridgeBinding
+#region ⛹️BridgeBinding
 // Bridge bindings define the native methods callable from the React UI.
 
 /// <summary>
-/// 🔌Interface for a bridge binding exposing named methods.
+/// 🔌️Interface for a bridge binding exposing named methods.
 /// </summary>
 public interface IBridgeBinding
 {
@@ -146,13 +146,13 @@ public interface IBridgeBinding
     IReadOnlyDictionary<string, Func<JToken?, Task<object?>>> Methods { get; }
 }
 
-#endregion ⛹BridgeBinding
+#endregion ⛹️BridgeBinding
 
-#region 🪨BridgeRegistry
+#region 🪨️BridgeRegistry
 // Central registry routing bridge requests to the correct binding and method.
 
 /// <summary>
-/// 📨Routes incoming bridge requests to registered bindings.
+/// 📨️Routes incoming bridge requests to registered bindings.
 /// </summary>
 public class BridgeRegistry
 {
@@ -224,13 +224,13 @@ public class BridgeRegistry
         _bindings.TryGetValue(binding, out var b) ? b.Methods.Keys : Enumerable.Empty<string>();
 }
 
-#endregion 🪨BridgeRegistry
+#endregion 🪨️BridgeRegistry
 
-#region 🗻AppBinding
+#region 🗻️AppBinding
 // Application-level bridge binding for version info and diagnostics.
 
 /// <summary>
-/// 📌Provides application-level methods: ping, getVersion, getBridgeInfo.
+/// 📌️Provides application-level methods: ping, getVersion, getBridgeInfo.
 /// </summary>
 public class AppBinding : IBridgeBinding
 {
@@ -249,13 +249,13 @@ public class AppBinding : IBridgeBinding
     };
 }
 
-#endregion 🗻AppBinding
+#endregion 🗻️AppBinding
 
-#region 📢DocumentBinding
+#region 📢️DocumentBinding
 // Document-level bridge binding for Rhino document information.
 
 /// <summary>
-/// 🔧Provides document-level methods: getInfo, getUnits, getLayers.
+/// 🔧️Provides document-level methods: getInfo, getUnits, getLayers.
 /// </summary>
 public class DocumentBinding : IBridgeBinding
 {
@@ -298,13 +298,13 @@ public class DocumentBinding : IBridgeBinding
     };
 }
 
-#endregion 📢DocumentBinding
+#endregion 📢️DocumentBinding
 
-#region 🎢LayerService
+#region 🎢️LayerService
 // Service for creating and managing Rhino layers following the compose hierarchy.
 
 /// <summary>
-/// 🆕Creates nested layer hierarchies for compose imports.
+/// 🆕️Creates nested layer hierarchies for compose imports.
 /// Layer path: compose::KITNAME::Types::TYPENAME::Representations::REPRESENTATIONTAGS
 /// </summary>
 public static class LayerService
@@ -372,13 +372,13 @@ public static class LayerService
     }
 }
 
-#endregion 🎢LayerService
+#endregion 🎢️LayerService
 
-#region 🎹ImportBinding
+#region 🎹️ImportBinding
 // Bridge binding for importing kits and representations into the active Rhino document.
 
 /// <summary>
-/// 📨DTO for an import representation request from the React UI.
+/// 📨️DTO for an import representation request from the React UI.
 /// </summary>
 public class ImportRepresentationRequest
 {
@@ -390,7 +390,7 @@ public class ImportRepresentationRequest
 }
 
 /// <summary>
-/// 🔧Provides import methods: importRepresentation, importKit (placeholder for file dialog trigger).
+/// 🔧️Provides import methods: importRepresentation, importKit (placeholder for file dialog trigger).
 /// </summary>
 public class ImportBinding : IBridgeBinding
 {
@@ -450,15 +450,15 @@ public class ImportBinding : IBridgeBinding
     };
 }
 
-#endregion 🎹ImportBinding
+#endregion 🎹️ImportBinding
 
 #if RHINO_PLUGIN
-#region 🪩ComposeRhinoPlugin
+#region 🪩️ComposeRhinoPlugin
 // Main Rhino program class bootstrapping the bridge bindings.
 // Panel registration is done in the ShowComposeCommand constructor (like Speckle).
 
 /// <summary>
-/// 📍Entry point for the compose Rhino program.
+/// 📍️Entry point for the compose Rhino program.
 /// Registers bridge bindings on load. Panel is registered by the command.
 /// </summary>
 public class ComposeRhinoPlugin : PlugIn
@@ -478,19 +478,19 @@ public class ComposeRhinoPlugin : PlugIn
         Bridge.Register(new DocumentBinding());
         Bridge.Register(new ImportBinding());
 
-        RhinoApp.WriteLine("📐compose.3dm program loaded.");
+        RhinoApp.WriteLine("📐️compose.3dm program loaded.");
         return LoadReturnCode.Success;
     }
 }
 
-#endregion 🪩ComposeRhinoPlugin
+#endregion 🪩️ComposeRhinoPlugin
 
-#region 🔓ComposeWebViewControl
+#region 🔓️ComposeWebViewControl
 // WPF UserControl hosting WebView2 that loads the compose React UI.
 // This control is wrapped by ComposePanelHost (WpfElementHost) for Rhino panel integration.
 
 /// <summary>
-/// 👤WPF UserControl hosting WebView2 that loads the compose React UI.
+/// 👤️WPF UserControl hosting WebView2 that loads the compose React UI.
 /// Handles bridge message routing between the browser and native C#.
 /// </summary>
 public class ComposeWebViewControl : System.Windows.Controls.UserControl
@@ -553,7 +553,7 @@ public class ComposeWebViewControl : System.Windows.Controls.UserControl
 #endif
         // Look for local built UI assets
         var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
-        var indexPath = Path.Combine(pluginDir, "ui", "dist", "🌐index.html");
+        var indexPath = Path.Combine(pluginDir, "ui", "dist", "🌐️index.html");
         if (System.IO.File.Exists(indexPath))
             return new Uri(indexPath).AbsoluteUri;
 
@@ -578,7 +578,7 @@ public class ComposeWebViewControl : System.Windows.Controls.UserControl
         }
         catch (Exception ex)
         {
-            RhinoApp.WriteLine($"[📐compose.3dm] Bridge error: {ex.Message}");
+            RhinoApp.WriteLine($"[📐️compose.3dm] Bridge error: {ex.Message}");
         }
     }
 
@@ -593,9 +593,9 @@ public class ComposeWebViewControl : System.Windows.Controls.UserControl
     }
 }
 
-#endregion 🔓ComposeWebViewControl
+#endregion 🔓️ComposeWebViewControl
 
-#region 📊ComposePanelHost
+#region 📊️ComposePanelHost
 // Dockable Rhino panel host wrapping the WPF WebView2 control.
 // Follows the Speckle pattern: inherits RhinoWindows.Controls.WpfElementHost.
 
@@ -656,14 +656,14 @@ public class ComposePanelHost : RhinoWindows.Controls.WpfElementHost
     }
 }
 
-#endregion 📊ComposePanelHost
+#endregion 📊️ComposePanelHost
 
-#region 🛒ShowComposeCommand
+#region 🛒️ShowComposeCommand
 // Rhino command to open or focus the compose dockable panel.
 // Panel registration happens in the constructor (like Speckle connectors).
 
 /// <summary>
-/// 📬Command that opens the compose dockable side panel.
+/// 📬️Command that opens the compose dockable side panel.
 /// Registers the panel in its constructor following Speckle's pattern.
 /// </summary>
 [CommandStyle(global::Rhino.Commands.Style.ScriptRunner)]
@@ -755,5 +755,5 @@ public class ShowComposeCommand : Command
     }
 }
 
-#endregion 🛒ShowComposeCommand
+#endregion 🛒️ShowComposeCommand
 #endif

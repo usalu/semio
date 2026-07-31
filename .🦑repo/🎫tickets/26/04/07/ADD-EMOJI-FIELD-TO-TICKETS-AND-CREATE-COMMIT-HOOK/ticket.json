@@ -1,8 +1,0 @@
-{
-  "title": "Add Emoji Field to Tickets and Create Commit Hook",
-  "status": "closed",
-  "description": "Add an `emoji` field to all ticket implementations (Go, TypeScript, GraphQL). Extend all existing ticket JSON files with a fitting emoji. Update all tests. Create a zero-touch configured git hook that automatically creates commit messages with ticket details for dev branches.",
-  "summary": "Added `emoji` field to all ticket and contributor data structures across the entire codebase. Updated Go structs (Ticket, Contributor), GraphQL schema, TypeScript types, SQL schema, JSON marshal/unmarshal. Added emojis to all 1228 ticket.json files and all 6 contributor.json files. Extended existing tests with emoji assertions (marshal, unmarshal, round-trip). Created zero-touch prepare-commit-msg git hook that auto-generates commit messages on dev branches matching `*/🏗️dev` pattern with format: `{{DevEmoji}}{{DevAlias}}🎆YY🌙MM☀️DD⏰HH⌚MM⏱️SS🚩` subject line, grouped ticket list body, and Signed-off-by footer.",
-  "goal": "🎯coda",
-  "sessions": ["⚪8d97064d7bd348c0b7c66e4fe889b3b1"]
-}

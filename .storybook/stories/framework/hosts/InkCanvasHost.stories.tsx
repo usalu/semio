@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/InkCanvasHost.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/InkCanvasHost.stories.tsx
 // Specs: Host the framework renderer's `InkCanvasHost` with zero WASM engine — the whiteboard-style ink
 // surface (pointer gestures, hit-testing, resize handles) is implemented entirely in React/DOM (`framework/
 // renderer/react/index.tsx`), so a story-local reducer over `InkCanvasEvent`s is enough for real interaction.
@@ -8,7 +8,7 @@
 // also handles the sibling `setSelection`/`setCamera`/`setHover` actions `InkCanvasHost` dispatches directly
 // (`inkCanvasActions`). Interactive drag/draw/pan/erase and click-to-select therefore all round-trip live.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
@@ -182,7 +182,7 @@ function InkCanvasStoryHost({ interactive, viewMode }: { readonly interactive: b
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/InkCanvasHost",
+  title: "🛠️framework🔌️hosts/InkCanvasHost",
   component: InkCanvasStoryHost,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -197,7 +197,7 @@ export const Editable: Story = {
   args: { interactive: true, viewMode: "edit" },
 };
 
-/** 🔒 `interactive: false` + `viewMode: "navigator"` — the read-only preview path (pointer gestures are gated off, resize handles never show). */
+/** 🔒️ `interactive: false` + `viewMode: "navigator"` — the read-only preview path (pointer gestures are gated off, resize handles never show). */
 export const NavigatorPreview: Story = {
   args: { interactive: false, viewMode: "navigator" },
 };

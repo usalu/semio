@@ -1,9 +1,0 @@
-{
-  "title": "Rename Design Technology to Compose",
-  "emoji": "🏘",
-  "status": "closed",
-  "description": "Rename design technology to compose to resolve naming ambiguity",
-  "summary": "Moved monorepo brand assets from compose/asset to root asset/ via git mv. Renamed packages @semio-tech/compose-asset|icon|logo|image to @semio-tech/semio-asset|icon|logo|image. Restored semio branding on badges, logos, and icon filenames (repo-semio, semio_horizontal, semio.svg, semiofile_*). Updated workspace entries, bun.lock, vite/tsconfig aliases, storybook imports, and compose/rs fixture paths. Verified nx run @semio-tech/semio-asset:build succeeds.",
-  "goal": "🎯aioptimizedrepo🎯repoclient",
-  "sessions": ["⚪6c01ef84d3b64703bfd9291385cc9ac0"]
-}

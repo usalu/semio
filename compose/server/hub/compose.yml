@@ -1,13 +1,13 @@
-# #region 🔖Header
+# #region 🔖️Header
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 # AGPL-3.0
 # Docker Compose for compose-hub only: the Rust compose-hub binary, `db`-backed (CW6b). Zero-touch:
 # `db::Database` (FsStorage) + compose-hub's own directory/history stores live under COMPOSE_HUB_DATA,
 # a plain volume-mounted directory — no external database service.
-# #endregion 🔖Header
+# #endregion 🔖️Header
 
 services:
-  # #region 🔖Hub
+  # #region 🔖️Hub
   # Specs: compose-hub Rust backend with embedded /admin dashboard; protect JSON admin APIs with COMPOSE_ADMIN_TOKEN.
   hub:
     image: rust:1.89-bookworm
@@ -30,7 +30,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
-  # #endregion 🔖Hub
+  # #endregion 🔖️Hub
 
 volumes:
   compose_hub_data:

@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/stories/styling/Glass.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/styling/Glass.stories.tsx
 // Specs: Docs gallery for the `Level` context (`LevelProvider`/`useLevel`) and its glass fill (`@semio-tech/ui-react`) across every `Level`.
 // Summary: `glassClass` is a generic Tailwind `@utility` class defined in `framework/ui/styling/js/ui.css` (backdrop-filter blur/saturate + a `color-mix` fill); its alpha/blur are derived per the `[data-level="…"]` ancestor the swatch is stamped with — not per a hand-picked tier. A level's attached chrome (title caps, ribbons, tab bars, rails) renders this exact same fill as its body, so one level always shows one appearance. Each swatch renders over a colorful backdrop so the blur/alpha differences across levels are visible without needing WebGL or a running program.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
@@ -11,18 +11,18 @@ import type { ReactElement } from "react";
 import { glassClass, LEVELS, LevelProvider, useLevel, type Level } from "@semio-tech/ui-react";
 import { galleryPageStyle } from "../../styling/index.tsx";
 
-//#region 🔖Variants
-/** @emoji 🌈 Busy backdrop every glass swatch sits over — a flat background would make blur/saturate differences invisible. */
+//#region 🔖️Variants
+/** @emoji 🌈️ Busy backdrop every glass swatch sits over — a flat background would make blur/saturate differences invisible. */
 const BACKDROP_STYLE = {
   backgroundImage: "conic-gradient(from 0deg, #ff344f, #fa9500, #fccf05, #7eb77f, #34d1bf, #ff344f)",
   backgroundSize: "48px 48px",
   padding: 24,
   borderRadius: 10,
 } as const;
-//#endregion 🔖Variants
+//#endregion 🔖️Variants
 
-//#region 🔖LevelGlassSwatch
-/** @emoji 🪟 Reads the level from context via `useLevel()` (falling back to `"base"` per its own contract) rather than taking it as a prop — this is what a real consumer nested under `LevelProvider` does. */
+//#region 🔖️LevelGlassSwatch
+/** @emoji 🪟️ Reads the level from context via `useLevel()` (falling back to `"base"` per its own contract) rather than taking it as a prop — this is what a real consumer nested under `LevelProvider` does. */
 function LevelGlassReader(): ReactElement {
   const level = useLevel();
   return (
@@ -33,7 +33,7 @@ function LevelGlassReader(): ReactElement {
   );
 }
 
-/** @emoji 🪟 One `LevelProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
+/** @emoji 🪟️ One `LevelProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
 function LevelGlassSwatch({ level }: { readonly level: Level }): ReactElement {
   return (
     <LevelProvider level={level}>
@@ -41,9 +41,9 @@ function LevelGlassSwatch({ level }: { readonly level: Level }): ReactElement {
     </LevelProvider>
   );
 }
-//#endregion 🔖LevelGlassSwatch
+//#endregion 🔖️LevelGlassSwatch
 
-//#region 🔖Gallery
+//#region 🔖️Gallery
 function GlassGallery(): ReactElement {
   return (
     <div style={galleryPageStyle}>
@@ -61,10 +61,10 @@ function GlassGallery(): ReactElement {
     </div>
   );
 }
-//#endregion 🔖Gallery
+//#endregion 🔖️Gallery
 
 const meta = {
-  title: "🎨styling/Glass",
+  title: "🎨️styling/Glass",
   component: GlassGallery,
   parameters: {
     layout: "fullscreen",
@@ -76,7 +76,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-//#region 🔖Stories
+//#region 🔖️Stories
 export const AllLevels: Story = {};
 
 export const PanelLevel: Story = {
@@ -99,7 +99,7 @@ export const PaneLevel: Story = {
   ),
 };
 
-/** @emoji 🪝 Outside any `LevelProvider`, `useLevel()` falls back to `"base"` per its own docstring contract. */
+/** @emoji 🪝️ Outside any `LevelProvider`, `useLevel()` falls back to `"base"` per its own docstring contract. */
 export const DefaultLevelFallback: Story = {
   render: () => (
     <div style={galleryPageStyle}>
@@ -109,4 +109,4 @@ export const DefaultLevelFallback: Story = {
     </div>
   ),
 };
-//#endregion 🔖Stories
+//#endregion 🔖️Stories

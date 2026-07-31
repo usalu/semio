@@ -88,7 +88,7 @@ Replace all hand-authored RGBA/metric literals in `Theme::dark()` with values de
 1. `bun ./ui/styling/script.ts generate` then `cargo test -p ui_styling` (existing light/dark parity tests in [ui/styling/rs/lib.rs](ui/styling/rs/lib.rs) lines 76-112 — extend with a chrome-specific assertion, e.g. `CHROME_LIGHT.base != CHROME_DARK.base`).
 2. `cargo test -p ui_wgpu`.
 3. Rebuild wasm: `bun ./framework/renderer/wgpu/script.ts wasm`.
-4. Re-run the 25-plugin E2E suite (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) to confirm no regressions from the earlier empty-screen fix.
+4. Re-run the 25-plugin E2E suite (`.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) to confirm no regressions from the earlier empty-screen fix.
 5. Visually diff regenerated screenshots against the React shell for navbar/footer height, sharp corners, red accent, and hover borders; toggle the theme selector (System/Light/Dark) and confirm the canvas actually re-themes.
 
 ## Todos

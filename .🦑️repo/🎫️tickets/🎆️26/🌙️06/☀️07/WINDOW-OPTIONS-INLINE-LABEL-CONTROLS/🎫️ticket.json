@@ -1,0 +1,12 @@
+{
+  "title": "Window Options Inline Label Controls",
+  "emoji": "🪟️",
+  "status": "closed",
+  "description": "Window options must be efficient: label and control on the same row when they fit (e.g. LOD dropdown should not be a nested tree item under LOD group). Flatten single-child measure groups and put labels on select/slider controls directly.",
+  "summary": "Flattened redundant single-child window measure groups so short labels (LOD, Compute) sit on the same row as their select control via WindowMeasureTreeLeaf. Updated flow, procedural, dag, puzzle 2d/5d, and CAD play controllers plus related tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1582"
+  },
+  "goal": "🎯️ui🎯️react",
+  "sessions": ["⚪️6355c362ea0a449f91e02787f48926f3"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Remove Quality App From Sketchpad",
-  "emoji": "✏️",
-  "status": "closed",
-  "description": "Remove the Quality app from compose/sketchpad while preserving quality entities where still used by kits.",
-  "summary": "Removed the standalone sketchpad Quality app from routing and registration. Quality entity entry points now stay in the Kit app qualities view, Quality is no longer a feedback app option, and the sketchpad manual app list no longer includes Quality. Verified Vite build succeeds and preview serves both root and Kit qualities URLs. Full Playwright suite was run and remains failing on existing dev-server/fixture issues unrelated to the Quality app removal.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
-  "sessions": ["⚪56d2a42745374712b2465aa09eb40c32"]
-}

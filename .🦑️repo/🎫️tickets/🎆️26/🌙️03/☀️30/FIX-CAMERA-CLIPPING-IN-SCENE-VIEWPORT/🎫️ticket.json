@@ -1,0 +1,12 @@
+{
+  "title": "Fix Camera Clipping in Scene Viewport",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The 3D scene viewport clips/cuts parts of the design. The bounds.clip() call after auto-fit is too aggressive, causing geometry to be cut off by the camera clipping planes.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1176"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️95010bd4a1fa466b82e1fcb8c50494c2"]
+}

@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-trinity-jack-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Jack app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/🔌️jack/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+trinity_jack_rs = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/🔌️jack/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-jack" }
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "trinity_ram" }

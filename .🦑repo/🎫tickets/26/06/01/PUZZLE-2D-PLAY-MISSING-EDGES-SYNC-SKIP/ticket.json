@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle 2d Play Missing Edges Sync Skip",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Play canvas has 180 nodes and 358 handles but 0 edges in scene/WASM. Root cause: skipSceneSyncIfDescriptorUnchanged skips imperative sync after unmountPuzzle2dHostMount clears the scene while descriptor fingerprint unchanged.",
-  "summary": "Play showed 180 nodes but 0 edges because WASM/scene resync emitted a mass edge-delete burst that stripped all 179 edges from fixture state (filter only blocked mass node deletes). Fixed by: filtering edge-only resync bursts in filterPuzzle2dPlayStructuralDeleteBatch; 800ms mount guard on structural deletes; cloning default fixture for isolated React state; calling puzzle2dEnsureSceneEdgesFromDescriptor from Puzzle2dCanvas when declarative descriptor has edges. Verified in browser after reload: ctxEdges/sceneEdges/wasmEdges/edgeTreeItems all 179. play vitest 12/12, puzzle/2d/react vitest 127/127.",
-  "goal": "🎯puzzle2d",
-  "sessions": ["⚪f8c13159316f46608d21b5aad806c951"]
-}

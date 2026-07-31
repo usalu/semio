@@ -1,8 +1,0 @@
-{
-  "title": "Refactor FilterProvider",
-  "emoji": "♻️",
-  "status": "closed",
-  "description": "Refactor FilterProvider to use menus instead of tree items and fix tests",
-  "summary": "Refactored FilterProvider to support policy and breach filters, added missing command registrations, and fixed tests. All 48 tests passed.",
-  "goal": "🎯aioptimizedrepo"
-}

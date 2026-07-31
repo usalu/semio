@@ -143,4 +143,4 @@ flowchart LR
 
 - Run `bun run test:note` (extends existing inline vitest blocks — no new test files).
 - Boot `bun run dev:note`, and manually exercise via CDP/browser: double-click empty canvas creates + focuses a text block; type + bold/italic/underline/link via toolbar; double-click existing text re-opens editor; resize handles resize single and multi selections; multi-select drag moves all selected blocks; stroke/point eraser removes/splits ink; copy/paste of blocks (cmd+c/cmd+v) and paste of a copied image/SVG from the OS clipboard; Delete/Backspace, cmd+d, cmd+z/cmd+shift+z, arrow-key nudge, and Escape all work.
-- Update `.repo/🎫/26/07/02/NOTE-INFINITE-CANVAS-APP/verify-log.md` with the new verification results (reopen ticket via `ticket_reopen` since it covers the same app).
+- Update `.repo/🎫️/26/07/02/NOTE-INFINITE-CANVAS-APP/verify-log.md` with the new verification results (reopen ticket via `ticket_reopen` since it covers the same app).

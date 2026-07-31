@@ -3,7 +3,7 @@ name: Bun Nx Monorepo Setup
 overview: Migrate the polyglot monorepo to Bun as the single Node package manager + runtime, route every script (build/test/dev/lint/publish/setup) exclusively through Nx with full dependency caching across Bun, Cargo, Go, uv and dotnet, and reduce the devcontainer + native bootstrap to one zero-touch `bun nx run workspace:setup` entrypoint.
 todos:
  - id: ticket
-   content: Open ticket .repo/🎫/26/05/11/bun-nx-monorepo-setup via repo/client/client
+   content: Open ticket .repo/🎫️/26/05/11/bun-nx-monorepo-setup via repo/client/client
    status: completed
  - id: bun-swap
    content: Swap npm/pnpm → Bun in root package.json, delete package-lock.json + .npmrc, add bunfig.toml, run bun install
@@ -49,7 +49,7 @@ isProject: false
 
 ## Ticket
 
-Open via `repo/client/client(.exe) ticket open` under the most appropriate goal from `repo://goals`. Folder: `.repo/🎫/26/05/11/bun-nx-monorepo-setup/`. All scratch logs/scripts go there.
+Open via `repo/client/client(.exe) ticket open` under the most appropriate goal from `repo://goals`. Folder: `.repo/🎫️/26/05/11/bun-nx-monorepo-setup/`. All scratch logs/scripts go there.
 
 ## 1. Package manager swap (npm/pnpm → Bun)
 
@@ -142,7 +142,7 @@ Refine [nx.json](nx.json):
 
 Per-project `project.json` overrides `inputs`/`outputs` to the right toolchain (e.g. Rust crates use `["cargo", "^cargo"]` and emit `{projectRoot}/target/release/...`; Go uses `["go", "^go"]` and emits `{projectRoot}/<binary>(.exe)`).
 
-`defaultBase` stays `⛳wip`. The existing `build-wasm` target stays special-cased.
+`defaultBase` stays `⛳️wip`. The existing `build-wasm` target stays special-cased.
 
 ## 6. Devcontainer + native bootstrap (zero-touch)
 
@@ -217,5 +217,5 @@ Add Nx cache persistence via `actions/cache` keyed on `bun.lock`, `Cargo.lock`, 
 
 - This is one focused refactor; no need to delegate. Estimated 4-6 hours of edits + verification.
 - `pnpm.overrides` (`@semio-tech/compose-asset`, `@semio-tech/compose-js` workspace pinning) becomes `overrides` at root (Bun supports the `overrides` field).
-- `defaultBase = "⛳wip"` is unusual but kept.
-- The repo MCP `ticket_open` is unavailable in this Cursor session's MCP set; the ticket folder will be created via `repo/client/client(.exe) ticket open` once available, or scaffolded manually under `.repo/🎫/26/05/11/bun-nx-monorepo-setup/`.
+- `defaultBase = "⛳️wip"` is unusual but kept.
+- The repo MCP `ticket_open` is unavailable in this Cursor session's MCP set; the ticket folder will be created via `repo/client/client(.exe) ticket open` once available, or scaffolded manually under `.repo/🎫️/26/05/11/bun-nx-monorepo-setup/`.

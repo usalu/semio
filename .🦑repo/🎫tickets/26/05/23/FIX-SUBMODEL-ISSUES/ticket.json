@@ -1,8 +1,0 @@
-{
-  "title": "Fix Submodel Issues",
-  "emoji": "🎫",
-  "status": "open",
-  "description": "Fix issues with the submodels while preserving existing uncommitted changes. Inspect current working tree safely, avoid modifying git operations, and make scoped edits only to existing files.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪f7692afaed134e4da384970d2244a1ff"]
-}

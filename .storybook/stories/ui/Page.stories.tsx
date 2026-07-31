@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // .elements/ui/.storybook/story/elements/window/Page.stories.tsx
 
@@ -9,12 +9,12 @@
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Page } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
-// #region 🌈Page
+// #region 🌈️Page
 
 const meta = {
   title: "🖱️ui⚛️react/Page",
@@ -103,4 +103,4 @@ export const LongContent: Story = {
   ),
 };
 
-// #endregion 🌈Page
+// #endregion 🌈️Page

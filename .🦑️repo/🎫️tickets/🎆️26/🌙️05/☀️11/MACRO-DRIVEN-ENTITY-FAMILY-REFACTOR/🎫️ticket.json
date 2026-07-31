@@ -1,0 +1,17 @@
+{
+  "title": "Macro Driven Entity Family Refactor",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Refactor compose/rs/lib.rs and compose/graphql/target.schema.graphql so all base functionality is macro-derived (edges, connections, hashing, diffs, modifications, owner unions, interface enums, operations, command navs, SDL fragments). Code-first: one entity_family! per entity emits the full 12-type ladder + Object impls + SDL fragment; gql::sdl() concatenates registered fragments instead of include_str! tautology; target.schema.graphql becomes a generated golden. Fixes all schema inconsistencies (duplicate Clump/TheKit, missing Stat/Layer/Group/Connection/Kit/Representation operation ladders, missing ClumpDiff ladder, FixedPiecesInput, ConnectionDiff body, normalized Modifications.owns comments). Multi-worker parallel execution: 1 coordinator + W0 foundation + W1-W6 entity conversion in parallel + W7 operations + W8 command navs + integrator + sweep. See plan e6121b3c for full DAG, worker manifest, region partitioning, subagent prompts, and concurrency safety rules.",
+  "summary": "Aligned compose Rust GraphQL control plane with schema.golden.graphql: Entity + EntityConnection interfaces, Workspace (renamed from Version), VCS owner/owns fields on Graph/Session/TheKit/Alternative/Checkpoint/Edit/Conflict, Operation interface uses Entity instead of removed OwnerEntity union, trimmed SessionCommand and BackboneCommand to golden fields, Query.entity returns Entity, Subscription.operation added, schema registration updated. Windows cargo check hit LNK1104 on proc-macro DLLs in this agent environment.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1412"
+  },
+  "goal": "🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "e6121b3c",
+    "local": "macro-driven_entity_family_refactor_e6121b3c.plan.md"
+  },
+  "sessions": ["⚪️c91fe4002a7d4955a69decf2598b2051", "⚪️06c3828ccbf547cb8939ba28c41175cf", "⚪️4da172291216456aa4ce8a4110eacfed", "⚪️6e7169ef68d84e7d91058cf7e7c6e9e1", "⚪️b316afda77904a45a23b2f8a95f60f61"]
+}

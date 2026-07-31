@@ -51,7 +51,7 @@ flowchart TD
 
 Each parent (Orthographic, 2D, 3D, Isometry, Perspective) is itself a draggable template that applies a sensible default view (Orthographic/2D -> Top, 3D/Isometry -> NE, Perspective -> standard perspective).
 
-## 1. Engine view ids + tree + layout catalog - [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx) (region `📷OrbitCameraView`)
+## 1. Engine view ids + tree + layout catalog - [infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx) (region `📷️OrbitCameraView`)
 
 - Extend `OrbitCameraViewId` (~~1009) and the `ORBIT_CAMERA_VIEW_LABELS`/`ORBIT_CAMERA_VIEW_DIRECTION` maps (~~1023/1035) with: `right` `[1,0,0]`, `left` `[-1,0,0]`, `isometricNe` `[1,1,1]`, `isometricNw` `[-1,1,1]`, `isometricSe` `[1,-1,1]`, `isometricSw` `[-1,-1,1]`, `twoPointPerspective` `[1,-1,0]` (horizontal/eye-level so verticals stay parallel). Keep existing ids.
 - Add `children?` to `OrbitCameraViewTemplateDescriptor` (~~1107) and rewrite `createOrbitCameraViewTemplates` (~~1122) to return the nested tree above (each node has `id`, `label`, `controllerId`, `command`, `args:{view}`, optional `children`). Labels per request ("Below", "Right", "Left", "Two Point Perspective").
@@ -96,7 +96,7 @@ Play ([cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)):
 - Pass `instanceId` from `CadPlaySurfaceHost` (~~2202, has `shellInstance`) into `CadPlayInteractionPane` (~~2086); read the per-instance seed and pass `cameraView`/`cameraViewSeedKey` into `PlaySession` (~2153).
 - Replace `CAD_PLAY_LAYOUT`/named layouts with the existing 4-pane quad plus the full view-layout catalog (mapper bound to a representative window kind, e.g. `CAD_PLAY_SHAPE_WINDOW_ID`, dropping multiple instances at different views). Update the cad-play vitest (~2319) for templates + `setOrbitCameraView`.
 
-## 6. Shared layout mapper - [framework/product/playground/core/index.ts](framework/product/playground/core/index.ts) (region `🔖WindowKindRuntime`/layouts)
+## 6. Shared layout mapper - [framework/product/playground/core/index.ts](framework/product/playground/core/index.ts) (region `🔖️WindowKindRuntime`/layouts)
 
 - Add `namedLayoutsFromOrbitViewDescriptors(windowKindId, descriptors)` that turns the abstract layout descriptors from step 1 into `NamedLayout[]` (using `createWindowLayout` with `templateId = view`, `groupPath` from the descriptor, arrangement -> row/column/stack tree). Both plays consume this.
 

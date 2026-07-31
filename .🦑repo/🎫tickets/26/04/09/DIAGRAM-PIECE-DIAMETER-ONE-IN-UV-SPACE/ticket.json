@@ -1,8 +1,0 @@
-{
-  "title": "Diagram Piece Diameter One In Uv Space",
-  "status": "closed",
-  "description": "ComposeDiagram: pieces should have diameter 1 in diagram u,v units — scale circle r by scale*resolvedZoom; default radius 0.5; fix selection overlay padding to match.",
-  "summary": "ComposeDiagram piece nodes: radius is in diagram u/v units; default 0.5 with r * (scale*resolvedZoom) so diameter matches 1 vs origin rulers. Hover/selected extra radius and stroke scale with pxPerDiagramUnit; selection overlay outer radius updated. Constants DIAGRAM_PIECE_*_EXTRA. Vitest 232 pass.",
-  "goal": "🎯uipolish",
-  "sessions": ["⚪00feb0194f2d4ff5a5c979d0ddd716e6"]
-}

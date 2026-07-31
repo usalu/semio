@@ -1,0 +1,11 @@
+{
+  "title": "Implement Rust Kit Backbones",
+  "status": "closed",
+  "description": "Implement async Rust kit backbones in compose/rs: DevKitBackbone synchronized JSON file, LocalKitBackbone synchronized folder with .compose/kit.db and files/folders, RemoteKitBackbone synchronized websocket connection to compose/hub. Backbone must own authoritative kit state, maintain linear change history, manage sessions with timeout/disconnect, and coordinate candidate agreement across clients. Extend existing Rust tests only and verify tests pass.",
+  "summary": "Implemented and verified Rust async kit backbone integration work. Fixed async backbone to use current stateful Kit methods for applying diffs and validating candidates, preserving authoritative kit snapshots and linear ledger persistence. Extended existing Rust test file with async coverage for DevKitBackbone JSON + ledger persistence and consensus, LocalKitBackbone .compose/kit.db + ledger persistence, idle timeout interaction locking, and RemoteKitBackbone websocket session/propose/agreement/vote/commit flow via a local mock hub. Updated stale Rust callers/tests from removed free functions to current method APIs so unit and doctests compile. Verified `cargo test` in compose/rs passes: 83 passed, 1 ignored, doctests passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1364"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️e3070dd1ce20423f8df792504b549ab5"]
+}

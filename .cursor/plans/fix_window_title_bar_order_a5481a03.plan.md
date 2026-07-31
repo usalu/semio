@@ -77,5 +77,5 @@ Remove these per the "no leftover migration/dead code" rule. Keep `\semio@window
 
 1. Kill stray `tectonic` processes.
 2. Rebuild a template that exercises both the cover-page `Window[title=...]` row (e.g. `zwischenbericht` or the standalone verify tex already in the ticket folder) and a plain in-body `Window`/`Figure` (e.g. `report`).
-3. Rasterize the relevant pages (ticket already has `.repo/🎫/26/07/09/PRINT-WINDOW-BORDER-GAP/rasterize.ts`) and visually confirm: chip row + separator sit above the box content, borders connect, and the cover title is no longer clipped.
-4. Update `.repo/🎫/26/07/09/PRINT-WINDOW-BORDER-GAP/verify-log.md` with the corrected root cause and reopen/close the ticket with the fix summary.
+3. Rasterize the relevant pages (ticket already has `.repo/🎫️/26/07/09/PRINT-WINDOW-BORDER-GAP/rasterize.ts`) and visually confirm: chip row + separator sit above the box content, borders connect, and the cover title is no longer clipped.
+4. Update `.repo/🎫️/26/07/09/PRINT-WINDOW-BORDER-GAP/verify-log.md` with the corrected root cause and reopen/close the ticket with the fix summary.

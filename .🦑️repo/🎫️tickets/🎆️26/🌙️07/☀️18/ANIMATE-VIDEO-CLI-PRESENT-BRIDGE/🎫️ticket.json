@@ -1,0 +1,14 @@
+{
+  "title": "Animate Video CLI Present Bridge",
+  "emoji": "🎥️",
+  "status": "closed",
+  "description": "Implement video CLI, present bridge, plugin export in semio animate: script.ts router, preview_scene_window, subtitle sidecar, cache LRU, present compiler, plugin export, react renderer, launch.json, scene structs.",
+  "summary": "Implemented animate video CLI (render/preview/flush-cache with RenderCliScript flags), preview_scene_window with metadata fallback and optional winit feature, SRT subtitle sidecar, cache LRU eviction, present compile_scene_to_assets + real player boot, plugin exportVideoFromDeck shell action, React sceneHash video embed, launch.json entries, and specialized scene structs. animate_core/video/present/plugin tests pass via isolated ticket target dir.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2094"
+  },
+  "goal": "🎯️animate",
+  "sessions": [
+    "⚪️4434a2c65f7448ce976fdfb819aeeb31"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "title": "Redraw Camera Chase During Play",
+  "emoji": "📷️",
+  "status": "closed",
+  "description": "While redraw play runs, damp pane cameras each fixture commit toward triptych bbox fit; post-stop ease unchanged.",
+  "summary": "Added BOARD_PLAY_REDRAW_CAMERA_CHASE_BLEND and dampTriptychCamerasLinear; while boardRedrawPlaying and not suppress, each fixture-driven render damps boardPlayPaneCamerasBaseline toward triptychCamerasFromFixture(fixture). Chase ref initialized on play start alongside baseline; cleared when play stops. Post-pause third/two-thirds ease unchanged. Settings blurb updated. Vitest passed.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️1d6eb0634aa84288b6773b28d1d965ae"]
+}

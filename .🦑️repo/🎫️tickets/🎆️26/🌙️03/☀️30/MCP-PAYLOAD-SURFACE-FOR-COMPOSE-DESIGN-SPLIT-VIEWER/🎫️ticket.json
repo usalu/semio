@@ -1,0 +1,9 @@
+{
+  "title": "Mcp Payload Surface For Compose Design Split Viewer",
+  "emoji": "✂️",
+  "status": "closed",
+  "description": "Add engine surface field and UI effectiveSurface so start_working_in_design mounts ComposeDesign not ComposeDiagram when hosts merge stale show-diagram with points.",
+  "summary": "Engine: added `surface` to MCP app payloads (`design`/`scene`/`diagram`) via _mcp_app_surface_for_mode. UI: McpDiagramPayload.surface, normalize + score + merge (with design-rich candidate copying surface); McpDesignViewer branches on effectiveSurface so ComposeDesign mounts for split view even when stale merged mode is show-diagram with non-empty points. Extended engine tests for surface. pytest + vitest pass.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": ["⚪️629f5ceb539642f386f5a0d2ea265724"]
+}

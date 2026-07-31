@@ -1,0 +1,8 @@
+{
+  "title": "Fix Antigravity Devcontainer Forwarder Failure",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Enable concurrent attachment from VS Code, Antigravity, Windsurf, and Cursor to the same devcontainer without mount, ownership, or extension install races.",
+  "summary": "Enabled concurrent multi-IDE devcontainer use by persisting Cursor/Antigravity server homes, extending ownership repair, and making post-attach extension setup lock-protected and non-destructive across VS Code, Antigravity, Windsurf, and Cursor.",
+  "goal": "🎯️aioptimizedrepo🎯️sandboxedrepo🎯️zerotouchdevcontainer"
+}

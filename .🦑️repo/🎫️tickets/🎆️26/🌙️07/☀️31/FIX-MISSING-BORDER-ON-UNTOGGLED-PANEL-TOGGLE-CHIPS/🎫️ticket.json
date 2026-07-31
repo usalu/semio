@@ -1,0 +1,11 @@
+{
+  "title": "Fix Missing Border on Untoggled Panel Toggle Chips",
+  "emoji": "🔲️",
+  "status": "closed",
+  "description": "The panel toggle chips in the navbar are missing their border outline when untoggled (panel is folded/closed). The `WindowChrome chipOnly` render path does not include a `WindowChromeSilhouetteBorder`, so there is no SVG silhouette border drawn around the chip cap when in chipOnly mode. The border is only shown for the fully-expanded `WindowChrome` (non-chipOnly) via the silhouette SVG. Fix: add `WindowChromeSilhouetteBorder` to the `chipOnly` branch in `WindowChrome` in `/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx`.",
+  "summary": "Fixed missing border on untoggled panel toggle chips in the navbar. The `WindowChrome chipOnly` render path (used by `PanelChromeTabBar`) was missing a `WindowChromeSilhouetteBorder` component, so no SVG silhouette border was drawn around chip caps when the panel is folded. Added `\u003cWindowChromeSilhouetteBorder stack={stackEl} active={active} borderKind={borderKind} /\u003e` to the chipOnly branch. Also extended the existing test to assert the silhouette border element is present in both folded `PanelChromeTabBar` and folded `Panel`.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️55721fe1450a49428f3e2ad8e473dde4"
+  ]
+}

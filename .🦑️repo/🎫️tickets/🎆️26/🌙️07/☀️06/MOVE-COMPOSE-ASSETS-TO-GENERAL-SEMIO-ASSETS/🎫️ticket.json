@@ -1,0 +1,12 @@
+{
+  "title": "Move Compose Assets to General Semio Assets",
+  "emoji": "📦️",
+  "status": "closed",
+  "description": "Move the compose assets to the general semio assets workspace",
+  "summary": "Moved compose assets metabolism and abbau-aufbau to asset/ package and updated references in JS and Rust codebases",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1831"
+  },
+  "goal": "🎯️r2602🎯️updateddocs🎯️updateduserdocs🎯️updatedexamples",
+  "sessions": ["⚪️c60be6601af6440db2a6cb4c2ccdf04d"]
+}

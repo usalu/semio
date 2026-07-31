@@ -99,4 +99,4 @@ flowchart TB
 
 ## Ticket workflow (first execution step)
 
-Read `repo://goals`; open a new ticket "Tree Operator Clusters" under the most fitting goal (likely `🎯procedural🎯floweditor`), or reopen if one matches. Keep all temp logs/scripts inside the ticket folder; close with a summary + touched files when done. No new crate is introduced, so no new `launch.json` build targets are required.
+Read `repo://goals`; open a new ticket "Tree Operator Clusters" under the most fitting goal (likely `🎯️procedural🎯️floweditor`), or reopen if one matches. Keep all temp logs/scripts inside the ticket folder; close with a summary + touched files when done. No new crate is introduced, so no new `launch.json` build targets are required.

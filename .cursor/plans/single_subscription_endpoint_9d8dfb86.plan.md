@@ -24,7 +24,7 @@ todos:
    content: "Run graphql parse + buildSchema; rg sweeps confirm no `scope:` leftovers in operation types and exactly 96+ `involved: [Entity!]!` occurrences."
    status: pending
  - id: ticket_update
-   content: "Append problem/change/verification to .repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md."
+   content: "Append problem/change/verification to .repo/🎫️/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md."
    status: pending
 isProject: false
 ---
@@ -116,7 +116,7 @@ These must all become:
   involved: [Entity!]! # reference // Tag | Attribute
 ```
 
-Trailing `# reference // …` comment listing the involved entity kinds is preserved verbatim (the comment now correctly describes plural members). The transform is a deterministic line-by-line regex `^(\s*)scope: Entity! # reference (//.*)?$` → `$1involved: [Entity!]! # reference $2`. Implemented as a small CommonJS script in the ticket folder (`.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/scope_to_involved.cjs`) following the same pattern as the existing `unionize.cjs` / `strip_specific_owner_fields.cjs`.
+Trailing `# reference // …` comment listing the involved entity kinds is preserved verbatim (the comment now correctly describes plural members). The transform is a deterministic line-by-line regex `^(\s*)scope: Entity! # reference (//.*)?$` → `$1involved: [Entity!]! # reference $2`. Implemented as a small CommonJS script in the ticket folder (`.repo/🎫️/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/scope_to_involved.cjs`) following the same pattern as the existing `unionize.cjs` / `strip_specific_owner_fields.cjs`.
 
 Affected count: 96 lines total (1 on `interface Operation` already replaced in step 2 + 95 concrete operation types). All 96 should end up reading `involved: [Entity!]!`.
 
@@ -151,7 +151,7 @@ type FailedOperationConnection implements EntityConnection {
 
 ```graphql
 type Subscription {
- # 📡 Single async feed of every event on the system — applied operations, failed operations, and any future lifecycle/sync events.
+ # 📡️ Single async feed of every event on the system — applied operations, failed operations, and any future lifecycle/sync events.
  # Clients discriminate concrete events (RenamedTag, MovedPiece, FailedOperation, ...) via inline fragments.
  event: Event!
 }
@@ -182,7 +182,7 @@ No other fields. No `commandSucceeded`, `operationSucceeded`, `operationFailed`,
 
 ## Ticket Update
 
-Append to `.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md`:
+Append to `.repo/🎫️/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md`:
 
 - Problem: flat per-event Subscription duplicates the Operation interface; `FailedOperation` cannot implement `Operation` (no `modification`/`after`); events are a general concept, not just operations; a single event commonly involves multiple entities so `scope: Entity!` is the wrong shape.
 - Change: introduce top-level general-purpose `Event` interface (+ edge/connection) with `involved: [Entity!]!`; rewrite all 96 `scope: Entity!` lines (Operation interface + 95 concrete operations) to `involved: [Entity!]!` via `scope_to_involved.cjs`; `Operation` becomes one specialization of `Event`; add `FailedOperation` as a sibling specialization; collapse Subscription to a single `event: Event!`; remove orphaned `Command` / `Error`.

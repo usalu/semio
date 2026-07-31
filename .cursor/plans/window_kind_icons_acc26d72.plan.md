@@ -87,4 +87,4 @@ Extend existing suites only:
 
 ## Ticket / goal
 
-On execution: open ticket under goal `🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp` (same family as recent shell UX tickets; `repo://goals` MCP resource is currently unavailable). Bind this plan id on open/close.
+On execution: open ticket under goal `🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp` (same family as recent shell UX tickets; `repo://goals` MCP resource is currently unavailable). Bind this plan id on open/close.

@@ -47,7 +47,7 @@ Create a new Rust crate under `infinite/world/`, mirroring `infinite/cavas/rs` (
 
 - `cargo test -p kernel_3d_scene`, `cargo test -p infinite_world`, `cargo test -p ui_wgpu`, `cargo test -p semio-framework-renderer-wgpu` (or workspace-wide) - confirm all moved tests (including the `concrete_forest_*` frustum regression tests) still pass from their new locations.
 - Rebuild WASM (`bun ./framework/renderer/wgpu/script.ts wasm`).
-- Re-run `bun ./.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --plugins puzzle3d,puzzle5d,lowpoly,procedural3d,cad,shooting` and confirm all six pass (including re-investigating the earlier `procedural3d` screenshot timeout).
+- Re-run `bun ./.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --plugins puzzle3d,puzzle5d,lowpoly,procedural3d,cad,shooting` and confirm all six pass (including re-investigating the earlier `procedural3d` screenshot timeout).
 - Manually load a plugin that triggers the Vello/raster path (e.g. `dag`) in the dev browser and confirm the two WebGPU validation errors no longer appear in the console.
 
 ## Architecture after this change

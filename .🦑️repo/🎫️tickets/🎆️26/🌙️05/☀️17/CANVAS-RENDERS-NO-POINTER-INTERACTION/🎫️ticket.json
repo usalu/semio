@@ -1,0 +1,8 @@
+{
+  "title": "Canvas Renders No Pointer Interaction",
+  "emoji": "🖐️",
+  "status": "open",
+  "description": "Canvas renders but no pointer interaction (pan/select/zoom). Trace BoardCanvas eventSurface, BoardRenderer listeners, overlays, and global capture listeners.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️4ce30b70e7f34230907fdd3222bfc2c5"]
+}

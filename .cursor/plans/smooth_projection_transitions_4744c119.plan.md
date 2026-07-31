@@ -94,7 +94,7 @@ Fix `[handleProjectionSpecChange](cad/renderer/js/index.tsx)` to use `worldProje
 
 - Mode-only (same Top orientation, 3pt → ortho): position/target unchanged; projectionSpec updates; zoom family-safe.
 - Orientation change (same mode, free → Top): target/distance preserved; destination eye matches Top look.
-- Logs under `.repo/🎫/26/07/23/COMPLETE-3D-PROJECTION-GIZMO/`.
+- Logs under `.repo/🎫️/26/07/23/COMPLETE-3D-PROJECTION-GIZMO/`.
 
 ## Out of scope
 

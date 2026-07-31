@@ -128,7 +128,7 @@ Replace the generic Copy/Paste no-operations with scene-contributed items (start
 
 ## Verification
 
-- Extend the existing suite (per repo convention, no new test files): [.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts) — add assertions that Mod+P opens a palette with visible, clickable items; Mod+F opens find with items for `draw`/`flow`; the example dropdown, 4-icon panel toggle group, and mode buttons render/function; and — specifically on `s` and `draw` — the Command rail and Window Options rail chips are present and expand to show real controls.
+- Extend the existing suite (per repo convention, no new test files): [.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫️/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts) — add assertions that Mod+P opens a palette with visible, clickable items; Mod+F opens find with items for `draw`/`flow`; the example dropdown, 4-icon panel toggle group, and mode buttons render/function; and — specifically on `s` and `draw` — the Command rail and Window Options rail chips are present and expand to show real controls.
 - `cargo test -p ui_wgpu` for widget/layout units touched; rebuild the WGPU wasm bundle (`framework/renderer/wgpu/script.ts wasm`).
 - Run the full 25-plugin suite for both `verify-react-playgrounds-e2e.ts` and `verify-wgpu-playgrounds-e2e.ts` to confirm no regressions, plus a manual screenshot comparison of `s` and `draw` in both renderers.
 - All work stays in existing files using region/subregion comments per repo convention — no new script files.

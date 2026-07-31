@@ -64,19 +64,19 @@ flowchart LR
 - Add a `commandRequest` effect (mirror the existing `reorganize` effect at ~L1377) handling canvas commands: `openSpotlight` (set spotlight at screen/world), `selectAll`, `clearSelection` (`setSelection("[]")`), `deleteSelection`, `togglePreview` (toggle ids in the preview-off set via `setPreviewOff`), `replaceImage` (`openImagePicker(id)`), `reorganize`. Each runs `evaluate`/`persistFixture`/`renderFrame`/`emitInteractionState`.
 - Extend `emitInteractionState` to also read `previewOffWidgetIds` and call `onPreviewOffChange`.
 - Add a shared pure helper `buildFlowContextMenuItems(ctx, dispatch)` returning the common `ContextMenuItem[]` (Add node…, Delete [destructive, count-aware], Toggle preview [checked], Replace image… [only when `isImageWidget`], Select all, Clear selection [when selection non-empty], Reorganize), with `onSelect: () => dispatch(command, args)`.
-- Extend the `#region 🧪Tests` with cases for `buildFlowContextMenuItems` (background vs node vs image variants).
+- Extend the `#region 🧪️Tests` with cases for `buildFlowContextMenuItems` (background vs node vs image variants).
 
 ### 2. `flow/play/index.ts`
 
 - Add `commandRequestEpoch`/`commandRequestPayload` state + `getCommandRequest()`; add a `canvasCommand` controller command that records `{command, argsJson}` and bumps the epoch (reuse existing `reorganize`).
 - Add `buildFlowPlayCanvasContextMenu(ctx, dispatch)` delegating to `buildFlowContextMenuItems`.
-- Extend `#region 🧪Tests`.
+- Extend `#region 🧪️Tests`.
 
 ### 3. `procedural/play/index.ts`
 
 - Same `commandRequest` epoch + `canvasCommand` dispatcher; store previewOff from `onPreviewOffChange` into existing `previewOffNodeIds` so the 3D preview reacts.
 - Add `buildProceduralPlayCanvasContextMenu(ctx, dispatch)` = `buildFlowContextMenuItems` plus preview-specific items (e.g. "Isolate in preview" → `setShowMode selected` + select node).
-- Extend `#region 🧪Tests`.
+- Extend `#region 🧪️Tests`.
 
 ### 4. `procedural/react/index.tsx` (ProceduralFlowEditor)
 

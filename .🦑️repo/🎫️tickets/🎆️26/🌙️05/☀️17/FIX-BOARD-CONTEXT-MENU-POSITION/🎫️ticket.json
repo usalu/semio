@@ -1,0 +1,15 @@
+{
+  "title": "Fix Board Context Menu Position",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Board context menu appears linked to the internal board coordinate system instead of the mouse position. Diagnose the board context menu event path and position the menu next to the pointer in viewport/client coordinates. Keep changes in existing files and validate with focused tests or runtime checks where feasible.",
+  "summary": "Unified ordinary and controlled context menus on the viewport-fixed window surface so the outer top-left aligns with the right-click client coordinates. Added exact portal and position regression coverage; 13 focused context-menu tests pass. Runtime render confirmed BODY, fixed, 123px, 87px for a click at 123,87.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1426"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [
+    "⚪️96a5f79db40a4421a3f054e2e1500442",
+    "⚪️500b8d27853b43019e56edd5bebe067e"
+  ]
+}

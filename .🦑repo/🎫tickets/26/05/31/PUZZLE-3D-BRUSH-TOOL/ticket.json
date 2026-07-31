@@ -1,6 +1,0 @@
-{
-  "title": "Puzzle 3D Brush Tool",
-  "status": "closed",
-  "summary": "Fixed puzzle 3D brush engagement Enter and chevron select: engagement command line uses engagementCommandTokenEquals so PascalCase tokens (Brush/Select) match tool commands; engagementSpecRef updates synchronously during render; host bridge registers in useLayoutEffect so commands run before paint.",
-  "sessions": ["⚪832954a6c04b40129e01afd7572cad87", "⚪347a438a3aad4f87aad47f369f12985d"]
-}

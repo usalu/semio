@@ -1,0 +1,9 @@
+{
+  "title": "Fix Active Window Node Selection Chrome",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When selecting nodes in puzzle 2d, the active window does not show node selection chrome but other windows do. Edges and handles react correctly in the active window. Root cause: set_selection_ids_gestured does not bump content_scene_generation so cached world node/handle layer is stale; edges are not cached and repaint every frame.",
+  "summary": "Fixed puzzle 2d node selection chrome missing on the authoring (active) canvas: gesture selection paths now bump content_scene_generation so the cached Vello node/handle layer rebuilds. Peer panes already used set_selection_ids_json_silent which bumped the cache. Added board_host_gestured_selection_invalidates_cached_world_content; 87 Rust + 98 Vitest tests pass.",
+  "goal": "🎯️puzzle",
+  "sessions": ["⚪️8f6dfe111156481897e3be7cd4e8b534"]
+}

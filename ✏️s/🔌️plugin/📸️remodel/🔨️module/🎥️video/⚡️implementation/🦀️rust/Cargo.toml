@@ -1,0 +1,15 @@
+[package]
+name = "remodel_video"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🎥️video/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }

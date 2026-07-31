@@ -1,0 +1,12 @@
+{
+  "title": "Presentation Pdf Cover Fit",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix PDF disposition rendering: must cover frame like figures (uniform scale, centered, no distortion). Issues: wide PDFs keep fixed height with side gaps; narrow PDFs squeeze horizontally.",
+  "summary": "Fixed PDF dispositions not covering their frame (letterboxing when wide, horizontal squeeze when narrow).\n\nRoot cause: react-pdf `Page` used fixed `height` only (fit-height), and CSS `max-width`/`max-height` on the canvas squeezed pages wider than the frame.\n\nFix: `pdfCoverScale()` computes uniform cover scale from container and page viewport; `PdfMorphView` renders with `scale={coverScale}` after `onLoadSuccess`. Removed canvas max-size constraints; parent frame clips and centers via existing flex + overflow hidden.\n\n79 renderer tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1515"
+  },
+  "goal": "🎯️presentation",
+  "sessions": ["⚪️82fc0d1b9dd54b399e004116e319390a"]
+}

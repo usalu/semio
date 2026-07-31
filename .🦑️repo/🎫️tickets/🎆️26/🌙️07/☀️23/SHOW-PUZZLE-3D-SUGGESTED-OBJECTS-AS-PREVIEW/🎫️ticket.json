@@ -1,0 +1,14 @@
+{
+  "title": "Show Puzzle 3D Suggested Objects as Preview",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Puzzle 3D: suggested objects are not shown as preview in 3D. When hovering/selecting suggested objects from the suggestion menu, the brush preview ghost should appear in the 3D world at the proposed placement. Diagnose why brushPreviewJson is missing or not rendered during suggestion hover, fix at the root, add regression coverage in existing tests, and verify with runtime evidence.",
+  "summary": "Fixed Puzzle 3D suggestion ghosts not appearing in the world viewport.\n\nRoot causes:\n1. One-shot context-menu suggestions no longer enter brush mode; `world_brush_preview_json` must emit when `suggestion_menu` is open (not only when `active_utility == \"brush\"`).\n2. React `BrushPreviewGhost` required the preview `meshUrl` to already be in the scene meshes list, so unplaced kinds never loaded their GLB (catalogue-drop already loaded `meshUrl` directly).\n3. Demand frameloop left newly mounted ghosts unpainted until the next orbit tick.\n4. Brush collision mesh registration only covered placed-object URLs, so suggestion kinds could stay pending forever.\n\nFixes:\n- Plugin: gate brush preview on brush utility OR open suggestion menu; keep suggestions off brush mode.\n- React: `brushPreviewGhostMeshUrl` + translucent GLB ghost with demand invalidate; include preview `meshUrl` in brush mesh registrars; host `SetActiveUtility` syncs the per-window utility ref before refresh.\n\nVerification: vitest ghost mesh URL + utility-map refresh (4 passed); cargo `hover_suggestion_updates_the_brush_candidate_index_and_live_preview` and `open_and_accept_vortex_suggestions_preserve_active_utility` (both ok).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2271"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️1c1e74a99f124185a56896d572c2d275"
+  ]
+}

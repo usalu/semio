@@ -1,0 +1,12 @@
+{
+  "title": "Bundle Sketchpad for Compose VS Code Kit Editor",
+  "emoji": "✏️",
+  "status": "closed",
+  "description": "Compose VS Code should open the kit editor when opening a kit JSON file. The extension already registers a custom editor, but runtime falls back to static HTML because sketchpad-dist/index.html is missing. Update the Compose VS Code build/package flow so the sketchpad webview app is bundled with the extension, broaden kit file detection where appropriate, extend an existing test file instead of creating a new one, validate the build/runtime path, and track all touched files.",
+  "summary": "Compose VS Code kit files now open in the custom kit editor across the repo naming conventions. The extension resolves sketchpad assets from bundled sketchpad-dist or the sibling workspace sketchpad build, and the existing VS Code test file now covers kit file detection plus dist resolution.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1027"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️a0b64902bacb4b3aafac930a4084870a"]
+}

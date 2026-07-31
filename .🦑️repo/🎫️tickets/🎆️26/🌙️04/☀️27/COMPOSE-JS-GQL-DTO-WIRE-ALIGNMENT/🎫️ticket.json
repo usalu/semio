@@ -1,0 +1,8 @@
+{
+  "title": "Compose JS Gql Dto Wire Alignment",
+  "emoji": "🔗️",
+  "status": "open",
+  "description": "Align compose/js wire types with *Dto + GraphQL schema: replace generic JsonValue/KitJsonTreeDto naming with GqlScalarWireDto, add KitFullSnapshotDto for Query.kit fullDto, type materializeAt, use DesignPlain for paste selection; run tsc/tests.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️6ee500f3a57b415c8e6c82a706b56d75"]
+}

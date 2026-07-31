@@ -1,0 +1,14 @@
+{
+  "title": "Fix Invalid Lowpoly Show-Edges Icon Id",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "lowpoly/plugin/rs/lib.rs used icon_id \"git-commit-horizontal\" for the \"show edges\" wireframe toggle (in lowpoly_window_engagement's WindowEngagementOption and in lowpoly_window_measures' WindowMeasure::Toggle), but that name has no entry in ui/asset/icon/generated/icon_name.rs's IconName catalog (only \"git-commit\" exists). The \u0026str -\u003e IconName From impl's .expect(\"invalid catalog icon name\") panics at runtime whenever this code path builds, failing lowpoly-plugin tests: __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest, engagement_options_contain_no_utility_switcher, paint_utility_params_are_utility_tagged_and_mesh_op_measures_removed, select_window_options_mirror_puzzle3d_taxonomy, window_kind_actions_scope_mesh_ops_to_main_only. Fix by swapping to an existing valid catalog icon that fits the wireframe/show-edges semantic, then verify with cargo test -p lowpoly-plugin.",
+  "summary": "Fixed 3 invalid IconName catalog references in lowpoly/plugin/rs/lib.rs that caused runtime panics (\"invalid catalog icon name\") whenever the affected UI paths built: \"git-commit-horizontal\" → \"grid-3x3\" (show-edges wireframe toggle, 2 sites: WindowEngagementOption and WindowMeasure::Toggle), \"cursor\" → \"mouse-pointer\" (default selection mode toggle), \"refresh-cw\" → \"arrow-right-left\" (invertive selection mode toggle). Also swept the whole file's icon_id/icon usages against ui/asset/icon/generated/icon_name.rs's IconName catalog to confirm no other invalid names remain. Verified with `cargo test -p lowpoly-plugin`: all 20 unit tests pass, including the 5 originally-failing tests (__semio_plugin_sanity_declared_apps_appear_in_bundle_manifest, engagement_options_contain_no_utility_switcher, paint_utility_params_are_utility_tagged_and_mesh_op_measures_removed, select_window_options_mirror_puzzle3d_taxonomy, window_kind_actions_scope_mesh_ops_to_main_only). The lib doctest failure (E0463 can't find crate lowpoly_core) is a pre-existing, unrelated rustdoc crate-resolution issue.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2365"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps🎯️runningdesignapp",
+  "sessions": [
+    "⚪️f6e41dc78e9745b7888c5d6e8ae227a3"
+  ]
+}

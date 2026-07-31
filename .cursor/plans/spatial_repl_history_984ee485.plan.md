@@ -91,7 +91,7 @@ Readonly measure commands (`measure.distance/area/volume`) keep returning a `Com
 
 ## 4. Renderer REPL — [spatial/js/renderer-r3f/index.tsx](spatial/js/renderer-r3f/index.tsx)
 
-Lift the REPL UI out of `play/main.tsx` into the renderer package under a new `🪩Repl` region so the renderer is the full REPL surface. Public API:
+Lift the REPL UI out of `play/main.tsx` into the renderer package under a new `🪩️Repl` region so the renderer is the full REPL surface. Public API:
 
 ```ts
 export function useDocumentHistory(): DocumentHistory; // memoized per host
@@ -112,14 +112,14 @@ export function CommandRepl(props: CommandReplProps): ReactNode; // canvas + pal
 
 ## 5. Tests — extend the existing vitest suites
 
-In `spatial/js/core/index.ts` `🧪Tests` region:
+In `spatial/js/core/index.ts` `🧪️Tests` region:
 
 - `DocumentHistory` round-trip: record two modifications, `undo`/`redo` restores topology counts and revision via `applyTopologyDiff`.
 - Readonly skip: `measure.distance` commit produces empty diff and `peekUndo()` stays `null`.
 - In-command redo: `send` → `undo` → `redo` returns to the post-send snapshot; new `send` after `undo` clears `snapRedoStack`.
 - Active vs inactive routing: while `state === "first_corner"`, `rt.undo()` walks `snapUndoStack`; when `state === machine.initial` (or after `commit`) it pops `DocumentHistory`.
 
-In `spatial/js/renderer-r3f/index.tsx` `🧪Tests` region: smoke test that `useReplHistoryState` reports `canRedo=true` after an undo on a runtime with two committed modifications (using a stub kernel + bypassing canvas rendering, like the existing runtime test).
+In `spatial/js/renderer-r3f/index.tsx` `🧪️Tests` region: smoke test that `useReplHistoryState` reports `canRedo=true` after an undo on a runtime with two committed modifications (using a stub kernel + bypassing canvas rendering, like the existing runtime test).
 
 ## 6. Out of scope
 

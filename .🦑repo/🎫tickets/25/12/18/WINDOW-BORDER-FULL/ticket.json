@@ -1,7 +1,0 @@
-{
-  "title": "Fix missing bottom/right window borders",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Every window should have a full border around it. Currently the bottom and right border are missing.",
-  "goal": "🎯r2602🎯runningsketchpad"
-}

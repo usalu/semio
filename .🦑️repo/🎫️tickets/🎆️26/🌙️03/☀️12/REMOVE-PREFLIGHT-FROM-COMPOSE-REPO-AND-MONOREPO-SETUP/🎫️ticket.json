@@ -1,0 +1,12 @@
+{
+  "title": "Remove Preflight From repo and Monorepo Setup",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Remove all preflight-related functionality from repo CLI and the monorepo setup. This includes:\n\n1. Remove preflight command from repo CLI if it exists\n2. Remove preflight references from package.json scripts \n3. Remove preflight tasks from .vscode/tasks.json\n4. Remove any preflight-related documentation or configuration\n5. Update any dependent systems that rely on preflight\n\nThe goal is to completely eliminate preflight from the codebase as it's no longer needed.",
+  "summary": "Successfully removed all preflight-related functionality from repo and monorepo setup:\n\n1. ✅️ Removed preflight script from root package.json\n2. ✅️ Updated all package.json scripts that used preflight to use nx directly (test, build, publish:test, publish)\n3. ✅️ Removed entire preflight section from .vscode/tasks.json (16 individual preflight tasks)\n4. ✅️ Removed preflight scripts from individual package.json files (compose/rs, compose/sketchpad)\n5. ✅️ Updated documentation to remove preflight references:\n   - README.md build instructions and automation commands description\n   - compose/js/README.md preflight section\n   - compose/DOCS.md preflight section  \n   - repo/DOCS.md preflight command documentation\n\nThe monorepo now uses nx directly for all orchestration instead of going through a preflight layer. All scripts and tasks have been updated accordingly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/856"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["🔀️b206b77c4747a568056c9529317b17e33a0bd823⚪️17733172787810169198839898664731729403"]
+}

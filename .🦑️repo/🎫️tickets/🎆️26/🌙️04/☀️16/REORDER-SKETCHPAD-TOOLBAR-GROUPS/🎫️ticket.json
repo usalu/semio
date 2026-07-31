@@ -1,0 +1,11 @@
+{
+  "title": "Reorder Sketchpad Toolbar Groups",
+  "status": "closed",
+  "description": "Reorder compose sketchpad toolbar groups consistently across apps as Select, Create, Open, Filter. Update existing tests only and verify tests pass.",
+  "summary": "Reordered sketchpad toolbar parent groups to Select, Create, Open, Filter across the shared toolbar shell and app registrations. Extended embedded sketchpad Playwright coverage to assert toolbar group order for Home, Kit, Type, and Design. Updated createKit test/runtime calls to use explicit temporary kind, fixed FolderSection missing kit context, repaired the transaction squashed diff method syntax, and added a Node sql.js wasm fallback so the full sketchpad suite runs. Verified build and all sketchpad tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1336"
+  },
+  "goal": "🎯️r2603🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️ea5dca23a4894ec28413097e5d48a20f", "⚪️43f1105c6e2e480aae543d23ea8f1cda"]
+}

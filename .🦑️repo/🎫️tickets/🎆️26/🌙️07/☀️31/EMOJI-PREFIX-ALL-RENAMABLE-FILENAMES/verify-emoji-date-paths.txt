@@ -1,0 +1,5 @@
+date dirs: .🦑️repo/🎫️tickets/🎆️YY/🌙️MM/☀️DD/SLUG
+cache: .🦑️repo/⚡️cache/{🤖️generated,🔀️diff}/🎆️YY/🌙️MM/☀️DD/
+files: 🎫️ticket.json, 🎯️goal.json, 🧑️‍💻️contributor.json, 📌️important.md, 📁️files.json
+Go: FormatYearDir/MonthDir/DayDir + FormatTicketRelPath
+tests: TestRenderPromptTemplateUsesRepoMetaRoot|TestGetRepoMetaDir PASS

@@ -1,0 +1,12 @@
+{
+  "title": "Refactor Compose UI to Use Elements UI Only",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "Extend Compose Ui Components For Iframe And Create Scene And Design Components",
+  "summary": "Refactored compose/ui to inherit styling from elements/ui by removing compose/ui-owned CSS vars, moving them into elements/ui/globals.css, and rewriting KitArtifactSelect to compose elements/ui primitives (Section, Button, ToggleGroup) instead of inline styles + Tailwind strings.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1041"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️56e3cc8ba8514284ac76dfa27496550f", "⚪️4c16f04aff0c4566b778eb451c09536f"]
+}

@@ -1,7 +1,0 @@
-{
-  "title": "Puzzle 3d Vortex Compatibility Coloring",
-  "emoji": "🎨",
-  "status": "open",
-  "description": "Color every vortex by compatibility group (Union-Find over kindCompatibility); compatible vortex kinds share one color on idle vortices.",
-  "goal": "🎯presentation"
-}

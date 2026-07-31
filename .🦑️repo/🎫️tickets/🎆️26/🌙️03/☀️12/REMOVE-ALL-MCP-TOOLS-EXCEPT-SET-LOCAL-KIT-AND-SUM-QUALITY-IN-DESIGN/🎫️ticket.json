@@ -1,0 +1,12 @@
+{
+  "title": "Remove All Mcp Tools Except Set Local Kit and Sum Quality in Design",
+  "emoji": "🗑️",
+  "status": "closed",
+  "description": "Remove all MCP tools from the compose engine except set_local_kit and sum_quality_in_design. All other @mcp.tool() decorated functions should be removed from engine.py.",
+  "summary": "Removed 28 MCP tools from engine.py, keeping only set_local_kit and sum_quality_in_design. Deleted: validate_kit, flatten_design, drag_pieces_in_design, get_kit_diff, apply_kit_diff, inverse_kit_diff, pieces_metadata, get_primitive_design, get_design_family, get_design_siblings, get_design_children, are_designs_in_same_family, can_use_design_as_piece, find_same_family_design_pieces, get_primitive_type, get_type_family, get_type_siblings, get_type_children, are_types_in_same_family, find_piece_type_in_design, find_used_connectors_by_piece_in_design, find_replaceable_types_for_piece_in_design, find_replaceable_types_for_pieces_in_design, create_clustered_design, replace_cluster_with_design, get_clusterable_groups, expand_design_pieces, find_attribute_value.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/851"
+  },
+  "goal": "🎯️engine",
+  "sessions": ["🔀️b206b77c4747a568056c9529317b17e33a0bd823⚪️1773312576672754637538708700318306684"]
+}

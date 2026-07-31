@@ -1,7 +1,0 @@
-{
-  "title": "Fix DefaultComputeChildPlane Float Precision to Double",
-  "status": "closed",
-  "description": "Rewrote DefaultComputeChildPlane and all 10 helper functions from System.Numerics float (32-bit) to double[] arrays (64-bit). Replaced Vector3/Quaternion/Matrix4x4 with double[3]/double[4]/double[16]. Added Vec3 and Quat helper functions. Fixed ConnectionPlacementTranslationBasis caller. Build: 0 errors.",
-  "goal": "🎯r2603🎯runningnet",
-  "sessions": ["⚪59dec508204e48e1a3c7ed419d5e31db"]
-}

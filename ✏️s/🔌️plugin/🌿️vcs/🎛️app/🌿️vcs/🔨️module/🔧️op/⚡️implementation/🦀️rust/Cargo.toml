@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-vcs-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "VCS app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+vcs = { path = "../../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-s-app-vcs" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

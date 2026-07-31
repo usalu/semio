@@ -1,4 +1,4 @@
-# #region 📊Header
+# #region 📊️Header
 
 # 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# #endregion 📊Header
+# #endregion 📊️Header
 
 import functools
 import importlib.util

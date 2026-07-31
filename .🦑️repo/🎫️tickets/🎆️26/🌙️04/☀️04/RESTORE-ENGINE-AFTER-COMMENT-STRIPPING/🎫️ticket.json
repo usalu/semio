@@ -1,0 +1,9 @@
+{
+  "title": "Restore Engine After Comment Stripping",
+  "emoji": "💬️",
+  "status": "closed",
+  "description": "Fix engine and dependencies broken by repo-wide comment stripping.",
+  "summary": "Restored corrupted Python after aggressive comment stripping: compose/engine/main.py from 80bfd6772, compose/py/main.py and coda/engine/coda.py from 41b248ef4. Engine imports cleanly; compose/engine/engine.test.py 174 tests pass.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️0d3273ee7075489ba0c2033eec3a4045"]
+}

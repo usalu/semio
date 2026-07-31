@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/story/puzzle/2d/Fixtures.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/story/puzzle/2d/Fixtures.stories.tsx
 // Specs: Host the framework renderer's `Board2dHost` against the *real* puzzle-2d example fixtures (not hand-authored story data).
 // Summary: Same story-local-reducer pattern as `./Board.stories.tsx` (emulating `apply_board_events_from_json`) for interaction, but the fixture data comes from the real `puzzle/2d/example/*.puzzle2d` DSL-text fixtures (`Puzzle2dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-2d-rs`'s `puzzle2dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript). This file only proves those real fixtures round-trip through the host; the interaction-mechanics coverage (lasso/brush/lod) lives in `Board.stories.tsx`.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
@@ -15,7 +15,7 @@ import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/app/2d/example
 import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/app/2d/example/nakagin-capsule-tower.puzzle2d?raw";
 
 //#region WasmFixtureLoader
-/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-2d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
+/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-2d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
 type Puzzle2dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle2dParseDslJson: (dslText: string) => string };
 let puzzle2dWasmModulePromise: Promise<Puzzle2dWasmModule> | null = null;
 function loadPuzzle2dWasm(): Promise<Puzzle2dWasmModule> {
@@ -73,7 +73,7 @@ const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   lodMode: "automatic",
 };
 
-/** @emoji 📬 Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` (see `./Board.stories.tsx`'s copy) — only the event kinds the real fixtures need to demonstrate (camera pan/zoom, select, drag, delete). */
+/** @emoji 📬️ Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` (see `./Board.stories.tsx`'s copy) — only the event kinds the real fixtures need to demonstrate (camera pan/zoom, select, drag, delete). */
 function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): StoryPuzzle2dState {
   let events: readonly { readonly name: string; readonly payload?: Record<string, unknown> }[] = [];
   try {
@@ -126,7 +126,7 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
   return { fixture, runtime };
 }
 
-/** @emoji 🧩 Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough to click/pan/zoom/delete against the real fixtures. */
+/** @emoji 🧩️ Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough to click/pan/zoom/delete against the real fixtures. */
 function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
   const { fixture, runtime } = state;
   switch (action) {
@@ -230,7 +230,7 @@ function Board2dFixtureStoryHost({ fixtureDsl, interactive }: { readonly fixture
 //#endregion StoryHost
 
 const meta = {
-  title: "🧩puzzle🩻2d/Fixtures",
+  title: "🧩️puzzle🩻️2d/Fixtures",
   component: Board2dFixtureStoryHost,
   parameters: {
     layout: "fullscreen",
@@ -242,7 +242,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🏯 180 nodes / 179 edges — the real Nakagin Capsule Tower 2D board fixture (`puzzle/2d/example/nakagin-capsule-tower.puzzle2d`). */
+/** 🏯️ 180 nodes / 179 edges — the real Nakagin Capsule Tower 2D board fixture (`puzzle/2d/example/nakagin-capsule-tower.puzzle2d`). */
 export const NakaginCapsuleTower: Story = {
   args: {
     fixtureDsl: nakaginCapsuleTowerFixtureDsl,
@@ -250,7 +250,7 @@ export const NakaginCapsuleTower: Story = {
   },
 };
 
-/** 🌲 The real Concrete Forest 2D board fixture (`puzzle/2d/example/concrete-forest.puzzle2d`). */
+/** 🌲️ The real Concrete Forest 2D board fixture (`puzzle/2d/example/concrete-forest.puzzle2d`). */
 export const ConcreteForest: Story = {
   args: {
     fixtureDsl: concreteForestFixtureDsl,

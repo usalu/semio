@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/stories/styling/Tokens.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/styling/Tokens.stories.tsx
 // Specs: Docs gallery rendering the generated `framework/ui/styling/js/tokens.generated.ts` constants as readable tables.
-// Summary: `STYLING_TOKENS` (primitive colors), `STYLING_SEMIO_THEME.spacing`, `STYLING_RADII`, `STYLING_STROKES`, and `STYLING_OPACITIES` — the flat numeric/hex maps a token author would want to eyeball after running `bun ./script.ts generate` in `framework/ui/styling`. `STYLING_METRICS` is nested per-subsystem (camera/label/board/dag/…) rather than a flat map, so it's out of scope for a single table here.
+// Summary: `STYLING_TOKENS` (primitive colors), `STYLING_SEMIO_THEME.spacing`, `STYLING_RADII`, `STYLING_STROKES`, and `STYLING_OPACITIES` — the flat numeric/hex maps a token author would want to eyeball after running `bun ./📜️script.ts generate` in `framework/ui/styling`. `STYLING_METRICS` is nested per-subsystem (camera/label/board/dag/…) rather than a flat map, so it's out of scope for a single table here.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
@@ -11,14 +11,14 @@ import type { ReactElement } from "react";
 import { STYLING_OPACITIES, STYLING_RADII, STYLING_SEMIO_THEME, STYLING_STROKES, STYLING_TOKENS } from "@semio-tech/ui-styling";
 import { DataTable, galleryCardStyle, galleryPageStyle } from "../../styling/index.tsx";
 
-//#region 🔖Formatting
+//#region 🔖️Formatting
 function formatNumberOrArray(value: number | readonly number[]): string {
   return Array.isArray(value) ? `[${(value as readonly number[]).join(", ")}]` : String(value);
 }
-//#endregion 🔖Formatting
+//#endregion 🔖️Formatting
 
-//#region 🔖ColorsTable
-/** @emoji 🎨 `STYLING_TOKENS` — the primitive hex palette every `ThemePaintRef.token` resolves against. */
+//#region 🔖️ColorsTable
+/** @emoji 🎨️ `STYLING_TOKENS` — the primitive hex palette every `ThemePaintRef.token` resolves against. */
 function ColorsTable(): ReactElement {
   const entries = Object.entries(STYLING_TOKENS);
   return (
@@ -37,10 +37,10 @@ function ColorsTable(): ReactElement {
     </div>
   );
 }
-//#endregion 🔖ColorsTable
+//#endregion 🔖️ColorsTable
 
-//#region 🔖SpacingTable
-/** @emoji 📏 `STYLING_SEMIO_THEME.spacing` — the only spacing scale a `UiTheme` carries (no standalone `STYLING_SPACING` export; it lives inline on the theme premade). */
+//#region 🔖️SpacingTable
+/** @emoji 📏️ `STYLING_SEMIO_THEME.spacing` — the only spacing scale a `UiTheme` carries (no standalone `STYLING_SPACING` export; it lives inline on the theme premade). */
 function SpacingTable(): ReactElement {
   const entries = Object.entries(STYLING_SEMIO_THEME.spacing);
   return (
@@ -52,9 +52,9 @@ function SpacingTable(): ReactElement {
     </div>
   );
 }
-//#endregion 🔖SpacingTable
+//#endregion 🔖️SpacingTable
 
-//#region 🔖NumberMapTable
+//#region 🔖️NumberMapTable
 function NumberMapTable({ title, source, record }: { readonly title: string; readonly source: string; readonly record: Record<string, number | readonly number[]> }): ReactElement {
   const entries = Object.entries(record);
   return (
@@ -68,10 +68,10 @@ function NumberMapTable({ title, source, record }: { readonly title: string; rea
     </div>
   );
 }
-//#endregion 🔖NumberMapTable
+//#endregion 🔖️NumberMapTable
 
 const meta = {
-  title: "🎨styling/Tokens",
+  title: "🎨️styling/Tokens",
   component: ColorsTable,
   parameters: {
     layout: "fullscreen",
@@ -83,7 +83,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-//#region 🔖Stories
+//#region 🔖️Stories
 export const Colors: Story = {};
 
 export const Spacing: Story = {
@@ -129,4 +129,4 @@ export const AllTokens: Story = {
     </div>
   ),
 };
-//#endregion 🔖Stories
+//#endregion 🔖️Stories

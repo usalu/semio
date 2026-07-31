@@ -1,9 +1,0 @@
-{
-  "title": "Interpolate Curve Missing From Document",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "After creating interpolate curve, no curve shape appears under shape document. Fix typology object binding on commit.",
-  "summary": "Interpolate curve commits added wire/edge geometry but no typology object row appeared in the shape document because typology JSON listed the wrong interaction id (`curve.interpolate-curve` vs `curve.interpolateCurve`), so `typologyIdForInteractionCommit` returned null and `ensureTypologyObjectFromCreateDiff` never ran. Fixed interaction id references on InterpolateCurve, ControlPointCurve, ExtrudeCurve, and NetworkSurface typologies; added `produces.typology` fallback in `typologyIdForInteractionCommit`; added integration test asserting document object binding after interpolate curve commit.",
-  "goal": "🎯cad",
-  "sessions": ["⚪627e689b67d0488c8a0704c6d772461d"]
-}

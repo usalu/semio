@@ -1,0 +1,11 @@
+{
+  "title": "Add Milestone and Issue Linking Flags",
+  "emoji": "➕️",
+  "status": "closed",
+  "description": "Add --milestone flag to goal creation to link existing milestone instead of creating new one. Add --issue flag to ticket creation to link existing issue instead of creating new one.",
+  "summary": "Added --milestone flag to goal open command and --issue flag to ticket open command. These flags allow linking to existing GitHub milestones/issues instead of creating new ones. Updated structs, CLI parsing, MCP tools, GraphQL schema, and tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/317"
+  },
+  "goal": "🎯️aioptimizedrepo"
+}

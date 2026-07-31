@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2026 Ueli Saluz <ueli@compose-tech.de>
 
@@ -6,9 +6,9 @@
 
 // Storybook stories for OntologyTree and ValidationTree components.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 📮Stories
+// #region 📮️Stories
 // Storybook stories exercising ontology and validation tree viewers.
 // Stories MUST provide example data matching the OWL Treppenraum ontology.
 
@@ -18,7 +18,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import React from "react";
 
 // #region 🏷️CodaThemeWrapper
-// 🎨Provides the coda-specific CSS variables needed by tree components.
+// 🎨️Provides the coda-specific CSS variables needed by tree components.
 const CodaThemeWrapper = ({ children }: { children: React.ReactNode }) => (
   <div
     style={{
@@ -195,7 +195,7 @@ const necessaryStaircaseOntology: OntologyTreeNode = {
 };
 // #endregion 🗡️OntologyTreeExampleData
 
-// 🌳#region 🌧️OntologyTreeStory
+// 🌳️#region 🌧️OntologyTreeStory
 const ontologyMeta = {
   title: "🖱️ui⚛️react/OntologyTree",
   component: OntologyTree,
@@ -256,4 +256,4 @@ export const SimpleClass: OntologyStory = {
 };
 // #endregion 🌧️OntologyTreeStory
 
-// #endregion 📮Stories
+// #endregion 📮️Stories

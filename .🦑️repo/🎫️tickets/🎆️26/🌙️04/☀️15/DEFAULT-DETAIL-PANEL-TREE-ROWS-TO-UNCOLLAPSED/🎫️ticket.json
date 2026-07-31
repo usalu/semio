@@ -1,0 +1,11 @@
+{
+  "title": "Default Detail Panel Tree Rows to Uncollapsed",
+  "status": "closed",
+  "description": "In sketchpad's PanelTabContent, the defaultOpen for tree sections is set to `section.defaultOpen ?? index === 0`, which means only the first section is expanded by default. Change this so all sections default to open (true) unless explicitly set otherwise.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1330"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️26c24d6735f04851a38937f860d5a677"]
+}

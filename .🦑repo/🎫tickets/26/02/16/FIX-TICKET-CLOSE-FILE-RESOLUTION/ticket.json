@@ -1,8 +1,0 @@
-{
-  "title": "Fix Ticket Close File Resolution",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "Fix ticket close failure: close command requires at least one file. Ensure files accept path/id/uri and tests cover it. Investigate CLI/mcp ticket close file resolution and update tests.",
-  "summary": "Normalized ticket close file inputs to accept paths, IDs, and URIs with repo scanning fallback; applied normalization in close/diff flows and extended CLI tests (including e2e close) to cover identifiers. Ran focused go tests.",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli"
-}

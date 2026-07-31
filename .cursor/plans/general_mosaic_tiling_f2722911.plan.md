@@ -69,7 +69,7 @@ Keyframes at [783-852](framework/product/presentation/renderer/react/globals.css
 
 ### 5. Update unit tests (extend existing file only)
 
-In the renderer describe blocks, replace magic-number mosaic assertions ([5489-5492](framework/product/presentation/renderer/react/index.tsx), [5590-5605](framework/product/presentation/renderer/react/index.tsx), [5188-5197](framework/product/presentation/renderer/react/index.tsx), [5365-5371](framework/product/presentation/renderer/react/index.tsx)) with values computed from `mosaicWindowedCoverVars`: assert mosaic size is `"${columns*100}% auto"` (e.g. `500% auto`) and per-cell positions; keep full-image `cover` and single-crop centered-cover tests. Run `bun ./script.ts test` in [renderer/react](framework/product/presentation/renderer/react) and `core`.
+In the renderer describe blocks, replace magic-number mosaic assertions ([5489-5492](framework/product/presentation/renderer/react/index.tsx), [5590-5605](framework/product/presentation/renderer/react/index.tsx), [5188-5197](framework/product/presentation/renderer/react/index.tsx), [5365-5371](framework/product/presentation/renderer/react/index.tsx)) with values computed from `mosaicWindowedCoverVars`: assert mosaic size is `"${columns*100}% auto"` (e.g. `500% auto`) and per-cell positions; keep full-image `cover` and single-crop centered-cover tests. Run `bun ./📜️script.ts test` in [renderer/react](framework/product/presentation/renderer/react) and `core`.
 
 ### 6. Browser-verify the grid
 

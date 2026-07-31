@@ -1,0 +1,8 @@
+{
+  "title": "Redesign ticket schema with files-only and git-derived fields",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Redesign ticket schema with nested date objects and git-derived fields",
+  "summary": "Finalize ticket schema persistence to sessions-only and validate open/reopen/close runtime behavior.",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoticketmechanism"
+}

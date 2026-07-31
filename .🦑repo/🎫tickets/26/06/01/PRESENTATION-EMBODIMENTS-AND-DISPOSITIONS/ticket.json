@@ -1,9 +1,0 @@
-{
-  "title": "Presentation Embodiments And Dispositions",
-  "emoji": "📽",
-  "status": "closed",
-  "description": "Reconcile @semio-tech/framework-presentation with presentation/AGENTS.md: Video + Pdf embodiments, Disposition model (position/style), analogy template, react-pdf renderer, projektetage live assets.",
-  "summary": "Aligned @semio-tech/framework-presentation-core with presentation/AGENTS.md: added VideoEmbodiment and PdfEmbodiment; renamed ParticipantPlacement to Disposition with DispositionPosition/DispositionStyle; Arrangement.placements to dispositions; ResolvedPlacement to ResolvedDisposition; added analogy() template. React renderer: react-pdf (pdfjs worker via import.meta.url), VideoMorphView, PdfMorphView, DispositionFrame for absolute positioning, data-auto-animate-id per thought.id. Extended vitest (core 13, renderer 9). Projektetage: second media sequence with public PNG/MP4/PDF and two morph slides (9 arrangements total). Live Playwright check on :6050 confirmed figure, video, pdf render and positioned frames.",
-  "goal": "🎯framework",
-  "sessions": []
-}

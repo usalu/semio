@@ -1,0 +1,12 @@
+{
+  "title": "Fix Desktop White Screen From Playwright Core Bundle Errors",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Desktop shows white screen because playwright-core gets pulled into Vite client bundle, causing chromium-bidi resolution failures and infinite dep optimization loop crashing Electron with ERR_INSUFFICIENT_RESOURCES",
+  "summary": "Fixed desktop white screen caused by playwright-core being pulled into Vite dependency optimization. The desktop renderer vite config scans ../sketchpad/index.ts for dependencies, which imports @playwright/test. Vite dep optimizer tried to bundle playwright-core which failed on missing chromium-bidi, causing an infinite optimization loop crashing Electron with ERR_INSUFFICIENT_RESOURCES. Added @playwright/test, playwright, and playwright-core to optimizeDeps.exclude in vite.renderer.config.ts.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1044"
+  },
+  "goal": "🎯️testgoallifecycletest1774230250821055356",
+  "sessions": ["⚪️a05b811cf3fb4753b5d64c071e99b72f"]
+}

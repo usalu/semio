@@ -1,0 +1,18 @@
+{
+  "title": "Active Border Only When Selected",
+  "emoji": "🎯️",
+  "status": "closed",
+  "description": "Panels, panes, windows, introduction steps, etc can all be activated. Only show the active border (primary color) when something is actively selected. If the ui element is activated then remove the introduction state; afterwards it is shown normal.",
+  "summary": "Window dock silhouettes no longer paint the primary active stroke from layout activeWindowId alone — they follow useSurfaceActive (click/focus), matching panels and panes. Activating a surface clears its data-introduced stamps so the active stroke wins. Introduction step chrome starts introduced, becomes active on click, then normal after a background click without re-entering the introduced pulse for that step. Fixed useSurfaceActive layout cleanup so same-commit re-registers do not drop the active root. Extended vitests for Mode silhouettes, introduction activate/normal, and introduced-stamp clearing.",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "sessions": [],
+  "files": [
+    "ui/js/react/index.tsx",
+    ".repo/🎫️/26/07/27/ACTIVE-BORDER-ONLY-WHEN-SELECTED/notes.md",
+    ".repo/🎫️/26/07/27/ACTIVE-BORDER-ONLY-WHEN-SELECTED/ticket.json",
+    ".repo/🎫️/26/07/27/ACTIVE-BORDER-ONLY-WHEN-SELECTED/vitest-active-border.txt",
+    ".repo/🎫️/26/07/27/ACTIVE-BORDER-ONLY-WHEN-SELECTED/vitest-active-border-2.txt",
+    ".repo/🎫️/26/07/27/ACTIVE-BORDER-ONLY-WHEN-SELECTED/vitest-active-border-3.txt",
+    ".repo/🎫️/26/07/27/ACTIVE-BORDER-ONLY-WHEN-SELECTED/vitest-broader.txt"
+  ]
+}

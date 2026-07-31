@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/algorithm/.storybook/story/Drag.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/algorithm/.storybook/story/Drag.stories.tsx
 // Specs: Pure UI proxy to flatDesign + dragPieces via shared story hooks.
 // Summary: IPO drag board — WASM flat input, layout diff, dragPieces output + diff.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Design } from "@semio-tech/compose-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -56,7 +56,7 @@ function DragFrame() {
 }
 
 const meta = {
-  title: "🏘️compose🧪algorithms/Drag",
+  title: "🏘️compose🧪️algorithms/Drag",
   component: DragFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

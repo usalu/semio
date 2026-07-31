@@ -35,7 +35,7 @@ const WRITER_IMPORT = `import { createWriterDocument } from "@semio-tech/writer-
 const NEEDS_WRITER = new Set(["flow/react/index.tsx", "puzzle/2d/react/index.tsx", "puzzle/5d/react/index.tsx", "sequence/react/index.tsx", "mathematical/graph/port/directed/dag/react/index.tsx", "s/react/index.tsx"]);
 
 function extractPlayHostRegion(content: string): { before: string; region: string; after: string } | null {
-  const marker = content.match(/\/\/#region 🔖\w+PlayHost/);
+  const marker = content.match(/\/\/#region 🔖️\w+PlayHost/);
   if (!marker) return null;
   const startIdx = content.lastIndexOf(marker[0]);
   const endMarker = marker[0].replace("//#region", "//#endregion");
@@ -109,26 +109,26 @@ const shellPath = join(REPO, "framework/product/playground/renderer/react/index.
 let shell = readFileSync(shellPath, "utf8");
 if (!shell.includes("registerUiShootingSurfaceHost")) {
   shell = shell.replace(
-    `/** @emoji 🔺 Binds \`surfaceId\` from {@link UiTrinityHostSurfaceNode} to a trinity canvas. */
+    `/** @emoji 🔺️ Binds \`surfaceId\` from {@link UiTrinityHostSurfaceNode} to a trinity canvas. */
 export function registerUiTrinitySurfaceHost(surfaceId: string, Component: TrinitySurfaceHost): void {
   trinitySurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
-/** @emoji 📊 Binds`,
-    `/** @emoji 🔺 Binds \`surfaceId\` from {@link UiTrinityHostSurfaceNode} to a trinity canvas. */
+/** @emoji 📊️ Binds`,
+    `/** @emoji 🔺️ Binds \`surfaceId\` from {@link UiTrinityHostSurfaceNode} to a trinity canvas. */
 export function registerUiTrinitySurfaceHost(surfaceId: string, Component: TrinitySurfaceHost): void {
   trinitySurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
-/** @emoji 📸 Binds \`surfaceId\` from {@link UiShootingHostSurfaceNode} to a shooting canvas. */
+/** @emoji 📸️ Binds \`surfaceId\` from {@link UiShootingHostSurfaceNode} to a shooting canvas. */
 export function registerUiShootingSurfaceHost(surfaceId: string, Component: ShootingSurfaceHost): void {
   shootingSurfaceHosts.set(surfaceId, Component);
   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
 }
 
-/** @emoji 📊 Binds`,
+/** @emoji 📊️ Binds`,
   );
   writeFileSync(shellPath, shell);
   console.log("Added registerUiShootingSurfaceHost to shell");
@@ -142,8 +142,8 @@ shell = shell.replace(
       const { readFileSync } = await import("node:fs");
       const source = readFileSync("index.tsx", "utf8");
       const hostRegion = (kind: "2d" | "5d") => {
-        const start = \`//#region 🔖Puzzle\${kind}PlayHost\`;
-        return source.slice(source.indexOf(start), source.indexOf(\`//#endregion 🔖Puzzle\${kind}PlayHost\`));
+        const start = \`//#region 🔖️Puzzle\${kind}PlayHost\`;
+        return source.slice(source.indexOf(start), source.indexOf(\`//#endregion 🔖️Puzzle\${kind}PlayHost\`));
       };
       const puzzle2d = hostRegion("2d");
       const puzzle5d = hostRegion("5d");
@@ -159,8 +159,8 @@ shell = shell.replace(
       const { fileURLToPath } = await import("node:url");
       const rendererDir = dirname(fileURLToPath(import.meta.url));
       const puzzle2dSource = readFileSync(join(rendererDir, "../../../../puzzle/2d/react/index.tsx"), "utf8");
-      const start = "//#region 🔖Puzzle2dPlayHost";
-      const puzzle2d = puzzle2dSource.slice(puzzle2dSource.indexOf(start), puzzle2dSource.indexOf("//#endregion 🔖Puzzle2dPlayHost"));
+      const start = "//#region 🔖️Puzzle2dPlayHost";
+      const puzzle2d = puzzle2dSource.slice(puzzle2dSource.indexOf(start), puzzle2dSource.indexOf("//#endregion 🔖️Puzzle2dPlayHost"));
       expect(puzzle2d).toMatch(
         /import\\s*\\{[^}]*puzzle2dSetBrushPlaceCommitHandler[^}]*\\}\\s*from\\s*["']@semio-tech\\/puzzle-2d-react["']/,
       );

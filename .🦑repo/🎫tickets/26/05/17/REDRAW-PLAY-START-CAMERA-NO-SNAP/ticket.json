@@ -1,9 +1,0 @@
-{
-  "title": "Redraw Play Start Camera No Snap",
-  "emoji": "📷",
-  "status": "closed",
-  "description": "On redraw play start remove snap to triptych; init chase ref from current baseline mirror so damping interpolates from visible camera.",
-  "summary": "Play start no longer calls setBoardPlayPaneCamerasBaseline(triptych(fixture)) which snapped all panes. Added boardPlayPaneCamerasBaselineMirrorRef synced each render; playJustStarted seeds boardPlayRedrawCameraChaseRef from mirror (current view). Chase effect then damps toward triptych on fixture ticks. Settings blurb updated. Vitest: 59 passed, 1 unrelated flaky WASM link test failed on index.ts.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪f288d12177644cae8ce85418c56b6266"]
-}

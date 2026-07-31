@@ -1,0 +1,12 @@
+{
+  "title": "Convert Temp Buildings to Spatial Assets",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "Convert the temporary building data into spatial asset JSON once. Focus on producing correct JSON assets and avoid broader code changes.",
+  "summary": "Added the converted small, tall, and large building topology fixtures to the spatial renderer play geometry catalog so they are selectable from the existing geometry dropdown. Verified @spatial/js-renderer-r3f tests via bun nx run @spatial/js-renderer-r3f:test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1472"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️6d4f0428fb4249f195235648088164bc", "⚪️8adf690ad43c4d8c84ac23f3c5077885", "⚪️625fc8155c2c449781f2e7f442d057ba"]
+}

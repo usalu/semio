@@ -1,0 +1,12 @@
+{
+  "title": "One Compiled DSL Per Technology",
+  "emoji": "🔌️",
+  "status": "closed",
+  "description": "Remove Jack writer windows from technologies that have compiled wire DAG DSL (flow, sequence, puzzle/2d). Add WireHoverBridge for bidirectional hover/selection between graph canvas and wire DSL writer.",
+  "summary": "Media graph and DAG play canvases lacked wheel zoom and pan gestures that Flow play implements via its session host. DagCanvas now handles scroll-wheel zoom (with LOD pinning), middle-mouse / Alt-drag / Space-drag pan, persists camera through onFixtureChange, and reloads fixtures without tearing down the GPU session. SMediaGraphCanvas now stores the updated camera from fixture callbacks so graph edits keep the current viewport.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1806"
+  },
+  "goal": "🎯️framework🎯️playground",
+  "sessions": ["⚪️86150c7d7f5d4285a25016f22283debc", "⚪️5b1a0727a0bc44749edf410615827f3c"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Board Icon Emoji Usvg Bounds And Fontdb",
-  "emoji": "🎯",
-  "status": "closed",
-  "description": "Fix board SVG icon rendering: render_group was multiplying parent affine with node.abs_transform() but usvg abs_transform is already document-absolute, causing double transform (oversized/off-center). Use path.abs_transform() only per path; bump icon cache key v7.",
-  "summary": "Board emoji icons were parsed with empty usvg fontdb (system text fallback) and fitted using bounds that only unioned Path nodes, so Typst emoji SVGs built from Image/Text were mis-scaled, clipped, and off-center. Added OnceLock usvg::Options that loads the same bundled Noto Color Emoji subset into fontdb and default font_family; wired get_or_build_icon_paint and append_svg_str_themed to use it. Extended svg_icon_content_bounds visitation to Image and visible Text abs boxes. Centralized TTF bytes in board_icon_assets; board_icon_codec uses that module. Added fontdb dependency aligned with usvg. New unit test svg_icon_content_bounds_includes_visible_image_abs_box. cargo test -p elements_board and nx run @elements/board:test passed (including wasm-pack release).",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪37aa8ba505c24b459472f16b68e86b5c", "⚪bb010fcd337d4593af5a1d881bbbdf4e"]
-}

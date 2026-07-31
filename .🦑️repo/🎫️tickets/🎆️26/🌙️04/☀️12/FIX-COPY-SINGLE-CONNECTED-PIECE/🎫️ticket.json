@@ -1,0 +1,8 @@
+{
+  "title": "Fix Copy Single Connected Piece",
+  "status": "closed",
+  "description": "copyDesign drops a connected piece when only the piece is selected (no parent piece, no parent connection). The piece must still appear in the clipboard so the paste diff places it. Fix in TypeScript only — other languages stay until follow-up.",
+  "summary": "Fixed copyDesign in TypeScript dropping a connected piece when selected alone (no parent piece, no parent connection). Added a fall-through \"free fixed\" branch in [compose/js/index.ts](compose/js/index.ts#L6259-L6287) that clones the piece and stamps it with the flat plane/center plus compose.center/compose.plane attributes so pasteDesign places it via its isFixed branch with anchor/coord. New test in [compose/js/index.ts](compose/js/index.ts#L15616-L15651) covers selecting only t_f0_b_c0 and asserts the clipboard piece, paste diff, and coord offset. All 7 CopyAndPaste vitest tests pass; the single full-suite failure (ExportDesignModel dotnet shell-out) is pre-existing and unrelated. Other languages (Go/Py/C#/Rust) deliberately untouched per dev request.",
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️8ee79cd9fc924846b367064069d5bfa1"]
+}

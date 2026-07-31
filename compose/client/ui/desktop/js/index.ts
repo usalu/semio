@@ -1,13 +1,13 @@
-// #region 🧲Header
+// #region 🧲️Header
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // Entry point for the Electron main process managing windows and lifecycle.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🐙Main Process
+// #region 🐙️Main Process
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 
@@ -55,7 +55,7 @@ const createWindow = () => {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/🌐index.html`));
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/🌐️index.html`));
   }
 };
 
@@ -297,7 +297,7 @@ app.whenReady().then(async () => {
 
   // #region DesktopIntegrationTests
   // VS Code-style integration tests: COMPOSE_EXTENSION_TESTS_PATH points at an ESM file that exports run(ctx).
-  // Specs: Mirrors extensionTestsPath; launcher is bun ./📜script.ts test (see .compose-test.mjs).
+  // Specs: Mirrors extensionTestsPath; launcher is bun ./📜️script.ts test (see .compose-test.mjs).
   const extensionTestsPath = process.env.COMPOSE_EXTENSION_TESTS_PATH?.trim();
   if (extensionTestsPath) {
     try {
@@ -330,4 +330,4 @@ app.whenReady().then(async () => {
   // #endregion DesktopIntegrationTests
 });
 
-// #endregion 🐙Main Process
+// #endregion 🐙️Main Process

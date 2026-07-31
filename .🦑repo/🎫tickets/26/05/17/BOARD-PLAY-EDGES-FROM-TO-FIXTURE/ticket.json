@@ -1,9 +1,0 @@
-{
-  "title": "Board Play Edges From To Fixture",
-  "emoji": "🔗",
-  "status": "closed",
-  "description": "Board play stopped rendering edges: Nakagin fixture JSON still uses edge keys `from`/`to` while TS parser and Rust paths expected `source`/`target`. Fixed TS parseBoardFixtureV1 to normalize endpoints; extended Rust scene_json helper fixture_edge_handle_ids_from_object and wired force_graph, hierarchical_tree, redraw_layout, board_host fixture sync; fixed raw string delimiter in svg_icon test. Vitest board package passed; wasm32 cargo check passed (native Windows cargo test blocked by wgpu/windows duplicate).",
-  "summary": "Restored board play edges when fixtures use legacy `from`/`to` on edges: TS `parseBoardFixtureV1` maps those to `source`/`target`; Rust `fixture_edge_handle_ids_from_object` is used in force_graph, hierarchical_tree, redraw_layout, and board_host fixture→descriptor sync so WASM layout and host stay aligned. Re-exported helper at crate root; fixed `r#\"…\"#` SVG test literal that broke on `fill=\"#\"` by using `r##\"…\"##`. Verified `cargo check -p elements_board --target wasm32-unknown-unknown` and `bunx vitest run` in `elements/client/lib/board` (56 tests). Full `nx run @elements/board:test` still fails on this Windows host because `cargo test` compiles native wgpu/DX12 with conflicting `windows` crate versions (environment issue, not this change).",
-  "goal": "🎯r2602",
-  "sessions": ["⚪68cc98ca208847b8844522ae3711588b"]
-}

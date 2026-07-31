@@ -1,0 +1,16 @@
+{
+  "title": "Unified 5D Topology Component",
+  "status": "closed",
+  "description": "Single neutral TopologyV1 model, shared TopologyStore, FiveD flat|volume, paired connect/LOD semantics across @puzzle/2d and @puzzle/3d.",
+  "summary": "Replaced legacy spatial/scene topology vocabulary with flat/volume: TopologyV1 uses volumeCamera and part.volume aspects, FiveD mode=volume, projectVolume, volumeChromeDefaults, play PUZZLE_5D_PLAY_VOLUME_* ids, TopologyVolumeSurfaceHost. Nakagin topology fixture migrated. @semio-tech/puzzle-5d-react (26) and play vitest (6) pass.",
+  "files": [
+    "puzzle/5d/react/index.tsx",
+    "puzzle/5d/play/index.ts",
+    "puzzle/5d/play/fixtures/nakagin-capsule-tower.topology.json",
+    "puzzle/5d/play/e2e/topology.spec.ts",
+    "framework/playground/renderer/react/index.tsx",
+    "compose/client/lib/sketchpad/js/index.ts",
+    ".repo/🎫️/26/05/30/UNIFIED-5D-TOPOLOGY-COMPONENT/ticket.json"
+  ],
+  "goal": "🎯️puzzle🎯️5d"
+}

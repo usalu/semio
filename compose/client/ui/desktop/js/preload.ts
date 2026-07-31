@@ -1,4 +1,4 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -6,9 +6,9 @@
 
 // Electron preload script exposing safe APIs to the renderer process.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
-// #region 🎋Preload
+// #region 🎋️Preload
 // Electron preload script exposing window controls and OS APIs to the renderer.
 // Preload MUST use contextBridge to safely expose IPC methods.
 
@@ -57,12 +57,12 @@ contextBridge.exposeInMainWorld("kitFolder", {
 });
 // #endregion 🎗️FolderBridge
 
-// #region 📄FileBridge
+// #region 📄️FileBridge
 // Exposes JSON-file-based kit storage operations to the renderer process.
 contextBridge.exposeInMainWorld("kitFile", {
   selectFile: () => ipcRenderer.invoke("select-file"),
   readJson: (filePath: string) => ipcRenderer.invoke("read-kit-json-file", filePath),
   writeJson: (filePath: string, json: string) => ipcRenderer.invoke("write-kit-json-file", filePath, json),
 });
-// #endregion 📄FileBridge
-// #endregion 🎋Preload
+// #endregion 📄️FileBridge
+// #endregion 🎋️Preload

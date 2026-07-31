@@ -1,0 +1,11 @@
+{
+  "title": "Fix Connector Tree Row Spacing and Display in Type App Detail Panel",
+  "status": "closed",
+  "description": "Fix connector tree rows in the type app detail panel: add empty tree item spacing before each connector tree row when multiple connectors exist (following general spacing principles), show connector name instead of generic ID for new connectors, show empty field with \"add a name\" placeholder for unnamed connectors, ensure one tree row per connector.",
+  "summary": "Fixed connector tree row spacing and display in the Type App detail panel:\n\n1. **Connector TreeItem label**: Changed from `connector.port?.guid || \"\"` to `connector.name || \"\"` so each tree row shows the connector name when available instead of the port GUID.\n\n2. **Spacing between connector items**: Added `mt-single` className for `index \u003e 0` on the wrapping `\u003cdiv\u003e` around each connector TreeItem in `ConnectorsListSectionForm`, following the same spacing pattern used in `PanelTabContent` sections.\n\n3. **Name placeholder for new connectors**: Added `placeholderId=\"compose.sketchpad.app.type.connectorNamePlaceholder.label\"` to name Input fields in both `ConnectorsListSectionForm` and `TypeConnectorSectionForm`, so new connectors show \"Add a name\" (EN) / \"Name eingeben\" (DE) instead of a blank or generic ID.\n\n4. **i18n translations**: Added `connectorNamePlaceholder` entries in both DE and EN translation blocks in `elements/ui/index.tsx`.\n\nAll 200 vitest tests pass. No new TypeScript errors introduced.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1332"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️99eecdd950174dff8e2fac5c6e47ce7c"]
+}

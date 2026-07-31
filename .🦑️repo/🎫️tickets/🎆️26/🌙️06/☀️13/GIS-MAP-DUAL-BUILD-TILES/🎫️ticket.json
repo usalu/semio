@@ -1,0 +1,11 @@
+{
+  "title": "Gis Map Dual Build Tiles",
+  "emoji": "🗺️",
+  "status": "open",
+  "description": "Add two GIS map play build targets: one that bundles prefetched OSM/vector tiles into dist for offline static hosting, and one that keeps runtime tile fetching via the dev proxy.",
+  "summary": "Added two GIS map play build modes. `build` sets `GIS_MAP_TILE_SERVE_MODE=fetch` so Vite keeps the OSM/vector tile proxies that fetch missing tiles at dev/preview runtime. `build-tiles` prefetches raster/vector tiles (same flags as `tiles`), then builds with `GIS_MAP_TILE_SERVE_MODE=bundle`, copying `.repo-cache` tiles into `dist/osm` and `dist/vt` for offline static hosting. Introduced `GisMapTileServeMode`, `gisMapTilesVitePlugins`, and `resolveGisMapTileServeMode` in `ui/styling/vite-elements-assets.ts`. Registered nx targets, package scripts, and launch.json entries `📦️build🌐️gis📍️map` and `📦️build🌐️gis📍️map🧩️tiles`. Verified fetch build omits tile dirs; bundle build copies z0 tiles into dist.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1684"
+  },
+  "sessions": ["⚪️8895656b4c9148d6a09b0118ca94f6bb", "⚪️91859160ff9747529979eef9ea7f53f7"]
+}

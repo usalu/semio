@@ -1,0 +1,12 @@
+{
+  "title": "Make Presentation Figures Scrollable by Default",
+  "emoji": "📜️",
+  "status": "closed",
+  "description": "Make sure that figures, images, etc are by default scrollable. Due to the cover and non distort restriction, it will only scroll in one direction depending on the aspect ratio of the div vs the original. Add an option to disable scrolling.",
+  "summary": "Overlay scrollbar thumb is hidden by default (opacity 0) and only shown when hovering the scrollbar lane or while dragging. Lane receives pointer events; thumb stays visible during drag via presentation-figure-scroll-bar--dragging class. 126 renderer tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1694"
+  },
+  "goal": "🎯️framework🎯️presentation",
+  "sessions": ["⚪️bc3d9ddece7547ceb20665d2962d7246", "⚪️ba6052d29fe24428978404e314642ac7", "⚪️1ba397043ba24912afb440052531b278", "⚪️9b59aeb00ca94cbba620d6378e3b3e0a", "⚪️325058160d9041bd932a9604ba50d590", "⚪️06ced41fff1747b4a2001fc9445a5f23"]
+}

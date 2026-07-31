@@ -1,0 +1,12 @@
+{
+  "title": "Remove Native Algorithm Adapters",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Remove all native adapters from compose/algorithms. The new architecture uses compose/rs as the single source of truth and re-exports it through compose/js, compose/react, and compose/ui. Refactor existing files and tests without legacy support.",
+  "summary": "Removed the remaining native-adapter surface from compose/algorithms by deleting the ignored native bridge sources and language decorator file from the workspace, keeping Storybook on the rs-backed @semio-tech/compose-js/@semio-tech/compose-react/@compose/ui path. Fixed algorithms Storybook imports to use @storybook/react-vite, adjusted the embedded public-surface guard to use import.meta.vitest, and added tsconfig aliases/types needed by the rs WASM re-export path. Verification: npx tsc --noEmit -p compose/algorithms/tsconfig.json passed; npm --workspace @semio-tech/compose-algorithms run lint passed; npm --workspace @semio-tech/compose-algorithms run test passed with the package's no-test-files configuration; npm --workspace @semio-tech/compose-algorithms run build completed successfully with existing Vite/docgen warnings.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1383"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️59b86c82c1184d0495935d1dc40b7b02"]
+}

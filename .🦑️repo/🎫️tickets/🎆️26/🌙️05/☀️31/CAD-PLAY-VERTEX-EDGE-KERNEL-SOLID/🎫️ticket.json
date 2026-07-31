@@ -1,0 +1,9 @@
+{
+  "title": "Cad Play Vertex Edge Kernel Solid",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "CAD play: moving vertices or edges produces wrong boxy blocky solids and overlapping shapes. Fix kernel solid computation on topology edit.",
+  "summary": "Fixed fundamental solid display: committed shading is only brepjs mesh(ValidSolid) via meshTransferFromBrep. Removed solid() weld fallback that could compound faces into box-like chunks; extrude/offset no longer inject meshFaceModelDiff placeholder topology. Kernel-authored solids (empty shellIds) preserve WASM brep across sync. Pick highlights use B-rep wireframes instead of axis-aligned boxGeometry overlays per face. Documented pipeline in brepjs AGENTS.md. Tests: 28 brepjs, 58 renderer.",
+  "goal": "🎯️cad",
+  "sessions": ["⚪️5e2ae006c0c249298b4bba1ac9a6965c", "⚪️1df4d915ca9047cda5bb8d3360f20ed0", "⚪️fe65c1ce10c2444b9d4d5b36167ed6d9", "⚪️3befffed7ad6451988a7869d4bdaa5f8"]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Fix TypeScript Policy Breachs in JS and Desktop Files",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix code policy breachs in TypeScript/TSX files by adding sections around orphan code and summary+spec comments before definitions in: compose/js/dev.ts, compose/js/i18n.ts, compose/js/index.ts, compose/js/playwright.config.ts, compose/desktop/main.ts, compose/desktop/renderer.tsx, compose/js/compose.benchmark.ts, compose/js/sketchpad/portColor.ts",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/518"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo🎯️consistentsections",
+  "sessions": ["⚪️17721129809583885498057222672198286953"]
+}

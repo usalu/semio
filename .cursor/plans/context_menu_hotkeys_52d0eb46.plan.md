@@ -21,7 +21,7 @@ isProject: false
 
 ## Goal association
 
-`🎯r2602/🎯runningsketchpad` (same as other Puzzle 3D context-menu / suggestion tickets). Open a new ticket on implementation (no existing ticket covers numbered shortcuts + always-show hotkeys).
+`🎯️r2602/🎯️runningsketchpad` (same as other Puzzle 3D context-menu / suggestion tickets). Open a new ticket on implementation (no existing ticket covers numbered shortcuts + always-show hotkeys).
 
 ## Current state
 
@@ -50,9 +50,9 @@ flowchart LR
 
 In `[framework/renderer/react/index.tsx](framework/renderer/react/index.tsx)`:
 
-- Add `formatKeybindingShortcut(keys: string): string` that takes the first chord of a binding and maps tokens to display symbols (`backspace` → `⌫`, `delete` → `⌦`, `mod` → `⌘` on Apple / `Ctrl` elsewhere, `shift` → `⇧`, etc.).
+- Add `formatKeybindingShortcut(keys: string): string` that takes the first chord of a binding and maps tokens to display symbols (`backspace` → `⌫️`, `delete` → `⌦️`, `mod` → `⌘️` on Apple / `Ctrl` elsewhere, `shift` → `⇧️`, etc.).
 - Extend `mapContextMenuSpecs` with an optional `keysByActionId: ReadonlyMap<string, string>`. When `spec.shortcut` is missing and `spec.action` has a binding, set `shortcut` from the formatter. Explicit `shortcut` always wins.
-- Provide a thin `AppKeybindingsContext` from the app shell (where `session.app.keybindings` already exists for the palette) and a `useAppKeybindingsByActionId()` helper. Scene hosts call `mapContextMenuSpecs(specs, dispatch, keysByActionId)` so Puzzle 3D delete shows `⌫` (last binding for `deleteSelection` is `backspace`), duplicate shows `⌘D` / `Ctrl+D`, etc.
+- Provide a thin `AppKeybindingsContext` from the app shell (where `session.app.keybindings` already exists for the palette) and a `useAppKeybindingsByActionId()` helper. Scene hosts call `mapContextMenuSpecs(specs, dispatch, keysByActionId)` so Puzzle 3D delete shows `⌫️` (last binding for `deleteSelection` is `backspace`), duplicate shows `⌘️D` / `Ctrl+D`, etc.
 
 No Rust menu JSON changes required for static hotkeys — they stay single-sourced from `.keybinding(...)`.
 

@@ -1,5 +1,5 @@
-// #region 🧲Header
-// 💻 .storybook/stories/framework/hosts/UiInterpreter.stories.tsx
+// #region 🧲️Header
+// 💻️ .storybook/stories/framework/hosts/UiInterpreter.stories.tsx
 // Specs: Exercise `interpretUiNode` (`framework/os/renderer/js/react/index.tsx`) directly against hand-written
 // `UiNode` JSON trees — no wasm, no scene protocol, just the declarative-UI half of the renderer barrel.
 // Summary: Three fixtures — a button-in-a-stack, a two-section tree (with a nested item and an inline
@@ -9,7 +9,7 @@
 // it directly). A debug readout records the last dispatched `ActionDescriptor` so button clicks, toggle
 // flips, select/slider changes, and tree selection all visibly round-trip.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useState, type ReactElement } from "react";
@@ -20,7 +20,7 @@ import type { ActionDescriptor, UiNode } from "@semio-tech/framework-core";
 const STORY_UI_INTERPRETER_CONTROLLER_ID = "ui-interpreter-story";
 
 //#region Fixtures
-/** 🔘 A stack of text + a `button` control node. */
+/** 🔘️ A stack of text + a `button` control node. */
 const BUTTON_TREE: UiNode = {
   type: "stack",
   direction: "vertical",
@@ -35,7 +35,7 @@ const BUTTON_TREE: UiNode = {
   ],
 };
 
-/** 🌳 Two sections — "Layers" (a selected leaf, a nested child, a hover-reveal row action) and "Settings" (a `toggle` `UiControlNode` embedded in a tree item). */
+/** 🌳️ Two sections — "Layers" (a selected leaf, a nested child, a hover-reveal row action) and "Settings" (a `toggle` `UiControlNode` embedded in a tree item). */
 const TREE_TREE: UiNode = {
   type: "tree",
   selectedIds: ["item-background"],
@@ -127,7 +127,7 @@ function UiInterpreterStoryHost({ node }: { readonly node: UiNode }): ReactEleme
 //#endregion StoryHost
 
 const meta = {
-  title: "🛠️framework🔌hosts/UiInterpreter",
+  title: "🛠️framework🔌️hosts/UiInterpreter",
   component: UiInterpreterStoryHost,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],
@@ -137,12 +137,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🔘 `renderUiControl`'s `"button"` case, plus the `"separator"`/`"text"` node kinds. */
+/** 🔘️ `renderUiControl`'s `"button"` case, plus the `"separator"`/`"text"` node kinds. */
 export const Button: Story = {
   args: { node: BUTTON_TREE },
 };
 
-/** 🌳 The `"tree"` node case — `DeclarativeTreePanel` calls `uiTreeNodeToTreePanelConfig` internally to build sections/items/nested items, a row action, and a `toggle` `UiControlNode`. */
+/** 🌳️ The `"tree"` node case — `DeclarativeTreePanel` calls `uiTreeNodeToTreePanelConfig` internally to build sections/items/nested items, a row action, and a `toggle` `UiControlNode`. */
 export const Tree: Story = {
   args: { node: TREE_TREE },
 };

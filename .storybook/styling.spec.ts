@@ -1,18 +1,18 @@
-// #region 🧲Header
-// 💻 .storybook/styling.spec.ts
+// #region 🧲️Header
+// 💻️ .storybook/styling.spec.ts
 // Specs: End-to-end checks for the `styling` Storybook scope's docs-gallery stories inside the aggregated Storybook static build.
 // Summary: Loads one representative story per `stories/styling/*.stories.tsx` file and asserts it actually renders (no "couldn't find story", no page/console errors, expected gallery content visible), plus drives `ThemeRoundtrip`'s textarea interactively to exercise the real `parseUiTheme`/`serializeUiTheme` round-trip in the browser. Modeled on `puzzle-2d.spec.ts`; unlike that board host these stories are pure read-only data renders, so there is no canvas/WASM session to poke — content assertions replace the debug-readout polling.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { expect, test, type Page } from "@playwright/test";
 
-//#region 🔖Shared
+//#region 🔖️Shared
 function significantConsoleErrors(messages: string[]): string[] {
   return messages.filter((text) => !/Failed to load resource:.*\b404\b/i.test(text));
 }
 
-/** @emoji 🧪 Navigates to `iframe.html?id=…` and asserts the story actually mounted — a 200 status alone doesn't prove this since `iframe.html` is a static shell that renders its "couldn't find story" fallback with the same HTTP status. */
+/** @emoji 🧪️ Navigates to `iframe.html?id=…` and asserts the story actually mounted — a 200 status alone doesn't prove this since `iframe.html` is a static shell that renders its "couldn't find story" fallback with the same HTTP status. */
 async function expectStylingStory(page: Page, storyId: string): Promise<void> {
   const pageErrors: Error[] = [];
   const consoleErrors: string[] = [];
@@ -32,11 +32,11 @@ async function expectStylingStory(page: Page, storyId: string): Promise<void> {
   expect(pageErrors.map((error) => error.message)).toEqual([]);
   expect(significantConsoleErrors(consoleErrors)).toEqual([]);
 }
-//#endregion 🔖Shared
+//#endregion 🔖️Shared
 
-//#region 🔖Theme
+//#region 🔖️Theme
 test("styling/Theme AllThemes: renders every builtin theme's light+dark board/map/canvas/chrome swatch grids", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-theme--all-themes");
+  await expectStylingStory(page, "🎨️styling-theme--all-themes");
   await expect(page.getByText("semio", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("board", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("light", { exact: true }).first()).toBeVisible();
@@ -44,14 +44,14 @@ test("styling/Theme AllThemes: renders every builtin theme's light+dark board/ma
 });
 
 test("styling/Theme SemioOnly: renders only the semio theme's two appearance cards", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-theme--semio-only");
+  await expectStylingStory(page, "🎨️styling-theme--semio-only");
   await expect(page.getByText("semio", { exact: false }).first()).toBeVisible();
 });
-//#endregion 🔖Theme
+//#endregion 🔖️Theme
 
-//#region 🔖Tokens
+//#region 🔖️Tokens
 test("styling/Tokens AllTokens: renders colors/spacing/radii/strokes/opacities tables", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-tokens--all-tokens");
+  await expectStylingStory(page, "🎨️styling-tokens--all-tokens");
   await expect(page.getByText("Colors", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("primary", { exact: false }).first()).toBeVisible();
   await expect(page.getByText("Spacing", { exact: false }).first()).toBeVisible();
@@ -59,14 +59,14 @@ test("styling/Tokens AllTokens: renders colors/spacing/radii/strokes/opacities t
 });
 
 test("styling/Tokens Colors: renders the STYLING_TOKENS palette as a table", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-tokens--colors");
+  await expectStylingStory(page, "🎨️styling-tokens--colors");
   await expect(page.getByText("#ff344f", { exact: false }).first()).toBeVisible();
 });
-//#endregion 🔖Tokens
+//#endregion 🔖️Tokens
 
-//#region 🔖Glass
+//#region 🔖️Glass
 test("styling/Glass AllLevels: renders every Level's ui-glass swatch", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-glass--all-levels");
+  await expectStylingStory(page, "🎨️styling-glass--all-levels");
   await expect(page.getByText("panel", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("window", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("menu", { exact: true }).first()).toBeVisible();
@@ -75,15 +75,15 @@ test("styling/Glass AllLevels: renders every Level's ui-glass swatch", async ({ 
 });
 
 test("styling/Glass DefaultLevelFallback: useLevel() falls back to base outside any provider", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-glass--default-level-fallback");
+  await expectStylingStory(page, "🎨️styling-glass--default-level-fallback");
   await expect(page.getByText("base", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(".ui-glass", { exact: false }).first()).toBeVisible();
 });
-//#endregion 🔖Glass
+//#endregion 🔖️Glass
 
-//#region 🔖ThemeRoundtrip
+//#region 🔖️ThemeRoundtrip
 test("styling/ThemeRoundtrip SemioTheme: parses cleanly and round-trips the input JSON", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-themeroundtrip--semio-theme");
+  await expectStylingStory(page, "🎨️styling-themeroundtrip--semio-theme");
   const errorReadout = page.getByTestId("theme-roundtrip-error");
   await expect(errorReadout).toHaveText("parses cleanly");
   const status = page.getByTestId("theme-roundtrip-status");
@@ -92,17 +92,17 @@ test("styling/ThemeRoundtrip SemioTheme: parses cleanly and round-trips the inpu
 });
 
 test("styling/ThemeRoundtrip BrokenTokenReference: parseUiTheme surfaces the unknown token ref", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-themeroundtrip--broken-token-reference");
+  await expectStylingStory(page, "🎨️styling-themeroundtrip--broken-token-reference");
   const errorReadout = page.getByTestId("theme-roundtrip-error");
   await expect(errorReadout).toContainText("not-a-real-token");
   await expect(page.getByTestId("theme-roundtrip-output")).toHaveValue("");
 });
 
 test("styling/ThemeRoundtrip SemioTheme: editing the textarea to invalid JSON surfaces a parse error live", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-themeroundtrip--semio-theme");
+  await expectStylingStory(page, "🎨️styling-themeroundtrip--semio-theme");
   const input = page.getByTestId("theme-roundtrip-input");
   await input.fill("{ not valid json");
   await expect(page.getByTestId("theme-roundtrip-error")).toContainText("parseUiTheme threw");
   await expect(page.getByTestId("theme-roundtrip-output")).toHaveValue("");
 });
-//#endregion 🔖ThemeRoundtrip
+//#endregion 🔖️ThemeRoundtrip

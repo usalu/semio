@@ -1,0 +1,12 @@
+{
+  "title": "Side Panel Tab Bar Clipping",
+  "emoji": "📑️",
+  "status": "closed",
+  "description": "Fix Document tab left clipping in side panels and establish a clean shared mechanism for rendering panel tab bars in React SidePanel/MobilePanel and WGPU floating panels.",
+  "summary": "Fixed Document tab left clipping in side panels by introducing a shared tab-bar mechanism in both renderers. React: new PanelTabBar component used by SidePanel and MobilePanel, tab strip raised to z-40 above the chrome frame, horizontal inset padding, min-w-0 labels, and scroll reset. WGPU: extracted render_panel_tab_bar with hairline inset + scissor, moved panel borders inside glass foreground before tabs so overlay pass no longer paints over tab labels.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1853"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️f697a6e53adf484787b535856ff5fc67"]
+}

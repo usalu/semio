@@ -1,0 +1,7 @@
+{
+  "title": "move-dev-deps-to-devdependencies",
+  "emoji": "📦️",
+  "status": "closed",
+  "description": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/compose/package.json",
+  "goal": "🎯️aioptimizedrepo"
+}

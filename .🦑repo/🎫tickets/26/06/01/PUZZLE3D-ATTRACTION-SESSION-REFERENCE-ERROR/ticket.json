@@ -1,9 +1,0 @@
-{
-  "title": "Puzzle3d Attraction Session Reference Error",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Fix ReferenceError: attractionSession is not defined in Inner useMemo deps at index.tsx:7058",
-  "summary": "Fixed runtime crash in `Inner` (`CanvasImpl`): `useMemo` dependency array referenced bare `attractionSession` which was never defined in scope; JSX already used `props.attractionSession`. Replaced dep with `props.attractionSession`.\n\nTests: `bun ./script.ts test` in `puzzle/3d/react` — 146/146 passed.",
-  "goal": "🎯compose",
-  "sessions": ["⚪e31fcfa2b36f462c8f73147d0dd7d694"]
-}

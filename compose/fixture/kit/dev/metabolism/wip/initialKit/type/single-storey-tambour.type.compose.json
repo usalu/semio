@@ -151,7 +151,7 @@
           "y": 0,
           "z": -1
         },
-        "description": "🎲 The bottom system center of the elevator.",
+        "description": "🎲️ The bottom system center of the elevator.",
         "port": {
           "id": "019ab243-21f3-7380-93c6-9e678ad2f321",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -196,7 +196,7 @@
           "y": 0,
           "z": 1
         },
-        "description": "🎯 The top system center of the elevator.",
+        "description": "🎯️ The top system center of the elevator.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-6b15b40049fb",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -232,7 +232,7 @@
           "y": 0,
           "z": 0
         },
-        "description": "🎳 The first door of the side plattform in the east facade.",
+        "description": "🎳️ The first door of the side plattform in the east facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-57263e420e70",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -254,7 +254,7 @@
           "y": 1,
           "z": 0
         },
-        "description": "🎮 The second door of the side plattform in the north facade.",
+        "description": "🎮️ The second door of the side plattform in the north facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -276,7 +276,7 @@
           "y": 1,
           "z": 0
         },
-        "description": "🎰 The third door of the side plattform in the north facade.",
+        "description": "🎰️ The third door of the side plattform in the north facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-57263e420e70",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -298,7 +298,7 @@
           "y": 0,
           "z": 0
         },
-        "description": "🧩 The fourth door of the side plattform in the west facade.",
+        "description": "🧩️ The fourth door of the side plattform in the west facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -320,7 +320,7 @@
           "y": 0,
           "z": 0
         },
-        "description": "🪀 The first door of the main plattform in the west facade.",
+        "description": "🪀️ The first door of the main plattform in the west facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-57263e420e70",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -342,7 +342,7 @@
           "y": -1,
           "z": 0
         },
-        "description": "🪁 The second door of the main plattform in the south facade.",
+        "description": "🪁️ The second door of the main plattform in the south facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -364,7 +364,7 @@
           "y": -1,
           "z": 0
         },
-        "description": "🪩 The first door of the main plattform in the south facade.",
+        "description": "🪩️ The first door of the main plattform in the south facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-57263e420e70",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -386,7 +386,7 @@
           "y": 0,
           "z": 0
         },
-        "description": "🪅 The second door of the main plattform in the east facade.",
+        "description": "🪅️ The second door of the main plattform in the east facade.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-50266f6860b8",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -553,9 +553,9 @@
       }
     ]
   },
-  "icon": "icons/🔣tambour_single-storey.svg",
-  "image": "images/🔣tambour_single-storey.svg",
-  "description": "🪤 An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
+  "icon": "icons/🔣️tambour_single-storey.svg",
+  "image": "images/🔣️tambour_single-storey.svg",
+  "description": "🪤️ An efficient one storey tambour for a rectangular shaft core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. The doors are spiraling around.",
   "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
     "items": [

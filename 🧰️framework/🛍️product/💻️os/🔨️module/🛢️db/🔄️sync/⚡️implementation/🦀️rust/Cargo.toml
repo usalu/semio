@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-os-kernel-db-sync"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db replica sync — frontier exchange, missing-command transfer, snapshot bootstrap, resume tokens"
+
+[lints]
+workspace = true
+[lib]
+name = "db_sync"
+path = "../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+db_core = { path = "../../../🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-db-core" }
+db_wal = { path = "../../../📝️wal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-db-wal" }
+db_storage = { path = "../../../🗄️storage/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-db-storage" }
+protocol = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+# 🎯️ `blake3` because this crate derives its own replay-based frontier `chain_hash` and snapshot
+# `pack_hash` (see `//#region 🔖️ReplicaState`/`🔖️Bootstrap`), the same direct dependency `db_wal`
+# already takes for its own hash-chaining.
+blake3 = "1"

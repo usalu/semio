@@ -1,20 +1,20 @@
-// #region 🧲Header
+// #region 🧲️Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // Electron renderer: configures kit factories then mounts sketchpad via {@link mountPlatform}.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 // #region ⛩️Renderer
 
-// #region 🔌Adapters
+// #region 🔌️Adapters
 import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
 import { configureSketchpadKitFactories, createComposeKitStoreFromJsStore, ensureSketchpadPlatform, importKit, InMemoryComposeKitStore, type ComposeKitStore } from "@semio-tech/compose-sketchpad";
 import { createRoot } from "react-dom/client";
-// #endregion 🔌Adapters
+// #endregion 🔌️Adapters
 
-import "./🎨globals.css";
+import "./🎨️globals.css";
 
 declare global {
   interface Window {

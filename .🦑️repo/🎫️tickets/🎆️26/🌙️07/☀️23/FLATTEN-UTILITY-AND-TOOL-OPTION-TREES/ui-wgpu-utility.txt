@@ -1,0 +1,15 @@
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+    Finished `test` profile [unoptimized] target(s) in 4.87s
+     Running unittests lib.rs (.repo/🎫️/26/07/23/FLATTEN-UTILITY-AND-TOOL-OPTION-TREES/target/debug/deps/ui_wgpu-05d4442bafa904bd)
+
+running 7 tests
+test component::layout::layout_wire_format_tests::partition_window_measures_empty_input_roundtrips_to_empty ... ok
+test component::layout::layout_wire_format_tests::partition_window_measures_keeps_untagged_group_and_non_group_in_general ... ok
+test component::layout::layout_wire_format_tests::partition_window_measures_drops_non_matching_utility_group_from_both_buckets ... ok
+test component::layout::layout_wire_format_tests::partition_window_measures_unwraps_matching_utility_group_children_into_utility_options ... ok
+test component::utilities::utility_node_wire_format_tests::derive_utility_nodes_groups_shared_group_into_one_collection ... ok
+test component::utilities::utility_node_wire_format_tests::derive_utility_nodes_marks_the_active_utility_pressed ... ok
+test component::utilities::utility_node_wire_format_tests::derive_utility_nodes_hoists_single_child_groups ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s
+

@@ -1,0 +1,12 @@
+{
+  "title": "Fix Lowpoly Dev Infinite Loop",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix lowpoly dev Maximum update depth exceeded infinite React loop.",
+  "summary": "Fixed lowpoly dev crash (Maximum update depth exceeded) caused by an infinite notify/re-render loop.\n\n- Removed `selectedIds`/`selectionMode` from fixture reload effect deps in LowpolyCanvas; selection sync uses a dedicated effect keyed by id fingerprint.\n- Memoized `selectedIds` in LowpolyPlaySurfaceHost via `interactionRevision`.\n- Split session bridge: fixture reload notifies tessellation; selection-only changes sync WASM without re-tessellating.\n- Removed spurious `notifyLowpolySharedPlay()` on session init when session already exists.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1816"
+  },
+  "goal": "🎯️lowpoly🎯️play",
+  "sessions": ["⚪️01e79846c2be48239221911385fb02fb"]
+}

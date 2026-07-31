@@ -1,0 +1,12 @@
+{
+  "title": "Fix Inspector Port Forwarding In Devcontainer",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The MCP inspector page hangs when opened from the host through VS Code forwarded ports because it binds to localhost inside the container. Update scripts and docs so proxy/UI bind to 0.0.0.0 and are reachable from host.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/769"
+  },
+  "goal": "🎯️r2603🎯️runningnet",
+  "sessions": ["⚪️019cb3dd895374e1b2225d059927712e"]
+}

@@ -52,7 +52,7 @@ isProject: false
 
 ## Ticket
 
-- The existing open ticket [.repo/.../BRUSH-ENGAGEMENT-NO-SUGGESTIONS/ticket.json](.repo/🎫/26/06/02/BRUSH-ENGAGEMENT-NO-SUGGESTIONS/ticket.json) is about hit-testing, a different concern. At execution start, read `repo://goals`, then open a NEW ticket (e.g. `Brush Kind Suggestion Percentages`) via `ticket_open`, associating it with the most appropriate goal (likely `🎯r2602🎯runningsketchpad`). Put any temp files under that ticket folder.
+- The existing open ticket [.repo/.../BRUSH-ENGAGEMENT-NO-SUGGESTIONS/ticket.json](.repo/🎫️/26/06/02/BRUSH-ENGAGEMENT-NO-SUGGESTIONS/ticket.json) is about hit-testing, a different concern. At execution start, read `repo://goals`, then open a NEW ticket (e.g. `Brush Kind Suggestion Percentages`) via `ticket_open`, associating it with the most appropriate goal (likely `🎯️r2602🎯️runningsketchpad`). Put any temp files under that ticket folder.
 
 ## Shared helper
 

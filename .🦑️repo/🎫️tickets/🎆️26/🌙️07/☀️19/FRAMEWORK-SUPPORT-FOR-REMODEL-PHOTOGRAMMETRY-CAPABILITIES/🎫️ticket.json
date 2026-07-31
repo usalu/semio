@@ -1,0 +1,13 @@
+{
+  "title": "Framework Support for Remodel Photogrammetry Capabilities",
+  "emoji": "🌐️",
+  "status": "open",
+  "description": "Extend the shared UI framework to support the remodel photogrammetry app's 4 canonical capabilities, additive-only at their existing canonical sites (no new files):\nD1: World3dScene gains an optional points_json field (point-cloud rendering layer distinct from per-mesh rendering) across ui/wgpu/rs/lib.rs (struct + builder + wire-format test), framework/core/js/index.ts (TS mirror), framework/renderer/react/components/world-3d-host.tsx (decode base64 positions/colors, render THREE.Points), framework/renderer/wgpu/rs/lib.rs (native point-sprite render pass).\nD2: HostEffect::DispatchAction variant for self re-dispatch of staged/progressive plugin work, across framework/core/rs/lib.rs (enum variant), framework/core/js/index.ts (TS mirror), framework/renderer/react/os-shell.tsx (applyHostEffects handling + recursive effect feed-through), framework/renderer/wgpu/rs/lib.rs (native effect queue handling).\nD3: HostEffect::RequestFileOpen gains multiple: bool for multi-file picker, across the same 4 sites, with per-file sequential dispatch in os-shell.tsx.\nD4: OsMediaFormat gains Ply and Las variants across framework/core/rs/lib.rs (all impl methods) and framework/core/js/index.ts mirror if one exists (no encoders implemented, just format identifiers).\nVerify with cargo test/clippy for the touched Rust crates and TS typecheck/test for the touched TS files. Surgical, minimal, additive changes only — this is a large shared file used by every plugin in the monorepo.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2163"
+  },
+  "goal": "🎯️framework🎯️os",
+  "sessions": [
+    "⚪️91c928f78b954f84ad96d9b822f91b7d"
+  ]
+}

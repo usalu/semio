@@ -1,0 +1,12 @@
+{
+  "title": "Flow Dictionary Module",
+  "emoji": "📚️",
+  "status": "closed",
+  "description": "Extend flow with dictionary module. Add neuron kinds for dictionary manipulation (pack, unpack, get, set, remove, has, keys, size, merge) and wire into flow core registry.",
+  "summary": "Ensured all flow neuron modules (dictionary, logic, math, text) appear in flow play workbench catalogue. Added FLOW_NEURON_MODULE_IDS validation, catalogue snapshot refresh for kinds panel, updated runtime validate script, and rebuilt WASM.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1543"
+  },
+  "goal": "🎯️flow",
+  "sessions": ["⚪️9abbe99e106a49daa88dd8c152893b28", "⚪️be55ada01dc0404e83098ef7a6345fda"]
+}

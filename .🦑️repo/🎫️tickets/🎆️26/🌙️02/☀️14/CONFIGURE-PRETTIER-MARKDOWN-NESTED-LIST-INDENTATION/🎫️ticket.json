@@ -1,0 +1,11 @@
+{
+  "title": "Configure Prettier Markdown Nested List Indentation",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Configure Prettier to use only one space for markdown nested list indentation by adding a markdown-specific override with tabWidth: 1.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/569"
+  },
+  "goal": "🎯️aioptimizedrepo"
+}

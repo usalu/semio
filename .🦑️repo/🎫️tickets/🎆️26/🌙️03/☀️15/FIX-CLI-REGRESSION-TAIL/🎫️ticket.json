@@ -1,0 +1,12 @@
+{
+  "title": "Fix CLI Regression Tail",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix the remaining repo/cli package regressions after hook payload normalization. Current failing areas: policy scope leakage causing repo-wide README breaches in fixture tests, godfile path matching misses, contributor listing/query visibility, GraphQL Statute.priority runtime resolution, autofix formatting drift in generated comment blocks, and SQLite export schema execution. Implement the fixes directly in existing files and verify repo/cli tests pass.",
+  "summary": "Completed the CLI regression tail cleanup by fixing contributor query matching, statute priority normalization, godfile validation leakage, TypeScript autofix definition identification formatting, embedded SQLite export schema syntax, and draft lifecycle test isolation. Verified with targeted regression subsets and a full `go test ./repo/cli` pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/920"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️f615afcce8b34a16ac8c95bdb4fa7e6f"]
+}

@@ -1,0 +1,7 @@
+{
+  "title": "Reshape log frontmatter and migrate logs",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Remove stats nesting, add nesting to lines {added;removed}, add nesting to date {created,updated}, rename base to commit, and migrate all existing logs to the new format.",
+  "goal": "🎯️aioptimizedrepo"
+}

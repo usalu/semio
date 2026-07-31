@@ -221,7 +221,7 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.91649 .39992 -.39992 .91649 -175.261956 211.223173)'>
-            <tspan fill='#fccf05'>📏</tspan>
+            <tspan fill='#fccf05'>📏️</tspan>
         </text>
         <path d='M-4.668 345.8553L52.52 339.6443' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -255,13 +255,13 @@
         <path d='M-43.69527 298.718757H-48.87887' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -232.8767 252.7107)'>
-            <tspan fill='#fccf05'>↕ </tspan>
+            <tspan fill='#fccf05'>↕️ </tspan>
         </text>
         <path
             d='M51.238 313.1753C51.984 312.8003 52.484 311.9293 52.484 310.6833V171.2423C52.484 170.0003 52.98 169.1253 53.727 168.7543C52.98 168.3793 52.484 167.5083 52.484 166.2613V26.8203C52.484 25.5781 51.984 24.7031 51.238 24.332'
             stroke='#fccf05' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -124.3126 106.5567)'>
-            <tspan fill='#fccf05'>🎚 </tspan>
+            <tspan fill='#fccf05'>🎚️ </tspan>
         </text>
         <path d='M3.539 336.3553L8.949 335.6173' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -292,7 +292,7 @@
             <tspan fill='#fa9500'>z</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -168.822 274.1607)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <path d='M3.539-18.8359L8.945-19.3281' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -323,7 +323,7 @@
             <tspan fill='#fa9500'>z</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -168.822 -81.0263)'>
-            <tspan fill='#fa9500'>⬆ </tspan>
+            <tspan fill='#fa9500'>⬆️ </tspan>
         </text>
         <path d='M-36.16 330.2263L-38.402 329.3323' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -355,7 +355,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 185.003768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 185.003768)'>
@@ -363,7 +363,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 185.003768)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 298.2543L-38.418 297.1253' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -395,7 +395,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 153.029768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 153.029768)'>
@@ -403,7 +403,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 153.029768)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 266.0113L-38.402 265.1173' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -435,7 +435,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 120.787768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 120.787768)'>
@@ -443,7 +443,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 120.787768)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 234.0353L-38.402 233.1403' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -475,7 +475,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 88.812768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 88.812768)'>
@@ -483,7 +483,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 88.812768)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 202.0583L-38.418 200.9333' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -515,7 +515,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 56.838768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 56.838768)'>
@@ -523,7 +523,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 56.838768)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 169.8203L-38.402 168.9223' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -555,7 +555,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 24.596768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 24.596768)'>
@@ -563,7 +563,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 24.596768)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 137.8437L-38.402 136.9492' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -595,7 +595,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -7.378232)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -7.378232)'>
@@ -603,7 +603,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -7.378232)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 105.8672L-38.418 104.7422' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -634,7 +634,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -39.352732)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -39.352732)'>
@@ -642,7 +642,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -39.352732)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 73.625L-38.402 72.73047' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -674,7 +674,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -71.594132)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -71.594132)'>
@@ -682,7 +682,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -178.872632 -71.594132)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-36.16 41.6523L-38.418 40.5234' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -714,7 +714,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -180.001332 -104.095232)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -180.001332 -104.095232)'>
@@ -722,7 +722,7 @@
         </text>
         <text class='f9' x='190.3756' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -180.001332 -104.095232)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-15.109 328.6293L-17.352 327.7343' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -754,7 +754,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 183.405768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 183.405768)'>
@@ -762,7 +762,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 183.405768)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 296.6523L-17.367 295.5273' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -794,7 +794,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 151.429768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 151.429768)'>
@@ -802,7 +802,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 151.429768)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 264.4143L-17.352 263.5153' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -834,7 +834,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 119.188768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 119.188768)'>
@@ -842,7 +842,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 119.188768)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 232.4373L-17.352 231.5433' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -874,7 +874,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 87.214768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 87.214768)'>
@@ -882,7 +882,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 87.214768)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 200.4613L-17.367 199.3363' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -914,7 +914,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 55.238768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 55.238768)'>
@@ -922,7 +922,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 55.238768)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 168.2183L-17.352 167.3243' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -954,7 +954,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 22.997768)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 22.997768)'>
@@ -962,7 +962,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 22.997768)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 136.2461L-17.352 135.3477' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -994,7 +994,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -8.976232)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -8.976232)'>
@@ -1002,7 +1002,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -8.976232)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 104.2695L-17.367 103.1406' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1034,7 +1034,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -40.951732)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -40.951732)'>
@@ -1042,7 +1042,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -40.951732)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 72.02734L-17.352 71.13281' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1074,7 +1074,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -73.192832)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -73.192832)'>
@@ -1082,7 +1082,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -157.822732 -73.192832)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-15.109 40.0508L-17.367 38.9258' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1114,7 +1114,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -158.951432 -105.693832)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -158.951432 -105.693832)'>
@@ -1122,7 +1122,7 @@
         </text>
         <text class='f9' x='190.3756' y='63.898275'
             transform='matrix(.90631 .42262 -.42262 .90631 -158.951432 -105.693832)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M-2.32 329.6953L-7.195 330.1833' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1154,7 +1154,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 278.812055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 278.812055)'>
@@ -1162,7 +1162,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 278.812055)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 297.4533L-7.195 297.9413' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1194,7 +1194,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 246.570055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 246.570055)'>
@@ -1202,7 +1202,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 246.570055)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 265.4763L-7.195 265.9653' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1234,7 +1234,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 214.595055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 214.595055)'>
@@ -1242,7 +1242,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 214.595055)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 233.5043L-7.195 233.9883' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1274,7 +1274,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 182.621055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 182.621055)'>
@@ -1282,7 +1282,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 182.621055)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 201.2613L-7.195 201.7503' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1314,7 +1314,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 150.379055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 150.379055)'>
@@ -1322,7 +1322,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 150.379055)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 169.2853L-7.195 169.7733' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1354,7 +1354,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 118.404055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 118.404055)'>
@@ -1362,7 +1362,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 118.404055)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 137.043L-7.195 137.7773' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1394,7 +1394,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 86.163055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 86.163055)'>
@@ -1402,7 +1402,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 86.163055)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 105.0703L-7.195 105.5547' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1434,7 +1434,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 54.188455)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 54.188455)'>
@@ -1442,7 +1442,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 54.188455)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 73.09375L-7.195 73.58203' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1474,7 +1474,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 22.213355)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 22.213355)'>
@@ -1482,7 +1482,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -193.109976 22.213355)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M-2.32 40.8516L-7.195 41.582' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1514,7 +1514,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -194.347266 -9.886745)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -194.347266 -9.886745)'>
@@ -1522,7 +1522,7 @@
         </text>
         <text class='f9' x='190.3756' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -194.347266 -9.886745)'>
-            <tspan fill='#fa9500'>🥈</tspan>
+            <tspan fill='#fa9500'>🥈️</tspan>
         </text>
         <path d='M39.246 314.2423L34.371 314.9723' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1554,7 +1554,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 263.357055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 263.357055)'>
@@ -1562,7 +1562,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 263.357055)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 282.2653L34.375 282.7543' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1594,7 +1594,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 231.382055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 231.382055)'>
@@ -1602,7 +1602,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 231.382055)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 250.2893L34.375 250.7773' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1634,7 +1634,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 199.407055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 199.407055)'>
@@ -1642,7 +1642,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 199.407055)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 218.0473L34.371 218.7773' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1674,7 +1674,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 167.166055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 167.166055)'>
@@ -1682,7 +1682,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 167.166055)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 186.0743L34.375 186.5583' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1714,7 +1714,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 135.191055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 135.191055)'>
@@ -1722,7 +1722,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 135.191055)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 154.0977L34.375 154.5859' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1754,7 +1754,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 103.216055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 103.216055)'>
@@ -1762,7 +1762,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 103.216055)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 121.8555L34.375 122.3437' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1794,7 +1794,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 70.975055)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 70.975055)'>
@@ -1802,7 +1802,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 70.975055)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 89.8789L34.375 90.3672' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1834,7 +1834,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 39.000255)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 39.000255)'>
@@ -1842,7 +1842,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 39.000255)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 57.90625L34.375 58.39453' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1874,7 +1874,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 7.025555)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 7.025555)'>
@@ -1882,7 +1882,7 @@
         </text>
         <text class='f9' x='187.88494' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -151.542366 7.025555)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path d='M39.246 25.6641L34.375 26.1523' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -1914,7 +1914,7 @@
         </text>
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -152.779666 -25.074945)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -152.779666 -25.074945)'>
@@ -1922,22 +1922,22 @@
         </text>
         <text class='f9' x='190.3756' y='63.898275'
             transform='matrix(.99353 -.11319 .11319 .99353 -152.779666 -25.074945)'>
-            <tspan fill='#fa9500'>🥇</tspan>
+            <tspan fill='#fa9500'>🥇️</tspan>
         </text>
         <path
             d='M63.738-30.3242H-54.137C-56.34-30.3242-58.125-28.5391-58.125-26.3398V349.7463C-58.125 351.9453-56.34 353.7303-54.137 353.7303H63.738C65.937 353.7303 67.723 351.9453 67.723 349.7463V-26.3398C67.723-28.5391 65.937-30.3242 63.738-30.3242Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>🛗</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>🛗️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>📏</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>📏️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>,</text>
         <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>↔ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>↕ </text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>↕️ </text>
         <text class='f7' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>,</text>
-        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>🎚 </text>
+        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>🎚️ </text>
         <text class='f7' x='259.46755' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>,</text>
-        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>🧭</text>
+        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>🧭️</text>
         <text class='f4' x='276.543241' y='63.898275' transform='matrix(1 0 0 1 -233.873 -100.4323)'>)</text>
         <path d='M88.9062 459.6403L90.0312 457.1793' stroke='#fff' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2121,7 +2121,7 @@
             fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.91655 .3998 -.3998 .91655 -140.250598 344.687827)'>
-            <tspan fill='#fccf05'>↪ </tspan>
+            <tspan fill='#fccf05'>↪️ </tspan>
         </text>
         <path d='M-46.289 450.4843V419.3433' stroke='#fccf05' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <path
@@ -2137,7 +2137,7 @@
         <path d='M-43.69527 418.68778H-48.87887' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -232.8767 372.7197)'>
-            <tspan fill='#fccf05'>↕ </tspan>
+            <tspan fill='#fccf05'>↕️ </tspan>
         </text>
         <path d='M-46.289 417.6323V390.2613' stroke='#fccf05' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <path
@@ -2153,7 +2153,7 @@
         <path d='M-43.69527 389.60555H-48.87887' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -232.8767 341.7517)'>
-            <tspan fill='#fccf05'>🔼</tspan>
+            <tspan fill='#fccf05'>🔼️</tspan>
         </text>
         <path d='M3.781 393.2423L22.941 401.4573' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2171,7 +2171,7 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.91911 .39389 -.39389 .91911 -131.098776 271.829551)'>
-            <tspan fill='#fccf05'>⬅ </tspan>
+            <tspan fill='#fccf05'>⬅️ </tspan>
         </text>
         <path d='M49.023 412.6323L68.184 420.8433' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2189,7 +2189,7 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.91911 .39389 -.39389 .91911 -85.857626 291.218551)'>
-            <tspan fill='#fccf05'>➡ </tspan>
+            <tspan fill='#fccf05'>➡️ </tspan>
         </text>
         <path d='M24.516 402.1293L47.449 411.9573' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2266,25 +2266,25 @@
             <tspan fill='#fa9500'>z</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -140.0706 335.5887)'>
-            <tspan fill='#fa9500'>🅰 </tspan>
+            <tspan fill='#fa9500'>🅰️ </tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -94.5608 355.5157)'>
-            <tspan fill='#fa9500'>🅱 </tspan>
+            <tspan fill='#fa9500'>🅱️ </tspan>
         </text>
         <path
             d='M191.7734 371.8403H-54.137C-56.34 371.8403-58.125 373.6213-58.125 375.8243V492.6873C-58.125 494.8903-56.34 496.6723-54.137 496.6723H191.7734C193.9766 496.6723 195.7578 494.8903 195.7578 492.6873V375.8243C195.7578 373.6213 193.9766 371.8403 191.7734 371.8403Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>🏫</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>🏫️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>↪ </text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>↪️ </text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>↕ </text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>↕️ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>🔼</text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>🔼️</text>
         <text class='f7' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>,</text>
-        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>⬅ </text>
+        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>⬅️ </text>
         <text class='f7' x='259.46755' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>,</text>
-        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>➡ </text>
+        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>➡️ </text>
         <text class='f7' x='276.543241' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>,</text>
         <text class='f2' x='280.971049' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>↔ </text>
         <text class='f4' x='293.618932' y='63.898275' transform='matrix(1 0 0 1 -233.873 301.7297)'>)</text>
@@ -2326,7 +2326,7 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.91559 .40198 -.40198 .91559 -49.246963 -6.508203)'>
-            <tspan fill='#fccf05'>📏</tspan>
+            <tspan fill='#fccf05'>📏️</tspan>
         </text>
         <path d='M118.5039 127.5859L177.71484 121.1133' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2360,7 +2360,7 @@
         <path d='M81.02734-26.257764H75.84765' stroke='#fccf05' fill='none' stroke-width='.3985' stroke-miterlimit='10'
             stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -99.4358 -19.1062)'>
-            <tspan fill='#fccf05'>↕ </tspan>
+            <tspan fill='#fccf05'>↕️ </tspan>
         </text>
         <path d='M112.7187 126.8203V56.03125' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2377,7 +2377,7 @@
         <path d='M115.30831 55.371055H110.12862' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -73.871 29.2304)'>
-            <tspan fill='#fccf05'>↪ </tspan>
+            <tspan fill='#fccf05'>↪️ </tspan>
         </text>
         <path d='M147.2461 104.3789V33.5898' stroke='#fccf05' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <path
@@ -2393,7 +2393,7 @@
         <path d='M149.83558 32.929687H144.65199' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -30.63 6.7883)'>
-            <tspan fill='#fccf05'>↩ </tspan>
+            <tspan fill='#fccf05'>↩️ </tspan>
         </text>
         <path d='M181.52343 119.4219V109.0547' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2410,7 +2410,7 @@
         <path d='M184.11334 108.394475H178.93365' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 3.649 52.0427)'>
-            <tspan fill='#fccf05'>⏬</tspan>
+            <tspan fill='#fccf05'>⏬️</tspan>
         </text>
         <path d='M129.9805 116.3359L135.1953 115.8828' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2441,24 +2441,24 @@
             <tspan fill='#fa9500'>z</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -47.362 48.8857)'>
-            <tspan fill='#fa9500'>⬇ </tspan>
+            <tspan fill='#fa9500'>⬇️ </tspan>
         </text>
         <path
             d='M189.375-29.7773H79.1016C76.902-29.7773 75.117-27.9922 75.117-25.793V131.3437C75.117 133.5469 76.902 135.3281 79.1016 135.3281H189.375C191.5781 135.3281 193.3594 133.5469 193.3594 131.3437V-25.793C193.3594-27.9922 191.5781-29.7773 189.375-29.7773Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>🎓</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>🎓️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>📏</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>📏️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>,</text>
         <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>↔ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>↕ </text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>↕️ </text>
         <text class='f7' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>,</text>
-        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>⏬</text>
+        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>⏬️</text>
         <text class='f7' x='259.46755' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>,</text>
-        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>↪ </text>
+        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>↪️ </text>
         <text class='f7' x='276.543241' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>,</text>
-        <text class='f2' x='280.971049' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>↩ </text>
+        <text class='f2' x='280.971049' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>↩️ </text>
         <text class='f4' x='293.618932' y='63.898275' transform='matrix(1 0 0 1 -100.6313 -99.8848)'>)</text>
         <path d='M89.0351 173.5863L132.3984 190.7343' stroke='#fff' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2500,7 +2500,7 @@
         <path d='M81.53121 172.250078H76.35153' stroke='#fccf05' fill='none' stroke-width='.3985' stroke-miterlimit='10'
             stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -98.9339 138.9567)'>
-            <tspan fill='#fccf05'>↕ </tspan>
+            <tspan fill='#fccf05'>↕️ </tspan>
         </text>
         <path d='M84.8125 171.2183L140.5547 165.8633' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2536,17 +2536,17 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.92952 .3686 -.3686 .92952 -47.571833 119.39505)'>
-            <tspan fill='#fccf05'>📏</tspan>
+            <tspan fill='#fccf05'>📏️</tspan>
         </text>
         <path d='M160.0312 217.5273L162.4219 215.1333M160.0312 215.1333L162.4219 217.5273' stroke='#fccf05' fill='none'
             stroke-width='.3985' stroke-miterlimit='10' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -21.009 149.2147)'>
-            <tspan fill='#fccf05'>🪟</tspan>
+            <tspan fill='#fccf05'>🪟️</tspan>
         </text>
         <path d='M104.8398 202.3473L107.2305 199.9573M104.8398 199.9573L107.2305 202.3473' stroke='#fccf05' fill='none'
             stroke-width='.3985' stroke-miterlimit='10' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -76.198 134.0377)'>
-            <tspan fill='#fccf05'>🚪</tspan>
+            <tspan fill='#fccf05'>🚪️</tspan>
         </text>
         <path d='M106.0351 225.2343L95.9531 225.9573' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -2578,22 +2578,22 @@
             <tspan fill='#fa9500'>z</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -72.306 158.7847)'>
-            <tspan fill='#fa9500'>🚪</tspan>
+            <tspan fill='#fa9500'>🚪️</tspan>
         </text>
         <path
             d='M188.96484 157.6055H79.1016C76.902 157.6055 75.117 159.3906 75.117 161.5898V248.9063C75.117 251.1053 76.902 252.8903 79.1016 252.8903H188.96484C191.168 252.8903 192.9492 251.1053 192.9492 248.9063V161.5898C192.9492 159.3906 191.168 157.6055 188.96484 157.6055Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>📦</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>📦️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>📏</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>📏️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>,</text>
         <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>↔ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>↕ </text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>↕️ </text>
         <text class='f7' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>,</text>
-        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>🚪</text>
+        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>🚪️</text>
         <text class='f7' x='259.46755' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>,</text>
-        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>🪟</text>
+        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>🪟️</text>
         <text class='f4' x='276.543241' y='63.898275' transform='matrix(1 0 0 1 -100.6313 87.4967)'>)</text>
         <path d='M117.7383 321.0503L126.0508 329.0903' stroke='#fff' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -3378,7 +3378,7 @@
         <path d='M89.0625 295.339604H83.88282' stroke='#fccf05' fill='none' stroke-width='.3985' stroke-miterlimit='10'
             stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -100.1172 255.6337)'>
-            <tspan fill='#fccf05'>↕ </tspan>
+            <tspan fill='#fccf05'>↕️ </tspan>
         </text>
         <path d='M87.1601 292.9103L124.5859 288.8203' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -3396,7 +3396,7 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99405 -.10857 .10857 .99405 -82.431972 245.121525)'>
-            <tspan fill='#fccf05'>⬅ </tspan>
+            <tspan fill='#fccf05'>⬅️ </tspan>
         </text>
         <path d='M126.293 288.6563L128.5312 288.4683' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -3414,7 +3414,7 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99649 -.08304 .08304 .99649 -59.645579 238.127956)'>
-            <tspan fill='#fccf05'>🤏</tspan>
+            <tspan fill='#fccf05'>🤏️</tspan>
         </text>
         <path d='M130.2344 288.3043L167.0039 284.2183' stroke='#fccf05' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -3432,7 +3432,7 @@
             stroke-miterlimit='10' stroke-linecap='square' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99385 -.11041 .11041 .99385 -39.769731 240.866793)'>
-            <tspan fill='#fccf05'>➡ </tspan>
+            <tspan fill='#fccf05'>➡️ </tspan>
         </text>
         <path d='M99.2969 340.5193L102.8203 341.9843' stroke='#fa9500' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -3492,38 +3492,38 @@
             <tspan fill='#fa9500'>z</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -86.8267 275.0607)'>
-            <tspan fill='#fa9500'>⬅ </tspan>
+            <tspan fill='#fa9500'>⬅️ </tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 2.678 266.1817)'>
-            <tspan fill='#fa9500'>➡ </tspan>
+            <tspan fill='#fa9500'>➡️ </tspan>
         </text>
         <path
             d='M188.88281 275.2773H78.621C76.422 275.2773 74.637 277.0583 74.637 279.2613V356.7933C74.637 358.9963 76.422 360.7773 78.621 360.7773H188.88281C191.082 360.7773 192.8672 358.9963 192.8672 356.7933V279.2613C192.8672 277.0583 191.082 275.2773 188.88281 275.2773Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>🌉</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>🌉️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>⬅ </text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>⬅️ </text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>➡ </text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>➡️ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>,</text>
         <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>↔ </text>
         <text class='f7' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>,</text>
-        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>↕ </text>
+        <text class='f2' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>↕️ </text>
         <text class='f7' x='259.46755' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>,</text>
-        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>🤏</text>
+        <text class='f2' x='263.895358' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>🤏️</text>
         <text class='f4' x='276.543241' y='63.898275' transform='matrix(1 0 0 1 -101.1134 205.1677)'>)</text>
         <path
             d='M199.5195-51.6407H-60.98C-63.18-51.6407-64.965-49.8557-64.965-47.6567V499.5273C-64.965 501.7303-63.18 503.5113-60.98 503.5113H199.5195C201.7187 503.5113 203.5039 501.7303 203.5039 499.5273V-47.6567C203.5039-49.8557 201.7187-51.6407 199.5195-51.6407Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
         <text class='f0' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -240.0492 -120.0846)'>P﬘ﬕ﬚<tspan
                 x='204.118984'>ﬕ﬚ײַﬖ﬋﬙</tspan></text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -230.5128 514.6607)'>🏫</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -230.5128 514.6607)'>🏫️</text>
         <path
             d='M-38.961 566.7733H-50.777C-52.98 566.7733-54.762 568.5583-54.762 570.7573V580.3593C-54.762 582.5583-52.98 584.3433-50.777 584.3433H-38.961C-36.762 584.3433-34.977 582.5583-34.977 580.3593V570.7573C-34.977 568.5583-36.762 566.7733-38.961 566.7733Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -196.4967 537.3387)'>🏫</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -196.4967 537.3387)'>🏫️</text>
         <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -196.4967 516.0907)'>
-            <tspan fill='#ff344f'>🛗</tspan>
+            <tspan fill='#ff344f'>🛗️</tspan>
         </text>
         <path d='M-1.047 573.4453L-10.855 576.9883L-1.047 580.5313V587.3673H18.934V566.6133H-1.047Z' stroke='#ff344f'
             fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 .99628' />
@@ -3534,7 +3534,7 @@
             <tspan fill='#ff344f'>[</tspan>
         </text>
         <text class='f9' x='187.400673' y='51.943107' transform='matrix(1 0 0 1 -178.456871 520.5617)'>
-            <tspan fill='#ff344f'>🎚 </tspan>
+            <tspan fill='#ff344f'>🎚️ </tspan>
         </text>
         <text class='f3' x='193.724614' y='51.943107' transform='matrix(1 0 0 1 -178.456871 520.5617)'>
             <tspan fill='#ff344f'>]</tspan>
@@ -3546,7 +3546,7 @@
             <tspan fill='#ff344f'>[</tspan>
         </text>
         <text class='f9' x='187.400673' y='57.920691' transform='matrix(1 0 0 1 -178.456871 520.5617)'>
-            <tspan fill='#ff344f'>🧭</tspan>
+            <tspan fill='#ff344f'>🧭️</tspan>
         </text>
         <text class='f3' x='193.724614' y='57.920691' transform='matrix(1 0 0 1 -178.456871 520.5617)'>
             <tspan fill='#ff344f'>]</tspan>
@@ -3558,13 +3558,13 @@
             <tspan fill='#ff344f'>[</tspan>
         </text>
         <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -178.456871 520.5617)'>
-            <tspan fill='#ff344f'>🆔</tspan>
+            <tspan fill='#ff344f'>🆔️</tspan>
         </text>
         <text class='f3' x='193.724614' y='63.898275' transform='matrix(1 0 0 1 -178.456871 520.5617)'>
             <tspan fill='#ff344f'>]</tspan>
         </text>
         <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -196.4967 494.8437)'>
-            <tspan fill='#ff344f'>🎓</tspan>
+            <tspan fill='#ff344f'>🎓️</tspan>
         </text>
         <path
             d='M18.27 546.9573H-16.762C-18.965 546.9573-20.746 548.7423-20.746 550.9413V603.0353C-20.746 605.2343-18.965 607.0193-16.762 607.0193H18.27C20.469 607.0193 22.254 605.2343 22.254 603.0353V550.9413C22.254 548.7423 20.469 546.9573 18.27 546.9573Z'
@@ -3572,35 +3572,35 @@
         <path
             d='M21.59 543.6363H-54.098C-56.301 543.6363-58.082 545.4223-58.082 547.6213V606.3553C-58.082 608.5583-56.301 610.3403-54.098 610.3403H21.59C23.793 610.3403 25.574 608.5583 25.574 606.3553V547.6213C25.574 545.4223 23.793 543.6363 21.59 543.6363Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🏭</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🏭️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🆔</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🆔️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🎚 </text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🎚️ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🧭</text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>🧭️</text>
         <text class='f4' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -233.8334 473.5277)'>)</text>
         <text class='f5' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -211.913 514.2027)'>⇒</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -136.9682 524.5827)'>🛗</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -136.9682 524.5827)'>🛗️</text>
         <path d='M45.133 576.7813L48.676 585.4803L52.219 576.7813H58.664V567.9843H38.684V576.7813Z' stroke='#fff'
             fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 .99628' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -138.7255 509.9787)'>🏷️ </text>
         <text class='f3' x='185.39428' y='63.898275' transform='matrix(1 0 0 1 -138.7255 509.9787)'>[</text>
-        <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -138.7255 509.9787)'>🆔</text>
+        <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -138.7255 509.9787)'>🆔️</text>
         <text class='f3' x='193.724614' y='63.898275' transform='matrix(1 0 0 1 -138.7255 509.9787)'>]</text>
         <path
             d='M58 564.6643H39.348C37.148 564.6643 35.363 566.4493 35.363 568.6483V590.2813C35.363 592.4803 37.148 594.2653 39.348 594.2653H58C60.203 594.2653 61.984 592.4803 61.984 590.2813V568.6483C61.984 566.4493 60.203 564.6643 58 564.6643Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -100.1173 521.7477)'>🛗</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -100.1173 521.7477)'>🛗️</text>
         <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -38.383 546.9157)'>
-            <tspan fill='#ff344f'>📦</tspan>
+            <tspan fill='#ff344f'>📦️</tspan>
         </text>
         <text class='f8' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 -38.383 546.9157)'>
             <tspan fill='#ff344f'>[1]</tspan>
             <tspan fill='#ff344f' x='191.718221' y='66.361207'>1</tspan>
         </text>
         <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -38.383 532.7417)'>
-            <tspan fill='#ff344f'>📦</tspan>
+            <tspan fill='#ff344f'>📦️</tspan>
         </text>
         <text class='f8' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 -38.383 532.7417)'>
             <tspan fill='#ff344f'>[2]</tspan>
@@ -3610,61 +3610,61 @@
             <tspan fill='#ff344f'>…</tspan>
         </text>
         <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -38.383 514.7357)'>
-            <tspan fill='#ff344f'>📦</tspan>
+            <tspan fill='#ff344f'>📦️</tspan>
         </text>
         <text class='f8' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 -38.383 514.7357)'>
             <tspan fill='#ff344f'>[</tspan>
         </text>
         <text class='f1' x='199.465049' y='57.653657' transform='matrix(1 0 0 1 -38.383 514.7357)'>
-            <tspan fill='#ff344f'>🛗</tspan>
+            <tspan fill='#ff344f'>🛗️</tspan>
         </text>
         <text class='f8' x='208.318567' y='57.653657' transform='matrix(1 0 0 1 -38.383 514.7357)'>
             <tspan fill='#ff344f'>.</tspan>
         </text>
         <text class='f1' x='210.062029' y='57.653657' transform='matrix(1 0 0 1 -38.383 514.7357)'>
-            <tspan fill='#ff344f'>🎚 </tspan>
+            <tspan fill='#ff344f'>🎚️ </tspan>
         </text>
         <text class='f8' x='218.915547' y='57.653657' transform='matrix(1 0 0 1 -38.383 514.7357)'>
             <tspan fill='#ff344f'>-1]</tspan>
         </text>
         <text class='f1' x='191.718221' y='66.558557' transform='matrix(1 0 0 1 -38.383 514.7357)'>
-            <tspan fill='#ff344f'>🛗</tspan>
+            <tspan fill='#ff344f'>🛗️</tspan>
         </text>
         <text class='f8' x='200.571739' y='66.558557' transform='matrix(1 0 0 1 -38.383 514.7357)'>
             <tspan fill='#ff344f'>.</tspan>
         </text>
         <text class='f1' x='202.315201' y='66.558557' transform='matrix(1 0 0 1 -38.383 514.7357)'>
-            <tspan fill='#ff344f'>🎚 </tspan>
+            <tspan fill='#ff344f'>🎚️ </tspan>
         </text>
         <text class='f8' x='211.168719' y='66.558557' transform='matrix(1 0 0 1 -38.383 514.7357)'>
             <tspan fill='#ff344f'>-1</tspan>
         </text>
         <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -38.383 497.7277)'>
-            <tspan fill='#ff344f'>📦</tspan>
+            <tspan fill='#ff344f'>📦️</tspan>
         </text>
         <text class='f8' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 -38.383 497.7277)'>
             <tspan fill='#ff344f'>[</tspan>
         </text>
         <text class='f1' x='199.465049' y='57.653657' transform='matrix(1 0 0 1 -38.383 497.7277)'>
-            <tspan fill='#ff344f'>🛗</tspan>
+            <tspan fill='#ff344f'>🛗️</tspan>
         </text>
         <text class='f8' x='208.318567' y='57.653657' transform='matrix(1 0 0 1 -38.383 497.7277)'>
             <tspan fill='#ff344f'>.</tspan>
         </text>
         <text class='f1' x='210.062029' y='57.653657' transform='matrix(1 0 0 1 -38.383 497.7277)'>
-            <tspan fill='#ff344f'>🎚 </tspan>
+            <tspan fill='#ff344f'>🎚️ </tspan>
         </text>
         <text class='f8' x='218.915547' y='57.653657' transform='matrix(1 0 0 1 -38.383 497.7277)'>
             <tspan fill='#ff344f'>]</tspan>
         </text>
         <text class='f1' x='191.718221' y='66.558557' transform='matrix(1 0 0 1 -38.383 497.7277)'>
-            <tspan fill='#ff344f'>🛗</tspan>
+            <tspan fill='#ff344f'>🛗️</tspan>
         </text>
         <text class='f8' x='200.571739' y='66.558557' transform='matrix(1 0 0 1 -38.383 497.7277)'>
             <tspan fill='#ff344f'>.</tspan>
         </text>
         <text class='f1' x='202.315201' y='66.558557' transform='matrix(1 0 0 1 -38.383 497.7277)'>
-            <tspan fill='#ff344f'>🎚 </tspan>
+            <tspan fill='#ff344f'>🎚️ </tspan>
         </text>
         <path
             d='M188.49609 546.1363H79.6172C77.418 546.1363 75.633 547.9223 75.633 550.1213V612.6133C75.633 614.8123 77.418 616.5973 79.6172 616.5973H188.49609C190.6992 616.5973 192.4844 614.8123 192.4844 612.6133V550.1213C192.4844 547.9223 190.6992 546.1363 188.49609 546.1363Z'
@@ -3672,41 +3672,41 @@
         <path
             d='M191.8203 542.8163H36.027C33.828 542.8163 32.043 544.6013 32.043 546.8003V615.9333C32.043 618.1323 33.828 619.9183 36.027 619.9183H191.8203C194.0195 619.9183 195.8047 618.1323 195.8047 615.9333V546.8003C195.8047 544.6013 194.0195 542.8163 191.8203 542.8163Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>📚</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>📚️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>🆔</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>🆔️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>🧭</text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>🧭️</text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>🏅</text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>🏅️</text>
         <text class='f7' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>,</text>
-        <text class='f11' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>□</text>
+        <text class='f11' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>□️</text>
         <text class='f4' x='252.837141' y='63.898275' transform='matrix(1 0 0 1 -143.7064 472.7077)'>)</text>
         <text class='f5' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -115.2422 518.3447)'>⇒</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -173.81916 613.8747)'>🏫</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -229.1192 595.4627)'>🛗</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -173.81916 613.8747)'>🏫️</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -229.1192 595.4627)'>🛗️</text>
         <text class='f8' x='191.718221' y='66.361207' transform='matrix(1 0 0 1 -229.1192 595.4627)'>1</text>
         <path d='M-39.629 647.6643L-41.734 656.3593L-32.543 647.6643H-15.48V638.8633H-50.977V647.6643Z' stroke='#fff'
             fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 .99628' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -228.388 580.8587)'>🏷️ </text>
         <text class='f3' x='185.39428' y='63.898275' transform='matrix(1 0 0 1 -228.388 580.8587)'>[</text>
-        <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -228.388 580.8587)'>🆔</text>
+        <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -228.388 580.8587)'>🆔️</text>
         <text class='f3' x='193.724614' y='63.898275' transform='matrix(1 0 0 1 -228.388 580.8587)'>]<tspan
                 x='197.768122'>=</tspan></text>
-        <text class='f9' x='204.925016' y='63.898275' transform='matrix(1 0 0 1 -228.388 580.8587)'>⬅ </text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -117.7543 595.4627)'>🛗</text>
+        <text class='f9' x='204.925016' y='63.898275' transform='matrix(1 0 0 1 -228.388 580.8587)'>⬅️ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -117.7543 595.4627)'>🛗️</text>
         <text class='f8' x='191.718221' y='66.361207' transform='matrix(1 0 0 1 -117.7543 595.4627)'>2</text>
         <path d='M60.441 647.6643L69.633 656.3593L67.527 647.6643H78.879V638.8633H43.379V647.6643Z' stroke='#fff'
             fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 .99628' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -134.0313 580.8587)'>🏷️ </text>
         <text class='f3' x='185.39428' y='63.898275' transform='matrix(1 0 0 1 -134.0313 580.8587)'>[</text>
-        <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -134.0313 580.8587)'>🆔</text>
+        <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -134.0313 580.8587)'>🆔️</text>
         <text class='f3' x='193.724614' y='63.898275' transform='matrix(1 0 0 1 -134.0313 580.8587)'>]<tspan
                 x='197.768122'>=</tspan></text>
-        <text class='f9' x='204.925016' y='63.898275' transform='matrix(1 0 0 1 -134.0313 580.8587)'>➡ </text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -183.74072 595.5837)'>📦</text>
+        <text class='f9' x='204.925016' y='63.898275' transform='matrix(1 0 0 1 -134.0313 580.8587)'>➡️ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -183.74072 595.5837)'>📦️</text>
         <text class='f8' x='191.718221' y='66.361207' transform='matrix(1 0 0 1 -183.74072 595.5837)'>1</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -163.1327 595.5837)'>📦</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -163.1327 595.5837)'>📦️</text>
         <text class='f8' x='191.718221' y='66.361207' transform='matrix(1 0 0 1 -163.1327 595.5837)'>2</text>
         <path d='M5.051 672.4453L-32.785 659.4373' stroke='#fff' fill='none' stroke-width='.3985'
             stroke-miterlimit='10' />
@@ -3723,13 +3723,13 @@
         <path
             d='M78.215 635.5433H-50.313C-52.516 635.5433-54.301 637.3283-54.301 639.5273V679.5703C-54.301 681.7733-52.516 683.5583-50.313 683.5583H78.215C80.4141 683.5583 82.1992 681.7733 82.1992 679.5703V639.5273C82.1992 637.3283 80.4141 635.5433 78.215 635.5433Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -43.424 616.7097)'>🏫</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -80.2979 598.2967)'>🛗</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -43.424 616.7097)'>🏫️</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -80.2979 598.2967)'>🛗️</text>
         <text class='f8' x='191.718221' y='66.361207' transform='matrix(1 0 0 1 -80.2979 598.2967)'>1</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -10.036 598.2967)'>🛗</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -10.036 598.2967)'>🛗️</text>
         <text class='f8' x='191.718221' y='66.361207' transform='matrix(1 0 0 1 -10.036 598.2967)'>2</text>
         <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -43.424 598.2967)'>
-            <tspan fill='#ff344f'>🌉</tspan>
+            <tspan fill='#ff344f'>🌉️</tspan>
         </text>
         <path d='M138.6758 650.4963L142.2187 659.1953L145.7617 650.4963H164.6601V635.3513H119.7773V650.4963Z'
             stroke='#ff344f' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='.3985 .99628' />
@@ -3740,14 +3740,14 @@
             <tspan fill='#ff344f'>[</tspan>
         </text>
         <text class='f9' x='187.400673' y='57.920691' transform='matrix(1 0 0 1 -57.631 583.4447)'>
-            <tspan fill='#ff344f'>⬅ </tspan>
+            <tspan fill='#ff344f'>⬅️ </tspan>
         </text>
         <text class='f3' x='193.724614' y='57.920691' transform='matrix(1 0 0 1 -57.631 583.4447)'>
             <tspan fill='#ff344f'>]</tspan>
             <tspan fill='#ff344f' x='197.768122'>:</tspan>
         </text>
         <text class='f9' x='201.81163' y='57.920691' transform='matrix(1 0 0 1 -57.631 583.4447)'>
-            <tspan fill='#ff344f'>📦</tspan>
+            <tspan fill='#ff344f'>📦️</tspan>
         </text>
         <text class='f3' x='208.135571' y='59.415087' transform='matrix(1 0 0 1 -57.631 583.4447)'>
             <tspan fill='#ff344f'>1</tspan>
@@ -3763,14 +3763,14 @@
             <tspan fill='#ff344f'>[</tspan>
         </text>
         <text class='f9' x='187.400673' y='63.898275' transform='matrix(1 0 0 1 -57.631 583.4447)'>
-            <tspan fill='#ff344f'>➡ </tspan>
+            <tspan fill='#ff344f'>➡️ </tspan>
         </text>
         <text class='f3' x='193.724614' y='63.898275' transform='matrix(1 0 0 1 -57.631 583.4447)'>
             <tspan fill='#ff344f'>]</tspan>
             <tspan fill='#ff344f' x='197.768122'>:</tspan>
         </text>
         <text class='f9' x='201.81163' y='63.898275' transform='matrix(1 0 0 1 -57.631 583.4447)'>
-            <tspan fill='#ff344f'>📦</tspan>
+            <tspan fill='#ff344f'>📦️</tspan>
         </text>
         <text class='f3' x='208.135571' y='65.392671' transform='matrix(1 0 0 1 -57.631 583.4447)'>
             <tspan fill='#ff344f'>2</tspan>
@@ -3799,13 +3799,13 @@
         <path
             d='M188.32421 628.7113H-53.633C-55.836 628.7113-57.621 630.4963-57.621 632.6953V685.7263C-57.621 687.9293-55.836 689.7113-53.633 689.7113H188.32421C190.5234 689.7113 192.3086 687.9293 192.3086 685.7263V632.6953C192.3086 630.4963 190.5234 628.7113 188.32421 628.7113Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>🛣 </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>🛣️ </text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>⬅ </text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>⬅️ </text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>➡ </text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>➡️ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>🎚 </text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>🎚️ </text>
         <text class='f4' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 -233.3689 558.6017)'>)</text>
         <text class='f5' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -95.2263 597.3097)'>⇒</text>
         <path
@@ -3817,26 +3817,26 @@
             d='M294.371-31.3594H218.543C216.3398-31.3594 214.5547-29.5742 214.5547-27.3711V-17.7461C214.5547-15.5469 216.3398-13.7617 218.543-13.7617H294.371C296.574-13.7617 298.355-15.5469 298.355-17.7461V-27.3711C298.355-29.5742 296.574-31.3594 294.371-31.3594Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
         <text class='f4' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>[</text>
-        <text class='f2' x='181.837747' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>🚪</text>
+        <text class='f2' x='181.837747' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>🚪️</text>
         <text class='f4' x='197.252962' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>:</text>
-        <text class='f2' x='202.787703' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>⬇ </text>
+        <text class='f2' x='202.787703' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>⬇️ </text>
         <text class='f7' x='215.435586' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>,</text>
-        <text class='f2' x='219.863394' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>🪟</text>
+        <text class='f2' x='219.863394' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>🪟️</text>
         <text class='f4' x='235.278609' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>:</text>
-        <text class='f2' x='240.81335' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>⬅ </text>
+        <text class='f2' x='240.81335' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>⬅️ </text>
         <text class='f4' x='253.461233' y='63.898275' transform='matrix(1 0 0 1 38.807 -83.471)'>]</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 38.807 -100.6291)'>↩ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 38.807 -100.6291)'>↩️ </text>
         <path
             d='M273.4219 6.6875H218.543C216.3398 6.6875 214.5547 8.4727 214.5547 10.6719V20.2969C214.5547 22.5 216.3398 24.2852 218.543 24.2852H273.4219C275.6211 24.2852 277.4062 22.5 277.4062 20.2969V10.6719C277.4062 8.4727 275.6211 6.6875 273.4219 6.6875Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
         <text class='f4' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>[</text>
-        <text class='f2' x='181.837747' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>↩ </text>
+        <text class='f2' x='181.837747' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>↩️ </text>
         <text class='f7' x='194.485629' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>,</text>
-        <text class='f2' x='198.913437' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>🕶 </text>
+        <text class='f2' x='198.913437' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>🕶️ </text>
         <text class='f4' x='214.328653' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>:</text>
-        <text class='f2' x='219.863394' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>⬅ </text>
+        <text class='f2' x='219.863394' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>⬅️ </text>
         <text class='f4' x='232.511277' y='63.898275' transform='matrix(1 0 0 1 38.807 -45.4262)'>]</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 38.807 -62.58423)'>😎</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 38.807 -62.58423)'>😎️</text>
         <path
             d='M297.691-51.8357H215.2226C213.0195-51.8357 211.2344-50.0507 211.2344-47.8517V23.6172C211.2344 25.8203 213.0195 27.6055 215.2226 27.6055H297.691C299.895 27.6055 301.676 25.8203 301.676 23.6172V-47.8517C301.676-50.0507 299.895-51.8357 297.691-51.8357Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
@@ -3844,20 +3844,20 @@
         <text class='f10' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>1</text>
         <text class='f11' x='185.812785' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>return</text>
         <text class='f4' x='209.600534' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>[</text>
-        <text class='f2' x='212.367942' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>🚪</text>
+        <text class='f2' x='212.367942' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>🚪️</text>
         <text class='f4' x='227.783158' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>:</text>
-        <text class='f2' x='233.317898' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>➡ </text>
+        <text class='f2' x='233.317898' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>➡️ </text>
         <text class='f7' x='245.965781' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>,</text>
-        <text class='f2' x='250.393589' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>🪟</text>
+        <text class='f2' x='250.393589' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>🪟️</text>
         <text class='f4' x='265.808805' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>:</text>
-        <text class='f2' x='271.343546' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>🧭</text>
+        <text class='f2' x='271.343546' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>🧭️</text>
         <text class='f4' x='283.991429' y='63.898275' transform='matrix(1 0 0 1 45.369 15.7428)'>]</text>
         <path
             d='M334.785 64.535156H221.7812C219.582 64.535156 217.7969 66.32031 217.7969 68.51953V84.7891C217.7969 86.9883 219.582 88.7734 221.7812 88.7734H334.785C336.984 88.7734 338.77 86.9883 338.77 84.7891V68.51953C338.77 66.32031 336.984 64.535156 334.785 64.535156Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.048 -5.5725)'>☀ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.048 -5.5725)'>☀️ </text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 42.048 -5.5725)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.048 -5.5725)'>🧭</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.048 -5.5725)'>🧭️</text>
         <text class='f4' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 42.048 -5.5725)'>)</text>
         <path
             d='M341.625 43.2187H214.9414C212.7422 43.2187 210.957 45.0039 210.957 47.207V91.6289C210.957 93.8281 212.7422 95.6133 214.9414 95.6133H341.625C343.828 95.6133 345.609 93.8281 345.609 91.6289V47.207C345.609 45.0039 343.828 43.2187 341.625 43.2187Z'
@@ -3865,57 +3865,57 @@
         <text class='f0' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 35.872 -25.2422)'>G﬋ﬔ﬋﬘﬇<tspan
                 x='216.336839'>﬚﬏ﬕﬔ﬙</tspan></text>
         <text class='f4' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>(</text>
-        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>📦</text>
+        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>📦️</text>
         <text class='f7' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>,</text>
         <text class='f4' x='200.020403' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>[</text>
-        <text class='f2' x='202.787811' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>🪞</text>
+        <text class='f2' x='202.787811' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>🪞️</text>
         <text class='f4' x='215.435694' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>(</text>
-        <text class='f2' x='219.310068' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>↕ </text>
+        <text class='f2' x='219.310068' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>↕️ </text>
         <text class='f4' x='231.957951' y='63.898275' transform='matrix(1 0 0 1 45.401 86.7317)'>)])</text>
         <path
             d='M290.531 135.2812H221.8164C219.6133 135.2812 217.8281 137.0664 217.8281 139.2656V155.7773C217.8281 157.9766 219.6133 159.7617 221.8164 159.7617H290.531C292.734 159.7617 294.516 157.9766 294.516 155.7773V139.2656C294.516 137.0664 292.734 135.2812 290.531 135.2812Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.081 66.0097)'>📦</text>
-        <text class='f1' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 42.081 66.0097)'>🪞</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.081 66.0097)'>📦️</text>
+        <text class='f1' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 42.081 66.0097)'>🪞️</text>
         <text class='f4' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 128.378 86.7317)'>(</text>
-        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 128.378 86.7317)'>📦</text>
+        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 128.378 86.7317)'>📦️</text>
         <text class='f4' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 128.378 86.7317)'>(</text>
-        <text class='f2' x='199.466969' y='63.898275' transform='matrix(1 0 0 1 128.378 86.7317)'>↩ </text>
+        <text class='f2' x='199.466969' y='63.898275' transform='matrix(1 0 0 1 128.378 86.7317)'>↩️ </text>
         <text class='f4' x='212.114851' y='63.898275' transform='matrix(1 0 0 1 128.378 86.7317)'>))</text>
         <path
             d='M350.898 135.2812H304.793C302.59 135.2812 300.809 137.0664 300.809 139.2656V155.7773C300.809 157.9766 302.59 159.7617 304.793 159.7617H350.898C353.098 159.7617 354.883 157.9766 354.883 155.7773V139.2656C354.883 137.0664 353.098 135.2812 350.898 135.2812Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 125.058 66.0097)'>📦</text>
-        <text class='f1' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 125.058 66.0097)'>↩ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 125.058 66.0097)'>📦️</text>
+        <text class='f1' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 125.058 66.0097)'>↩️ </text>
         <text class='f4' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>(</text>
-        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>📦</text>
+        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>📦️</text>
         <text class='f4' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>(</text>
-        <text class='f2' x='199.466969' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>☀ </text>
+        <text class='f2' x='199.466969' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>☀️ </text>
         <text class='f4' x='212.114851' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>(</text>
-        <text class='f2' x='215.989225' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>⬆ </text>
+        <text class='f2' x='215.989225' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>⬆️ </text>
         <text class='f4' x='228.637108' y='63.898275' transform='matrix(1 0 0 1 45.401 134.9827)'>)))</text>
         <path
             d='M288.316 183.5313H221.8164C219.6133 183.5313 217.8281 185.3163 217.8281 187.5153V204.0273C217.8281 206.2263 219.6133 208.0113 221.8164 208.0113H288.316C290.52 208.0113 292.305 206.2263 292.305 204.0273V187.5153C292.305 185.3163 290.52 183.5313 288.316 183.5313Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.081 114.2607)'>📦</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.081 114.2607)'>📦️</text>
         <text class='f1' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 42.081 114.2607)'>⤴ </text>
         <text class='f4' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>(</text>
-        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>📦</text>
+        <text class='f2' x='182.944712' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>📦️</text>
         <text class='f4' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>(</text>
-        <text class='f2' x='199.466969' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>☀ </text>
+        <text class='f2' x='199.466969' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>☀️ </text>
         <text class='f4' x='212.114851' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>(</text>
-        <text class='f2' x='215.989225' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>⬆ </text>
+        <text class='f2' x='215.989225' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>⬆️ </text>
         <text class='f4' x='228.637108' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>))</text>
         <text class='f7' x='236.385856' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>,</text>
         <text class='f4' x='240.813664' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>[</text>
-        <text class='f2' x='243.581072' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>🪞</text>
+        <text class='f2' x='243.581072' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>🪞️</text>
         <text class='f4' x='256.228955' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>(</text>
-        <text class='f2' x='260.103329' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>↕ </text>
+        <text class='f2' x='260.103329' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>↕️ </text>
         <text class='f4' x='272.751212' y='63.898275' transform='matrix(1 0 0 1 45.401 183.2337)'>)])</text>
         <path
             d='M331.324 231.7813H221.8164C219.6133 231.7813 217.8281 233.5663 217.8281 235.7693V252.2773C217.8281 254.4803 219.6133 256.2613 221.8164 256.2613H331.324C333.527 256.2613 335.312 254.4803 335.312 252.2773V235.7693C335.312 233.5663 333.527 231.7813 331.324 231.7813Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.081 162.5117)'>📦</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.081 162.5117)'>📦️</text>
         <text class='f1' x='191.718221' y='57.653657' transform='matrix(1 0 0 1 42.081 162.5117)'>⤵ </text>
         <path
             d='M357.738 111.0977H214.9766C212.7734 111.0977 210.9883 112.8828 210.9883 115.082V259.1173C210.9883 261.3203 212.7734 263.1053 214.9766 263.1053H357.738C359.941 263.1053 361.723 261.3203 361.723 259.1173V115.082C361.723 112.8828 359.941 111.0977 357.738 111.0977Z'
@@ -4460,12 +4460,12 @@
         <path
             d='M349.957 300.8403H221.7695C219.5664 300.8403 217.7851 302.6213 217.7851 304.8243V371.2813C217.7851 373.4843 219.5664 375.2693 221.7695 375.2693H349.957C352.156 375.2693 353.941 373.4843 353.941 371.2813V304.8243C353.941 302.6213 352.156 300.8403 349.957 300.8403Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.034 230.7297)'>🪞</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.034 230.7297)'>🪞️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 42.034 230.7297)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.034 230.7297)'>✈ </text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.034 230.7297)'>✈️ </text>
         <text class='f4' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 42.034 230.7297)'>)</text>
         <text class='f5' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 101.811 275.9827)'>⇒</text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 100.469 263.6337)'>↕ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 100.469 263.6337)'>↕️ </text>
         <path
             d='M356.797 279.5233H214.9297C212.7266 279.5233 210.9414 281.3083 210.9414 283.5083V378.1253C210.9414 380.3243 212.7266 382.1093 214.9297 382.1093H356.797C358.996 382.1093 360.781 380.3243 360.781 378.1253V283.5083C360.781 281.3083 358.996 279.5233 356.797 279.5233Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
@@ -4476,12 +4476,12 @@
             d='M258.65268 438.46511C258.75424 439.066676 259.847993 439.961208 260.148774 440.06277C259.847993 440.160426 258.75424 441.058864 258.65268 441.65652'
             stroke='#fff' fill='none' stroke-width='.31879' stroke-miterlimit='10' stroke-linecap='round'
             stroke-linejoin='round' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 46.488 370.9887)'>⬆ </text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 65.069 370.9887)'>⬇ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 46.488 370.9887)'>⬆️ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 65.069 370.9887)'>⬇️ </text>
         <path
             d='M260.3398 419.7813H222.0039C219.8047 419.7813 218.0195 421.5663 218.0195 423.7653V442.4333C218.0195 444.6363 219.8047 446.4223 222.0039 446.4223H260.3398C262.5391 446.4223 264.3242 444.6363 264.3242 442.4333V423.7653C264.3242 421.5663 262.5391 419.7813 260.3398 419.7813Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.271 350.5097)'>↕ </text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.271 350.5097)'>↕️ </text>
         <path
             d='M267.1797 399.3043H215.1641C212.9648 399.3043 211.1797 401.0863 211.1797 403.2893V449.2773C211.1797 451.4763 212.9648 453.2613 215.1641 453.2613H267.1797C269.3828 453.2613 271.1641 451.4763 271.1641 449.2773V403.2893C271.1641 401.0863 269.3828 399.3043 267.1797 399.3043Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
@@ -4491,181 +4491,181 @@
             d='M347.94581 439.31633C348.04347 439.913991 349.141122 440.812428 349.437997 440.910084C349.141122 441.011647 348.04347 441.906178 347.94581 442.50383'
             stroke='#fff' fill='none' stroke-width='.31879' stroke-miterlimit='10' stroke-linecap='round'
             stroke-linejoin='round' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 111.686 371.8387)'>🧭<tspan
-                x='191.718221'>🎚 </tspan>
-            <tspan x='204.366104'>🏅</tspan>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 111.686 371.8387)'>🧭️<tspan
+                x='191.718221'>🎚️ </tspan>
+            <tspan x='204.366104'>🏅️</tspan>
         </text>
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 154.361 371.8387)'>🚪</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 154.361 371.8387)'>🚪️</text>
         <path
             d='M349.633 420.6323H287.203C285.004 420.6323 283.219 422.4143 283.219 424.6173V443.2853C283.219 445.4883 285.004 447.2693 287.203 447.2693H349.633C351.832 447.2693 353.617 445.4883 353.617 443.2853V424.6173C353.617 422.4143 351.832 420.6323 349.633 420.6323Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🍢</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🍢️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🧭</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🧭️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🎚 </text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🎚️ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🏅</text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>🏅️</text>
         <text class='f4' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 107.469 350.5237)'>)</text>
         <path
             d='M356.473 399.3123H280.363C278.1601 399.3123 276.3789 401.0933 276.3789 403.2973V450.1253C276.3789 452.3283 278.1601 454.1093 280.363 454.1093H356.473C358.672 454.1093 360.457 452.3283 360.457 450.1253V403.2973C360.457 401.0933 358.672 399.3123 356.473 399.3123Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
         <text class='f0' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 101.292 330.8487)'>S﬚﬏﬉﬎﬏ﬔ﬍﬙</text>
         <text class='f10' x='179.070338' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>1</text>
-        <text class='f2' x='185.812785' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>🗼</text>
+        <text class='f2' x='185.812785' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>🗼️</text>
         <text class='f4' x='198.460668' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>(</text>
-        <text class='f2' x='202.335041' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>🅰 </text>
+        <text class='f2' x='202.335041' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>🅰️ </text>
         <text class='f7' x='214.982924' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f2' x='219.410732' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>🎚 </text>
+        <text class='f2' x='219.410732' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>🎚️ </text>
         <text class='f4' x='234.272481' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>+</text>
         <text class='f5' x='244.235095' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>±</text>
         <text class='f7' x='251.983842' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f2' x='256.41165' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>➡ </text>
+        <text class='f2' x='256.41165' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>➡️ </text>
         <text class='f7' x='269.059533' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f11' x='273.487341' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>□</text>
+        <text class='f11' x='273.487341' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>□️</text>
         <text class='f4' x='279.504814' y='28.032771' transform='matrix(1 0 0 1 45.485 478.7207)'>[0])</text>
         <text class='f10' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>2</text>
-        <text class='f2' x='185.812785' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>🗼</text>
+        <text class='f2' x='185.812785' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>🗼️</text>
         <text class='f4' x='198.460668' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>(</text>
-        <text class='f2' x='202.335041' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>🅱 </text>
+        <text class='f2' x='202.335041' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>🅱️ </text>
         <text class='f7' x='214.982924' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f2' x='219.410732' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>🎚 </text>
+        <text class='f2' x='219.410732' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>🎚️ </text>
         <text class='f5' x='234.272481' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>−<tspan
                 x='244.235095'>±</tspan></text>
         <text class='f7' x='251.983842' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f2' x='256.41165' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>⬅ </text>
+        <text class='f2' x='256.41165' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>⬅️ </text>
         <text class='f7' x='269.059533' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f11' x='273.487341' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>□</text>
+        <text class='f11' x='273.487341' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>□️</text>
         <text class='f4' x='279.504814' y='39.987939' transform='matrix(1 0 0 1 45.485 478.7207)'>[1])</text>
         <text class='f10' x='179.070338' y='51.943107' transform='matrix(1 0 0 1 45.485 478.7207)'>3</text>
         <text class='f11' x='185.812785' y='51.943107' transform='matrix(1 0 0 1 45.485 478.7207)'>foreach<tspan
-                x='218.167042'>─</tspan>
+                x='218.167042'>─️</tspan>
             <tspan x='227.716194'>in</tspan>
             <tspan x='237.956114'>≡:</tspan>
         </text>
         <text class='f10' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>4</text>
-        <text class='f2' x='194.316358' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>🛣 </text>
+        <text class='f2' x='194.316358' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>🛣️ </text>
         <text class='f4' x='206.964241' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>(</text>
-        <text class='f2' x='210.838614' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>🅰 </text>
+        <text class='f2' x='210.838614' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>🅰️ </text>
         <text class='f7' x='223.486497' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f2' x='227.914305' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>🅱 </text>
+        <text class='f2' x='227.914305' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>🅱️ </text>
         <text class='f7' x='240.562188' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>,</text>
-        <text class='f11' x='244.989996' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>─</text>
+        <text class='f11' x='244.989996' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>─️</text>
         <text class='f4' x='252.048488' y='63.898275' transform='matrix(1 0 0 1 45.485 478.7207)'>)</text>
         <path
             d='M342.039 491.6483H221.8984C219.6992 491.6483 217.9141 493.4333 217.9141 495.6323V547.7653C217.9141 549.9683 219.6992 551.7503 221.8984 551.7503H342.039C344.238 551.7503 346.023 549.9683 346.023 547.7653V495.6323C346.023 493.4333 344.238 491.6483 342.039 491.6483Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>🏯</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>🏯️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>🎚 </text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>🎚️ </text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>,</text>
         <text class='f5' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>±</text>
         <text class='f7' x='220.417033' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>,</text>
-        <text class='f11' x='224.844841' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>□</text>
+        <text class='f11' x='224.844841' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>□️</text>
         <text class='f7' x='230.862315' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>,</text>
         <text class='f11' x='235.290123' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>≡</text>
         <text class='f4' x='240.908701' y='63.898275' transform='matrix(1 0 0 1 42.165 421.5397)'>)</text>
         <text class='f10' x='179.070338' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>1</text>
-        <text class='f2' x='185.812785' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🏭</text>
+        <text class='f2' x='185.812785' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🏭️</text>
         <text class='f4' x='198.460668' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>(</text>
-        <text class='f2' x='202.335041' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔</text>
+        <text class='f2' x='202.335041' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔️</text>
         <text class='f7' x='214.982924' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f2' x='219.410732' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🎚 </text>
+        <text class='f2' x='219.410732' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🎚️ </text>
         <text class='f7' x='232.058615' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f2' x='236.486423' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🧭</text>
+        <text class='f2' x='236.486423' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>🧭️</text>
         <text class='f4' x='249.134306' y='16.077603' transform='matrix(1 0 0 1 45.708 567.9827)'>)</text>
         <text class='f10' x='179.070338' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>2</text>
-        <text class='f2' x='185.812785' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢</text>
+        <text class='f2' x='185.812785' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢️</text>
         <text class='f4' x='198.460668' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>(</text>
-        <text class='f2' x='202.335041' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔</text>
+        <text class='f2' x='202.335041' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔️</text>
         <text class='f7' x='214.982924' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f2' x='219.410732' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>⬆ </text>
+        <text class='f2' x='219.410732' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>⬆️ </text>
         <text class='f7' x='232.058615' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f11' x='236.486423' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>□</text>
+        <text class='f11' x='236.486423' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>□️</text>
         <text class='f4' x='242.503897' y='28.032771' transform='matrix(1 0 0 1 45.708 567.9827)'>[0])</text>
         <text class='f10' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>3</text>
-        <text class='f2' x='185.812785' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢</text>
+        <text class='f2' x='185.812785' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢️</text>
         <text class='f4' x='198.460668' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>(</text>
-        <text class='f2' x='202.335041' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔</text>
+        <text class='f2' x='202.335041' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔️</text>
         <text class='f7' x='214.982924' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f2' x='219.410732' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>➡ </text>
+        <text class='f2' x='219.410732' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>➡️ </text>
         <text class='f7' x='232.058615' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f11' x='236.486423' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>□</text>
+        <text class='f11' x='236.486423' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>□️</text>
         <text class='f4' x='242.503897' y='39.987939' transform='matrix(1 0 0 1 45.708 567.9827)'>[1])</text>
         <text class='f10' x='179.070338' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>4</text>
-        <text class='f2' x='185.812785' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢</text>
+        <text class='f2' x='185.812785' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢️</text>
         <text class='f4' x='198.460668' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>(</text>
-        <text class='f2' x='202.335041' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔</text>
+        <text class='f2' x='202.335041' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔️</text>
         <text class='f7' x='214.982924' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f2' x='219.410732' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>⬇ </text>
+        <text class='f2' x='219.410732' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>⬇️ </text>
         <text class='f7' x='232.058615' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f11' x='236.486423' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>□</text>
+        <text class='f11' x='236.486423' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>□️</text>
         <text class='f4' x='242.503897' y='51.943107' transform='matrix(1 0 0 1 45.708 567.9827)'>[2])</text>
         <text class='f10' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>5</text>
-        <text class='f2' x='185.812785' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢</text>
+        <text class='f2' x='185.812785' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>🏢️</text>
         <text class='f4' x='198.460668' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>(</text>
-        <text class='f2' x='202.335041' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔</text>
+        <text class='f2' x='202.335041' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>🆔️</text>
         <text class='f7' x='214.982924' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f2' x='219.410732' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>⬅ </text>
+        <text class='f2' x='219.410732' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>⬅️ </text>
         <text class='f7' x='232.058615' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>,</text>
-        <text class='f11' x='236.486423' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>□</text>
+        <text class='f11' x='236.486423' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>□️</text>
         <text class='f4' x='242.503897' y='63.898275' transform='matrix(1 0 0 1 45.708 567.9827)'>[3])</text>
         <path
             d='M305.258 568.9533H222.1211C219.9219 568.9533 218.1367 570.7383 218.1367 572.9373V637.0273C218.1367 639.2263 219.9219 641.0113 222.1211 641.0113H305.258C307.461 641.0113 309.246 639.2263 309.246 637.0273V572.9373C309.246 570.7383 307.461 568.9533 305.258 568.9533Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🗼</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🗼️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🆔</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🆔️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🎚 </text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🎚️ </text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>,</text>
-        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🧭</text>
+        <text class='f2' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>🧭️</text>
         <text class='f7' x='242.391859' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>,</text>
-        <text class='f11' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>□</text>
+        <text class='f11' x='246.819667' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>□️</text>
         <text class='f4' x='252.837141' y='63.898275' transform='matrix(1 0 0 1 42.388 498.8457)'>)</text>
         <text class='f10' x='179.070338' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>1</text>
-        <text class='f2' x='185.812785' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>📚</text>
+        <text class='f2' x='185.812785' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>📚️</text>
         <text class='f4' x='198.460668' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>(</text>
-        <text class='f2' x='202.335041' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>🆔</text>
+        <text class='f2' x='202.335041' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>🆔️</text>
         <text class='f7' x='214.982924' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>,</text>
-        <text class='f2' x='219.410732' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>🧭</text>
+        <text class='f2' x='219.410732' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>🧭️</text>
         <text class='f7' x='232.058615' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>,</text>
-        <text class='f2' x='236.486423' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>🥇</text>
+        <text class='f2' x='236.486423' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>🥇️</text>
         <text class='f7' x='249.134306' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>,</text>
-        <text class='f11' x='253.562114' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>□</text>
+        <text class='f11' x='253.562114' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>□️</text>
         <text class='f4' x='259.579587' y='51.943107' transform='matrix(1 0 0 1 45.931 621.3777)'>[0])</text>
         <text class='f10' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>2</text>
-        <text class='f2' x='185.812785' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>📚</text>
+        <text class='f2' x='185.812785' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>📚️</text>
         <text class='f4' x='198.460668' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>(</text>
-        <text class='f2' x='202.335041' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>🆔</text>
+        <text class='f2' x='202.335041' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>🆔️</text>
         <text class='f7' x='214.982924' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>,</text>
-        <text class='f2' x='219.410732' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>🧭</text>
+        <text class='f2' x='219.410732' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>🧭️</text>
         <text class='f7' x='232.058615' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>,</text>
-        <text class='f2' x='236.486423' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>🥈</text>
+        <text class='f2' x='236.486423' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>🥈️</text>
         <text class='f7' x='249.134306' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>,</text>
-        <text class='f11' x='253.562114' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>□</text>
+        <text class='f11' x='253.562114' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>□️</text>
         <text class='f4' x='259.579587' y='63.898275' transform='matrix(1 0 0 1 45.931 621.3777)'>[1])</text>
         <path
             d='M322.559 658.2153H222.3437C220.1445 658.2153 218.3594 660.0003 218.3594 662.1993V690.4223C218.3594 692.6253 220.1445 694.4063 222.3437 694.4063H322.559C324.758 694.4063 326.543 692.6253 326.543 690.4223V662.1993C326.543 660.0003 324.758 658.2153 322.559 658.2153Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>🏢</text>
+        <text class='f2' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>🏢️</text>
         <text class='f4' x='191.718221' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>(</text>
-        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>🆔</text>
+        <text class='f2' x='195.592595' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>🆔️</text>
         <text class='f7' x='208.240478' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>,</text>
-        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>🧭</text>
+        <text class='f2' x='212.668286' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>🧭️</text>
         <text class='f7' x='225.316169' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>,</text>
-        <text class='f11' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>□</text>
+        <text class='f11' x='229.743977' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>□️</text>
         <text class='f4' x='235.76145' y='63.898275' transform='matrix(1 0 0 1 42.61 588.1067)'>)</text>
         <path
             d='M348.879 470.3323H215.0586C212.8594 470.3323 211.0742 472.1173 211.0742 474.3163V697.2613C211.0742 699.4653 212.8594 701.2503 215.0586 701.2503H348.879C351.078 701.2503 352.863 699.4653 352.863 697.2613V474.3163C352.863 472.1173 351.078 470.3323 348.879 470.3323Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
         <text class='f0' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 35.989 401.8697)'>S﬉﬎﬋ﬓ﬋﬙</text>
-        <text class='f1' x='179.070338' y='32.017827' transform='matrix(1 0 0 1 197.443 -67.45706)'>🏯</text>
+        <text class='f1' x='179.070338' y='32.017827' transform='matrix(1 0 0 1 197.443 -67.45706)'>🏯️</text>
         <text class='f8' x='189.667318' y='32.017827' transform='matrix(1 0 0 1 197.443 -67.45706)'>kagin<tspan
                 x='206.904437'>capsule</tspan>
             <tspan x='229.559227'>tower</tspan>
         </text>
-        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 197.443 -67.45706)'>🎚 </text>
+        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 197.443 -67.45706)'>🎚️ </text>
         <text class='f8' x='198.170891' y='39.987939' transform='matrix(1 0 0 1 197.443 -67.45706)'>#floors</text>
         <text class='f5' x='189.317373' y='47.958051' transform='matrix(1 0 0 1 197.443 -67.45706)'>±</text>
         <text class='f8' x='198.809583' y='47.958051' transform='matrix(1 0 0 1 197.443 -67.45706)'>dif<tspan
@@ -4682,13 +4682,13 @@
         <path
             d='M447.18-46.0117H375.852C373.648-46.0117 371.863-44.2307 371.863-42.0277V-1.3906C371.863 .8125 373.648 2.5937 375.852 2.5937H447.18C449.379 2.5937 451.164 .8125 451.164-1.3906V-42.0277C451.164-44.2307 449.379-46.0117 447.18-46.0117Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='32.017827' transform='matrix(1 0 0 1 197.56 -17.2309)'>🗼</text>
+        <text class='f1' x='179.070338' y='32.017827' transform='matrix(1 0 0 1 197.56 -17.2309)'>🗼️</text>
         <text class='f8' x='189.667318' y='32.017827' transform='matrix(1 0 0 1 197.56 -17.2309)'>tower</text>
-        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 197.56 -17.2309)'>🆔</text>
+        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 197.56 -17.2309)'>🆔️</text>
         <text class='f8' x='198.170891' y='39.987939' transform='matrix(1 0 0 1 197.56 -17.2309)'>id</text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.56 -17.2309)'>🎚 </text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.56 -17.2309)'>🎚️ </text>
         <text class='f8' x='198.170891' y='47.958051' transform='matrix(1 0 0 1 197.56 -17.2309)'>#floors</text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.56 -17.2309)'>🧭</text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.56 -17.2309)'>🧭️</text>
         <text class='f8' x='198.170891' y='55.928163' transform='matrix(1 0 0 1 197.56 -17.2309)'>elevator<tspan
                 x='222.371642'>side</tspan></text>
         <text class='f1' x='191.825698' y='63.898275' transform='matrix(1 0 0 1 197.56 -17.2309)'></text>
@@ -4697,12 +4697,12 @@
         <path
             d='M447.293 4.2109H375.965C373.766 4.2109 371.98 5.9961 371.98 8.1992V48.8359C371.98 51.0391 373.766 52.8203 375.965 52.8203H447.293C449.496 52.8203 451.281 51.0391 451.281 48.8359V8.1992C451.281 5.9961 449.496 4.2109 447.293 4.2109Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 197.676 25.025)'>🏢</text>
+        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 197.676 25.025)'>🏢️</text>
         <text class='f8' x='189.667318' y='39.987939' transform='matrix(1 0 0 1 197.676 25.025)'>façade</text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.676 25.025)'>🆔</text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.676 25.025)'>🆔️</text>
         <text class='f8' x='198.170891' y='47.958051' transform='matrix(1 0 0 1 197.676 25.025)'>tower<tspan
                 x='215.792797'>id</tspan></text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.676 25.025)'>🧭</text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.676 25.025)'>🧭️</text>
         <text class='f8' x='198.170891' y='55.928163' transform='matrix(1 0 0 1 197.676 25.025)'>side</text>
         <text class='f1' x='191.825698' y='63.898275' transform='matrix(1 0 0 1 197.676 25.025)'></text>
         <text class='f8' x='196.974359' y='63.898275' transform='matrix(1 0 0 1 197.676 25.025)'>capsule<tspan
@@ -4713,29 +4713,29 @@
         <path
             d='M449.734-48.3397H373.523C371.324-48.3397 369.539-46.5547 369.539-44.3517V93.418C369.539 95.6172 371.324 97.4023 373.523 97.4023H449.734C451.937 97.4023 453.719 95.6172 453.719 93.418V-44.3517C453.719-46.5547 451.937-48.3397 449.734-48.3397Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
-        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 197.793 72.9497)'>🏭</text>
+        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 197.793 72.9497)'>🏭️</text>
         <text class='f8' x='189.667318' y='39.987939' transform='matrix(1 0 0 1 197.793 72.9497)'>tower<tspan
                 x='207.289224'>placement</tspan></text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.793 72.9497)'>🆔</text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.793 72.9497)'>🆔️</text>
         <text class='f8' x='198.170891' y='47.958051' transform='matrix(1 0 0 1 197.793 72.9497)'>shaft<tspan
                 x='213.470451'>id</tspan></text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.793 72.9497)'>🎚 </text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.793 72.9497)'>🎚️ </text>
         <text class='f8' x='198.170891' y='55.928163' transform='matrix(1 0 0 1 197.793 72.9497)'>#floors</text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 197.793 72.9497)'>🧭</text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 197.793 72.9497)'>🧭️</text>
         <text class='f8' x='198.170891' y='63.898275' transform='matrix(1 0 0 1 197.793 72.9497)'>elevator<tspan
                 x='222.371642'>side</tspan></text>
         <path
             d='M434.402 102.3633H376.199C374 102.3633 372.215 104.1484 372.215 106.3477V138.6719C372.215 140.8711 374 142.6562 376.199 142.6562H434.402C436.602 142.6562 438.387 140.8711 438.387 138.6719V106.3477C438.387 104.1484 436.602 102.3633 434.402 102.3633Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='32.017827' transform='matrix(1 0 0 1 197.909 122.8287)'>📚</text>
+        <text class='f1' x='179.070338' y='32.017827' transform='matrix(1 0 0 1 197.909 122.8287)'>📚️</text>
         <text class='f8' x='189.667318' y='32.017827' transform='matrix(1 0 0 1 197.909 122.8287)'>stack<tspan
                 x='205.739859'>placement</tspan></text>
-        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 197.909 122.8287)'>🆔</text>
+        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 197.909 122.8287)'>🆔️</text>
         <text class='f8' x='198.170891' y='39.987939' transform='matrix(1 0 0 1 197.909 122.8287)'>shaft<tspan
                 x='213.470451'>id</tspan></text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.909 122.8287)'>🧭</text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 197.909 122.8287)'>🧭️</text>
         <text class='f8' x='198.170891' y='47.958051' transform='matrix(1 0 0 1 197.909 122.8287)'>façade</text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.909 122.8287)'>🏅</text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 197.909 122.8287)'>🏅️</text>
         <text class='f8' x='198.170891' y='55.928163' transform='matrix(1 0 0 1 197.909 122.8287)'>door<tspan
                 x='212.697471'>number</tspan></text>
         <text class='f1' x='191.825698' y='63.898275' transform='matrix(1 0 0 1 197.909 122.8287)'></text>
@@ -4744,20 +4744,20 @@
         <path
             d='M447.645 144.2734H376.316C374.113 144.2734 372.332 146.0586 372.332 148.2578V188.8943C372.332 191.0973 374.113 192.8833 376.316 192.8833H447.645C449.844 192.8833 451.629 191.0973 451.629 188.8943V148.2578C451.629 146.0586 449.844 144.2734 447.645 144.2734Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 198.026 165.0847)'>🛣 </text>
+        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 198.026 165.0847)'>🛣️ </text>
         <text class='f8' x='189.667318' y='39.987939' transform='matrix(1 0 0 1 198.026 165.0847)'>bridge<tspan
                 x='209.226783'>placement</tspan></text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 198.026 165.0847)'>⬅ </text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 198.026 165.0847)'>⬅️ </text>
         <text class='f8' x='198.170891' y='47.958051' transform='matrix(1 0 0 1 198.026 165.0847)'>left<tspan
                 x='209.207142'>shaft</tspan>
             <tspan x='224.506702'>id</tspan>
         </text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.026 165.0847)'>➡ </text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.026 165.0847)'>➡️ </text>
         <text class='f8' x='198.170891' y='55.928163' transform='matrix(1 0 0 1 198.026 165.0847)'>right<tspan
                 x='213.085664'>shaft</tspan>
             <tspan x='228.385224'>id</tspan>
         </text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.026 165.0847)'>🎚 </text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.026 165.0847)'>🎚️ </text>
         <text class='f8' x='198.170891' y='63.898275' transform='matrix(1 0 0 1 198.026 165.0847)'>floor</text>
         <path
             d='M436.57 194.5003H376.434C374.23 194.5003 372.445 196.2813 372.445 198.4843V230.8043C372.445 233.0043 374.23 234.7893 376.434 234.7893H436.57C438.773 234.7893 440.555 233.0043 440.555 230.8043V198.4843C440.555 196.2813 438.773 194.5003 436.57 194.5003Z'
@@ -4765,10 +4765,10 @@
         <path
             d='M449.969 100.0391H373.875C371.672 100.0391 369.891 101.8242 369.891 104.0234V233.1293C369.891 235.3283 371.672 237.1133 373.875 237.1133H449.969C452.168 237.1133 453.953 235.3283 453.953 233.1293V104.0234C453.953 101.8242 452.168 100.0391 449.969 100.0391Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
-        <text class='f1' x='179.070338' y='-15.802846' transform='matrix(1 0 0 1 198.142 268.4547)'>🏫</text>
+        <text class='f1' x='179.070338' y='-15.802846' transform='matrix(1 0 0 1 198.142 268.4547)'>🏫️</text>
         <text class='f8' x='189.667318' y='-15.802846' transform='matrix(1 0 0 1 198.142 268.4547)'>base<tspan
                 x='203.8023'>building</tspan></text>
-        <text class='f1' x='187.573911' y='-7.832734' transform='matrix(1 0 0 1 198.142 268.4547)'>↪ </text>
+        <text class='f1' x='187.573911' y='-7.832734' transform='matrix(1 0 0 1 198.142 268.4547)'>↪️ </text>
         <text class='f8' x='196.427429' y='-7.832734' transform='matrix(1 0 0 1 198.142 268.4547)'>parcel<tspan
                 x='215.203698'>curve</tspan>
             <tspan x='232.434006'>[</tspan>
@@ -4776,20 +4776,20 @@
         <path d='M434.43345 260.421634L439.51548 258.32007L438.68736 256.18726H433.785012L433.097512 256.97632Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <text class='f8' x='241.570794' y='-7.832734' transform='matrix(1 0 0 1 198.142 268.454)'>]</text>
-        <text class='f1' x='187.573911' y='.137379' transform='matrix(1 0 0 1 198.142 268.454)'>↕ </text>
+        <text class='f1' x='187.573911' y='.137379' transform='matrix(1 0 0 1 198.142 268.454)'>↕️ </text>
         <text class='f8' x='196.427429' y='.137379' transform='matrix(1 0 0 1 198.142 268.454)'>ground<tspan
                 x='217.927857'>floor</tspan>
             <tspan x='196.077484' y='8.107491'>height[3m]</tspan>
         </text>
-        <text class='f1' x='187.573911' y='16.077603' transform='matrix(1 0 0 1 198.142 268.454)'>🔼</text>
+        <text class='f1' x='187.573911' y='16.077603' transform='matrix(1 0 0 1 198.142 268.454)'>🔼️</text>
         <text class='f8' x='196.427429' y='16.077603' transform='matrix(1 0 0 1 198.142 268.454)'>floor<tspan
                 x='211.726989'>height[3.5m]</tspan></text>
-        <text class='f1' x='187.573911' y='24.047715' transform='matrix(1 0 0 1 198.142 268.454)'>⬅ </text>
+        <text class='f1' x='187.573911' y='24.047715' transform='matrix(1 0 0 1 198.142 268.454)'>⬅️ </text>
         <text class='f8' x='196.427429' y='24.047715' transform='matrix(1 0 0 1 198.142 268.454)'>primary<tspan
                 x='220.246798'>core</tspan>
             <tspan x='196.077484' y='32.017827'>length[6m]</tspan>
         </text>
-        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 198.142 268.454)'>➡ </text>
+        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 198.142 268.454)'>➡️ </text>
         <text class='f8' x='196.427429' y='39.987939' transform='matrix(1 0 0 1 198.142 268.454)'>secondar<tspan
                 x='222.953931'>core</tspan>
             <tspan x='196.077484' y='47.958051'>length[6m]</tspan>
@@ -4802,99 +4802,99 @@
         <path
             d='M446.75 242.0783H376.547C374.348 242.0783 372.562 243.8593 372.562 246.0623V334.4023C372.562 336.6013 374.348 338.3863 376.547 338.3863H446.75C448.953 338.3863 450.734 336.6013 450.734 334.4023V246.0623C450.734 243.8593 448.953 242.0783 446.75 242.0783Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='16.077603' transform='matrix(1 0 0 1 198.259 334.5017)'>🛗</text>
+        <text class='f1' x='179.070338' y='16.077603' transform='matrix(1 0 0 1 198.259 334.5017)'>🛗️</text>
         <text class='f8' x='187.923856' y='16.077603' transform='matrix(1 0 0 1 198.259 334.5017)'>shaft</text>
-        <text class='f1' x='187.573911' y='24.047715' transform='matrix(1 0 0 1 198.259 334.5017)'>📏</text>
+        <text class='f1' x='187.573911' y='24.047715' transform='matrix(1 0 0 1 198.259 334.5017)'>📏️</text>
         <text class='f8' x='196.427429' y='24.047715' transform='matrix(1 0 0 1 198.259 334.5017)'>length[6m]</text>
         <text class='f1' x='187.573911' y='32.017827' transform='matrix(1 0 0 1 198.259 334.5017)'>↔ </text>
         <text class='f8' x='196.427429' y='32.017827' transform='matrix(1 0 0 1 198.259 334.5017)'>width[6m]</text>
-        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 198.259 334.5017)'>↕ </text>
+        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 198.259 334.5017)'>↕️ </text>
         <text class='f8' x='196.427429' y='39.987939' transform='matrix(1 0 0 1 198.259 334.5017)'>floor<tspan
                 x='211.726989'>height[3m]</tspan></text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 198.259 334.5017)'>🎚 </text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 198.259 334.5017)'>🎚️ </text>
         <text class='f8' x='196.427429' y='47.958051' transform='matrix(1 0 0 1 198.259 334.5017)'>#floors[10]</text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.259 334.5017)'>🧭</text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.259 334.5017)'>🧭️</text>
         <text class='f8' x='196.427429' y='55.928163' transform='matrix(1 0 0 1 198.259 334.5017)'>elevator<tspan
                 x='220.62818'>side</tspan>
             <tspan x='196.077484' y='63.898275'>[</tspan>
         </text>
-        <text class='f1' x='198.39983' y='63.898275' transform='matrix(1 0 0 1 198.259 334.5017)'>⬆ </text>
+        <text class='f1' x='198.39983' y='63.898275' transform='matrix(1 0 0 1 198.259 334.5017)'>⬆️ </text>
         <rect x='198.39983' y='66.072176' height='.338711' width='8.853518'
             transform='matrix(1 0 0 1 198.259 334.5017)' />
-        <text class='f1' x='207.253348' y='63.898275' transform='matrix(1 0 0 1 198.259 334.5017)'>➡ <tspan
-                x='216.106866'>⬇ </tspan>
-            <tspan x='224.960384'>⬅ </tspan>
+        <text class='f1' x='207.253348' y='63.898275' transform='matrix(1 0 0 1 198.259 334.5017)'>➡️ <tspan
+                x='216.106866'>⬇️ </tspan>
+            <tspan x='224.960384'>⬅️ </tspan>
         </text>
         <text class='f8' x='233.813902' y='63.898275' transform='matrix(1 0 0 1 198.259 334.5017)'>]</text>
         <path
             d='M441.637 340.0043H376.664C374.465 340.0043 372.68 341.7893 372.68 343.9883V401.9143C372.68 404.1173 374.465 405.8983 376.664 405.8983H441.637C443.84 405.8983 445.621 404.1173 445.621 401.9143V343.9883C445.621 341.7893 443.84 340.0043 441.637 340.0043Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='24.047715' transform='matrix(1 0 0 1 198.375 394.0447)'>🎓</text>
+        <text class='f1' x='179.070338' y='24.047715' transform='matrix(1 0 0 1 198.375 394.0447)'>🎓️</text>
         <text class='f8' x='187.923856' y='24.047715' transform='matrix(1 0 0 1 198.375 394.0447)'>capital</text>
-        <text class='f1' x='187.573911' y='32.017827' transform='matrix(1 0 0 1 198.375 394.0447)'>📏</text>
+        <text class='f1' x='187.573911' y='32.017827' transform='matrix(1 0 0 1 198.375 394.0447)'>📏️</text>
         <text class='f8' x='196.427429' y='32.017827' transform='matrix(1 0 0 1 198.375 394.0447)'>length[6m]</text>
         <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 198.375 394.0447)'>↔ </text>
         <text class='f8' x='196.427429' y='39.987939' transform='matrix(1 0 0 1 198.375 394.0447)'>width[6m]</text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 198.375 394.0447)'>↕ </text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 198.375 394.0447)'>↕️ </text>
         <text class='f8' x='196.427429' y='47.958051' transform='matrix(1 0 0 1 198.375 394.0447)'>height[12m]</text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.375 394.0447)'>↪ </text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.375 394.0447)'>↪️ </text>
         <text class='f8' x='196.427429' y='55.928163' transform='matrix(1 0 0 1 198.375 394.0447)'>left<tspan
                 x='207.46368'>height[6m]</tspan></text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.375 394.0447)'>↩ </text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.375 394.0447)'>↩️ </text>
         <text class='f8' x='196.427429' y='63.898275' transform='matrix(1 0 0 1 198.375 394.0447)'>right<tspan
                 x='211.342202'>height[6m]</tspan></text>
         <path
             d='M441.367 407.5153H376.781C374.582 407.5153 372.797 409.3003 372.797 411.5043V460.1133C372.797 462.3123 374.582 464.0973 376.781 464.0973H441.367C443.57 464.0973 445.355 462.3123 445.355 460.1133V411.5043C445.355 409.3003 443.57 407.5153 441.367 407.5153Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='22.245194' transform='matrix(1 0 0 1 198.492 454.2137)'>📦</text>
+        <text class='f1' x='179.070338' y='22.245194' transform='matrix(1 0 0 1 198.492 454.2137)'>📦️</text>
         <text class='f8' x='187.923856' y='22.245194' transform='matrix(1 0 0 1 198.492 454.2137)'>capsule</text>
-        <text class='f1' x='187.573911' y='30.215306' transform='matrix(1 0 0 1 198.492 454.2137)'>📏</text>
+        <text class='f1' x='187.573911' y='30.215306' transform='matrix(1 0 0 1 198.492 454.2137)'>📏️</text>
         <text class='f8' x='196.427429' y='30.215306' transform='matrix(1 0 0 1 198.492 454.2137)'>length[4.2m]</text>
         <text class='f1' x='187.573911' y='38.185418' transform='matrix(1 0 0 1 198.492 454.2137)'>↔ </text>
         <text class='f8' x='196.427429' y='38.185418' transform='matrix(1 0 0 1 198.492 454.2137)'>width[2.7m]</text>
-        <text class='f1' x='187.573911' y='46.15553' transform='matrix(1 0 0 1 198.492 454.2137)'>↕ </text>
+        <text class='f1' x='187.573911' y='46.15553' transform='matrix(1 0 0 1 198.492 454.2137)'>↕️ </text>
         <text class='f8' x='196.427429' y='46.15553' transform='matrix(1 0 0 1 198.492 454.2137)'>height[2.5m]</text>
-        <text class='f1' x='187.573911' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>🚪</text>
+        <text class='f1' x='187.573911' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>🚪️</text>
         <text class='f8' x='196.427429' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>door[</text>
-        <text class='f1' x='211.532893' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>⬇ </text>
+        <text class='f1' x='211.532893' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>⬇️ </text>
         <rect x='211.532893' y='56.299543' height='.338711' width='8.853518'
             transform='matrix(1 0 0 1 198.492 454.2137)' />
-        <text class='f1' x='220.386411' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>➡ </text>
+        <text class='f1' x='220.386411' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>➡️ </text>
         <text class='f8' x='229.239929' y='54.125642' transform='matrix(1 0 0 1 198.492 454.2137)'>]</text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>🪟</text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>🪟️</text>
         <text class='f8' x='196.427429' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>window[</text>
-        <text class='f1' x='221.220685' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>⬆ </text>
+        <text class='f1' x='221.220685' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>⬆️ </text>
         <rect x='221.220685' y='66.072176' height='.338711' width='8.853518'
             transform='matrix(1 0 0 1 198.492 454.2137)' />
-        <text class='f1' x='230.074203' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>⬅ </text>
+        <text class='f1' x='230.074203' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>⬅️ </text>
         <text class='f8' x='238.927721' y='63.898275' transform='matrix(1 0 0 1 198.492 454.2137)'>]</text>
         <path
             d='M440.406 465.7153H376.898C374.695 465.7153 372.914 467.5003 372.914 469.6993V521.6253C372.914 523.8283 374.695 525.6133 376.898 525.6133H440.406C442.605 525.6133 444.391 523.8283 444.391 521.6253V469.6993C444.391 467.5003 442.605 465.7153 440.406 465.7153Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='24.047715' transform='matrix(1 0 0 1 198.608 513.7557)'>🌉</text>
+        <text class='f1' x='179.070338' y='24.047715' transform='matrix(1 0 0 1 198.608 513.7557)'>🌉️</text>
         <text class='f8' x='187.923856' y='24.047715' transform='matrix(1 0 0 1 198.608 513.7557)'>bridge</text>
-        <text class='f1' x='187.573911' y='32.017827' transform='matrix(1 0 0 1 198.608 513.7557)'>⬅ </text>
+        <text class='f1' x='187.573911' y='32.017827' transform='matrix(1 0 0 1 198.608 513.7557)'>⬅️ </text>
         <text class='f8' x='196.427429' y='32.017827' transform='matrix(1 0 0 1 198.608 513.7557)'>left<tspan
                 x='207.46368'>length[2.7m]</tspan></text>
-        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 198.608 513.7557)'>➡ </text>
+        <text class='f1' x='187.573911' y='39.987939' transform='matrix(1 0 0 1 198.608 513.7557)'>➡️ </text>
         <text class='f8' x='196.427429' y='39.987939' transform='matrix(1 0 0 1 198.608 513.7557)'>right<tspan
                 x='211.342202'>length[2.7m]</tspan></text>
         <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 198.608 513.7557)'>↔ </text>
         <text class='f8' x='196.427429' y='47.958051' transform='matrix(1 0 0 1 198.608 513.7557)'>width[2.6m]</text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.608 513.7557)'>↕ </text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 198.608 513.7557)'>↕️ </text>
         <text class='f8' x='196.427429' y='55.928163' transform='matrix(1 0 0 1 198.608 513.7557)'>height[2.75m]</text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.608 513.7557)'>🤏</text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 198.608 513.7557)'>🤏️</text>
         <text class='f8' x='196.427429' y='63.898275'
             transform='matrix(1 0 0 1 198.608 513.7557)'>tolerance[30cm]</text>
         <path
             d='M446.832 527.2303H377.016C374.812 527.2303 373.031 529.0113 373.031 531.2153V579.7033C373.031 581.9063 374.812 583.6873 377.016 583.6873H446.832C449.031 583.6873 450.816 581.9063 450.816 579.7033V531.2153C450.816 529.0113 449.031 527.2303 446.832 527.2303Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 1.99255' />
-        <text class='f1' x='179.070338' y='55.928163' transform='matrix(1 0 0 1 201.165 543.4957)'>🪞</text>
+        <text class='f1' x='179.070338' y='55.928163' transform='matrix(1 0 0 1 201.165 543.4957)'>🪞️</text>
         <text class='f8' x='189.667318' y='55.928163' transform='matrix(1 0 0 1 201.165 543.4957)'>mirror</text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>✈ </text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>✈️ </text>
         <text class='f8' x='196.427429' y='63.898275'
             transform='matrix(1 0 0 1 201.165 543.4957)'>coordinateSystem[</text>
-        <text class='f1' x='213.851834' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>↕ </text>
+        <text class='f1' x='213.851834' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>↕️ </text>
         <rect x='213.851834' y='66.072176' height='.338711' width='8.853518'
             transform='matrix(1 0 0 1 201.165 543.4957)' />
         <text class='f8' x='222.705352' y='63.898275' transform='matrix(1 0 0 1 201.165 543.4957)'>,</text>
@@ -4906,13 +4906,13 @@
         <path
             d='M439.777 586.5273H377.246C375.047 586.5273 373.262 588.3083 373.262 590.5113V613.2343C373.262 615.4333 375.047 617.2183 377.246 617.2183H439.777C441.98 617.2183 443.766 615.4333 443.766 613.2343V590.5113C443.766 588.3083 441.98 586.5273 439.777 586.5273Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
-        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 201.282 594.1877)'>🍢</text>
+        <text class='f1' x='179.070338' y='39.987939' transform='matrix(1 0 0 1 201.282 594.1877)'>🍢️</text>
         <text class='f8' x='189.667318' y='39.987939' transform='matrix(1 0 0 1 201.282 594.1877)'>connection</text>
-        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 201.282 594.1877)'>🧭</text>
+        <text class='f1' x='187.573911' y='47.958051' transform='matrix(1 0 0 1 201.282 594.1877)'>🧭️</text>
         <text class='f8' x='196.427429' y='47.958051' transform='matrix(1 0 0 1 201.282 594.1877)'>façade</text>
-        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 201.282 594.1877)'>🎚 </text>
+        <text class='f1' x='187.573911' y='55.928163' transform='matrix(1 0 0 1 201.282 594.1877)'>🎚️ </text>
         <text class='f8' x='196.427429' y='55.928163' transform='matrix(1 0 0 1 201.282 594.1877)'>floor</text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 201.282 594.1877)'>🏅</text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 201.282 594.1877)'>🏅️</text>
         <text class='f8' x='196.427429' y='63.898275' transform='matrix(1 0 0 1 201.282 594.1877)'>door<tspan
                 x='210.954009'>number</tspan></text>
         <path
@@ -4921,9 +4921,9 @@
         <path
             d='M436.527 621.2733H377.363C375.164 621.2733 373.379 623.0583 373.379 625.2573V662.2303C373.379 664.4333 375.164 666.2183 377.363 666.2183H436.527C438.727 666.2183 440.512 664.4333 440.512 662.2303V625.2573C440.512 623.0583 438.727 621.2733 436.527 621.2733Z'
             stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' stroke-dasharray='2.98883 2.98883' />
-        <text class='f1' x='179.070338' y='55.928163' transform='matrix(1 0 0 1 201.398 627.2427)'>☀ </text>
+        <text class='f1' x='179.070338' y='55.928163' transform='matrix(1 0 0 1 201.398 627.2427)'>☀️ </text>
         <text class='f8' x='189.667318' y='55.928163' transform='matrix(1 0 0 1 201.398 627.2427)'>orientation</text>
-        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 201.398 627.2427)'>🧭</text>
+        <text class='f1' x='187.573911' y='63.898275' transform='matrix(1 0 0 1 201.398 627.2427)'>🧭️</text>
         <text class='f8' x='196.427429' y='63.898275' transform='matrix(1 0 0 1 201.398 627.2427)'>window<tspan
                 x='220.641801'>side</tspan></text>
         <path
@@ -4966,7 +4966,7 @@
             stroke-linejoin='round' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.94406 .32967 -.32967 .94406 -45.577472 470.860164)'>
-            <tspan fill='#ff344f'>🍢</tspan>
+            <tspan fill='#ff344f'>🍢️</tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.94406 .32967 -.32967 .94406 -45.577472 470.860164)'>
@@ -4974,7 +4974,7 @@
         </text>
         <text class='f9' x='187.053098' y='63.898275'
             transform='matrix(.94406 .32967 -.32967 .94406 -45.577472 470.860164)'>
-            <tspan fill='#ff344f'>🧭</tspan>
+            <tspan fill='#ff344f'>🧭️</tspan>
         </text>
         <text class='f10' x='193.377039' y='63.898275'
             transform='matrix(.94406 .32967 -.32967 .94406 -45.577472 470.860164)'>
@@ -4983,7 +4983,7 @@
         </text>
         <text class='f9' x='199.60369' y='63.898275'
             transform='matrix(.94406 .32967 -.32967 .94406 -45.577472 470.860164)'>
-            <tspan fill='#ff344f'>🏅</tspan>
+            <tspan fill='#ff344f'>🏅️</tspan>
         </text>
         <text class='f10' x='205.927631' y='63.898275'
             transform='matrix(.94406 .32967 -.32967 .94406 -45.577472 470.860164)'>
@@ -4996,20 +4996,20 @@
             stroke='#fff' fill='none' stroke-width='.318779' stroke-miterlimit='10' stroke-linecap='round'
             stroke-linejoin='round' />
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(.99 .14082 -.14082 .99 -66.227141 498.120046)'>
-            <tspan fill='#ff344f'>🍢</tspan>
+            <tspan fill='#ff344f'>🍢️</tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275' transform='matrix(.99 .14082 -.14082 .99 -66.227141 498.120046)'>
             <tspan fill='#ff344f'>(</tspan>
         </text>
         <text class='f9' x='187.053098' y='63.898275' transform='matrix(.99 .14082 -.14082 .99 -66.227141 498.120046)'>
-            <tspan fill='#ff344f'>🧭</tspan>
+            <tspan fill='#ff344f'>🧭️</tspan>
         </text>
         <text class='f10' x='193.377039' y='63.898275' transform='matrix(.99 .14082 -.14082 .99 -66.227141 498.120046)'>
             <tspan fill='#ff344f'>,</tspan>
             <tspan fill='#ff344f' x='195.867699'>2,</tspan>
         </text>
         <text class='f9' x='199.60369' y='63.898275' transform='matrix(.99 .14082 -.14082 .99 -66.227141 498.120046)'>
-            <tspan fill='#ff344f'>🏅</tspan>
+            <tspan fill='#ff344f'>🏅️</tspan>
         </text>
         <text class='f10' x='205.927631' y='63.898275' transform='matrix(.99 .14082 -.14082 .99 -66.227141 498.120046)'>
             <tspan fill='#ff344f'>)</tspan>
@@ -5022,7 +5022,7 @@
             stroke-linejoin='round' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
-            <tspan fill='#ff344f'>🍢</tspan>
+            <tspan fill='#ff344f'>🍢️</tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
@@ -5030,7 +5030,7 @@
         </text>
         <text class='f9' x='187.053098' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
-            <tspan fill='#ff344f'>🧭</tspan>
+            <tspan fill='#ff344f'>🧭️</tspan>
         </text>
         <text class='f10' x='193.377039' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
@@ -5038,7 +5038,7 @@
         </text>
         <text class='f9' x='194.622369' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
-            <tspan fill='#ff344f'>🛗</tspan>
+            <tspan fill='#ff344f'>🛗️</tspan>
         </text>
         <text class='f10' x='200.946311' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
@@ -5046,7 +5046,7 @@
         </text>
         <text class='f9' x='202.191641' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
-            <tspan fill='#ff344f'>🎚 </tspan>
+            <tspan fill='#ff344f'>🎚️ </tspan>
         </text>
         <text class='f10' x='208.515582' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
@@ -5054,7 +5054,7 @@
         </text>
         <text class='f9' x='213.910391' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
-            <tspan fill='#ff344f'>🏅</tspan>
+            <tspan fill='#ff344f'>🏅️</tspan>
         </text>
         <text class='f10' x='220.234332' y='63.898275'
             transform='matrix(.99469 -.10258 .10258 .99469 -89.416326 538.045001)'>
@@ -5068,7 +5068,7 @@
             stroke-linejoin='round' />
         <text class='f9' x='179.070338' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
-            <tspan fill='#ff344f'>🍢</tspan>
+            <tspan fill='#ff344f'>🍢️</tspan>
         </text>
         <text class='f10' x='185.39428' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
@@ -5076,7 +5076,7 @@
         </text>
         <text class='f9' x='187.053098' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
-            <tspan fill='#ff344f'>🧭</tspan>
+            <tspan fill='#ff344f'>🧭️</tspan>
         </text>
         <text class='f10' x='193.377039' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
@@ -5084,7 +5084,7 @@
         </text>
         <text class='f9' x='194.622369' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
-            <tspan fill='#ff344f'>🛗</tspan>
+            <tspan fill='#ff344f'>🛗️</tspan>
         </text>
         <text class='f10' x='200.946311' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
@@ -5092,7 +5092,7 @@
         </text>
         <text class='f9' x='202.191641' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
-            <tspan fill='#ff344f'>🎚 </tspan>
+            <tspan fill='#ff344f'>🎚️ </tspan>
         </text>
         <text class='f10' x='208.515582' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
@@ -5100,7 +5100,7 @@
         </text>
         <text class='f9' x='209.760912' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
-            <tspan fill='#ff344f'>🏅</tspan>
+            <tspan fill='#ff344f'>🏅️</tspan>
         </text>
         <text class='f10' x='216.084854' y='63.898275'
             transform='matrix(.94974 -.31293 .31293 .94974 -91.541837 575.382604)'>
@@ -5111,19 +5111,19 @@
             d='M-6.52344 654.76582C-6.42578 655.363479-5.328128 656.261916-5.031253 656.359573C-5.328128 656.461135-6.42578 657.355667-6.52344 657.95332'
             stroke='#fff' fill='none' stroke-width='.31879' stroke-miterlimit='10' stroke-linecap='round'
             stroke-linejoin='round' />
-        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -210.4272 589.7747)'>🎚 <tspan
-                x='185.39428'>🥈</tspan></text>
+        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -210.4272 589.7747)'>🎚️ <tspan
+                x='185.39428'>🥈️</tspan></text>
         <text class='f10' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -210.4272 593.5857)'>a</text>
-        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -192.1235 589.7747)'>🚪</text>
+        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -192.1235 589.7747)'>🚪️</text>
         <path d='M61.117 656.3593H33.227' stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <path
             d='M34.42192 657.95332C34.32427 657.355667 33.226611 656.461135 32.929736 656.359573C33.226611 656.261916 34.32427 655.363479 34.42192 654.76582'
             stroke='#fff' fill='none' stroke-width='.31879' stroke-miterlimit='10' stroke-linecap='round'
             stroke-linejoin='round' />
-        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -132.4611 589.7747)'>🎚 <tspan
-                x='185.39428'>🥇</tspan></text>
+        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -132.4611 589.7747)'>🎚️ <tspan
+                x='185.39428'>🥇️</tspan></text>
         <text class='f10' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -122.3037 594.1567)'>b</text>
-        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -144.4408 589.7747)'>🚪</text>
+        <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -144.4408 589.7747)'>🚪️</text>
         <path d='M115.6055 659.1953H134.9883' stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <path
             d='M133.79311 657.60192C133.89467 658.199578 134.98842 659.094109 135.289201 659.195671C134.98842 659.293328 133.89467 660.191765 133.79311 660.78942'
@@ -5133,7 +5133,7 @@
             <tspan fill='#dced31'>a</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -51.806 592.6097)'>
-            <tspan fill='#dced31'>➡ </tspan>
+            <tspan fill='#dced31'>➡️ </tspan>
         </text>
         <path d='M168.8359 659.1953H149.4492' stroke='#fff' fill='none' stroke-width='.3985' stroke-miterlimit='10' />
         <path
@@ -5144,7 +5144,7 @@
             <tspan fill='#dced31'>b</tspan>
         </text>
         <text class='f9' x='179.070338' y='63.898275' transform='matrix(1 0 0 1 -28.219 592.6097)'>
-            <tspan fill='#dced31'>⬅ </tspan>
+            <tspan fill='#dced31'>⬅️ </tspan>
         </text>
     </g>
 </svg>

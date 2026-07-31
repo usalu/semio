@@ -1,8 +1,0 @@
-{
-  "title": "Rename Board To Puzzle2d In Play",
-  "emoji": "🏷️",
-  "status": "open",
-  "description": "Replace board naming with puzzle2d in puzzle 2d play, framework playground hosts, and fix board.* kind ids in puzzle 3d.",
-  "goal": "🎯puzzle",
-  "sessions": ["⚪8345f7c75e09469aa7948d5aa05b9834"]
-}

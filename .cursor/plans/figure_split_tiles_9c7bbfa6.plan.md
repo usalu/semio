@@ -36,19 +36,19 @@ flowchart LR
 
 File: [framework/product/presentation/core/index.ts](framework/product/presentation/core/index.ts)
 
-- In `//#region 🔖Disposition`, add types and extend `Disposition`:
+- In `//#region 🔖️Disposition`, add types and extend `Disposition`:
   - `SplitTile`: `{ key: string; crop: DispositionPosition; position: DispositionPosition; emphasis?: ParticipantEmphasis; style?: DispositionStyle }` (`crop` = normalized 0..1 source rectangle of the figure; `position` = normalized 0..1 slide rectangle).
   - `DispositionSplit`: `{ readonly tiles: readonly SplitTile[] }`.
   - Add `readonly split?: DispositionSplit` to `Disposition`.
-- In `//#region 🔖Morph`, add `tileMorphId(participantId, tileKey)` returning `${participantId}--tile--${tileKey}` (stable per-tile reveal `data-id`).
-- New `//#region 🔖Split`:
+- In `//#region 🔖️Morph`, add `tileMorphId(participantId, tileKey)` returning `${participantId}--tile--${tileKey}` (stable per-tile reveal `data-id`).
+- New `//#region 🔖️Split`:
   - `splitFigureGrid(spec)` where `spec = { rows, columns, frame: DispositionPosition, gap?: number, emphasis?, keyPrefix? }`. Returns `SplitTile[]` with one tile per cell:
     - `crop = { x: c/columns, y: r/rows, width: 1/columns, height: 1/rows }`
     - `key =` ${keyPrefix ?? "tile"}-r${r}-c${c}``
     - `position` packs the cell into `frame` honoring `gap` (cellW = (frame.width - gap\*(columns-1))/columns, etc.). With `gap = 0` the tiles reconstruct the image exactly; with a `gap` and a smaller `frame` they are "taken apart and scaled down".
   - Hiding tiles / "only a portion shows" needs no new API: filter the tile array for that arrangement's `split.tiles`.
-- Extend `ResolvedDisposition` (`//#region 🔖Resolved`) with `readonly split?: DispositionSplit`, and have `resolveArrangement` (`//#region 🔖Resolve`) pass `disposition.split` through.
-- Tests in `//#region 🧪Tests`: `splitFigureGrid` yields `rows*columns` tiles, correct crops/keys, reconstructs `frame` at `gap = 0`, respects `gap`; `resolveArrangement` surfaces `split`; `tileMorphId` format.
+- Extend `ResolvedDisposition` (`//#region 🔖️Resolved`) with `readonly split?: DispositionSplit`, and have `resolveArrangement` (`//#region 🔖️Resolve`) pass `disposition.split` through.
+- Tests in `//#region 🧪️Tests`: `splitFigureGrid` yields `rows*columns` tiles, correct crops/keys, reconstructs `frame` at `gap = 0`, respects `gap`; `resolveArrangement` surfaces `split`; `tileMorphId` format.
 
 ## 2. React renderer
 
@@ -62,7 +62,7 @@ File: [framework/product/presentation/renderer/react/index.tsx](framework/produc
   - root `div` has `data-id={tileMorphId(participantId, tile.key)}` so reveal morphs it across arrangements.
 - In `MorphDispositionView`: when `disposition.split` is set and `embodiment.kind === "figure"`, render a `Fragment` of tiles, each wrapped in an absolutely-positioned frame built from `tile.position` + `tile.style` (reuse `dispositionFrameStyle`), instead of the single `DispositionFrame`. Non-figure or no-split keeps current behavior.
 - In `ArrangementSection`, treat the arrangement as positioned when any disposition has `position` OR `split` (so the `presentation-arrangement-canvas` is used).
-- Tests in `//#region 🧪Tests`: a split figure disposition renders `tiles.length` nodes matching `[data-id^="catalogue--tile--"]`, with `background-image` set and absolute frames; hiding a tile removes its node.
+- Tests in `//#region 🧪️Tests`: a split figure disposition renders `tiles.length` nodes matching `[data-id^="catalogue--tile--"]`, with `background-image` set and absolute frames; hiding a tile removes its node.
 
 File: [framework/product/presentation/renderer/react/globals.css](framework/product/presentation/renderer/react/globals.css)
 
@@ -79,7 +79,7 @@ File: [mit-bestand/präsentation/33.projektetage/index.ts](mit-bestand/präsenta
   - `catalogue-split`: `splitFigureGrid({ rows: 3, columns: 5, frame: <smaller centered frame>, gap: 0.02 })` — every tile flies apart and scales down (auto-animated from the assembled keys).
   - `catalogue-focus`: same grid but `.filter` to a few tile keys (e.g. center row) placed larger — the rest fade out ("only a portion shows / tiles hidden").
 - Keep `media-suite` last.
-- Update tests in `//#region 🧪Tests`: `countArrangements(deck)` becomes 12 (7 intro + 5 media); assert the media thought has a disposition with `split` of 15 tiles.
+- Update tests in `//#region 🧪️Tests`: `countArrangements(deck)` becomes 12 (7 intro + 5 media); assert the media thought has a disposition with `split` of 15 tiles.
 
 ## 4. Ticket + verification
 

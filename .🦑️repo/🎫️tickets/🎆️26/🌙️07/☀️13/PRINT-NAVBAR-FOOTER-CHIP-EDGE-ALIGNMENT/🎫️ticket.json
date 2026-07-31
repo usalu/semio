@@ -1,0 +1,12 @@
+{
+  "title": "Print Navbar Footer Chip Edge Alignment",
+  "emoji": "🎨️",
+  "status": "closed",
+  "description": "Fix navbar/footer chips in print/tex/semio-window.sty rendering with inward horizontal offset instead of flush against the chrome border. Top-left chip (emblem/project) must start exactly where the border starts, top-right chip (heading) must end exactly where the border ends — same for footer (logo chips left, page number right). Remove the extraneous \\hspace{\\semio@spacing@single} padding at both ends of \\semio@chrome@bar@threezone's edge hbox that currently offsets the whole chip row inward from \\headwidth.",
+  "summary": "Fixed navbar/footer chip rows rendering with an inward horizontal offset instead of sitting flush against the chrome border.\n\nRoot cause: `\\semio@chrome@bar@threezone` in print/tex/semio-window.sty added `\\hspace{\\semio@spacing@single}` at both ends of its edge-zone hbox, even though that hbox already spans the full `\\headwidth` that the border rule (`\\semio@chrome@navbar@bar`/`\\semio@chrome@footer@bar`) is drawn across — offsetting the whole left/right chip cluster inward from the border on both the navbar and footer.\n\nFix: removed the two `\\hspace{\\semio@spacing@single}` calls around `#2`/`#4` in the edge hbox, so the left-most chip starts exactly at the border's left edge and the right-most chip ends exactly at the border's right edge.\n\nVerified by rebuilding print/dist/kompaktbericht.pdf, print/dist/zwischenbericht.pdf, and mit-bestand/bericht/zwischenbericht/dist/zwischenbericht.pdf and rasterizing pages with pdfjs-dist + @napi-rs/canvas (via a ticket-local rasterize.ts) — confirmed pixel alignment of the emblem/project chip (top-left), heading chip (top-right), footer logo chips (bottom-left), and page-number chip (bottom-right) against the border rule in all three documents.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1970"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️4da0341dd7ee4e97b9dca2fcf2861d64"]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Refine Details Panel Empty-State Styling for Editable Value Controls",
+  "status": "closed",
+  "description": "Refine the global compose/sketchpad Details panel empty-state styling for editable value-side controls in the right-side property inspector. Any editable field/control on the value side that currently has no value should render in a muted/grayed state while empty (compose styling), but it must remain fully editable. As soon as the user focuses, types, or the control has a real value, it should return to the normal active styling automatically. Apply generically across editable Input, Textarea, Combobox, Slider, and Stepper value display used in TreeRow/TreeItem property rows. Keep all layout unchanged. Do not treat empty editable fields as disabled or readOnly.",
+  "summary": "Re-applied all changes after discard. Added PropertyValueColumnContext (boolean React context, true inside Label's property-control div). Applied empty-state muted opacity (0.6) to Input (via input-root), Textarea (via textarea-root), Combobox (via ButtonGroup style), Stepper (via stepper-group), and Slider (via slider-content) when inside a property value column AND empty/undefined AND not focused/active. Opacity returns to 1 on focus, interaction, or when value is present. Controls outside Label are unaffected. Added 4 tests covering Input, Textarea, Combobox, and Stepper empty vs filled vs standalone cases. All 29 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1283"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️d8f81e314db74c7b932bd5eee737c157", "⚪️b7fc9514042d47a0b4921e390f0f05e5"]
+}

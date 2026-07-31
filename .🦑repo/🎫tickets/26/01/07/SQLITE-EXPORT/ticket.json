@@ -1,7 +1,0 @@
-{
-  "title": "SQLITE-EXPORT",
-  "emoji": "🗄️",
-  "status": "closed",
-  "description": "add an export command to a sqlite file (create a schema) that has all the information (repo, bundles, folders, files, sections, definitions, contributors, tickets, policies, statutes, breachs)",
-  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repofilemechanism"
-}

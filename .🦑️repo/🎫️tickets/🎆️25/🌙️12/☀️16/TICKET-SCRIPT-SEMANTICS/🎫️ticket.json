@@ -1,0 +1,7 @@
+{
+  "title": "Rename log workflow to ticket+interactions",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Improve log script semantics. Rename logs to tickets. create log becomes ticket open. Then a new command is ticket interaction start Then there should be ticket interaction finish finish becomes ticket close Throw an error if an interaction is unifinished for a ticket (e.g. when another interaction start or ticket close is called) Force files to be a necessary parameter to call for interaction start and interaction finish. Update the file list on finish for the interaction and compute stats (lines).",
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repomechanisms🎯️repoticketmechanism"
+}

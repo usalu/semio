@@ -48,13 +48,13 @@ flowchart LR
 
 ## 1. Kernel: new geometry utilities + dedupe
 
-In [geometry/brep/js/index.ts](geometry/brep/js/index.ts) add to `BrepKernel` interface (region `🔌BrepKernelInterface`) and `BrepjsGeometryKernel` (region `🔖Evaluate`/`🔖Curves`/`🔖Surfaces`), reusing already-imported brepjs primitives:
+In [geometry/brep/js/index.ts](geometry/brep/js/index.ts) add to `BrepKernel` interface (region `🔌️BrepKernelInterface`) and `BrepjsGeometryKernel` (region `🔖️Evaluate`/`🔖️Curves`/`🔖️Surfaces`), reusing already-imported brepjs primitives:
 
 - `divideCurveSync(curve, count)`: sample `curvePointAt` at `count` evenly spaced `t ∈ [0,1]` → `Vec3[]`.
 - `reparametrizeCurveSync(curve, samples=64)`: sample points over `[0,1]`, rebuild with `interpolateCurve` (respect `curveIsClosed`) → clean unit-domain edge.
 - `reparametrizeSurfaceSync(face, uSamples=12, vSamples=12)`: sample `pointOnSurface` across the `uvBounds` domain into a grid, rebuild with `surfaceFromGrid` → unit-domain face.
 
-Extend the `🧪Tests` region in the same file (no new test files) covering the three methods.
+Extend the `🧪️Tests` region in the same file (no new test files) covering the three methods.
 
 Remove the stale duplicate [geometry/brep/js/kernel.ts](geometry/brep/js/kernel.ts) (not imported anywhere; missing `ellipsoid` import so already non-compiling) per the greenfield no-legacy rule.
 
@@ -72,7 +72,7 @@ In [procedural/react/index.tsx](procedural/react/index.tsx), add entries to `BRE
 - Repair: `repair.healFace`, `repair.sewShells`.
 - IO: `io.importStep`, `io.importStl` (base64 text input → `Uint8Array`).
 
-Bump `BREP_MODULE_MANIFEST.version`. Extend the file's `🧪Tests` region with handler tests (e.g. reparametrize round-trips, divideCurve point count, split list).
+Bump `BREP_MODULE_MANIFEST.version`. Extend the file's `🧪️Tests` region with handler tests (e.g. reparametrize round-trips, divideCurve point count, split list).
 
 ## 3. Math module: seeded random + fuller arithmetic
 
@@ -81,11 +81,11 @@ In [flow/module/math/lib.rs](flow/module/math/lib.rs), add `Function` structs + 
 - `math.random` (`seed?`, `min?`=0, `max?`=1 → `number`): deterministic splitmix64 from `seed` when present; when absent, draw from a lazily-seeded `thread_local` RNG. Entropy via a `cfg`-gated `entropy_seed()` (`js_sys::Math::random()` on `wasm32`, `std::time::SystemTime` natively) — keeps it cross-platform and avoids non-determinism in seeded graphs.
 - Arithmetic/utility: `subtract`, `divide`, `power`, `modulo`, `negate`, `abs`, `sqrt`, `min`, `max`, `floor`, `ceil`, `round`, trig `sin`/`cos`/`tan`, and `remap` (`value`, `fromMin`, `fromMax`, `toMin`, `toMax` → `number`).
 
-Add `js_sys` (wasm-only) to [flow/module/math/Cargo.toml](flow/module/math/Cargo.toml) as the wasm interface boundary. Extend the in-file `🔖Tests` (seeded determinism, remap, divide-by-zero guard).
+Add `js_sys` (wasm-only) to [flow/module/math/Cargo.toml](flow/module/math/Cargo.toml) as the wasm interface boundary. Extend the in-file `🔖️Tests` (seeded determinism, remap, divide-by-zero guard).
 
 ## 4. List module: series generation
 
-In [flow/module/list/lib.rs](flow/module/list/lib.rs) add `list.range` (`start`, `step`, `count` → index-keyed list) and `list.reverse`, with tests in the existing `🔖Tests` region. This drives divide/iteration workflows.
+In [flow/module/list/lib.rs](flow/module/list/lib.rs) add `list.range` (`start`, `step`, `count` → index-keyed list) and `list.reverse`, with tests in the existing `🔖️Tests` region. This drives divide/iteration workflows.
 
 ## 5. Build, wire, verify
 

@@ -1,9 +1,0 @@
-{
-  "title": "Board Fixture Node Caption From Kind Catalog",
-  "emoji": "🏷️",
-  "status": "closed",
-  "description": "Board play Nakagin capsule nodes show no caption because fixtureNodeDisplayText drops cs_* labels. Resolve overlay text from meta.kindCatalogs.nodes by nodeKind when primary caption is absent.",
-  "summary": "Node captions now use kit piece names from fixture `label` (e.g. `cs_sl1_d0_t_f4_b_c1`), not kind-catalog type labels like `J`. Removed `cs_*` suppression and the `meta.kindCatalogs.nodes` fallback added earlier. `parseBoardFixtureV1` maps `text` ← explicit `text` or trimmed `label`. Vitest updated and passing for fixture io.",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯kit",
-  "sessions": ["⚪ad75ea4e339143d7bfcca95b740b8ee2", "⚪e12f3ffc6fe0423daaedde3185595eb6"]
-}

@@ -1,0 +1,12 @@
+{
+  "title": "Replace Puzzle 3d References With Rathaus Ahlen",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "Replace sketch.png and site.pdf references in puzzle3d with rathaus-ahlen-grundriss.png, scale up, and lock by default.",
+  "summary": "Replaced puzzle3d concrete-forest sketch.png and site.pdf references with a single Rathaus Ahlen floor plan at /infinite-fixture/rathaus-ahlen-grundriss.png (widthWorld 50, locked). Updated importReference defaults (widthWorld 50, locked: true) and the import toolbar button. Asset copied to infinite/fixture for Vite serving. Play tests 72/72 pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1650"
+  },
+  "goal": "🎯️puzzle3d🎯️puzzle3dplay",
+  "sessions": ["⚪️440bcff3ed144a02a3cd25b0c9142dc0"]
+}

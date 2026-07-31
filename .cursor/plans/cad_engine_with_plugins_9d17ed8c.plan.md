@@ -6,7 +6,7 @@ todos:
    content: Open repo ticket `cad-engine-plugins` and associate with the most appropriate goal from `repo://goals`
    status: completed
  - id: core
-   content: Write `🔖Core` + `🔖Commands` + `🔖Registry` + `🔖Plugins` regions (pure, zero three/wasm/r3f imports)
+   content: Write `🔖️Core` + `🔖️Commands` + `🔖️Registry` + `🔖️Plugins` regions (pure, zero three/wasm/r3f imports)
    status: completed
  - id: topologic-adapter
    content: Implement `TopologicCadEngine` adapter using existing `../wasm/index.ts` bindings, returning fixture-compatible entities
@@ -29,7 +29,7 @@ isProject: false
 ## Decisions taken (no clarifications needed)
 
 - **Single file, organized by regions** — per `AGENTS.md` "edit existing files / regions". Use `.tsx` (not `.ts`) because R3F + JSX is required. Path: `elements/client/lib/geometry/cad/index.tsx`.
-- **Adapters live in the same file but in isolated regions** — the pure core in regions `🔖Core` / `🔖Registry` / `🔖Commands` does NOT import `three`, `@react-three/fiber`, or `../wasm/`\*. Adapters in separate regions DO. Enforced by import discipline and an inline vitest assertion.
+- **Adapters live in the same file but in isolated regions** — the pure core in regions `🔖️Core` / `🔖️Registry` / `🔖️Commands` does NOT import `three`, `@react-three/fiber`, or `../wasm/`\*. Adapters in separate regions DO. Enforced by import discipline and an inline vitest assertion.
 - **Use existing infrastructure**: Topologic adapter calls the existing wasm bindings from `[elements/client/lib/geometry/wasm/index.ts](elements/client/lib/geometry/wasm/index.ts)` (via `ensureTopologicWasmLoaded`) — no new wasm work. Honors `[elements/client/lib/geometry/react/AGENTS.md](elements/client/lib/geometry/react/AGENTS.md)`: topologic for all geometry, three.js only for rendering.
 - **Tests extend the existing inline `import.meta.vitest` block** in the new file (no new test file), per repo rule.
 - **Ticket**: open a new ticket via repo mcp `ticket_open` (slug `cad-engine-plugins`) before any non-readonly work; close on finish.
@@ -52,23 +52,23 @@ flowchart LR
 
 ### Regions (top-to-bottom)
 
-- `🧲Header` — file purpose docstring.
-- `🔖Core` — pure types: `Point3D`, `Vec3`, `Ray`, `PointerEvent`, `IPreviewMesh`, `IGraphicsEngine`, `ICADEngine`, `ICommitBus`, `IHostContext`, `CadEvent`. Zero external imports.
-- `🔖Commands` — `ICommand` interface + `BaseCommand` abstract class with `activate/deactivate/onPointerMove/onPointerClick/onKey`. Pure math helpers (`distance`, `subtract`, `add`).
-- `🔖Plugins` — `ICadPlugin { id; commands: ICommand[]; activate?(host) }`. Built-in `primitivesPlugin` exporting `CylinderCommand`, `BoxCommand`, `SphereCommand` (pure, mirrors the user's `CylinderCommand` example).
-- `🔖Registry` — `CadEngine` class:
+- `🧲️Header` — file purpose docstring.
+- `🔖️Core` — pure types: `Point3D`, `Vec3`, `Ray`, `PointerEvent`, `IPreviewMesh`, `IGraphicsEngine`, `ICADEngine`, `ICommitBus`, `IHostContext`, `CadEvent`. Zero external imports.
+- `🔖️Commands` — `ICommand` interface + `BaseCommand` abstract class with `activate/deactivate/onPointerMove/onPointerClick/onKey`. Pure math helpers (`distance`, `subtract`, `add`).
+- `🔖️Plugins` — `ICadPlugin { id; commands: ICommand[]; activate?(host) }`. Built-in `primitivesPlugin` exporting `CylinderCommand`, `BoxCommand`, `SphereCommand` (pure, mirrors the user's `CylinderCommand` example).
+- `🔖️Registry` — `CadEngine` class:
   - `registerPlugin(plugin)`, `unregisterPlugin(id)`, `listCommands()`
   - `activateCommand(id)`, current-command pointer routing
   - emits `commandActivated`/`geometryCommitted` events via a tiny typed emitter
   - exposes `setHostContext(host)` so adapters can attach at mount time
-- `🔖TopologicAdapter` — `class TopologicCadEngine implements ICADEngine`: builds primitives by composing existing wasm helpers; returns the same fixture-entity shape used by `TopologicViewport` so committed geometry can be re-rendered with the existing pipeline. Lazy-loads via `ensureTopologicWasmLoaded()`.
-- `🔖R3FAdapter` — three.js classes implementing `IGraphicsEngine`/`IPreviewMesh` operating on a `THREE.Group` preview layer.
-- `🔖CanvasUI` — `<CadCanvas engine={...} plugins={...} children=?/>`: wraps `@react-three/fiber`'s `Canvas`, mounts a preview-layer group, wires raycasting to `engine.onPointer*`, and exports hooks:
+- `🔖️TopologicAdapter` — `class TopologicCadEngine implements ICADEngine`: builds primitives by composing existing wasm helpers; returns the same fixture-entity shape used by `TopologicViewport` so committed geometry can be re-rendered with the existing pipeline. Lazy-loads via `ensureTopologicWasmLoaded()`.
+- `🔖️R3FAdapter` — three.js classes implementing `IGraphicsEngine`/`IPreviewMesh` operating on a `THREE.Group` preview layer.
+- `🔖️CanvasUI` — `<CadCanvas engine={...} plugins={...} children=?/>`: wraps `@react-three/fiber`'s `Canvas`, mounts a preview-layer group, wires raycasting to `engine.onPointer*`, and exports hooks:
   - `useCadEngine(): CadEngine` (context)
   - `useActiveCommand(): string | null`
   - `useCadCommit(handler)` — subscribe to commits
   - `useRegisterPlugin(plugin)` — convenience effect
-- `🧪Tests` — extend with vitest cases covering: pure-core has no three/wasm/r3f imports; registry register/unregister; cylinder state machine commits geometry; adapters are swappable (mock `IGraphicsEngine` + `ICADEngine`).
+- `🧪️Tests` — extend with vitest cases covering: pure-core has no three/wasm/r3f imports; registry register/unregister; cylinder state machine commits geometry; adapters are swappable (mock `IGraphicsEngine` + `ICADEngine`).
 
 ## Wiring example added to file's exports (no new files)
 

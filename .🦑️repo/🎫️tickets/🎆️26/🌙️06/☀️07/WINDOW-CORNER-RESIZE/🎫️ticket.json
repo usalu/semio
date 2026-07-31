@@ -1,0 +1,8 @@
+{
+  "title": "Window Corner Dual Resize",
+  "emoji": "↔",
+  "status": "closed",
+  "description": "When dragging a corner where horizontal and vertical window splits meet, resize both axes at once like VS Code.",
+  "summary": "Fixed corner resizing between perpendicular window splits. Corner pointer drags now drive both live react-resizable-panels groups through their imperative layouts, persist both axis sizes, use natural drag direction and pair-preserving minimum constraints, survive hot reloads through corner-local handlers, and isolate geometry per mounted Mode. Extended the existing UI test region with a mounted pointer-drag regression proving both row and column layouts change together.",
+  "goal": "🎯️ui🎯️uireact"
+}

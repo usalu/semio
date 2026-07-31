@@ -1,0 +1,11 @@
+{
+  "title": "Redesign Gizmo Visual and Enable in Type App",
+  "status": "closed",
+  "description": "Redesign the gizmo to be thinner, less bulky, and more recognizable, with cleaner spacing, slimmer handles, clearer axis readability, and a legible small-size silhouette. Do not remove existing functionality only improve behavior and visual clarity. Make it visible the same way on both design and type app (currently only showing in design app).",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1291"
+  },
+  "goal": "🎯️sketchpadimprovements",
+  "sessions": ["⚪️c5378ba445ce43bd905b7c794a4f5d27", "⚪️db49b8947d3544c28d76350847adece7", "⚪️b052f198dad74cfa84a379fd466c0c78"]
+}

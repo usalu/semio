@@ -117,9 +117,9 @@ This is what makes report/paper/flyer/zukunftbau share one literal style definit
 
 ## 5. Verification
 
-- `bun ./script.ts generate` to regenerate `semio-tokens.sty` with chrome colors.
-- `bun ./script.ts test` in `print/` to rebuild all six templates.
-- `bun ./script.ts build` in `mit-bestand/bericht/` to rebuild the Zwischenbericht.
+- `bun ./📜️script.ts generate` to regenerate `semio-tokens.sty` with chrome colors.
+- `bun ./📜️script.ts test` in `print/` to rebuild all six templates.
+- `bun ./📜️script.ts build` in `mit-bestand/bericht/` to rebuild the Zwischenbericht.
 - Visually inspect `forschungsbericht.pdf` (chapter+section nesting) and `zwischenbericht.pdf` (section-only) to confirm title bars, borders, and colors match the OS chrome look; fall back to the non-breakable chapter-band design from step 3 if nested breakable boxes fail to compile.
 
 ## Out of scope

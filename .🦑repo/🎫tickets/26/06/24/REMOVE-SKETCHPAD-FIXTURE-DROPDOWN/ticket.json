@@ -1,9 +1,0 @@
-{
-  "title": "Remove Sketchpad Fixture Dropdown",
-  "emoji": "🎫",
-  "status": "closed",
-  "description": "Sketchpad is not a playground and should not show a fixture dropdown.",
-  "summary": "Removed the sketchpad navbar fixture selector, rewired the sketchpad play HTML to import the sketchpad boot entry through Vite, and added the explicit boot alias needed for dev runtime resolution. Verified build with bun nx run @semio-tech/compose-sketchpad-play:build and verified the live sketchpad page at http://127.0.0.1:6173/ renders without a fixture combobox or console errors.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪6575a4be3e6e4dc8a2a087d0fac577f2"]
-}

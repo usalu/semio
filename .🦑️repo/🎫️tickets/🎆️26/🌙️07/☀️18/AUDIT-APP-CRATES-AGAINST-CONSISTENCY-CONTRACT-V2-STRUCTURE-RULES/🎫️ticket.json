@@ -1,0 +1,14 @@
+{
+  "title": "Audit App Crates Against Consistency Contract V2 Structure Rules",
+  "emoji": "🔎️",
+  "status": "closed",
+  "description": "Read-only structural audit of all */plugin/rs/lib.rs app crates (Wave 4) against the Consistency Contract: region marker format (//#region 🔖️Name, tests region must be 🧪️Tests), exactly one 🔖️Manifest region per app, app struct naming PascalCase(app id)+App, mod-layout rule for multi-app crates, no stray Cargo.lock/target under plugin/rs, and every plugin/engine crate (Cargo.toml+lib.rs) has a project.json.",
+  "summary": "Read-only structural audit of all 24+ app-plugin crates (*/plugin/rs/lib.rs) against the Wave 4 Consistency Contract. Checked region-marker format/naming, per-app 🔖️Manifest regions, app-struct PascalCase(id)+App naming, mod-layout for multi-app crates, stray Cargo.lock/target under plugin/rs, and project.json coverage for plugin/engine crates. Findings: fem/plugin/rs uses \"// #region\" (space) throughout and \"🔖️Tests\" instead of \"🧪️Tests\", plus is a 2-app crate that stays flat instead of using pub mod app_\u003cname\u003e; framework/plugin/rs has one endregion missing its 🔖️ marker (RefreshUi) and one region using 🌞️ instead of 🔖️ (WorldSunConfig); architect's app id \"architect\" maps to struct ArchitectPlayApp instead of ArchitectApp; s/plugin/rs has zero per-app 🔖️Manifest regions for its 2 apps (HomeApp/StudioApp), using one crate-level 🔖️Manifest for bundle registration instead; gis/procedural/trinity/puzzle correctly have per-app 🔖️Manifest regions but additionally use a crate-level 🔖️Bundle region for plugin registration, a name rule 2 explicitly disallows. No stray Cargo.lock/target under any */plugin/rs/. raster's former engine crate (relocated to framework/surface/paint/rs) and all other framework/surface/* engine crates have project.json as expected; however only 1 of 29 app plugin crates (animate) has project.json+script.ts nx wiring at all — flagged as likely a separate not-yet-started migration line rather than a Wave-4 region/manifest/naming defect. No files were modified (read-only audit); note an unrelated ticket (WAVE-4-V1-DUPLICATION-HUNTER-AUDIT) was accidentally closed mid-task by a path-less ticket_close call after two failed ticket_open attempts, and was immediately reopened via ticket_reopen to correct it.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2112"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️ce50eaa7e06e4c1ca733a176ce0fb60d"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "title": "Rewind Deleted Edits From Session Transcripts",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Write a program to parse session JSON transcript files and extract string replacements (oldString/newString), then rewind deleted edits by reversing them. Test that everything works.",
+  "summary": "Wrote a Python rewind program that parses JSONL session transcripts, extracts all replace_string_in_file/multi_replace_string_in_file operations with timestamps, and supports --list, --check, --replay, --rewind, --dry-run modes with file/session/timestamp filters. Uses virtual file state tracking for correct chained edit handling. Applied 47 missing replacements to compose/sketchpad/index.tsx, 3 to compose/ui/index.tsx. Fixed duplicate useThree import. All 114 unit tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1101"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️c048f096f9634b56aa98d4d925c306f8"]
+}

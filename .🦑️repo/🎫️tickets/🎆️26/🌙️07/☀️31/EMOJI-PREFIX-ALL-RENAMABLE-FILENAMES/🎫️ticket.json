@@ -1,0 +1,9 @@
+{
+  "title": "Emoji Prefix All Renamable Filenames",
+  "emoji": "📁️",
+  "status": "open",
+  "summary": "Emoji date dirs 🎆️YY/🌙️MM/☀️DD + prefixed meta JSON (🎫️ticket/🎯️goal/🧑️‍💻️contributor); disk renamed; client rebuilt.",
+  "description": "Continued emoji+name path consistency for repo client binary per plan repo_emoji_path_consistency_21004b8c.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
+  "plan_id": "repo_emoji_path_consistency_21004b8c"
+}

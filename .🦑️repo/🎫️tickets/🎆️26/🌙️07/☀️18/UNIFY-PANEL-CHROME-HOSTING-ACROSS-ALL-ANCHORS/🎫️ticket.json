@@ -1,0 +1,19 @@
+{
+  "title": "Unify Panel Chrome Hosting Across All Anchors",
+  "emoji": "🎛️",
+  "status": "closed",
+  "description": "Unify React panel hosting so every anchor's root tab row lives in the navbar (top) or footer (bottom)—including middle—while the floating glass panel expands for content and nested tab rows, with clear visual separation from the window/base layer. All six anchors chrome-hosted; nested tabs remain first-class via composable dock.",
+  "summary": "Unified panel chrome hosting across all six anchors. Every anchor's root tab row now lives in navbar (top-left, top-middle beside logo/modes, top-right trailing) or footer (bottom-left leading, bottom-middle centered, bottom-right trailing) via PanelChromeTabBar; floating Panel always uses tabBarHost=chrome and expands with glass panel-level styling for nested rows and body. PanelChromeTabBar now sets data-level=panel and frosted glass chrome; panel glass alpha bumped to 0.72 for clearer separation from window/base. Added chrome-hosted middle-anchor stories and vitest coverage for expand, glass styling, and empty-anchor DnD on chrome bars.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2041"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "a11c5b08",
+    "local": "unify_panel_chrome_a11c5b08.plan.md"
+  },
+  "sessions": [
+    "⚪️d62c577462c24bf6a9c2e435397b5674"
+  ]
+}

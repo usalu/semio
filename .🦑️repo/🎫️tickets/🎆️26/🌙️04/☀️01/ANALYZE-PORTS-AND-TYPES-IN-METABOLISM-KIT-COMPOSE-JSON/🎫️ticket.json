@@ -1,0 +1,12 @@
+{
+  "title": "Analyze Ports and Types in metabolism.kit.compose.json",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Comprehensive analysis of ports and their usage by types in metabolism.kit.compose.json.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1248"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️normalizecomposeassetnaming",
+  "sessions": ["⚪️b3c0839c990a481788048632d4ec2b26"]
+}

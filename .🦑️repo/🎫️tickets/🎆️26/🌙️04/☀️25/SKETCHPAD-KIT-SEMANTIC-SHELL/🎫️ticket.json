@@ -1,0 +1,6 @@
+{
+  "title": "Sketchpad Kit Semantic Shell",
+  "status": "closed",
+  "summary": "Sketchpad: removed KitDiff merge/apply; commands use kitWire + executeComposeKitCommand. JS: importKitToPlain, extended compose.kit command dispatch (replace, catalog, design, patch, cluster, expand). Stores: await kit wire, kitCommandApplied + rs undo/redo. Playwright: __COMPOSE_EXECUTE_COMPOSE_KIT_COMMAND__. AGENTS.md updated.",
+  "sessions": ["⚪️154f9e4386274198abe0659b6603106e", "⚪️a6e41d95fb204e0b87b8c70d6037c2a9", "⚪️ade2a7344528426c902e74b01faf50e7"]
+}

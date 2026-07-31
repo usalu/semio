@@ -1,0 +1,15 @@
+{
+  "title": "Fix Gumball Drag Cursor Scale",
+  "emoji": "📏️",
+  "status": "closed",
+  "description": "3D gumball: when dragging, objects fly out — the drag scale is too high and does not match the cursor. Fix screen-to-world translation so the selection follows the pointer 1:1.",
+  "summary": "Real fly-away cause was absolute host deltas stacked on accumulate-style plugins (CAD AmendLast, lowpoly scratch, puzzle without session). Host now sends incremental last→pending deltas; puzzle scratch accumulates increments; ortho duck-typing kept. Puzzle gumball_transform_session test passed. DEBUG logs left for runtime confirmation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2287"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️d507e11f1f354bf7af62a196d87974ea",
+    "⚪️943ae2cec3b6449f91c8309a9257d207"
+  ]
+}

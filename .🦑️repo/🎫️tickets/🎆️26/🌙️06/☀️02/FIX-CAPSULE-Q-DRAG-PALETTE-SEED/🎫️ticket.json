@@ -1,0 +1,12 @@
+{
+  "title": "Fix Capsule q Drag Palette Seed",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Dragging Capsule Q from puzzle 3d palette crashes because catalog lacks meshUrl and resolveObjectKindMeshUrl falls back to puzzle3d://palette-seed. Rename to Capsule q and add capsule_q.glb mesh.",
+  "summary": "Removed metabolism/nakagin domain logic from puzzle/3d/react (inferMetabolismMeshUrlForKindName, door-capsule relabeling, kit connector builders). Those helpers now live under puzzle/3d/play; mesh URLs stay in fixture catalog via backfill. Generic palette drop guard (resolvePuzzle3dFixtureDrop) and isLoadableMeshUrl remain in react. Tests: react 256/256, play 43/43.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1530"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️3462ac60ace14eee8401e644c171239e", "⚪️187acb22e8874a1ba939cca8f184f756", "⚪️a5041d4c525647a8a70786f69535f214"]
+}

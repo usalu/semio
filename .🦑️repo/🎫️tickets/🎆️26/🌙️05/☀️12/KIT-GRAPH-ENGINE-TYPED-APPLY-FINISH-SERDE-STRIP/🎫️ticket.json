@@ -1,0 +1,9 @@
+{
+  "title": "Kit Graph Engine Typed Apply Finish Serde Strip",
+  "emoji": "🦀️",
+  "status": "closed",
+  "description": "Finish kit_graph_engine: add apply_kit_operation, projection_fingerprint_for_kit, deterministic__diff with stable_payload_digest; wire kit_backbone replay and record paths; remove remaining serde derives outside kit_backbone in compose/rs/lib.rs; fix tests and wasm_bridge GraphQL JSON parse.",
+  "summary": "Restored `kit_graph_engine` with typed `apply_kit_operation`, `DesignSlot`, `projection_fingerprint_for_kit`, `deterministic__diff` (payload digest). Replay uses `kit_operation_from_stored` + `apply_kit_operation`; backbone record uses `kit_operation_step_input_json`. Fixed JSON position parser shadowing, `Kit::apply_diff` aux flags, Tags scope parse, `entity_input!` PartialEq. Stripped serde from operation input/Diff/CommandReceipt; WASM execute JSON manual parse. Tests updated; cargo test 36 passed.",
+  "goal": "🎯️aioptimizedrepo🎯️singlefilerepo",
+  "sessions": ["⚪️7963fb16d8d1429abdecbf5e1053f7f9"]
+}

@@ -1,0 +1,11 @@
+{
+  "title": "Fix Section List Command Filtering and Symbols",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "The section list command shows sections from all files instead of just the specified file. It also uses § (definition symbol) instead of # (section symbol). Child sections should display as #SECTION#CHILDSECTION#...",
+  "summary": "Fixed section list command: (1) Fixed StreamFiles to handle compose/BUNDLE/file.ext scope by parsing bundle prefix + sub-path, and added single-file fast path. (2) Changed section symbol from § to # in all rendering. (3) Added hierarchical path to flattened sections so child sections display as #Parent#Child#GrandChild format.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/309"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli"
+}

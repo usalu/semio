@@ -1,0 +1,8 @@
+{
+  "title": "Spatial Doctrine Refactor",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Remove raw/analytic views and kernel surface/part logic; extension-based views only.",
+  "summary": "Removed remaining spatial legacy builtin/geometry-model-definition references from core and renderer play code, kept construct codegen self-contained without extra helper files, aligned construct kit ids with construct*From* mode actions, and verified the spatial core/query/renderer targets. Legacy-term scans over spatial/js, spatial/assets/modelDefinition, and spatial/fixtures are clean for the retired builtin/geometry model-definition terms.",
+  "goal": "🎯️r2602🎯️runningsketchpad"
+}

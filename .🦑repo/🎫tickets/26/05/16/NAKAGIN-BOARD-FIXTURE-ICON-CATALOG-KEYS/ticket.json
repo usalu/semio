@@ -1,9 +1,0 @@
-{
-  "title": "Nakagin Board Fixture Icon Catalog Keys",
-  "emoji": "🖼️",
-  "status": "closed",
-  "description": "Nakagin capsule tower board fixture nodes lacked iconKind; WASM detail LOD could not resolve metabolism SVG catalog keys. Emit iconKind from kit type icon paths in the fixture generator, add missing capsule-with-balcony and trapezoid-capsule SVG assets (copied from base capsule/ellipsoid sets) so build.rs embeds all kit icon stems, regenerate nakagin-capsule-tower.board.json, verify board tests.",
-  "summary": "Nakagin fixture generator now sets each node's iconKind from the kit type icon path stem so WASM detail LOD can resolve baked metabolism SVGs. Added sixteen SVG files (capsule-with-balcony_* from capsule_*; trapezoid-capsule_* from ellipsoid-capsule_*) so every kit-referenced stem exists under examples/metabolism/icons for build.rs. Regenerated nakagin-capsule-tower.board.json. Extended parseBoardFixtureV1 Vitest for catalog-style keys. Vitest 55 passed; wasm-pack release build succeeded. Full bun ./script.ts test still fails at cargo test on this Windows host due to duplicate windows crates in wgpu-hal DX12 (pre-existing).",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪778ea9cc1eb34fde8e39200b707f4b35"]
-}

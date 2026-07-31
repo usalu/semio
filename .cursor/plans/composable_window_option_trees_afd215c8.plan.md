@@ -41,11 +41,11 @@ Target shape (Puzzle 3D), matching the request:
 
 ## 1. Ticket setup
 
-- Read `repo://goals` (MCP `project-0-compose-repo`), then open a new ticket via `ticket_open` titled "Composable Window Option Trees" associated with the most fitting goal (likely a framework/ui goal). The closed `🎫/26/06/02/HIDE-CATALOG-VORTICES-IN-TREE-BY-DEFAULT` is a different surface (kinds side-panel tree), so a new ticket is appropriate. Keep any scratch files inside the ticket folder.
+- Read `repo://goals` (MCP `project-0-compose-repo`), then open a new ticket via `ticket_open` titled "Composable Window Option Trees" associated with the most fitting goal (likely a framework/ui goal). The closed `🎫️/26/06/02/HIDE-CATALOG-VORTICES-IN-TREE-BY-DEFAULT` is a different surface (kinds side-panel tree), so a new ticket is appropriate. Keep any scratch files inside the ticket folder.
 
 ## 2. Core model: make `WindowMeasure` a tree
 
-In [framework/core/index.ts](framework/core/index.ts) `//#region 🔖WindowMeasure` (~67-99), add a group node and fold it into the union:
+In [framework/core/index.ts](framework/core/index.ts) `//#region 🔖️WindowMeasure` (~67-99), add a group node and fold it into the union:
 
 ```ts
 export interface WindowMeasureGroup {

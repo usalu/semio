@@ -1,0 +1,12 @@
+{
+  "title": "Gizmo Axis Click Snaps Camera to Orthographic View",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Enhance the existing view gizmo in elements/ui/index.tsx and compose/ui/index.tsx: when clicking an axis head, smoothly snap the camera to the corresponding orthographic view (X/Y/Z), switch to orthographic projection, and when the user orbits the camera, automatically return to perspective mode. Preserve all existing interactions.",
+  "summary": "Enhanced the view gizmo in both elements/ui/index.tsx and compose/ui/index.tsx. When an axis head is clicked in the GizmoViewport, the camera smoothly snaps to the corresponding orthographic view (drei's tweenCamera handles the animation) and onProjectionChange(\"orthographic\") is called. When the user orbits the camera after a gizmo snap, onProjectionChange(\"camera\") is called to return to perspective mode. All existing interactions, controls, and custom behaviors are preserved.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1256"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️ab2fb23e67164c29a6ef200aa8d3e455"]
+}

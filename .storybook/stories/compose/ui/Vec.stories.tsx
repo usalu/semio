@@ -1,13 +1,13 @@
-// #region 🧲Header
-// 💻 compose/ui/.storybook/story/Vec.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/ui/.storybook/story/Vec.stories.tsx
 // Specs: One component per stories file. First story is Default with max features and minimal setup. Default story is uncontrolled.
 // Summary: Vec stories: Default, NoAxes, NoOrigin, PositiveDomain, Large.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Vec, type VecValue } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
-// #region 🏪Vec
+// #region 🏪️Vec
 
 const meta = {
   title: "🏘️compose⚛️react/Vec",
@@ -64,4 +64,4 @@ export const Large: Story = {
   args: { ...defaultArgs, id: "vec-large", size: 200 },
 };
 
-// #endregion 🏪Vec
+// #endregion 🏪️Vec

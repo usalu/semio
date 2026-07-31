@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 .storybook/preview.ts
+// #region 🧲️Header
+// 💻️ .storybook/preview.ts
 // Specs: Reuse the shared UI appearance and level decorators for the root monorepo Storybook.
 // Summary: Defines global Storybook preview parameters; loads CSS stacks only when any scope is active; provides the decorator toolkit (level, appearance, locale, terminology, theme, renderer-port swap, wasm gate).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import type { Preview } from "@storybook/react-vite";
 
@@ -12,15 +12,15 @@ import { scopeActive } from "./scopes.ts";
 
 declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
 
-//#region 🔖ScopeStyles
+//#region 🔖️ScopeStyles
 if (__STORYBOOK_ACTIVE_SCOPES__.length > 0) {
   await import("./globals.css");
 }
-/** @emoji 🎯 True when `prefix` is (a prefix of) an active `STORYBOOK_SCOPE` — for stories/decorators that gate behavior by scope. */
+/** @emoji 🎯️ True when `prefix` is (a prefix of) an active `STORYBOOK_SCOPE` — for stories/decorators that gate behavior by scope. */
 export function storybookScopeActive(prefix: string): boolean {
   return scopeActive(__STORYBOOK_ACTIVE_SCOPES__, prefix);
 }
-//#endregion 🔖ScopeStyles
+//#endregion 🔖️ScopeStyles
 
 enum Appearance {
   SYSTEM = "system",
@@ -185,12 +185,12 @@ const preview: Preview = {
 
 export default preview;
 
-//#region 🔖withLevel
+//#region 🔖️withLevel
 import { type Level as UiLevel, LevelProvider, surfaceClass } from "@semio-tech/ui-react";
 import type { Decorator } from "@storybook/react-vite";
 import React from "react";
 
-// #region 🧩LevelWrapper
+// #region 🧩️LevelWrapper
 /** Border + min width used when a story sets `level` via args (compose UI / algorithms). */
 export const LevelWrapper: React.FC<{ level: UiLevel; children: React.ReactNode }> = ({ level, children }) => {
   return (
@@ -199,9 +199,9 @@ export const LevelWrapper: React.FC<{ level: UiLevel; children: React.ReactNode 
     </div>
   );
 };
-// #endregion 🧩LevelWrapper
+// #endregion 🧩️LevelWrapper
 
-// #region 🧩WithLevel
+// #region 🧩️WithLevel
 export const withLevel: Decorator = (Story, context) => {
   const argLevel = context.args?.level as UiLevel | undefined;
   if (argLevel) {
@@ -220,13 +220,13 @@ export const withLevel: Decorator = (Story, context) => {
     </LevelProvider>
   );
 };
-// #endregion 🧩WithLevel
-//#endregion 🔖withLevel
+// #endregion 🧩️WithLevel
+//#endregion 🔖️withLevel
 
-//#region 🔖withAppearance
-import { useElementsSurfaceChrome, type ElementsSurfaceDevice, type ElementsSurfaceAppearance } from "@semio-tech/ui-react";
+//#region 🔖️withAppearance
+import { TextSelectionContextMenuHost, useElementsSurfaceChrome, type ElementsSurfaceDevice, type ElementsSurfaceAppearance } from "@semio-tech/ui-react";
 
-// #region 🌈StorySurfaceHost
+// #region 🌈️StorySurfaceHost
 const StorySurfaceHost: React.FC<{
   children: React.ReactNode;
   globals: { appearance?: string; device?: string; driver?: string };
@@ -235,20 +235,25 @@ const StorySurfaceHost: React.FC<{
   const device = (globals.device as ElementsSurfaceDevice | undefined) ?? "desktop";
   const driver = resolveUiDriver(globals.driver ?? DEFAULT_UI_DRIVER.id, {});
   useElementsSurfaceChrome({ appearance, device, driver });
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <TextSelectionContextMenuHost />
+    </>
+  );
 };
-// #endregion 🌈StorySurfaceHost
+// #endregion 🌈️StorySurfaceHost
 
-// #region 🌈WithAppearance
+// #region 🌈️WithAppearance
 export const withAppearance: Decorator = (Story, context) => (
   <StorySurfaceHost globals={context.globals as { appearance?: string; device?: string; driver?: string }}>
     <Story />
   </StorySurfaceHost>
 );
-// #endregion 🌈WithAppearance
-//#endregion 🔖withAppearance
+// #endregion 🌈️WithAppearance
+//#endregion 🔖️withAppearance
 
-//#region 🔖withLocale
+//#region 🔖️withLocale
 import { setUiLocale, writeStoredUiChromeLocale, type UiLocale } from "@semio-tech/ui-react";
 
 const LocaleHost: React.FC<{ children: React.ReactNode; locale: UiLocale }> = ({ children, locale }) => {
@@ -259,15 +264,15 @@ const LocaleHost: React.FC<{ children: React.ReactNode; locale: UiLocale }> = ({
   return <>{children}</>;
 };
 
-/** @emoji 🌐 Drives the story's `changeLanguage` from the `locale` toolbar so `t(...)`-consuming components re-render translated. */
+/** @emoji 🌐️ Drives the story's `changeLanguage` from the `locale` toolbar so `t(...)`-consuming components re-render translated. */
 export const withLocale: Decorator = (Story, context) => (
   <LocaleHost locale={(context.globals.locale as UiLocale | undefined) ?? "en"}>
     <Story />
   </LocaleHost>
 );
-//#endregion 🔖withLocale
+//#endregion 🔖️withLocale
 
-//#region 🔖withTerminology
+//#region 🔖️withTerminology
 import { writeStoredUiChromeTerminology, type UiChromeTerminologyId } from "@semio-tech/ui-react";
 
 const TerminologyHost: React.FC<{ children: React.ReactNode; terminology: UiChromeTerminologyId }> = ({ children, terminology }) => {
@@ -277,15 +282,15 @@ const TerminologyHost: React.FC<{ children: React.ReactNode; terminology: UiChro
   return <>{children}</>;
 };
 
-/** @emoji 📚 Persists the `terminology` toolbar choice (native / reuse) before render, mirroring `useUiTerminology`'s storage-event contract. */
+/** @emoji 📚️ Persists the `terminology` toolbar choice (native / reuse) before render, mirroring `useUiTerminology`'s storage-event contract. */
 export const withTerminology: Decorator = (Story, context) => (
   <TerminologyHost terminology={(context.globals.terminology as UiChromeTerminologyId | undefined) ?? "native"}>
     <Story />
   </TerminologyHost>
 );
-//#endregion 🔖withTerminology
+//#endregion 🔖️withTerminology
 
-//#region 🔖withTheme
+//#region 🔖️withTheme
 import { builtinUiThemes, setActiveUiTheme } from "@semio-tech/ui-react";
 
 const ThemeHost: React.FC<{ children: React.ReactNode; themeId: string }> = ({ children, themeId }) => {
@@ -296,7 +301,7 @@ const ThemeHost: React.FC<{ children: React.ReactNode; themeId: string }> = ({ c
   return <>{children}</>;
 };
 
-/** @emoji 🎨 Applies the `theme` toolbar selection via `setActiveUiTheme`; a no-operation until the toolbar's `items` are populated (see `populateThemeToolbarItems` below) since `initialGlobals.theme` is unset by default. */
+/** @emoji 🎨️ Applies the `theme` toolbar selection via `setActiveUiTheme`; a no-operation until the toolbar's `items` are populated (see `populateThemeToolbarItems` below) since `initialGlobals.theme` is unset by default. */
 export const withTheme: Decorator = (Story, context) => {
   const themeId = context.globals.theme as string | undefined;
   if (!themeId) return <Story />;
@@ -307,16 +312,16 @@ export const withTheme: Decorator = (Story, context) => {
   );
 };
 
-/** @emoji 🎨 Populates the `theme` toolbar's `items` from `builtinUiThemes()` — deferred to module-init time (not the `globalTypes` literal above) since it needs the ui-styling module graph loaded. */
+/** @emoji 🎨️ Populates the `theme` toolbar's `items` from `builtinUiThemes()` — deferred to module-init time (not the `globalTypes` literal above) since it needs the ui-styling module graph loaded. */
 if (preview.globalTypes?.theme?.toolbar) {
   preview.globalTypes.theme.toolbar.items = builtinUiThemes().map((t) => ({ value: t.id, title: t.name ?? t.id }));
 }
-//#endregion 🔖withTheme
+//#endregion 🔖️withTheme
 
-//#region 🔖withRenderer
+//#region 🔖️withRenderer
 import { configureHostPorts, type HostPortOverrides } from "@semio-tech/ui-react";
 
-/** @emoji 🔌 A story requests an alternate host-port adapter (stub renderer, test double, …) by setting
+/** @emoji 🔌️ A story requests an alternate host-port adapter (stub renderer, test double, …) by setting
  * `parameters.hostPortOverrides` to a {@link HostPortOverrides} object (or a thunk returning one, for
  * overrides that need `context.globals`, e.g. the `iconRenderer` toggle). Applied via `configureHostPorts`
  * before render and reset to defaults on cleanup, since ports are module-global. Most stories set nothing
@@ -331,16 +336,16 @@ export const withRenderer: Decorator = (Story, context) => {
   }, [JSON.stringify(Object.keys(overrides))]);
   return <Story />;
 };
-//#endregion 🔖withRenderer
+//#endregion 🔖️withRenderer
 
-//#region 🔖withWasm
-/** @emoji 🧱 Single-flight dynamic-import loader registry, generalizing `ensureComposeWasm`
+//#region 🔖️withWasm
+/** @emoji 🧱️ Single-flight dynamic-import loader registry, generalizing `ensureComposeWasm`
  * (`.storybook/compose/algorithm/kit-store/index.tsx`). Dynamic imports code-split per loader, so a
  * scoped Storybook boot never pulls in another scope's wasm graph until a story actually requests it
  * via `parameters.wasm`. */
 
-// #region 🔌FrameworkHostsWasmLoaders
-/** 🧵 Wraps a `framework/os/renderer/js/react/index.tsx`-style wasm-bindgen module import (bare workspace
+// #region 🔌️FrameworkHostsWasmLoaders
+/** 🧵️ Wraps a `framework/os/renderer/js/react/index.tsx`-style wasm-bindgen module import (bare workspace
  * specifier, resolved by bun-symlinked `node_modules/@semio-tech/*` — no scope alias needed) into a
  * single-flight `WASM_LOADERS` entry; `mod.default()` is itself idempotent once the wasm instance is
  * live, but the cache also collapses concurrent first-call races and clears on failure so a later
@@ -363,7 +368,7 @@ function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default
     return promise;
   };
 }
-// #endregion 🔌FrameworkHostsWasmLoaders
+// #endregion 🔌️FrameworkHostsWasmLoaders
 
 const WASM_LOADERS: Record<string, () => Promise<void>> = {
   compose: () => import("./compose/algorithm/kit-store/index.tsx").then((m) => m.ensureComposeWasm()),
@@ -399,7 +404,7 @@ const WasmGateHost: React.FC<{ children: React.ReactNode; ids: string[] }> = ({ 
   return <>{children}</>;
 };
 
-/** @emoji 🧱 Gates a story behind `parameters.wasm: string[]` loader ids until every referenced wasm module resolves. */
+/** @emoji 🧱️ Gates a story behind `parameters.wasm: string[]` loader ids until every referenced wasm module resolves. */
 export const withWasm: Decorator = (Story, context) => {
   const ids = (context.parameters.wasm as string[] | undefined) ?? [];
   if (ids.length === 0) return <Story />;
@@ -409,4 +414,4 @@ export const withWasm: Decorator = (Story, context) => {
     </WasmGateHost>
   );
 };
-//#endregion 🔖withWasm
+//#endregion 🔖️withWasm

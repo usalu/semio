@@ -1,9 +1,0 @@
-{
-  "title": "Fix Empty Diagram and Csp Block in Mcp App",
-  "emoji": "🔧",
-  "status": "closed",
-  "description": "After the scene/model fixes, the diagram is now empty and there is a blocked CSP request. Two bugs: 1) _build_diagram_data in compose/engine/main.py looks up design from kit[\"designs\"] which may be a shallow entry (no pieces) — same root cause as the _enrich_design fix. Pass the full session design to _build_diagram_data. 2) The CSP meta only declares connectDomains/resourceDomains — the MCP host may need additional fields. Investigate and fix both.",
-  "summary": "Bulk close",
-  "goal": "🎯sketchpadimprovements",
-  "sessions": ["⚪4ee16440bfb0426c88ebf1e19d4e049c", "⚪ff11619cf02443ec92609f81e07e02cd"]
-}

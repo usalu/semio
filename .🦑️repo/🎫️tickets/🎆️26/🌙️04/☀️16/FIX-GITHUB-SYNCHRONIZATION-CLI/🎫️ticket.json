@@ -1,0 +1,11 @@
+{
+  "title": "Fix Github Synchronization Cli",
+  "status": "closed",
+  "description": "Github synchronization through the CLI currently does not work. Diagnose the existing CLI sync flow, fix the implementation directly in existing files, extend existing test coverage without adding new test files, and verify the relevant tests pass. Existing related closed ticket URI found: repo://ticket/🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli🎯️repoclifilters🎫️completegithubsyncmechanism, but the dated ticket path was not exposed for reopening.",
+  "summary": "Added explicit `repo sync github` command routing to the existing syncManagement mutation, made unknown sync targets fail instead of silently showing parent help, and added regression coverage in the existing CLI test file. Added a devcontainer tool-install skip gate so its GitKraken workspace test can avoid network installers and skip the Linux-only script on Windows. Focused sync/devcontainer tests pass; full repo CLI suite still has unrelated pre-existing failures/timeouts in bootstrap asset expectations, Go section test collection, fixture breach expectations, ticket lifecycle URI parsing, and a tree-build E2E timeout.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1334"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repobinary🎯️repocli🎯️repoclifilters",
+  "sessions": ["⚪️5b10ab89a651473cb39a714661590b40"]
+}

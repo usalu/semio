@@ -1,7 +1,0 @@
-{
-  "title": "Semantic border kinds (element/window)",
-  "emoji": "📋",
-  "status": "closed",
-  "description": "\"The border mechanism of all UI elements should be more flexible: add semantic border kinds with different styles. Introduce Tailwind classes border-element (element borders use hover color) and border-window (window borders use current normal border).\"",
-  "goal": "🎯r2602🎯runningsketchpad"
-}

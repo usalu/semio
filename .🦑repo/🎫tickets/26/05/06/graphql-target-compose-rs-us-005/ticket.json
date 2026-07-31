@@ -1,7 +1,0 @@
-{
-  "id": "2026/05/06/graphql-target-compose-rs-us-005",
-  "title": "Implement GraphQL Target In compose/rs Matching compose/graphql/schema.graphql",
-  "status": "closed",
-  "summary": "US-005: Verified async_graphql in compose/rs emits SDL identical to compose/graphql/schema.graphql; documented explicit non-memoization for Graph computed fields and ephemeral Operation.diff; all epic quality gates pass.",
-  "files": ["compose/rs/lib.rs", ".ralph-tui/progress.md", ".repo/🎫/26/05/06/graphql-target-compose-rs-us-005/ticket.json"]
-}

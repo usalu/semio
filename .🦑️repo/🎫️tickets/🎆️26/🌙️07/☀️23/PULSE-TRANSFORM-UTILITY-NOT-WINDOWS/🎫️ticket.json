@@ -1,0 +1,16 @@
+{
+  "title": "Pulse Transform Utility Not Windows",
+  "emoji": "🎓️",
+  "status": "closed",
+  "description": "Aggregator introduction is adhoc and incomplete with the new element-id introduction system (introduce/show ids, no cutouts).\n\nReported:\n- Step 4 (viewport) should elevate/show ALL windows (Top + Perspective), not only the first match of the window-kind id.\n- Step 6 (add object) does not show the catalogue panel and tree item; drag-and-drop is impossible.\n\nRoot causes to fix at the framework/ui level:\n1. useIntroductionElevation uses querySelector (first match only) — kind-id aliases on multiple window instances never all elevate.\n2. useFirstDraggableElementAlias exists but is never wired into Panel/MobilePanel, so framework.panelTab.*.firstDraggable never mounts.\n\nMake the element-id introduce/show path work end-to-end for the Aggregator brand tour (and the shared Puzzle 3D introduction).",
+  "summary": "Step 7 now pulses only the Transform utility, not the window silhouettes.\n\n**Cause:** Any `[data-introduced]` descendant (including `#transform`) promoted the dock-stack SVG to `introduced`, and CSS suppressed every introduced stamp inside the stack so the utility itself could not pulse.\n\n**Fix:** `isWindowChromeIntroducedTarget` limits silhouette promotion to window body stamps (`data-slot=window` / bare `framework.window.{segment}`). Nested utilities keep the inset pulse; CSS suppress is scoped to window-chrome stamps only.\n\n**Verified:** utility-vs-silhouette + window-introduce + resolveWindowSilhouetteBorderKind tests (4 passed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2275"
+  },
+  "goal": "🎯️r2602",
+  "sessions": [
+    "⚪️26b14614ac634b92911c4a881fe8bdf3",
+    "⚪️9f27f5a82b19479494c109bc4f948fe7",
+    "⚪️bf77bfeba272416481db7a1e41c3cca0"
+  ]
+}

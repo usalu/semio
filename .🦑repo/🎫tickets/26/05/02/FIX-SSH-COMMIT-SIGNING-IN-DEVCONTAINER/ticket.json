@@ -1,9 +1,0 @@
-{
-  "title": "Fix SSH Commit Signing in Devcontainer",
-  "emoji": "🐚",
-  "status": "closed",
-  "description": "Investigate why commits fail inside the active devcontainer and fix SSH commit signing configuration.",
-  "summary": "Configured devcontainer Git SSH signing to use a stable ssh-agent socket and normalize signing config; verified active container signing path with a temporary agent key.",
-  "goal": "🎯aioptimizedrepo🎯sandboxedrepo🎯zerotouchdevcontainer",
-  "sessions": ["⚪5771128bc1bc4197a4f58e2e9efe6a87"]
-}

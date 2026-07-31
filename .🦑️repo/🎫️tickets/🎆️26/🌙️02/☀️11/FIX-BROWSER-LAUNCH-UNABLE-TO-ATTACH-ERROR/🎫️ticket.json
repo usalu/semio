@@ -1,0 +1,126 @@
+{
+  "title": "Fix Browser Launch Unable To Attach Error",
+  "status": "closed",
+  "prompt": "unable to launch browser: 'unable to attach browser' .. fix this while keeping chrome as main browser.",
+  "summary": "Fix browser attach failure while keeping Chrome as external browser",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/493"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
+  "started": "2026-02-11T14:09:11.112456487Z",
+  "finished": "2026-02-11T14:26:31.953625152Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-11 14:09:11",
+        "finished": "2026-02-11 14:13:18"
+      },
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "760cbb465f75ca4a04db88230f000dad550ddee6",
+      "prompt": "unable to launch browser: 'unable to attach browser' .. fix this while keeping chrome as main browser.",
+      "llm": "sonnet-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "compose/compose/compose/js",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "compose/js",
+              "lines": {
+                "added": 0,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "⚙️compose/js/playwright.config.ts",
+              "lines": {
+                "added": 5,
+                "removed": 7
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-02-11 14:23:17",
+        "finished": "2026-02-11 14:26:31"
+      },
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "codex",
+      "commit": "d8f7005b643fe6f393319430779ae99b90c01d46",
+      "prompt": "unable to launch browser: unable to attach browser; keep chrome as main browser",
+      "llm": "gpt-5-2-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

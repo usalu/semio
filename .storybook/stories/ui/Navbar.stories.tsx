@@ -1,18 +1,18 @@
-// #region 🧲Header
+// #region 🧲️Header
 
-// 🥼︎ .storybook/stories/ui/Navbar.stories.tsx
+// 🥼️ .storybook/stories/ui/Navbar.stories.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { Button, LevelProvider, Navbar, RibbonDivider, RibbonGroup, RibbonItem, RibbonZone, Toggle } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
-// 🔷#region 🩺Navbar
+// 🔷️#region 🩺️Navbar
 const Bell = createIconComponent("bell");
 const ChevronDown = createIconComponent("chevron-down");
 const Home = createIconComponent("home");
@@ -69,9 +69,9 @@ export const Default: Story = {
   },
 };
 
-// #endregion 🩺Navbar
+// #endregion 🩺️Navbar
 
-// 🔷#region 🌙Ribbon
+// 🔷️#region 🌙️Ribbon
 export const RibbonDefault: Story = {
   args: { items: defaultItems },
   render: () => (
@@ -106,4 +106,4 @@ export const RibbonDefault: Story = {
     </LevelProvider>
   ),
 };
-// #endregion 🌙Ribbon
+// #endregion 🌙️Ribbon

@@ -88,12 +88,12 @@ Invariants:
 
 ## Affected regions in [compose/rs/lib.rs](compose/rs/lib.rs)
 
-- `📦 kit` (lines 1148–2833):
+- `📦️ kit` (lines 1148–2833):
   - Add `Kit::deep_clone()` walking every sub-entity (Type, Representation, Connector, Design, Piece, Tag, Concept, Quality, Author, File, Folder, Prop, Attribute, Stat, plus all `*_by_id` weak maps re-pointing into the cloned graph).
   - Add **the single central mutation entry point** `Kit::apply_diff(&self, diff: &KitDiff) -> Result<(), ComposeError>`. This is the only public mutator on `Kit`. Internally it walks the canonical `KitDiff` (sparse scalar overrides + `removed` / `updated` / `added` triples on every collection) and writes the corresponding `RwLock<…>` slot (or pushes/removes from `Vec`/`HashMap`). Every direct field-mutation in the file that currently reaches into `kit.name.write().await`, `kit.description.write().await`, `kit.tags.write().await.push(...)`, `design.pieces.write().await.push(...)`, etc., is collapsed into this one method.
   - All existing per-field mutator helpers on `Kit` (e.g. `create_and_register_tag`, `delete_tag_by_id`, `register_tag`, `register_concept`, `register_quality`) are removed; their behaviour is expressed as `KitDiff` fragments produced from operations and applied centrally.
   - Strip `bump_touch_epoch` from `Kit` (now done at `Graph` level on materialization invalidation).
-- `🌿 vcs` (lines 3089–4156):
+- `🌿️ vcs` (lines 3089–4156):
   - Replace `Graph.the_kit: Arc<Kit>` with: `parent_root_for_active_draft: RwLock<Arc<Kit>>` (clone of the seed checkpoint's `frozen_root`) and `materialized_cache: RwLock<Option<MaterializedSlot>>` where `MaterializedSlot { change_seq: u64, kit: Arc<Kit> }`.
   - Add `Graph::materialized_kit(&self) -> Arc<Kit>` (deep-clones parent root and replays draft operations; reuses cache when `change_seq` matches).
   - Add `Graph::active_draft()` accessor and `Graph::record_op_in_open_transaction(forward: KitOperation, backward: KitOperation)` that appends to the current `Change`, bumps `Draft.change_seq`, and invalidates the materialization cache.
@@ -206,7 +206,7 @@ Invariants:
   - forward `DeletePieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::None }` → backwards `[ CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id, piece_id, blueprint_id: <pre.blueprint>, attribute_ids: <pre.attrs> }, input: Input::FixedPiece { position: <pre.position>, name: <pre.name>, description: <pre.description> } }, /* one connection-recreating operation per connection that referenced the piece, scope reusing prior connection ids */ ]`
   - forward `DeleteTags { scope: Scope::Tags { tag_ids }, input: Input::None }` → backwards = ordered `Vec` of `CreateTag` operations (one per id, oldest first), each with `Scope::CreateTag.tag_id` set to the original id from `pre` and `input: Input::Tag { tag: <pre.tag input snapshot> }`.
     `KitOperation` stays a flat data type with no undo state inside variants; `to_backwards` is a pure read on `kit` returning a fresh `Vec`. `Change.forwards: Vec<KitOperation>` / `Change.backwards: Vec<KitOperation>` are symmetric — both are just lists of one-way operations that go through the same operation → diff → `apply_diff` pipeline at replay time. There is no separate `operation::inverse_for` helper; the logic is on the variants of `KitOperation` itself.
-- `🧵 worker` (lines 5887–6211): `ChildRuntime::apply` becomes a flat dispatcher per `Command` that:
+- `🧵️ worker` (lines 5887–6211): `ChildRuntime::apply` becomes a flat dispatcher per `Command` that:
   1. Captures `before_kit = self.graph.materialized_kit().await` (used by `to_backwards` to derive the inverse operations, e.g. previous name / previous tag input snapshot).
   2. For every entity the command will create, mints fresh ids via the system id generator (`Id::new().await`); these ids go directly into the matching `Scope` variant (alongside any owner / target ids the user did supply).
   3. Builds the forward `KitOperation::<Variant> { scope: Scope::<…> { … }, input: Input::<…> { … } }` from the populated `Scope` and the user-supplied non-id payload wrapped in the matching `Input` variant.
@@ -215,12 +215,12 @@ Invariants:
   6. Re-materializes via `self.graph.materialized_kit().await` (which, internally, deep-clones root then for each recorded forward operation runs `operation.to_diff(&kit) → kit.apply_diff(diff)`).
   7. Builds the existing `OperationKind` (e.g. `RenamedKit { kit: materialized_kit, … }`) and pushes to `op_history` + emits on the bus, exactly as today.
   - `Graph::abort_transaction` simply drops the open transaction's `Change` list and invalidates the materialization cache; the next `materialized_kit()` deep-clones root and replays only the surviving (finalized) operations, automatically yielding the pre-transaction state — no manual undo execution needed. `Change.backwards` is preserved on disk for explicit undo/redo flows (future).
-- `🌐 gql` (lines 6213–6638): every resolver that calls `graph.the_kit.`\* (`Graph::the_kit`, `Graph::projection_fingerprint`, `Graph::root_snapshot_hash`, `Query::node`, `Query::piece_in_design`, `Query::kit_store_bundle_json`, `Mutation::kit_store_bundle_hydrate`, `Mutation::kit_store_initialize_defaults`) switches to `let kit = graph.materialized_kit().await;`.
+- `🌐️ gql` (lines 6213–6638): every resolver that calls `graph.the_kit.`\* (`Graph::the_kit`, `Graph::projection_fingerprint`, `Graph::root_snapshot_hash`, `Query::node`, `Query::piece_in_design`, `Query::kit_store_bundle_json`, `Mutation::kit_store_bundle_hydrate`, `Mutation::kit_store_initialize_defaults`) switches to `let kit = graph.materialized_kit().await;`.
 - `🗄️ kit_backbone` (lines 5241–5830):
   - `KitStoreBundleFile::from_graph` serializes from `graph.materialized_kit()` for `wip.root` and from each `Checkpoint.frozen_root.kit_full_snapshot_value()` for the checkpoint list.
   - `KitStoreBundleFile::hydrate_into_graph` materializes a fresh `Arc<Kit>` from the bundle JSON, freezes it as the seed `Checkpoint.frozen_root`, and points `Graph.parent_root_for_active_draft` at a clone of it.
   - `clear_piece_projections_for_backbone_replay` (line 5699) is removed; replay just re-hydrates a fresh checkpoint root.
-- `🧪 tests` (lines 6783–7492): update `g.the_kit` references in tests (lines 7239, 7240, 7265, 7292, 7330, 7185–7186, 7217, 4262–4264) to `g.materialized_kit().await`. Extend `kit_store_bundle_serialize_hydrate_round_trip_via_graphql` (line 6850) with assertions:
+- `🧪️ tests` (lines 6783–7492): update `g.the_kit` references in tests (lines 7239, 7240, 7265, 7292, 7330, 7185–7186, 7217, 4262–4264) to `g.materialized_kit().await`. Extend `kit_store_bundle_serialize_hydrate_round_trip_via_graphql` (line 6850) with assertions:
   - After `renameKit` to "Hello Bundle", `wip.checkpoints.edges[0].node.frozenRoot.name` == previous name (root unchanged).
   - `wip.theKit.name` == "Hello Bundle" (materialized changed).
   - After `transactionAbort` of the rename transaction, `wip.theKit.name` reverts to the previous name.

@@ -1,0 +1,12 @@
+{
+  "title": "Zwischenbericht AP Tool Projektstand",
+  "emoji": "📄️",
+  "status": "closed",
+  "description": "Replace placeholder text in mit-bestand zwischenbericht section 1 Ergebnisse with provided final content for Forschungsfragen, AP-Erfahrung Recherche, Interviews, User Stories, and Synthese.",
+  "summary": "Fixed glossary table styling issues by restoring proper vertical padding for long tables:\n\n**Changes made:**\n1. Restored `\\extrarowheight` to `\\semio@spacing@single` in `\\semio@table@setup@long` (line 108) - this provides consistent vertical padding for all rows\n2. Removed negative vertical spacing `\\\\[\\dimexpr-\\semio@spacing@single\\relax]` from `\\semio@table@long@header@repeat@three` (line 147) - this eliminates the compensatory gap that was created\n\n**Issues fixed:**\n- First row offset/gap at the top of glossary tables\n- Text inside rows now has proper top spacing (consistent with bottom spacing)\n- Header row now has proper top spacing\n\n**Impact:**\n- Affects all long table types: register tables, reference tables, and glossary tables\n- All three table types now have consistent vertical padding throughout\n- Visual presentation is now uniform with proper spacing between header and first data row",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1887"
+  },
+  "goal": "🎯️r2602🎯️updateddocs",
+  "sessions": ["⚪️3792c9e603fe46499330c8acfdbfb76c", "⚪️2bc89a040f174875aa13999f8d949a60", "⚪️c0636b0f16a54124b47115cc5b6c41db", "⚪️756c272222444f448b6f4d727582563a", "⚪️20e2587e1eb84e58b00eddbfd6c1220d", "⚪️efa40bb67fd64502a429d273cf9285d2"]
+}

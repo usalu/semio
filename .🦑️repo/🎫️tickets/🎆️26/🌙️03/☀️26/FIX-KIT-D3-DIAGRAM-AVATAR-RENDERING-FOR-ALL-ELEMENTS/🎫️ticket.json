@@ -1,0 +1,12 @@
+{
+  "title": "Fix Kit D3 Diagram Avatar Rendering for All Elements",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix sketchpad Kit app D3 diagram to render avatars in the middle of each shape for all element kinds. Currently designs, tags, types work but others like files don't.",
+  "summary": "Fixed Kit D3 diagram avatar rendering for all element kinds. Two changes in compose/sketchpad/index.tsx: 1) KitArtifactNode - Added CSS overrides to scale up SVG icons to 40% of container and text initials to text-2xl for file/folder/author/quality/port/concept. 2) kitDiagramTriangleStrategy - Added padding-top 33% to center file icons at triangle centroid. All 105 unit tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1100"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️f8453d70d1aa479a857ec48a3441deed"]
+}

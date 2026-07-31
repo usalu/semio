@@ -3,7 +3,7 @@ name: Forms Extensions And Flow Kinds
 overview: 'Generalize forms into an extension-driven technology: a controlled, DOM-free question-kind registry/host (mirroring flow''s manifest pattern), plus a built-in "procedural" extension that contributes a flow-backed "Building Component" question kind. The form edits the flow''s input parameters and shows a live async 3D preview by evaluating the neural DAG headlessly through FlowOrchestratorClient. Forms fixtures are reduced to a single building-component.forms.json.'
 todos:
  - id: ticket
-   content: Reopen the forms ticket (.repo/🎫/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE) via repo MCP after reading repo://goals
+   content: Reopen the forms ticket (.repo/🎫️/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE) via repo MCP after reading repo://goals
    status: completed
  - id: core-host
    content: "forms-core: add FormsExtensionHost + question-kind contribution registry (DOM-free), register 13 built-ins as the builtin extension, widen parser for extension kinds, widen FormValue to allow nested records, update runtime default/validate/submit; move flowFixtureToFormSpec/applyGenerationValuesToFixture into core; extend vitest"
@@ -54,7 +54,7 @@ Key principle: when a form uses a flow it touches only the headless neural DAG (
 
 In [forms/core/index.ts](forms/core/index.ts):
 
-- Add a `🧩Extensions` region with:
+- Add a `🧩️Extensions` region with:
   - `FormsQuestionKindContribution` manifest: `{ kind: string; label; iconId; group?; defaults; value: "scalar" | "list" | "record"; validate?: declarative; preview?: { surface: "flow3d"; fixtureSlug: string }; controls?: { source: "flowFixture"; fixtureSlug: string } }`. Purely declarative, no functions returning DOM.
   - `FormsExtensionEntry` `{ id; manifest; active }` and `FormsExtensionHost` mirroring flow's host: loader map, `activate`/`deactivate`/`setActive`/`activateDefaults`, `subscribe`/`getRevision`/`notify`, `listEntries`, `listQuestionKinds()`, `catalogueEntries()`. Export singleton `formsExtensionHost`.
 - Relax kinds: keep the 13 typed built-ins, add `FormQuestionExtension` `{ kind: string; ...; fixtureSlug?: string }` and widen the parser so unknown kinds resolve against `formsExtensionHost.listQuestionKinds()` instead of `throw` at [forms/core/index.ts](forms/core/index.ts) (the `default: throw` in `parseFormQuestion`).

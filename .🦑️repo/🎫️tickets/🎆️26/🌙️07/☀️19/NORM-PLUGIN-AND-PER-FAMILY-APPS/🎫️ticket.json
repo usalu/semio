@@ -1,0 +1,14 @@
+{
+  "title": "Norm Plugin And Per-Family Apps",
+  "emoji": "📏️",
+  "status": "closed",
+  "description": "Add retained headless NormHost session layer on top of existing family crates, then ship one WASM DocumentApp per family (13 apps) in norm/plugin so compliance can run without UI while the plugin mirrors host state.",
+  "summary": "Added headless NormHost session layer in norm_core (NormFamily trait, SetDocumentOp, NormHost) and wired Document/Op/evaluate/Host into all 13 family crates. Created norm-plugin WASM crate with one DocumentApp per family (13 apps, ports 6091–6103), playground metadata, workspace registration, launch.json test target extension, and passing plugin tests including host-backed report and undo/redo round-trip.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2115"
+  },
+  "goal": "🎯️Norm",
+  "sessions": [
+    "⚪️dd09e4952f69453db38d0444009603db"
+  ]
+}

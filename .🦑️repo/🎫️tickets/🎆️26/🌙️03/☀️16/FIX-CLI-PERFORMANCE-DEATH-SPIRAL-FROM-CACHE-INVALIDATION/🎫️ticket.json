@@ -1,0 +1,12 @@
+{
+  "title": "Fix CLI Performance Death Spiral From Cache Invalidation",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix the massive performance problem where CLI processes consume 100-200% CPU each. Root cause: hashComposeMetaState walks .repo including ⚡️ (agent session logs) directory, which changes on every hook invocation, invalidating the tree cache and forcing full rebuilds on every search. This creates a death spiral of hooks → file writes → cache invalidation → expensive rebuilds.",
+  "summary": "Fixed CLI performance death spiral caused by tree cache invalidation on every hook call. The hashComposeMetaState function was walking the entire .repo directory including ⚡️ (agent session logs, 1772+ files) and using file modtimes for 🎫️ (ticket) files. Since every hook call writes to both directories, the cache fingerprint changed on every tool use, forcing a full 8-10 second tree rebuild on every search. Fix: (1) Skip ⚡️ directory entirely from hash - these are ephemeral hook artifacts irrelevant to tree structure. (2) Skip file contents/modtimes for ticket files under 🎫️ - only track directory existence so cache invalidates on ticket open/close but not on every hook's agent tracking update. Result: cached search drops from ~9s to ~0.4s (20x improvement). Cache fingerprint is now stable across hook invocations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/948"
+  },
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": ["⚪️e43e77475fd1421b93c514d4b021b446"]
+}

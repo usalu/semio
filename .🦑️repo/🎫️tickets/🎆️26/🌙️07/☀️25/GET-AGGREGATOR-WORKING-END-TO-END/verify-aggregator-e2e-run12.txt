@@ -1,0 +1,23 @@
+warm 200 /js/index.ts
+warm 200 /@fs/Users/ueli/Documents/semio/framework/ui/js/react/index.tsx
+warm 200 /@fs/Users/ueli/Documents/semio/framework/os/renderer/js/react/index.tsx
+warm 200 /plugin-modules/puzzle/puzzle_plugin.js
+warm 200 /mesh/hexagonal-cut-concrete-forest-left.glb
+{
+  "ok": true,
+  "out": "/Users/ueli/Documents/semio/.repo/🎫️/26/07/25/GET-AGGREGATOR-WORKING-END-TO-END/verify-aggregator-e2e.json",
+  "shot": "/Users/ueli/Documents/semio/.repo/🎫️/26/07/25/GET-AGGREGATOR-WORKING-END-TO-END/aggregator-viewport.png",
+  "summary": {
+    "title": "Entwerfen mit Bestand · Aggregator",
+    "canvasCount": 2,
+    "hasAbbauAufbau": true,
+    "glbProbe": {
+      "url": "/mesh/hexagonal-cut-concrete-forest-left.glb",
+      "ok": true,
+      "status": 200,
+      "bytes": 86112,
+      "contentType": "model/gltf-binary"
+    },
+    "errorCount": 0
+  }
+}

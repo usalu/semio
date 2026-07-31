@@ -1,0 +1,12 @@
+{
+  "title": "Fix MCP App White Screen",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix MCP App White Screen",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1120"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️b6ebf5428500423f89d1ebb32a7d63cd"]
+}

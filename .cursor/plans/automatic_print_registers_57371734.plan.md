@@ -73,11 +73,11 @@ Add a new component macro, following the existing naming convention of `\makecov
 
 ## Verification
 
-- Build via `bun ./script.ts build report forschungsbericht` (Tectonic) for both light/dark variants and confirm no compile errors (multi-pass aux resolution).
+- Build via `bun ./📜️script.ts build report forschungsbericht` (Tectonic) for both light/dark variants and confirm no compile errors (multi-pass aux resolution).
 - Rasterize/screenshot the appendix pages of both PDFs (matching the repo's existing rasterize-verify convention used in `PRINT-HEADING-COLOR-SCHEME`) to visually confirm: correct localized titles, correct per-kind numbering matching the in-body chip numbers, correct page numbers, and that unused kinds (e.g. `Photo`, `Theorem`) don't render empty sections.
 
 ## Process
 
-- Open a repo ticket (goal `🎯r2602`, matching the sibling `PRINT-HEADING-COLOR-SCHEME`/`PRINT-GLASS-PANELS`/`PRINT-WINDOW-ELEMENT-TAXONOMY` tickets) before implementing, per repo workflow rules.
+- Open a repo ticket (goal `🎯️r2602`, matching the sibling `PRINT-HEADING-COLOR-SCHEME`/`PRINT-GLASS-PANELS`/`PRINT-WINDOW-ELEMENT-TAXONOMY` tickets) before implementing, per repo workflow rules.
 
 [{"id":"ticket","content":"Open repo ticket under goal r2602 for this feature"},{"id":"plural-labels","content":"Add plural DE/EN kind-label maps to semio-core.sty"},{"id":"registration","content":"Extend semio_window_kind_define to 5 args (plural key) and update all 14 call sites"},{"id":"aux-write","content":"Add frozen-number addcontentsline write inside semio_window_kind_begin"},{"id":"list-render","content":"Add per-kind l@ entry macro + 14 listof commands using SemioTable styling"},{"id":"hooks","content":"Generalize chip-suppression hook installer to all 14 list commands"},{"id":"makeregisters","content":"Add makeregisters to semio-components.sty"},{"id":"templates","content":"Wire appendix + makeregisters into report.content.tex and forschungsbericht.content.tex"},{"id":"verify","content":"Build report+forschungsbericht (light/dark) and visually verify rasterized appendix pages"},{"id":"ticket-close","content":"Close the ticket with summary and touched files"}]

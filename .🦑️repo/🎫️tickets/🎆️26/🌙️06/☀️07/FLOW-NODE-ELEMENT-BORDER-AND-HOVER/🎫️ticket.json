@@ -1,0 +1,12 @@
+{
+  "title": "Flow Node Element Border and Hover",
+  "emoji": "🎫️",
+  "status": "closed",
+  "description": "Flow canvas nodes use emphasized border by default and lack hover effect. Fix pointer hover tracking and ensure Vello node stroke defaults to element gray.",
+  "summary": "Fixed flow node hover: `onPointerMove` now calls `pointerMoveScreen` on idle cursor movement (not only during active drag), and `onPointerLeave` clears hover. Updated Vello theme tokens so node/label defaults use element gray (`labelFill` → element, `labelFillHovered` → emphasized). Aligned puzzle2d default node/handle stroke styles to element. Added `idle_pointer_move_updates_hover` dag test confirming hit-test hover updates.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1580"
+  },
+  "goal": "🎯️ui🎯️theming",
+  "sessions": ["⚪️98eb41be84e4499aa34492d009b1b16f"]
+}

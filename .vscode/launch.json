@@ -71,7 +71,7 @@
       "name": "🛠️dev🎛️dashboard",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./repo/cli/rs/script.ts run",
+      "command": "bun ./🧰️framework/🛍️product/🦑️repo/🔨️module/⌨️cli/⚡️implementation/🦀️rust/📜️script.ts run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -79,10 +79,10 @@
       }
     },
     {
-      "name": "🛠️dev📐cad⚛️react",
+      "name": "🛠️dev📐️cad⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts dev cad",
+      "command": "bun ./📜️script.ts dev cad",
       "cwd": "${workspaceFolder}",
       "env": {
         "CAD_JS_RENDERER_PLAY_PORT": "6020",
@@ -99,10 +99,10 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧊wgpu🌐wasm",
+      "name": "🛠️dev📐️cad🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts dev cad",
+      "command": "bun ./📜️script.ts dev cad",
       "cwd": "${workspaceFolder}",
       "env": {
         "CAD_JS_RENDERER_PLAY_PORT": "6120",
@@ -119,10 +119,10 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧊wgpu🖥️native",
+      "name": "🛠️dev📐️cad🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native cad",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native cad",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -130,10 +130,10 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧩concrete🌲forest⚛️react",
+      "name": "🛠️dev📐️cad🧩️concrete🌲️forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts dev cad fixture concrete",
+      "command": "bun ./📜️script.ts dev cad fixture concrete",
       "cwd": "${workspaceFolder}",
       "env": {
         "CAD_JS_RENDERER_PLAY_PORT": "6020",
@@ -150,10 +150,10 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧩concrete🌲forest🧊wgpu🌐wasm",
+      "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts dev cad fixture concrete",
+      "command": "bun ./📜️script.ts dev cad fixture concrete",
       "cwd": "${workspaceFolder}",
       "env": {
         "CAD_JS_RENDERER_PLAY_PORT": "6120",
@@ -170,10 +170,10 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧩concrete🌲forest🧊wgpu🖥️native",
+      "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native cad",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native cad",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -181,7 +181,7 @@
       }
     },
     {
-      "name": "🛠️dev🔬coda🖱️desktop",
+      "name": "🛠️dev🔬️coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/coda-desktop:dev",
@@ -192,7 +192,7 @@
       }
     },
     {
-      "name": "🛠️dev🔬coda🤖mcp",
+      "name": "🛠️dev🔬️coda🤖️mcp",
       "type": "node-terminal",
       "request": "launch",
       "command": "uv --directory coda/assistant run main.py --mcp-stdio",
@@ -212,7 +212,7 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose📐3dm",
+      "name": "🛠️dev🏘️compose📐️3dm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx dev @semio-tech/compose-3dm-ui",
@@ -258,10 +258,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose⚙️engine🤖mcp",
+      "name": "🛠️dev🏘️compose⚙️engine🤖️mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts dev mcp engine",
+      "command": "bun ./📜️script.ts dev mcp engine",
       "isBackground": true,
       "options": {
         "cwd": "${workspaceFolder}"
@@ -294,7 +294,7 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose🌐hub",
+      "name": "🛠️dev🏘️compose🌐️hub",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p compose-hub",
@@ -312,7 +312,7 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose🧮query🦀build",
+      "name": "🛠️dev🏘️compose🧮️query🦀️build",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/compose-query:build",
@@ -323,10 +323,10 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose🧮query🌐wasm",
+      "name": "🛠️dev🏘️compose🧮️query🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts query wasm",
+      "command": "bun ./📜️script.ts query wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -386,7 +386,7 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose📊gql",
+      "name": "🛠️dev🏘️compose📊️gql",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/compose-gql:dev",
@@ -406,7 +406,7 @@
       }
     },
     {
-      "name": "🛠️dev🌳dag⚛️react",
+      "name": "🛠️dev🌳️dag⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:dag",
@@ -426,7 +426,7 @@
       }
     },
     {
-      "name": "🛠️dev🌳dag🧊wgpu🌐wasm",
+      "name": "🛠️dev🌳️dag🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:dag",
@@ -446,10 +446,10 @@
       }
     },
     {
-      "name": "🛠️dev🌳dag🧊wgpu🖥️native",
+      "name": "🛠️dev🌳️dag🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native dag",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native dag",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -457,7 +457,7 @@
       }
     },
     {
-      "name": "🛠️dev🧮mathematical⚛️react",
+      "name": "🛠️dev🧮️mathematical⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:mathematical",
@@ -477,7 +477,7 @@
       }
     },
     {
-      "name": "🛠️dev🧮mathematical🧊wgpu🌐wasm",
+      "name": "🛠️dev🧮️mathematical🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:mathematical",
@@ -497,10 +497,10 @@
       }
     },
     {
-      "name": "🛠️dev🧮mathematical🧊wgpu🖥️native",
+      "name": "🛠️dev🧮️mathematical🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native mathematical",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native mathematical",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -528,7 +528,7 @@
       }
     },
     {
-      "name": "🛠️dev🏛️architect🧊wgpu🌐wasm",
+      "name": "🛠️dev🏛️architect🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:architect",
@@ -548,10 +548,10 @@
       }
     },
     {
-      "name": "🛠️dev🏛️architect🧊wgpu🖥️native",
+      "name": "🛠️dev🏛️architect🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native architect",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native architect",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -559,7 +559,7 @@
       }
     },
     {
-      "name": "🛠️dev🌊flow⚛️react",
+      "name": "🛠️dev🌊️flow⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:flow",
@@ -579,7 +579,7 @@
       }
     },
     {
-      "name": "🛠️dev🌊flow🧊wgpu🌐wasm",
+      "name": "🛠️dev🌊️flow🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:flow",
@@ -599,10 +599,10 @@
       }
     },
     {
-      "name": "🛠️dev🌊flow🧊wgpu🖥️native",
+      "name": "🛠️dev🌊️flow🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native flow",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native flow",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -630,7 +630,7 @@
       }
     },
     {
-      "name": "🛠️dev⚙️imperative🧊wgpu🌐wasm",
+      "name": "🛠️dev⚙️imperative🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:imperative",
@@ -650,10 +650,10 @@
       }
     },
     {
-      "name": "🛠️dev⚙️imperative🧊wgpu🖥️native",
+      "name": "🛠️dev⚙️imperative🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native imperative",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native imperative",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -661,7 +661,7 @@
       }
     },
     {
-      "name": "🛠️dev📜sequence⚛️react",
+      "name": "🛠️dev📜️sequence⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:sequence",
@@ -681,7 +681,7 @@
       }
     },
     {
-      "name": "🛠️dev📜sequence🧊wgpu🌐wasm",
+      "name": "🛠️dev📜️sequence🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:sequence",
@@ -701,10 +701,10 @@
       }
     },
     {
-      "name": "🛠️dev📜sequence🧊wgpu🖥️native",
+      "name": "🛠️dev📜️sequence🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native sequence",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native sequence",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -712,7 +712,7 @@
       }
     },
     {
-      "name": "🛠️dev🔷lowpoly⚛️react",
+      "name": "🛠️dev🔷️lowpoly⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:lowpoly",
@@ -732,7 +732,7 @@
       }
     },
     {
-      "name": "🛠️dev🔷lowpoly🧊wgpu🌐wasm",
+      "name": "🛠️dev🔷️lowpoly🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:lowpoly",
@@ -753,10 +753,10 @@
       }
     },
     {
-      "name": "🛠️dev🔷lowpoly🧊wgpu🖥️native",
+      "name": "🛠️dev🔷️lowpoly🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native lowpoly",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native lowpoly",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -764,7 +764,7 @@
       }
     },
     {
-      "name": "🛠️dev📄layout⚛️react",
+      "name": "🛠️dev📄️layout⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:layout",
@@ -784,7 +784,7 @@
       }
     },
     {
-      "name": "🛠️dev📄layout🧊wgpu🌐wasm",
+      "name": "🛠️dev📄️layout🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:layout",
@@ -804,10 +804,10 @@
       }
     },
     {
-      "name": "🛠️dev📄layout🧊wgpu🖥️native",
+      "name": "🛠️dev📄️layout🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native layout",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native layout",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -815,7 +815,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis📍2d⚛️react",
+      "name": "🛠️dev🌐️gis📍️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:gis:2d",
@@ -835,7 +835,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis📍2d🧊wgpu🌐wasm",
+      "name": "🛠️dev🌐️gis📍️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:gis:2d",
@@ -855,10 +855,10 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis📍2d🧊wgpu🖥️native",
+      "name": "🛠️dev🌐️gis📍️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native gis2d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native gis2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -866,7 +866,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis⛰️3d⚛️react",
+      "name": "🛠️dev🌐️gis⛰️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:gis:3d",
@@ -886,7 +886,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis⛰️3d🧊wgpu🌐wasm",
+      "name": "🛠️dev🌐️gis⛰️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:gis:3d",
@@ -906,10 +906,10 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis⛰️3d🧊wgpu🖥️native",
+      "name": "🛠️dev🌐️gis⛰️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native gis3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native gis3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -917,7 +917,7 @@
       }
     },
     {
-      "name": "🛠️dev🎬animateplay⚛️react",
+      "name": "🛠️dev🎬️animateplay⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:animate",
@@ -937,7 +937,7 @@
       }
     },
     {
-      "name": "🛠️dev🎬animateplay🧊wgpu🌐wasm",
+      "name": "🛠️dev🎬️animateplay🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:animate",
@@ -957,10 +957,10 @@
       }
     },
     {
-      "name": "🛠️dev🎬animateplay🧊wgpu🖥️native",
+      "name": "🛠️dev🎬️animateplay🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native animate",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native animate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -979,7 +979,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🩻2d⚛️react",
+      "name": "🛠️dev🔧️procedural🩻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:2d",
@@ -999,7 +999,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🩻2d🧊wgpu🌐wasm",
+      "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:2d",
@@ -1019,10 +1019,10 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🩻2d🧊wgpu🖥️native",
+      "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native procedural2d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native procedural2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1030,7 +1030,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d⚛️react",
+      "name": "🛠️dev🔧️procedural🏙️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d",
@@ -1050,7 +1050,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧊wgpu🌐wasm",
+      "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d",
@@ -1070,10 +1070,10 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧊wgpu🖥️native",
+      "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native procedural3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1081,7 +1081,7 @@
       }
     },
     {
-      "name": "🛠️dev🪚process🏙️3d⚛️react",
+      "name": "🛠️dev🪚️process🏙️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:process:3d",
@@ -1101,7 +1101,7 @@
       }
     },
     {
-      "name": "🛠️dev🪚process🏙️3d🧊wgpu🌐wasm",
+      "name": "🛠️dev🪚️process🏙️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:process:3d",
@@ -1121,10 +1121,10 @@
       }
     },
     {
-      "name": "🛠️dev🪚process🏙️3d🧊wgpu🖥️native",
+      "name": "🛠️dev🪚️process🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native process3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native process3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1132,7 +1132,7 @@
       }
     },
     {
-      "name": "🛠️dev🛒sourcing⚛️react",
+      "name": "🛠️dev🛒️sourcing⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:sourcing",
@@ -1152,7 +1152,7 @@
       }
     },
     {
-      "name": "🛠️dev🛒sourcing🧊wgpu🌐wasm",
+      "name": "🛠️dev🛒️sourcing🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:sourcing",
@@ -1172,10 +1172,10 @@
       }
     },
     {
-      "name": "🛠️dev🛒sourcing🧊wgpu🖥️native",
+      "name": "🛠️dev🛒️sourcing🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native sourcing",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native sourcing",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1183,7 +1183,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column⚛️react",
+      "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d:hexagonal-column",
@@ -1203,7 +1203,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column🧊wgpu🌐wasm",
+      "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d:hexagonal-column",
@@ -1223,10 +1223,10 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column🧊wgpu🖥️native",
+      "name": "🛠️dev🔧️procedural🏙️3d🧩️hexagonal🧱️column🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native procedural3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native procedural3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1253,7 +1253,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand📄zwischenbericht",
+      "name": "🛠️dev🏚️mitbestand📄️zwischenbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-bericht:watch",
@@ -1264,7 +1264,7 @@
       }
     },
     {
-      "name": "🛠️dev🏚️mitbestand🧱aggregator⚛️react",
+      "name": "🛠️dev🏚️mitbestand🧱️aggregator⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:mit-bestand:aggregator",
@@ -1284,7 +1284,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🩻2d⚛️react",
+      "name": "🛠️dev🧩️puzzle🩻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",
@@ -1304,7 +1304,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🩻2d🧊wgpu🌐wasm",
+      "name": "🛠️dev🧩️puzzle🩻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",
@@ -1324,10 +1324,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🩻2d🧊wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native puzzle2d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native puzzle2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1335,7 +1335,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d⚛️react",
+      "name": "🛠️dev🧩️puzzle🏙️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d",
@@ -1355,7 +1355,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🧊wgpu🌐wasm",
+      "name": "🛠️dev🧩️puzzle🏙️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d",
@@ -1375,10 +1375,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🧊wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native puzzle3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native puzzle3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1386,7 +1386,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest⚛️react",
+      "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d:concrete-forest",
@@ -1406,7 +1406,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest🧊wgpu🌐wasm",
+      "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d:concrete-forest",
@@ -1426,10 +1426,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest🧊wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native puzzle3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native puzzle3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1437,7 +1437,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d⚛️react",
+      "name": "🛠️dev🧩️puzzle👯️5d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d",
@@ -1457,7 +1457,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🧊wgpu🌐wasm",
+      "name": "🛠️dev🧩️puzzle👯️5d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d",
@@ -1477,10 +1477,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🧊wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle👯️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native puzzle5d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native puzzle5d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1488,7 +1488,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest⚛️react",
+      "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d:concrete-forest",
@@ -1508,7 +1508,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest🧊wgpu🌐wasm",
+      "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d:concrete-forest",
@@ -1528,10 +1528,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest🧊wgpu🖥️native",
+      "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native puzzle5d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native puzzle5d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1539,7 +1539,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱block🩻2d⚛️react",
+      "name": "🛠️dev🧱️block🩻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:block:2d",
@@ -1559,7 +1559,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱block🩻2d🧊wgpu🌐wasm",
+      "name": "🛠️dev🧱️block🩻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:block:2d",
@@ -1579,10 +1579,10 @@
       }
     },
     {
-      "name": "🛠️dev🧱block🩻2d🧊wgpu🖥️native",
+      "name": "🛠️dev🧱️block🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native block2d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native block2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1590,7 +1590,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱block🏙️3d⚛️react",
+      "name": "🛠️dev🧱️block🏙️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:block:3d",
@@ -1610,7 +1610,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱block🏙️3d🧊wgpu🌐wasm",
+      "name": "🛠️dev🧱️block🏙️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:block:3d",
@@ -1630,10 +1630,10 @@
       }
     },
     {
-      "name": "🛠️dev🧱block🏙️3d🧊wgpu🖥️native",
+      "name": "🛠️dev🧱️block🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native block3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native block3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1641,7 +1641,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱block👯5d⚛️react",
+      "name": "🛠️dev🧱️block👯️5d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:block:5d",
@@ -1661,7 +1661,7 @@
       }
     },
     {
-      "name": "🛠️dev🧱block👯5d🧊wgpu🌐wasm",
+      "name": "🛠️dev🧱️block👯️5d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:block:5d",
@@ -1681,10 +1681,10 @@
       }
     },
     {
-      "name": "🛠️dev🧱block👯5d🧊wgpu🖥️native",
+      "name": "🛠️dev🧱️block👯️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native block5d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native block5d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1692,7 +1692,7 @@
       }
     },
     {
-      "name": "🛠️dev🧠reasoning🔗wires⚛️react",
+      "name": "🛠️dev🧠️reasoning🔗️wires⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:reasoning:wires",
@@ -1712,7 +1712,7 @@
       }
     },
     {
-      "name": "🛠️dev🧠reasoning🔗wires🧊wgpu🌐wasm",
+      "name": "🛠️dev🧠️reasoning🔗️wires🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:reasoning:wires",
@@ -1732,10 +1732,10 @@
       }
     },
     {
-      "name": "🛠️dev🧠reasoning🔗wires🧊wgpu🖥️native",
+      "name": "🛠️dev🧠️reasoning🔗️wires🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native reasoning-wires",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native reasoning-wires",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1743,7 +1743,7 @@
       }
     },
     {
-      "name": "🛠️dev🧰repo🤖mcp",
+      "name": "🛠️dev🧰️repo🤖️mcp",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev -- mcp repo",
@@ -1759,14 +1759,14 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./🧰framework/🛍️product/🦑repo/🔨module/💻client/🔌mcp/⚡️implementation/🐹go&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
-      "name": "🛠️dev🧰repo🤖mcp⌨️cursor",
+      "name": "🛠️dev🧰️repo🤖️mcp⌨️cursor",
       "type": "node-terminal",
       "request": "launch",
-      "command": "./🧰framework/🛍️product/🦑repo/🔨module/💻client/client mcp cursor",
+      "command": "./🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client mcp cursor",
       "env": {
         "GOWORK": "${workspaceFolder}/go.work"
       },
@@ -1777,10 +1777,10 @@
       }
     },
     {
-      "name": "🛠️dev🧰repo⌨️client",
+      "name": "🛠️dev🧰️repo⌨️client",
       "type": "node-terminal",
       "request": "launch",
-      "command": "go build -o 🧰framework/🛍️product/🦑repo/🔨module/💻client/client ./🧰framework/🛍️product/🦑repo/🔨module/💻client/🔌mcp/⚡️implementation/🐹go && ./🧰framework/🛍️product/🦑repo/🔨module/💻client/client --help",
+      "command": "go build -o 🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client ./🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/🔌️mcp/⚡️implementation/🐹️go && ./🧰️framework/🛍️product/🦑️repo/🔨️module/💻️client/client --help",
       "env": {
         "GOWORK": "${workspaceFolder}/go.work"
       },
@@ -1791,7 +1791,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting⚛️react",
+      "name": "🛠️dev📸️shooting⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting",
@@ -1811,7 +1811,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🧊wgpu🌐wasm",
+      "name": "🛠️dev📸️shooting🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting",
@@ -1831,10 +1831,10 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🧊wgpu🖥️native",
+      "name": "🛠️dev📸️shooting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native shooting",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native shooting",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1842,7 +1842,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🎛️base⚛️react",
+      "name": "🛠️dev📸️shooting🎛️base⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting:base-icon",
@@ -1862,7 +1862,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🎛️base🧊wgpu🌐wasm",
+      "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting:base-icon",
@@ -1882,10 +1882,10 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🎛️base🧊wgpu🖥️native",
+      "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native shooting",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native shooting",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1893,7 +1893,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook",
+      "name": "🛠️dev📖️storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook",
@@ -1912,7 +1912,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️compose",
+      "name": "🛠️dev📖️storybook🏘️compose",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:compose",
@@ -1931,7 +1931,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️compose🖱️ui",
+      "name": "🛠️dev📖️storybook🏘️compose🖱️ui",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:compose:ui",
@@ -1950,7 +1950,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🧩puzzle🩻2d",
+      "name": "🛠️dev📖️storybook🧩️puzzle🩻️2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:puzzle:2d",
@@ -1969,7 +1969,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🖱️ui",
+      "name": "🛠️dev📖️storybook🖱️ui",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:ui",
@@ -1988,7 +1988,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🎨styling",
+      "name": "🛠️dev📖️storybook🎨️styling",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:styling",
@@ -2007,7 +2007,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🧩puzzle🧊3d",
+      "name": "🛠️dev📖️storybook🧩️puzzle🧊️3d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:puzzle:3d",
@@ -2026,7 +2026,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🧩puzzle🕐5d",
+      "name": "🛠️dev📖️storybook🧩️puzzle🕐️5d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:puzzle:5d",
@@ -2045,7 +2045,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🛠️framework",
+      "name": "🛠️dev📖️storybook🛠️framework",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:framework",
@@ -2064,7 +2064,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🛠️framework🔌hosts",
+      "name": "🛠️dev📖️storybook🛠️framework🔌️hosts",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:framework:hosts",
@@ -2083,7 +2083,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🛠️framework🖥️os",
+      "name": "🛠️dev📖️storybook🛠️framework🖥️os",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:framework:os",
@@ -2102,7 +2102,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook♾️infinite",
+      "name": "🛠️dev📖️storybook♾️infinite",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:infinite",
@@ -2121,7 +2121,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook📐cad",
+      "name": "🛠️dev📖️storybook📐️cad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:cad",
@@ -2140,7 +2140,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🧠coda",
+      "name": "🛠️dev📖️storybook🧠️coda",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:coda",
@@ -2159,7 +2159,7 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🎬animate",
+      "name": "🛠️dev📖️storybook🎬️animate",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:storybook:animate",
@@ -2178,7 +2178,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack⚛️react",
+      "name": "🛠️dev🔺️trinity🃏️jack⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:jack",
@@ -2198,7 +2198,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack🧊wgpu🌐wasm",
+      "name": "🛠️dev🔺️trinity🃏️jack🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:jack",
@@ -2218,10 +2218,10 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack🧊wgpu🖥️native",
+      "name": "🛠️dev🔺️trinity🃏️jack🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native trinity",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native trinity",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2229,7 +2229,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack🦀shell",
+      "name": "🛠️dev🔺️trinity🃏️jack🦀️shell",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo run -p trinity_jack_shell -- trinity/fixture/nakagin-capsule-tower.trinity.json \"MATCH (a:Piece) RETURN a.name\"",
@@ -2240,7 +2240,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity♻️rewrite⚛️react",
+      "name": "🛠️dev🔺️trinity♻️rewrite⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:rewrite",
@@ -2260,7 +2260,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity♻️rewrite🧊wgpu🌐wasm",
+      "name": "🛠️dev🔺️trinity♻️rewrite🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:rewrite",
@@ -2280,10 +2280,10 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity♻️rewrite🧊wgpu🖥️native",
+      "name": "🛠️dev🔺️trinity♻️rewrite🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native trinity-rewrite",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native trinity-rewrite",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2291,7 +2291,7 @@
       }
     },
     {
-      "name": "🛠️dev📋forms⚛️react",
+      "name": "🛠️dev📋️forms⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:forms",
@@ -2311,7 +2311,7 @@
       }
     },
     {
-      "name": "🛠️dev📋forms🧊wgpu🌐wasm",
+      "name": "🛠️dev📋️forms🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:forms",
@@ -2331,10 +2331,10 @@
       }
     },
     {
-      "name": "🛠️dev📋forms🧊wgpu🖥️native",
+      "name": "🛠️dev📋️forms🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native forms",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native forms",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2342,7 +2342,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩playbook⚛️react",
+      "name": "🛠️dev🧩️playbook⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:playbook",
@@ -2362,7 +2362,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩playbook🧊wgpu🌐wasm",
+      "name": "🛠️dev🧩️playbook🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:playbook",
@@ -2382,10 +2382,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩playbook🧊wgpu🖥️native",
+      "name": "🛠️dev🧩️playbook🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native playbook",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native playbook",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2413,7 +2413,7 @@
       }
     },
     {
-      "name": "🛠️dev🖼️raster🧊wgpu🌐wasm",
+      "name": "🛠️dev🖼️raster🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:raster",
@@ -2433,10 +2433,10 @@
       }
     },
     {
-      "name": "🛠️dev🖼️raster🧊wgpu🖥️native",
+      "name": "🛠️dev🖼️raster🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native raster",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native raster",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2464,7 +2464,7 @@
       }
     },
     {
-      "name": "🛠️dev🗄️vcs🎛️play🧊wgpu🌐wasm",
+      "name": "🛠️dev🗄️vcs🎛️play🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:vcs",
@@ -2484,10 +2484,10 @@
       }
     },
     {
-      "name": "🛠️dev🗄️vcs🎛️play🧊wgpu🖥️native",
+      "name": "🛠️dev🗄️vcs🎛️play🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native vcs",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native vcs",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2516,7 +2516,7 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s🧊wgpu🌐wasm",
+      "name": "🛠️dev🖥️s🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -2537,10 +2537,10 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s🧊wgpu🖥️native",
+      "name": "🛠️dev🖥️s🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native s",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native s",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2548,7 +2548,7 @@
       }
     },
     {
-      "name": "🧪verify🖥️s⚛️studio",
+      "name": "🧪️verify🖥️s⚛️studio",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:verify",
@@ -2565,7 +2565,7 @@
       }
     },
     {
-      "name": "🛠️dev🦀os-plugins",
+      "name": "🛠️dev🦀️os-plugins",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:plugin",
@@ -2594,7 +2594,7 @@
       "name": "🛠️dev🕸️os-run",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts os run",
+      "command": "bun ./📜️script.ts os run",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2623,7 +2623,7 @@
       }
     },
     {
-      "name": "🛠️dev✏️draw🧊wgpu🌐wasm",
+      "name": "🛠️dev✏️draw🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -2644,10 +2644,10 @@
       }
     },
     {
-      "name": "🛠️dev✏️draw🧊wgpu🖥️native",
+      "name": "🛠️dev✏️draw🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native s",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native s",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2655,7 +2655,7 @@
       }
     },
     {
-      "name": "🛠️dev📝note⚛️react",
+      "name": "🛠️dev📝️note⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:note",
@@ -2675,7 +2675,7 @@
       }
     },
     {
-      "name": "🛠️dev📝note🧊wgpu🌐wasm",
+      "name": "🛠️dev📝️note🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:note",
@@ -2695,10 +2695,10 @@
       }
     },
     {
-      "name": "🛠️dev📝note🧊wgpu🖥️native",
+      "name": "🛠️dev📝️note🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native note",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native note",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2726,7 +2726,7 @@
       }
     },
     {
-      "name": "🛠️dev✍️writer🧊wgpu🌐wasm",
+      "name": "🛠️dev✍️writer🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:writer",
@@ -2746,10 +2746,10 @@
       }
     },
     {
-      "name": "🛠️dev✍️writer🧊wgpu🖥️native",
+      "name": "🛠️dev✍️writer🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native writer",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native writer",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2757,7 +2757,7 @@
       }
     },
     {
-      "name": "🛠️dev🏺remodel⚛️react",
+      "name": "🛠️dev🏺️remodel⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:remodel",
@@ -2777,7 +2777,7 @@
       }
     },
     {
-      "name": "🛠️dev🏺remodel🧊wgpu🌐wasm",
+      "name": "🛠️dev🏺️remodel🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:remodel",
@@ -2797,10 +2797,10 @@
       }
     },
     {
-      "name": "🛠️dev🏺remodel🧊wgpu🖥️native",
+      "name": "🛠️dev🏺️remodel🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native remodel",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native remodel",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2808,7 +2808,7 @@
       }
     },
     {
-      "name": "🛠️dev🖱️ui🪁typecheck",
+      "name": "🛠️dev🖱️ui🪁️typecheck",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/ui-react:typecheck",
@@ -2819,10 +2819,10 @@
       }
     },
     {
-      "name": "🧪verify🌍workspace",
+      "name": "🧪️verify🌍️workspace",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts verify",
+      "command": "bun ./📜️script.ts verify",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2830,10 +2830,10 @@
       }
     },
     {
-      "name": "🧪verify🚪gate",
+      "name": "🧪️verify🚪️gate",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts verify gate",
+      "command": "bun ./📜️script.ts verify gate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2841,7 +2841,7 @@
       }
     },
     {
-      "name": "🧪verify🖌️ui-primitives",
+      "name": "🧪️verify🖌️ui-primitives",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/ui-react:check-ui-primitives",
@@ -2852,7 +2852,7 @@
       }
     },
     {
-      "name": "🧪verify🌐chrome-i18n",
+      "name": "🧪️verify🌐️chrome-i18n",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/ui-react:check-chrome-i18n",
@@ -2863,7 +2863,7 @@
       }
     },
     {
-      "name": "🧪verify🎨raw-colors",
+      "name": "🧪️verify🎨️raw-colors",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/ui-styling-tokens:check-no-raw-colors",
@@ -2874,7 +2874,7 @@
       }
     },
     {
-      "name": "🧪verify🔁os-sync",
+      "name": "🧪️verify🔁️os-sync",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo test -p store_sync -p vcs",
@@ -2885,10 +2885,10 @@
       }
     },
     {
-      "name": "🧪test🌍workspace",
+      "name": "🧪️test🌍️workspace",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test",
+      "command": "bun ./📜️script.ts test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2896,10 +2896,10 @@
       }
     },
     {
-      "name": "🧪test🏃quick",
+      "name": "🧪️test🏃️quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test quick",
+      "command": "bun ./📜️script.ts test quick",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2907,10 +2907,10 @@
       }
     },
     {
-      "name": "🧪test🐢long",
+      "name": "🧪️test🐢️long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test long",
+      "command": "bun ./📜️script.ts test long",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2918,10 +2918,10 @@
       }
     },
     {
-      "name": "🧪test🐘exhaustive",
+      "name": "🧪️test🐘️exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test exhaustive",
+      "command": "bun ./📜️script.ts test exhaustive",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2929,10 +2929,10 @@
       }
     },
     {
-      "name": "🧪test📊coverage",
+      "name": "🧪️test📊️coverage",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test exhaustive",
+      "command": "bun ./📜️script.ts test exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_COVERAGE": "1"
@@ -2943,10 +2943,10 @@
       }
     },
     {
-      "name": "🧪test🎬animate-video",
+      "name": "🧪️test🎬️animate-video",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test",
+      "command": "bun ./📜️script.ts test",
       "cwd": "${workspaceFolder}/animate/video/rs",
       "presentation": {
         "group": "3_dev",
@@ -2954,10 +2954,10 @@
       }
     },
     {
-      "name": "🎥render🎬animate-video",
+      "name": "🎥️render🎬️animate-video",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts render",
+      "command": "bun ./📜️script.ts render",
       "cwd": "${workspaceFolder}/animate/video/rs",
       "presentation": {
         "group": "3_dev",
@@ -2965,10 +2965,10 @@
       }
     },
     {
-      "name": "👁preview🎬animate-video",
+      "name": "👁️preview🎬️animate-video",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts preview",
+      "command": "bun ./📜️script.ts preview",
       "cwd": "${workspaceFolder}/animate/video/rs",
       "presentation": {
         "group": "3_dev",
@@ -2976,10 +2976,10 @@
       }
     },
     {
-      "name": "🧹flush-cache🎬animate-video",
+      "name": "🧹️flush-cache🎬️animate-video",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts flush-cache",
+      "command": "bun ./📜️script.ts flush-cache",
       "cwd": "${workspaceFolder}/animate/video/rs",
       "presentation": {
         "group": "3_dev",
@@ -2987,7 +2987,7 @@
       }
     },
     {
-      "name": "🧪test⚡energy-engine",
+      "name": "🧪️test⚡️energy-engine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/energy-engine:test",
@@ -2998,7 +2998,7 @@
       }
     },
     {
-      "name": "🧪test🏗️fem",
+      "name": "🧪️test🏗️fem",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo test -p fem_core -p semio-s-plugin-fem-shared -p semio-s-app-fem-2d -p semio-s-app-fem-2d-engine -p semio-s-app-fem-2d-dsl -p semio-s-app-fem-2d-op -p semio-s-app-fem-2d-pack -p semio-s-app-fem-2d-protocol -p semio-s-app-fem-2d-ui -p semio-s-app-fem-3d -p semio-s-app-fem-3d-engine -p semio-s-app-fem-3d-dsl -p semio-s-app-fem-3d-op -p semio-s-app-fem-3d-pack -p semio-s-app-fem-3d-protocol -p semio-s-app-fem-3d-ui -p semio-s-plugin-fem",
@@ -3009,7 +3009,7 @@
       }
     },
     {
-      "name": "🧪test📏norm",
+      "name": "🧪️test📏️norm",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo test -p norm_core -p norm_din_4108 -p norm_din_en_16798 -p norm_din_v_18599 -p norm_en_1990 -p norm_en_1991 -p norm_en_1992 -p norm_en_1993 -p norm_en_1994 -p norm_en_1995 -p norm_en_1996 -p norm_en_1997 -p norm_en_1998 -p norm_en_1999 -p norm_iso_16757 -p norm_vdi_3805 -p norm-plugin",
@@ -3020,7 +3020,7 @@
       }
     },
     {
-      "name": "🧪test🏛️architect-spine",
+      "name": "🧪️test🏛️architect-spine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/architect-spine:test",
@@ -3031,7 +3031,7 @@
       }
     },
     {
-      "name": "🧪test🕸️mathematical-graph",
+      "name": "🧪️test🕸️mathematical-graph",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo test -p mathematical_graph -p mathematical_graph_drawing -p mathematical_algebra -p mathematical_random -p mathematical_graph_traversal -p mathematical_graph_components -p mathematical_graph_dag -p mathematical_graph_cycles -p mathematical_graph_paths -p mathematical_graph_operators -p mathematical_graph_coloring -p mathematical_graph_generate -p mathematical_graph_generate_random -p mathematical_graph_io -p mathematical_graph_structure -p mathematical_graph_cliques -p mathematical_graph_clustering -p mathematical_graph_matching -p mathematical_graph_bipartite -p mathematical_graph_trees -p mathematical_graph_planarity -p mathematical_graph_flow -p mathematical_graph_centrality -p mathematical_graph_distance -p mathematical_graph_similarity -p mathematical_graph_isomorphism -p mathematical_graph_connectivity -p mathematical_graph_community -p mathematical_graph_approximation -p mathematical_graph_spectral -p mathematical_graph_normal_undirected -p mathematical_graph_normal_directed -p mathematical_graph_port_undirected -p mathematical_graph_port_directed_normal",
@@ -3042,7 +3042,7 @@
       }
     },
     {
-      "name": "🧪test♾️mathematical-cas",
+      "name": "🧪️test♾️mathematical-cas",
       "type": "node-terminal",
       "request": "launch",
       "command": "cargo test -p mathematical_number -p mathematical_polynomial -p mathematical_algebra -p mathematical_random -p mathematical_cas",
@@ -3053,7 +3053,7 @@
       }
     },
     {
-      "name": "🧪test🧮mathematical-fuzzy",
+      "name": "🧪️test🧮️mathematical-fuzzy",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/math-fuzzy:test",
@@ -3064,7 +3064,7 @@
       }
     },
     {
-      "name": "🧪test🎰mathematical-sampling",
+      "name": "🧪️test🎰️mathematical-sampling",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/math-sampling:test",
@@ -3075,7 +3075,7 @@
       }
     },
     {
-      "name": "🧪test🌀mathematical-entropy",
+      "name": "🧪️test🌀️mathematical-entropy",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/math-entropy:test",
@@ -3086,7 +3086,7 @@
       }
     },
     {
-      "name": "🧪test🌊mathematical-wfc",
+      "name": "🧪️test🌊️mathematical-wfc",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/math-wfc:test",
@@ -3097,7 +3097,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-core",
+      "name": "🧪️test📦️pack-core",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-core-rs:test",
@@ -3108,7 +3108,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-format",
+      "name": "🧪️test📦️pack-format",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-format-rs:test",
@@ -3119,7 +3119,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-value",
+      "name": "🧪️test📦️pack-value",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-value-rs:test",
@@ -3130,7 +3130,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-io",
+      "name": "🧪️test📦️pack-io",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-io-rs:test",
@@ -3141,7 +3141,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-async",
+      "name": "🧪️test📦️pack-async",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-async-rs:test",
@@ -3152,7 +3152,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-http",
+      "name": "🧪️test📦️pack-http",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-http-rs:test",
@@ -3163,7 +3163,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-index",
+      "name": "🧪️test📦️pack-index",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-index-rs:test",
@@ -3174,7 +3174,7 @@
       }
     },
     {
-      "name": "🧪test📦pack",
+      "name": "🧪️test📦️pack",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-rs:test",
@@ -3185,7 +3185,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-testkit",
+      "name": "🧪️test📦️pack-testkit",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-testkit-rs:test",
@@ -3196,7 +3196,7 @@
       }
     },
     {
-      "name": "🧪test📦pack-cli",
+      "name": "🧪️test📦️pack-cli",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/pack-cli-rs:test",
@@ -3207,7 +3207,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-core",
+      "name": "🧪️test🎞️protocol-core",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-core-rs:test",
@@ -3218,7 +3218,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-command",
+      "name": "🧪️test🎞️protocol-command",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-command-rs:test",
@@ -3229,7 +3229,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-causal",
+      "name": "🧪️test🎞️protocol-causal",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-causal-rs:test",
@@ -3240,7 +3240,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-crdt",
+      "name": "🧪️test🎞️protocol-crdt",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-crdt-rs:test",
@@ -3251,7 +3251,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-format",
+      "name": "🧪️test🎞️protocol-format",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-format-rs:test",
@@ -3262,7 +3262,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-history",
+      "name": "🧪️test🎞️protocol-history",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-history-rs:test",
@@ -3273,7 +3273,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-materialize",
+      "name": "🧪️test🎞️protocol-materialize",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-materialize-rs:test",
@@ -3284,7 +3284,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-io",
+      "name": "🧪️test🎞️protocol-io",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-io-rs:test",
@@ -3295,7 +3295,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-wire",
+      "name": "🧪️test🎞️protocol-wire",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-wire-rs:test",
@@ -3306,7 +3306,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol",
+      "name": "🧪️test🎞️protocol",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-rs:test",
@@ -3317,7 +3317,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-testkit",
+      "name": "🧪️test🎞️protocol-testkit",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-testkit-rs:test",
@@ -3328,7 +3328,7 @@
       }
     },
     {
-      "name": "🧪test🎞️protocol-cli",
+      "name": "🧪️test🎞️protocol-cli",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/protocol-cli-rs:test",
@@ -3339,7 +3339,51 @@
       }
     },
     {
-      "name": "🧪test🗄️db-core",
+      "name": "🧪️test🗣️dsl-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-core-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.9121
+      }
+    },
+    {
+      "name": "🧪️test🗣️dsl-schema",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-schema-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.9122
+      }
+    },
+    {
+      "name": "🧪️test🗣️dsl-derive",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-derive-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.9123
+      }
+    },
+    {
+      "name": "🧪️test🗣️dsl",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.9124
+      }
+    },
+    {
+      "name": "🧪️test🗄️db-core",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-core-rs:test",
@@ -3350,7 +3394,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-actor",
+      "name": "🧪️test🗄️db-actor",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-actor-rs:test",
@@ -3361,7 +3405,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-state",
+      "name": "🧪️test🗄️db-state",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-state-rs:test",
@@ -3372,7 +3416,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-storage",
+      "name": "🧪️test🗄️db-storage",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-storage-rs:test",
@@ -3383,7 +3427,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-storage-sqlite",
+      "name": "🧪️test🗄️db-storage-sqlite",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-storage-sqlite-rs:test",
@@ -3394,7 +3438,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-storage-postgres",
+      "name": "🧪️test🗄️db-storage-postgres",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-storage-postgres-rs:test",
@@ -3405,7 +3449,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-storage-neo4j",
+      "name": "🧪️test🗄️db-storage-neo4j",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-storage-neo4j-rs:test",
@@ -3416,7 +3460,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-wal",
+      "name": "🧪️test🗄️db-wal",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-wal-rs:test",
@@ -3427,7 +3471,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-snapshot",
+      "name": "🧪️test🗄️db-snapshot",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-snapshot-rs:test",
@@ -3438,7 +3482,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-index",
+      "name": "🧪️test🗄️db-index",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-index-rs:test",
@@ -3449,7 +3493,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-conflict",
+      "name": "🧪️test🗄️db-conflict",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-conflict-rs:test",
@@ -3460,7 +3504,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-projection",
+      "name": "🧪️test🗄️db-projection",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-projection-rs:test",
@@ -3471,7 +3515,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-query",
+      "name": "🧪️test🗄️db-query",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-query-rs:test",
@@ -3482,7 +3526,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-preview",
+      "name": "🧪️test🗄️db-preview",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-preview-rs:test",
@@ -3493,7 +3537,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-security",
+      "name": "🧪️test🗄️db-security",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-security-rs:test",
@@ -3504,7 +3548,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-document",
+      "name": "🧪️test🗄️db-document",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-document-rs:test",
@@ -3515,7 +3559,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-compact",
+      "name": "🧪️test🗄️db-compact",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-compact-rs:test",
@@ -3526,7 +3570,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-sync",
+      "name": "🧪️test🗄️db-sync",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-sync-rs:test",
@@ -3537,7 +3581,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-cluster",
+      "name": "🧪️test🗄️db-cluster",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-cluster-rs:test",
@@ -3548,7 +3592,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-observe",
+      "name": "🧪️test🗄️db-observe",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-observe-rs:test",
@@ -3559,7 +3603,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-engine",
+      "name": "🧪️test🗄️db-engine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-engine-rs:test",
@@ -3570,7 +3614,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db",
+      "name": "🧪️test🗄️db",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-rs:test",
@@ -3581,7 +3625,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-testkit",
+      "name": "🧪️test🗄️db-testkit",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-testkit-rs:test",
@@ -3592,7 +3636,7 @@
       }
     },
     {
-      "name": "🧪test🗄️db-cli",
+      "name": "🧪️test🗄️db-cli",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/db-cli-rs:test",
@@ -3603,7 +3647,7 @@
       }
     },
     {
-      "name": "🧪test🗃️store",
+      "name": "🧪️test🗃️store",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/store-rs:test",
@@ -3614,7 +3658,7 @@
       }
     },
     {
-      "name": "🧪test🗃️store-sync",
+      "name": "🧪️test🗃️store-sync",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/store-sync-rs:test",
@@ -3625,7 +3669,7 @@
       }
     },
     {
-      "name": "🧪test🖥️os-core",
+      "name": "🧪️test🖥️os-core",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-core:test",
@@ -3636,7 +3680,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🩻2d⚛️react",
+      "name": "🛠️dev🏗️fem🩻️2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:fem:2d",
@@ -3656,7 +3700,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🩻2d🧊wgpu🌐wasm",
+      "name": "🛠️dev🏗️fem🩻️2d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:fem:2d",
@@ -3676,10 +3720,10 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🩻2d🧊wgpu🖥️native",
+      "name": "🛠️dev🏗️fem🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native fem2d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native fem2d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3707,7 +3751,7 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🏙️3d🧊wgpu🌐wasm",
+      "name": "🛠️dev🏗️fem🏙️3d🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:fem:3d",
@@ -3727,10 +3771,10 @@
       }
     },
     {
-      "name": "🛠️dev🏗️fem🏙️3d🧊wgpu🖥️native",
+      "name": "🛠️dev🏗️fem🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native fem3d",
+      "command": "bun ./🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/🦀️rust/📜️script.ts native fem3d",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3738,7 +3782,7 @@
       }
     },
     {
-      "name": "📦build📐cad🎛️concrete🌲forest",
+      "name": "📦️build📐️cad🎛️concrete🌲️forest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:cad:concrete-forest",
@@ -3749,7 +3793,7 @@
       }
     },
     {
-      "name": "📦build🔬coda🖱️desktop",
+      "name": "📦️build🔬️coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- coda-desktop",
@@ -3760,7 +3804,7 @@
       }
     },
     {
-      "name": "📦build🏘️compose📐3dm",
+      "name": "📦️build🏘️compose📐️3dm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- 3dm",
@@ -3771,7 +3815,7 @@
       }
     },
     {
-      "name": "📦build🏘️compose🏪assets",
+      "name": "📦️build🏘️compose🏪️assets",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- assets",
@@ -3782,7 +3826,7 @@
       }
     },
     {
-      "name": "📦build🏘️compose🖱️desktop",
+      "name": "📦️build🏘️compose🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- desktop",
@@ -3793,7 +3837,7 @@
       }
     },
     {
-      "name": "📦build🏘️compose⚙️engine",
+      "name": "📦️build🏘️compose⚙️engine",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- engine",
@@ -3804,7 +3848,7 @@
       }
     },
     {
-      "name": "📦build🗃️store",
+      "name": "📦️build🗃️store",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/store-rs:wasm",
@@ -3815,7 +3859,7 @@
       }
     },
     {
-      "name": "📦build🖥️os-core",
+      "name": "📦️build🖥️os-core",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-core:wasm",
@@ -3826,7 +3870,7 @@
       }
     },
     {
-      "name": "📦build🏘️compose🔗graphql",
+      "name": "📦️build🏘️compose🔗️graphql",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run compose/graphql:build",
@@ -3837,7 +3881,7 @@
       }
     },
     {
-      "name": "📦build🏘️compose✍️sketchpad",
+      "name": "📦️build🏘️compose✍️sketchpad",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- sites",
@@ -3848,7 +3892,7 @@
       }
     },
     {
-      "name": "📦build🌐gis📍2d",
+      "name": "📦️build🌐️gis📍️2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-playground-dev:build -- --app gis-2d",
@@ -3859,7 +3903,7 @@
       }
     },
     {
-      "name": "📦build🎬animateplay",
+      "name": "📦️build🎬️animateplay",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-playground-dev:build -- --app animate",
@@ -3870,7 +3914,7 @@
       }
     },
     {
-      "name": "📦build🖨️print",
+      "name": "📦️build🖨️print",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:print",
@@ -3881,7 +3925,7 @@
       }
     },
     {
-      "name": "📦audit🛝playground",
+      "name": "📦️audit🛝️playground",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-playground-core:audit",
@@ -3892,7 +3936,7 @@
       }
     },
     {
-      "name": "📦build🔧procedural🩻2d",
+      "name": "📦️build🔧️procedural🩻️2d",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:procedural:2d",
@@ -3903,7 +3947,7 @@
       }
     },
     {
-      "name": "📦build🔧procedural🏙️3d🎛️column",
+      "name": "📦️build🔧️procedural🏙️3d🎛️column",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:procedural:3d:hexagonal-column",
@@ -3914,7 +3958,7 @@
       }
     },
     {
-      "name": "📦build📽️projektetage",
+      "name": "📦️build📽️projektetage",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:build",
@@ -3925,7 +3969,7 @@
       }
     },
     {
-      "name": "📦build🏚️mitbestand📄zwischenbericht",
+      "name": "📦️build🏚️mitbestand📄️zwischenbericht",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:mit-bestand:zwischenbericht",
@@ -3936,7 +3980,7 @@
       }
     },
     {
-      "name": "📦build🏚️mitbestand🧱aggregator",
+      "name": "📦️build🏚️mitbestand🧱️aggregator",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:mit-bestand:aggregator",
@@ -3947,7 +3991,7 @@
       }
     },
     {
-      "name": "📦build🧩puzzle🏙️3d🎛️concrete",
+      "name": "📦️build🧩️puzzle🏙️3d🎛️concrete",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:puzzle:3d:concrete-forest",
@@ -3958,7 +4002,7 @@
       }
     },
     {
-      "name": "📦build🧩puzzle👯5d🎛️concrete",
+      "name": "📦️build🧩️puzzle👯️5d🎛️concrete",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:puzzle:5d:concrete-forest",
@@ -3969,7 +4013,7 @@
       }
     },
     {
-      "name": "📦build🧰repo⌨️client",
+      "name": "📦️build🧰️repo⌨️client",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- repo-cli",
@@ -3980,7 +4024,7 @@
       }
     },
     {
-      "name": "📦build🧰repo⌨️server",
+      "name": "📦️build🧰️repo⌨️server",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build -- repo-server",
@@ -3991,7 +4035,7 @@
       }
     },
     {
-      "name": "📦build📸shooting🎛️base",
+      "name": "📦️build📸️shooting🎛️base",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:shooting:base-icon",
@@ -4002,7 +4046,7 @@
       }
     },
     {
-      "name": "📦build📖storybook",
+      "name": "📦️build📖️storybook",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run build:storybook",
@@ -4013,7 +4057,7 @@
       }
     },
     {
-      "name": "📦build🧮graph📜manifest",
+      "name": "📦️build🧮️graph📜️manifest",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/graph-manifest:generate",
@@ -4024,7 +4068,7 @@
       }
     },
     {
-      "name": "📦build🧩plugin📜registry",
+      "name": "📦️build🧩️plugin📜️registry",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/plugin-registry:generate",
@@ -4035,10 +4079,10 @@
       }
     },
     {
-      "name": "📦build🖱️ui🏪assets",
+      "name": "📦️build🖱️ui🏪️assets",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts generate all",
+      "command": "bun ./📜️script.ts generate all",
       "cwd": "${workspaceFolder}/ui/asset",
       "presentation": {
         "group": "4_build",
@@ -4046,10 +4090,10 @@
       }
     },
     {
-      "name": "📦build🖱️ui🎨styling",
+      "name": "📦️build🖱️ui🎨️styling",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts generate",
+      "command": "bun ./📜️script.ts generate",
       "cwd": "${workspaceFolder}/ui/styling",
       "presentation": {
         "group": "4_build",
@@ -4057,7 +4101,7 @@
       }
     },
     {
-      "name": "⬆️publish🔬coda🖱️desktop",
+      "name": "⬆️publish🔬️coda🖱️desktop",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- coda-desktop",
@@ -4090,7 +4134,7 @@
       }
     },
     {
-      "name": "⬆️publish🏘️compose✍️sketchpad📖docs",
+      "name": "⬆️publish🏘️compose✍️sketchpad📖️docs",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run publish -- docs",
@@ -4115,7 +4159,7 @@
   ],
   "compounds": [
     {
-      "name": "🧭compound🖥️s⚛️react🗄️os-hub",
+      "name": "🧭️compound🖥️s⚛️react🗄️os-hub",
       "configurations": ["🛠️dev🗄️os-hub", "🛠️dev🖥️s⚛️react"],
       "stopAll": true,
       "presentation": {

@@ -1,0 +1,12 @@
+{
+  "title": "Layout Canvas Pan Zoom Drag",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Implement layout canvas pan/zoom, catalogue drag-and-drop preview on canvas, and panel hiding via pointerPaletteDrag following puzzle 2d pattern.",
+  "summary": "Fixed layout canvas GPU clear color: replaced hardcoded dark gray [0.12,0.13,0.15] with infinite_cavas::theme::default_raster_clear() (CANVAS_LIGHT.raster_clear), matching flow/puzzle2d/sequence. WASM rebuilt and tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1812"
+  },
+  "goal": "🎯️layout🎯️playground",
+  "sessions": ["⚪️d8163535a36b4990951d37bb3386ebd4", "⚪️a83a7ad3b0014702a169f23e0552ad83"]
+}

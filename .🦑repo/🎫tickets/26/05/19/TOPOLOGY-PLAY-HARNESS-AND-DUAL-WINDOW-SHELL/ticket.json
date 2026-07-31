@@ -1,9 +1,0 @@
-{
-  "title": "Topology Play Harness And Dual Window Shell",
-  "emoji": "🧩",
-  "status": "closed",
-  "description": "Finish elements/client/lib/topology: implement play/index.tsx with LevelProvider+UI and two windowKinds (board vs scene), shared buildTopologyDualSurfaceBindings, Nakagin fixtures, preload GLTF; ensure e2e passes; wire workspace if needed.",
-  "summary": "Implemented topology play entry (Nakagin board+scene, dual windowKinds, shared buildTopologyDualSurfaceBindings, shell context, GLTF preload). TopologyScenePane wraps Scene in Suspense so data-topology-scene-root mounts before meshes; Scene relocateMode applied after spreads; board/scene panes allow camera overrides. E2e activates Spatial scene Golden Layout tab via evaluate click on .lm_tab. Vitest + Playwright pass (bun ./script.ts test).",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "sessions": ["⚪c5c066d455b84ce1896750759400d9ac"]
-}

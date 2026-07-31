@@ -1,9 +1,0 @@
-{
-  "title": "Tile Drag Preview Unclip",
-  "emoji": "🖼",
-  "status": "closed",
-  "description": "Tiles are movable but remain cropped inside the original position during drag. Fix so dragged tiles preview everywhere, original space stays as-is, and other dispositions do not move.",
-  "summary": "Split figure tiles were clipped during drag because `[data-id]` interactive wrappers forced `overflow: hidden` with higher specificity than the pinned canvas-framed `overflow: visible` rule. Updated globals.css to keep `overflow: hidden` only at rest, allow `overflow: visible` while gesturing or when canvas-framed+pinned (wrapper stays on declared frame; content translates via existing `canvasDispositionDragContentStyle`). Raised z-index during gesturing so previews paint above neighbors. Added DOM/CSS regression tests; all 57 presentation renderer tests pass.",
-  "goal": "🎯framework🎯product🎯presentation",
-  "sessions": ["⚪a1ab57dec56e4e7a983c761e17beaf76"]
-}

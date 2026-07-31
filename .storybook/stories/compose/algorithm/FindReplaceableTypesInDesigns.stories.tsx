@@ -1,9 +1,9 @@
-// #region 🧲Header
-// 💻 compose/algorithm/.storybook/story/FindReplaceableTypesInDesigns.stories.tsx
+// #region 🧲️Header
+// 💻️ compose/algorithm/.storybook/story/FindReplaceableTypesInDesigns.stories.tsx
 // Specs: Find-replaceable-types renders the full Nakagin Capsule Tower as the source design and a compatible design tree output.
 // Summary: Separate Storybook entry for compatible replacement types and designs with live selection-driven tree rendering.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import {
   AlgorithmApp,
@@ -30,7 +30,7 @@ import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 const { pieceIds: selectionPieceIds, connectionIds: selectionConnectionIds } = nakaginStoryCopySelection();
 
-//#region 🔍FindReplaceableTypesInDesigns
+//#region 🔍️FindReplaceableTypesInDesigns
 // Summary: Renders the full Nakagin Capsule Tower source selection and a live compatible tree from the selected pieces.
 // Specs: Uses the Nakagin copy-selection asset for the source window, then derives compatible types and designs from live selection state.
 
@@ -172,10 +172,10 @@ function FindReplaceableTypesInDesignsFrame() {
   return <AlgorithmApp id="find-replaceable-types-in-designs" label="Find Replaceable Types In Designs" windows={WINDOWS} defaultLayout={DEFAULT_LAYOUT} context={context} className="h-full w-full" />;
 }
 
-//#endregion 🔍FindReplaceableTypesInDesigns
+//#endregion 🔍️FindReplaceableTypesInDesigns
 
 const meta = {
-  title: "🏘️compose🧪algorithms/FindReplaceableTypesInDesigns",
+  title: "🏘️compose🧪️algorithms/FindReplaceableTypesInDesigns",
   component: FindReplaceableTypesInDesignsFrame,
   parameters: { layout: "fullscreen" },
   tags: ["autodocs"],

@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-sourcing-curate-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing curate app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🎒️pack/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+sourcing = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate" }
+pack = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+sourcing_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate-dsl" }

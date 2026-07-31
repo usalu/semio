@@ -1,0 +1,14 @@
+{
+  "title": "Reset Puzzle 3D Suggestion Brush to Selection",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix Puzzle 3D interaction state: after choosing a suggested object from the context menu, the next left click incorrectly behaves like the brush tool. Completing a context-menu suggestion must leave the window in default selection mode so the next left click selects normally. Diagnose the root state transition, add regression coverage in existing test files, and verify runtime behavior.",
+  "summary": "Fixed Puzzle 3D context-menu suggestion acceptance leaving the host-owned brush utility active. Successful acceptance now clears the active utility to the unset default, which the world resolves as selection mode, and the host receives SetActiveUtility with an empty utility id. Extended the existing acceptance regression test to reproduce the real brush ViewState and assert object creation, popup closure, the host reset effect, and rendered select mode. Runtime tracing temporarily confirmed utility=default and selection_mode=select, then was removed. Verification: focused regression passed before and after log removal; 37 adjacent Puzzle 3D tests passed before the unrelated 500-tick fill-planning test was bounded after ten CPU-active minutes; repo verify gate passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2210"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️701e945d2bf94aa389c6e274a1f5b1ec"
+  ]
+}

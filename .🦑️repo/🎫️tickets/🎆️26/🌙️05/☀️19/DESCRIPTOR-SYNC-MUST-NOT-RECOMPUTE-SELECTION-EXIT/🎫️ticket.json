@@ -1,0 +1,9 @@
+{
+  "title": "Descriptor Sync Must Not Recompute Selection Exit",
+  "emoji": "🎯️",
+  "status": "closed",
+  "description": "Fix secondary selection showing stale/wrong ids: sync_descriptor must not recompute selection_exit_highlight from descriptor selected flags (lags wasm); clear exit when descriptor forces selection set change.",
+  "summary": "sync_descriptor no longer calls set_selection_exit_last_transition when descriptor selected flags diverge from wasm selection; that recomputed exit chrome from potentially stale JSX round-trips and could show ids from an older selection. When the descriptor forces a different selection set, selection_exit_highlight is cleared instead; user-visible exit chrome stays owned by select/setSelection/delete paths only.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": ["⚪️9c67ed9486e0494c9356c4e6df323945"]
+}

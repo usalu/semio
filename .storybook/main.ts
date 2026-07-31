@@ -1,10 +1,10 @@
 // This file has been automatically migrated to valid ESM format by Storybook.
-// #region 🧲Header
-// 💻 .storybook/main.ts
+// #region 🧲️Header
+// 💻️ .storybook/main.ts
 // Specs: Aggregate the existing package-local Storybook trees into one root monorepo Storybook.
 // Summary: Configures the workspace Storybook with shared aliases, MDX support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), a composable scope system driven by `.storybook/scopes.ts` (`STORYBOOK_SCOPE` is a comma-separated list of hierarchical scope ids), and module-worker-safe Vite behavior.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
-// #endregion 🧲Header
+// #endregion 🧲️Header
 
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
@@ -46,12 +46,12 @@ function getAbsolutePath(value: string): string {
   }
 }
 
-// #region 🔖ScopeDerivation
+// #region 🔖️ScopeDerivation
 /** @emoji 🗂️ Active scopes for this process — computed once, reused by `stories`, aliases, watch-ignores, defines, and lazy scope `vitePlugins`. */
 const activeScopes: readonly StoryScope[] = resolveActiveScopes(storybookScope);
 const activeScopeIds: readonly string[] = activeScopes.map((s) => s.id);
 
-/** @emoji 🔗 Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
+/** @emoji 🔗️ Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
 function buildStorybookAliases(): Record<string, string> {
   const baseline: Record<string, string> = {
     "@semio-tech/ui-react": toVitePath(uiReactDir),
@@ -69,7 +69,7 @@ function buildStorybookAliases(): Record<string, string> {
   }
   return resolved;
 }
-// #endregion 🔖ScopeDerivation
+// #endregion 🔖️ScopeDerivation
 
 const config: StorybookConfig = {
   stories: buildScopeStoryGlobs(activeScopes),
@@ -91,11 +91,11 @@ const config: StorybookConfig = {
   },
   async viteFinal(config, { configType }) {
     config.resolve = config.resolve || {};
-    // #region 🔖ResolvePackageExports
+    // #region 🔖️ResolvePackageExports
     /** SB 10’s resolver prefers `storybook`/`stories` export conditions; most deps only declare `import`/`require`, so `"."` fails. Put standard bundler conditions first. */
     const previousConditions = config.resolve.conditions ?? [];
     config.resolve.conditions = ["import", "module", "browser", "default", ...previousConditions.filter((c) => !["import", "module", "browser", "default"].includes(c))];
-    // #endregion 🔖ResolvePackageExports
+    // #endregion 🔖️ResolvePackageExports
     const workspaceResolve = createWorkspaceViteResolveConfig(repoRootPath);
     const aliasRecord: Record<string, string> = {
       ...buildStorybookAliases(),
@@ -123,7 +123,7 @@ const config: StorybookConfig = {
     config.server.watch = {
       ...currentWatch,
       usePolling: true,
-      ignored: [...ignoredList, "**/storybook-static/**", "**/.nx/**", "**/.🦑repo/**", "**/.repo/**", "**/dist/**", "**/.git/**", "**/node_modules/**", ...scopeWatchIgnores],
+      ignored: [...ignoredList, "**/storybook-static/**", "**/.nx/**", "**/.🦑️repo/**", "**/.repo/**", "**/dist/**", "**/.git/**", "**/node_modules/**", ...scopeWatchIgnores],
     };
 
     config.plugins = config.plugins || [];
@@ -135,19 +135,19 @@ const config: StorybookConfig = {
     if (!hasUiAssetsPlugin) {
       config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
     }
-    // #region 🔖ScopeAssetsAndPlugins
-    /** @emoji 🌐 Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
+    // #region 🔖️ScopeAssetsAndPlugins
+    /** @emoji 🌐️ Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
     const scopeAssets = activeScopes.flatMap((s) => s.assets ?? []);
     if (scopeAssets.length > 0) {
       config.plugins.push(...playgroundAssetVitePlugins(repoRootPath, scopeAssets));
     }
-    /** @emoji 🌐 Lazy scope-gated Vite plugins (only imported when the owning scope is active). */
+    /** @emoji 🌐️ Lazy scope-gated Vite plugins (only imported when the owning scope is active). */
     for (const scope of activeScopes) {
       if (scope.vitePlugins) {
         config.plugins.push(...(await scope.vitePlugins()));
       }
     }
-    // #endregion 🔖ScopeAssetsAndPlugins
+    // #endregion 🔖️ScopeAssetsAndPlugins
     const indicesToRemove: number[] = [];
     for (let i = 0; i < config.plugins.length; i++) {
       const plugin: any = config.plugins[i];

@@ -102,6 +102,6 @@ Rewire the engagement chrome:
 
 ## Process notes
 
-- Reopen ticket `cadwgpupremigrationparity` (same goal, `🎯r2602🎯runningsketchpad`) once implementation starts, per repo rules — this is a continuation of the same task, not a new one.
+- Reopen ticket `cadwgpupremigrationparity` (same goal, `🎯️r2602🎯️runningsketchpad`) once implementation starts, per repo rules — this is a continuation of the same task, not a new one.
 - Extend the existing test modules in `cad/rs/lib.rs` and `cad/plugin/rs/lib.rs` (no new test files) to cover: derive-transformation face classification on a known box fixture, interaction statechart commit for each of the 4 ported specs, and save/load round-trips (JSON for selected, STEP for model-space/current).
 - No React/JS renderer restoration — everything above is implemented in Rust against the existing wgpu plugin/kernel stack.

@@ -1,9 +1,0 @@
-{
-  "title": "Extract Sketchpad Bundle from Compose Js",
-  "emoji": "📤",
-  "status": "closed",
-  "description": "Create a new compose/sketchpad bundle, move all sketchpad UI/runtime code out of compose/js into it, keep only domain logic in compose/js, update imports/exports/tests/docs, and verify the split with builds/tests.",
-  "summary": "Bulk close",
-  "goal": "🎯sketchpadimprovements",
-  "sessions": ["🔀77b1ae683a0ae676dbcd9b3687b7aaf018eb9bcb⚪019ced033c8e7743bc5e74775d26d83a"]
-}

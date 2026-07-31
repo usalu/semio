@@ -60,7 +60,7 @@ Add one private `unwrap`-style helper (reuse existing `isOk`/`unwrap`) and apply
 - Gears: `makeExternalGearSync`/`makeInternalGearSync` (params object, unwrap `GearResult`, register its solid).
 - `polygonSync`/`polyhedronSync` -> unwrap.
 - Angle units: keep kernel sync methods in **radians** (existing convention) and convert to degrees inside the adapter right before brepjs rotate/revolve/circularPattern calls; localize the quirk.
-- Update the `BrepKernelInterface` method signatures (region `🔌BrepKernelInterface`) to accept the new params (axis/plane normal+origin/center/direction/count/spacing) where added.
+- Update the `BrepKernelInterface` method signatures (region `🔌️BrepKernelInterface`) to accept the new params (axis/plane normal+origin/center/direction/count/spacing) where added.
 
 ## 2. Neuron kinds + handlers — `procedural/react/index.tsx`
 

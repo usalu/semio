@@ -1,0 +1,12 @@
+{
+  "title": "Add Owner, Owned, Edge, and Connection to Every Entity",
+  "emoji": "🔗️",
+  "status": "closed",
+  "description": "Add union XOwner, union XOwned, type XEdge implements EntityEdge, and type XConnection implements EntityConnection for every entity type in compose/graphql/target.schema.graphql. Also make Side implement Entity, make Diffs an interface, add missing PieceModification type, fix the EntityConnection union/interface conflict, and update owner/owns fields to use typed versions.",
+  "summary": "Relay-aligned EntityEdge now declares only cursor (like ShipEdge without abstract node). Every concrete Edge type exposes node as its paired concrete entity type (e.g. VectorEdge.node: Vector!, BridgeEdge.node: Connection!, PointDiffEdge.node: PositionDiff!), not Entity!. Resolved GraphQL SDL name clash by renaming the polymorphic union to AnyEntityConnection for owns/removed/added while keeping interface EntityConnection for concrete Connection implementations. Removed unused empty enum ConflictKind that broke SDL parsing. Verified graphql-core parse and compose crate parses_target_schema / cargo tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1395"
+  },
+  "goal": "🎯️r2603",
+  "sessions": ["⚪️b74a267d91e94ed3ab88b04fff1f4dde"]
+}

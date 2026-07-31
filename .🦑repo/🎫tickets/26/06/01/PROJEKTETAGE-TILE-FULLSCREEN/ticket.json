@@ -1,9 +1,0 @@
-{
-  "title": "Projektetage Tile Fullscreen",
-  "emoji": "🐛",
-  "status": "closed",
-  "description": "Fix split tile fullscreen on projektetage catalogue slides: pressing fullscreen on a tile does not expand it to slide fullscreen.",
-  "summary": "Enlarged uniform interactive fullscreen frame from 45%×42.5% to 90%×85% slide space (5% / 7.5% margins). Still identical for figure, video, pdf, and split tiles; much closer to immersive fullscreen than the prior midpoint between catalogue thumb and video.",
-  "goal": "🎯presentation",
-  "sessions": ["⚪99b8fa53b0c0467ebe096529b2031eda", "⚪7b91dcf906c9460fbccc7daf5a767342", "⚪3b33dd7b99754018a5e4c5b40db4c866"]
-}

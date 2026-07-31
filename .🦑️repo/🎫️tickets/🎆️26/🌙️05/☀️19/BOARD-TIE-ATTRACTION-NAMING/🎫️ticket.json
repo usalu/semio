@@ -1,0 +1,11 @@
+{
+  "title": "Board Tie Attraction Naming",
+  "emoji": "🎫️",
+  "status": "open",
+  "description": "elements board: Rename tie terminology to attraction. Source tie object is attracting; target tie object is attracted.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1450"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️c04bdbd402e648269a5744274e3a40ea"]
+}

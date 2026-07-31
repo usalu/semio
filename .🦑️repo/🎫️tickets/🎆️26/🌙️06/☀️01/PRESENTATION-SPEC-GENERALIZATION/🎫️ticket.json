@@ -1,0 +1,9 @@
+{
+  "title": "Presentation Spec Generalization",
+  "emoji": "📽️",
+  "status": "closed",
+  "description": "Align @semio-tech/framework-presentation with the spec: introduce Slide (arrangement + optional transition), generalize Morph with auto-derived bridge slides, simplify Split to tiles only, remove bespoke column/ghost/morphTarget machinery, update renderer and 33.projektetage deck.",
+  "summary": "Fixed Bauteilarten→Bauteilbeschriftungen figure morph: dormant column crop anchors were hidden on the resting focus slide so reveal.js only faded tiles while morphing. Added Arrangement.settleAfterMorphFrom plus renderer settled-state sync—after catalogue→focus tile morph completes, tiles hide and column crop figures show as morph sources that directly auto-animate into text labels (no bridge slide). Tests: core 33, renderer 20, deck 6 passing.",
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️13531ab51b094146b2b0664aa39353d3", "⚪️94c78b783e3d4cb787b763a6b88c06de", "⚪️b8797ffeeb4a48a5ab834eb48b497aa6", "⚪️eec337fccc344c4aba197fe4b57f5794", "⚪️8f3603228a034ed0bd27485f78519a55"]
+}

@@ -1,9 +1,0 @@
-{
-  "title": "Storybook Ui Missing Styles",
-  "emoji": "🎨",
-  "status": "closed",
-  "description": "Storybook UI (dev:storybook:ui) renders without styles — fix CSS/Tailwind/theme loading in Storybook preview.",
-  "summary": "Storybook UI preview was unstyled because Tailwind v4 was not wired like other Vite apps: @theme tokens never resolved on :root (--foreground, --color-primary empty) so utilities and semantic colors did not apply. Added `.storybook/globals.css` importing `@semio-tech/ui-react/globals.css` with @source paths for ui/react, storybook stories, and sibling stacks; preview loads it for ui/compose/puzzle scopes. Registered `@tailwindcss/vite` and `uiAssetsVitePlugin` in `.storybook/main.ts` viteFinal. Verified in browser on :6015: Anta font, dark canvas, bordered button group, CSS vars populated. @semio-tech/ui-react tests pass (80).",
-  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
-  "sessions": ["⚪a798b865c85b4e4badb4d397a1742b59"]
-}

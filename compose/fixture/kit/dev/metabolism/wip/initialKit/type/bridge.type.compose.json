@@ -159,7 +159,7 @@
           "y": 0,
           "z": 0
         },
-        "description": "🧴 The middle of the east side of the plattform.",
+        "description": "🧴️ The middle of the east side of the plattform.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-58d90f95991e",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -195,7 +195,7 @@
           "y": 0,
           "z": 0
         },
-        "description": "🧽 The middle of the west side of the plattform.",
+        "description": "🧽️ The middle of the west side of the plattform.",
         "port": {
           "id": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
           "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
@@ -380,7 +380,7 @@
   },
   "icon": "",
   "image": "images/bridge.png",
-  "description": "🏢 A bridge with two segments an addition on the west along the main path.",
+  "description": "🏢️ A bridge with two segments an addition on the west along the main path.",
   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
   "typology": {
     "id": "typology-bridge"

@@ -1,0 +1,14 @@
+{
+  "title": "CAD Example Reference Locked by Default",
+  "emoji": "🔒️",
+  "status": "closed",
+  "description": "The reference in the CAD example should by default be locked same as puzzle 3d (concrete-forest references ship locked: true). Change CAD example reference creation so references are locked by default.",
+  "summary": "CAD concrete-forest example references now default to locked, matching puzzle 3d. Changed `forest_references_for_model_definitions` from `locked: false` to `locked: true`, and extended `forest_references_sit_at_authored_slab_elevation` to assert the lock. Verified with `cargo test -p cad-plugin forest_references_sit_at_authored_slab_elevation`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2266"
+  },
+  "goal": "🎯️r2602/🎯️runningsketchpad/🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪️81c71d253f3e465eacc4761af43ccfbb"
+  ]
+}

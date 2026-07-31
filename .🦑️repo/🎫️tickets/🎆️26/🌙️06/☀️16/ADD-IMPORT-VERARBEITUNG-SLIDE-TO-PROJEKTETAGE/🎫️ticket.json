@@ -1,0 +1,12 @@
+{
+  "title": "Add Import Verarbeitung Slide to Projektetage",
+  "emoji": "📽️",
+  "status": "closed",
+  "description": "Add new slide 'Import Verarbeitung' after Manuelles Prüfen in Bauteilportal \u003e Systematik \u003e Eingabeprozess sequence, using import-verarbeitung.png asset.",
+  "summary": "Added Import Besipiel slide with 1×3 bauteilbörse figure grid before Import Verarbeitung. Reordered Import Verarbeitung and Output slide indices. Extended deck tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1721"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️699b872fad2848e08eddeae192f0b10f", "⚪️e784f8aab9714d51902008aa0e7d9d43"]
+}

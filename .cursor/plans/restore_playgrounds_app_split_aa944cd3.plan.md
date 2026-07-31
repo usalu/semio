@@ -9,7 +9,7 @@ isProject: false
 
 ## Ticket
 
-Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-WIRES-FORCE-GRAPH-ON-VFS-UNFOLD` doesn't fit — this is new scope, so open a fresh ticket under goal `🎯framework🎯playground` (check `repo://goals` first) before starting, e.g. `SPLIT-PLAYGROUND-APP-ARCHITECTURE`.
+Work happens inside the existing (reopened) ticket `.repo/🎫️/26/07/02/FIX-KIT-WIRES-FORCE-GRAPH-ON-VFS-UNFOLD` doesn't fit — this is new scope, so open a fresh ticket under goal `🎯️framework🎯️playground` (check `repo://goals` first) before starting, e.g. `SPLIT-PLAYGROUND-APP-ARCHITECTURE`.
 
 ## Phase 0 — Unblock every playground (root cause first)
 
@@ -23,7 +23,7 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
 
 2. **cad vite config syntax error** — [cad/js/renderer/play/vite.config.ts](cad/js/renderer/play/vite.config.ts) is missing its `export default createPlaygroundPlayViteConfig({` opening line (dangling object literal starting at `playEntryKind: "cad",`). This blocks any `nx build` that transitively depends on `@semio-tech/cad-js-renderer`. Fix it as part of Phase 1 migration (file gets rewritten anyway) or standalone first if Phase 1 is deferred.
 
-3. Re-verify: `cd framework/product/playground/dev && bun ./script.ts build --app <each of the 23 entries>` should all succeed (bypasses nx's unrelated `^build` fan-out; use this instead of `nx run …:build` for fast iteration). Entries: `2d 3d 5d gis-2d wires draw writer raster forms flow dag imperative sequence layout lowpoly procedural-2d procedural-3d shooting s vcs trinity-jack trinity-rewrite presentation`. Fix any remaining app-specific compile errors surfaced (there may be a few beyond the CSS bug — the migration ticket touched every `playground.ts`).
+3. Re-verify: `cd framework/product/playground/dev && bun ./📜️script.ts build --app <each of the 23 entries>` should all succeed (bypasses nx's unrelated `^build` fan-out; use this instead of `nx run …:build` for fast iteration). Entries: `2d 3d 5d gis-2d wires draw writer raster forms flow dag imperative sequence layout lowpoly procedural-2d procedural-3d shooting s vcs trinity-jack trinity-rewrite presentation`. Fix any remaining app-specific compile errors surfaced (there may be a few beyond the CSS bug — the migration ticket touched every `playground.ts`).
 
 4. Smoke-test a representative sample with `dev` (vite dev server + fetch) to confirm runtime boot, not just build, since `BuildScript` in `framework/product/playground/dev/script.ts` currently skips `devHost.prebuild` (only `DevScript` calls it) — check whether any app's build silently misses fixture assets because of this and fix if so.
 
@@ -36,7 +36,7 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
 - Register `cadPlayAppDefinition` in [framework/product/playground/core/app-registry.ts](framework/product/playground/core/app-registry.ts).
 - Add `cad` to `PACKAGE_ROOT_BY_ENTRY`/`ENTRY_TO_HOST` in [framework/product/playground/dev/script.ts](framework/product/playground/dev/script.ts).
 - Add `dev:cad`/`dev:cad:*` fixture scripts to root `package.json` (mirroring `dev:puzzle:3d:concrete-forest`) and a matching `resolvePlaygroundDevApp` case in [script.ts](script.ts).
-- Update `.vscode/launch.json` cad dev entries to the shared `bun ./script.ts dev cad` path, and remove/retire `cad/js/renderer/script.ts`'s standalone `play/vite.config.ts`-based dev/build once folded into the shared runner.
+- Update `.vscode/launch.json` cad dev entries to the shared `bun ./📜️script.ts dev cad` path, and remove/retire `cad/js/renderer/script.ts`'s standalone `play/vite.config.ts`-based dev/build once folded into the shared runner.
 - Delete `cad/js/renderer/play/` once migrated (matches precedent: the original migration ticket deleted all 23 migrated `*/play` directories).
 
 ## Phase 2 — Split app vs. playground for all 24 technologies
@@ -59,7 +59,7 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
 
 **Rule of thumb**: if the code would need to change when swapping in a different fixture, it's a playground concern → stays in `playground.ts`. If it defines _how the app behaves_ regardless of which fixture is loaded, it's app logic → moves to `index.ts`.
 
-Do this per technology, verifying after each one: `bun nx run <pkg>:test` passes, `bun ./script.ts build --app <entry>` (from `framework/product/playground/dev`) still succeeds, and (where a `build<X>WorkflowDefinition` test exists in `s/core` or `s/play`) the `s` extension loading test still passes.
+Do this per technology, verifying after each one: `bun nx run <pkg>:test` passes, `bun ./📜️script.ts build --app <entry>` (from `framework/product/playground/dev`) still succeeds, and (where a `build<X>WorkflowDefinition` test exists in `s/core` or `s/play`) the `s` extension loading test still passes.
 
 Technologies (23 existing + cad from Phase 1), roughly smallest-first to build momentum before the largest files:
 `imperative`, `reasoning/mindmap/wires`, `vcs`, `layout`, `writer`, `trinity/jack/host-core`, `mathematical/graph/port/directed/dag`, `trinity/rewrite`, `lowpoly`, `framework/product/presentation`, `sequence`, `s`, `forms`, `shooting`, `raster`, `draw`, `flow`, `gis/2d`, `procedural/2d`, `puzzle/5d` (+ `puzzle/5d/react` which currently also carries force-graph merge logic — check if any of that belongs in `index.ts` too), `procedural/3d`, `puzzle/2d`, `puzzle/3d`, `cad`.
@@ -67,7 +67,7 @@ Technologies (23 existing + cad from Phase 1), roughly smallest-first to build m
 ## Phase 3 — Full verification
 
 - Build every playground app via the direct script path (bypasses unrelated nx fan-out): `2d 3d 5d gis-2d wires draw writer raster forms flow dag imperative sequence layout lowpoly procedural-2d procedural-3d shooting s vcs trinity-jack trinity-rewrite presentation cad`.
-- Run the full test suite for every touched package (`bun nx run-many -t test` scoped to touched projects, or `bun ./script.ts test` for full confidence).
+- Run the full test suite for every touched package (`bun nx run-many -t test` scoped to touched projects, or `bun ./📜️script.ts test` for full confidence).
 - Spot-check `s`/os integration boots the same apps with the same behavior as the playground (selection/hover/tools/panels/windows/options identical, since it's now literally the same `index.ts` app in both hosts).
 - Update the two AGENTS.md files that currently describe the old shape ([framework/product/playground/AGENTS.md](framework/product/playground/AGENTS.md) says apps boot "using `PlaygroundAppDefinition` exports from each technology `core/playground.ts`" — clarify that the definition lives in `playground.ts` but the app itself lives in `index.ts`) — **do not edit `AGENTS.md` files per the workspace rule**; skip this if it would require editing a protected file, just leave a note in the ticket summary instead.
 - Close out via `ticket_close` with a summary listing every file touched.

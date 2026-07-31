@@ -1,0 +1,12 @@
+{
+  "title": "Print Navbar Chapter Chip",
+  "emoji": "🧭️",
+  "status": "closed",
+  "description": "Navbar top right should show the current chapter name inside the chip. Currently empty in zwischenbericht and other templates.",
+  "summary": "Navbar top-right chip now shows the current chapter or section title via `\\semio@chrome@heading@track` hooked into heading `titleformat`. Chapters and parts always update the chip; sections update it only when no chapter is active, so zwischenbericht-style documents show section names like Ergebnisse.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1865"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️04c06dec0f2a4edd841dd40f772ea1e3"]
+}

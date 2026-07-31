@@ -1,0 +1,8 @@
+{
+  "title": "Update Entity Id Requirements",
+  "emoji": "🔄️",
+  "status": "closed",
+  "description": "Update all entity ID generation to match the new requirements: new entity kinds (root, year, month, day, hour, minute, second, line, range, todo, breach, interaction), new ID formats with hierarchical parent prefixes, new resource/diffable kind lists. Update GetArtifactID, GetID methods, entity kind enums, and write comprehensive tests for every list/tree command with exact IDs.",
+  "summary": "Updated all entity ID generation to match new hierarchical requirements. Added PropagateParentIDs, goalArtifactID helper, fixed GetArtifactID for goals/tickets/commits/line/range, excluded bundle root folders from tree, updated 6 stale tests, added 20+ comprehensive entity ID tests.",
+  "goal": "🎯️aioptimizedrepo"
+}

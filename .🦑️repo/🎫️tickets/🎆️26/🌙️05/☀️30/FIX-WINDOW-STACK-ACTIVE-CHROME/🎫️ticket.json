@@ -1,0 +1,9 @@
+{
+  "title": "Fix Window Stack Active Chrome",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "When changing the active window to another window stack, the previous active tab and fullscreen button maintain their active marker incorrectly.",
+  "summary": "Multi-tab Mode dock stack-active tabs now use the same filled primary styling as single-window tabs (`modeDockActiveTabFillClass`: bg-active-base, text-active-foreground) while keeping the U-cap border chrome. Single-tab stacks reuse the shared fill constant. Vitest assertions lock primary fill on globally active stack tabs.",
+  "goal": "🎯️ui",
+  "sessions": ["⚪️8c7697ee93e74a35b66a9ee05bd4ba72", "⚪️76a0e761308e464f862ef1c02f310d74"]
+}

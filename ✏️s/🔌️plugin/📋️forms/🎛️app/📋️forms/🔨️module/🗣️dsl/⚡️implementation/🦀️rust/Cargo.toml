@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-forms-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Forms app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/🔨️module/🗣️dsl/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+forms = { path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/⚡️implementation/🦀️rust", package = "semio-s-app-forms" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

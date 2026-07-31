@@ -1,0 +1,11 @@
+{
+  "title": "Fix Vscode Views Missing",
+  "emoji": "🔧️",
+  "status": "closed",
+  "description": "Fix GraphQL query mismatches causing Goals, Tickets, and Contributors tree views to fail in the VS Code extension.",
+  "summary": "Fixed GraphQL schema mismatches between Go binary and VS Code extension. Updated schema.graphql to match binary (Goal.ui→client, Interaction system/dates types, ContributorBundle lines removal, hierarchical TicketYear), updated queries.ts, and regenerated codegen.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/419"
+  },
+  "goal": "🎯️fixvscodeviewsmissing"
+}

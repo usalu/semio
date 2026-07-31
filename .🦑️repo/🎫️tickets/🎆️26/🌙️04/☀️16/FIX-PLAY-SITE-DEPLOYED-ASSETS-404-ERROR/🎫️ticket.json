@@ -1,0 +1,11 @@
+{
+  "title": "Fix Play Site Deployed Assets 404 Error",
+  "status": "closed",
+  "description": "The play site build outputs absolute asset paths (/assets/...) in index.html. When deployed under a subpath, the browser requests assets from the root instead of the subpath, causing 404 errors for _commonjsHelpers-CE1G-McA.js and _commonjs-dynamic-modules-TDtrdbi3.js. Fix by setting base: './' in the Vite config so asset references are relative.",
+  "summary": "The play site is deployed to GitHub Pages (CNAME: v3.play.semio-tech.com). GitHub Pages runs Jekyll by default, which ignores files starting with `_`. The Vite/Rollup commonjs helper chunks (`_commonjsHelpers-CE1G-McA.js`, `_commonjs-dynamic-modules-TDtrdbi3.js`) start with underscores and were being filtered out, causing 404s and a white screen. Added a `.nojekyll` file to `public/` so Vite copies it to `dist/` on build, disabling Jekyll processing on GitHub Pages. Also kept the earlier `base: \"./\"` fix for relative asset paths.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1333"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": ["⚪️b3a5d863e3884f678d1645869537ab50", "⚪️29495fd062e646f2ac634979dfb268c2"]
+}

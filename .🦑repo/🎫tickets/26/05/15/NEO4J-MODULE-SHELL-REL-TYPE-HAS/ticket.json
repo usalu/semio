@@ -1,7 +1,0 @@
-{
-  "title": "Neo4j Module Shell Rel Type Has",
-  "status": "closed",
-  "description": "Neo4j graph migrations live as migrations.cypher in this ticket; migrate.neo4j.script.ts runs them. generate.script.ts exports only the live DB and does not run migrations.",
-  "summary": "Renamed structural Module→Class|Interface|Scalar relationship from PART_OF to HAS in compose Neo4j SDL and migration Cypher (all [:PART_OF] sites). RelabelHasRelationshipsToOwns now excludes (Module)-[:HAS]-\u003e(Class|Interface|Scalar) so repeat migrate does not turn structural HAS into OWNS. Added RelabelLegacyPartOfStructuralEdgesToHas (MATCH on legacy PART_OF) for one-time upgrade from prior graphs. Renamed region RetypeResidualModuleOwnsToPartOf to RetypeResidualModuleOwnsToHas. Updated stitch-operation-command-migrations.script.ts reparent block comment. Attempted bun run test; nx build had not finished within the agent wait window.",
-  "sessions": ["⚪e382339b49674a6ba0333df1d9a656a6"]
-}

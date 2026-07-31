@@ -1,8 +1,0 @@
-
- RUN  v4.1.7 /Users/ueli/Documents/semio/✏️s/🔨module/◻️2d/⚡️implementation/🟦typescript
-
-No test files found, exiting with code 0
-
-include: index.ts
-exclude:  **/node_modules/**, **/.git/**
-

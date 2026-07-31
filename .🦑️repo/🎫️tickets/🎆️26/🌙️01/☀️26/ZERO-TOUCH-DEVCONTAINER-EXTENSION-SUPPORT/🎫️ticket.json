@@ -1,0 +1,10 @@
+{
+  "title": "Zero Touch Devcontainer Extension Support",
+  "emoji": "🤝️",
+  "status": "closed",
+  "summary": "Uninstall repo extension before installs, clear Cursor caches, and document uninstall-first devcontainer flow.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/218"
+  },
+  "goal": "🎯️aioptimizedrepo🎯️repoclient🎯️repovscodeextension"
+}

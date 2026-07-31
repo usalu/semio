@@ -1,8 +1,0 @@
-{
-  "title": "Consistent Geometry and Gis Folder Naming",
-  "emoji": "🧭",
-  "status": "open",
-  "description": "Rename geometry to kernel, geometry/brep to kernel/3d, geometry/drawing to kernel, gis/map to gis/2d, and gis/terrain to gis/3d.",
-  "goal": "🎯r2602",
-  "sessions": ["⚪42a8597d9e3e4cea980da5a7e9ab143b"]
-}

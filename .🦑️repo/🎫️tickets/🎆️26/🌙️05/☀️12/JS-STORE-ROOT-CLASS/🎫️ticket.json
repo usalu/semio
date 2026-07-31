@@ -1,0 +1,9 @@
+{
+  "title": "JS Store Root Class",
+  "emoji": "📜️",
+  "status": "open",
+  "description": "Make compose/js expose Store as the root owner for GraphQL transport and keep Kit beneath the Version interface shape from target.schema.graphql.",
+  "summary": "Removed root-era helper names such as KitGraphql/kitGraphql/__kitGraphqlEnvelope/rootKit, moved synchronous Kit access under TheKit.kit(), aligned GraphQL reads/subscriptions to Query.store/Subscription.store, and kept downstream React/algorithms adapters on openStore/useWipKit.",
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️7f7eaf7e658a45d0bec37ac18341c5af"]
+}

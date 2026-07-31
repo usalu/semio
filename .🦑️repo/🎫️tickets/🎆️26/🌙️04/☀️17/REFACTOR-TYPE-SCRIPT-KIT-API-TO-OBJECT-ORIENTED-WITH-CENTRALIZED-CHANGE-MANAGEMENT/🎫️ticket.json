@@ -1,0 +1,10 @@
+{
+  "title": "Refactor TypeScript Kit API To Object-Oriented With Centralized Change Management",
+  "status": "open",
+  "description": "Refactor TypeScript Kit API To Object-Oriented With Centralized Change Management",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1356"
+  },
+  "goal": "🎯️compose🎯️api",
+  "sessions": ["⚪️91a2bb5591f14d47983227497b8b5af8"]
+}

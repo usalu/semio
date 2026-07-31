@@ -1,0 +1,12 @@
+{
+  "title": "No Newlines in Definitions Statute",
+  "emoji": "📋️",
+  "status": "closed",
+  "description": "Add a new code statute that inside definitions no newlines (blank lines) are allowed. Create an autofix that removes them.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/725"
+  },
+  "goal": "🎯️code🎯️statute",
+  "sessions": ["⚪️17721967622133389896178769216958419219"]
+}

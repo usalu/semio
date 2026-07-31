@@ -1,0 +1,11 @@
+{
+  "title": "Create Complete Test Parity Across All Programming Languages",
+  "status": "closed",
+  "description": "Create complete parity between tests across all programming languages (JS/TS, Go, Python, Rust, C#/.NET). Create assets for all inputs and outputs. Ensure all languages test the same functionality with the same test data and expected results. Missing tests need to be added to each language to achieve full parity.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1340"
+  },
+  "goal": "🎯️r2602",
+  "sessions": ["⚪️275fbb6576d244ca9586c0d98b2ee1b4"]
+}

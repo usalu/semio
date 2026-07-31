@@ -102,7 +102,7 @@ RETURN s.id
 
 ## 6. Tests (extend, do not add files)
 
-- [spatial/js/query/index.ts](spatial/js/query/index.ts) `#region 🧪Tests`:
+- [spatial/js/query/index.ts](spatial/js/query/index.ts) `#region 🧪️Tests`:
   - Reject `MATCH (s:Surface) RETURN s` at parse with the expected message.
   - `CALL view.surfaces() YIELD data AS surfaces UNWIND surfaces AS s WHERE s.exposure='external' RETURN s.id` returns the same surfaces previously asserted via `MATCH (s:Surface)`.
   - Same flow for `view.parts` and `view.volumes` on the two-cell intersection fixture.
@@ -111,4 +111,4 @@ RETURN s.id
 
 ## 7. Ticket plumbing
 
-Use existing ticket `BREPJS-CELLCOMPLEX-PARTS-SURFACES` (folder already present under `.repo/🎫/26/05/25/`) or open a new one `SPATIAL-QUERY-RAW-VS-ANALYTIC` via `ticket_open` and close it at the end with the touched files.
+Use existing ticket `BREPJS-CELLCOMPLEX-PARTS-SURFACES` (folder already present under `.repo/🎫️/26/05/25/`) or open a new one `SPATIAL-QUERY-RAW-VS-ANALYTIC` via `ticket_open` and close it at the end with the touched files.
