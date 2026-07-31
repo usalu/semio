@@ -2515,32 +2515,42 @@
   }%
 }
 
+% 📐 Outline heading pairs keep each chip a closed rectangle (own bottom stroke)
+% and join them with a gap-only baseline — same pattern as muted window headers.
+% A full-linewidth underlay would continue past the title chip's right vertical and
+% read as a bottom-border overshoot (or as the right chip sitting inset from the rule).
+\newcommand{\semio@heading@pair@outline@row}[1]{%
+  \setlength{\semio@window@gap@w}{%
+    \dimexpr\linewidth
+      -\wd\semio@window@tab@box
+      -\wd\semio@window@ctrl@box
+      +\semio@stroke@hairline
+      +\semio@stroke@hairline
+    \relax
+  }%
+  \semio@heading@row@wrap{%
+    \hbox to \linewidth{%
+      \usebox{\semio@window@tab@box}%
+      \hskip-\semio@stroke@hairline\relax
+      \semio@window@header@gap@open{#1}%
+      \hskip-\semio@stroke@hairline\relax
+      \usebox{\semio@window@ctrl@box}%
+    }%
+  }%
+}
+
 \newcommand{\semio@heading@pair@outline}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#5}{#2}{#1}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
-  \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \semio@heading@baseline@full{#1}%
-      \usebox{\semio@window@tab@box}%
-      \hfil
-      \usebox{\semio@window@ctrl@box}%
-    }%
-  }%
+  \semio@heading@pair@outline@row{#1}%
 }
 
 \newcommand{\semio@heading@pair@nofill@num}[4]{%
   \semio@hierarchy@path@set{#1}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#2}{#3}{#4}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@kind@number@bare{#1}}{#3}{#4}}%
-  \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \semio@heading@baseline@full{#4}%
-      \usebox{\semio@window@tab@box}%
-      \hfil
-      \usebox{\semio@window@ctrl@box}%
-    }%
-  }%
+  \semio@heading@pair@outline@row{#4}%
 }
 
 \newcommand{\semio@heading@title@end}[3]{%

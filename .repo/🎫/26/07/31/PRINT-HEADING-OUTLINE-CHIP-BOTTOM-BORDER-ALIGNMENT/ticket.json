@@ -1,0 +1,8 @@
+{
+  "title": "Print Heading Outline Chip Bottom Border Alignment",
+  "emoji": "🖨️",
+  "status": "open",
+  "description": "Outline paragraph/chapter/subsection heading chips show a bottom-border overshoot past the title chip right edge (or the right number chip looks inset). Root cause: outline pairs use both a per-chip bottom stroke and a full-linewidth baseline underlay, so the shared baseline continues past the title chip right vertical. Fix outline heading pairs to use a gap-only baseline connector between closed chips (like muted window headers), keeping standalone outline chips closed.",
+  "goal": "🎯r2602",
+  "sessions": []
+}
