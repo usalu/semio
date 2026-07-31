@@ -60,7 +60,7 @@
 \renewcommand{\semio@cover@arbeitsprobe@image}{asset/demonstrator/aggegator.png}
 \makeatother
 \kurzfassung{%
-  Entwerfen mit inhomogenen Baukomponenten ist ästhetisch, historisch und ökologisch reizvoll, aber entwurfstechnisch anspruchsvoll und komplex, da funktionale, konstruktive und qualitative Abhängigkeiten direkt beim Entwerfen berücksichtigt werden müssen.
+  Entwerfen mit wiederverwendeten Baukomponenten ist ästhetisch, historisch und ökologisch reizvoll, aber entwurfstechnisch anspruchsvoll und komplex, da funktionale, konstruktive und qualitative Abhängigkeiten direkt beim Entwerfen berücksichtigt werden müssen.
   Die im Projekt entwickelte End-To-End-Plattform, welche gleichzeitig Katalog-, Entwurfs- und Leistungsbewertungs-Tool beinhaltet, ermöglicht es, in dieser Situation effektiv Lösungen zu entwickeln.
   Das Performance-Assessment hinsichtlich Energie und Tragwerk erlaubt frühe multidisziplinäre Optimierung.
   Mithilfe einer KI-Assistenz können auch große Bestandspools, in welchen es explosionsartig viele Kombinationsmöglichkeiten gibt, im Entwurfsprozess berücksichtigt werden.
@@ -134,9 +134,9 @@
 
 \section{Forschungsfragen und Vorgehen}
 
-Die Wiederverwendung von Baukomponenten gilt als wichtiger Ansatz zur Reduzierung des Ressourcenverbrauchs und der grauen Emissionen im Bauwesen. In der Praxis beschränkt sie sich bislang jedoch weitgehend auf einzelne Pilot- und Leuchtturmprojekte. Zwar wächst das Angebot an Bauteilbörsen, Rückbauinventaren und Materialbanken (vgl.\ \appendixref{anlage:bauteilboersen}), doch stehen diesem bislang nur wenige realisierte Wiederverwendungsprojekte gegenüber (vgl.\ \appendixref{anlage:projekte}). Wesentliche Hemmnisse liegen in den planerischen, technischen und organisatorischen Übergängen zwischen dem vorhandenen Bauteilangebot und seinem tatsächlichen Wiedereinsatz (vgl.\ \appendixref{anlage:huerden} sowie Handbuch \cite{udk-abbau-aufbau-handbuch-2023}).
+Die Wiederverwendung von Baukomponenten ist ein wichtiger Ansatz zur Reduzierung des Ressourcenverbrauchs und der grauen Emissionen im Bauwesen. In der Praxis beschränkt sie sich bislang jedoch weitgehend auf einzelne Pilot- und Leuchtturmprojekte. Zwar wächst das Angebot an Bauteilbörsen, Rückbauinventaren und Materialbanken (vgl.\ \appendixref{anlage:bauteilboersen}), doch stehen diesem bislang nur wenige realisierte Wiederverwendungsprojekte gegenüber (vgl.\ \appendixref{anlage:projekte}). Wesentliche Hemmnisse liegen in den planerischen, technischen und organisatorischen Übergängen zwischen dem vorhandenen Bauteilangebot und seinem tatsächlichen Wiedereinsatz (vgl.\ \appendixref{anlage:huerden} sowie Handbuch \cite{udk-abbau-aufbau-handbuch-2023}).
 
-Das Vorhaben baut auf dem \Abbr{BBSR}-Projekt „Abbau/Aufbau“ \cite{bbsr-abbau-aufbau-2024} auf, in dem methodische Grundlagen für den Umgang mit wiederverwendeten Tragwerksbauteilen entwickelt wurden. „Entwerfen mit Bestand“ führt diese Arbeiten weiter und richtet den Blick auf drei bislang nicht durchgängig gelöste Aufgaben: die Verbindung von Bauteilangebot und Entwurfsprozess, die digitale Unterstützung von Fügungs- und Nachweisprozessen sowie die Zuordnung verfügbarer Baukomponenten zu konkreten Entwurfs- und Planungsanforderungen.
+Das Vorhaben baut auf dem \Abbr{BBSR}-Projekt „Abbau/Aufbau“ \cite{bbsr-abbau-aufbau-2024} auf, in dem methodische Grundlagen für den Umgang mit wiederverwendeten Stahlbetontragwerksbauteilen entwickelt wurden. „Entwerfen mit Bestand“ führt diese Arbeiten weiter und richtet den Blick auf drei bislang nicht durchgängig gelöste Aufgaben: die Verbindung von Bauteilangebot und Entwurfsprozess, die digitale Unterstützung von Fügungs- und Nachweisprozessen sowie die Zuordnung verfügbarer Baukomponenten zu konkreten Entwurfs- und Planungsanforderungen.
 
 Daraus ergeben sich fünf Forschungsfragen:
 
@@ -147,13 +147,13 @@ Wie lassen sich heterogene Baukomponenten systematisch beschreiben und ordnen, d
 Wie können Bauteilbörsen und vergleichbare Akteure planungsrelevante Daten mit möglichst geringem Erfassungs- und Pflegeaufwand bereitstellen?
 
 \subsection{Synchronisierung}
-Wie können Entwurfs-, Lebenszyklus- und Tragwerksmodelle parallel entwickelt, verändert und bewertet werden, sodass Wechselwirkungen zwischen den jeweiligen Fachmodellen frühzeitig erkennbar werden?
+Wie können Entwurfs-, Lebenszyklus- und Tragwerksmodelle parallel entwickelt, verändert und bewertet werden, sodass Wechselwirkungen zwischen den jeweiligen Disziplinen frühzeitig erkennbar werden?
 
 \subsection{Assistenz}
 Wie kann \Abbr{KI}, insbesondere \Abbr{LLM}s bei der Datenerfassung, der digitalen Modellbildung, dem Entwurfsprozess und der Analyse von Entwurfsvarianten unterstützen?
 
 \subsection{Praxistauglichkeit}
-Wie müssen digitale Werkzeuge gestaltet und erprobt werden, damit sie praxistauglich, anschlussfähig und langfristig nutzbar sind?
+Wie müssen digitale Werkzeuge gestaltet seien, damit sie anschlussfähig, praxistauglich und langfristig nutzbar sind?
 
 \subsection{Zielsetzung}
 Ziel ist die Entwicklung einer digitalen Arbeitsumgebung, in der heterogene Bauteildaten über verschiedene Planungsschritte hinweg erfasst, miteinander verknüpft und für den Entwurf nutzbar gemacht werden können. Auf diese Weise soll die Wiederverwendung von Baukomponenten nicht nur dokumentiert, sondern frühzeitig und systematisch in Entwurfsentscheidungen einbezogen werden.
@@ -169,31 +169,32 @@ Die Recherche erfasst Informationen zu wiederverwendbaren Baukomponenten über v
 
 \begin{SemioNest}
 \paragraph{Bauteilbörsen und Angebotskanäle}
-Untersucht wurden 50 öffentlich zugängliche Bauteilbörsen und Angebotskanäle aus acht Ländern; die Erhebung fand im Juni 2026 statt (vgl.\ \appendixref{anlage:bauteilboersen}). Betrachtet wurden die Informationen, die auf den jeweiligen Angebotsseiten, in Katalogen oder auf Produktkarten öffentlich verfügbar waren. Die Auswertung beschreibt damit die Sicht potenzieller Nutzender; fehlende Angaben lassen nicht darauf schließen, dass diese innerhalb der jeweiligen Organisation grundsätzlich nicht vorliegen.
+Untersucht wurden 50 öffentlich zugängliche Bauteilbörsen und Angebotskanäle aus acht Ländern (vgl.\ \appendixref{anlage:bauteilboersen}). Betrachtet wurden die Informationen, die auf den jeweiligen Angebotsseiten, in Katalogen oder auf Produktkarten öffentlich verfügbar waren. Die Auswertung beschreibt damit die Sicht der Nutzenden. Fehlende Angaben lassen nicht darauf schließen, dass diese innerhalb der jeweiligen Organisation grundsätzlich nicht vorliegen.
 
-Die untersuchten Angebote unterscheiden sich vor allem darin, zu welchem Zeitpunkt und in welcher Form Baukomponenten verfügbar gemacht werden: bereits ausgebaut und gelagert, vor dem Rückbau erfasst oder zunächst nur über eine Kontaktvermittlung zugänglich. Auf dieser Grundlage wurden vier Angebotslogiken unterschieden. Die Übergänge zwischen ihnen sind fließend, da einzelne Organisationen mehrere Modelle miteinander verbinden.
+Die untersuchten Angebote unterscheiden sich vor allem darin, zu welchem Zeitpunkt im Wiederverwendungsprozess und in welcher Form die Baukomponenten verfügbar gemacht werden: bereits ausgebaut und gelagert, vor dem Rückbau erfasst oder zunächst nur geplant als Bestellung zugänglich. Auf dieser Grundlage wurden vier Angebotslogiken unterschieden. Die Übergänge zwischen ihnen sind fließend, da einzelne Organisationen mehrere Modelle miteinander verbinden.
 
 \begin{SemioNest}
 \paragraph{Depot-Shop}
 Depot-Shops stellen vergleichsweise verlässliche Angaben zu Lagerort, Abmessungen, Zustand und aktueller Verfügbarkeit bereit, da die angebotenen Baukomponenten bereits ausgebaut und eingelagert sind. Für die planerische Nutzung und fachliche Vorbewertung fehlen jedoch häufig weiterführende geometrische, materielle oder konstruktive Informationen.
-
+  
 \paragraph{Marktplatz}
-Marktplätze unterscheiden sich stark im Umfang, in der Struktur und in der Belastbarkeit der bereitgestellten Angaben. Ursache ist die Zusammenführung von Angeboten unterschiedlicher Anbieter:innen. Vor einer planerischen Weiterverwendung müssen die Daten daher häufig geprüft, ergänzt und vereinheitlicht werden.
-
+Marktplätze unterscheiden sich stark im Umfang, in der Struktur und in der Belastbarkeit der bereitgestellten Angaben. Ursache ist die Zusammenführung von Angeboten unterschiedlicher Anbietenden. Vor einer planerischen Weiterverwendung müssen die Daten daher häufig geprüft, ergänzt und vereinheitlicht werden.
+  
 \paragraph{Ressourcenkatalog}
-Ressourcenkataloge machen Baukomponenten besonders früh sichtbar, da diese bereits vor oder während des Rückbaus erfasst werden. Verfügbarkeit, Zustand und Status können sich zu diesem Zeitpunkt jedoch noch ändern, solange Ausbau, Prüfung und Sicherung nicht abgeschlossen sind.
-
+Ressourcenkataloge machen Baukomponenten besonders früh sichtbar, da diese bereits vor oder während des Rückbaus erfasst werden. Verfügbarkeit, Zustand und Status können sich zu diesem Zeitpunkt jedoch noch ändern, solange Ausbau, Prüfung und Sicherung nicht abgeschlossen sind. Dies ermöglicht einerseits eine frühzeitige Optimierung, allerdings auf Kosten von verringerter Planungssicherheit.
+  
 \paragraph{Vermittlungsplattform}
-Vermittlungsplattformen stellen vor allem Kontakte zwischen Besitzenden, Suchenden und beteiligten Fachakteur:innen her. Häufig liegen zunächst nur Kurzbeschreibungen oder Kontaktdaten vor. Für die weitere planerische und digitale Nutzung müssen die betreffenden Baukomponenten daher in der Regel genauer erfasst und qualifiziert werden.
-
+Vermittlungsplattformen stellen vor allem Kontakte zwischen Besitzenden, Suchenden und beteiligten Fachakteur:innen her. Häufig liegen zunächst nur Kurzbeschreibungen oder Kontaktdaten vor. Für die weitere planerische und digitale Nutzung müssen die betreffenden Baukomponenten daher in der Regel genauer erfasst und qualifiziert werden. Für kleine Projekte kann die frühzeitige Vernetzung von Vorteil sein, allerdings wenn die Komponenten nicht wiederverwendet werden, besteht die Gefahr, dass Informationen mehrfach intern erfasst werden.
+  
 \paragraph{Anforderungen}
-Aus der Auswertung ergeben sich drei zentrale Anforderungen. Erstens muss die Datenstruktur unterschiedliche Grade der Vollständigkeit und Belastbarkeit abbilden. Zweitens muss sie Veränderungen von Verfügbarkeit und Status im Zeitverlauf erfassen. Drittens muss der Eingabeweg an die Form der vorhandenen Daten angepasst werden. Unvollständige oder frei formulierte Angebote erfordern eine geführte manuelle Erfassung, während strukturierte Bestandsdaten über Schnittstellen übernommen werden können. Unabhängig vom Eingabeweg müssen Herkunft, Änderungen und weiterhin offene Angaben nachvollziehbar erhalten bleiben.
-
+Aus der Auswertung ergeben sich drei zentrale Anforderungen. Erstens muss die Datenstruktur unterschiedliche Grade der Vollständigkeit und Belastbarkeit abbilden. Zweitens muss sie Veränderungen von Verfügbarkeit und Status im Zeitverlauf erfassen. Drittens muss der Eingabeweg an die Form der vorhandenen Daten angepasst werden. Unvollständige oder frei formulierte Angebote erfordern eine geführte Erfassung, während strukturierte Bestandsdaten über Schnittstellen übernommen werden können. Unabhängig vom Eingabeweg müssen Herkunft, Änderungen und fehlende Informationen nachvollziehbar sein.
+  
 Diese Ergebnisse bestätigen Beobachtungen aus der Literatur zu unstrukturierten Märkten und zur eingeschränkten Rückverfolgbarkeit insbesondere tragender Baukomponenten \cite{densley-tingley-cooper-cullen-structural-steel-reuse-2017,sivers-fivet-reuse-market-dynamics-2025}. Bestehende Inventaransätze wie Swiss-Inv zeigen zugleich, dass einheitlich strukturierte Bestandsdaten die spätere Übernahme und Weiterverarbeitung wesentlich erleichtern können \cite{cirkla-swiss-inv}.
 \end{SemioNest}
-
+  
 \paragraph{Wiederverwendungsprozesse}
 Die Auswertung der dokumentierten Projekte ergab eine wiederkehrende Abfolge von Arbeitsschritten: Bestandserkundung und Auswahl, Rückbauplanung, Ausbau und Sicherung, Aufbereitung oder Vermittlung, Zuordnung zu einem neuen Projekt, Entwurf und Variantenbildung, fachliche Prüfung sowie Wiedereinbau (vgl.\ \appendixref{anlage:projekte}). Dabei zeigte sich, dass Wiederverwendungsprozesse selten linear verlaufen. Änderungen der Verfügbarkeit, des Zustands, der Mengen oder der Projektanforderungen führen häufig zu Rücksprüngen zwischen Auswahl, Entwurf und Prüfung. Die tatsächliche Eignung einer Baukomponente ergibt sich daher erst aus dem Zusammenspiel ihrer physischen Eigenschaften, ihrer vorgesehenen Funktion und den Rahmenbedingungen des neuen Projekts. Als besonders wichtig erwies sich eine frühzeitige Abstimmung zwischen Rückbau, Vermittlung, Planung und fachlicher Prüfung. Der Vergleich mit bestehenden digitalen Wiederverwendungsprozessen bestätigte diese Prozessstruktur. Der D5-Workflow bildet wesentliche Schritte von der Bestandserfassung bis zum Wiedereinbau ab, während der buildingSMART-Use-Case insbesondere den Übergang vom Rückbau in die weitere Vermittlung beschreibt \cite{de-wolf-d5-digital-circular-workflow-2024,buildingsmart-benelux-decommissioning-to-reuse-2024}.
+  
 
 \begin{SemioNest}
 \paragraph{Gestaltung}
