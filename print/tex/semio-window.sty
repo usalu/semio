@@ -44,6 +44,13 @@
 % the depth-0 cap raisebox sends all vertical growth upward (bottom border, the
 % shared top rule, fixed).
 \providecommand{\semio@tab@inset}{\semio@window@bodypad}
+% 🔲 Vertical tab/heading inset = 70% of the horizontal \semio@tab@inset. Every
+% cap that uses the roomy inset (window/table title & number tabs AND the
+% section/appendix heading boxes) drives its top/bottom label gap from THIS token
+% and its left/right gap from \semio@tab@inset, so the vertical air is uniformly
+% 30% tighter than the horizontal while the two stay locked in one ratio. Written
+% as a nested \dimexpr so it scales if \semio@tab@inset changes.
+\providecommand{\semio@tab@inset@v}{\dimexpr\semio@tab@inset*7/10\relax}
 \providecommand{\semio@window@imagefit}{contain}
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
@@ -1125,9 +1132,17 @@
 % text. \ExplSyntaxOff is also pointless here at runtime; nothing in the
 % payload needs `_`/`:` to be non-letters.
 \cs_new_protected:Npn \semio_window_textsize_apply: {
-  \bool_if:NT \l_semio_window_textsize_set_bool {
+  \bool_if:NTF \l_semio_window_textsize_set_bool {
     \tl_set:Nx \l_tmpa_tl { \dim_use:N \l_semio_window_textsize_dim }
     \fontsize{\tl_use:N \l_tmpa_tl}{\tl_use:N \l_tmpa_tl}\selectfont
+  } {
+    % TEST: with no explicit text-size, default window body text to the same
+    % size tables use (\semio@chrome@font@body), so window and table text match.
+    % Skip text-size=fit windows (e.g. the cover tiles) — those auto-scale their
+    % text to fill the box, so pinning a base size here would fight the fit.
+    \bool_if:NF \l_semio_window_textfit_bool {
+      \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+    }
   }
 }
 
@@ -2231,9 +2246,10 @@
   }%
 }
 % Vertical padding budget added to the measured slot to form the cap height.
-% Default = 3·\semio@chrome@padding (unchanged for accent tabs, heading bars and
-% chips). The muted cap core locally \renewcommands this — scoped to its own
-% \hbox — so its label gets the full \semio@tab@inset above and below.
+% Default = 3·\semio@chrome@padding (unchanged for accent tabs). The muted cap
+% core and the heading chips locally \renewcommand this — each scoped to its own
+% \hbox — so their label gets \semio@tab@inset@v (70% of \semio@tab@inset) above
+% and below.
 \newcommand{\semio@window@cap@vpad@budget}{%
   \semio@chrome@padding+\semio@chrome@padding+\semio@chrome@padding}
 % Horizontal label inset inside a cap slot. Default = \semio@chrome@padding
@@ -2393,7 +2409,7 @@
   % LR-headbox-inset: same roomy vertical budget the muted cap core uses; scoped
   % to the caller's \hbox (\semio@heading@cap@nofill), so other caps are untouched.
   \renewcommand{\semio@window@cap@vpad@budget}{%
-    \semio@tab@inset+\semio@tab@inset+\semio@stroke@hairline}%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
     \semio@window@cap@metrics@set
   \semio@window@cap@raise{\semio@heading@cap@nofill@vbox{#3}}%
 }
@@ -2420,12 +2436,13 @@
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-  % Full title-tab inset: the label sits \semio@tab@inset from the top and bottom
-  % borders too. The +hairline compensates the tab's own top border stroke, so the
-  % canvas body (titleh−hairline) yields \semio@tab@inset above AND below the
-  % vertically-centred label. Local to the enclosing \hbox → other caps unaffected.
+  % Title-tab vertical inset: the label sits \semio@tab@inset@v (70% of the
+  % horizontal \semio@tab@inset) from the top and bottom borders. The +hairline
+  % compensates the tab's own top border stroke, so the canvas body (titleh−hairline)
+  % yields \semio@tab@inset@v above AND below the vertically-centred label. Local to
+  % the enclosing \hbox → other caps unaffected.
   \renewcommand{\semio@window@cap@vpad@budget}{%
-    \semio@tab@inset+\semio@tab@inset+\semio@stroke@hairline}%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
   \semio@window@cap@metrics@set
   \semio@window@cap@raise{\semio@window@cap@muted@vbox{semio-chrome-canvas}}%
 }
@@ -2447,14 +2464,15 @@
 }
 
 \newcommand{\semio@heading@chip}[3]{%
-  % LR-headbox-inset: match the window/table title tabs — the label sits the full
-  % \semio@tab@inset from all four borders (horizontal via \semio@window@cap@hpad,
-  % vertical via the vpad budget), instead of the tight \semio@chrome@padding.
-  % Scoped to this box so accent tabs (\semio@window@tab/@ctrl) keep their inset.
+  % LR-headbox-inset: match the window/table title tabs — the label sits
+  % \semio@tab@inset from the left/right borders (via \semio@window@cap@hpad) and
+  % \semio@tab@inset@v (70% of that) from top/bottom (via the vpad budget), instead
+  % of the tight \semio@chrome@padding. Scoped to this box so accent tabs
+  % (\semio@window@tab/@ctrl) keep their inset.
   \begingroup
   \renewcommand{\semio@window@cap@hpad}{\semio@tab@inset}%
   \renewcommand{\semio@window@cap@vpad@budget}{%
-    \semio@tab@inset+\semio@tab@inset+\semio@stroke@hairline}%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
   \semio@window@cap{#1}{#3}{%
     \semio@heading@bar@font\color{#2}%
   }%
