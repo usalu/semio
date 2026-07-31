@@ -108,10 +108,10 @@ pub fn encode_emit_event_json(event: &db_core::EmitEvent) -> String {
     out.push_str("}}");
     out
 }
-//#endregion 🔖️Json
+//#endregion 🔖Json
 
-//#region 🔖️Sink
-/// @emoji 🚰️ Where a sink's JSON-lines actually land — implementable over memory (`MemorySink`,
+//#region 🔖Sink
+/// @emoji 🚰 Where a sink's JSON-lines actually land — implementable over memory (`MemorySink`,
 /// tests/introspection), a file/pipe/`Vec<u8>` (`WriterSink`), or anything else ordered and
 /// append-only. Mirrors `pack_core::PackSink`'s spirit but returns `db_core::DbError` (the
 /// family's error type) instead of `PackError`, and writes pre-delimited lines rather than raw

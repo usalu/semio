@@ -1240,9 +1240,9 @@ impl DocumentApp for FlowPlayApp {
             .collect()
     }
 }
-//#endregion 🔖️FlowPlayApp
+//#endregion 🔖FlowPlayApp
 
-//#region 🔖️Manifest
+//#region 🔖Manifest
 pub fn create_flow_app() -> App {
     App::from_builder(
         App::builder(FLOW_PLAY_APP_ID, "Flow").document(["semio", "flow"])
@@ -1314,7 +1314,7 @@ pub fn create_flow_app() -> App {
                 PanelGroup::Details,
                 FLOW_PLAY_BODY_INSPECTOR,
             )
-            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
+            // ✏ Document-mutating actions — dispatched as VCS operations with true inverses.
             .operation("addWidget", "Add Widget")
             .operation("removeWidget", "Remove Widget")
             .operation("deleteSelection", "Delete Selection")
@@ -1326,9 +1326,9 @@ pub fn create_flow_app() -> App {
             .operation("renameFlowWidget", "Rename Widget")
             .operation("nodeGraphEdit", "Node Graph Edit")
             .operation("spotlightCommit", "Spotlight Commit")
-            // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
+            // 🧩 Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
-            // 👁️ Ephemeral view/config actions — mutate runtime, emit no operations.
+            // 👁 Ephemeral view/config actions — mutate runtime, emit no operations.
             .view_action("evaluate", "Evaluate")
             .view_action("selectAll", "Select All")
             .view_action("focusSelection", "Zoom to Selection")
@@ -1355,7 +1355,7 @@ pub fn create_flow_app() -> App {
             .action_with(flow_internal_action("selectGeneration", "Select Generation", ActionKind::View))
             .action_with(flow_internal_action("renameGeneration", "Rename Generation", ActionKind::View))
             .action_with(flow_internal_action("updateGenerationValues", "Update Generation Values", ActionKind::View))
-            // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
+            // 📝 Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", "Kind", vec![
                     ActionArgOption::new("inputSlider", "Slider"),
@@ -1369,9 +1369,9 @@ pub fn create_flow_app() -> App {
     .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"))
     .workflow("flow", "Flow", "graph")
 }
-//#endregion 🔖️Manifest
+//#endregion 🔖Manifest
 
-//#region 🧪️Tests
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1510,7 +1510,7 @@ mod tests {
         assert!(german.contains("Synapsen"), "german labels: {german}");
     }
 
-    /// 🤝️ Definitional merge proof: two instances on one backbone make DISJOINT edits (one renames a
+    /// 🤝 Definitional merge proof: two instances on one backbone make DISJOINT edits (one renames a
     /// widget, the other adds a widget); after exchanging operations both converge — impossible under
     /// whole-fixture `setDocument` snapshots, which would clobber one side.
     #[test]

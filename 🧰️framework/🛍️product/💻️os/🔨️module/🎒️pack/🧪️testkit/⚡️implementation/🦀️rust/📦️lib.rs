@@ -12,7 +12,7 @@
 //! canonical text form so generated values stay representable by `vcs`/`dsl_derive`'s future
 //! DSL-bidirectional tests without this crate needing to depend on either of them.
 
-use dsl_schema::{DslValue, FieldValue, RecordSpec, RecordValue, Shape, WireNode, WireValue};
+use dsl_schema::{DslValue, ExprValue, FieldValue, RecordSpec, RecordValue, Shape, WireNode, WireValue};
 use std::collections::HashMap;
 
 //#region 🔖️Arbitrary
@@ -172,6 +172,14 @@ impl RecordValueGen {
             }
             Shape::Wire => FieldValue::Wire(self.generate_wire(depth + 1, max_depth)),
             Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64()),
+            Shape::Ref(_) => FieldValue::Text(self.next_string(6)),
+            Shape::Coord(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
+            Shape::Dir => FieldValue::Tuple((0..3).map(|_| FieldValue::Float(self.next_f64())).collect()),
+            Shape::Dim(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
+            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
+            Shape::Count => FieldValue::UInt(self.next_uint()),
+            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
+            Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
         }
     }
 
@@ -198,6 +206,14 @@ impl RecordValueGen {
             Shape::Table(_) => FieldValue::List(Vec::new()),
             Shape::Wire => FieldValue::Wire(WireValue { from: WireNode { id: "n".to_string(), kind: None, port: None }, edge: None, properties: DslValue::Null }),
             Shape::Quantity(_) | Shape::Angle(_) => FieldValue::Float(self.next_f64()),
+            Shape::Ref(_) => FieldValue::Text(self.next_string(6)),
+            Shape::Coord(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
+            Shape::Dir => FieldValue::Tuple((0..3).map(|_| FieldValue::Float(self.next_f64())).collect()),
+            Shape::Dim(dims) => FieldValue::Tuple((0..*dims).map(|_| FieldValue::Float(self.next_f64())).collect()),
+            Shape::Range => FieldValue::Tuple(vec![FieldValue::Float(self.next_f64()), FieldValue::Float(self.next_f64())]),
+            Shape::Count => FieldValue::UInt(self.next_uint()),
+            Shape::Expr => FieldValue::Expr(ExprValue::Num(self.next_f64())),
+            Shape::Embed(_) => FieldValue::Text(self.next_string(8)),
         }
     }
 

@@ -3,7 +3,7 @@ name = "semio-framework-os-kernel-dsl"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Facade for the token-native declarative DSL engine — re-exports dsl_core/dsl_token/dsl_schema, the DslField/DslVariants runtime traits generated code binds against, and derive macros"
+description = "Facade for the token-native declarative DSL engine — re-exports dsl_core/dsl_schema, the DslField/DslVariants runtime traits generated code binds against, and derive macros"
 
 
 [lints]

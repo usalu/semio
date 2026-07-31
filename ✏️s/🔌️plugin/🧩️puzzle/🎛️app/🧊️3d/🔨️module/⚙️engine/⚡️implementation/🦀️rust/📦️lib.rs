@@ -1129,7 +1129,7 @@ fn order_brush_fill_compatible_candidates(
     cross
 }
 
-/// 🎯️ A target vortex's world-space pose, bundled so `brush_preview_from_candidate` stays under clippy's arg-count limit.
+/// 🎯 A target vortex's world-space pose, bundled so `brush_preview_from_candidate` stays under clippy's arg-count limit.
 #[derive(Clone, Copy)]
 struct TargetVortexWorld {
     position: Vec3,
@@ -1343,7 +1343,7 @@ impl Puzzle3dEngine {
 
     fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
         let mut scene: SceneConfig = serde_json::from_str(json)?;
-        // 🪣️ After the fill slider materializes objects into the document, every incidental action
+        // 🪣 After the fill slider materializes objects into the document, every incidental action
         // (hover, pick, mesh register sync, …) re-feeds that applied projection here. Treating it as a
         // brand-new scene used to `rebuild_queue()` and bake the filled objects into `fill.base`, after
         // which the slider could neither remove them nor replan a fresh tail.
@@ -1402,7 +1402,7 @@ impl Puzzle3dEngine {
         self.meshes.contains_key(url)
     }
 
-    /// 🧊️ Drops a cached brush-candidate entry and re-queues that vortex at the front so a just-opened
+    /// 🧊 Drops a cached brush-candidate entry and re-queues that vortex at the front so a just-opened
     /// suggestion popup is not stuck on a stale empty / pending result.
     fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
         self.brush_cache.remove(vortex_full_id);
@@ -1416,7 +1416,7 @@ impl Puzzle3dEngine {
         }
     }
 
-    /// 🧊️ Recomputes and caches brush candidates for one vortex immediately (used when opening / accepting
+    /// 🧊 Recomputes and caches brush candidates for one vortex immediately (used when opening / accepting
     /// the suggestion popup so the UI does not wait on the background queue).
     fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
         let result = self.compute_brush_cache_entry(vortex_full_id);
@@ -1745,7 +1745,7 @@ impl Puzzle3dEngine {
                 if next_fixture.objects.len() == fill.fixture.objects.len() {
                     continue;
                 }
-                // 🔒️ Infallible: the length check above proves `apply_brush_placement_to_fixture` actually
+                // 🔒 Infallible: the length check above proves `apply_brush_placement_to_fixture` actually
                 // appended (rather than returning `fixture.clone()` unchanged), and it only ever appends
                 // exactly one object together with exactly one attraction, never one without the other.
                 let mut placed_object = next_fixture.objects.last().cloned().expect("objects grew, so last() is Some");
@@ -1757,7 +1757,7 @@ impl Puzzle3dEngine {
                 let new_attraction = next_fixture.attractions.last().cloned().expect("attractions grew alongside objects, so last() is Some");
                 fill.fixture = next_fixture;
                 fill.sequence.push(payload);
-                // 🪣️ Tag with its sequence position so `compose_fill_display` can expose it as `revealIndex`.
+                // 🪣 Tag with its sequence position so `compose_fill_display` can expose it as `revealIndex`.
                 placed_object.reveal_index = Some(fill.appended_objects.len());
                 fill.appended_objects.push(placed_object);
                 fill.appended_attractions.push(new_attraction);
@@ -1768,7 +1768,7 @@ impl Puzzle3dEngine {
         false
     }
 
-    /// 🔽️ Moving the count down (or up) only changes which prefix of the already-planned sequence is
+    /// 🔽 Moving the count down (or up) only changes which prefix of the already-planned sequence is
     /// applied to the document — the plan (`sequence`/`appended_*`/`placed`/`fixture`) is prefix-stable
     /// and is never discarded here, so a jittery drag can never force expensive replanning.
     fn apply_fill_count(&mut self, count: usize) -> Option<Fixture> {
@@ -1776,7 +1776,7 @@ impl Puzzle3dEngine {
         let count = count.min(fill.sequence.len());
         fill.applied_count = count;
         let mut fixture = fill.base.clone();
-        // 🪣️ `revealIndex` is a live-viewport-only hint (see `compose_fill_display`) — never persist it
+        // 🪣 `revealIndex` is a live-viewport-only hint (see `compose_fill_display`) — never persist it
         // to the committed document projection.
         fixture.objects.extend(fill.appended_objects.iter().take(count).cloned().map(|mut object| {
             object.reveal_index = None;
@@ -1786,7 +1786,7 @@ impl Puzzle3dEngine {
         Some(fixture)
     }
 
-    /// 🪣️ Read-only prefix of the precomputed fill plan for live viewport show/hide — does not mutate
+    /// 🪣 Read-only prefix of the precomputed fill plan for live viewport show/hide — does not mutate
     /// `applied_count`, the queue, or the document projection.
     fn compose_fill_display(&self, count: usize) -> Option<Fixture> {
         let fill = self.fill.as_ref()?;
@@ -1824,7 +1824,7 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     };
     let object_id = format!("puzzle3d.brush.{}", uuid_simple());
     let vortices: Vec<VortexProps> = kind.vortices.iter().enumerate().map(|(index, entry)| VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: entry.vortex_kind.clone(), position: entry.position, direction: entry.direction }).collect();
-    // 🌲️ The new object attaches as `attracted`: the pre-existing target vortex it's docking onto stays the
+    // 🌲 The new object attaches as `attracted`: the pre-existing target vortex it's docking onto stays the
     // resolution root. Params start at zero (a bare port-to-port docking); `puzzle3d_rederive_all_attractions`
     // (puzzle/plugin/rs/d3/mod.rs) rederives them from this placement's actual pose right after merge, so the
     // object never visibly jumps when the directed-attraction resolver runs.

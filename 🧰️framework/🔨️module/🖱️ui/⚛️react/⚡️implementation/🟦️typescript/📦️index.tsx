@@ -14823,7 +14823,7 @@ const Scrollable = reactHostPort.forwardRef<HTMLDivElement, React.ComponentProps
       )}
       {...props}
     >
-      <div data-slot="scroll-area-viewport" className="min-h-0 min-w-0">
+      <div data-slot="scroll-area-viewport" className="min-h-0 min-w-0 w-full">
         {children}
       </div>
     </div>
@@ -20439,7 +20439,7 @@ const Panel: React.FC<PanelProps> = ({
                 close={panelFoldControl}
                 titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={1} showActiveColor={visible} />}
                 body={
-                  <div data-slot="panel-body-stack" className={cn("flex min-h-0 flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
+                  <div data-slot="panel-body-stack" className={cn("flex min-h-0 min-w-0 w-full flex-1", isBottom ? "flex-col-reverse" : "flex-col")}>
                     <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
                     <Scrollable className="relative flex-1 min-h-0">
                       {activeTabTrees && activeNode ? (
@@ -31435,6 +31435,8 @@ if (import.meta.vitest) {
       const bodyTabs = bodyStack?.querySelector('[data-slot="panel-tabs"]');
 
       expect(bodyStack?.getAttribute("data-slot")).toBe("panel-body-stack");
+      expect(bodyStack?.className).toContain("min-w-0");
+      expect(bodyStack?.className).toContain("w-full");
       expect(chipCap?.querySelectorAll('[data-slot="panel-tabs"]')).toHaveLength(1);
       expect(chipCap?.textContent).toContain("App");
       expect(chipCap?.textContent).not.toContain("Command");
@@ -31443,6 +31445,7 @@ if (import.meta.vitest) {
       expect(bodyTabs?.closest("[data-window-silhouette-chip]")).toBeNull();
       expect(bodyStack?.firstElementChild?.getAttribute("data-slot")).toBe("ribbon");
       expect(bodyStack?.lastElementChild?.getAttribute("data-slot")).toBe("scroll-area");
+      expect(bodyStack?.querySelector('[data-slot="scroll-area-viewport"]')?.className).toContain("w-full");
     });
 
     it("Panel marks the active tab with hover fill and emphasized icon above the emphasized frame", () => {

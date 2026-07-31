@@ -7097,7 +7097,7 @@ pub fn run_diffusion(config: &DiffusionRunConfig, latent: &mut [f32], shape: [us
     Ok(())
 }
 
-/// 🌫️ Image-to-image: the sigma-schedule index to start denoising from, given `strength` in
+/// 🌫 Image-to-image: the sigma-schedule index to start denoising from, given `strength` in
 /// `[0, 1]` (`1.0` = full generation from pure noise, `0.0` = skip denoising entirely, returning
 /// the original image essentially unchanged).
 pub fn img2img_start_index(sigma_count: usize, strength: f64) -> usize {
@@ -7105,7 +7105,7 @@ pub fn img2img_start_index(sigma_count: usize, strength: f64) -> usize {
     (((1.0 - strength) * sigma_count as f64).round() as usize).min(sigma_count)
 }
 
-/// 🌫️ Inpainting: re-noises `original` to the current `sigma` and blends it into `x` wherever
+/// 🌫 Inpainting: re-noises `original` to the current `sigma` and blends it into `x` wherever
 /// `mask[i] > 0` (`1.0` = fully keep the (re-noised) original, `0.0` = fully keep the freely
 /// generated content), matching the "hold the known region, regenerate the rest" contract.
 pub fn apply_inpaint_mask(x: &mut [f32], original: &[f32], mask: &[f32], sigma: f64, rng: &mut dyn RandomSource) {
@@ -7116,14 +7116,14 @@ pub fn apply_inpaint_mask(x: &mut [f32], original: &[f32], mask: &[f32], sigma: 
         }
     }
 }
-// #endregion 🔖️Diffusion
+// #endregion 🔖Diffusion
 
-// #region 🔖️Tests
+// #region 🔖Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    // #region 🔖️IdsTests
+    // #region 🔖IdsTests
     #[test]
     fn step_index_checked_next_overflows_to_none() {
         assert_eq!(StepIndex::new(u32::MAX).checked_next(), None);
@@ -7136,9 +7136,9 @@ mod tests {
         assert_eq!(format!("{}", SequenceId::new(7)), "7");
         assert_eq!(format!("{}", StepIndex::new(3)), "3");
     }
-    // #endregion 🔖️IdsTests
+    // #endregion 🔖IdsTests
 
-    // #region 🔖️ErrorsTests
+    // #region 🔖ErrorsTests
     #[test]
     fn every_error_variant_has_nonempty_display() {
         let errors = [
@@ -7174,9 +7174,9 @@ mod tests {
         assert_eq!(resolve_fallback(None, None, argmax), (FallbackAction::ArgmaxRaw, argmax));
         assert_eq!(resolve_fallback(None, None, None), (FallbackAction::Error, None));
     }
-    // #endregion 🔖️ErrorsTests
+    // #endregion 🔖ErrorsTests
 
-    // #region 🔖️LimitsTests
+    // #region 🔖LimitsTests
     #[test]
     fn default_limits_validate() {
         assert!(SamplingLimits::default().validate().is_ok());
@@ -7187,9 +7187,9 @@ mod tests {
         let limits = SamplingLimits { max_beam_width: 0, ..SamplingLimits::default() };
         assert!(limits.validate().is_err());
     }
-    // #endregion 🔖️LimitsTests
+    // #endregion 🔖LimitsTests
 
-    // #region 🔖️JsonTests
+    // #region 🔖JsonTests
     #[test]
     fn json_round_trips_basic_values() {
         let text = r#"{"a":1,"b":[true,false,null,"x\ny"],"c":{"d":-2.5}}"#;
@@ -7268,9 +7268,9 @@ mod tests {
         assert!(written.contains("1.5"));
         assert_eq!(write_json(&JsonValue::Num(3.0)), "3");
     }
-    // #endregion 🔖️JsonTests
+    // #endregion 🔖JsonTests
 
-    // #region 🔖️Utf8Tests
+    // #region 🔖Utf8Tests
     #[test]
     fn utf8_status_classifies_complete_partial_invalid() {
         assert_eq!(utf8_status(b"hello"), Utf8Status::Complete);
@@ -7280,9 +7280,9 @@ mod tests {
         assert_eq!(utf8_status(&[0xFF]), Utf8Status::Invalid);
         assert_eq!(utf8_status(b""), Utf8Status::Complete);
     }
-    // #endregion 🔖️Utf8Tests
+    // #endregion 🔖Utf8Tests
 
-    // #region 🔖️NumericsTests
+    // #region 🔖NumericsTests
     #[test]
     fn softmax_live_sums_to_one_and_matches_hand_computed() {
         let logits = [1.0f32, 2.0, 3.0];
@@ -7291,7 +7291,7 @@ mod tests {
         softmax_live(&logits, &live, &mut probs, Accum::F64);
         let sum: f32 = probs.iter().sum();
         assert!((sum - 1.0).abs() < 1e-6);
-        // 📐️ Hand-computed via exp(x - 3): [exp(-2), exp(-1), exp(0)] / sum
+        // 📐 Hand-computed via exp(x - 3): [exp(-2), exp(-1), exp(0)] / sum
         let expected = [0.09003057f32, 0.24472847, 0.66524096];
         for (p, e) in probs.iter().zip(expected.iter()) {
             assert!((p - e).abs() < 1e-5, "{p} vs {e}");
@@ -7421,9 +7421,9 @@ mod tests {
         assert_eq!(altered, 1);
         assert_eq!(logits[1], f32::MAX);
     }
-    // #endregion 🔖️NumericsTests
+    // #endregion 🔖NumericsTests
 
-    // #region 🔖️BitsetTests
+    // #region 🔖BitsetTests
     #[test]
     fn bitset_new_full_has_exactly_len_bits_set() {
         let set = TokenBitset::new_full(70);
@@ -7489,9 +7489,9 @@ mod tests {
         assert!(!set.is_all_zero());
         assert_eq!(set.first_set(), Some(TokenId::new(40)));
     }
-    // #endregion 🔖️BitsetTests
+    // #endregion 🔖BitsetTests
 
-    // #region 🔖️RngTests
+    // #region 🔖RngTests
     #[test]
     fn counter_rng_is_deterministic_for_same_seed() {
         let mut a = CounterRng::from_seed(123);
@@ -7516,7 +7516,7 @@ mod tests {
         let key_a = StreamKey { request: 1, sequence: 2, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
         let key_b = StreamKey { request: 1, sequence: 3, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
 
-        // 🎲️ Splitting in either order from the same parent must produce identical child streams.
+        // 🎲 Splitting in either order from the same parent must produce identical child streams.
         let mut a_first = parent.split(key_a);
         let mut b_first = parent.split(key_b);
         let a_vals_1: Vec<u64> = (0..4).map(|_| a_first.next_u64()).collect();
@@ -7598,9 +7598,9 @@ mod tests {
         }
         assert_eq!(rng.next_range(4, 4), 4);
     }
-    // #endregion 🔖️RngTests
+    // #endregion 🔖RngTests
 
-    // #region 🔖️VocabularyTests
+    // #region 🔖VocabularyTests
     #[test]
     fn vocabulary_validates_logits_length() {
         let vocab = Vocabulary::new(10);
@@ -7630,9 +7630,9 @@ mod tests {
         let fp3 = SliceTextAdapter::new(&different).fingerprint();
         assert_ne!(fp1, fp3, "separator byte must prevent boundary-shift collisions");
     }
-    // #endregion 🔖️VocabularyTests
+    // #endregion 🔖VocabularyTests
 
-    // #region 🔖️ScheduleTests
+    // #region 🔖ScheduleTests
     #[test]
     fn constant_schedule_ignores_input() {
         let schedule = Schedule::Constant(0.7);
@@ -7714,9 +7714,9 @@ mod tests {
         let json = schedule.to_json();
         assert!(Schedule::from_json(&json).is_err());
     }
-    // #endregion 🔖️ScheduleTests
+    // #endregion 🔖ScheduleTests
 
-    // #region 🔖️ConfigTests
+    // #region 🔖ConfigTests
     #[test]
     fn default_config_validates() {
         assert!(SamplingConfig::default().validate().is_ok());
@@ -7867,9 +7867,9 @@ mod tests {
             assert_eq!(spec, parsed);
         }
     }
-    // #endregion 🔖️ConfigTests
+    // #endregion 🔖ConfigTests
 
-    // #region 🔖️WorkspaceTests
+    // #region 🔖WorkspaceTests
     fn small_vocab() -> Vocabulary {
         Vocabulary::new(8).with_eos(vec![TokenId::new(7)])
     }
@@ -9247,7 +9247,7 @@ mod tests {
         let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
         let mut ws = LogitsWorkspace::new(3);
         let mut observer = NullObserver;
-        // 🧱️ Token 0 ("z") has the highest raw logit but must be masked out by the regex constraint.
+        // 🧱 Token 0 ("z") has the highest raw logit but must be masked out by the regex constraint.
         let logits = [10.0f32, 1.0, 1.0];
         let result = sample_step(&config, &mut state, &mut ws, &vocab, Some(&adapter), &logits, &mut observer).unwrap();
         assert_ne!(result.token, TokenId::new(0));
@@ -9304,9 +9304,9 @@ mod tests {
         let forked = constraint.fork();
         assert!(!forked.is_satisfied());
     }
-    // #endregion 🔖️ConstraintsTests
+    // #endregion 🔖ConstraintsTests
 
-    // #region 🔖️BatchTests
+    // #region 🔖BatchTests
     #[test]
     fn continuous_batcher_add_remove_and_step() {
         let config = SamplingConfig::precise();
@@ -9367,16 +9367,16 @@ mod tests {
         assert_eq!(forward.get(SequenceId::new(1)).unwrap().generated(), backward.get(SequenceId::new(1)).unwrap().generated());
         assert_eq!(forward.get(SequenceId::new(2)).unwrap().generated(), backward.get(SequenceId::new(2)).unwrap().generated());
     }
-    // #endregion 🔖️BatchTests
+    // #endregion 🔖BatchTests
 
-    // #region 🔖️SearchTests
+    // #region 🔖SearchTests
     #[test]
     fn beam_search_finds_the_highest_probability_short_sequence() {
         let config = SamplingConfig::precise();
         let vocab = Vocabulary::new(4).with_eos(vec![TokenId::new(3)]);
         let beam_config = BeamSearchConfig { width: 4, length_penalty: 1.0, max_steps: 3 };
         let initial = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
-        // 🌳️ Token 1 dominates for the first two steps (building the best possible 2-token prefix);
+        // 🌳 Token 1 dominates for the first two steps (building the best possible 2-token prefix);
         // from step 2 on, EOS (token 3) overwhelmingly dominates every beam alike, so whichever beam
         // carries the best prefix into that step produces the overall best-scoring finished
         // hypothesis: "1, 1, 3". Raw (non-length-normalized) cumulative log-probability would instead

@@ -8885,10 +8885,10 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
 type EngineSessionWasmModule = { readonly default: (input?: unknown) => Promise<unknown> } & Record<string, new () => unknown>;
 
 const ENGINE_SESSION_IMPORTERS: Record<string, () => Promise<EngineSessionWasmModule>> = {
-  "node-graph": () => import("@semio-tech/framework-surface-node-graph-rs/pkg/framework_surface_node_graph.js"),
-  "paint-2d": () => import("@semio-tech/framework-surface-paint-rs/pkg/framework_surface_paint.js"),
-  "tiled-map": () => import("@semio-tech/framework-surface-tiled-map-rs/pkg/framework_surface_tiled_map.js"),
-  terrain: () => import("@semio-tech/framework-surface-terrain-rs/pkg/framework_surface_terrain.js"),
+  "node-graph": () => import("@semio-tech/framework-surface-node-graph-rs"),
+  "paint-2d": () => import("@semio-tech/framework-surface-paint-rs"),
+  "tiled-map": () => import("@semio-tech/framework-surface-tiled-map-rs"),
+  terrain: () => import("@semio-tech/framework-surface-terrain-rs"),
   "board-2d": () => import("@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js"),
 };
 
@@ -9041,7 +9041,7 @@ let editorSessionPromise: Promise<EditorSessionModule> | null = null;
 
 export async function createEditorSession(): Promise<EditorWasmSession> {
   if (!editorSessionPromise) {
-    editorSessionPromise = import("@semio-tech/framework-editor-rs/pkg/framework_editor.js").then(async (mod) => {
+    editorSessionPromise = import("@semio-tech/framework-editor-rs").then(async (mod) => {
       await mod.default();
       return mod as EditorSessionModule;
     });

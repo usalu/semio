@@ -13,6 +13,9 @@
 #[cfg(test)]
 extern crate self as dsl;
 
+use std::collections::HashMap;
+use std::sync::{Mutex, OnceLock};
+
 pub use dsl_core::*;
 pub use dsl_derive::{DslDocument, DslEnum, DslOps, DslRecord, DslScalar};
 pub use dsl_schema::*;
@@ -376,6 +379,91 @@ pub mod op_rt {
 }
 //#endregion 🔖️OpRt
 
+//#region 🔖️Idiom
+/// @emoji 🗣️ A custom front-end language layered on this engine: its own lexer/parser/printer/AST,
+/// sharing only the laws (round-trip, canonicalize idempotence) and — via `register_idiom` — the
+/// editor plumbing (`LanguageService` fence delegation, semantic tokens). Formalizes the technique
+/// Jack (`math_graph_dsl`) already used by hand: pre-scan tokens `dsl_core::lex`'s fixed alphabet
+/// can't express, delegate every remaining run to `dsl_core::lex`, reuse `escape_text`/`Writer`/
+/// `parse_wire_text` for anything already shared. Two integration routes:
+/// - **Route A — whole-surface idiom** (a document/op language in its own right, e.g. CAD's
+///   Construct): the crate hand-implements `store::DocumentDsl`/`protocol::OpText` by lowering its
+///   own `Ast` to a `#[derive(DslRecord)]` semantic model, so `DocumentPack`/pack≡dsl hold through
+///   that model without this trait needing to know about packing at all.
+/// - **Route B — embedded idiom** (a `Shape::Embed(lang)` host field, e.g. a Jack query living
+///   inside a `writer` document): `register_idiom` lets canonicalization normalize the embedded
+///   text through the idiom's own canonical printer, so idempotence composes across the boundary.
+pub trait DslIdiom {
+    /// Stable registry id — the `lang` string a `#[dsl(lang = "...")]` field names.
+    const LANG: &'static str;
+    type Ast: Clone + PartialEq + Send + Sync;
+
+    fn parse(text: &str) -> Result<Self::Ast, TextError>;
+    /// LAW: `Self::parse(&Self::print(ast)) == Ok(ast)` for every `ast` the idiom can produce —
+    /// the idiom's own round-trip law, the direct analogue of this engine's `parse ∘ print = id`
+    /// for `RecordSpec` grammars.
+    fn print(ast: &Self::Ast) -> String;
+    fn classify(text: &str) -> Vec<(TokenClass, TextSpan)>;
+    fn complete(_text: &str, _offset: usize) -> Vec<CompletionItem> {
+        Vec::new()
+    }
+}
+
+/// @emoji 🧩️ Placeholder until `dsl_schema::LanguageService` grows a real completion type — kept
+/// as a named type now so `DslIdiom::complete`'s signature doesn't need to change when it does.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CompletionItem {
+    pub label: String,
+    pub detail: Option<String>,
+}
+
+/// @emoji 📇️ Type-erased vtable for one registered idiom — what `Shape::Embed` canonicalization
+/// and `LanguageService` fence delegation call through, without depending on the idiom's own crate
+/// (which would be a dependency cycle: the idiom depends on `dsl`, not the reverse).
+#[derive(Clone, Copy)]
+pub struct IdiomHooks {
+    pub lang: &'static str,
+    /// `print ∘ parse` — `Err` propagates the idiom's own parse diagnostic unchanged.
+    pub canonicalize: fn(&str) -> Result<String, TextError>,
+    pub classify: fn(&str) -> Vec<(TokenClass, TextSpan)>,
+    pub complete: fn(&str, usize) -> Vec<CompletionItem>,
+}
+
+/// @emoji 🏗️ Derives an `IdiomHooks` vtable from a `DslIdiom` impl — the one place `Self::Ast`
+/// needs to be named, so every other caller works with the type-erased `IdiomHooks` instead.
+pub fn hooks_for<I: DslIdiom>() -> IdiomHooks {
+    IdiomHooks {
+        lang: I::LANG,
+        canonicalize: |text| I::parse(text).map(|ast| I::print(&ast)),
+        classify: I::classify,
+        complete: I::complete,
+    }
+}
+
+static IDIOM_REGISTRY: OnceLock<Mutex<HashMap<&'static str, IdiomHooks>>> = OnceLock::new();
+
+fn idiom_registry() -> &'static Mutex<HashMap<&'static str, IdiomHooks>> {
+    IDIOM_REGISTRY.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// @emoji 📌️ Registers an idiom's hooks under its `LANG` id — called once at host/plugin init.
+/// Re-registering the same `lang` overwrites the previous hooks rather than erroring, so a
+/// hot-reloaded dev build never deadlocks on itself.
+pub fn register_idiom(hooks: IdiomHooks) {
+    let mut registry = idiom_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    registry.insert(hooks.lang, hooks);
+}
+
+/// @emoji 🔍️ Looks up a previously-registered idiom's hooks by `lang` id. `None` for an
+/// unregistered (or not-yet-registered) lang — callers must treat that as "pass through verbatim",
+/// never as an error, since `Shape::Embed` text must remain parseable before any plugin has run
+/// its own registration.
+pub fn idiom(lang: &str) -> Option<IdiomHooks> {
+    let registry = idiom_registry().lock().unwrap_or_else(|poison| poison.into_inner());
+    registry.get(lang).copied()
+}
+//#endregion 🔖️Idiom
+
 //#region 🔖️TestSupport
 /// @emoji 🧪️ Round-trip/property helpers every derived (or hand-declared) grammar's own tests
 /// call — the facade-level analogue of `store::test_support`, scoped to the engine's own laws
@@ -383,7 +471,7 @@ pub mod op_rt {
 pub mod test_support {
     use super::*;
 
-    /// @emoji 🔁️ `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
+    /// @emoji 🔁 `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
         let printed = print(value, spec, JoinMode::Document);
         let opts = ParseOptions::default();
@@ -391,14 +479,14 @@ pub mod test_support {
         assert_eq!(value, &reparsed, "schema round trip diverged;\nprinted:\n{printed}");
     }
 
-    /// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
+    /// @emoji ♻ `canonicalize(canonicalize(x)) == canonicalize(x)`.
     pub fn assert_idempotent(text: &str, spec: &RecordSpec) {
         let once = canonicalize(text, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("canonicalize failed: {e}"));
         let twice = canonicalize(&once, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("second canonicalize failed: {e}"));
         assert_eq!(once, twice, "canonicalization must be idempotent");
     }
 
-    /// @emoji 📏️ Document and Inline renders of the same value must parse back to equal values,
+    /// @emoji 📏 Document and Inline renders of the same value must parse back to equal values,
     /// and the Inline render must be exactly one line — the newline law, checked generically.
     pub fn assert_document_inline_agree(value: &RecordValue, spec: &RecordSpec) {
         let inline_text = print(value, spec, JoinMode::Inline);
@@ -408,9 +496,9 @@ pub mod test_support {
         assert_eq!(value, &reparsed, "Document and Inline renders must parse to the same value");
     }
 }
-//#endregion 🔖️TestSupport
+//#endregion 🔖TestSupport
 
-//#region 🧪️Tests
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -433,6 +521,52 @@ mod tests {
         assert_eq!(value, FieldValue::Wire(literal));
         let restored = Wire::from_value(&value).expect("from_value");
         assert_eq!(restored, wire);
+    }
+
+    // --- DslIdiom: a toy "hello <name>" language exercising the whole trait + registry seam ---
+    #[derive(Clone, Debug, PartialEq)]
+    struct GreetAst {
+        name: String,
+    }
+
+    struct GreetIdiom;
+
+    impl DslIdiom for GreetIdiom {
+        const LANG: &'static str = "greet";
+        type Ast = GreetAst;
+
+        fn parse(text: &str) -> Result<Self::Ast, TextError> {
+            text.strip_prefix("hello ")
+                .map(|name| GreetAst { name: name.trim().to_string() })
+                .ok_or_else(|| TextError::new("expected 'hello <name>'", TextSpan::at(1, 1)))
+        }
+
+        fn print(ast: &Self::Ast) -> String {
+            format!("hello {}", ast.name)
+        }
+
+        fn classify(_text: &str) -> Vec<(TokenClass, TextSpan)> {
+            Vec::new()
+        }
+    }
+
+    #[test]
+    fn dsl_idiom_round_trips_through_its_own_parse_and_print() {
+        let ast = GreetIdiom::parse("hello world").expect("parse");
+        assert_eq!(ast, GreetAst { name: "world".to_string() });
+        assert_eq!(GreetIdiom::print(&ast), "hello world");
+        assert_eq!(GreetIdiom::parse(&GreetIdiom::print(&ast)), Ok(ast), "idiom round trip law");
+    }
+
+    #[test]
+    fn dsl_idiom_registry_resolves_by_lang_and_canonicalizes_through_the_hooks() {
+        register_idiom(hooks_for::<GreetIdiom>());
+        let hooks = idiom("greet").expect("registered idiom must be found by its LANG id");
+        assert_eq!(hooks.lang, "greet");
+        let canonical = (hooks.canonicalize)("hello   world").expect("canonicalize");
+        assert_eq!(canonical, "hello world", "canonicalize normalizes through parse -> print");
+        assert!((hooks.canonicalize)("not a greeting").is_err(), "a malformed idiom body must surface the idiom's own parse error");
+        assert!(idiom("never-registered-lang").is_none(), "an unregistered lang must resolve to None, never a default/error");
     }
 
     #[test]

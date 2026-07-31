@@ -1338,7 +1338,7 @@ pub struct DerivedUtilitySpec {
     pub category: Option<UtilityCategory>,
 }
 
-/// @emoji 🧰️ Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
+/// @emoji 🧰 Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
 /// Each utility becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
 /// `on_change` dispatches `setActiveUtility { utilityId }` against `controller_id`. Utilities sharing a `group`
 /// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
@@ -1405,10 +1405,10 @@ pub fn derive_utility_nodes(
         })
         .collect()
 }
-//#endregion 🔖️DeriveUtilityNodes
+//#endregion 🔖DeriveUtilityNodes
 
-//#region 🔖️WireFormatGoldenTests
-/** 🧊️ Golden wire-format tests: freeze exact JSON for UtilityNode before it moves into ui_wgpu. */
+//#region 🔖WireFormatGoldenTests
+/** 🧊 Golden wire-format tests: freeze exact JSON for UtilityNode before it moves into ui_wgpu. */
 #[cfg(test)]
 mod utility_node_wire_format_tests {
     use super::*;
@@ -1508,24 +1508,24 @@ mod utility_node_wire_format_tests {
         assert!(matches!(&nodes[1], UtilityNode::Toggle { id, .. } if id == "brush"));
     }
 }
-//#endregion 🔖️WireFormatGoldenTests
+//#endregion 🔖WireFormatGoldenTests
 // #endregion utilities
 }
 
 pub mod ui {
 // #region ui
-//! 🧩️ Declarative UI graph types shared by kernel, plugins, and renderers.
+//! 🧩 Declarative UI graph types shared by kernel, plugins, and renderers.
 
 use crate::IconName;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-//#region 🔖️Action
+//#region 🔖Action
 pub use super::layout::{ActionDescriptor, StyleSpec, UiPresence, UiState, UiStatus};
-//#endregion 🔖️Action
+//#endregion 🔖Action
 
-//#region 🔖️Primitives
-// 🚧️ NOT typegen-derived: `children: Vec<UiNode>` makes this recursive through `UiNode`, which isn't
+//#region 🔖Primitives
+// 🚧 NOT typegen-derived: `children: Vec<UiNode>` makes this recursive through `UiNode`, which isn't
 // itself typegen-derived yet (blocked on the `ComponentScene` scene family — see 🔖️Manifest in
 // framework/core/rs/lib.rs). Hand-mirrored in framework/core/js/index.ts until that lands.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -4357,7 +4357,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, celebrating);
     }
 
-    /// ✨️ Every `UiNode` variant's `presence` field actually serializes when set — an exhaustiveness
+    /// ✨ Every `UiNode` variant's `presence` field actually serializes when set — an exhaustiveness
     /// belt-and-braces check so a future variant can't silently drop its shared state on the wire.
     #[test]
     fn every_ui_node_variant_serializes_a_non_default_presence() {
@@ -4415,7 +4415,7 @@ mod ui_node_wire_format_tests {
         );
     }
 
-    /// ☁️ `points_json` follows the same `Option<String>` skip-if-none convention as `terrain_json`:
+    /// ☁ `points_json` follows the same `Option<String>` skip-if-none convention as `terrain_json`:
     /// absent when unset, round-trips (camelCase `pointsJson`) when set.
     #[test]
     fn world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set() {
@@ -4514,7 +4514,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, scenes);
     }
 
-    /// 🆚️ `DiffViewScene`/`EventFeedScene` golden coverage lives in its own pair-tuple (rather than
+    /// 🆚 `DiffViewScene`/`EventFeedScene` golden coverage lives in its own pair-tuple (rather than
     /// joining `scene_records_serialize_to_golden_json`'s tuple above) because std only implements
     /// `Debug`/`PartialEq` for tuples up to 12 elements, and that tuple is already at the cap.
     const GOLDEN_DIFF_VIEW_EVENT_FEED_SCENES_JSON: &str = "[{\"before\":\"a\",\"after\":\"b\",\"language\":\"rust\",\"mode\":\"unified\"},{\"entriesJson\":\"[]\",\"follow\":true,\"activateAction\":\"openEvent\"}]";
@@ -12235,7 +12235,7 @@ mod tests {
     #[test]
     fn emoji_codepoints_resolve_through_the_noto_emoji_fallback_family() {
         let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
-        let glyph = atlas.ensure_glyph('😀️', 32.0);
+        let glyph = atlas.ensure_glyph('😀', 32.0);
         assert!(glyph.width > 0 && glyph.height > 0, "emoji glyph must produce a non-empty raster");
         assert!(!glyph.is_color, "the bundled Noto Emoji assets are monochrome outline-only");
         assert!(atlas.take_dirty());
@@ -12246,7 +12246,7 @@ mod tests {
         let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
         assert!(!atlas.take_color_dirty());
         atlas.pack_glyph(
-            ('🔥️', 32),
+            ('🔥', 32),
             super::RasterizedGlyph {
                 bitmap: vec![255u8; 4 * 4 * 4],
                 width: 4,
@@ -12257,7 +12257,7 @@ mod tests {
                 is_color: true,
             },
         );
-        let glyph = atlas.ensure_glyph('🔥️', 32.0);
+        let glyph = atlas.ensure_glyph('🔥', 32.0);
         assert!(glyph.is_color);
         assert_eq!((glyph.width, glyph.height), (4, 4));
         assert!(atlas.take_color_dirty(), "packing a color glyph must mark the color page dirty");

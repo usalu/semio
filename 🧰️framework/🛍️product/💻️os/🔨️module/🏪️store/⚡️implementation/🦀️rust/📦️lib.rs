@@ -3967,7 +3967,7 @@ pub mod test_support {
         assert_eq!(&decoded, command, "command binary round trip diverged from source command");
     }
 
-    /// @emoji 📄️ Asserts that printing a store's envelope to text and parsing it back yields the same
+    /// @emoji 📄 Asserts that printing a store's envelope to text and parsing it back yields the same
     /// live projection the store already holds — the ground truth for {@link print_document_text}/
     /// {@link parse_document_text} on any technology once it implements `DocumentDsl` + `OpText`.
     pub fn assert_document_text_round_trip<P, Operation>(store: &DocumentStore<P, Operation>)
@@ -5640,9 +5640,9 @@ mod tests {
         );
     }
 
-    //#endregion 🏛️StudioTests
+    //#endregion 🏛StudioTests
 
-    //#region 🔖️TextFormatHelpers
+    //#region 🔖TextFormatHelpers
     #[test]
     fn ops_author_conversion_drops_avatar_matching_the_ops_text_format() {
         let author = Author { id: "a1".into(), name: "Alice".into(), avatar: Some("http://example/a1.png".into()) };

@@ -209,10 +209,10 @@ pub fn describe_video_probe(probe: &remodel_video::VideoProbe) -> (remodel_video
         }
     }
 }
-//#endregion 🔖️EngineMapping
+//#endregion 🔖EngineMapping
 
-//#region 🔖️Exporters
-/// 🌐️ Hand-rolled ASCII Stanford PLY mesh exporter (vertex positions + optional per-vertex color, plus
+//#region 🔖Exporters
+/// 🌐 Hand-rolled ASCII Stanford PLY mesh exporter (vertex positions + optional per-vertex color, plus
 /// the triangle face list). No PLY/LAS writer exists yet in `remodel_mesh`/`remodel_dense`/`remodel_geo`
 /// (checked) — export-only, simple, well-specified formats are acceptable to hand-roll here per the
 /// house convention that a library-side writer is only mandatory once one already exists.
@@ -255,7 +255,7 @@ fn mesh_to_ply(mesh: &MeshData) -> String {
     out
 }
 
-/// 🛰️ Hand-rolled binary LAS 1.2 exporter (public header block + point data record format 0): encodes
+/// 🛰 Hand-rolled binary LAS 1.2 exporter (public header block + point data record format 0): encodes
 /// each mesh vertex as one unclassified LAS point at millimeter scale — a documented simplification
 /// standing in for a real point-cloud-native LAS export (this codec is registered mesh-generically, so
 /// it always receives a `MeshData`, never a raw point cloud).
@@ -347,7 +347,7 @@ pub fn remodel_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     Ok(scene.results.mesh.mesh)
 }
 
-/// 🖼️ Exports whichever raster/texture asset is available (DSM, else ortho, else the mesh's baked
+/// 🖼 Exports whichever raster/texture asset is available (DSM, else ortho, else the mesh's baked
 /// texture) verbatim — every such asset is already a base64 PNG, so this is a lookup, not a re-encode.
 pub fn remodel_png_export(doc: &Value) -> Result<semio_framework_os::OsMediaExportResult, String> {
     let scene: RemodelScene = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;

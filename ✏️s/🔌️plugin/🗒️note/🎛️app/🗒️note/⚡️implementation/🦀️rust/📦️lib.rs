@@ -100,6 +100,7 @@ pub enum NoteBlockNode {
         visible: bool,
         #[serde(default)]
         locked: bool,
+        #[dsl(lang = "tex")]
         tex: String,
         display_mode: bool,
     },

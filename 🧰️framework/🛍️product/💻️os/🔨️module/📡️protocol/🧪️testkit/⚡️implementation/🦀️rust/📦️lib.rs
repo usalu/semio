@@ -42,7 +42,7 @@ impl SplitMix64 {
 }
 
 const WORD_ALPHABET: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-const ADVERSARIAL_UNICODE: &[char] = &['é', 'ø', 'ñ', 'ß', '文', '档', '漢', '中', '🎉️', '🚀️'];
+const ADVERSARIAL_UNICODE: &[char] = &['é', 'ø', 'ñ', 'ß', '文', '档', '漢', '中', '🎉', '🚀'];
 
 fn next_word(rng: &mut SplitMix64, max_len: usize) -> String {
     let len = 1 + rng.next_range(max_len as u64) as usize;

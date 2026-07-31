@@ -189,7 +189,11 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
       } else {
         candidates.push(resolve(repoRoot, cleanId));
       }
-      if (candidates.some((abs) => existsSync(abs))) return undefined;
+      const hit = candidates.find((abs) => existsSync(abs));
+      // When package root is already the wasm-pack `pkg/` folder, `.../pkg/foo.js` resolves to
+      // `pkgRoot/foo.js` via the stripped candidate above — return that absolute path so Vite does
+      // not keep looking for a nested `pkg/` that does not exist.
+      if (hit) return hit;
       return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
     },
     load(id) {

@@ -1,10 +1,8 @@
 [workspace]
 members = [
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🫀️core/⚡️implementation/🦀️rust",
-    "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🎟️token/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/✨️derive/⚡️implementation/🦀️rust",
-    "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/✍️editor/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🫀️core/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/📐️format/⚡️implementation/🦀️rust",

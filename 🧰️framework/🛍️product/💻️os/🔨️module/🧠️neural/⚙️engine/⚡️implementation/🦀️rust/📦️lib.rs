@@ -2396,7 +2396,7 @@ mod tests {
         let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, 1).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 1);
         assert_eq!(tick1.remaining, vec!["b".to_string()]);
-        // ⏱️ Tick 2: "a" is now a cache hit (free), so this budget-1 call reaches and computes "b".
+        // ⏱ Tick 2: "a" is now a cache hit (free), so this budget-1 call reaches and computes "b".
         let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, 1).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 2, "resuming must not recompute the already-cached \"a\"");
         assert!(tick2.remaining.is_empty(), "the walk reached the end of the topo order");
@@ -2449,7 +2449,7 @@ mod tests {
             module: "list".into(),
             name: "Size".into(),
             abbreviation: "Size".into(),
-            icon: "emoji:📋️".into(),
+            icon: "emoji:📋".into(),
             summary: "Size".into(),
             inputs: vec![ChannelSpec::list("list", &["list.size"])],
             outputs: vec![ChannelSpec::named("C", "Cnt", "count", "ListCount")],
@@ -2470,7 +2470,7 @@ mod tests {
             id: "point".into(),
             module: "math".into(),
             name: "Point".into(),
-            icon: "emoji:📍️".into(),
+            icon: "emoji:📍".into(),
             summary: "Point with x, y, z".into(),
             fields: vec![FieldSpec::decimal_default("x", 0.0), FieldSpec::decimal_default("y", 0.0), FieldSpec::decimal_default("z", 0.0)],
         }

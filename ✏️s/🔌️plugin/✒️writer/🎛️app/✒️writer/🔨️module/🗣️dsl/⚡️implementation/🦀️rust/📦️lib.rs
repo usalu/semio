@@ -37,7 +37,7 @@ mod tests {
     }
 
     /// ✍️ Hand-built representative document exercising the multiline/quoted-text path
-    /// (verbatim from the original file's `🔖️DslAndOpText` test region).
+    /// (verbatim from the original file's `🔖DslAndOpText` test region).
     fn jack_projection() -> WriterProjection {
         WriterProjection {
             schema: "writer.document".into(),

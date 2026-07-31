@@ -31,6 +31,16 @@ struct FieldAttrs {
     unit: Option<String>,
     /// `#[dsl(angle = "deg")]` — same mechanism as `unit`, `Shape::Angle` instead.
     angle: Option<String>,
+    /// `#[dsl(refs = "material")]` — a scalar `String`/`Option<String>` field prints/parses as
+    /// `Shape::Ref(kind)` instead of plain `Shape::Text`.
+    refs: Option<String>,
+    /// `#[dsl(defines = "material")]` — the anchor side of `refs`: this field's `FieldSpec.defines`
+    /// is set so `LanguageService::validate` knows which field, in a record of this kind, other
+    /// records' `Shape::Ref("material")` fields are expected to resolve against.
+    defines: Option<String>,
+    /// `#[dsl(lang = "jack")]` — a scalar `String` field prints/parses as `Shape::Embed(lang)`
+    /// (fenced verbatim in Document mode) instead of plain `Shape::Text`.
+    lang: Option<String>,
 }
 
 fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
@@ -88,6 +98,15 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
             } else if meta.path.is_ident("angle") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.angle = Some(value.value());
+            } else if meta.path.is_ident("refs") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                out.refs = Some(value.value());
+            } else if meta.path.is_ident("defines") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                out.defines = Some(value.value());
+            } else if meta.path.is_ident("lang") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                out.lang = Some(value.value());
             }
             Ok(())
         });
@@ -235,6 +254,12 @@ struct FieldPlan {
     unit: Option<String>,
     /// `#[dsl(angle = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
     angle: Option<String>,
+    /// `#[dsl(refs = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
+    refs: Option<String>,
+    /// `#[dsl(defines = "...")]` — sets `FieldSpec.defines`, independent of `Shape`.
+    defines: Option<String>,
+    /// `#[dsl(lang = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
+    lang: Option<String>,
 }
 
 fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
@@ -254,7 +279,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
             None
         };
         let block = attrs.block && !matches!(kind, FieldKind::VecBlockStatements(_));
-        out.push(FieldPlan { ident, id: index as u16, key, positional, optional, kind, elem_ty, block, unit: attrs.unit.clone(), angle: attrs.angle.clone() });
+        out.push(FieldPlan { ident, id: index as u16, key, positional, optional, kind, elem_ty, block, unit: attrs.unit.clone(), angle: attrs.angle.clone(), refs: attrs.refs.clone(), defines: attrs.defines.clone(), lang: attrs.lang.clone() });
     }
     out
 }
@@ -270,7 +295,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
     let mut field_idents = Vec::new();
 
     for plan in &plans {
-        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, block, unit, angle } = plan;
+        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, block, unit, angle, refs, defines, lang } = plan;
         // A `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` scalar field's Shape is resolved at
         // spec-build time via `dsl::__rt::unit_for_derive` — same lazy-per-call pattern every other
         // `fn() -> RecordSpec`-backed Shape in this engine already uses, so an unknown unit symbol
@@ -280,8 +305,16 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             Some(quote! { ::dsl::Shape::Quantity(::dsl::__rt::unit_for_derive(#symbol)) })
         } else if let Some(symbol) = angle {
             Some(quote! { ::dsl::Shape::Angle(::dsl::__rt::unit_for_derive(#symbol)) })
+        } else if let Some(kind) = refs {
+            Some(quote! { ::dsl::Shape::Ref(#kind) })
+        } else if let Some(l) = lang {
+            Some(quote! { ::dsl::Shape::Embed(#l) })
         } else {
             None
+        };
+        let defines_expr = match defines {
+            Some(kind) => quote! { .defines(#kind) },
+            None => quote! {},
         };
         field_idents.push(ident.clone());
         let pos_expr = match positional {
@@ -461,7 +494,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
         };
 
         spec_exprs.push(quote! {
-            ::dsl::FieldSpec::new(#id, #key, #shape_expr) #pos_expr #opt_expr
+            ::dsl::FieldSpec::new(#id, #key, #shape_expr) #pos_expr #opt_expr #defines_expr
         });
         to_value_stmts.push(quote! {
             record.fields.insert(#id, #to_value_expr);

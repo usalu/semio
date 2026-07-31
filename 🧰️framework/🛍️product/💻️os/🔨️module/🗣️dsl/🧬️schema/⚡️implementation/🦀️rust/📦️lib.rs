@@ -72,6 +72,37 @@ pub enum Shape {
     /// (rather than reusing `Quantity` with an angle unit) so `shape_type_name`/table headers can
     /// tell a length from a rotation at a glance (`NUM` vs `QTY` vs `ANG`).
     Angle(&'static dsl_core::UnitSpec),
+    /// A `Shape::Text` refinement: a checked reference to an entity of the named kind (e.g.
+    /// `"material"`). Prints/parses identically to `Text` (bare-preferred) — the only difference
+    /// is semantic (a paired `FieldSpec.defines` anchor lets `LanguageService::validate` flag a
+    /// dangling reference), so it needs no dedicated parse/print arm, only a distinct type name.
+    Ref(&'static str),
+    /// `@x,y[,z,...]` — a placement/position literal, `dims` coordinates. Value is
+    /// `FieldValue::Tuple` (same representation `Shape::Tuple` uses) with exactly `dims` floats.
+    Coord(u8),
+    /// `^x,y,z` — a unit direction/axis vector, always exactly 3 floats. Value is
+    /// `FieldValue::Tuple` — distinct from `Coord(3)` only by its `^` sigil and `DIR` type tag,
+    /// so a reader never confuses "where" from "which way".
+    Dir,
+    /// `WxHxD` (glued, no separator token — see `parse_dim`) — `dims` size components. Value is
+    /// `FieldValue::Tuple` with exactly `dims` floats.
+    Dim(u8),
+    /// `(lo..hi)` or `(lo..hi,step)` — value is `FieldValue::Tuple` of 2 or 3 floats (no dedicated
+    /// `RangeValue` type: a range IS a small tuple, just printed with `..` instead of `,` between
+    /// the first two elements).
+    Range,
+    /// `xN` — a bare count/multiplicity literal. Value is `FieldValue::UInt`.
+    Count,
+    /// `(expr)` — an arithmetic formula literal, always outer-parenthesized. Value is the ONE
+    /// genuinely new `FieldValue` variant this engine adds (`FieldValue::Expr`) — everything else
+    /// in this Shape reuses an existing representation.
+    Expr,
+    /// Fenced verbatim text in Document mode (`` ```lang\ncontent\n``` ``), escaped-quoted `Text`
+    /// in Inline mode — both parse to the same `FieldValue::Text`, the "Document/Inline agree" law
+    /// applied to a shape whose Document form needs raw multi-line content. `lang` is this field's
+    /// DECLARED embedded language (e.g. `"jack"`); an authored fence's own lang tag must be empty
+    /// or match it.
+    Embed(&'static str),
 }
 
 #[derive(Clone, Debug)]
@@ -86,11 +117,15 @@ pub struct FieldSpec {
     pub optional: bool,
     /// Splice a nested record's fields directly into this record (shared doc/op field schemas).
     pub flatten: bool,
+    /// Paired with a sibling field's `Shape::Ref(kind)`: this field's value is the canonical id of
+    /// an entity of kind `kind`. `None` for every field that isn't such an anchor. Not wire/hash
+    /// relevant (LanguageService-only, see `Shape::Ref`'s doc comment) — purely an authoring aid.
+    pub defines: Option<&'static str>,
 }
 
 impl FieldSpec {
     pub fn new(id: u16, key: &str, shape: Shape) -> Self {
-        Self { id, key: key.to_string(), position: None, shape, optional: false, flatten: false }
+        Self { id, key: key.to_string(), position: None, shape, optional: false, flatten: false, defines: None }
     }
 
     pub fn positional(mut self, index: u8) -> Self {
@@ -105,6 +140,11 @@ impl FieldSpec {
 
     pub fn flatten(mut self) -> Self {
         self.flatten = true;
+        self
+    }
+
+    pub fn defines(mut self, kind: &'static str) -> Self {
+        self.defines = Some(kind);
         self
     }
 }
@@ -183,6 +223,7 @@ pub enum FieldValue {
     Map(Vec<(String, FieldValue)>),
     Value(DslValue),
     Wire(WireValue),
+    Expr(ExprValue),
     Absent,
 }
 
@@ -200,6 +241,52 @@ impl RecordValue {
 /// @emoji 🌳️ Alias naming the parse product per the engine's design vocabulary.
 pub type Cst = RecordValue;
 //#endregion 🔖️Value
+
+//#region 🔖️Expr
+/// @emoji ➕️ Arithmetic operators `Shape::Expr` supports — standard left-associative precedence
+/// (`*`/`/` bind tighter than `+`/`-`), plus a call form for named functions (`min(a, b)`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExprOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+impl ExprOp {
+    fn precedence(self) -> u8 {
+        match self {
+            ExprOp::Add | ExprOp::Sub => 1,
+            ExprOp::Mul | ExprOp::Div => 2,
+        }
+    }
+
+    fn symbol(self) -> &'static str {
+        match self {
+            ExprOp::Add => "+",
+            ExprOp::Sub => "-",
+            ExprOp::Mul => "*",
+            ExprOp::Div => "/",
+        }
+    }
+}
+
+/// @emoji 🧮️ The parsed body of a `Shape::Expr` field — a small formula AST, e.g.
+/// `1.35*G + 1.5*Q` parses to `Binary(Add, Binary(Mul, Num(1.35), Var("G")), Binary(Mul,
+/// Num(1.5), Var("Q")))`. Deliberately NOT a general-purpose scripting language (no assignment, no
+/// control flow, no boolean logic) — it's a formula literal, one notch above a bare number.
+#[derive(Clone, Debug, PartialEq)]
+pub enum ExprValue {
+    Num(f64),
+    /// A snake_case reference to a sibling field/symbol, resolved by the consuming technology
+    /// (e.g. a norm calc-sheet's own `given`/prior `clause` definitions) — this engine only
+    /// parses/prints the name, it never evaluates it.
+    Var(String),
+    Neg(Box<ExprValue>),
+    Binary(ExprOp, Box<ExprValue>, Box<ExprValue>),
+    Call(String, Vec<ExprValue>),
+}
+//#endregion 🔖️Expr
 
 //#region 🔖️Cursor
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -330,18 +417,7 @@ fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextEr
             let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
             Ok(FieldValue::Float(value))
         }
-        Shape::Text => match cursor.peek().kind {
-            TokenKind::Text => {
-                let token = cursor.advance();
-                let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
-                Ok(FieldValue::Text(text))
-            }
-            TokenKind::Ident => {
-                let token = cursor.advance();
-                Ok(FieldValue::Text(ident_like_text(&token)))
-            }
-            other => Err(TextError::new(format!("expected Text, found {other:?} '{}'", cursor.peek().text.as_str()), cursor.span())),
-        },
+        Shape::Text => parse_scalar_text(cursor),
         Shape::Bytes64 => {
             let token = cursor.expect(TokenKind::Text)?;
             let bytes = base64_decode(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
@@ -357,8 +433,195 @@ fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextEr
                 .ok_or_else(|| TextError::new(format!("unknown enum tag '{text}'"), token.span))
         }
         Shape::Quantity(declared) | Shape::Angle(declared) => parse_quantity(cursor, declared),
+        Shape::Ref(_) => parse_scalar_text(cursor),
+        Shape::Embed(declared_lang) => parse_embed(cursor, declared_lang),
+        Shape::Count => {
+            if cursor.peek().kind != TokenKind::Ident {
+                return Err(TextError::new(format!("expected a count literal like 'x24', found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
+            }
+            let token = cursor.advance();
+            let text = token.text.as_str();
+            let digits = text.strip_prefix('x').ok_or_else(|| TextError::new(format!("expected a count literal like 'x24', found '{text}'"), token.span))?;
+            let value: u64 = digits.parse().map_err(|_| TextError::new(format!("invalid count literal 'x{digits}'"), token.span))?;
+            Ok(FieldValue::UInt(value))
+        }
         other => Err(TextError::new(format!("shape {other:?} is not a scalar"), cursor.span())),
     }
+}
+
+/// @emoji 🧮️ Precedence-climbing entry point for `Shape::Expr`'s body (called with the caller's
+/// outer `(`/`)` already consumed). `min_prec` is the lowest operator precedence this call is
+/// willing to keep consuming at — the standard technique for turning a flat token stream into a
+/// precedence-correct tree without a separate tokenize-then-shunting-yard pass.
+fn parse_expr(cursor: &mut Cursor, min_prec: u8) -> Result<ExprValue, TextError> {
+    let lhs = parse_expr_unary(cursor)?;
+    parse_expr_continue(cursor, min_prec, lhs)
+}
+
+/// @emoji 🧮️ The loop body of `parse_expr`, factored out so the glued-negative-number case below
+/// can re-enter it with an ALREADY-PARSED left operand instead of calling `parse_expr_unary` again
+/// (which would re-consume nothing, since the token was already consumed to build that operand).
+fn parse_expr_continue(cursor: &mut Cursor, min_prec: u8, mut lhs: ExprValue) -> Result<ExprValue, TextError> {
+    loop {
+        // The shared lexer glues a leading `-` onto an immediately-following digit as ONE negative
+        // number token (`y=-2`'s existing, load-bearing behavior — see dsl_core's lexer) — so
+        // `10-2` lexes as `Int(10), Int(-2)`, not `Int(10), Minus, Int(2)`. Detect that shape here
+        // and reinterpret it as `Sub` with a positive right operand, rather than requiring authors
+        // to always space out `-` (canonical PRINT output always does; hand-written input may not).
+        let glued_negative = matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) && cursor.peek().text.as_str().starts_with('-');
+        let (op, prec) = if glued_negative {
+            (ExprOp::Sub, ExprOp::Sub.precedence())
+        } else {
+            match cursor.peek().kind {
+                TokenKind::Plus => (ExprOp::Add, ExprOp::Add.precedence()),
+                TokenKind::Minus => (ExprOp::Sub, ExprOp::Sub.precedence()),
+                TokenKind::Star => (ExprOp::Mul, ExprOp::Mul.precedence()),
+                TokenKind::Slash => (ExprOp::Div, ExprOp::Div.precedence()),
+                _ => break,
+            }
+        };
+        if prec < min_prec {
+            break;
+        }
+        let rhs = if glued_negative {
+            let token = cursor.advance();
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
+            parse_expr_continue(cursor, prec + 1, ExprValue::Num(-value))?
+        } else {
+            cursor.advance();
+            parse_expr(cursor, prec + 1)?
+        };
+        lhs = ExprValue::Binary(op, Box::new(lhs), Box::new(rhs));
+    }
+    Ok(lhs)
+}
+
+fn parse_expr_unary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
+    if cursor.peek().kind == TokenKind::Minus {
+        cursor.advance();
+        return Ok(ExprValue::Neg(Box::new(parse_expr_unary(cursor)?)));
+    }
+    parse_expr_primary(cursor)
+}
+
+fn parse_expr_primary(cursor: &mut Cursor) -> Result<ExprValue, TextError> {
+    match cursor.peek().kind {
+        TokenKind::Float | TokenKind::Int => {
+            let token = cursor.advance();
+            let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
+            Ok(ExprValue::Num(value))
+        }
+        TokenKind::Ident => {
+            let token = cursor.advance();
+            let name = ident_like_text(&token);
+            if cursor.peek().kind == TokenKind::LParen {
+                cursor.advance();
+                let mut args = Vec::new();
+                if cursor.peek().kind != TokenKind::RParen {
+                    loop {
+                        args.push(parse_expr(cursor, 0)?);
+                        if cursor.peek().kind == TokenKind::Comma {
+                            cursor.advance();
+                            continue;
+                        }
+                        break;
+                    }
+                }
+                cursor.expect(TokenKind::RParen)?;
+                Ok(ExprValue::Call(name, args))
+            } else {
+                Ok(ExprValue::Var(name))
+            }
+        }
+        TokenKind::LParen => {
+            cursor.advance();
+            let inner = parse_expr(cursor, 0)?;
+            cursor.expect(TokenKind::RParen)?;
+            Ok(inner)
+        }
+        other => Err(TextError::new(format!("expected a number, variable, or '(', found {other:?} '{}'", cursor.peek().text.as_str()), cursor.span())),
+    }
+}
+
+/// @emoji 🧮️ Standalone entry point for parsing a bare expression body (no surrounding `(`/`)`,
+/// unlike `Shape::Expr`'s own field-value grammar) — what `pack_value`'s decoder calls to turn the
+/// canonical string it stored back into an `ExprValue`, since decode has no `Cursor` of its own.
+pub fn parse_expr_text(text: &str) -> Result<ExprValue, TextError> {
+    let tokens = lex(text, &Limits::default(), false)?;
+    let mut cursor = Cursor::new(tokens, Limits::default());
+    let value = parse_expr(&mut cursor, 0)?;
+    cursor.expect(TokenKind::Eof)?;
+    Ok(value)
+}
+
+/// @emoji 🎨️ Canonical `Shape::Expr` printer. Parenthesizes the minimum necessary to guarantee
+/// `parse_expr(print_expr(e)) == e` for EVERY tree shape (not just canonically-left-nested ones):
+/// a `Binary` right operand is parenthesized whenever its own precedence isn't STRICTLY higher
+/// than the parent's (so even a commutative `a+(b+c)` keeps its parens — losing them would
+/// reparse as the structurally different `(a+b)+c`), and a left operand only when strictly lower
+/// (left-associativity already makes equal precedence safe there).
+pub fn print_expr(expr: &ExprValue) -> String {
+    print_expr_prec(expr, 0)
+}
+
+fn print_expr_prec(expr: &ExprValue, min_prec: u8) -> String {
+    let (body, own_prec) = match expr {
+        ExprValue::Num(v) => (format_f64(*v), 255),
+        ExprValue::Var(name) => (name.clone(), 255),
+        ExprValue::Call(name, args) => {
+            let joined = args.iter().map(|a| print_expr_prec(a, 0)).collect::<Vec<_>>().join(", ");
+            (format!("{name}({joined})"), 255)
+        }
+        // min_prec=4 is higher than every binary op (max 2) and Neg's own rank (3), so a nested
+        // Binary OR another Neg always gets parenthesized — the latter specifically avoids ever
+        // printing adjacent `--`, which would relex as `DashArrow`, not two `Minus` tokens.
+        ExprValue::Neg(inner) => (format!("-{}", print_expr_prec(inner, 4)), 3),
+        ExprValue::Binary(op, l, r) => {
+            let prec = op.precedence();
+            let l_text = print_expr_prec(l, prec);
+            let r_text = print_expr_prec(r, prec + 1);
+            (format!("{l_text} {} {r_text}", op.symbol()), prec)
+        }
+    };
+    if own_prec < min_prec {
+        format!("({body})")
+    } else {
+        body
+    }
+}
+
+/// @emoji 📛️ `Shape::Text`'s own body, factored out so `Shape::Ref` (identical grammar, distinct
+/// type only) can share it without a redundant match arm duplicating both branches.
+fn parse_scalar_text(cursor: &mut Cursor) -> Result<FieldValue, TextError> {
+    match cursor.peek().kind {
+        TokenKind::Text => {
+            let token = cursor.advance();
+            let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
+            Ok(FieldValue::Text(text))
+        }
+        TokenKind::Ident => {
+            let token = cursor.advance();
+            Ok(FieldValue::Text(ident_like_text(&token)))
+        }
+        other => Err(TextError::new(format!("expected Text, found {other:?} '{}'", cursor.peek().text.as_str()), cursor.span())),
+    }
+}
+
+/// @emoji 🗣️ `Shape::Embed`'s parse: a `Fence` token (Document mode — see `dsl_core`'s lexer for
+/// the `lang\u{0}content` encoding) with an empty or matching lang tag, OR anything
+/// `parse_scalar_text` already accepts (Inline mode's escaped-quoted fallback) — both converge on
+/// the same `FieldValue::Text`, which is what makes Document/Inline renders agree.
+fn parse_embed(cursor: &mut Cursor, declared_lang: &'static str) -> Result<FieldValue, TextError> {
+    if cursor.peek().kind == TokenKind::Fence {
+        let token = cursor.advance();
+        let raw = token.text.as_str();
+        let (lang, content) = raw.split_once('\u{0}').ok_or_else(|| TextError::new("malformed fence token (missing separator)", token.span))?;
+        if !lang.is_empty() && lang != declared_lang {
+            return Err(TextError::new(format!("fence declares lang '{lang}', field expects '{declared_lang}'"), token.span));
+        }
+        return Ok(FieldValue::Text(content.to_string()));
+    }
+    parse_scalar_text(cursor)
 }
 
 /// @emoji 📐️ Shared parse for `Shape::Quantity`/`Shape::Angle`: a number, optionally followed by a
@@ -386,10 +649,96 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static dsl_core::UnitSpec) ->
     }
 }
 
+/// @emoji 🔢️ Reads one `Float|Int` token as `f64` — the plain-number leaf `Shape::Coord`/`Dir`/
+/// `Dim`/`Range` compose from (unlike `parse_quantity`, no unit-suffix consumption: these shapes'
+/// components are always dimensionless numbers or already-declared-unit numbers).
+fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
+    if !matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) {
+        return Err(TextError::new(format!("expected a number, found {:?} '{}'", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
+    }
+    let token = cursor.advance();
+    parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))
+}
+
+/// @emoji 📍️ Shared body for `Shape::Coord`/`Shape::Dir`: a fixed-arity comma-separated run of
+/// plain numbers, with no delimiter of its own (the caller already consumed the `@`/`^` sigil).
+fn parse_fixed_number_tuple(cursor: &mut Cursor, arity: usize, what: &str) -> Result<FieldValue, TextError> {
+    let mut items = Vec::with_capacity(arity);
+    loop {
+        items.push(FieldValue::Float(parse_plain_number(cursor)?));
+        if items.len() == arity {
+            break;
+        }
+        cursor.expect(TokenKind::Comma)?;
+    }
+    if cursor.peek().kind == TokenKind::Comma {
+        return Err(TextError::new(format!("{what} literal expects exactly {arity} components"), cursor.span()));
+    }
+    Ok(FieldValue::Tuple(items))
+}
+
+/// @emoji 📏️ `Shape::Dim`'s `WxHxD` grammar: the FIRST number is an ordinary `Float|Int` token;
+/// every number after it is glued (no whitespace, no comma) onto an `x`-prefixed ident — the
+/// lexer has no notion of a bare `x` operator (digits/`.` are ident-continue, so `x0.12x0.24`
+/// lexes as ONE `Ident` token), so this splits that single glued token on `x` itself rather than
+/// looping token-by-token the way `parse_fixed_number_tuple` does.
+fn parse_dim(cursor: &mut Cursor, dims: usize) -> Result<FieldValue, TextError> {
+    let first_token = cursor.peek().clone();
+    let first = parse_plain_number(cursor)?;
+    let mut items = vec![FieldValue::Float(first)];
+    if dims > 1 {
+        let suffix = cursor.peek();
+        if suffix.kind != TokenKind::Ident || suffix.byte_range.0 != first_token.byte_range.1 {
+            return Err(TextError::new(format!("dimension literal expects {dims} components glued with 'x' (e.g. '2x3'), found only one"), cursor.span()));
+        }
+        let suffix_token = cursor.advance();
+        let suffix_text = suffix_token.text.as_str();
+        let parts: Vec<&str> = suffix_text.split('x').collect();
+        // `"x0.12x0.24".split('x')` yields `["", "0.12", "0.24"]` — the leading empty piece is the
+        // text before the first `x`, which is always empty since the suffix itself starts with it.
+        if parts.first() != Some(&"") || parts.len() != dims {
+            return Err(TextError::new(format!("dimension literal expects {dims} components glued with 'x', found '{}{}'", format_f64(first), suffix_text), suffix_token.span));
+        }
+        for part in &parts[1..] {
+            let value = parse_f64(part).map_err(|_| TextError::new(format!("invalid dimension component '{part}'"), suffix_token.span))?;
+            items.push(FieldValue::Float(value));
+        }
+    }
+    Ok(FieldValue::Tuple(items))
+}
+
 fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
     match shape {
-        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Quantity(_) | Shape::Angle(_) => parse_scalar(cursor, shape),
+        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Quantity(_) | Shape::Angle(_) | Shape::Ref(_) | Shape::Count | Shape::Embed(_) => parse_scalar(cursor, shape),
+        Shape::Coord(dims) => {
+            cursor.expect(TokenKind::At)?;
+            parse_fixed_number_tuple(cursor, *dims as usize, "coordinate")
+        }
+        Shape::Dir => {
+            cursor.expect(TokenKind::Caret)?;
+            parse_fixed_number_tuple(cursor, 3, "direction")
+        }
+        Shape::Dim(dims) => parse_dim(cursor, *dims as usize),
+        Shape::Range => {
+            cursor.expect(TokenKind::LParen)?;
+            let lo = parse_plain_number(cursor)?;
+            cursor.expect(TokenKind::DotDot)?;
+            let hi = parse_plain_number(cursor)?;
+            let mut items = vec![FieldValue::Float(lo), FieldValue::Float(hi)];
+            if cursor.peek().kind == TokenKind::Comma {
+                cursor.advance();
+                items.push(FieldValue::Float(parse_plain_number(cursor)?));
+            }
+            cursor.expect(TokenKind::RParen)?;
+            Ok(FieldValue::Tuple(items))
+        }
+        Shape::Expr => {
+            cursor.expect(TokenKind::LParen)?;
+            let value = parse_expr(cursor, 0)?;
+            cursor.expect(TokenKind::RParen)?;
+            Ok(FieldValue::Expr(value))
+        }
         Shape::Tuple(elem, len) => {
             let mut items = Vec::new();
             loop {
@@ -679,7 +1028,13 @@ fn can_start_positional(cursor: &Cursor, shape: &Shape) -> bool {
     match shape {
         Shape::Bool | Shape::Enum(_) => cursor.peek().kind == TokenKind::Ident,
         Shape::Int | Shape::UInt => cursor.peek().kind == TokenKind::Int,
-        Shape::Float | Shape::Quantity(_) | Shape::Angle(_) => matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int),
+        Shape::Float | Shape::Quantity(_) | Shape::Angle(_) | Shape::Dim(_) => matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int),
+        Shape::Ref(_) => matches!(cursor.peek().kind, TokenKind::Text | TokenKind::Placeholder),
+        Shape::Count => cursor.peek().kind == TokenKind::Ident,
+        Shape::Coord(_) => cursor.peek().kind == TokenKind::At,
+        Shape::Dir => cursor.peek().kind == TokenKind::Caret,
+        Shape::Range | Shape::Expr => cursor.peek().kind == TokenKind::LParen,
+        Shape::Embed(_) => matches!(cursor.peek().kind, TokenKind::Fence | TokenKind::Text | TokenKind::Placeholder),
         // Only `Text|Placeholder` — NOT bare `Ident` — may start an optional positional `Text`
         // field: an unquoted bare-ident value here would be indistinguishable from the next
         // statement's leading keyword, so this deliberately narrower check (versus `Shape::Text`
@@ -740,6 +1095,14 @@ pub fn shape_type_name(shape: &Shape) -> &'static str {
         Shape::Wire => "WIRE",
         Shape::Quantity(_) => "QTY",
         Shape::Angle(_) => "ANG",
+        Shape::Ref(_) => "REF",
+        Shape::Coord(_) => "CRD",
+        Shape::Dir => "DIR",
+        Shape::Dim(_) => "DIM",
+        Shape::Range => "RNG",
+        Shape::Count => "CNT",
+        Shape::Expr => "EXPR",
+        Shape::Embed(_) => "EMBED",
     }
 }
 
@@ -923,6 +1286,9 @@ enum Chunk {
     /// preceding separator (space in Inline mode, space-or-newline-continuation in Document mode)
     /// — consumed by that one chunk, then normal spacing resumes. See [`Writer::glue`].
     Glue,
+    /// @emoji 📜️ `Shape::Embed`'s payload — the one chunk kind whose Document and Inline renders
+    /// genuinely differ in FORM (fenced block vs. escaped quoted string), not just spacing.
+    Verbatim { lang: String, content: String },
 }
 
 impl Default for Writer {
@@ -970,6 +1336,12 @@ impl Writer {
         self.chunks.push(Chunk::Glue);
     }
 
+    /// @emoji 📜️ Pushes a `Shape::Embed` payload — content MAY contain raw newlines (unlike
+    /// [`Self::atom`], which forbids them), since Document mode renders it as a fence.
+    pub fn verbatim(&mut self, lang: &str, content: &str) {
+        self.chunks.push(Chunk::Verbatim { lang: lang.to_string(), content: content.to_string() });
+    }
+
     pub fn render(&self, mode: JoinMode) -> String {
         match mode {
             JoinMode::Inline => {
@@ -994,6 +1366,7 @@ impl Writer {
                         Chunk::OpenBlock => push("{".to_string(), &mut glued),
                         Chunk::CloseBlock => push("}".to_string(), &mut glued),
                         Chunk::NewRecord => {}
+                        Chunk::Verbatim { content, .. } => push(format!("\"{}\"", dsl_core::escape_text(content)), &mut glued),
                     }
                 }
                 parts.join(" ")
@@ -1048,6 +1421,23 @@ impl Writer {
                                 line_open = false;
                             }
                         }
+                        Chunk::Verbatim { lang, content } => {
+                            if !line_open {
+                                push_indent(&mut out, indent);
+                            } else if !glued {
+                                out.push(' ');
+                            }
+                            out.push_str("```");
+                            out.push_str(lang);
+                            out.push('\n');
+                            out.push_str(content);
+                            if !content.is_empty() {
+                                out.push('\n');
+                            }
+                            out.push_str("```");
+                            line_open = true;
+                            glued = false;
+                        }
                     }
                 }
                 if line_open {
@@ -1067,10 +1457,29 @@ impl Writer {
 /// completely order-independent, so this is a print-only change.
 fn keyed_field_rank(shape: &Shape) -> u8 {
     match shape {
-        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Tuple(_, _) | Shape::Quantity(_) | Shape::Angle(_) => 0,
+        Shape::Bool
+        | Shape::Int
+        | Shape::UInt
+        | Shape::Float
+        | Shape::Text
+        | Shape::Bytes64
+        | Shape::Enum(_)
+        | Shape::Tuple(_, _)
+        | Shape::Quantity(_)
+        | Shape::Angle(_)
+        | Shape::Ref(_)
+        | Shape::Coord(_)
+        | Shape::Dir
+        | Shape::Dim(_)
+        | Shape::Range
+        | Shape::Count
+        | Shape::Expr => 0,
         Shape::List(_) | Shape::Map(_) | Shape::Record(_) | Shape::Block(_) | Shape::Value | Shape::Wire => 1,
         Shape::Table(_) => 2,
         Shape::Statements(_) => 3,
+        // Ranks LAST of all: a multi-line fence dwarfs everything else in a record, so it should
+        // print after every scalar/composite/table field, not interleaved among them.
+        Shape::Embed(_) => 4,
     }
 }
 
@@ -1174,6 +1583,18 @@ fn scalar_to_text(value: &FieldValue) -> String {
     }
 }
 
+/// @emoji 🔢️ Renders one `FieldValue::Tuple` element as bare text for the `Coord`/`Dir`/`Dim`/
+/// `Range` printers above — every element of those tuples is always `FieldValue::Float` by
+/// construction (their parsers only ever push `FieldValue::Float`), so this panics rather than
+/// falling back on a malformed value, matching the rest of this module's "trust the parser built
+/// this" convention for shapes whose `FieldValue` invariant is enforced entirely at parse time.
+fn number_tuple_component(value: &FieldValue) -> String {
+    match value {
+        FieldValue::Float(v) => format_f64(*v),
+        other => panic!("Coord/Dir/Dim/Range tuple element must be Float, found {other:?}"),
+    }
+}
+
 pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
     match (value, shape) {
         // Must precede the generic scalar arm below: that arm's shape pattern is `_` and would
@@ -1181,6 +1602,33 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
         // with no unit suffix even for a `Quantity`/`Angle` field.
         (FieldValue::Float(v), Shape::Quantity(unit) | Shape::Angle(unit)) => {
             writer.atom(format!("{}{}", format_f64(*v), unit.symbol));
+        }
+        (FieldValue::UInt(v), Shape::Count) => {
+            writer.atom(format!("x{v}"));
+        }
+        (FieldValue::Tuple(items), Shape::Coord(_)) => {
+            writer.atom(format!("@{}", items.iter().map(number_tuple_component).collect::<Vec<_>>().join(",")));
+        }
+        (FieldValue::Tuple(items), Shape::Dir) => {
+            writer.atom(format!("^{}", items.iter().map(number_tuple_component).collect::<Vec<_>>().join(",")));
+        }
+        (FieldValue::Tuple(items), Shape::Dim(_)) => {
+            writer.atom(items.iter().map(number_tuple_component).collect::<Vec<_>>().join("x"));
+        }
+        (FieldValue::Tuple(items), Shape::Range) => {
+            let parts: Vec<String> = items.iter().map(number_tuple_component).collect();
+            let body = match parts.as_slice() {
+                [lo, hi] => format!("{lo}..{hi}"),
+                [lo, hi, step] => format!("{lo}..{hi},{step}"),
+                _ => parts.join(","),
+            };
+            writer.atom(format!("({body})"));
+        }
+        (FieldValue::Expr(expr), Shape::Expr) => {
+            writer.atom(format!("({})", print_expr(expr)));
+        }
+        (FieldValue::Text(content), Shape::Embed(lang)) => {
+            writer.verbatim(lang, content);
         }
         (FieldValue::Bool(_) | FieldValue::Int(_) | FieldValue::UInt(_) | FieldValue::Float(_) | FieldValue::Text(_) | FieldValue::Bytes64(_), _) => {
             writer.atom(scalar_to_text(value));
@@ -1541,6 +1989,110 @@ mod tests {
         assert!(!printed.contains("label"), "optional absent field must be omitted: {printed}");
     }
 
+    // --- primitive: embed — fenced verbatim text (Document) / escaped Text (Inline) ---
+    fn writer_note_spec() -> RecordSpec {
+        RecordSpec::new(Some("query"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "body", Shape::Embed("jack"))])
+    }
+
+    #[test]
+    fn embed_round_trips_multiline_fenced_content_in_document_mode() {
+        let spec = writer_note_spec();
+        assert_round_trip("query q1 body=```jack\nMATCH (a) RETURN a\nWHERE a.x > 1\n```", &spec);
+    }
+
+    #[test]
+    fn embed_document_and_inline_renders_agree() {
+        let spec = writer_note_spec();
+        assert_document_inline_agree("query q1 body=```jack\nMATCH (a) RETURN a\n```", &spec);
+    }
+
+    #[test]
+    fn embed_empty_lang_tag_is_accepted_and_canonicalizes_to_the_declared_lang() {
+        let spec = writer_note_spec();
+        let value = parse("query q1 body=```\nMATCH (a) RETURN a\n```", &spec, &ParseOptions::default()).expect("parse with empty lang tag");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("```jack"), "empty lang tag must canonicalize to the field's declared lang: {printed}");
+    }
+
+    #[test]
+    fn embed_rejects_a_mismatched_lang_tag() {
+        let spec = writer_note_spec();
+        let error = parse("query q1 body=```python\nprint(1)\n```", &spec, &ParseOptions::default()).unwrap_err();
+        assert!(error.message.contains("jack"), "{error}");
+    }
+
+    #[test]
+    fn embed_inline_mode_accepts_a_quoted_escaped_string_directly() {
+        let spec = writer_note_spec();
+        let value = parse("query q1 body=\"MATCH (a) RETURN a\"", &spec, &ParseOptions { limits: Limits::default(), mode: SourceMode::Inline }).expect("inline parse");
+        let FieldValue::Text(body) = value.get(1).expect("body field") else { panic!("expected Text") };
+        assert_eq!(body, "MATCH (a) RETURN a");
+    }
+
+    #[test]
+    fn embed_empty_content_round_trips() {
+        let spec = writer_note_spec();
+        assert_round_trip("query q1 body=```jack\n```", &spec);
+    }
+
+    // --- primitive: expr — an arithmetic formula literal ---
+    fn formula_spec() -> RecordSpec {
+        RecordSpec::new(Some("combine"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "value", Shape::Expr)])
+    }
+
+    #[test]
+    fn expr_round_trips_a_load_combination_formula() {
+        let spec = formula_spec();
+        assert_round_trip("combine ULS value=(1.35*G + 1.5*Q)", &spec);
+        assert_document_inline_agree("combine ULS value=(1.35*G + 1.5*Q)", &spec);
+    }
+
+    #[test]
+    fn expr_parses_with_correct_precedence() {
+        let spec = formula_spec();
+        let value = parse("combine c value=(10-2*3)", &spec, &ParseOptions::default()).expect("parse");
+        let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
+        assert_eq!(
+            *expr,
+            ExprValue::Binary(
+                ExprOp::Sub,
+                Box::new(ExprValue::Num(10.0)),
+                Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(2.0)), Box::new(ExprValue::Num(3.0)))),
+            ),
+            "10-2*3 must parse as 10-(2*3), not (10-2)*3"
+        );
+    }
+
+    #[test]
+    fn expr_right_nested_addition_round_trips_through_parens() {
+        // a+(b+c) is structurally distinct from (a+b)+c; canonical print must keep the parens.
+        let spec = formula_spec();
+        let value = parse("combine c value=(a+(b+c))", &spec, &ParseOptions::default()).expect("parse");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("(b + c)"), "right-nested addition must keep disambiguating parens: {printed}");
+        let reparsed = parse(&printed, &spec, &ParseOptions::default()).expect("reparse");
+        assert_eq!(value, reparsed);
+    }
+
+    #[test]
+    fn expr_supports_unary_minus_and_function_calls() {
+        let spec = formula_spec();
+        assert_round_trip("combine c value=(min(a, b) + -1)", &spec);
+    }
+
+    #[test]
+    fn expr_glued_negative_number_after_operand_canonicalizes_to_spaced_subtraction() {
+        // Hand-written "10-2" (no space) hits the lexer's negative-number-literal rule, not a bare
+        // Minus token; the Expr parser must still interpret it as subtraction, and re-print it with
+        // real spacing so the ambiguity never reappears in canonical output.
+        let spec = formula_spec();
+        let value = parse("combine c value=(10-2)", &spec, &ParseOptions::default()).expect("parse");
+        let FieldValue::Expr(expr) = value.get(1).expect("value field") else { panic!("expected Expr") };
+        assert_eq!(*expr, ExprValue::Binary(ExprOp::Sub, Box::new(ExprValue::Num(10.0)), Box::new(ExprValue::Num(2.0))));
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("10 - 2"), "canonical print must space out the operator: {printed}");
+    }
+
     // --- primitive: quantity/angle — a Shape::Float refinement that prints/parses a glued unit suffix ---
     fn material_spec() -> RecordSpec {
         RecordSpec::new(
@@ -1577,7 +2129,51 @@ mod tests {
         assert_eq!(with_suffix.get(0), bare.get(0), "a bare number must equal the same value spelled with its declared unit's suffix");
     }
 
+    // --- primitive: coord/dir/dim/range/count/ref — sigil-and-glyph notation literals ---
+    fn placement_spec() -> RecordSpec {
+        RecordSpec::new(
+            Some("object"),
+            RecordLayout::Inline,
+            vec![
+                FieldSpec::new(0, "id", Shape::Text).positional(0),
+                FieldSpec::new(1, "material", Shape::Ref("material")),
+                FieldSpec::new(2, "position", Shape::Coord(3)),
+                FieldSpec::new(3, "axis", Shape::Dir),
+                FieldSpec::new(4, "size", Shape::Dim(3)),
+                FieldSpec::new(5, "slider", Shape::Range),
+                FieldSpec::new(6, "count", Shape::Count),
+            ],
+        )
+    }
+
     #[test]
+    fn coord_dir_dim_range_count_ref_round_trip() {
+        let spec = placement_spec();
+        assert_round_trip("object col-a material=s355 position=@1.35,0,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10,0.5) count=x24", &spec);
+        assert_document_inline_agree("object col-a material=s355 position=@1.35,0,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10,0.5) count=x24", &spec);
+    }
+
+    #[test]
+    fn range_without_step_round_trips_with_two_elements() {
+        let spec = RecordSpec::new(Some("slot"), RecordLayout::Inline, vec![FieldSpec::new(0, "window", Shape::Range)]);
+        assert_round_trip("slot window=(0..10)", &spec);
+    }
+
+    #[test]
+    fn coord_dir_dim_range_count_reject_wrong_arity_or_form() {
+        let spec = placement_spec();
+        // Coord declared as 3 components; only 2 given.
+        let err = parse("object col-a material=s355 position=@1.35,0 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
+        assert!(err.message.contains("coordinate") || err.message.contains("expected"), "{err}");
+        // Dim declared as 3 components; only one number, no glued 'x' suffix at all.
+        let err2 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4 slider=(0..10) count=x1", &spec, &ParseOptions::default()).unwrap_err();
+        assert!(err2.message.contains("dimension"), "{err2}");
+        // Count without the 'x' prefix is not a valid count literal.
+        let err3 = parse("object col-a material=s355 position=@1,2,3 axis=^0,1,0 size=2.4x0.12x0.24 slider=(0..10) count=24", &spec, &ParseOptions::default()).unwrap_err();
+        assert!(err3.message.contains("count"), "{err3}");
+    }
+
+        #[test]
     fn quantity_rejects_an_incompatible_unit() {
         let spec = material_spec();
         let error = parse("material e=210kg rho=7850kg/m3 rotation=45deg", &spec, &ParseOptions::default()).unwrap_err();

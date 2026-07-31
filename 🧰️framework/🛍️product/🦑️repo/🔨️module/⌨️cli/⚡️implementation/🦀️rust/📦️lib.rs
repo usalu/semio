@@ -1003,9 +1003,9 @@ pub mod tui_dashboard {
             }
         }
     }
-    //#endregion 🔖️Sessions
+    //#endregion 🔖Sessions
 
-    /// 🎛️ The bare-`semio` interactive dashboard: `dev` and `build` windows, each a table of
+    /// 🎛 The bare-`semio` interactive dashboard: `dev` and `build` windows, each a table of
     /// plugins (parent rows) with their apps (child rows), and a log pane streaming the session
     /// launched from whichever row is activated.
     pub fn run(root: &Path) -> i32 {

@@ -1,8 +1,9 @@
 {
   "title": "Get Procedural 3D Working End to End",
   "emoji": "🧊",
-  "status": "open",
+  "status": "closed",
   "description": "Get procedural 3d working end to end. Currently the canvas shows after a second an error: Render error: session.clearGhostWidget is not a function",
+  "summary": "Fixed procedural 3d end-to-end Render error session.clearGhostWidget is not a function. Root cause: broken FE0E/FE0F node_modules symlinks + nested /pkg/ imports made Vite serve a FlowSession stub missing clearGhostWidget. Repaired symlinks, pointed flow-core workspace at wasm-pack pkg output, switched engine imports to package mains, made wasm stub resolver return resolved absolute paths and stub ghost APIs, fixed Rust char-literal VS pollution and TokenKind/Shape exhaustiveness blocking wasm builds. Verified on :6018: title semio · procedural · 3d, Flow+Preview, 3 canvases, no render/ghost errors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2403"
   },

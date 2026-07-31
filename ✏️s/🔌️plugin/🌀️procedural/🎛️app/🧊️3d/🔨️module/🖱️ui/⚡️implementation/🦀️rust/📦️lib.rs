@@ -1303,7 +1303,7 @@ mod tests {
         let measures = app.window_measures(&ViewState::default());
         assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW));
         assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW));
-        // 👁️ Sun toggling is a view action: it must not record a document operation.
+        // 👁 Sun toggling is a view action: it must not record a document operation.
         let before = app.projection().expect("projection");
         app.handle_action("toggleSun", None, &ViewState::default(), &meta("local")).expect("toggle sun");
         assert_eq!(app.projection().expect("projection"), before, "toggleSun must not mutate the document");
@@ -1325,7 +1325,7 @@ mod tests {
 
     #[test]
     fn sphere_cut_example_preview_renders_meshes() {
-        // 🧵️ Loading the example never evaluates synchronously anymore (see `pending_effects`) —
+        // 🧵 Loading the example never evaluates synchronously anymore (see `pending_effects`) —
         // draining the `flowEvalTick` chain here simulates what the JS renderer's `applyHostEffects`
         // does automatically after every refresh, so the render below sees the real evaluated
         // geometry rather than the cold-start placeholder mesh.

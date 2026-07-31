@@ -596,12 +596,12 @@ pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, Layout
     }
     Ok(bytes)
 }
-//#endregion 📤️ Export
+//#endregion 📤 Export
 
-//#region 🔖️ DocumentHelpers
+//#region 🔖 DocumentHelpers
 const LAYOUT_SAMPLE_TEXT: &str = layout_dsl::LAYOUT_SAMPLE_TEXT;
 
-/// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_projection`
+/// 📄 The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_projection`
 /// and the app manifest's `.example(...)` document.
 pub fn default_document() -> LayoutDocument {
     <LayoutDocument as store::DocumentDsl>::parse_dsl(LAYOUT_SAMPLE_TEXT).expect("sample layout fixture")

@@ -1204,6 +1204,7 @@ export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): Ru
     timeout: budgetMs,
     killSignal: "SIGKILL",
     stdio: ["ignore", "pipe", "pipe"],
+    maxBuffer: 64 * 1024 * 1024,
   });
   if (result.error) {
     if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
@@ -3043,7 +3044,9 @@ export function branchValidationError(command: "micro-commit" | "commit", branch
   if (!branch.ok) return `${command}: cannot read current branch: ${branch.error}`;
   if (!branch.name) return `${command}: detached HEAD; switch to a branch containing ⛳️wip or 🏗️dev`;
   const normalizedBranch = branch.name.replace(/\uFE0E|\uFE0F/g, "");
-  if (!normalizedBranch.includes("⛳️wip") && !normalizedBranch.includes("🏗️dev")) {
+  const wipMarker = "⛳️wip".replace(/\uFE0E|\uFE0F/g, "");
+  const devMarker = "🏗️dev".replace(/\uFE0E|\uFE0F/g, "");
+  if (!normalizedBranch.includes(wipMarker) && !normalizedBranch.includes(devMarker)) {
     return `${command}: current branch "${branch.name}" must contain ⛳️wip or 🏗️dev`;
   }
   return null;

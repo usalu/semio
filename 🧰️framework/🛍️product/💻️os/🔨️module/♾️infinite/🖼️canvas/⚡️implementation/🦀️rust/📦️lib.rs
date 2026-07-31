@@ -1295,7 +1295,7 @@ pub mod icon_codec {
 
     fn is_extended_pictographic_char(c: char) -> bool {
         let cp = c as u32;
-        matches!(cp, 0x1F1E6..=0x1F1FF | 0x1F300..=0x1FAFF | 0x2600..=0x27BF | 0x2300..=0x23FF) || matches!(c, '©' | '®' | '™️' | '☺️' | '☻️' | '♥️' | '♦️' | '♣️' | '♠️' | '✓️' | '✔️' | '✕️' | '✖️' | '✗️' | '✘️') || c == '\u{FE0F}' || c == '\u{200D}'
+        matches!(cp, 0x1F1E6..=0x1F1FF | 0x1F300..=0x1FAFF | 0x2600..=0x27BF | 0x2300..=0x23FF) || matches!(c, '©' | '®' | '™' | '☺' | '☻' | '♥' | '♦' | '♣' | '♠' | '✓' | '✔' | '✕' | '✖' | '✗' | '✘') || c == '\u{FE0F}' || c == '\u{200D}'
     }
 
     fn looks_like_bare_emoji(s: &str) -> bool {

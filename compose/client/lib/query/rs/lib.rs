@@ -664,9 +664,9 @@ mod planner {
         out
     }
 }
-//#endregion 🔖️Planner
+//#endregion 🔖Planner
 
-//#region 🔖️Executor
+//#region 🔖Executor
 mod executor {
     use super::errors::ArchitectError;
     use super::planner::{JsonPath, OpPlan, PathSeg, Step};
@@ -680,14 +680,14 @@ mod executor {
 
     pub type Row = BTreeMap<String, Value>;
 
-    /// @emoji 📊️ Tabular architect result.
+    /// @emoji 📊 Tabular architect result.
     #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
     pub struct QueryResult {
         pub columns: Vec<String>,
         pub rows: Vec<Value>,
     }
 
-    /// @emoji ⚙️ Runs `OpPlan` against a `Transport`.
+    /// @emoji ⚙ Runs `OpPlan` against a `Transport`.
     pub struct Executor;
 
     impl Executor {
@@ -785,7 +785,7 @@ mod executor {
             Ok(())
         }
 
-        /// 🪝️ `CALL` binds the whole (unwrapped) response payload to a single conventional `result`
+        /// 🪝 `CALL` binds the whole (unwrapped) response payload to a single conventional `result`
         /// row/var — Jack's `CALL` grammar has no `YIELD` clause, so per-field extraction is done by
         /// `RETURN result.<field>` (one property-access level) instead of `YIELD <field> AS ...`.
         fn ingest_call_result(&mut self, data: &Value) {

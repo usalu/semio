@@ -1,0 +1,30 @@
+{
+  "title": "semio · procedural · 3d",
+  "rootHtml": "<div class=\"flex h-screen min-h-0 w-screen flex-col bg-transparent\" data-level=\"base\"><div data-slot=\"layout\" data-level=\"base\" class=\"relative flex flex-col overflow-hidden ui-surface h-screen w-screen\"><div class=\"flex-shrink-0\"><nav id=\"ui.navbar\" data-slot=\"navbar\" data-level=\"base\" data-ui-reveal-region=\"navbar\" data-elevation-root=\"\" class=\"relative h-large z-navbar bg-transparent\"><div class=\"p-single flex gap-single items-center min-w-0 h-full\"><div class=\"h-medium flex shrink-0 items-center min-w-0\"><div data-ghost-region=\"true\" class=\"flex shrink-0 items-center\" data-level=\"panel\" data-slot=\"panel-chrome-tab-bar\" data-anchor=\"top-left\"><div data-slot=\"window-chrome-stack\" data-window-silhouette=\"true\" data-level=\"panel\" class=\"relative inline-flex min-w-0 bg-transparent\"><svg data-slot=\"window-chrome-silhouette-border\" data-window-silhouette-border=\"true\" data-kind=\"normal\" class=\"pointer-events-none absolute inset-0 z-[40] overflow-visible\" width=\"181.90625\" height=\"22.390625\" viewBox=\"0 0 181.90625 22.390625\" aria-hidden=\"true\"><path d=\"M1,1 H180.90625 V21.390625 H1 Z\" fill=\"none\" stroke=\"var(--border-normal-color)\" stroke-linejoin=\"miter\" vector-effect=\"non-scaling-stroke\" class=\"window-silhouette-border window-silhouette-border-normal\"></path></svg><div data-slot=\"window-chrome-chip-cap\" data-window-silhouette-chip=\"true\" data-dock=\"top\" data-ui-reveal-region=\"window-cap\" class=\"flex min-h-medium min-w-0 shrink items-stretch relative z-[2] border-0 ui-glass\"><div data-slot=\"ribbon\" data-direction=\"down\" class=\"flex shrink-0 flex-col items-stretch w-fit max-w-full\"><div data-slot=\"ribbon-row\" data-depth=\"0\" class=\"flex min-w-0 w-full shrink-0 items-stretch\"><div data-slot=\"panel-tabs\" class=\"ui-scrollbar-hidden relative z-40 flex min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single h-medium\"><button data-slot=\"panel-tab-button\" data-hover-scope=\"true\" data-tab-id=\"framework.panel.document\" data-tab-kind=\"leaf\" id=\"framework.panel.document\" data-level=\"panel\" class=\"text-element inline-flex justify-center gap-single text-xs font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-small [&amp;_svg]:shrink-0 outline-none focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none whitespace-nowrap h-medium p-single overflow-hidden leading-none hover:not-data-[handle-hovered=true]:bg-hover-interactive-fill hover:not-data-[handle-hovered=true]:text-emphasized group max-w-[12rem] cursor-pointer items-center px-single select-none transition-colors relative z-30 box-border min-h-medium h-full shrink-0 bg-transparent border-e border-solid !border-normal last:border-e-0\" title=\"Document\" aria-label=\"Document\"><div class=\"flex min-w-0 flex-1 items-center gap-single overflow-hidden\"><span class=\"inline-flex shrink-0 items-center ju",
+  "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+  "canvasCount": 3,
+  "fails": [
+    {
+      "status": 404,
+      "url": "http://127.0.0.1:6018/%F0%9F%96%BC%EF%B8%8Ffavicon.ico"
+    }
+  ],
+  "consoles": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ]
+}

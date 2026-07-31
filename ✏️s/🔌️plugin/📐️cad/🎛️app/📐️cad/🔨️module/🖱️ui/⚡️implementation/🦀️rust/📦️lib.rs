@@ -2880,10 +2880,10 @@ impl DocumentApp for CadPlayApp {
     }
 }
 
-/// @emoji 🪟️ One quadrant of the quad layout: a stack holding a single window kind.
-//#endregion 🔖️CadPlayApp
+/// @emoji 🪟 One quadrant of the quad layout: a stack holding a single window kind.
+//#endregion 🔖CadPlayApp
 
-//#region 🔖️Manifest
+//#region 🔖Manifest
 fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
@@ -2899,7 +2899,7 @@ fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> Win
     })
 }
 
-/// @emoji 🪟️ Quad play layout: shape/building left column, energy/structure classic right column.
+/// @emoji 🪟 Quad play layout: shape/building left column, energy/structure classic right column.
 fn cad_quad_layout() -> WindowLayout {
     WindowLayout {
         root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
@@ -2927,7 +2927,7 @@ fn cad_quad_layout() -> WindowLayout {
     }
 }
 
-/// @emoji 🧰️ A cad transform-gumball utility: an exclusive member of the `transform` group rendered in
+/// @emoji 🧰 A cad transform-gumball utility: an exclusive member of the `transform` group rendered in
 /// the framework utility bar (`UtilityCategory::Utilities`). Switching it is a pure `setActiveUtility` View action
 /// (`ViewState::active_utility_id`) — it gates the action panel while active (the default), since a
 /// transform mode is a content-editing mode, not a passive viewing aid.
@@ -2939,7 +2939,7 @@ fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition
     }
 }
 
-/// @emoji 🧰️ The transform-utility refs scoping the gumball to every world-3d pane uniformly.
+/// @emoji 🧰 The transform-utility refs scoping the gumball to every world-3d pane uniformly.
 fn cad_transform_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
     vec!["move".into(), "rotate".into(), "scale".into()]
 }
@@ -3060,9 +3060,9 @@ pub fn create_cad_app() -> App {
     )
     .workflow("cad", "CAD", "model")
 }
-//#endregion 🔖️Manifest
+//#endregion 🔖Manifest
 
-//#region 🧪️Tests
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3076,7 +3076,7 @@ mod tests {
     use protocol::{Operation, OperationDiff};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
-    //#region 🔖️Harness
+    //#region 🔖Harness
     fn meta(actor: &str) -> ActionMeta {
         semio_framework_plugin::testkit::meta(actor)
     }
@@ -3089,7 +3089,7 @@ mod tests {
         HistoryView::empty()
     }
 
-    /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped) so tests can inspect ephemeral
+    /// 🕹 Drives one action against a bare `CadPlayApp` (unwrapped) so tests can inspect ephemeral
     /// runtime view-state and the emitted operations directly.
     fn drive(app: &mut CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>) -> ActionEmit<CadOperation> {
         let history = empty_history();
@@ -3097,7 +3097,7 @@ mod tests {
         app.handle_action(action, args.as_ref(), &doc, &ViewState::default())
     }
 
-    /// 🧮️ Folds a list of `CadOperation`s onto a scene via the core `Operation`/`OperationDiff` impls —
+    /// 🧮 Folds a list of `CadOperation`s onto a scene via the core `Operation`/`OperationDiff` impls —
     /// mirrors what the wrapping `VcsDocumentApp` store does when it dispatches the emitted operations.
     fn apply_operations(scene: &CadScene, operations: &[CadOperation]) -> CadScene {
         let mut next = scene.clone();
@@ -3110,9 +3110,9 @@ mod tests {
     fn view(scene: CadScene, runtime: CadPlayRuntime) -> CadPlayView {
         CadPlayView { document: scene, runtime }
     }
-    //#endregion 🔖️Harness
+    //#endregion 🔖Harness
 
-    //#region 🔖️Fixtures
+    //#region 🔖Fixtures
     #[test]
     fn forest_example_uses_per_object_brep_meshes() {
         let scene = forest_play_scene();
@@ -3121,7 +3121,7 @@ mod tests {
         assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
         let meshes = world_meshes_json(&scene.building_objects, scene.building_geometry.as_ref());
         assert!(meshes.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
-        assert!(!meshes.contains("🧊️hexagonal-cut-concrete-forest-left.glb"));
+        assert!(!meshes.contains("🧊hexagonal-cut-concrete-forest-left.glb"));
         assert!(scene.building_objects.len() > 5);
         assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
     }
@@ -3281,9 +3281,9 @@ mod tests {
         let forest_scene: CadScene = serde_json::from_str(&forest_json).unwrap();
         assert!(!forest_scene.building_objects.is_empty());
     }
-    //#endregion 🔖️Fixtures
+    //#endregion 🔖Fixtures
 
-    //#region 🔖️Render
+    //#region 🔖Render
     #[test]
     fn renders_world_scene_for_each_pane() {
         let app = CadPlayApp::default();
@@ -3364,14 +3364,14 @@ mod tests {
         assert!(utility_ids.contains(&"move"));
         assert!(utility_ids.contains(&"rotate"));
         assert!(utility_ids.contains(&"scale"));
-        // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
+        // 🧰 The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
         // cad must NOT also declare it as an Operation.
         let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
         assert_eq!(set_active_utility.kind, semio_framework_plugin::ActionKind::View);
-        // 🚦️ Transform utilities gate the action panel while active (the default) — cad declares no
+        // 🚦 Transform utilities gate the action panel while active (the default) — cad declares no
         // passive `allows_actions_while_active` view utilities.
         assert!(definition.utilities.iter().all(|utility| !utility.allows_actions_while_active));
-        // 🧭️ Every world-3d pane scopes the three transform utilities.
+        // 🧭 Every world-3d pane scopes the three transform utilities.
         for window in &definition.window_kinds {
             let refs: Vec<&str> = window.utilities.iter().map(|utility_ref| utility_ref.as_str()).collect();
             assert_eq!(refs, vec!["move", "rotate", "scale"], "window {} utilities", window.id);
@@ -3420,9 +3420,9 @@ mod tests {
         assert!(extent[2] > 0.05, "authored column height should be measurable");
         assert_ne!(extent, CAD_DEFAULT_TYPOLOGY_EXTENT, "should differ from the universal fallback");
     }
-    //#endregion 🔖️Render
+    //#endregion 🔖Render
 
-    //#region 🔖️ViewState
+    //#region 🔖ViewState
     #[test]
     fn gumball_fields_present_when_selection_active() {
         let mut app = CadPlayApp::default();
@@ -3434,7 +3434,7 @@ mod tests {
         assert!(selection.contains("\"gumballTarget\""));
     }
 
-    /// 🎥️ `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
+    /// 🎥 `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
     /// registrations below) — they must never emit a `CadOperation` (no VCS edit, no undo entry) and
     /// instead write straight into the app's ephemeral `CadPlayRuntime`, isolated per pane.
     #[test]
@@ -3652,9 +3652,9 @@ mod tests {
         let highlighted = document_tree_highlighted_ids(&scene, &runtime).expect("highlighted");
         assert!(highlighted.iter().any(|id| id.contains(&object_id) && id.starts_with("cad-object:shape:")));
     }
-    //#endregion 🔖️ViewState
+    //#endregion 🔖ViewState
 
-    //#region 🔖️Terminology
+    //#region 🔖Terminology
     #[test]
     fn multi_selection_inspector_shows_mixed_values() {
         let mut scene = default_document();
@@ -3761,9 +3761,9 @@ mod tests {
         assert!(!json.contains("\"Slab\""));
         assert!(!json.contains("\"Balken\""));
     }
-    //#endregion 🔖️Terminology
+    //#endregion 🔖Terminology
 
-    //#region 🔖️Operations
+    //#region 🔖Operations
     #[test]
     fn add_object_action_appends_object_and_selects_it() {
         let mut app = CadPlayApp::default();
@@ -3962,9 +3962,9 @@ mod tests {
         let session = app.runtime.engagement_session.as_ref().expect("repeat-last should start a session");
         assert_eq!(session.interaction_id, "primitive.box");
     }
-    //#endregion 🔖️Engagement
+    //#endregion 🔖Engagement
 
-    //#region 🔖️Import
+    //#region 🔖Import
     #[test]
     fn import_spatial_modelspace_round_trips() {
         let payload = json!({
@@ -4044,9 +4044,9 @@ mod tests {
         assert_eq!(next.objects.len(), scene.objects.len() + 1);
         assert!(next.objects.last().unwrap().solid_handle.is_some());
     }
-    //#endregion 🔖️Import
+    //#endregion 🔖Import
 
-    //#region 🔖️History
+    //#region 🔖History
     #[test]
     fn undo_redo_round_trips_added_object_through_wrapper() {
         let mut app = new_app();
@@ -4118,10 +4118,10 @@ mod tests {
             .origin;
         assert_eq!(after_undo, origin_before, "the coalesced drag undoes as one edit");
     }
-    //#endregion 🔖️History
+    //#endregion 🔖History
 
-    //#region 🔖️Convergence
-    /// 🧪️ The definitional merge proof: two instances start from the SAME base projection, apply
+    //#region 🔖Convergence
+    /// 🧪 The definitional merge proof: two instances start from the SAME base projection, apply
     /// DISJOINT edits (A translates object A, B patches object B's label), and after exchanging operations
     /// over a `MemoryBackbone` both converge to contain BOTH edits — impossible under whole-document
     /// `setDocument` snapshots.

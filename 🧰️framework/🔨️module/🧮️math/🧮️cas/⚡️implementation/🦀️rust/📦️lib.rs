@@ -1999,9 +1999,9 @@ impl std::fmt::Display for Expr {
         write!(f, "{}", display_string(self))
     }
 }
-// #endregion 🔖️Display
+// #endregion 🔖Display
 
-// #region 🔖️Latex
+// #region 🔖Latex
 pub fn to_latex(e: &Expr) -> String {
     let mut s = String::new();
     write_latex(e, &mut s);
@@ -2123,9 +2123,9 @@ fn latex_rel(operator: RelationalOperator) -> &'static str {
         RelationalOperator::Ge => " \\geq ",
     }
 }
-// #endregion 🔖️Latex
+// #endregion 🔖Latex
 
-// #region 🔖️Tests
+// #region 🔖Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2163,13 +2163,13 @@ mod tests {
         assert_eq!(to_latex(&Expr::constant(Constant::Pi)), "\\pi");
     }
 }
-// #endregion 🔖️Tests
+// #endregion 🔖Tests
 }
-// #endregion 🔖️Fmt
+// #endregion 🔖Fmt
 
-// #region 🔖️Pattern
+// #region 🔖Pattern
 pub mod pattern {
-//! 🃏️ Structural pattern matching and rule-based rewriting over the canonical `Expr` tree. `Add`/`Mul`
+//! 🃏 Structural pattern matching and rule-based rewriting over the canonical `Expr` tree. `Add`/`Mul`
 //! matching is associative-commutative (subject terms may match pattern terms in any order), handled by
 //! bounded backtracking rather than full (NP-hard) AC unification — a budget caps the search so a
 //! pathologically wide subject conservatively fails to match instead of hanging.
@@ -2178,7 +2178,7 @@ use crate::expr::{Expr, Kind, WildKind};
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-// #region 🔖️Wildcards
+// #region 🔖Wildcards
 pub fn wild(id: u16) -> Expr {
     Expr::from_kind_unchecked(Kind::Wild(id, WildKind::Any))
 }
@@ -2194,9 +2194,9 @@ pub fn wild_free(id: u16, symbol: &str) -> Expr {
 pub fn wild_seq(id: u16) -> Expr {
     Expr::from_kind_unchecked(Kind::Wild(id, WildKind::Seq))
 }
-// #endregion 🔖️Wildcards
+// #endregion 🔖Wildcards
 
-// #region 🔖️Bindings
+// #region 🔖Bindings
 #[derive(Clone, Debug, PartialEq)]
 pub enum Binding {
     One(Expr),
@@ -2238,9 +2238,9 @@ fn bind_many(id: u16, items: Vec<Expr>, mut bindings: Bindings) -> Option<Bindin
         }
     }
 }
-// #endregion 🔖️Bindings
+// #endregion 🔖Bindings
 
-// #region 🔖️Matcher
+// #region 🔖Matcher
 const DEFAULT_BUDGET: i64 = 10_000;
 const MAX_SUBJECT_WIDTH: usize = 24;
 
@@ -2323,7 +2323,7 @@ fn match_impl(pattern: &Expr, subject: &Expr, bindings: Bindings, budget: &mut i
     }
 }
 
-/// 🧩️ Matches an unordered term list against another: assigns each non-`Seq` pattern term to a distinct
+/// 🧩 Matches an unordered term list against another: assigns each non-`Seq` pattern term to a distinct
 /// subject term via backtracking (any assignment order is tried), then binds a single trailing `Seq`
 /// wildcard (at most one is supported) to whatever subject terms remain unassigned.
 fn match_multiset(p_terms: &[Expr], s_terms: &[Expr], bindings: Bindings, budget: &mut i64) -> Option<Bindings> {
@@ -2380,10 +2380,10 @@ fn assign(pats: &[&Expr], idx: usize, s_terms: &[Expr], used: &mut Vec<bool>, bi
     }
     None
 }
-// #endregion 🔖️Matcher
+// #endregion 🔖Matcher
 
-// #region 🔖️Instantiate
-/// 🏗️ Rebuilds `template` with every `Wild` node replaced by its binding — `Seq` bindings splice their
+// #region 🔖Instantiate
+/// 🏗 Rebuilds `template` with every `Wild` node replaced by its binding — `Seq` bindings splice their
 /// items directly into the enclosing `Add`/`Mul` term list rather than substituting a single value.
 pub fn instantiate(template: &Expr, bindings: &Bindings) -> Expr {
     match template.kind() {
@@ -2415,9 +2415,9 @@ fn instantiate_seq(terms: &[Expr], bindings: &Bindings) -> Vec<Expr> {
     }
     out
 }
-// #endregion 🔖️Instantiate
+// #endregion 🔖Instantiate
 
-// #region 🔖️Rules
+// #region 🔖Rules
 pub enum RuleRhs {
     Template(Expr),
     Builder(Rc<dyn Fn(&Bindings) -> Expr>),
@@ -2499,9 +2499,9 @@ impl RuleSet {
         crate::visit::map_children(&rewritten, &mut |c| self.apply_top_down_once(c))
     }
 }
-// #endregion 🔖️Rules
+// #endregion 🔖Rules
 
-// #region 🔖️Tests
+// #region 🔖Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2597,13 +2597,13 @@ mod tests {
         assert!(match_expr(&pattern, &x).is_none());
     }
 }
-// #endregion 🔖️Tests
+// #endregion 🔖Tests
 }
-// #endregion 🔖️Pattern
+// #endregion 🔖Pattern
 
-// #region 🔖️Polybridge
+// #region 🔖Polybridge
 pub mod polybridge {
-//! 🌉️ The `Expr` <-> polynomial bridge — the workhorse every algebraic domain (`simplify`, `solve`,
+//! 🌉 The `Expr` <-> polynomial bridge — the workhorse every algebraic domain (`simplify`, `solve`,
 //! rational `integrate`, `SymMatrix`) goes through: detect which subtrees behave as polynomial
 //! "generators" (variables, in the Gröbner-basis sense), convert to/from `mathematical_polynomial`
 //! types over those generators, and reconstruct canonical `Expr`s from the result.
@@ -2612,8 +2612,8 @@ use crate::expr::{Expr, Kind};
 use mathematical_number::{Integer, Natural, Rational};
 use mathematical_polynomial::{MonomialOrder, PolyM, PolyU};
 
-// #region 🔖️PolyMap
-/// 🗺️ The ordered list of generators a conversion was performed against; `gens[i]` is polynomial
+// #region 🔖PolyMap
+/// 🗺 The ordered list of generators a conversion was performed against; `gens[i]` is polynomial
 /// variable `i`.
 #[derive(Clone, Debug)]
 pub struct PolyMap {
@@ -2629,10 +2629,10 @@ fn push_unique(gens: &mut Vec<Expr>, e: Expr) {
         gens.push(e);
     }
 }
-// #endregion 🔖️PolyMap
+// #endregion 🔖PolyMap
 
-// #region 🔖️GenDetection
-/// 🔍️ Collects the maximal non-polynomial subtrees of `e` as generators: symbols, function
+// #region 🔖GenDetection
+/// 🔍 Collects the maximal non-polynomial subtrees of `e` as generators: symbols, function
 /// applications, non-numeric constants, and any `Pow` node whose exponent isn't a plain non-negative
 /// integer (fractional/negative/symbolic exponents can't be expressed as a polynomial power in the
 /// base, so the whole `Pow` becomes its own opaque generator).

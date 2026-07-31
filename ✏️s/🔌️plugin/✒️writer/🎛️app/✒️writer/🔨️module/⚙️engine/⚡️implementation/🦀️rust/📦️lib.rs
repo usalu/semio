@@ -70,7 +70,7 @@ mod grammar {
         ]
     }
 
-    /** @emoji 🎨️ Tokenizes source text for a supported writer language id. */
+    /** @emoji 🎨 Tokenizes source text for a supported writer language id. */
     pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
         let rules = match language_id {
             "jack" => jack_rules(),
@@ -99,7 +99,7 @@ mod grammar {
         tokens.sort_by_key(|token| (token.start, std::cmp::Reverse(token.end)));
         tokens
     }
-    //#endregion 🔖️Grammar
+    //#endregion 🔖Grammar
 }
 
 pub use grammar::{tokenize_language, GrammarToken};
@@ -108,38 +108,38 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
 
-//#region 🔖️Examples
-/// 📄️ The `jack` example, parsed once from {@link writer_dsl::JACK_EXAMPLE_TEXT} — the source of truth
+//#region 🔖Examples
+/// 📄 The `jack` example, parsed once from {@link writer_dsl::JACK_EXAMPLE_TEXT} — the source of truth
 /// for every call site below (`setActiveExample`, `.example("jack", ...)`, tests); never re-embed the
 /// raw text.
 pub fn jack_example_document() -> WriterProjection {
     <WriterProjection as store::DocumentDsl>::parse_dsl(writer_dsl::JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
 }
 
-/// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
+/// 📄 JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
 /// (`.example(...)`, `render(...)`) that still take a document as a JSON string.
 pub fn jack_example_json() -> String {
     serde_json::to_string(&jack_example_document()).expect("serialize jack example document")
 }
 
-/// 📄️ The `dag.jack` example, parsed once from {@link writer_dsl::DAG_JACK_EXAMPLE_TEXT} — see
+/// 📄 The `dag.jack` example, parsed once from {@link writer_dsl::DAG_JACK_EXAMPLE_TEXT} — see
 /// {@link jack_example_document}.
 pub fn dag_jack_example_document() -> WriterProjection {
     <WriterProjection as store::DocumentDsl>::parse_dsl(writer_dsl::DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
 }
 
-/// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
+/// 📄 JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
 pub fn dag_jack_example_json() -> String {
     serde_json::to_string(&dag_jack_example_document()).expect("serialize dag.jack example document")
 }
-//#endregion 🔖️Examples
+//#endregion 🔖Examples
 
-//#region 🔖️DocumentHelpers
+//#region 🔖DocumentHelpers
 pub fn empty_writer_projection() -> WriterProjection {
     WriterProjection { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new() }
 }
 
-//#region 🔖️JackAst
+//#region 🔖JackAst
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct JackAstNode {

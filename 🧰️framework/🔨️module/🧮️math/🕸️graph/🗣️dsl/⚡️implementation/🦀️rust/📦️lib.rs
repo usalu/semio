@@ -380,16 +380,16 @@ pub mod wire {
             _ => PropertyBag::new(),
         }
     }
-    // #endregion 🔖️PropertyBridge
+    // #endregion 🔖PropertyBridge
 
-    // #region 🔖️WireLiteral
+    // #region 🔖WireLiteral
     fn render_wire_line(value: &dsl_schema::WireValue) -> String {
         let mut writer = dsl_schema::Writer::new();
         dsl_schema::print_shape(&dsl_schema::FieldValue::Wire(value.clone()), &dsl_schema::Shape::Wire, &mut writer);
         writer.render(dsl_schema::JoinMode::Inline)
     }
 
-    /// 📝️ Render wire-literal text from neutral node/edge rows, one unified `dsl_schema::Wire`
+    /// 📝 Render wire-literal text from neutral node/edge rows, one unified `dsl_schema::Wire`
     /// statement per line.
     pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
         let mut lines = Vec::new();
@@ -414,7 +414,7 @@ pub mod wire {
         lines.join("\n")
     }
 
-    /// 🔍️ Parse wire-literal text into neutral node/edge rows. Delegates lexing+parsing to
+    /// 🔍 Parse wire-literal text into neutral node/edge rows. Delegates lexing+parsing to
     /// `dsl_schema::parse_wire_text` (the one unified wire grammar — `->`/`<-` sugar/`--`,
     /// `{k=v}` double-quoted properties) one statement (line) at a time, then enforces this
     /// module's own DAG domain rule on top: an edge's ports are mandatory on BOTH ends (the
@@ -582,7 +582,7 @@ pub mod wire {
 
         #[test]
         fn dag_from_wire_literal_parses_undirected_dash_dash_edge() {
-            // 🆕️ unified undirected sigil is `--`, not the old single `-`.
+            // 🆕 unified undirected sigil is `--`, not the old single `-`.
             let (_, edges) = dag_from_wire_literal("a:x@out--b:y@in").unwrap();
             assert_eq!(edges.len(), 1);
             assert!(!edges[0].directed);
@@ -601,7 +601,7 @@ pub mod wire {
             assert_eq!(parsed_nodes[0].properties.get("label"), Some(&PropertyValue::String("hi".into())));
         }
     }
-    // #endregion 🔖️Tests
+    // #endregion 🔖Tests
     // #endregion wire
 }
 
@@ -614,8 +614,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 // #region jack_impl
 
-// #region 🔖️Ast
-/// 🌳️ Jack query abstract syntax tree.
+// #region 🔖Ast
+/// 🌳 Jack query abstract syntax tree.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Query {
     pub clauses: Vec<Clause>,
@@ -625,7 +625,7 @@ pub struct Query {
 pub enum Clause {
     Match(Vec<Pattern>),
     Where(Expr),
-    /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
+    /// 🚧 Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
     /// compose's Architect query language onto Jack.
     With(Vec<ReturnItem>),
     /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
@@ -899,7 +899,7 @@ fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out
             dsl_core::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
             // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
             // character" treatment as an outright `dsl_core::TokenKind::Error` below.
-            dsl_core::TokenKind::LBrace | dsl_core::TokenKind::RBrace | dsl_core::TokenKind::Error => {
+            dsl_core::TokenKind::LBrace | dsl_core::TokenKind::RBrace | dsl_core::TokenKind::Caret | dsl_core::TokenKind::DotDot | dsl_core::TokenKind::Plus | dsl_core::TokenKind::Minus | dsl_core::TokenKind::Star | dsl_core::TokenKind::Slash | dsl_core::TokenKind::Fence | dsl_core::TokenKind::Error => {
                 if forgiving {
                     push_spanned(out, Token::Ident(text), start, end);
                 } else {
@@ -1455,7 +1455,7 @@ fn format_token(tok: &Token) -> String {
     }
 }
 
-/// 🪞️ Format jack source canonically (idempotent).
+/// 🪞 Format jack source canonically (idempotent).
 pub fn format(source: &str) -> Result<String, GraphDslError> {
     let tokens = lex_spanned(source, false)?;
     let mut out = String::new();
@@ -1585,6 +1585,93 @@ pub fn semantic_tokens(source: &str) -> Vec<SemanticToken> {
         .collect()
 }
 // #endregion 🔖️LanguageService
+
+// #region 🔖️DslIdiom
+/// 🔌️ Registers Jack as a `dsl::IdiomHooks` entry (the `DslIdiom` seam's Route B — an EMBEDDED
+/// idiom hosted inside another document's `Shape::Embed("jack")` field) so `canonicalize`
+/// normalizes embedded Jack text through this crate's own `format`/`tokenize`. Hand-built rather
+/// than `dsl::hooks_for::<I: DslIdiom>()`: that helper needs `DslIdiom::print(ast) -> String`, and
+/// Jack has no AST-to-text printer (`format` re-derives canonical text token-by-token from SOURCE,
+/// not from a `Query`) — `IdiomHooks` itself only needs function pointers, so it's built directly
+/// from the language-service surface Jack already has, no printer required.
+pub fn idiom_hooks() -> dsl::IdiomHooks {
+    dsl::IdiomHooks { lang: "jack", canonicalize: idiom_canonicalize, classify: idiom_classify, complete: idiom_complete }
+}
+
+fn idiom_canonicalize(text: &str) -> Result<String, dsl::TextError> {
+    format(text).map_err(|e| dsl::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))
+}
+
+fn idiom_classify(text: &str) -> Vec<(dsl::TokenClass, dsl::TextSpan)> {
+    tokenize(text)
+        .into_iter()
+        .map(|span| {
+            let class = match span.class {
+                TokenClass::Keyword => dsl::TokenClass::Keyword,
+                TokenClass::Ident => dsl::TokenClass::Ident,
+                TokenClass::Number => dsl::TokenClass::Number,
+                TokenClass::String => dsl::TokenClass::String,
+                TokenClass::Operator => dsl::TokenClass::Operator,
+                TokenClass::Punctuation => dsl::TokenClass::Punctuation,
+                TokenClass::Error => dsl::TokenClass::Error,
+            };
+            (class, byte_range_to_span(text, span.start, span.end))
+        })
+        .collect()
+}
+
+fn idiom_complete(text: &str, offset: usize) -> Vec<dsl::CompletionItem> {
+    // Jack's own `complete` needs a `&dyn QueryableGraph` for schema-aware suggestions (node/edge
+    // kinds, property names) that the generic `DslIdiom`/embed-host seam has no graph to supply —
+    // an empty graph still exercises the syntax-only completions (clause/logic keywords).
+    struct EmptyGraph;
+    impl QueryableGraph for EmptyGraph {
+        fn manifest(&self) -> Option<&mathematical_graph_manifest::GraphManifest> {
+            None
+        }
+        fn node_ids(&self) -> Vec<String> {
+            Vec::new()
+        }
+        fn node_kind(&self, _id: &str) -> Option<String> {
+            None
+        }
+        fn node_name(&self, _id: &str) -> Option<String> {
+            None
+        }
+        fn node_property(&self, _id: &str, _key: &str) -> Option<PropertyValue> {
+            None
+        }
+        fn edges(&self) -> Vec<QueryableEdge> {
+            Vec::new()
+        }
+        fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
+            None
+        }
+    }
+    complete(&EmptyGraph, text, offset).into_iter().map(|c| dsl::CompletionItem { label: c.label, detail: c.detail }).collect()
+}
+
+/// 📍️ Converts a byte-offset half-open range into `dsl_core::TextSpan`'s 1-based line/column/
+/// length form — Jack's own spans are byte offsets (`TokenSpan`/`SemanticToken`), `dsl_core`'s are
+/// line/column, so this is the one place that needs the source text to translate between them.
+fn byte_range_to_span(text: &str, start: usize, end: usize) -> dsl::TextSpan {
+    let mut line = 1u32;
+    let mut column = 1u32;
+    for (i, ch) in text.char_indices() {
+        if i >= start {
+            break;
+        }
+        if ch == '\n' {
+            line += 1;
+            column = 1;
+        } else {
+            column += 1;
+        }
+    }
+    let length = text.get(start..end).map(|s| s.chars().count()).unwrap_or(0) as u32;
+    dsl::TextSpan::with_length(line, column, length)
+}
+// #endregion 🔖️DslIdiom
 
 // #region 🔖️Parser
 struct Parser {
@@ -2087,6 +2174,21 @@ mod tests {
     fn parse_match_return() {
         let q = parse("MATCH (a:computation) RETURN a.name").unwrap();
         assert_eq!(q.clauses.len(), 2);
+    }
+
+    #[test]
+    fn idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam() {
+        let hooks = idiom_hooks();
+        assert_eq!(hooks.lang, "jack");
+        let canonical = (hooks.canonicalize)("MATCH   (a:computation)   RETURN   a.name").expect("canonicalize");
+        assert_eq!(canonical, format("MATCH (a:computation) RETURN a.name").unwrap());
+        assert!((hooks.canonicalize)("not jack at all $$$").is_err() || (hooks.canonicalize)("not jack at all $$$").is_ok(), "canonicalize must not panic on malformed input");
+        let classes = (hooks.classify)("MATCH (a:computation) RETURN a.name");
+        assert!(!classes.is_empty());
+        assert!(classes.iter().any(|(class, _)| *class == dsl::TokenClass::Keyword), "MATCH/RETURN must classify as keywords");
+        dsl::register_idiom(hooks);
+        let resolved = dsl::idiom("jack").expect("jack must be resolvable by lang id after registration");
+        assert_eq!((resolved.canonicalize)("MATCH (a:computation) RETURN a.name").unwrap(), format("MATCH (a:computation) RETURN a.name").unwrap());
     }
 
     #[test]
@@ -2739,7 +2841,7 @@ mod tests {
             assert!(matches!(err, GraphDslError::UnsupportedClause), "query {query} should report UnsupportedClause, got {err:?}");
         }
     }
-    // #endregion 🔖️WithUnwindCallTests
+    // #endregion 🔖WithUnwindCallTests
 
     #[test]
     fn lexer_accepts_both_single_and_double_quoted_strings_and_always_prints_double_quoted() {

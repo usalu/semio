@@ -211,8 +211,8 @@ impl Symbol {
 
 //#region 🔖️Tokens
 /// @emoji 🪙️ Stable token identity WITHIN one lex pass — an index into that pass's token vector,
-/// never a byte offset. `dsl_token` gives tokens identity that survives edits; this crate's
-/// `TokenId` is the snapshot-scoped building block that layer builds on.
+/// never a byte offset. Snapshot-scoped: a fresh lex pass assigns fresh ids, so a `TokenId` is
+/// only meaningful against the exact token vector it came from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TokenId(pub u32);
 
@@ -229,6 +229,19 @@ pub enum TokenKind {
     Arrow,
     DashArrow,
     BackArrow,
+    Caret,
+    DotDot,
+    /// Arithmetic operators, only ever produced in a position where they were previously an
+    /// "unknown character" lex error (a leading `+`/`*`/`/`, or a `-` that isn't digit-adjacent
+    /// and isn't the start of `->`/`--`) — see `Shape::Expr`'s parser, the only consumer. Purely
+    /// additive: no existing valid document could contain one of these in the old error position.
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    /// A fenced verbatim block (see the lexer's own doc comment on the `` ` `` branch) — the ONE
+    /// non-token-by-token construct in this alphabet, and `Shape::Embed`'s only consumer.
+    Fence,
     Placeholder,
     LBrace,
     RBrace,
@@ -263,7 +276,7 @@ pub enum TokenClass {
     Error,
 }
 
-/// @emoji 🧾️ One lexed token: kind, interned text, and a real span (never `(1,1)` placeholder).
+/// @emoji 🧾 One lexed token: kind, interned text, and a real span (never `(1,1)` placeholder).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpannedToken {
     pub id: TokenId,
@@ -272,10 +285,10 @@ pub struct SpannedToken {
     pub span: TextSpan,
     pub byte_range: (u32, u32),
 }
-//#endregion 🔖️Tokens
+//#endregion 🔖Tokens
 
-//#region 🔖️Escape
-/// @emoji 🔐️ The ONE canonical escape scheme for quoted `Text` tokens: `\\ \" \n \r \t` plus
+//#region 🔖Escape
+/// @emoji 🔐 The ONE canonical escape scheme for quoted `Text` tokens: `\\ \" \n \r \t` plus
 /// `\u{XXXX}` for any other control character. Nesting-sound because quoting is a token
 /// boundary — re-escaping an already-printed line is exactly invertible, no percent-encoding
 /// or per-technology scheme needed. Strict superset of every hand-rolled scheme it replaces.
@@ -295,7 +308,7 @@ pub fn escape_text(value: &str) -> String {
     out
 }
 
-/// @emoji 🔓️ Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
+/// @emoji 🔓 Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
 /// keeps the backslash and following character literal instead (editor/recovery mode).
 pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
     let mut out = String::with_capacity(value.len());
@@ -466,6 +479,7 @@ const UNITS: &[UnitSpec] = &[
     UnitSpec { symbol: "cm2", dimension: DIM_AREA, factor: 0.0001 },
     UnitSpec { symbol: "mm2", dimension: DIM_AREA, factor: 0.000001 },
     UnitSpec { symbol: "m3", dimension: DIM_VOLUME, factor: 1.0 },
+    UnitSpec { symbol: "m4", dimension: Dimension { m: 4, kg: 0, s: 0, k: 0, a: 0, rad: 0 }, factor: 1.0 },
     UnitSpec { symbol: "cm3", dimension: DIM_VOLUME, factor: 0.000001 },
     UnitSpec { symbol: "mm4", dimension: Dimension { m: 4, kg: 0, s: 0, k: 0, a: 0, rad: 0 }, factor: 1e-12 },
     UnitSpec { symbol: "cm4", dimension: Dimension { m: 4, kg: 0, s: 0, k: 0, a: 0, rad: 0 }, factor: 1e-8 },
@@ -613,6 +627,64 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
             push!(if closed { TokenKind::Text } else { TokenKind::Error }, start_line, start_col, start_byte, buf);
             continue;
         }
+        // Fenced block: ```lang\ncontent\n``` — the ONE place this lexer scans raw multi-line
+        // content instead of token-by-token (`Shape::Embed`'s only consumer). The lang tag is
+        // everything up to the first newline (may be empty); content is everything up to a line
+        // that is EXACTLY three backticks (no leading/trailing whitespace on that line — a fence
+        // can never be indented, matching every other "structural" line in this grammar). Encoded
+        // as one token, text = "lang\u{0}content" (NUL can't occur in valid authored text, so it's
+        // a safe separator without adding a field to `SpannedToken`) — `dsl_schema`'s `Shape::Embed`
+        // splits on it, the same trick `Shape::Dim` uses for its glued `x`-separated components.
+        if c == '`' && chars.get(i + 1) == Some(&'`') && chars.get(i + 2) == Some(&'`') {
+            let mut j = i + 3;
+            while j < chars.len() && chars[j] != '\n' {
+                j += 1;
+            }
+            let lang: String = chars[i + 3..j].iter().collect();
+            let mut closing: Option<(usize, usize)> = None;
+            if j < chars.len() {
+                let content_start = j + 1;
+                let mut k = content_start;
+                loop {
+                    let line_start = k;
+                    let mut line_end = k;
+                    while line_end < chars.len() && chars[line_end] != '\n' {
+                        line_end += 1;
+                    }
+                    if chars[line_start..line_end].iter().collect::<String>() == "```" {
+                        let content_end = if line_start > content_start { line_start - 1 } else { line_start };
+                        let resume = if line_end < chars.len() { line_end + 1 } else { line_end };
+                        closing = Some((content_end, resume));
+                        break;
+                    }
+                    if line_end >= chars.len() {
+                        break;
+                    }
+                    k = line_end + 1;
+                }
+            }
+            if let Some((content_end, resume)) = closing {
+                let content_start = j + 1;
+                let content: String = chars[content_start..content_end.max(content_start)].iter().collect();
+                for idx in i..resume {
+                    if chars[idx] == '\n' {
+                        line += 1;
+                        column = 1;
+                    } else {
+                        byte_offset += chars[idx].len_utf8() as u32;
+                        column += 1;
+                    }
+                }
+                i = resume;
+                push!(TokenKind::Fence, start_line, start_col, start_byte, format!("{lang}\u{0}{content}"));
+                continue;
+            }
+            if !forgiving {
+                return Err(TextError::new("unterminated fenced block (no closing '```' line)", TextSpan::at(start_line, start_col)));
+            }
+            // forgiving mode: fall through to "unknown character" for the opening backtick, then
+            // the lexer naturally re-tries from the next character on its next loop iteration.
+        }
         // `-inf` is its own special float literal (the negative-infinity half of the "nan/inf/-inf"
         // ident convention `format_f64`/`parse_f64` round-trip) — unlike ordinary numbers, `-` isn't
         // followed by a digit here, and `-` isn't a valid ident-start character either, so without
@@ -721,11 +793,33 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
             push!(TokenKind::DashArrow, start_line, start_col, start_byte, "--".to_string());
             continue;
         }
+        // A `-` that reaches here is neither a negative-number lead (handled above, earlier),
+        // nor `->`/`--` (just checked) — previously "unknown character"; now the Minus operator.
+        if c == '-' {
+            i += 1;
+            byte_offset += 1;
+            column += 1;
+            push!(TokenKind::Minus, start_line, start_col, start_byte, "-".to_string());
+            continue;
+        }
+        // `..` (Range literal `lo..hi`) must be checked before the single-char table below since
+        // a lone `.` isn't `is_ident_start` and would otherwise fall through to "unknown character".
+        if c == '.' && i + 1 < chars.len() && chars[i + 1] == '.' {
+            i += 2;
+            byte_offset += 2;
+            column += 2;
+            push!(TokenKind::DotDot, start_line, start_col, start_byte, "..".to_string());
+            continue;
+        }
         let single = match c {
             '=' => Some(TokenKind::Equals),
             ',' => Some(TokenKind::Comma),
             ':' => Some(TokenKind::Colon),
             '@' => Some(TokenKind::At),
+            '^' => Some(TokenKind::Caret),
+            '+' => Some(TokenKind::Plus),
+            '*' => Some(TokenKind::Star),
+            '/' => Some(TokenKind::Slash),
             '{' => Some(TokenKind::LBrace),
             '}' => Some(TokenKind::RBrace),
             '[' => Some(TokenKind::LBracket),
@@ -779,7 +873,8 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
                 TokenKind::Int | TokenKind::Float => TokenClass::Number,
                 TokenKind::Text => TokenClass::String,
                 TokenKind::Placeholder => TokenClass::Ident,
-                TokenKind::Equals | TokenKind::Arrow | TokenKind::DashArrow | TokenKind::BackArrow | TokenKind::At | TokenKind::Colon => TokenClass::Operator,
+                TokenKind::Equals | TokenKind::Arrow | TokenKind::DashArrow | TokenKind::BackArrow | TokenKind::At | TokenKind::Colon | TokenKind::Caret | TokenKind::DotDot | TokenKind::Plus | TokenKind::Minus | TokenKind::Star | TokenKind::Slash => TokenClass::Operator,
+                TokenKind::Fence => TokenClass::String,
                 TokenKind::Comma | TokenKind::LBrace | TokenKind::RBrace | TokenKind::LBracket | TokenKind::RBracket | TokenKind::LParen | TokenKind::RParen => TokenClass::Punctuation,
                 TokenKind::Comment => TokenClass::Comment,
                 TokenKind::Error => TokenClass::Error,
@@ -808,10 +903,10 @@ pub fn is_bare_ident(s: &str) -> bool {
         Err(_) => false,
     }
 }
-//#endregion 🔖️Lexer
+//#endregion 🔖Lexer
 
-//#region 🔖️Trust
-/// @emoji 🛂️ A value that has passed [`crate::lex`] in strict mode. Constructible only within
+//#region 🔖Trust
+/// @emoji 🛂 A value that has passed [`crate::lex`] in strict mode. Constructible only within
 /// this crate/its trusted callers — public API never lets a caller wrap arbitrary text as
 /// `Sanitized` without going through the real check.
 #[derive(Clone, Debug)]
@@ -831,7 +926,7 @@ impl<T> Sanitized<T> {
     }
 }
 
-/// @emoji 🛂️ A value that has additionally passed schema validation. Reserved for the
+/// @emoji 🛂 A value that has additionally passed schema validation. Reserved for the
 /// `dsl_schema` layer to construct.
 #[derive(Clone, Debug)]
 pub struct SchemaValid<T>(T);
@@ -849,9 +944,9 @@ impl<T> SchemaValid<T> {
         &self.0
     }
 }
-//#endregion 🔖️Trust
+//#endregion 🔖Trust
 
-//#region 🧪️Tests
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -862,7 +957,7 @@ mod tests {
             "plain text",
             "with \"quotes\" and \\backslash\\",
             "line1\nline2\ttabbed\r\n",
-            "unicode: 🔖️ café naïve",
+            "unicode: 🔖 café naïve",
             "\u{0007}bell and \u{001b}escape",
         ];
         for case in cases {
@@ -983,10 +1078,11 @@ mod tests {
                 (TokenKind::Equals, "=".to_string()),
                 // "-influence" must NOT be split into a "-inf" float token plus a stray "luence"
                 // ident — the lookahead requires the char right after "-inf" to not itself
-                // continue an identifier, so this falls through to ordinary "unknown character"
-                // handling for the leading '-' instead (forgiving mode turns it into an Error
-                // token), then lexes "influence" as its own ident.
-                (TokenKind::Error, "-".to_string()),
+                // continue an identifier, so the leading '-' falls through to the Minus operator
+                // token instead (added for Shape::Expr; previously this fell all the way through
+                // to "unknown character"/Error before Minus existed), then "influence" lexes as
+                // its own ident, unaffected either way.
+                (TokenKind::Minus, "-".to_string()),
                 (TokenKind::Ident, "influence".to_string()),
                 (TokenKind::Ident, "z".to_string()),
                 (TokenKind::Equals, "=".to_string()),
@@ -1104,6 +1200,69 @@ mod tests {
         assert!(!is_bare_ident("two words"));
         assert!(!is_bare_ident(""));
         assert!(!is_bare_ident("\"quoted\""));
+    }
+
+    #[test]
+    fn lexer_caret_and_dotdot_tokenize_distinctly_from_neighbors() {
+        let tokens = lex("^0,1,0 (0..10,0.5) 1.5..3 a..b", &Limits::default(), false).expect("lex");
+        let significant: Vec<(TokenKind, String)> =
+            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(
+            significant,
+            vec![
+                (TokenKind::Caret, "^".to_string()),
+                (TokenKind::Int, "0".to_string()),
+                (TokenKind::Comma, ",".to_string()),
+                (TokenKind::Int, "1".to_string()),
+                (TokenKind::Comma, ",".to_string()),
+                (TokenKind::Int, "0".to_string()),
+                (TokenKind::LParen, "(".to_string()),
+                (TokenKind::Int, "0".to_string()),
+                (TokenKind::DotDot, "..".to_string()),
+                (TokenKind::Int, "10".to_string()),
+                (TokenKind::Comma, ",".to_string()),
+                (TokenKind::Float, "0.5".to_string()),
+                (TokenKind::RParen, ")".to_string()),
+                (TokenKind::Float, "1.5".to_string()),
+                (TokenKind::DotDot, "..".to_string()),
+                (TokenKind::Int, "3".to_string()),
+                // A dot INSIDE an already-started ident never splits into DotDot — "a..b" stays
+                // one ident, exactly like kebab idents protect "-" from the Arrow/DashArrow checks.
+                (TokenKind::Ident, "a..b".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn lexer_fence_captures_lang_and_multiline_content() {
+        let source = "text=```jack\nMATCH (a) RETURN a\nWHERE a.x > 1\n```\nafter=1";
+        let tokens = lex(source, &Limits::default(), false).expect("lex");
+        let significant: Vec<&SpannedToken> = tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
+        let fence = significant.iter().find(|t| t.kind == TokenKind::Fence).expect("a Fence token");
+        let raw = fence.text.as_str();
+        let (lang, content) = raw.split_once('\u{0}').expect("NUL separator");
+        assert_eq!(lang, "jack");
+        assert_eq!(content, "MATCH (a) RETURN a\nWHERE a.x > 1");
+        // lexing must resume normally right after the closing fence line.
+        assert!(significant.iter().any(|t| t.kind == TokenKind::Ident && t.text.as_str().as_ref() == "after"));
+    }
+
+    #[test]
+    fn lexer_fence_with_no_lang_tag_and_empty_content() {
+        let tokens = lex("body=```\n```", &Limits::default(), false).expect("lex");
+        let fence = tokens.iter().find(|t| t.kind == TokenKind::Fence).expect("a Fence token");
+        let raw = fence.text.as_str();
+        let (lang, content) = raw.split_once('\u{0}').expect("NUL separator");
+        assert_eq!(lang, "");
+        assert_eq!(content, "");
+    }
+
+    #[test]
+    fn lexer_unterminated_fence_is_a_strict_error_and_forgiving_error_token() {
+        let strict = lex("body=```jack\nMATCH (a) RETURN a", &Limits::default(), false);
+        assert!(strict.is_err(), "unterminated fence must be a strict-mode error");
+        let forgiving = lex("body=```jack\nMATCH (a) RETURN a", &Limits::default(), true);
+        assert!(forgiving.is_ok(), "forgiving mode must never fail on malformed input");
     }
 
     #[test]

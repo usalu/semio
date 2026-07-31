@@ -7467,10 +7467,10 @@ mod output {
             }
         }
     }
-    // #endregion 🔖️Variable
+    // #endregion 🔖Variable
 
-    // #region 🔖️TimeSeries
-    /// 📈️ Time-series storage for one variable.
+    // #region 🔖TimeSeries
+    /// 📈 Time-series storage for one variable.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct TimeSeries {
         pub key: String,
@@ -7503,7 +7503,7 @@ mod output {
         }
     }
 
-    /// 📦️ All time-series output.
+    /// 📦 All time-series output.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct TimeSeriesStore {
         pub series: HashMap<String, TimeSeries>,
@@ -7529,7 +7529,7 @@ mod output {
             Some(out)
         }
     }
-    // #endregion 🔖️TimeSeries
+    // #endregion 🔖TimeSeries
 
     #[cfg(test)]
     mod tests {
@@ -7588,15 +7588,15 @@ mod output {
 }
 
 mod plant {
-    //! 🏭️ Plant loops: pumps, boilers, chillers, heat pumps, towers, HX, GSHP, thermal storage.
+    //! 🏭 Plant loops: pumps, boilers, chillers, heat pumps, towers, HX, GSHP, thermal storage.
 
     use crate::curves::PerformanceCurve;
     use crate::props::{glycol_cp_j_per_kg_k, glycol_density, water_cp_j_per_kg_k, water_density};
     use crate::units::RHO_WATER;
     use serde::{Deserialize, Serialize};
 
-    // #region 🔖️State
-    /// 💧️ Plant fluid stream state at a loop node.
+    // #region 🔖State
+    /// 💧 Plant fluid stream state at a loop node.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct PlantStream {
         pub temperature_c: f64,
@@ -7609,7 +7609,7 @@ mod plant {
         }
     }
 
-    /// 📤️ Timestep plant equipment output.
+    /// 📤 Timestep plant equipment output.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct PlantOutput {
         pub thermal_power_w: f64,
@@ -7618,10 +7618,10 @@ mod plant {
         pub outlet: PlantStream,
         pub heat_rejection_w: f64,
     }
-    // #endregion 🔖️State
+    // #endregion 🔖State
 
-    // #region 🔖️Pump
-    /// ⚙️ Variable-speed centrifugal pump with part-load curve.
+    // #region 🔖Pump
+    /// ⚙ Variable-speed centrifugal pump with part-load curve.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct Pump {
         pub design_head_pa: f64,
@@ -7631,7 +7631,7 @@ mod plant {
     }
 
     impl Pump {
-        /// ⚙️ Pump hydraulic and electrical power for a requested mass flow.
+        /// ⚙ Pump hydraulic and electrical power for a requested mass flow.
         pub fn simulate(&self, inlet: PlantStream, requested_flow_kg_s: f64) -> PlantOutput {
             let flow = requested_flow_kg_s.clamp(0.0, self.design_flow_kg_s * 1.2);
             let plr = self.part_load_curve.part_load(flow, self.design_flow_kg_s);
@@ -7641,10 +7641,10 @@ mod plant {
             PlantOutput { thermal_power_w: 0.0, electrical_power_w: hydraulic_w / motor_eta, gas_power_w: 0.0, outlet: PlantStream::new(inlet.temperature_c, flow), heat_rejection_w: hydraulic_w * (1.0 - motor_eta) }
         }
     }
-    // #endregion 🔖️Pump
+    // #endregion 🔖Pump
 
-    // #region 🔖️Boiler
-    /// 🔥️ Hot-water or steam boiler with combustion efficiency curve.
+    // #region 🔖Boiler
+    /// 🔥 Hot-water or steam boiler with combustion efficiency curve.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct Boiler {
         pub rated_capacity_w: f64,
@@ -7655,7 +7655,7 @@ mod plant {
     }
 
     impl Boiler {
-        /// 🔥️ Deliver hot-water heating to meet plant load.
+        /// 🔥 Deliver hot-water heating to meet plant load.
         pub fn simulate(&self, inlet: PlantStream, heating_load_w: f64, operating: bool) -> PlantOutput {
             if !operating || heating_load_w <= 0.0 {
                 return PlantOutput { electrical_power_w: 50.0, gas_power_w: self.standby_loss_w, outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
@@ -7669,10 +7669,10 @@ mod plant {
             PlantOutput { thermal_power_w: load, electrical_power_w: 200.0 * plr, gas_power_w: gas_w, outlet: PlantStream::new(self.supply_temperature_c, m_dot), heat_rejection_w: gas_w - load }
         }
     }
-    // #endregion 🔖️Boiler
+    // #endregion 🔖Boiler
 
-    // #region 🔖️Chiller
-    /// ❄️ Vapor-compression chiller with EIR part-load curve.
+    // #region 🔖Chiller
+    /// ❄ Vapor-compression chiller with EIR part-load curve.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct ChillerEir {
         pub rated_capacity_w: f64,
@@ -7684,7 +7684,7 @@ mod plant {
     }
 
     impl ChillerEir {
-        /// ❄️ Electric chiller cooling via Energy Input Ratio curves.
+        /// ❄ Electric chiller cooling via Energy Input Ratio curves.
         pub fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, operating: bool) -> PlantOutput {
             if !operating || cooling_load_w <= 0.0 {
                 return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
@@ -7701,7 +7701,7 @@ mod plant {
         }
     }
 
-    /// 🔥️ Absorption chiller driven by hot water or steam.
+    /// 🔥 Absorption chiller driven by hot water or steam.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct ChillerAbsorption {
         pub rated_capacity_w: f64,
@@ -7712,7 +7712,7 @@ mod plant {
     }
 
     impl ChillerAbsorption {
-        /// 🔥️ Absorption chiller with generator heat input.
+        /// 🔥 Absorption chiller with generator heat input.
         pub fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, generator_inlet_c: f64, operating: bool) -> PlantOutput {
             if !operating || cooling_load_w <= 0.0 || generator_inlet_c < self.min_generator_inlet_c {
                 return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
@@ -7726,10 +7726,10 @@ mod plant {
             PlantOutput { thermal_power_w: -load, gas_power_w: heat_in_w, electrical_power_w: 500.0 * plr, outlet: PlantStream::new(inlet.temperature_c - delta_t, inlet.mass_flow_kg_s), heat_rejection_w: load + heat_in_w }
         }
     }
-    // #endregion 🔖️Chiller
+    // #endregion 🔖Chiller
 
-    // #region 🔖️HeatPump
-    /// 🌡️ Water-to-water or air-source heat pump plant component.
+    // #region 🔖HeatPump
+    /// 🌡 Water-to-water or air-source heat pump plant component.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct HeatPump {
         pub rated_heating_w: f64,
@@ -7741,7 +7741,7 @@ mod plant {
     }
 
     impl HeatPump {
-        /// 🌡️ Bidirectional heat pump for heating or cooling plant load.
+        /// 🌡 Bidirectional heat pump for heating or cooling plant load.
         pub fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, source_temp_c: f64) -> PlantOutput {
             if load_w.abs() < 1.0 {
                 return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
@@ -7763,16 +7763,16 @@ mod plant {
         }
     }
 
-    /// 🔄️ Heat pump operating mode.
+    /// 🔄 Heat pump operating mode.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum HeatPumpMode {
         Heating,
         Cooling,
     }
-    // #endregion 🔖️HeatPump
+    // #endregion 🔖HeatPump
 
-    // #region 🔖️CoolingTower
-    /// 🌊️ Open cooling tower with approach and fan power.
+    // #region 🔖CoolingTower
+    /// 🌊 Open cooling tower with approach and fan power.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct CoolingTower {
         pub design_range_k: f64,
@@ -7783,7 +7783,7 @@ mod plant {
     }
 
     impl CoolingTower {
-        /// 🌊️ Reject condenser heat to outdoor air via evaporative cooling.
+        /// 🌊 Reject condenser heat to outdoor air via evaporative cooling.
         pub fn simulate(&self, inlet: PlantStream, heat_rejection_w: f64, outdoor_wb_c: f64) -> PlantOutput {
             if heat_rejection_w <= 0.0 {
                 return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
@@ -7797,10 +7797,10 @@ mod plant {
             PlantOutput { thermal_power_w: -heat_rejection_w, electrical_power_w: fan_w, gas_power_w: 0.0, outlet: PlantStream::new(outlet_t, m_dot), heat_rejection_w }
         }
     }
-    // #endregion 🔖️CoolingTower
+    // #endregion 🔖CoolingTower
 
-    // #region 🔖️HeatExchanger
-    /// 🔀️ Counter-flow plate heat exchanger.
+    // #region 🔖HeatExchanger
+    /// 🔀 Counter-flow plate heat exchanger.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct HeatExchanger {
         pub ua_w_per_k: f64,
@@ -7808,7 +7808,7 @@ mod plant {
     }
 
     impl HeatExchanger {
-        /// 🔀️ Transfer heat between hot and cold plant streams.
+        /// 🔀 Transfer heat between hot and cold plant streams.
         pub fn simulate(&self, hot: PlantStream, cold: PlantStream) -> (PlantOutput, PlantOutput) {
             let c_hot = hot.mass_flow_kg_s * water_cp_j_per_kg_k(hot.temperature_c);
             let c_cold = cold.mass_flow_kg_s * water_cp_j_per_kg_k(cold.temperature_c);
@@ -7821,10 +7821,10 @@ mod plant {
             (PlantOutput { thermal_power_w: -q, outlet: PlantStream::new(hot_out, hot.mass_flow_kg_s), ..Default::default() }, PlantOutput { thermal_power_w: q, outlet: PlantStream::new(cold_out, cold.mass_flow_kg_s), ..Default::default() })
         }
     }
-    // #endregion 🔖️HeatExchanger
+    // #endregion 🔖HeatExchanger
 
-    // #region 🔖️Gshp
-    /// 🌍️ Ground-source heat pump with borefield thermal response.
+    // #region 🔖Gshp
+    /// 🌍 Ground-source heat pump with borefield thermal response.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct Gshp {
         pub heat_pump: HeatPump,
@@ -7835,7 +7835,7 @@ mod plant {
     }
 
     impl Gshp {
-        /// 🌍️ Simulate GSHP with ground temperature penalty from sustained extraction.
+        /// 🌍 Simulate GSHP with ground temperature penalty from sustained extraction.
         pub fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, cumulative_ground_load_j: f64) -> PlantOutput {
             let penalty_k = (cumulative_ground_load_j / 1e9).clamp(0.0, 8.0);
             let source_t = match mode {
@@ -7849,10 +7849,10 @@ mod plant {
             out
         }
     }
-    // #endregion 🔖️Gshp
+    // #endregion 🔖Gshp
 
-    // #region 🔖️ThermalStorage
-    /// 🧊️ Stratified thermal storage tank on a plant loop.
+    // #region 🔖ThermalStorage
+    /// 🧊 Stratified thermal storage tank on a plant loop.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct ThermalStorage {
         pub volume_m3: f64,
@@ -7863,7 +7863,7 @@ mod plant {
         pub state: ThermalStorageState,
     }
 
-    /// 🌡️ Stratified tank nodal temperatures (top to bottom).
+    /// 🌡 Stratified tank nodal temperatures (top to bottom).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct ThermalStorageState {
         pub node_temperatures_c: Vec<f64>,
@@ -7871,7 +7871,7 @@ mod plant {
     }
 
     impl ThermalStorage {
-        /// 🧊️ Charge or discharge storage and return loop outlet stream.
+        /// 🧊 Charge or discharge storage and return loop outlet stream.
         pub fn simulate(&self, inlet: PlantStream, charge_w: f64, dt_s: f64) -> (PlantOutput, ThermalStorageState) {
             let rho = water_density(inlet.temperature_c);
             let cp = water_cp_j_per_kg_k(inlet.temperature_c);
@@ -7893,10 +7893,10 @@ mod plant {
             (PlantOutput { thermal_power_w: net_w, outlet: PlantStream::new(outlet_t, inlet.mass_flow_kg_s), heat_rejection_w: loss_w.max(0.0), ..Default::default() }, state)
         }
     }
-    // #endregion 🔖️ThermalStorage
+    // #endregion 🔖ThermalStorage
 
-    // #region 🔖️PlantLoop
-    /// 🔄️ Primary plant loop connecting equipment in series.
+    // #region 🔖PlantLoop
+    /// 🔄 Primary plant loop connecting equipment in series.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct PlantLoopSimulation {
         pub supply: PlantStream,
@@ -7906,7 +7906,7 @@ mod plant {
     }
 
     impl PlantLoopSimulation {
-        /// 🔄️ Solve one plant loop timestep with pump and demand heat exchanger.
+        /// 🔄 Solve one plant loop timestep with pump and demand heat exchanger.
         pub fn simulate(&self, demand_load_w: f64) -> PlantOutput {
             let rho = if self.glycol_fraction > 0.0 { glycol_density(self.supply.temperature_c, self.glycol_fraction) } else { water_density(self.supply.temperature_c) };
             let cp = if self.glycol_fraction > 0.0 { glycol_cp_j_per_kg_k(self.supply.temperature_c, self.glycol_fraction) } else { water_cp_j_per_kg_k(self.supply.temperature_c) };
@@ -7917,7 +7917,7 @@ mod plant {
             PlantOutput { thermal_power_w: demand_load_w, electrical_power_w: pump_out.electrical_power_w, outlet: pump_out.outlet, ..Default::default() }
         }
     }
-    // #endregion 🔖️PlantLoop
+    // #endregion 🔖PlantLoop
 
     #[cfg(test)]
     mod tests {
@@ -8011,7 +8011,7 @@ mod plant {
 }
 
 mod precompute {
-    //! 🧮️ Precompute geometry, CTF coefficients, solar factors, and zone topology.
+    //! 🧮 Precompute geometry, CTF coefficients, solar factors, and zone topology.
 
     use crate::envelope::ConductionState;
     use crate::geometry::{polygon_normal, surface_area_m2, surface_tilt_azimuth};
@@ -8021,8 +8021,8 @@ mod precompute {
     use crate::solar::beam_incidence_cosine;
     use std::collections::HashMap;
 
-    // #region 🔖️ZoneGeometry
-    /// 📐️ Precomputed zone geometry.
+    // #region 🔖ZoneGeometry
+    /// 📐 Precomputed zone geometry.
     #[derive(Clone, Debug, Default)]
     pub struct ZoneGeometry {
         pub floor_area_m2: f64,
@@ -8030,7 +8030,7 @@ mod precompute {
         pub roof_area_m2: f64,
     }
 
-    /// 📐️ Precomputed surface geometry and thermal properties.
+    /// 📐 Precomputed surface geometry and thermal properties.
     #[derive(Clone, Debug)]
     pub struct SurfacePrecompute {
         pub area_m2: f64,
@@ -8045,10 +8045,10 @@ mod precompute {
         pub zone_id: EntityId,
         pub sun_exposed: bool,
     }
-    // #endregion 🔖️ZoneGeometry
+    // #endregion 🔖ZoneGeometry
 
-    // #region 🔖️FenestrationPrecompute
-    /// 🪟️ Precomputed fenestration properties.
+    // #region 🔖FenestrationPrecompute
+    /// 🪟 Precomputed fenestration properties.
     #[derive(Clone, Debug)]
     pub struct FenestrationPrecompute {
         pub surface_id: EntityId,
@@ -8060,10 +8060,10 @@ mod precompute {
         pub azimuth_deg: f64,
         pub normal: [f64; 3],
     }
-    // #endregion 🔖️FenestrationPrecompute
+    // #endregion 🔖FenestrationPrecompute
 
-    // #region 🔖️ThermostatLookup
-    /// 🌡️ Resolved thermostat setpoints for a zone.
+    // #region 🔖ThermostatLookup
+    /// 🌡 Resolved thermostat setpoints for a zone.
     #[derive(Clone, Copy, Debug, Default)]
     pub struct ResolvedSetpoints {
         pub heating_c: f64,
@@ -8071,10 +8071,10 @@ mod precompute {
         pub heating_throttle_k: f64,
         pub cooling_throttle_k: f64,
     }
-    // #endregion 🔖️ThermostatLookup
+    // #endregion 🔖ThermostatLookup
 
-    // #region 🔖️PrecomputedModel
-    /// 🧮️ All precomputed data for a simulation run.
+    // #region 🔖PrecomputedModel
+    /// 🧮 All precomputed data for a simulation run.
     #[derive(Clone, Debug, Default)]
     pub struct PrecomputedModel {
         pub zone_geometry: HashMap<EntityId, ZoneGeometry>,
@@ -8086,7 +8086,7 @@ mod precompute {
     }
 
     impl PrecomputedModel {
-        /// 🧮️ Build precomputed data from model and timestep settings.
+        /// 🧮 Build precomputed data from model and timestep settings.
         pub fn build(model: &Model, zone_timestep_minutes: u32, system_timestep_minutes: u32) -> Self {
             let zone_timestep_s = zone_timestep_minutes as f64 * 60.0;
             let system_timestep_s = system_timestep_minutes as f64 * 60.0;
@@ -8140,18 +8140,18 @@ mod precompute {
             Self { zone_geometry, surfaces, fenestrations, default_setpoints, zone_timestep_s, system_timestep_s }
         }
 
-        /// ☀️ Solar incidence cosine for a surface at given solar position.
+        /// ☀ Solar incidence cosine for a surface at given solar position.
         pub fn surface_incidence(&self, surface_id: EntityId, sun_alt_deg: f64, sun_az_deg: f64) -> f64 {
             self.surfaces.get(&surface_id).map_or(0.0, |s| beam_incidence_cosine(s.normal, sun_alt_deg, sun_az_deg))
         }
 
-        /// ☀️ Solar position for site at day/hour.
+        /// ☀ Solar position for site at day/hour.
         pub fn solar_at(&self, model: &Model, day_of_year: u16, hour: f64) -> (f64, f64) {
             let pos = solar_position(model.site.latitude_deg, model.site.longitude_deg, day_of_year, hour);
             (pos.altitude_deg, pos.azimuth_deg)
         }
     }
-    // #endregion 🔖️PrecomputedModel
+    // #endregion 🔖PrecomputedModel
 
     #[cfg(test)]
     mod tests {
@@ -8213,33 +8213,33 @@ mod precompute {
 }
 
 mod props {
-    //! 💧️ Physical property functions: moist air, water, steam, refrigerants, glycol.
+    //! 💧 Physical property functions: moist air, water, steam, refrigerants, glycol.
 
     use crate::num::newton_raphson;
     use crate::units::{c_to_k, CP_DRY_AIR, H_FG_0C, P_STD, R_DRY_AIR, R_WATER_VAPOR};
 
-    // #region 🔖️Psychrometrics
-    /// 💧️ Saturation pressure of water [Pa] (Magnus-type, valid ~0–50°C).
+    // #region 🔖Psychrometrics
+    /// 💧 Saturation pressure of water [Pa] (Magnus-type, valid ~0–50°C).
     pub fn saturation_pressure_pa(t_c: f64) -> f64 {
         let t = t_c.clamp(-50.0, 100.0);
         611.657 * ((17.2799 * t) / (t + 237.3)).exp()
     }
 
-    /// 💧️ Humidity ratio W [kg_water/kg_dry_air] from dry-bulb and relative humidity.
+    /// 💧 Humidity ratio W [kg_water/kg_dry_air] from dry-bulb and relative humidity.
     pub fn humidity_ratio_from_rh(t_c: f64, rh: f64, p_atm: f64) -> f64 {
         let p_ws = saturation_pressure_pa(t_c);
         let p_w = rh.clamp(0.0, 1.0) * p_ws;
         0.621_945 * p_w / (p_atm - p_w).max(1.0)
     }
 
-    /// 💧️ Relative humidity from humidity ratio.
+    /// 💧 Relative humidity from humidity ratio.
     pub fn rh_from_humidity_ratio(t_c: f64, w: f64, p_atm: f64) -> f64 {
         let p_ws = saturation_pressure_pa(t_c);
         let p_w = w * p_atm / (0.621_945 + w);
         (p_w / p_ws).clamp(0.0, 1.0)
     }
 
-    /// 🌡️ Wet-bulb temperature [°C] via iterative psychrometric balance.
+    /// 🌡 Wet-bulb temperature [°C] via iterative psychrometric balance.
     pub fn wet_bulb_c(t_db_c: f64, w: f64, p_atm: f64) -> f64 {
         let target = w;
         let f = |t_wb: f64| humidity_ratio_from_rh(t_wb, 1.0, p_atm) - target;
@@ -8250,59 +8250,59 @@ mod props {
         newton_raphson(t_db_c, f, df, 30, 1e-6).unwrap_or(t_db_c)
     }
 
-    /// 🔥️ Moist air enthalpy [J/kg dry air].
+    /// 🔥 Moist air enthalpy [J/kg dry air].
     pub fn moist_air_enthalpy_j_per_kg(t_c: f64, w: f64) -> f64 {
         CP_DRY_AIR * t_c + w * (H_FG_0C + 1860.0 * t_c)
     }
 
-    /// 🌡️ Dew point [°C] from humidity ratio.
+    /// 🌡 Dew point [°C] from humidity ratio.
     pub fn dew_point_c(w: f64, p_atm: f64) -> f64 {
         let p_w = w * p_atm / (0.621_945 + w);
         let ln_pw = (p_w / 611.657).ln();
         237.3 * ln_pw / (17.2799 - ln_pw)
     }
 
-    /// 💨️ Moist air density [kg/m³].
+    /// 💨 Moist air density [kg/m³].
     pub fn moist_air_density(t_c: f64, w: f64, p_atm: f64) -> f64 {
         let t_k = c_to_k(t_c);
         let p_w = w * p_atm / (0.621_945 + w);
         let p_d = p_atm - p_w;
         p_d / (R_DRY_AIR * t_k) + p_w / (R_WATER_VAPOR * t_k)
     }
-    // #endregion 🔖️Psychrometrics
+    // #endregion 🔖Psychrometrics
 
-    // #region 🔖️Water
-    /// 💧️ Liquid water specific heat [J/(kg·K)] (temperature-dependent polynomial).
+    // #region 🔖Water
+    /// 💧 Liquid water specific heat [J/(kg·K)] (temperature-dependent polynomial).
     pub fn water_cp_j_per_kg_k(t_c: f64) -> f64 {
         4217.0 - 1.2 * t_c + 0.003 * t_c * t_c
     }
 
-    /// 💧️ Liquid water density [kg/m³].
+    /// 💧 Liquid water density [kg/m³].
     pub fn water_density(t_c: f64) -> f64 {
         999.839_5 + 0.067_37 * t_c - 0.010_52 * t_c * t_c
     }
 
-    /// 💧️ Liquid water thermal conductivity [W/(m·K)].
+    /// 💧 Liquid water thermal conductivity [W/(m·K)].
     pub fn water_conductivity(t_c: f64) -> f64 {
         0.561_0 + 0.002_0 * t_c - 6.0e-6 * t_c * t_c
     }
-    // #endregion 🔖️Water
+    // #endregion 🔖Water
 
-    // #region 🔖️Steam
-    /// 💨️ Steam saturation temperature [°C] from pressure [Pa].
+    // #region 🔖Steam
+    /// 💨 Steam saturation temperature [°C] from pressure [Pa].
     pub fn steam_saturation_temp_c(p_pa: f64) -> f64 {
         let ln_p = (p_pa / 611.657).ln();
         237.3 * ln_p / (17.2799 - ln_p)
     }
 
-    /// 💨️ Latent heat of vaporization [J/kg] at temperature [°C].
+    /// 💨 Latent heat of vaporization [J/kg] at temperature [°C].
     pub fn latent_heat_vaporization(t_c: f64) -> f64 {
         H_FG_0C - 2370.0 * t_c
     }
-    // #endregion 🔖️Steam
+    // #endregion 🔖Steam
 
-    // #region 🔖️Refrigerant
-    /// ❄️ R410A saturation pressure [Pa] simplified correlation (valid ~-40 to 40°C).
+    // #region 🔖Refrigerant
+    /// ❄ R410A saturation pressure [Pa] simplified correlation (valid ~-40 to 40°C).
     pub fn r410a_saturation_pressure_pa(t_c: f64) -> f64 {
         let t_k = c_to_k(t_c);
         let a = -1031.0;
@@ -8310,7 +8310,7 @@ mod props {
         (a / t_k + b).exp() * P_STD
     }
 
-    /// ❄️ R410A saturation temperature [°C] from pressure [Pa].
+    /// ❄ R410A saturation temperature [°C] from pressure [Pa].
     pub fn r410a_saturation_temp_c(p_pa: f64) -> f64 {
         let ratio = (p_pa / P_STD).ln();
         k_to_c(-1031.0 / (ratio - 7.0))
@@ -8319,28 +8319,28 @@ mod props {
     fn k_to_c(t_k: f64) -> f64 {
         t_k - 273.15
     }
-    // #endregion 🔖️Refrigerant
+    // #endregion 🔖Refrigerant
 
-    // #region 🔖️Glycol
-    /// 🧪️ Glycol mixture specific heat [J/(kg·K)] (ethylene glycol fraction 0–0.6).
+    // #region 🔖Glycol
+    /// 🧪 Glycol mixture specific heat [J/(kg·K)] (ethylene glycol fraction 0–0.6).
     pub fn glycol_cp_j_per_kg_k(t_c: f64, glycol_fraction: f64) -> f64 {
         let f = glycol_fraction.clamp(0.0, 0.6);
         water_cp_j_per_kg_k(t_c) * (1.0 - f) + 2400.0 * f
     }
 
-    /// 🧪️ Glycol mixture density [kg/m³].
+    /// 🧪 Glycol mixture density [kg/m³].
     pub fn glycol_density(t_c: f64, glycol_fraction: f64) -> f64 {
         let f = glycol_fraction.clamp(0.0, 0.6);
         water_density(t_c) * (1.0 - f) + 1110.0 * f
     }
 
-    /// 🧪️ Glycol mixture dynamic viscosity [Pa·s] (simplified).
+    /// 🧪 Glycol mixture dynamic viscosity [Pa·s] (simplified).
     pub fn glycol_viscosity(t_c: f64, glycol_fraction: f64) -> f64 {
         let f = glycol_fraction.clamp(0.0, 0.6);
         let mu_water = 0.001_792 / (1.0 + 0.033_7 * t_c + 0.000_221 * t_c * t_c);
         mu_water * (1.0 + 5.0 * f)
     }
-    // #endregion 🔖️Glycol
+    // #endregion 🔖Glycol
 
     #[cfg(test)]
     mod tests {
@@ -8367,15 +8367,15 @@ mod props {
 }
 
 mod refrigeration {
-    //! ❄️ Refrigeration: display cases, walk-ins, compressor racks, condensers, secondary loops.
+    //! ❄ Refrigeration: display cases, walk-ins, compressor racks, condensers, secondary loops.
 
     use crate::curves::PerformanceCurve;
     use crate::props::{r410a_saturation_pressure_pa, r410a_saturation_temp_c};
     use crate::units::P_STD;
     use serde::{Deserialize, Serialize};
 
-    // #region 🔖️State
-    /// 🌡️ Refrigeration circuit state.
+    // #region 🔖State
+    /// 🌡 Refrigeration circuit state.
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub struct RefrigerationState {
         pub evaporating_temperature_c: f64,
@@ -8384,7 +8384,7 @@ mod refrigeration {
         pub liquid_subcool_k: f64,
     }
 
-    /// 📤️ Refrigeration timestep output.
+    /// 📤 Refrigeration timestep output.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct RefrigerationOutput {
         pub cooling_power_w: f64,
@@ -8392,10 +8392,10 @@ mod refrigeration {
         pub condenser_heat_w: f64,
         pub mass_flow_kg_s: f64,
     }
-    // #endregion 🔖️State
+    // #endregion 🔖State
 
-    // #region 🔖️DisplayCase
-    /// 🛒️ Supermarket display case with anti-sweat and fan power.
+    // #region 🔖DisplayCase
+    /// 🛒 Supermarket display case with anti-sweat and fan power.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct DisplayCase {
         pub length_m: f64,
@@ -8409,7 +8409,7 @@ mod refrigeration {
     }
 
     impl DisplayCase {
-        /// 🛒️ Display case total cooling and electrical load.
+        /// 🛒 Display case total cooling and electrical load.
         pub fn simulate(&self, case_temperature_c: f64, ambient_c: f64, load_factor: f64) -> RefrigerationOutput {
             let lf = load_factor.clamp(0.0, 1.5);
             let conductance = self.design_cooling_w / (case_temperature_c - self.evaporating_temperature_c).max(1.0);
@@ -8421,10 +8421,10 @@ mod refrigeration {
             RefrigerationOutput { cooling_power_w: cooling_w, compressor_power_w: compressor_w, condenser_heat_w: cooling_w + compressor_w * 0.85, mass_flow_kg_s: cooling_w / 150_000.0 }
         }
     }
-    // #endregion 🔖️DisplayCase
+    // #endregion 🔖DisplayCase
 
-    // #region 🔖️WalkIn
-    /// 🚪️ Walk-in cooler or freezer box.
+    // #region 🔖WalkIn
+    /// 🚪 Walk-in cooler or freezer box.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct WalkIn {
         pub floor_area_m2: f64,
@@ -8437,7 +8437,7 @@ mod refrigeration {
     }
 
     impl WalkIn {
-        /// 🚪️ Walk-in envelope and infiltration cooling load.
+        /// 🚪 Walk-in envelope and infiltration cooling load.
         pub fn simulate(&self, ambient_c: f64, humidity_factor: f64) -> RefrigerationOutput {
             let delta_t = (ambient_c - self.design_box_temperature_c).max(0.0);
             let envelope_w = self.ua_w_per_k * delta_t;
@@ -8448,10 +8448,10 @@ mod refrigeration {
             RefrigerationOutput { cooling_power_w: cooling_w, compressor_power_w: compressor_w, condenser_heat_w: cooling_w + compressor_w, mass_flow_kg_s: cooling_w / 140_000.0 }
         }
     }
-    // #endregion 🔖️WalkIn
+    // #endregion 🔖WalkIn
 
-    // #region 🔖️CompressorRack
-    /// 🏭️ Shared compressor rack serving multiple cases.
+    // #region 🔖CompressorRack
+    /// 🏭 Shared compressor rack serving multiple cases.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct CompressorRack {
         pub rated_capacity_w: f64,
@@ -8463,7 +8463,7 @@ mod refrigeration {
     }
 
     impl CompressorRack {
-        /// 🏭️ Rack cooling capacity and power at floating suction/head pressure.
+        /// 🏭 Rack cooling capacity and power at floating suction/head pressure.
         pub fn simulate(&self, total_cooling_w: f64, evaporating_c: f64, condensing_c: f64) -> RefrigerationOutput {
             let load = total_cooling_w.min(self.rated_capacity_w * self.compressor_count as f64);
             if load <= 0.0 {
@@ -8475,15 +8475,15 @@ mod refrigeration {
             RefrigerationOutput { cooling_power_w: load, compressor_power_w: compressor_w, condenser_heat_w: load + compressor_w, mass_flow_kg_s: load / (150_000.0 * plr.max(0.2)) }
         }
 
-        /// 🌡️ Floating head pressure from ambient dry-bulb.
+        /// 🌡 Floating head pressure from ambient dry-bulb.
         pub fn floating_head_c(&self, ambient_c: f64) -> f64 {
             (ambient_c + 10.0).clamp(25.0, self.max_condensing_c)
         }
     }
-    // #endregion 🔖️CompressorRack
+    // #endregion 🔖CompressorRack
 
-    // #region 🔖️Condenser
-    /// 🌊️ Air-cooled or evaporative condenser rejecting rack heat.
+    // #region 🔖Condenser
+    /// 🌊 Air-cooled or evaporative condenser rejecting rack heat.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct RefrigerationCondenser {
         pub ua_w_per_k: f64,
@@ -8493,7 +8493,7 @@ mod refrigeration {
     }
 
     impl RefrigerationCondenser {
-        /// 🌊️ Condenser heat rejection and fan power.
+        /// 🌊 Condenser heat rejection and fan power.
         pub fn simulate(&self, heat_rejection_w: f64, ambient_c: f64, wet_bulb_c: f64) -> (f64, f64) {
             if heat_rejection_w <= 0.0 {
                 return (ambient_c + self.design_approach_k, 0.0);
@@ -8505,10 +8505,10 @@ mod refrigeration {
             (actual_t.max(condensing_t), fan_w)
         }
     }
-    // #endregion 🔖️Condenser
+    // #endregion 🔖Condenser
 
-    // #region 🔖️SecondaryLoop
-    /// 🧊️ Glycol secondary loop for remote display cases.
+    // #region 🔖SecondaryLoop
+    /// 🧊 Glycol secondary loop for remote display cases.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct SecondaryLoop {
         pub pump_power_w: f64,
@@ -8520,7 +8520,7 @@ mod refrigeration {
     }
 
     impl SecondaryLoop {
-        /// 🧊️ Secondary loop pump and heat pickup from cases.
+        /// 🧊 Secondary loop pump and heat pickup from cases.
         pub fn simulate(&self, case_load_w: f64, ambient_c: f64) -> (f64, f64, f64) {
             let pipe_loss_w = self.pipe_ua_w_per_k * (self.supply_temperature_c - ambient_c).max(0.0);
             let fluid_cooling = case_load_w + pipe_loss_w;
@@ -8530,19 +8530,19 @@ mod refrigeration {
             (fluid_cooling, new_return, pump_w)
         }
     }
-    // #endregion 🔖️SecondaryLoop
+    // #endregion 🔖SecondaryLoop
 
-    // #region 🔖️Circuit
-    /// ❄️ Full refrigeration circuit pressure-temperature check.
+    // #region 🔖Circuit
+    /// ❄ Full refrigeration circuit pressure-temperature check.
     pub fn refrigeration_state_from_pressures(suction_pa: f64, discharge_pa: f64) -> RefrigerationState {
         RefrigerationState { evaporating_temperature_c: r410a_saturation_temp_c(suction_pa.max(P_STD * 0.3)), condensing_temperature_c: r410a_saturation_temp_c(discharge_pa.max(P_STD)), suction_superheat_k: 5.0, liquid_subcool_k: 3.0 }
     }
 
-    /// ❄️ Estimate suction pressure from evaporating temperature.
+    /// ❄ Estimate suction pressure from evaporating temperature.
     pub fn evaporating_pressure_pa(t_evap_c: f64) -> f64 {
         r410a_saturation_pressure_pa(t_evap_c)
     }
-    // #endregion 🔖️Circuit
+    // #endregion 🔖Circuit
 
     #[cfg(test)]
     mod tests {
@@ -8599,7 +8599,7 @@ mod refrigeration {
 }
 
 mod results {
-    //! 📋️ Canonical simulation results and summary tables.
+    //! 📋 Canonical simulation results and summary tables.
 
     use crate::error::Diagnostics;
     use crate::meters::MeterStore;
@@ -8608,8 +8608,8 @@ mod results {
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
 
-    // #region 🔖️Summary
-    /// 📋️ Annual/monthly summary table row.
+    // #region 🔖Summary
+    /// 📋 Annual/monthly summary table row.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct SummaryRow {
         pub key: String,
@@ -8617,7 +8617,7 @@ mod results {
         pub unit: String,
     }
 
-    /// 📋️ Summary tables (energy use, loads, comfort).
+    /// 📋 Summary tables (energy use, loads, comfort).
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct SummaryTables {
         pub annual_energy: Vec<SummaryRow>,
@@ -8631,10 +8631,10 @@ mod results {
             self.annual_energy.push(SummaryRow { key: key.into(), value, unit: unit.into() });
         }
     }
-    // #endregion 🔖️Summary
+    // #endregion 🔖Summary
 
-    // #region 🔖️Sizing
-    /// 📐️ Component sizing result.
+    // #region 🔖Sizing
+    /// 📐 Component sizing result.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct SizingResult {
         pub component: String,
@@ -8643,16 +8643,16 @@ mod results {
         pub autosized: bool,
     }
 
-    /// 📐️ Sizing tables from design-day calculations.
+    /// 📐 Sizing tables from design-day calculations.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct SizingTables {
         pub zone_loads: Vec<SizingResult>,
         pub equipment: Vec<SizingResult>,
     }
-    // #endregion 🔖️Sizing
+    // #endregion 🔖Sizing
 
-    // #region 🔖️Results
-    /// 📋️ Complete simulation results (canonical structured format).
+    // #region 🔖Results
+    /// 📋 Complete simulation results (canonical structured format).
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct Results {
         pub time_series: TimeSeriesStore,
@@ -8665,7 +8665,7 @@ mod results {
         pub run_metadata: RunMetadata,
     }
 
-    /// 🏷️ Run metadata.
+    /// 🏷 Run metadata.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct RunMetadata {
         pub model_name: String,
@@ -8675,7 +8675,7 @@ mod results {
         pub warmup_days: u32,
         pub elapsed_ms: u64,
     }
-    // #endregion 🔖️Results
+    // #endregion 🔖Results
 
     #[cfg(test)]
     mod tests {
@@ -8691,12 +8691,12 @@ mod results {
 }
 
 mod room_air {
-    //! 🌀️ Room air distribution models: mixed, stratified, displacement, UFAD, surface-specific.
+    //! 🌀 Room air distribution models: mixed, stratified, displacement, UFAD, surface-specific.
 
     use serde::{Deserialize, Serialize};
 
-    // #region 🔖️RoomAirInput
-    /// 📥️ Inputs for room air model evaluation.
+    // #region 🔖RoomAirInput
+    /// 📥 Inputs for room air model evaluation.
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub struct RoomAirInput {
         pub zone_temp_c: f64,
@@ -8708,10 +8708,10 @@ mod room_air {
         pub internal_gain_w: f64,
         pub surface_temps_c: [f64; 6],
     }
-    // #endregion 🔖️RoomAirInput
+    // #endregion 🔖RoomAirInput
 
-    // #region 🔖️RoomAirOutput
-    /// 📤️ Room air model temperatures [°C].
+    // #region 🔖RoomAirOutput
+    /// 📤 Room air model temperatures [°C].
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub struct RoomAirOutput {
         pub occupied_temp_c: f64,
@@ -8721,10 +8721,10 @@ mod room_air {
         pub ceiling_temp_c: f64,
         pub surface_air_temps_c: [f64; 6],
     }
-    // #endregion 🔖️RoomAirOutput
+    // #endregion 🔖RoomAirOutput
 
-    // #region 🔖️RoomAirModel
-    /// 🌀️ Room air distribution model per ASHRAE / ISO 7730 room air classifications.
+    // #region 🔖RoomAirModel
+    /// 🌀 Room air distribution model per ASHRAE / ISO 7730 room air classifications.
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub enum RoomAirModel {
         FullyMixed,
@@ -8736,7 +8736,7 @@ mod room_air {
     }
 
     impl RoomAirModel {
-        /// 🌡️ Apply room air model and return stratified temperatures.
+        /// 🌡 Apply room air model and return stratified temperatures.
         pub fn apply(&self, input: &RoomAirInput) -> RoomAirOutput {
             match self {
                 Self::FullyMixed => fully_mixed(input),
@@ -8748,16 +8748,16 @@ mod room_air {
             }
         }
     }
-    // #endregion 🔖️RoomAirModel
+    // #endregion 🔖RoomAirModel
 
-    // #region 🔖️FullyMixed
+    // #region 🔖FullyMixed
     fn fully_mixed(input: &RoomAirInput) -> RoomAirOutput {
         let t = input.zone_temp_c;
         RoomAirOutput { occupied_temp_c: t, return_temp_c: t, exhaust_temp_c: t, floor_temp_c: t, ceiling_temp_c: t, surface_air_temps_c: [t; 6] }
     }
-    // #endregion 🔖️FullyMixed
+    // #endregion 🔖FullyMixed
 
-    // #region 🔖️VerticalGradient
+    // #region 🔖VerticalGradient
     fn vertical_gradient(input: &RoomAirInput, gradient_k_per_m: f64) -> RoomAirOutput {
         let h = input.ceiling_height_m.max(0.1);
         let t_floor = input.zone_temp_c - gradient_k_per_m * 0.1;
@@ -8765,9 +8765,9 @@ mod room_air {
         let t_occ = input.zone_temp_c;
         RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: t_ceil, exhaust_temp_c: t_ceil, floor_temp_c: t_floor, ceiling_temp_c: t_ceil, surface_air_temps_c: [t_floor, input.zone_temp_c, t_ceil, input.zone_temp_c, t_floor, t_ceil] }
     }
-    // #endregion 🔖️VerticalGradient
+    // #endregion 🔖VerticalGradient
 
-    // #region 🔖️Displacement
+    // #region 🔖Displacement
     fn displacement_1node(input: &RoomAirInput, mixing_factor: f64) -> RoomAirOutput {
         let f = mixing_factor.clamp(0.0, 1.0);
         let t_supply = input.supply_temp_c;
@@ -8792,9 +8792,9 @@ mod room_air {
         let t_upper = t_supply + grad * z_upper;
         RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: t_upper, exhaust_temp_c: t_upper, floor_temp_c: t_lower, ceiling_temp_c: t_upper, surface_air_temps_c: [t_lower, t_occ, t_upper, t_occ, t_lower, t_upper] }
     }
-    // #endregion 🔖️Displacement
+    // #endregion 🔖Displacement
 
-    // #region 🔖️Ufad
+    // #region 🔖Ufad
     fn ufad(input: &RoomAirInput, diffuser_height_m: f64, throw_m: f64) -> RoomAirOutput {
         let h = input.ceiling_height_m.max(0.1);
         let _z_diff = diffuser_height_m.clamp(0.05, h * 0.5);
@@ -8807,9 +8807,9 @@ mod room_air {
         let t_floor = t_supply + 0.3 * (t_occ - t_supply);
         RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: t_return, exhaust_temp_c: t_return, floor_temp_c: t_floor, ceiling_temp_c: t_return + 0.5 * (t_zone - t_occ), surface_air_temps_c: [t_floor, t_occ, t_return, t_occ, t_floor, t_return] }
     }
-    // #endregion 🔖️Ufad
+    // #endregion 🔖Ufad
 
-    // #region 🔖️SurfaceSpecific
+    // #region 🔖SurfaceSpecific
     fn surface_specific(input: &RoomAirInput) -> RoomAirOutput {
         let mut surface_air = input.surface_temps_c;
         for (i, &t_surf) in input.surface_temps_c.iter().enumerate() {
@@ -8818,7 +8818,7 @@ mod room_air {
         let t_occ = surface_air.iter().sum::<f64>() / surface_air.len() as f64;
         RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: input.zone_temp_c, exhaust_temp_c: input.zone_temp_c, floor_temp_c: surface_air[0], ceiling_temp_c: surface_air[2], surface_air_temps_c: surface_air }
     }
-    // #endregion 🔖️SurfaceSpecific
+    // #endregion 🔖SurfaceSpecific
 
     #[cfg(test)]
     mod tests {
@@ -8857,34 +8857,34 @@ mod room_air {
 }
 
 mod schedule {
-    //! 📅️ Schedule definitions and runtime lookup.
+    //! 📅 Schedule definitions and runtime lookup.
 
     use crate::model::ScheduleId;
     use serde::{Deserialize, Serialize};
 
-    // #region 🔖️ScheduleType
-    /// 📆️ Schedule interpolation mode.
+    // #region 🔖ScheduleType
+    /// 📆 Schedule interpolation mode.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum ScheduleInterpolation {
         Continuous,
         Discrete,
     }
 
-    /// 📆️ Schedule value limit.
+    /// 📆 Schedule value limit.
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub struct ScheduleLimits {
         pub min: f64,
         pub max: f64,
     }
 
-    /// 📅️ Constant schedule.
+    /// 📅 Constant schedule.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct ConstantSchedule {
         pub id: ScheduleId,
         pub value: f64,
     }
 
-    /// 📅️ Daily repeating schedule (24 hourly values).
+    /// 📅 Daily repeating schedule (24 hourly values).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct DailySchedule {
         pub id: ScheduleId,
@@ -8893,14 +8893,14 @@ mod schedule {
         pub limits: Option<ScheduleLimits>,
     }
 
-    /// 📅️ Weekly schedule (7 daily schedule ids).
+    /// 📅 Weekly schedule (7 daily schedule ids).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct WeeklySchedule {
         pub id: ScheduleId,
         pub daily_schedule_ids: [ScheduleId; 7],
     }
 
-    /// 📅️ Compact rule-based annual schedule.
+    /// 📅 Compact rule-based annual schedule.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct CompactScheduleRule {
         pub start_month: u8,
@@ -8910,7 +8910,7 @@ mod schedule {
         pub daily_schedule_id: ScheduleId,
     }
 
-    /// 📅️ Annual schedule with holiday overrides.
+    /// 📅 Annual schedule with holiday overrides.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct AnnualSchedule {
         pub id: ScheduleId,
@@ -8920,17 +8920,17 @@ mod schedule {
         pub holiday_dates: Vec<(u16, u8, u8)>,
     }
 
-    /// 📅️ External time-series schedule.
+    /// 📅 External time-series schedule.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct TimeSeriesSchedule {
         pub id: ScheduleId,
         pub values: Vec<f64>,
         pub timestep_seconds: u32,
     }
-    // #endregion 🔖️ScheduleType
+    // #endregion 🔖ScheduleType
 
-    // #region 🔖️ScheduleSet
-    /// 📚️ All schedules in a model.
+    // #region 🔖ScheduleSet
+    /// 📚 All schedules in a model.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct ScheduleSet {
         pub constants: Vec<ConstantSchedule>,
@@ -8996,15 +8996,15 @@ mod schedule {
             1.0
         }
 
-        /// 📦️ Pre-expand schedule values for all timesteps in a run period.
+        /// 📦 Pre-expand schedule values for all timesteps in a run period.
         pub fn expand(&self, id: ScheduleId, ctxs: &[ScheduleContext]) -> Vec<f64> {
             ctxs.iter().map(|c| self.lookup(id, c)).collect()
         }
     }
-    // #endregion 🔖️ScheduleSet
+    // #endregion 🔖ScheduleSet
 
-    // #region 🔖️Context
-    /// 🕐️ Calendar context for schedule lookup.
+    // #region 🔖Context
+    /// 🕐 Calendar context for schedule lookup.
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub struct ScheduleContext {
         pub year: u16,
@@ -9026,7 +9026,7 @@ mod schedule {
             md >= start || md <= end
         }
     }
-    // #endregion 🔖️Context
+    // #endregion 🔖Context
 
     #[cfg(test)]
     mod tests {
@@ -9048,14 +9048,14 @@ mod schedule {
 }
 
 mod shw {
-    //! 🚿️ Service hot water: mixed/stratified/HP heaters, fixtures, standby, drain recovery.
+    //! 🚿 Service hot water: mixed/stratified/HP heaters, fixtures, standby, drain recovery.
 
     use crate::props::{water_cp_j_per_kg_k, water_density};
     use crate::units::RHO_WATER;
     use serde::{Deserialize, Serialize};
 
-    // #region 🔖️State
-    /// 🌡️ Hot-water storage state.
+    // #region 🔖State
+    /// 🌡 Hot-water storage state.
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub struct WaterHeaterState {
         pub average_temperature_c: f64,
@@ -9064,7 +9064,7 @@ mod shw {
         pub volume_m3: f64,
     }
 
-    /// 📤️ Water heater timestep output.
+    /// 📤 Water heater timestep output.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct WaterHeaterOutput {
         pub heating_power_w: f64,
@@ -9074,10 +9074,10 @@ mod shw {
         pub delivered_flow_kg_s: f64,
         pub outlet_temperature_c: f64,
     }
-    // #endregion 🔖️State
+    // #endregion 🔖State
 
-    // #region 🔖️Mixed
-    /// 🚿️ Fully mixed storage water heater (electric or gas).
+    // #region 🔖Mixed
+    /// 🚿 Fully mixed storage water heater (electric or gas).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct MixedWaterHeater {
         pub volume_l: f64,
@@ -9089,7 +9089,7 @@ mod shw {
         pub fuel: WaterHeaterFuel,
     }
 
-    /// ⛽️ Water heater energy source.
+    /// ⛽ Water heater energy source.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum WaterHeaterFuel {
         Electric,
@@ -9097,7 +9097,7 @@ mod shw {
     }
 
     impl MixedWaterHeater {
-        /// 🚿️ Simulate mixed tank with draw, makeup, and standby losses.
+        /// 🚿 Simulate mixed tank with draw, makeup, and standby losses.
         pub fn simulate(&self, state: &WaterHeaterState, draw_flow_kg_s: f64, inlet_temperature_c: f64, dt_s: f64) -> (WaterHeaterOutput, WaterHeaterState) {
             let volume_m3 = self.volume_l / 1000.0;
             let rho = water_density(state.average_temperature_c);
@@ -9122,10 +9122,10 @@ mod shw {
             (WaterHeaterOutput { heating_power_w: heating_w, electrical_power_w: elec_w, gas_power_w: gas_w, standby_loss_w: standby_w, delivered_flow_kg_s: draw_flow_kg_s, outlet_temperature_c: tank_t }, new_state)
         }
     }
-    // #endregion 🔖️Mixed
+    // #endregion 🔖Mixed
 
-    // #region 🔖️Stratified
-    /// 🌡️ Stratified tank with fixed node count (1-D conduction between nodes).
+    // #region 🔖Stratified
+    /// 🌡 Stratified tank with fixed node count (1-D conduction between nodes).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct StratifiedWaterHeater {
         pub volume_l: f64,
@@ -9138,7 +9138,7 @@ mod shw {
     }
 
     impl StratifiedWaterHeater {
-        /// 🌡️ Simulate stratified tank with buoyancy-driven minimal mixing.
+        /// 🌡 Simulate stratified tank with buoyancy-driven minimal mixing.
         pub fn simulate(&self, node_temperatures_c: &[f64], draw_flow_kg_s: f64, inlet_temperature_c: f64, dt_s: f64) -> (WaterHeaterOutput, Vec<f64>) {
             let n = self.node_count.max(2);
             let mut temps: Vec<f64> = if node_temperatures_c.len() == n { node_temperatures_c.to_vec() } else { vec![inlet_temperature_c; n] };
@@ -9185,10 +9185,10 @@ mod shw {
             )
         }
     }
-    // #endregion 🔖️Stratified
+    // #endregion 🔖Stratified
 
-    // #region 🔖️HeatPump
-    /// 🌡️ Heat-pump water heater with ambient air source.
+    // #region 🔖HeatPump
+    /// 🌡 Heat-pump water heater with ambient air source.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct HeatPumpWaterHeater {
         pub tank: MixedWaterHeater,
@@ -9197,7 +9197,7 @@ mod shw {
     }
 
     impl HeatPumpWaterHeater {
-        /// 🌡️ HPWH with COP derated by ambient temperature.
+        /// 🌡 HPWH with COP derated by ambient temperature.
         pub fn simulate(&self, state: &WaterHeaterState, draw_flow_kg_s: f64, inlet_temperature_c: f64, ambient_c: f64, dt_s: f64) -> (WaterHeaterOutput, WaterHeaterState) {
             let cop = if ambient_c < self.min_ambient_c { 1.0 } else { (self.rated_cop * (1.0 - 0.03 * (20.0 - ambient_c))).max(1.5) };
             let (mut out, new_state) = self.tank.simulate(state, draw_flow_kg_s, inlet_temperature_c, dt_s);
@@ -9207,10 +9207,10 @@ mod shw {
             (out, new_state)
         }
     }
-    // #endregion 🔖️HeatPump
+    // #endregion 🔖HeatPump
 
-    // #region 🔖️Fixtures
-    /// 🚰️ Domestic hot-water fixture end use.
+    // #region 🔖Fixtures
+    /// 🚰 Domestic hot-water fixture end use.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct HotWaterFixture {
         pub name: String,
@@ -9220,24 +9220,24 @@ mod shw {
     }
 
     impl HotWaterFixture {
-        /// 🚰️ Hot-water draw mass flow [kg/s] at mixed delivery temperature.
+        /// 🚰 Hot-water draw mass flow [kg/s] at mixed delivery temperature.
         pub fn draw_flow_kg_s(&self, mains_temperature_c: f64) -> f64 {
             let flow_l_s = self.peak_flow_l_s * self.schedule_factor.clamp(0.0, 1.0);
             let mix_ratio = ((self.target_temperature_c - mains_temperature_c) / (self.target_temperature_c - mains_temperature_c).max(1.0)).clamp(0.0, 1.0);
             flow_l_s * mix_ratio * RHO_WATER / 1000.0
         }
 
-        /// 🔥️ Sensible energy demand [W] for fixture draw.
+        /// 🔥 Sensible energy demand [W] for fixture draw.
         pub fn demand_w(&self, mains_temperature_c: f64, storage_temperature_c: f64) -> f64 {
             let m_dot = self.draw_flow_kg_s(mains_temperature_c);
             let cp = water_cp_j_per_kg_k(storage_temperature_c);
             m_dot * cp * (self.target_temperature_c - mains_temperature_c).max(0.0)
         }
     }
-    // #endregion 🔖️Fixtures
+    // #endregion 🔖Fixtures
 
-    // #region 🔖️Standby
-    /// 🌡️ Standby loss model for tanks and distribution piping.
+    // #region 🔖Standby
+    /// 🌡 Standby loss model for tanks and distribution piping.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct StandbyLoss {
         pub ua_w_per_k: f64,
@@ -9246,15 +9246,15 @@ mod shw {
     }
 
     impl StandbyLoss {
-        /// 🌡️ Total standby loss [W] from tank or recirc loop.
+        /// 🌡 Total standby loss [W] from tank or recirc loop.
         pub fn loss_w(&self, fluid_temperature_c: f64) -> f64 {
             self.ua_w_per_k * (fluid_temperature_c - self.ambient_temperature_c).max(0.0) + self.circulation_pump_w
         }
     }
-    // #endregion 🔖️Standby
+    // #endregion 🔖Standby
 
-    // #region 🔖️DrainRecovery
-    /// ♻️ Drain-water heat recovery heat exchanger.
+    // #region 🔖DrainRecovery
+    /// ♻ Drain-water heat recovery heat exchanger.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct DrainWaterHeatRecovery {
         pub effectiveness: f64,
@@ -9262,7 +9262,7 @@ mod shw {
     }
 
     impl DrainWaterHeatRecovery {
-        /// ♻️ Preheat cold mains from warm drain flow.
+        /// ♻ Preheat cold mains from warm drain flow.
         pub fn preheat_w(&self, drain_flow_kg_s: f64, drain_temperature_c: f64, mains_temperature_c: f64) -> f64 {
             let cp = water_cp_j_per_kg_k((drain_temperature_c + mains_temperature_c) * 0.5);
             let q_max = drain_flow_kg_s * cp * (drain_temperature_c - mains_temperature_c).max(0.0);
@@ -9270,14 +9270,14 @@ mod shw {
             (self.ua_w_per_k * (drain_temperature_c - mains_temperature_c)).min(q_max * eps).max(0.0)
         }
 
-        /// 🌡️ Preheated mains temperature [°C].
+        /// 🌡 Preheated mains temperature [°C].
         pub fn preheated_mains_c(&self, drain_flow_kg_s: f64, drain_temperature_c: f64, mains_flow_kg_s: f64, mains_temperature_c: f64) -> f64 {
             let q = self.preheat_w(drain_flow_kg_s, drain_temperature_c, mains_temperature_c);
             let cp = water_cp_j_per_kg_k(mains_temperature_c);
             mains_temperature_c + q / (mains_flow_kg_s.max(1e-6) * cp)
         }
     }
-    // #endregion 🔖️DrainRecovery
+    // #endregion 🔖DrainRecovery
 
     #[cfg(test)]
     mod tests {
@@ -9338,7 +9338,7 @@ mod shw {
 }
 
 mod sim {
-    //! 🚀️ Engine orchestration: Model + SimulationConfig → Results.
+    //! 🚀 Engine orchestration: Model + SimulationConfig → Results.
 
     use crate::economics::{compute_lcca, LccaParameters, UtilityTariff};
     use crate::error::Error;
@@ -9354,12 +9354,12 @@ mod sim {
     use crate::units::Unit;
     use std::time::Instant;
 
-    // #region 🔖️Engine
-    /// ⚡️ Headless BEM simulation engine.
+    // #region 🔖Engine
+    /// ⚡ Headless BEM simulation engine.
     pub struct Engine;
 
     impl Engine {
-        /// ⚡️ Run full building energy simulation.
+        /// ⚡ Run full building energy simulation.
         pub fn run(model: &Model, config: &SimulationConfig) -> Result<Results, Error> {
             model.validate().map_err(|d| d.messages.into_iter().find(|m| m.severity == crate::error::Severity::Fatal).unwrap_or_else(|| Error::severe("model validation failed")))?;
 
@@ -9468,7 +9468,7 @@ mod sim {
             (0..8760).map(synthetic_hour).collect()
         }
     }
-    // #endregion 🔖️Engine
+    // #endregion 🔖Engine
 
     fn synthetic_hour(h: u32) -> WeatherRecord {
         let day = h / 24;
@@ -9519,8 +9519,8 @@ mod sim {
             .collect()
     }
 
-    // #region 🔖️Fixtures
-    /// 🧪️ Build a minimal test model for integration tests.
+    // #region 🔖Fixtures
+    /// 🧪 Build a minimal test model for integration tests.
     pub fn test_model_single_zone() -> Model {
         use crate::model::*;
         Model {
@@ -9566,7 +9566,7 @@ mod sim {
         }
     }
 
-    /// 🧪️ Full topology test model with plant, PV, AFN, daylight.
+    /// 🧪 Full topology test model with plant, PV, AFN, daylight.
     pub fn test_model_full_topology() -> Model {
         use crate::model::*;
         let mut model = test_model_single_zone();
@@ -9577,7 +9577,7 @@ mod sim {
         model.daylight_zones.push(DaylightZoneConfig { id: EntityId(80), zone_id: EntityId(1), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
         model
     }
-    // #endregion 🔖️Fixtures
+    // #endregion 🔖Fixtures
 
     #[cfg(test)]
     mod tests {
@@ -9658,15 +9658,15 @@ mod sim {
 }
 
 mod site {
-    //! 🌤️ Site, weather, EPW ingest, design days, solar position, ground temperatures.
+    //! 🌤 Site, weather, EPW ingest, design days, solar position, ground temperatures.
 
     use crate::error::Error;
     use crate::props::{humidity_ratio_from_rh, moist_air_density};
     use crate::units::{deg_to_rad, rad_to_deg};
     use serde::{Deserialize, Serialize};
 
-    // #region 🔖️WeatherRecord
-    /// 🌡️ One timestep of outdoor weather.
+    // #region 🔖WeatherRecord
+    /// 🌡 One timestep of outdoor weather.
     #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
     pub struct WeatherRecord {
         pub year: u16,
@@ -9696,10 +9696,10 @@ mod site {
             moist_air_density(self.dry_bulb_c, self.humidity_ratio(), self.atmospheric_pressure_pa)
         }
     }
-    // #endregion 🔖️WeatherRecord
+    // #endregion 🔖WeatherRecord
 
-    // #region 🔖️Epw
-    /// 📄️ EPW weather file parsed into typed records.
+    // #region 🔖Epw
+    /// 📄 EPW weather file parsed into typed records.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     pub struct EpwWeather {
         pub location: String,
@@ -9711,7 +9711,7 @@ mod site {
     }
 
     impl EpwWeather {
-        /// 📥️ Parse EPW text content (EnergyPlus Weather format).
+        /// 📥 Parse EPW text content (EnergyPlus Weather format).
         pub fn parse(content: &str) -> Result<Self, Error> {
             let mut lines = content.lines().filter(|l| !l.trim().is_empty());
             let header1 = lines.next().ok_or_else(|| Error::fatal("EPW: missing location line"))?;

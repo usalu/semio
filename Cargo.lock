@@ -7896,28 +7896,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-os-kernel-dsl-editor"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "semio-framework-os-kernel-dsl-schema",
- "semio-framework-os-kernel-dsl-token",
-]
-
-[[package]]
 name = "semio-framework-os-kernel-dsl-schema"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-dsl-core",
  "serde_json",
-]
-
-[[package]]
-name = "semio-framework-os-kernel-dsl-token"
-version = "0.1.0"
-dependencies = [
- "semio-framework-os-kernel-dsl-core",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -8262,6 +8245,7 @@ dependencies = [
 name = "semio-framework-os-kernel-math-graph-dsl"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-dsl-schema",
  "semio-framework-os-kernel-math-graph-manifest",
@@ -8724,6 +8708,7 @@ name = "semio-framework-os-kernel-pack-value"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "semio-framework-os-kernel-dsl-core",
  "semio-framework-os-kernel-dsl-schema",
  "semio-framework-os-kernel-pack-core",
  "semio-framework-os-kernel-pack-format",

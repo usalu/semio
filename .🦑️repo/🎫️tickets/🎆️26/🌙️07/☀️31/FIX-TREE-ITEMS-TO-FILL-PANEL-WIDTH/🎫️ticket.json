@@ -1,0 +1,14 @@
+{
+  "title": "Fix Tree Items to Fill Panel Width",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix the shared React tree/panel layout bug shown in CAD where tree items are constrained or clipped to the tab/content width instead of using the full available panel width. Diagnose the root layout constraint, extend existing tests, and verify the CAD runtime behavior.",
+  "summary": "Fixed the shared React panel layout so tree content uses the full available panel width. Made the nested panel body stack and scroll viewport explicitly full-width and shrinkable, and extended the existing Panel regression test to cover the complete width chain.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2405"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad🎯️runningsketchpadapps",
+  "sessions": [
+    "⚪85d3d05302e1444b874685b5ad6f0af1"
+  ]
+}

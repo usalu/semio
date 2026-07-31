@@ -41,6 +41,7 @@ const TAG_WIRE: u8 = 0x13;
 const TAG_TABLE_SOA: u8 = 0x14;
 const TAG_PACKED_F64: u8 = 0x15;
 const TAG_PACKED_VARINT: u8 = 0x16;
+const TAG_EXPR: u8 = 0x17;
 //#endregion 🔖️Tags
 
 //#region 🔖️Canonical
@@ -90,8 +91,14 @@ fn map_inner_shape(shape: Option<&Shape>) -> Option<&Shape> {
     }
 }
 
+/// @emoji 🚧️ Every shape whose `FieldValue` representation is `Tuple` rather than `List` — the
+/// packed-numeric-array fast path (`TAG_PACKED_F64`/`TAG_PACKED_VARINT`) collapses both to the
+/// same bytes on the wire (a run of numbers has no other distinguishing feature), so `shape` is
+/// the ONLY signal decode has left to reconstruct the right `FieldValue` variant. Every shape here
+/// is a fixed-arity number tuple by construction (`Coord`/`Dir`/`Dim`/`Range`'s own parsers in
+/// `dsl_schema` never produce anything else), so this can never rebuild the wrong shape.
 fn is_tuple_shape(shape: Option<&Shape>) -> bool {
-    matches!(shape, Some(Shape::Tuple(_, _)))
+    matches!(shape, Some(Shape::Tuple(_, _)) | Some(Shape::Coord(_)) | Some(Shape::Dir) | Some(Shape::Dim(_)) | Some(Shape::Range))
 }
 
 /// @emoji 🛡️ Depth-limit check shared by every recursive encode/decode entry point.
@@ -414,6 +421,13 @@ fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue,
         FieldValue::Wire(w) => {
             out.push(TAG_WIRE);
             encode_wire(ctx, w, depth + 1, out)?;
+        }
+        // Canonical `print_expr` text under the string codec — deterministic (the printer is
+        // canonical), so `decode = parse_expr_text ∘ decode_string` inverts it exactly, and
+        // pack ≡ dsl holds by construction rather than needing a bespoke binary AST encoding.
+        FieldValue::Expr(expr) => {
+            out.push(TAG_EXPR);
+            encode_string(ctx, &dsl_schema::print_expr(expr), out);
         }
     }
     Ok(())
@@ -761,6 +775,10 @@ fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut De
         TAG_MAP => decode_map(reader, map_inner_shape(shape), ctx, depth),
         TAG_VALUE => Ok(FieldValue::Value(decode_dsl_value(reader, ctx, depth + 1)?)),
         TAG_WIRE => Ok(FieldValue::Wire(decode_wire(reader, ctx, depth + 1)?)),
+        TAG_EXPR => {
+            let text = decode_string(reader, ctx)?;
+            dsl_schema::parse_expr_text(&text).map(FieldValue::Expr).map_err(|e| PackError::Malformed { what: "expr", offset: reader.position() as u64, detail: e.message })
+        }
         TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, table_spec_of(shape), ctx, depth)?)),
         TAG_PACKED_F64 => decode_packed_f64_body(reader, is_tuple_shape(shape)),
         TAG_PACKED_VARINT => decode_packed_varint_body(reader, elem_shape_of(shape).or(shape.filter(|s| !matches!(s, Shape::Tuple(_, _)))), is_tuple_shape(shape)),
@@ -921,10 +939,10 @@ fn elem_tag_for_shape(shape: &Shape) -> u8 {
     match shape {
         Shape::Float | Shape::Quantity(_) | Shape::Angle(_) => ELEM_F64,
         Shape::Int => ELEM_INT,
-        Shape::UInt => ELEM_UINT,
+        Shape::UInt | Shape::Count => ELEM_UINT,
         Shape::Enum(_) => ELEM_ENUM,
         Shape::Bool => ELEM_BOOL,
-        Shape::Text => ELEM_STR,
+        Shape::Text | Shape::Ref(_) => ELEM_STR,
         _ => ELEM_FALLBACK,
     }
 }
@@ -1175,6 +1193,14 @@ fn shape_tag(shape: &Shape) -> u8 {
         Shape::Wire => 16,
         Shape::Quantity(_) => 17,
         Shape::Angle(_) => 18,
+        Shape::Ref(_) => 19,
+        Shape::Coord(_) => 20,
+        Shape::Dir => 21,
+        Shape::Dim(_) => 22,
+        Shape::Range => 23,
+        Shape::Count => 24,
+        Shape::Expr => 25,
+        Shape::Embed(_) => 26,
     }
 }
 
@@ -1395,6 +1421,7 @@ pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptio
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dsl_schema::{ExprOp, ExprValue};
     use dsl_schema::{FieldSpec, RecordLayout};
 
     //#region 🔖️Fixtures
@@ -1465,6 +1492,16 @@ mod tests {
                 FieldSpec::new(14, "value_field", Shape::Value),
                 FieldSpec::new(15, "table_field", Shape::Table(table_row_spec)),
                 FieldSpec::new(16, "wire_field", Shape::Wire),
+                FieldSpec::new(17, "quantity_field", Shape::Quantity(dsl_core::unit_by_symbol("GPa").unwrap())),
+                FieldSpec::new(18, "angle_field", Shape::Angle(dsl_core::unit_by_symbol("deg").unwrap())),
+                FieldSpec::new(19, "ref_field", Shape::Ref("material")),
+                FieldSpec::new(20, "coord_field", Shape::Coord(3)),
+                FieldSpec::new(21, "dir_field", Shape::Dir),
+                FieldSpec::new(22, "dim_field", Shape::Dim(2)),
+                FieldSpec::new(23, "range_field", Shape::Range),
+                FieldSpec::new(24, "count_field", Shape::Count),
+                FieldSpec::new(25, "expr_field", Shape::Expr),
+                FieldSpec::new(26, "embed_field", Shape::Embed("jack")),
             ],
         )
     }
@@ -1520,6 +1557,23 @@ mod tests {
                 properties: DslValue::Object(vec![("weight".to_string(), DslValue::Number(2.0))]),
             }),
         );
+        fields.insert(17, FieldValue::Float(210.0));
+        fields.insert(18, FieldValue::Float(0.5));
+        fields.insert(19, FieldValue::Text("s355".to_string()));
+        fields.insert(20, FieldValue::Tuple(vec![FieldValue::Float(1.35), FieldValue::Float(0.0), FieldValue::Float(-2.4)]));
+        fields.insert(21, FieldValue::Tuple(vec![FieldValue::Float(0.0), FieldValue::Float(1.0), FieldValue::Float(0.0)]));
+        fields.insert(22, FieldValue::Tuple(vec![FieldValue::Float(2.4), FieldValue::Float(0.12)]));
+        fields.insert(23, FieldValue::Tuple(vec![FieldValue::Float(0.0), FieldValue::Float(10.0), FieldValue::Float(0.5)]));
+        fields.insert(24, FieldValue::UInt(24));
+        fields.insert(
+            25,
+            FieldValue::Expr(ExprValue::Binary(
+                ExprOp::Add,
+                Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(1.35)), Box::new(ExprValue::Var("G".to_string())))),
+                Box::new(ExprValue::Binary(ExprOp::Mul, Box::new(ExprValue::Num(1.5)), Box::new(ExprValue::Var("Q".to_string())))),
+            )),
+        );
+        fields.insert(26, FieldValue::Text("MATCH (a) RETURN a".to_string()));
         RecordValue { fields }
     }
     //#endregion 🔖️Fixtures

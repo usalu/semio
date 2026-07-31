@@ -11,7 +11,9 @@ pub const FEM_2D_SCHEMA: &str = "fem.2d";
 #[serde(rename_all = "camelCase")]
 pub struct FemNode {
     pub id: String,
+    #[dsl(unit = "m")]
     pub x: f64,
+    #[dsl(unit = "m")]
     pub y: f64,
 }
 
@@ -84,8 +86,10 @@ pub fn element_id(element: &FemElement) -> &str {
 pub struct FemMaterial {
     pub id: String,
     pub name: String,
+    #[dsl(unit = "Pa")]
     pub e: f64,
     pub nu: f64,
+    #[dsl(unit = "kg/m3")]
     pub rho: f64,
 }
 
@@ -95,7 +99,9 @@ pub struct FemMaterial {
 pub struct FemSection {
     pub id: String,
     pub name: String,
+    #[dsl(unit = "m2")]
     pub area: f64,
+    #[dsl(unit = "m4")]
     pub iy: f64,
 }
 

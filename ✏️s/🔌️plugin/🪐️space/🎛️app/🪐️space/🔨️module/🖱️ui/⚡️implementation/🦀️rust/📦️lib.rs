@@ -3063,7 +3063,7 @@ mod tests {
         assert!(inspector_json.contains("Wähle Workflow-Knoten oder App-Instanzen im Arbeitsbereich aus."));
     }
 
-    /// 🌉️ Moved from `home_ui`'s own test module: exercises BOTH apps together (Home's `createStudio`
+    /// 🌉 Moved from `home_ui`'s own test module: exercises BOTH apps together (Home's `createStudio`
     /// followed by Space's `openSpace`) — this crate already regular-depends on `home_ui`, so the
     /// integration test lives beside the app that owns the dependency edge instead of requiring a new
     /// dev-dependency cycle back from `home_ui` onto this crate.

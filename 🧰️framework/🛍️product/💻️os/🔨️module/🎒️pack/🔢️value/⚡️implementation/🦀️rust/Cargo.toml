@@ -17,3 +17,6 @@ pack_core = { path = "../../../🫀️core/⚡️implementation/🦀️rust", pa
 pack_format = { path = "../../../📐️format/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack-format" }
 dsl_schema = { path = "../../../../🗣️dsl/🧬️schema/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl-schema" }
 blake3 = "1"
+
+[dev-dependencies]
+dsl_core = { path = "../../../../🗣️dsl/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl-core" }

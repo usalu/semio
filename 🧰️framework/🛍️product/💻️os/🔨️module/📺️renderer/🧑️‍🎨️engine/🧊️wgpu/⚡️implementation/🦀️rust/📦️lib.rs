@@ -10411,7 +10411,7 @@ mod diff_view_tests {
     }
 
     //#region DiffViewPaintTests
-    /// 🧰️ Renders a `render_diff_view` scene in `mode` and returns the `DrawList` so paint-level
+    /// 🧰 Renders a `render_diff_view` scene in `mode` and returns the `DrawList` so paint-level
     /// assertions (glyph tint, absence of row-background fills) can inspect it directly, same
     /// technique as `render_entry_tests::Fixture`.
     fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (ui_wgpu::DrawList, Theme) {
@@ -10513,7 +10513,7 @@ mod diff_view_tests {
 //#endregion DiffViewTests
 
 //#region EventFeed
-/// 🪶️ Mirrors a `SurfaceKind::EventFeed` entry (`{id, timestampMs, iconId, title, detail?, tone?}`,
+/// 🪶 Mirrors a `SurfaceKind::EventFeed` entry (`{id, timestampMs, iconId, title, detail?, tone?}`,
 /// `ui_wgpu::EventFeedScene`'s doc comment / `EventFeedEntry` in `framework/core/js/index.ts`).
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -29765,7 +29765,7 @@ fn ffmpeg_frame_extraction_args(sample_stride: u32, max_frames: u32, max_long_ed
     ]
 }
 
-/// ⏱️ Approximate per-extracted-frame timestamp from the requested sampling cadence — `ffmpeg`'s own
+/// ⏱ Approximate per-extracted-frame timestamp from the requested sampling cadence — `ffmpeg`'s own
 /// frame PTS aren't threaded back through the `%06d.jpg` sequence (would need an `ffprobe` pass or
 /// `-frame_pts`/timebase math this ticket scopes out; documented simplification, same spirit as the D1
 /// wgpu point-sprite pass note above `render_world_3d`). Good enough for frame *ordering*/spacing; exact

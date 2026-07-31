@@ -1862,7 +1862,7 @@ mod tests {
         with_doc_view(&program, |doc| {
             let node = app.render(ARCHITECT_BODY_ADJACENCY, &doc, &ViewState::default());
             let json = serde_json::to_string(&node).unwrap();
-            assert!(json.contains('▲️'));
+            assert!(json.contains('▲'));
             assert!(json.contains("Reception"));
         });
     }
