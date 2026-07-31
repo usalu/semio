@@ -4,7 +4,7 @@
 //! the sibling `db_storage_sqlite`/`db_storage_postgres`/`db_storage_neo4j` crates) implements
 //! identically, so `db_engine`/the `db` facade select a backend via `Arc<dyn DbStorage>` at
 //! `Database::open` rather than at compile time. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯 Design choice: this crate has no opinion on WAL record framing (`db_wal` reuses

@@ -532,7 +532,7 @@ The devcontainer includes:
 Native Windows development is zero-touch through the checked-in bootstrap script:
 
 ```powershell
-bun ./script.ts setup native
+bun ./📜script.ts setup native
 ```
 
 The script installs the same baseline toolchain the devcontainer provides on a fresh machine:
@@ -557,10 +557,10 @@ Native Neo4j Desktop must own the local DBMS. Create a Neo4j Desktop **Local Ins
 Native macOS and Linux use the same root router:
 
 ```bash
-bun ./script.ts setup native
+bun ./📜script.ts setup native
 ```
 
-IDE startup runs `bun ./script.ts start`, which checks the native Neo4j Desktop `compose` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `compose`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
+IDE startup runs `bun ./📜script.ts start`, which checks the native Neo4j Desktop `compose` DBMS at `bolt://localhost:7687`, verifies APOC, and attempts to create the product graph databases `compose`, `elements`, `coda`, and `reuse`, plus any names listed in **`NEO4J_EXTRA_GRAPH_DATABASES`** (comma-separated, e.g. `metabolism,mydb`), when the DBMS edition supports multi-database administration. **Neo4j Community Edition allows only one standard user graph per DBMS** (often still named `neo4j` until you rename it). Those `CREATE DATABASE` calls do nothing useful on Community, so you will **not** see extra graphs in Desktop or Browser unless the edition supports them. Use **Neo4j Enterprise** (or another deployment that supports multiple standard databases) if you need isolated Bolt databases for each graph.
 
 **Where “databases” show up:** In Neo4j Browser, open your DBMS at `http://127.0.0.1:7474`, sign in, then use the **database dropdown** (next to the query editor). Only editions that support multi-database list more than one user graph besides `system`. To confirm what the server supports, run `SHOW DATABASES` while connected (Community typically shows `system` and one user database).
 
@@ -672,9 +672,9 @@ Used for small bugs and focused fixes with strong repo context 🧠
 
 Used for simple tasks (small edits, small refactors, small doc updates) 🧩
 
-The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file when you run `bun ./script.ts setup git` (also invoked from `npm run setup`), using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
+The canonical root agent instructions live in `AGENTS.md`. Root aliases such as `CLAUDE.md` and `GEMINI.md` are recreated from that file when you run `bun ./📜script.ts setup git` (also invoked from `npm run setup`), using symlinks when the shell supports them and a hard-link fallback on restricted Windows shells.
 
-Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./script.ts setup git` if you only need git symlink checkout, root alias files, and removal of any legacy repo-managed git hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
+Run `npm run setup` once after cloning for the full workspace bootstrap, or run `bun ./📜script.ts setup git` if you only need git symlink checkout, root alias files, and removal of any legacy repo-managed git hooks on Windows, macOS, and Linux. On Windows, true symlink creation may require Developer Mode or an elevated shell.
 
 ### ☁ Cloud [↑](#-tools-)
 
@@ -713,7 +713,7 @@ The default model for agent work is the one native to the platform we use for th
 
 All automation, CI runs, and agent workflows are controlled through the canonical root commands `setup`, `start`, `dev`, `generate`, `lint`, `format`, `test`, `build`, `publish`, and `purge` (see root `package.json`). Only `dev` is intended to stay live for watch mode, while the remaining commands exit so CI and agents can finish reliably.
 The root `package.json` uses Nx to orchestrate the command pipeline, and delegates bundle builds, tests, and publishing to Nx targets (`bun nx run …`).
-Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, and `bun run test` explicitly before pushing. `bun ./script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
+Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, and `bun run test` explicitly before pushing. `bun ./📜script.ts setup git` removes any legacy pre-commit or post-commit hooks that would block commits, rebases, or squashes.
 
 # 🏘 [Examples](compose/examples) [↑](#-overview)
 
@@ -865,7 +865,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src=".repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".🦑repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -893,7 +893,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src=".repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".🦑repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -902,21 +902,21 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-composegrasshopper-" title="🦗compose/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src=".repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".🦑repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-composegrasshopper-" title="🦗compose/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src=".repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".🦑repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-composejs-" title="🟨compose/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
-        <img src=".repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
+        <img src=".🦑repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
@@ -924,14 +924,14 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-composeladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src=".repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".🦑repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-composeengine-" title="⚙️️compose/engine"><sub>⚙️️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src=".repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <img src=".🦑repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />

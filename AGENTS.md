@@ -6,7 +6,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST implement all permanent scripts in `script.ts` at the respective directory.
     - `project.json` MUST only call `script.ts <command> <subcommand...> <args>`.
     - `package.json` MUST call `nx` to run `scripts.ts <command> <subcommand...> <args>`.
-    - Extend the script functionality from `./script.ts`.
+    - Extend the script functionality from `./📜script.ts`.
     - You MUST NOT create any other script files other than `script.ts`.
 - You MUST NOT edit `AGENTS.md` files.
 - You MUST setup everything zero-touch and cross-platform compatible for devcontainer, native windows, native macos and native linux environments.
@@ -38,7 +38,7 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
   - You MUST NOT use search tool because it is broken.
   - You MUST list all goals by reading the mcp resource `repo://goals` before starting a ticket so you can associate it with the most appropriate goal.
   - You MUST reopen a ticket with `ticket_reopen` if an existing ticket is already covering the same task.
-  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.repo/🎫/YY/MM/DD/TICKETSLUG`.
+  - If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open`. This creates a ticket folder `.🦑repo/🎫tickets/YY/MM/DD/TICKETSLUG`.
   - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
   - You MUST NOT delete all temporary files, logs, scripts, … inside the ticket folder after you are done.
   - You MUST NOT create any additional folders or files outside the ticket folder.

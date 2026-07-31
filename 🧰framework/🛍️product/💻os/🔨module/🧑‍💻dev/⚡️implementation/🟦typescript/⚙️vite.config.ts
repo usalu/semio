@@ -4,17 +4,17 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, staticDirVitePlugin, uiAssetsVitePlugin } from "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, uiAssetsVitePlugin } from "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦playgrounds.ts";
-import { isStudioPluginFilter } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/script.ts";
+import { isStudioPluginFilter } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/📜script.ts";
 import { resolveShellBrandById } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/🏷️brand/📦index.ts";
-import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/script.ts";
+import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/📜script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = configDir;
 const repoRoot = path.resolve(playDir, "../../../../../../..");
-const pluginModulesDir = path.join(playDir, "plugin-modules");
-const rendererModulesDir = path.join(playDir, "renderer-modules");
+const pluginModulesDir = path.join(playDir, "🔌plugin-modules");
+const rendererModulesDir = path.join(playDir, "📺renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
@@ -91,6 +91,7 @@ export default defineConfig({
     fs: { allow: [repoRoot, pluginModulesDir, rendererModulesDir] },
   },
   plugins: [
+    semioEmojiIndexHtmlVitePlugin(playDir),
     playgroundFlowWasmDevStubPlugin(repoRoot),
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
@@ -116,7 +117,7 @@ export default defineConfig({
     ...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
   ],
   optimizeDeps: {
-    entries: [path.join(playDir, "🌐🌐index.html")],
+    entries: [path.join(playDir, "🌐index.html")],
     include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
     exclude: [...nodeOnlyOptimizeDepsExclude, ...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
   },

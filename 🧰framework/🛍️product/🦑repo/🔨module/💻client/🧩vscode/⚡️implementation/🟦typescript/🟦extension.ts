@@ -1692,7 +1692,7 @@ function writeLog(level: string, args: any[]): void {
   const prefix = level === "ERROR" ? "[ERROR] " : "";
   outputChannel?.appendLine(prefix + message);
   try {
-    const logPath = path.join(getWorkspaceRoot() || "", "📋📋activation.log");
+    const logPath = path.join(getWorkspaceRoot() || "", "📋activation.log");
     fs.appendFileSync(logPath, `[${level}] ${message}\n`);
   } catch (e) {}
 }
@@ -3586,7 +3586,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
 
     composeGutterIcon = vscode.window.createTextEditorDecorationType({
-      gutterIconPath: vscode.Uri.file(context.asAbsolutePath("🔣🔣compose_🔣codeicon.svg")),
+      gutterIconPath: vscode.Uri.file(context.asAbsolutePath("🔣compose_codeicon.svg")),
       gutterIconSize: "contain",
     });
 

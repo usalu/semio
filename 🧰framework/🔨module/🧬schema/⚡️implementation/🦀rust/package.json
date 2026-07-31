@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "../../../../../🧰framework/🔨module/🧬schema/⚡️implementation/🦀rust/script.ts"
+    ".": "./📜script.ts"
   },
   "scripts": {
     "generate": "bun nx run @semio-tech/framework-schema:generate",

@@ -1,4 +1,4 @@
-//! 🕸️ CLI: `bun ./script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]` shells out to
+//! 🕸️ CLI: `bun ./📜script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]` shells out to
 //! `cargo run -p semio-framework-os-run --release -- <same args>`. This binary owns argv parsing and
 //! studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in the library.
 

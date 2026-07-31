@@ -735,15 +735,12 @@
         "vite": "^7.3.1",
       },
     },
-    "🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🟦typescript/🫀core": {
-      "name": "@semio-tech/flow-core",
-      "version": "0.1.0",
-      "devDependencies": {
-        "typescript": "^5.9.3",
-      },
-    },
     "🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🔨module/📐brep": {
       "name": "@semio-tech/flow-module-brep",
+      "version": "0.1.0",
+    },
+    "🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/pkg": {
+      "name": "@semio-tech/flow-core",
       "version": "0.1.0",
     },
     "🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust": {
@@ -1836,7 +1833,7 @@
 
     "@semio-tech/compose-sqlite": ["@semio-tech/compose-sqlite@workspace:compose/client/schema/sqlite"],
 
-    "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🟦typescript/🫀core"],
+    "@semio-tech/flow-core": ["@semio-tech/flow-core@workspace:🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/pkg"],
 
     "@semio-tech/flow-module-brep": ["@semio-tech/flow-module-brep@workspace:🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🔨module/📐brep"],
 

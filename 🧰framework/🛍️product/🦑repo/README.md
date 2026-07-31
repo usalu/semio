@@ -113,11 +113,11 @@ No problem, let them write what they know, until the tests are extended and let 
 
 ## Configuration
 
-Repo-wide settings live in [`.repo/config.toml`](../.repo/config.toml) at the monorepo root.
+Repo-wide settings live in [`.🦑repo/config.toml`](../.🦑repo/config.toml) at the monorepo root.
 
 | Key                  | Default    | Description                                                                 |
 | -------------------- | ---------- | --------------------------------------------------------------------------- |
-| `logging.session`    | `false`    | Write per-session `session.json` under `.repo/⚡/🤖/…` on agent hooks       |
+| `logging.session`    | `false`    | Write per-session `session.json` under `.🦑repo/⚡/🤖/…` on agent hooks       |
 | `logging.operations` | `true`     | Append derived `agent.<operation>.<phase>` events (requires `session = true`)      |
 | `logging.plan`       | `true`     | Track agent plan steps in `session.json` (requires `session = true`)        |
 | `logging.detail`     | `standard` | `minimal` (event only), `standard` (+ response), or `full` (+ native stdin) |

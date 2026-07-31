@@ -11,6 +11,6 @@
     "url": "https://github.com/usalu"
   },
   "exports": {
-    ".": "../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   }
 }

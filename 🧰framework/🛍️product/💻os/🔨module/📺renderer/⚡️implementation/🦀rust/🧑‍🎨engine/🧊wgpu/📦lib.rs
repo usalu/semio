@@ -5593,7 +5593,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
  * the shell already `GpuContext::upload_font_atlas`/`upload_icon_atlas`s every frame for chrome/dock/
  * panel text — so retained-mode content now shares the one real, GPU-uploaded glyph/icon texture
  * instead of reading from (or clobbering) a second, independent one. See
- * `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
+ * `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
  * for the original gap and the follow-up ticket work that closed it. */
 thread_local! {
     static UI_ENGINE: std::cell::RefCell<ui_wgpu::Ui> = std::cell::RefCell::new(ui_wgpu::Ui::new());
@@ -7016,7 +7016,7 @@ mod render_plan_validator_tests {
 
 //#region 🔬Introspection
 /** 🔬 Structural + frame-stats dump for the wgpu↔React UI-parity headless test harness (see
- * `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`): walks the SAME `UI_ENGINE` retained façade
+ * `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`): walks the SAME `UI_ENGINE` retained façade
  * `render_ui_node` (above) already drives, so every dump reflects exactly what was last laid
  * out/painted — never a second, independent measurement pass. Deliberately scoped to ONE window's
  * content tree: shell chrome/navbar/footer/dock are rendered by this crate's own immediate-mode
@@ -8898,7 +8898,7 @@ pub fn render_component_scene(
         // ticket's task 5 — `render_placeholder` itself is kept for other callers that still want an
         // explicit "unimplemented" chrome, e.g. an unresolved `ExternalSlot`).
     }
-    // 🐛➡️✅ W4 (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): this used to
+    // 🐛➡️✅ W4 (`.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): this used to
     // end with `apply_scene_wheel(scene, bounds, ctx); apply_scene_pointer(scene, bounds, ctx);` — a
     // once-per-render-frame sample of the aggregate `InputState` with its own manual "was it down last
     // frame" edge detection, which could drop fast clicks/double-clicks and had asymmetries (e.g. a
@@ -15018,14 +15018,14 @@ mod virtual_file_system_tests {
 /// called `SceneInput::handle_scene_pointer_button`/`handle_scene_pointer_move` for any surface kind.
 /// `w2-scene-wiring` landed `apply_scene_pointer` in `RenderEntry` next, calling those for every
 /// non-bespoke surface kind including `TextEditor` from a once-per-render-frame `InputState` sample —
-/// and `w4-scene-input` (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`) has
+/// and `w4-scene-input` (`.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`) has
 /// since replaced THAT with a real per-event route (`ui_wgpu::UiCommand::Scene` ->
 /// `interpreter::apply_scene_ui_command`, calling the same two handlers), deleting `apply_scene_pointer`
 /// itself. Plain click/drag still reaches `EditorHost` via that generic path today, just per real event
 /// now rather than sampled once per frame. That single-click/drag code was removed here to avoid
 /// double-dispatching `textSelect`/`textEdit`; what remains below (double-click word-select, right-click
 /// context menu, completions, rename) is *not* covered by the generic path and
-/// stays. 🐛➡️✅ W4 fix (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`):
+/// stays. 🐛➡️✅ W4 fix (`.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`):
 /// `EditorHost::pointer_down_screen` used to no-operate entirely for `button != 0`, so both the generic
 /// path's raw-button-passthrough call AND this region's own right-click handling had to force `button`
 /// to `0` to reposition the caret at all. `pointer_down_screen` now repositions the caret for every
@@ -16386,7 +16386,7 @@ pub struct ShellState {
     pub sync_card_anchor: Option<(f32, f32)>,
     pub last_envelope_json: Option<String>,
     /// @emoji 🏛️ Shell-lifetime document-host actor registry (native only); the browser wgpu build
-    /// has no native `DocumentHost` — its sync flows through the React shell's `🟦🟦backbone-🟦worker.ts`.
+    /// has no native `DocumentHost` — its sync flows through the React shell's `🟦backbone-worker.ts`.
     #[cfg(not(target_arch = "wasm32"))]
     pub document_host: DocumentHost,
     /// @emoji 🧵 The currently attached document's live actor channel (native only).
@@ -28239,7 +28239,7 @@ fn apply_chrome_color_overrides(base: &Theme, overrides: &ChromeColorOverrides) 
     theme
 }
 
-/// 🎨 The "mono" premade's real chrome palette (`ui/styling/theme/🔣🔣mono.theme.json`), resolved once
+/// 🎨 The "mono" premade's real chrome palette (`ui/styling/theme/🔣mono.theme.json`), resolved once
 /// via `ui/styling/js/theme.ts`'s own `resolveThemeAppearancePalettes` (ticket scratchpad
 /// `resolve-mono-chrome.ts`) and hand-ported here as `Rgba::from_srgb8` calls: this crate has no
 /// dependency on the `ui_styling` Rust codegen crate (only `ui_wgpu` does, and its `ChromePalette`/
@@ -30845,7 +30845,7 @@ async fn boot_runtime(
     #[cfg(not(target_arch = "wasm32"))]
     let css_height = size.height as f32 / dpr;
 
-    const ANTA_LATIN: &[u8] = include_bytes!("../../../../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤anta/🔤🔤latin.ttf");
+    const ANTA_LATIN: &[u8] = include_bytes!("../../../../../../../../🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤anta/🔤latin.ttf");
     let font_bytes = match fetch_font_bytes("/asset/font/anta/🔤🔤latin.ttf").await {
         Ok(bytes) if bytes.len() > 256 => bytes,
         _ => ANTA_LATIN.to_vec(),

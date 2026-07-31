@@ -5,7 +5,7 @@
 //! deflate codec. Every length is validated against `pack_core::PackLimits` before allocation.
 //!
 //! Layout notes: see the `## pack_format` section of the wave-0 contract at
-//! `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`. One deliberate
+//! `.🦑repo/🎫tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`. One deliberate
 //! deviation is documented in `🔖Footer` below: the contract's prose arithmetic for footer size
 //! (`"= 80 bytes exactly"`) undercounts its own `footer_crc32` field by 4 bytes; this crate
 //! implements the mathematically self-consistent 84-byte footer and exports `FOOTER_SIZE` so

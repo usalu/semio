@@ -5,7 +5,7 @@
 //! helper for committing expected byte-content as a text constant.
 //!
 //! See the `## pack_testkit` section of the wave-0 contract at
-//! `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md` for the binding
+//! `.🦑repo/🎫tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md` for the binding
 //! signatures this crate implements against. Deliberately depends on `dsl_schema`/`dsl_core`
 //! directly (not just `pack`) rather than the `arbitrary`/`quickcheck` crates — the generator is
 //! a small hand-rolled splitmix64 PRNG, and float generation round-trips through `dsl_core`'s own

@@ -2063,7 +2063,7 @@ mod tests {
         assert_eq!(host.camera.y, 0.0);
     }
 
-    /// 🐛 W4 fix (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): a right-click
+    /// 🐛 W4 fix (`.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): a right-click
     /// used to be a total no-op here (this test used to assert the caret/anchor stayed put) — now it
     /// still repositions the caret to the click point (matching left-click, for the right-click
     /// context-menu's "open where you clicked" UX) but must never start a drag-selection.

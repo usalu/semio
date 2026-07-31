@@ -1,7 +1,7 @@
 // #region Header
 /**
  * 🖥️ `@semio-tech/framework-os-core` — JS sync/backbone protocol surface (backbone URIs, document
- * envelopes, `🟦🟦backbone-🟦worker.ts` request/response wire types, `PersistenceBinding`/`OperationEnvelope`,
+ * envelopes, `🟦backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OperationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/os/renderer/js/react/index.tsx` and
  * `framework/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
  * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
@@ -249,7 +249,7 @@ export function desktopWindowControlsBridge(invoke: (channel: string) => Promise
 /** 📦 Dev-server-proxied content-addressed blob endpoint: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=` (raw
  * bytes body, returns `{"hash":"..."}`) and `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response).
  * Shared with the dev host shim (`framework/os/dev/script.ts`'s `hostShimSource`) and the
- * browser blob cache (`🟦🟦backbone-🟦worker.ts`) so all three stay in sync on the same literal. Backed by
+ * browser blob cache (`🟦backbone-worker.ts`) so all three stay in sync on the same literal. Backed by
  * `vcs::BlobStore`'s native counterpart; a hub-backed route is a later ticket. */
 export const BLOB_ENDPOINT_PATH = "/semio-blob";
 //#endregion 🔖Blob
@@ -258,7 +258,7 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
 /**
  * 🔁 TS mirror of `store_sync`'s Rust actor protocol (`DocumentActorConfig`/`DocumentActorMsg`/
  * `DocumentEvent`/`DocumentSyncStatus`/`RemoteState`/`PersistenceBinding`) — the wire/postMessage
- * shapes `🟦🟦backbone-🟦worker.ts` speaks, kept camelCase-tag-identical to the Rust side (`#[serde(tag =
+ * shapes `🟦backbone-worker.ts` speaks, kept camelCase-tag-identical to the Rust side (`#[serde(tag =
  * "kind", rename_all = "camelCase")]`) so a shared JSON fixture suite (`store/sync/fixtures/`)
  * stays plausible across both runtimes even though this file is a deliberately dumb TS twin (no
  * materialization — it only relays queues, exactly like the Rust actor's `ChannelBackbone` side).
@@ -974,10 +974,10 @@ export type DocumentEvent =
   | { readonly kind: "commandOutcome"; readonly batchId: number; readonly outcome: CommandAckOutcome }
   | ({ readonly kind: "conflict" } & SyncConflict);
 
-/** 📤 Main thread → `🟦🟦backbone-🟦worker.ts` messages. */
+/** 📤 Main thread → `🟦backbone-worker.ts` messages. */
 export type BackboneWorkerRequest = ({ readonly kind: "open" } & DocumentActorConfig) | { readonly kind: "close"; readonly documentId: string } | { readonly kind: "send"; readonly documentId: string; readonly message: DocumentActorMsg };
 
-/** 📥 `🟦🟦backbone-🟦worker.ts` → main thread messages. */
+/** 📥 `🟦backbone-worker.ts` → main thread messages. */
 export type BackboneWorkerResponse = { readonly kind: "event"; readonly documentId: string; readonly event: DocumentEvent } | { readonly kind: "ready" };
 //#endregion 🔖SyncProtocol
 

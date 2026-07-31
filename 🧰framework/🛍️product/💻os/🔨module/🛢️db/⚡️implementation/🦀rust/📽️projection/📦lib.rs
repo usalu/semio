@@ -2,7 +2,7 @@
 //! wired into a dependency DAG, applied incrementally as commands commit, checkpointed via
 //! `db_index::ProjectionIndex` for historical ("state as of frontier X") queries, and augmentable
 //! with an ephemeral, never-persisted preview overlay. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_projection` row) and Part 2 of the approved plan.
 //!
 //! 🎯 Design choice: per the contract's "no db crate below `db_document` interprets operation

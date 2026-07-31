@@ -20,6 +20,6 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "../../../../../../../✏️s/🔌plugin/📐cad/🧩extension/🏛️aec-building-structure/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   }
 }

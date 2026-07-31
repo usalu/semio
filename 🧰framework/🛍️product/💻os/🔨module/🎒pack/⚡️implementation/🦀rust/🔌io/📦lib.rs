@@ -8,7 +8,7 @@
 //! Everything here is native-only (`std::fs`, `std::sync::Mutex`) and gated behind
 //! `#[cfg(not(target_arch = "wasm32"))]` so the crate still compiles — as an effectively-empty
 //! crate — for a `wasm32-unknown-unknown` target check. See the `## pack_io` section of the
-//! wave-0 contract at `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`.
+//! wave-0 contract at `.🦑repo/🎫tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`.
 
 #[cfg(not(target_arch = "wasm32"))]
 mod native {

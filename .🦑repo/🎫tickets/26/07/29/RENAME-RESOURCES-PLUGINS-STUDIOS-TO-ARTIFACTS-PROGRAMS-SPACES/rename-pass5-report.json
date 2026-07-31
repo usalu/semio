@@ -1,0 +1,16 @@
+{
+  "pass": 5,
+  "files_touched": 10,
+  "files": [
+    "framework/product/os/hub/directory/rs/lib.rs",
+    "framework/product/os/hub/directory/neo4j/rs/lib.rs",
+    "framework/product/os/hub/directory/postgres/rs/lib.rs",
+    "framework/product/os/hub/directory/sqlite/rs/lib.rs",
+    "framework/product/os/hub/rs/bin.rs",
+    "framework/product/os/core/rs/lib.rs",
+    "framework/renderer/wgpu/rs/lib.rs",
+    "framework/program/registry/📜script.ts",
+    "framework/renderer/react/index.tsx",
+    "s/program/rs/lib.rs"
+  ]
+}

@@ -5,7 +5,7 @@
 //! extension range `0x40..=0x4F`), real group-commit batching (bounded by delay/bytes/count),
 //! segment rotation with a cross-segment hash chain, and crash recovery (torn-tail truncation,
 //! multi-segment replay). Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯 Design choice (dependency): the `protocol` facade re-exports `SprWriter`/`FrameCursor`/

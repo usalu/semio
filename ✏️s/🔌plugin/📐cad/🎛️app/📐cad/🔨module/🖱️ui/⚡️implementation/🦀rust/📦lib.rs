@@ -2076,7 +2076,7 @@ impl CadPlayApp {
     /// `draw_gesture_preview_payload` (see that doc for the full explanation): `framework/sync::
     /// SyncSession::publish_preview` is host-only and unreachable from this WASI-P2 sandboxed plugin
     /// crate, and `store::BackboneMessage` has no preview-shaped variant to relay one through. See
-    /// `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+    /// `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
     /// `#[allow(dead_code)]`: exercised by `🧪Tests` only until a host bridge exists.
     #[allow(dead_code)]
     fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {

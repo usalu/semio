@@ -1,6 +1,6 @@
 //! 🎞️ Protocol hub wire frames: the lane-tagged `ClientFrame`/`ServerFrame` envelopes a
 //! browser/native sync client exchanges with the collaboration hub, plus their binary codec. Frozen
-//! contract: `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment`
+//! contract: `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment`
 //! §`protocol_wire`.
 //!
 //! 🎯 W5: the byte encoding is now a fully hand-rolled binary layout — `lane: u8` followed by

@@ -15841,7 +15841,7 @@ if (import.meta.vitest) {
     it("preloads kits on home without navigating to kit app", async () => {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/script.ts");
+      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜script.ts");
       const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
       const fixtureUrl = "/fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json";
       const fixtureJson = JSON.stringify(readInitialKitFixtureFromPath(fixturePath));
@@ -16007,7 +16007,7 @@ if (import.meta.vitest) {
     it("materializes type representations after projection install", async () => {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/script.ts");
+      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜script.ts");
       const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
       const assembled = readInitialKitFixtureFromPath(fixturePath);
       const bundleKit = sketchpadKitFromDecodedBundle(assembled);
@@ -16028,7 +16028,7 @@ if (import.meta.vitest) {
     it("hydrates nakagin capsule tower with 180 pieces and 179 connections", async () => {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
-      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/script.ts");
+      const { readInitialKitFixtureFromPath } = await import("../../../../fixture/📜script.ts");
       const fixturePath = join(dirname(fileURLToPath(import.meta.url)), "../../../../fixture/kit/dev/metabolism/wip/initialKit/kit.compose.json");
       const assembled = readInitialKitFixtureFromPath(fixturePath);
       const { kit, session } = await importKit(new TextEncoder().encode(JSON.stringify(assembled)));

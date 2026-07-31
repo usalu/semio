@@ -6,11 +6,11 @@
   "description": "ui · Tailwind/CSS surface; canonical tokens + codegen live in framework/ui/styling (@semio-tech/ui-styling-tokens)",
   "type": "module",
   "exports": {
-    ".": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/📦index.ts",
-    "./🎨ui.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🎨ui.css",
-    "./🎨palette.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🎨palette.css",
-    "./tailwind.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🎨tailwind.config.ts",
-    "./tokens.generated": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🟦tokens.generated.ts"
+    ".": "./📦index.ts",
+    "./🎨ui.css": "./🎨ui.css",
+    "./🎨palette.css": "./🎨palette.css",
+    "./tailwind.config": "./🎨tailwind.config.ts",
+    "./tokens.generated": "./🟦tokens.generated.ts"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

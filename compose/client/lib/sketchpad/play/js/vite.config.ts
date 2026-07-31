@@ -25,7 +25,7 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
-import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
+import { readInitialKitFixtureFromPath } from "../../../../fixture/📜script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 // #endregion 🔌Adapters

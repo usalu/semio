@@ -12,5 +12,5 @@
     "resolveJsonModule": true
   },
   "include": ["*.ts", "bin/**/*.ts"],
-  "exclude": ["*.test.ts", "script.ts"]
+  "exclude": ["*.test.ts", "📜script.ts"]
 }

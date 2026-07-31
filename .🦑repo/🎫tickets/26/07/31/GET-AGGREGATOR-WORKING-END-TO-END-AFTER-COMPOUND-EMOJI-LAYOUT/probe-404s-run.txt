@@ -1,0 +1,165 @@
+{
+  "total": 748,
+  "top": [
+    [
+      "404 http://127.0.0.1:6023/%F0%9F%94%A8module/%F0%9F%96%B1%EF%B8%8Fui/asset/cursor/%F0%9F%94%A3cursor_selectable.svg",
+      135
+    ],
+    [
+      "404 http://127.0.0.1:6023/%F0%9F%94%A8module/%F0%9F%96%B1%EF%B8%8Fui/asset/cursor/%F0%9F%94%A3cursor_grabbing.svg",
+      134
+    ],
+    [
+      "404 http://127.0.0.1:6023/%F0%9F%94%A8module/%F0%9F%96%B1%EF%B8%8Fui/asset/cursor/%F0%9F%94%A3cursor_pointer.svg",
+      134
+    ],
+    [
+      "404 http://127.0.0.1:6023/%F0%9F%94%A8module/%F0%9F%96%B1%EF%B8%8Fui/asset/cursor/%F0%9F%94%A3cursor_foldable.svg",
+      109
+    ],
+    [
+      "404 http://127.0.0.1:6023/%F0%9F%94%A8module/%F0%9F%96%B1%EF%B8%8Fui/asset/cursor/%F0%9F%94%A3cursor_ew-resize.svg",
+      109
+    ],
+    [
+      "404 http://127.0.0.1:6023/%F0%9F%94%A8module/%F0%9F%96%B1%EF%B8%8Fui/asset/cursor/%F0%9F%94%A3cursor.svg",
+      89
+    ],
+    [
+      "404 http://127.0.0.1:6023/%E2%99%BB%EF%B8%8Fmit-bestand/%F0%9F%A7%BAaggregator/%F0%9F%96%BC%EF%B8%8Fasset/logo/%F0%9F%96%BC%EF%B8%8Fluh.png",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/%E2%99%BB%EF%B8%8Fmit-bestand/%F0%9F%A7%BAaggregator/%F0%9F%96%BC%EF%B8%8Fasset/logo/%F0%9F%96%BC%EF%B8%8Fluh-dark.png",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4latin.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4latin.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/%E2%99%BB%EF%B8%8Fmit-bestand/%F0%9F%A7%BAaggregator/%F0%9F%96%BC%EF%B8%8Fasset/logo/%F0%9F%96%BC%EF%B8%8Fudk.png",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/%E2%99%BB%EF%B8%8Fmit-bestand/%F0%9F%A7%BAaggregator/%F0%9F%96%BC%EF%B8%8Fasset/logo/%F0%9F%96%BC%EF%B8%8Fudk-dark.png",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4latin-ext.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4latin-ext.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4math.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4math.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4symbols.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/anta/%F0%9F%94%A4%F0%9F%94%A4symbols.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A4emoji-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A4emoji-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A40-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A40-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A41-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A41-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A42-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A42-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A43-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A43-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A44-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A44-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A45-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A45-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A46-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A46-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A47-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A47-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A48-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A48-400.woff2",
+      1
+    ],
+    [
+      "404 http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A49-400.woff2",
+      1
+    ],
+    [
+      "net::ERR_ABORTED http://127.0.0.1:6023/asset/font/noto-emoji/%F0%9F%94%A4%F0%9F%94%A49-400.woff2",
+      1
+    ]
+  ]
+}

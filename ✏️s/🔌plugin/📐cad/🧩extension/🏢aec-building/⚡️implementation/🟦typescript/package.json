@@ -18,6 +18,6 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "../../../../../../../✏️s/🔌plugin/📐cad/🧩extension/🏢aec-building/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   }
 }

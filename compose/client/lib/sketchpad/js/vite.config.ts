@@ -27,7 +27,7 @@ import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 import { meshCollectionVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
-import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
+import { readInitialKitFixtureFromPath } from "../../../../fixture/📜script.ts";
 // #endregion 🔌Adapters
 
 /** @emoji 🧊 Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad app — mirrors

@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts",
-    "./nx-plugin": "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/🟨nx-plugin.mjs"
+    ".": "./📦index.ts",
+    "./nx-plugin": "./🟨nx-plugin.mjs"
   },
   "scripts": {
-    "lint": "bun ./script.ts lint",
-    "test": "bun ./script.ts test"
+    "lint": "bun ./📜script.ts lint",
+    "test": "bun ./📜script.ts test"
   },
   "devDependencies": {
     "@nx/devkit": "21.4.1",

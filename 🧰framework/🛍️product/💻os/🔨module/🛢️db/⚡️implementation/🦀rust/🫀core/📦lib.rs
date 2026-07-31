@@ -3,7 +3,7 @@
 //! resource limits, `DurabilityClass`, sync-relevant frontier types (`Frontier`/`FrontierDelta`/
 //! `ResumeToken`), the `EpochFence` split-brain gate, mailbox `Priority`, config/profiles,
 //! `DbCapabilities`, the `VersionGraph` vcs seam, and the `Emit` observability seam. Frozen
-//! contract: `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! contract: `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯 Design choice: this crate depends on `pack_core` only (per the contract's per-crate deps

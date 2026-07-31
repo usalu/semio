@@ -20,9 +20,9 @@ export default defineConfig({
     name: "@semio-tech/ui-styling",
     mode: "test",
     environment: "node",
-    include: ["🟦vite-elements-assets.ts", "script.ts"],
-    coverage: { include: ["🟦vite-elements-assets.ts", "script.ts"] },
-    includeSource: ["🟦vite-elements-assets.ts", "script.ts"],
+    include: ["🟦vite-elements-assets.ts", "📜script.ts"],
+    coverage: { include: ["🟦vite-elements-assets.ts", "📜script.ts"] },
+    includeSource: ["🟦vite-elements-assets.ts", "📜script.ts"],
     passWithNoTests: false,
   },
 });

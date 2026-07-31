@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/🫀core/📦index.ts",
-    "./🔣manifest.schema.json": "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/🤖generated/🔣manifest.schema.json"
+    ".": "./🫀core/📦index.ts",
+    "./🔣manifest.schema.json": "./🤖generated/🔣manifest.schema.json"
   },
   "scripts": {
     "generate": "nx run @semio-tech/graph-manifest:generate",

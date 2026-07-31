@@ -147,32 +147,32 @@
     --color-removed: var(--destructive-border);
     --color-changed-selected: var(--accent);
     --color-changed-hovered: var(--accent-secondary);
-    --cursor-default: url("../../../asset/cursor/🔣cursor.svg") 0 0, default;
-    --cursor-pointer: url("../../../asset/cursor/🔣cursor_pointer.svg") 0 0, pointer;
-    --cursor-grab: url("../../../asset/cursor/🔣cursor_grab.svg") 0 0, grab;
-    --cursor-grabbing: url("../../../asset/cursor/🔣cursor_grabbing.svg") 0 0, grabbing;
-    --cursor-ew-resize: url("../../../asset/cursor/🔣cursor_ew-resize.svg") 16 2, ew-resize;
-    --cursor-col-resize: url("../../../asset/cursor/🔣cursor_ew-resize.svg") 16 2, col-resize;
-    --cursor-ns-resize: url("../../../asset/cursor/🔣cursor_ns-resize.svg") 2 16, ns-resize;
-    --cursor-nesw-resize: url("../../../asset/cursor/🔣cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
-    --cursor-nwse-resize: url("../../../asset/cursor/🔣cursor_nwse-resize.svg") 16 16, nwse-resize;
-    --cursor-move: url("../../../asset/cursor/🔣cursor_move_inkscape.svg") 16 16, move;
-    --cursor-crosshair: url("../../../asset/cursor/🔣cursor_🔣crosshair.svg") 0 0, crosshair;
-    --cursor-crosshair-centered: url("../../../asset/cursor/🔣cursor_🔣crosshair.svg") 16 16, crosshair;
-    --cursor-selectable: url("../../../asset/cursor/🔣cursor_selectable.svg") 0 0, pointer;
-    --cursor-foldable: url("../../../asset/cursor/🔣cursor_foldable.svg") 0 0, pointer;
+    --cursor-default: url("/asset/👆cursor/🔣cursor.svg") 0 0, default;
+    --cursor-pointer: url("/asset/👆cursor/🔣cursor_pointer.svg") 0 0, pointer;
+    --cursor-grab: url("/asset/👆cursor/🔣cursor_grab.svg") 0 0, grab;
+    --cursor-grabbing: url("/asset/👆cursor/🔣cursor_grabbing.svg") 0 0, grabbing;
+    --cursor-ew-resize: url("/asset/👆cursor/🔣cursor_ew-resize.svg") 16 2, ew-resize;
+    --cursor-col-resize: url("/asset/👆cursor/🔣cursor_ew-resize.svg") 16 2, col-resize;
+    --cursor-ns-resize: url("/asset/👆cursor/🔣cursor_ns-resize.svg") 2 16, ns-resize;
+    --cursor-nesw-resize: url("/asset/👆cursor/🔣cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
+    --cursor-nwse-resize: url("/asset/👆cursor/🔣cursor_nwse-resize.svg") 16 16, nwse-resize;
+    --cursor-move: url("/asset/👆cursor/🔣cursor_move_inkscape.svg") 16 16, move;
+    --cursor-crosshair: url("/asset/👆cursor/🔣cursor_crosshair.svg") 0 0, crosshair;
+    --cursor-crosshair-centered: url("/asset/👆cursor/🔣cursor_crosshair.svg") 16 16, crosshair;
+    --cursor-selectable: url("/asset/👆cursor/🔣cursor_selectable.svg") 0 0, pointer;
+    --cursor-foldable: url("/asset/👆cursor/🔣cursor_foldable.svg") 0 0, pointer;
     --cursor-help: help;
-    --cursor-not-allowed: url("../../../asset/cursor/🔣cursor_not-allowed.svg") 0 0, not-allowed;
+    --cursor-not-allowed: url("/asset/👆cursor/🔣cursor_not-allowed.svg") 0 0, not-allowed;
     --cursor-text: text;
     /* 🎬 Plain background-image URLs (no hotspot/fallback-keyword suffix) for the introduction
        demonstration's ghost cursor — the --cursor-* vars above embed a cursor: url() hotspot pair that
        background-image can't consume. */
-    --cursor-ghost-default: url("../../../asset/cursor/🔣cursor.svg");
-    --cursor-ghost-pointer: url("../../../asset/cursor/🔣cursor_pointer.svg");
-    --cursor-ghost-grab: url("../../../asset/cursor/🔣cursor_grab.svg");
-    --cursor-ghost-grabbing: url("../../../asset/cursor/🔣cursor_grabbing.svg");
-    --cursor-ghost-crosshair: url("../../../asset/cursor/🔣cursor_🔣crosshair.svg");
-    --cursor-ghost-move: url("../../../asset/cursor/🔣cursor_move_inkscape.svg");
+    --cursor-ghost-default: url("/asset/👆cursor/🔣cursor.svg");
+    --cursor-ghost-pointer: url("/asset/👆cursor/🔣cursor_pointer.svg");
+    --cursor-ghost-grab: url("/asset/👆cursor/🔣cursor_grab.svg");
+    --cursor-ghost-grabbing: url("/asset/👆cursor/🔣cursor_grabbing.svg");
+    --cursor-ghost-crosshair: url("/asset/👆cursor/🔣cursor_crosshair.svg");
+    --cursor-ghost-move: url("/asset/👆cursor/🔣cursor_move_inkscape.svg");
     * {
       cursor: var(--cursor-default);
     }
@@ -602,27 +602,27 @@
   --element-base: var(--color-gray);
   --element-window: var(--color-gray);
   --element-panel: var(--color-gray-600);
-  --cursor-default: url("../../../asset/cursor/🔣cursor_dark.svg") 0 0, default;
-  --cursor-pointer: url("../../../asset/cursor/🔣cursor_pointer_dark_inkscape.svg") 0 0, pointer;
-  --cursor-grab: url("../../../asset/cursor/🔣cursor_grab_dark.svg") 0 0, grab;
-  --cursor-grabbing: url("../../../asset/cursor/🔣cursor_grabbing.svg") 0 0, grabbing;
-  --cursor-ew-resize: url("../../../asset/cursor/🔣cursor_ew-resize_dark.svg") 16 2, ew-resize;
-  --cursor-col-resize: url("../../../asset/cursor/🔣cursor_ew-resize_dark.svg") 16 2, col-resize;
-  --cursor-ns-resize: url("../../../asset/cursor/🔣cursor_ns-resize_dark.svg") 2 16, ns-resize;
-  --cursor-nesw-resize: url("../../../asset/cursor/🔣cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
-  --cursor-nwse-resize: url("../../../asset/cursor/🔣cursor_nwse-resize_dark.svg") 16 16, nwse-resize;
-  --cursor-move: url("../../../asset/cursor/🔣cursor_move_dark.svg") 16 16, move;
-  --cursor-crosshair: url("../../../asset/cursor/🔣cursor_crosshair_dark.svg") 0 0, crosshair;
-  --cursor-crosshair-centered: url("../../../asset/cursor/🔣cursor_crosshair_dark.svg") 16 16, crosshair;
-  --cursor-selectable: url("../../../asset/cursor/🔣cursor_selectable_dark.svg") 0 0, pointer;
-  --cursor-foldable: url("../../../asset/cursor/🔣cursor_foldable_dark.svg") 0 0, pointer;
-  --cursor-not-allowed: url("../../../asset/cursor/🔣cursor_not-allowed_dark.svg") 0 0, not-allowed;
-  --cursor-ghost-default: url("../../../asset/cursor/🔣cursor_dark.svg");
-  --cursor-ghost-pointer: url("../../../asset/cursor/🔣cursor_pointer_dark_inkscape.svg");
-  --cursor-ghost-grab: url("../../../asset/cursor/🔣cursor_grab_dark.svg");
-  --cursor-ghost-grabbing: url("../../../asset/cursor/🔣cursor_grabbing.svg");
-  --cursor-ghost-crosshair: url("../../../asset/cursor/🔣cursor_crosshair_dark.svg");
-  --cursor-ghost-move: url("../../../asset/cursor/🔣cursor_move_dark.svg");
+  --cursor-default: url("/asset/👆cursor/🔣cursor_dark.svg") 0 0, default;
+  --cursor-pointer: url("/asset/👆cursor/🔣cursor_pointer_dark_inkscape.svg") 0 0, pointer;
+  --cursor-grab: url("/asset/👆cursor/🔣cursor_grab_dark.svg") 0 0, grab;
+  --cursor-grabbing: url("/asset/👆cursor/🔣cursor_grabbing.svg") 0 0, grabbing;
+  --cursor-ew-resize: url("/asset/👆cursor/🔣cursor_ew-resize_dark.svg") 16 2, ew-resize;
+  --cursor-col-resize: url("/asset/👆cursor/🔣cursor_ew-resize_dark.svg") 16 2, col-resize;
+  --cursor-ns-resize: url("/asset/👆cursor/🔣cursor_ns-resize_dark.svg") 2 16, ns-resize;
+  --cursor-nesw-resize: url("/asset/👆cursor/🔣cursor_nesw-resize_dark.svg") 16 16, nesw-resize;
+  --cursor-nwse-resize: url("/asset/👆cursor/🔣cursor_nwse-resize_dark.svg") 16 16, nwse-resize;
+  --cursor-move: url("/asset/👆cursor/🔣cursor_move_dark.svg") 16 16, move;
+  --cursor-crosshair: url("/asset/👆cursor/🔣cursor_crosshair_dark.svg") 0 0, crosshair;
+  --cursor-crosshair-centered: url("/asset/👆cursor/🔣cursor_crosshair_dark.svg") 16 16, crosshair;
+  --cursor-selectable: url("/asset/👆cursor/🔣cursor_selectable_dark.svg") 0 0, pointer;
+  --cursor-foldable: url("/asset/👆cursor/🔣cursor_foldable_dark.svg") 0 0, pointer;
+  --cursor-not-allowed: url("/asset/👆cursor/🔣cursor_not-allowed_dark.svg") 0 0, not-allowed;
+  --cursor-ghost-default: url("/asset/👆cursor/🔣cursor_dark.svg");
+  --cursor-ghost-pointer: url("/asset/👆cursor/🔣cursor_pointer_dark_inkscape.svg");
+  --cursor-ghost-grab: url("/asset/👆cursor/🔣cursor_grab_dark.svg");
+  --cursor-ghost-grabbing: url("/asset/👆cursor/🔣cursor_grabbing.svg");
+  --cursor-ghost-crosshair: url("/asset/👆cursor/🔣cursor_crosshair_dark.svg");
+  --cursor-ghost-move: url("/asset/👆cursor/🔣cursor_move_dark.svg");
   --info-bg: var(--color-dark-8-9);
   --info-foreground: var(--color-light);
   --info-border: var(--color-info);
@@ -834,7 +834,7 @@
   --text-9xl: 7.2rem;
   --text-9xl--line-height: 1;
   /* #region 🪜LevelZScale — formula z(k) = k * --z-step (zStep=10), k=0..5 for base..menu (see
-     contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
+     contract at .🦑repo/🎫tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
   --z-base: 0;
   --z-window: 10;
   --z-pane: 20;
@@ -848,7 +848,7 @@
   --glass-saturate: 1.45;
   /* #region 🎚️LevelKnobs — formula knobs for the unified 6-level surface system (base=0 window=1
      pane=2 panel=3 dialog=4 menu=5); 🎨ui.css and ui/styling/🔣tokens.json's "levels" block must stay
-     in lockstep (see contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
+     in lockstep (see contract at .🦑repo/🎫tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
      --glass-saturate above (1.45) is reused as-is by the new glass utilities, no duplicate knob. */
   --level-shade-step: 5%;
   --glass-alpha-step: 0.12;

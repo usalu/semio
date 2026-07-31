@@ -274,7 +274,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
   ephemeral: true,
   replayIntroductionOnLoad: true,
   tutorials: [ENTWERFEN_MIT_BESTAND_TUTORIAL],
-  assetsDir: "./♻️mit-bestand/🧺aggregator/🖼️asset",
+  assetsDir: "♻️mit-bestand/🧺aggregator/🖼️asset",
   distDir: "♻️mit-bestand/🧺aggregator/dist",
   cnameHost: "demonstrator.entwerfen.mit-bestand.de",
   introduction: {
@@ -314,9 +314,9 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         interactions: [],
         ordered: false,
         logos: [
-          { src: "/♻️mit-bestand/🧺aggregator/🖼️asset/logo/🖼️bmwsb.png", darkSrc: "/♻️mit-bestand/🧺aggregator/🖼️asset/logo/🖼️bmwsb-dark.png", alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
-          { src: "/♻️mit-bestand/🧺aggregator/🖼️asset/logo/🖼️bbsr.png", darkSrc: "/♻️mit-bestand/🧺aggregator/🖼️asset/logo/🖼️bbsr-dark.png", alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
-          { src: "/♻️mit-bestand/🧺aggregator/🖼️asset/logo/🖼️zukunft-bau.png", darkSrc: "/♻️mit-bestand/🧺aggregator/🖼️asset/logo/🖼️zukunft-bau-dark.png", alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
+          { src: "/♻️mit-bestand/🧺aggregator/🖼️asset/🪧logo/🖼️bmwsb.png", darkSrc: "/♻️mit-bestand/🧺aggregator/🖼️asset/🪧logo/🖼️bmwsb-dark.png", alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
+          { src: "/♻️mit-bestand/🧺aggregator/🖼️asset/🪧logo/🖼️bbsr.png", darkSrc: "/♻️mit-bestand/🧺aggregator/🖼️asset/🪧logo/🖼️bbsr-dark.png", alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
+          { src: "/♻️mit-bestand/🧺aggregator/🖼️asset/🪧logo/🖼️zukunft-bau.png", darkSrc: "/♻️mit-bestand/🧺aggregator/🖼️asset/🪧logo/🖼️zukunft-bau-dark.png", alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
         ],
         demonstrations: [],
       },

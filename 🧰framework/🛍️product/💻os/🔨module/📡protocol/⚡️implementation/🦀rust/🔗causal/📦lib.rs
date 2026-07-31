@@ -4,7 +4,7 @@
 //! `framework/core/rs/lib.rs`'s `🔖Sync` region (`OperationEnvelope` L6246, `DocumentDiff` L6121,
 //! `InverseOperation` L6137, `OpDag`/`InsertResult`/`OpDagError` L6266-6380 including its existing
 //! unit tests at L6488-6572) and `vcs/rs/lib.rs`'s `operation_envelope_from_edit`. Frozen contract:
-//! `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_causal`.
+//! `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_causal`.
 //!
 //! This crate's `FrontierSummary`/`frontier_delta` are the runtime/wire twin of
 //! `protocol_history`'s durable-log-derived pair — deliberately kept separate, see `🔖Frontier`.

@@ -7,7 +7,7 @@
 //! `assert_snapshot_plus_suffix_equals_replay`, `assert_projection_rebuild_equals_incremental`,
 //! `assert_inverse_undo_roundtrip`, `assert_sync_convergence`, `assert_fencing_excludes_stale_writer`,
 //! `assert_preview_never_durable`, `assert_overlay_structural_sharing`). Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_testkit` row).
 //!
 //! 🎯 Design choice (which "real db" each law drives): the `db` facade (`db/rs`) is still an

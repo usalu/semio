@@ -6,7 +6,7 @@
   "sourceRoot": ".",
   "projectType": "library",
   "exports": {
-    ".": "../../../../../../../✏️s/🔌plugin/🧩puzzle/🔨module/🖼️asset/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   },
   "author": {
     "name": "Ueli Saluz",

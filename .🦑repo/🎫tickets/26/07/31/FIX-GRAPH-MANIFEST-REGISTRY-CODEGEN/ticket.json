@@ -1,0 +1,9 @@
+{
+  "title": "Fix Graph Manifest Registry Codegen",
+  "emoji": "🕸️",
+  "status": "closed",
+  "description": "Restore semio-framework-os-kernel-math-graph-manifest build after emoji-prefix rename broke graph-manifest codegen (wrong outDir, missing #[path] for 🦀*.rs modules, stale /manifest/ discovery).",
+  "goal": "framework/math",
+  "summary": "Fixed `🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/script.ts`: output dir `🤖generated`, Rust modules as `🦀{mod}.rs`, registry entries with `#[path = \"🦀…\"]`, TS barrel `📦index.ts` with `🟦` imports, skip `🤖generated` while walking, discover manifests under `/🛂manifest/` not only `/manifest/`. Ran `bun nx run @semio-tech/graph-manifest:generate` (13 manifests). Verified `cargo check -p semio-framework-os-kernel-math-graph-manifest` succeeds.",
+  "sessions": []
+}

@@ -3,7 +3,7 @@
 //! `profile` over a `db::storage::FsStorage`-rooted document store. Hand-rolled arg parsing (no
 //! external CLI crate, per repo convention), exit codes `0` (success) / `1` (operation failed) /
 //! `2` (usage error), never panics on corrupt input. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_cli` row).
 //!
 //! 🎯 Design choice (depends on the `db` facade alone, `db_*` paths nowhere): every subcommand

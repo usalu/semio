@@ -2,7 +2,7 @@
 //! informed by the deleted `os-hub-storage-postgres` crate's connection/schema-bootstrap shape but
 //! implementing the generic, hub-agnostic `db_storage` trait family rather than hub-specific
 //! tables. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯 Design choice: every `db_storage` sub-trait method is deliberately synchronous (`fn ... ->

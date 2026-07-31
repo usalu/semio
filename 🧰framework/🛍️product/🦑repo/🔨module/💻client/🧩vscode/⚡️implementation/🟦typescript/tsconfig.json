@@ -14,6 +14,6 @@
       "@semio-tech/semio-asset": ["../../../asset/index.ts"]
     }
   },
-  "include": ["🟦🟦extension.test.ts", "🟦🟦extension.ts"],
+  "include": ["🟦extension.test.ts", "🟦extension.ts"],
   "exclude": ["node_modules", "out", "test"]
 }

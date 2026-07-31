@@ -5861,7 +5861,7 @@ pub struct PluginInstanceId(pub String);
 pub struct ArtifactId(pub String);
 
 // 🎞️ CW3 kernel cut-over: OperationId/ActorId/DocumentId/DocumentVersion/SchemaId moved to
-// `protocol_core` (frozen contract `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
+// `protocol_core` (frozen contract `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
 // re-exported here under their original names — shapes are unchanged (plain serde-transparent
 // String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
 // crates like `framework/sync`/`framework/product/os/hub` that import them straight from

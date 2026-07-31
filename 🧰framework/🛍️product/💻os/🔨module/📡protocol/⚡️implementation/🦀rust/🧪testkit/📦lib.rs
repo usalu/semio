@@ -2,7 +2,7 @@
 //! cross-crate law assertions the `protocol_*` family's round-trip/determinism/tamper-detection
 //! invariants boil down to, a re-export of `pack_testkit`'s panic-safe corruption fuzzer, and the
 //! golden-hash helper. Frozen contract:
-//! `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_testkit` +
+//! `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_testkit` +
 //! `## Amendment`'s testing notes).
 //!
 //! This crate deliberately depends on the `protocol` facade rather than the individual

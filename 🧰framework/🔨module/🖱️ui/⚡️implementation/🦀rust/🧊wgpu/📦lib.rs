@@ -5997,7 +5997,7 @@ pub fn semio_cursor_css(cursor: SemioCursor, dark: bool) -> &'static str {
         }
         (SemioCursor::Move, false) => "url(/asset/cursor/🔣cursor_move_inkscape.svg) 16 16, move",
         (SemioCursor::Move, true) => "url(/asset/cursor/🔣cursor_move_dark.svg) 16 16, move",
-        (SemioCursor::Crosshair, false) => "url(/asset/cursor/🔣cursor_🔣crosshair.svg) 16 16, crosshair",
+        (SemioCursor::Crosshair, false) => "url(/asset/cursor/🔣cursor_crosshair.svg) 16 16, crosshair",
         (SemioCursor::Crosshair, true) => {
             "url(/asset/cursor/🔣cursor_crosshair_dark.svg) 16 16, crosshair"
         }
@@ -6687,7 +6687,7 @@ impl DrawList {
 
     /// 🧊 Pushes a glass region rendered with an already-resolved `style` — callers derive `style`
     /// from `Theme::glass(level)` themselves (see
-    /// `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
+    /// `.🦑repo/🎫tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
     /// picking a per-tier lookup.
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
         let index = self.glass_regions.len();
@@ -11599,7 +11599,7 @@ pub mod text {
 //! glyphs). A built-in 8×16 ASCII bitmap mode is kept as the deterministic, dependency-free
 //! fallback used by `FontAtlas::builtin()` (relied on by many call sites across the crate for
 //! fast/fixed-metric test setup) and by any single codepoint no registered font can shape at all.
-//! See `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1b-text-stack.md` for the full
+//! See `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1b-text-stack.md` for the full
 //! architecture writeup, including the deliberate measurement/paint-consistency tradeoff that
 //! keeps `measure_text`/`ensure_glyph` per-codepoint rather than switching to whole-string
 //! `parley::Layout` metrics.
@@ -11653,8 +11653,8 @@ static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
     include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤7-400.ttf"),
     include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤8-400.ttf"),
     include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤9-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤1🔤0-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤1🔤1-400.ttf"),
+    include_bytes!("../../../🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤10-400.ttf"),
+    include_bytes!("../../../🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤11-400.ttf"),
 ];
 
 const BITMAP_GLYPH_W: u32 = 8;
@@ -12308,7 +12308,7 @@ impl Rgba {
 
 //#region 🔖Level
 /// 🪜 The unified 6-level UI surface axis (base..menu, both z-order and glass/shade formula input)
-/// — see `ui/styling/🔣tokens.json`'s `levels` block and `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
+/// — see `ui/styling/🔣tokens.json`'s `levels` block and `.🦑repo/🎫tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
 /// Replaces the old unlinked level-name axis (canvas/window/panel/overlay/temporary) plus a
 /// separate glass-tier axis (panel/ribbon/menu/windowOptions) with one formula-derived enum.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -12535,7 +12535,7 @@ pub mod paint {
 //! `paint_tree` runs, as an earlier revision of this comment used to caveat. `WidgetState`-backed
 //! composites have since gained real paint support too: an open `Select`'s popup expands live
 //! (`paint_select`'s `open`/`retained` params, wired by the W2 pass — see
-//! `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-ui-wgpu-integration.md`), and a focused
+//! `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-ui-wgpu-integration.md`), and a focused
 //! `Input`'s caret/selection-highlight render straight from its live `EditState` (`paint_input`,
 //! W2 widget-visuals pass). `Tree`'s live scroll offset (`WidgetState::scroll_offset`) remains the
 //! one rest-state-only exception — no scrollable-viewport paint exists yet, out of every pass to
@@ -13581,7 +13581,7 @@ mod tests {
     // single `UiStatus` enum, so "loading and waiting both set" is unrepresentable — which is the point.
 
     //#region 🔖FidelityFixes
-    // 🩹 One test per fidelity gap this pass closed (see `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`),
+    // 🩹 One test per fidelity gap this pass closed (see `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`),
     // additive to the pre-existing tests above.
 
     fn button(id: &str, disabled: bool) -> UiNode {
@@ -13814,7 +13814,7 @@ mod tests {
     //#endregion 🔖FidelityFixes
 
     //#region 🔖W2InteractivityFixes
-    // 🔽🎴🌳 Tests for `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 pass: Select popup painting
+    // 🔽🎴🌳 Tests for `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 pass: Select popup painting
     // (`paint_select` + `sync_select_popup_rows`), Stack `activate`/`selected`/`drop_action`
     // (`paint_stack_frame` + `sync_interactive_state`'s `DROP_TARGET` sync), and Tree row real layout
     // + `DRAG_SOURCE` sync (`sync_tree_row_layout`/`sync_tree_item_layout`).
@@ -13937,7 +13937,7 @@ mod tests {
     //#endregion 🔖W2InteractivityFixes
 
     //#region 🔖W2WidgetVisuals
-    // 🖱️✍️🎯 Tests for `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 widget-visuals pass: a
+    // 🖱️✍️🎯 Tests for `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 widget-visuals pass: a
     // focused `Input`'s caret/selection-highlight (`paint_input`, sourced from `tree::EditState`),
     // and the `formControlFocusBorderClass`-matching focus ring ported onto every remaining
     // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a
@@ -15239,7 +15239,7 @@ impl EventRouter {
 
     /// 🎯 Read-only: whether this window's retained content currently holds keyboard focus — see
     /// `engine::Ui::window_has_focus` (its only caller), added for the `w2-input-wiring` host-side
-    /// focus arbitration (content vs. chrome routing, `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`).
+    /// focus arbitration (content vs. chrome routing, `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`).
     pub(crate) fn is_focused(&self) -> bool {
         self.focus.focused.is_some()
     }
@@ -16000,7 +16000,7 @@ mod tests {
     //#endregion 🔖HoverRevealTests
 
     //#region 🔖W2InteractivityTests
-    // 🔽🎴🌳 Tests for the wiring closed out per `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2
+    // 🔽🎴🌳 Tests for the wiring closed out per `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2
     // pass: `Select` popup open/close (`toggle_select_popup`/`finish_close`), `Stack`
     // `activate`/`drop_action` (`is_plain_stack_container`'s hit-test exception), and `Tree` row
     // `hover_action`/`unhover_action`/`draggable` (`find_tree_item_spec`).
@@ -16803,7 +16803,7 @@ pub mod engine {
 //! 🧵 The retained-mode `Ui` façade: the missing keystone tying `arena`/`tree`/`reconcile`/`flex`/
 //! `paint`/`events`/`scene_slots`/`shell` into one usable pipeline — each of those regions was built
 //! and individually tested to its own milestone but nothing ever assembled them together, and nothing
-//! in `framework/renderer/wgpu` calls into any of it (see `.repo/🎫/26/07/11/RETAINED-MODE-UI-CRATE`'s
+//! in `framework/renderer/wgpu` calls into any of it (see `.🦑repo/🎫tickets/26/07/11/RETAINED-MODE-UI-CRATE`'s
 //! plan for the historical intent). This module is purely additive: the immediate-mode `widgets`
 //! path stays the only pipeline actually driving pixels until a later workstream proves this façade
 //! out (via the golden `tests` module below) and cuts over.
@@ -17017,7 +17017,7 @@ impl Default for Ui {
 
 //#region 🔬Introspection
 /// 🔬 Read-only accessors for the wgpu↔React parity structural-dump harness (see
-/// `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY` and `framework/renderer/wgpu`'s own
+/// `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY` and `framework/renderer/wgpu`'s own
 /// `🔬Introspection` region, which is the actual JSON-building caller): exposes just enough of
 /// `Ui`'s private `windows`/`theme` state for a caller to walk a window's retained `UiTree` (via
 /// `UiTree::node`/`UiTree::children`, both already public) and know which theme it last painted
@@ -17047,7 +17047,7 @@ impl Ui {
 
     /// 🎯 Whether `window_id`'s retained content currently has a focused node — `false` if that
     /// window has no retained state at all. Lets a host (`w2-input-wiring`,
-    /// `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-input-wiring.md`) decide whether real
+    /// `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-input-wiring.md`) decide whether real
     /// keyboard/IME events belong to this window's content (route via `dispatch_event`) or should
     /// fall back to chrome-level shortcuts. Forwards to `EventRouter::is_focused`, itself added this
     /// same pass — both purely additive reads, no change to `dispatch_event`'s own focus logic.
@@ -17573,7 +17573,7 @@ mod tests {
         assert!(instances > 0, "NumberStepper should paint its minus/value/plus segments");
     }
 
-    /// 🔒 Added by `w1c-paint-parity` (see `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`):
+    /// 🔒 Added by `w1c-paint-parity` (see `.🦑repo/🎫tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`):
     /// `paint::paint_number_stepper` now ports `widgets::render_number_stepper`'s nested
     /// center-value border box (the exact gap `golden_number_stepper_known_gap`'s doc comment
     /// above documents), closing the 14-vs-19-instance divergence for the `uniform: true` case.

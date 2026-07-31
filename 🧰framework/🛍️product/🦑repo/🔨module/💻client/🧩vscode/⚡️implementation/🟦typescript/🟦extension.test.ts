@@ -11,7 +11,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/💻client/🧩vscode/⚡️implementation/🟦typescript/🟦🟦extension.ts";
+import { getSketchpadDistCandidatePaths, isLikelyKitJsonFilePath, resolveSketchpadDistPath } from "../../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/💻client/🧩vscode/⚡️implementation/🟦typescript/🟦extension.ts";
 import {
   buildCliTreeArgs,
   buildEntityEmojiPattern,
@@ -729,7 +729,7 @@ suite("Sections View Test Suite", function () {
 
   test("Sections tree view refreshes on file change", async function () {
     const root = getWorkspaceRoot();
-    const candidatePaths = [path.join(root, "repo", "vscode", "🟦🟦extension.ts"), path.join(root, "..", "vscode", "🟦🟦extension.ts"), path.join(root, "🟦🟦extension.ts")];
+    const candidatePaths = [path.join(root, "repo", "vscode", "🟦extension.ts"), path.join(root, "..", "vscode", "🟦extension.ts"), path.join(root, "🟦extension.ts")];
     const existing = candidatePaths.find((p) => fs.existsSync(p));
     if (existing) {
       await vscode.workspace.openTextDocument(vscode.Uri.file(existing));
@@ -1910,7 +1910,7 @@ suite("CodeLens Behavior Test Suite", function () {
     const cases = [
       {
         label: "TypeScript",
-        paths: ["repo/vscode/🟦🟦extension.ts", "vscode/🟦🟦extension.ts", "🟦🟦extension.ts"],
+        paths: ["repo/vscode/🟦extension.ts", "vscode/🟦extension.ts", "🟦extension.ts"],
       },
       {
         label: "Go",
@@ -1931,7 +1931,7 @@ suite("CodeLens Behavior Test Suite", function () {
   });
 
   test("Entity CodeLenses do not expose summarize commands", async function () {
-    const document = await openWorkspaceDocument("repo/vscode/🟦🟦extension.ts");
+    const document = await openWorkspaceDocument("repo/vscode/🟦extension.ts");
     const summarizeLenses = (await getCodeLenses(document)).filter((lens) => lens.command?.command === "compose.summarize");
     assert.deepStrictEqual(summarizeLenses, [], "summarize CodeLenses should be fully replaced by analyze");
   });
@@ -1940,7 +1940,7 @@ suite("CodeLens Behavior Test Suite", function () {
     const cases = [
       {
         label: "TypeScript",
-        paths: ["repo/vscode/🟦🟦extension.ts", "vscode/🟦🟦extension.ts", "🟦🟦extension.ts"],
+        paths: ["repo/vscode/🟦extension.ts", "vscode/🟦extension.ts", "🟦extension.ts"],
       },
       {
         label: "Go",

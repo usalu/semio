@@ -7103,7 +7103,7 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
 // #endregion 🗨️Dialog
 
 // #region 🎈Level Context
-/** @emoji 📚 Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
+/** @emoji 📚 Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .🦑repo/🎫tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
 export type Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu";
 
 /** @emoji 📚 Every {@link Level}, ordered base..menu (Storybook/tests). */

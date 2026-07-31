@@ -1,8 +1,8 @@
 //! 🗄️ `db_sync` — server side of `protocol_wire`: frontier exchange, missing-command transfer,
 //! snapshot bootstrap, and resume tokens for a document replica ((re)connecting to the hub over
 //! `protocol::{ClientFrame, ServerFrame}`). Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
-//! (`## db crate family`); wire types frozen in `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! (`## db crate family`); wire types frozen in `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/
 //! contract.md` `## Amendment` §`protocol_wire`.
 //!
 //! 🎯 Design choice (dependency scope): per the contract's dep table this crate depends on

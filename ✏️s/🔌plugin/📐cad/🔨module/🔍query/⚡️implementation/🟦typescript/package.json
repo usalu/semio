@@ -26,6 +26,6 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "../../../../../../../✏️s/🔌plugin/📐cad/🔨module/🔍query/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   }
 }

@@ -1,0 +1,43 @@
+{
+  "name": "@semio-tech/repo-lib",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript",
+        "command": "bun ./📜script.ts lint"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript",
+        "command": "bun ./📜script.ts test"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript",
+        "command": "bun ./📜script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript",
+        "command": "bun ./📜script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript",
+        "command": "bun ./📜script.ts test exhaustive"
+      }
+    }
+  }
+}

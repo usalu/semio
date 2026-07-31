@@ -6,7 +6,7 @@
 //! fresh full baseline, ref-traced payload GC, index-kind merge (which also physically drops
 //! shadowed tombstones — `db_compact`'s share of "tombstone/preview GC"), cold-tier pack
 //! archival, and a fenced, budgeted top-level `Compactor` orchestrator. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_compact` row).
 //!
 //! 🎯 Scope boundary — "diff collapse": per the contract's hard dependency rule, no db crate

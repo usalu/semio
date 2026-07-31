@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
+const SCRIPT_BASENAME = "📜script.ts";
+
 /** @param {string} absScript */
 function scriptExportsPolicy(absScript) {
   const text = readFileSync(absScript, "utf8");
@@ -32,7 +34,7 @@ function policyScriptProjects(configFiles, _options, context) {
 
   return configFiles
     .filter((configFile) => {
-      if (configFile.includes("node_modules") || configFile.includes(".repo") || configFile.includes("/dist/")) {
+      if (configFile.includes("node_modules") || configFile.includes(".🦑repo") || configFile.includes("/dist/")) {
         return false;
       }
       const abs = join(workspaceRoot, configFile);
@@ -60,7 +62,7 @@ function policyScriptProjects(configFiles, _options, context) {
                     command: `bun "${rel}" policy`,
                   },
                   inputs: [`{workspaceRoot}/${rel}`, ...extraInputs],
-                  outputs: [`{workspaceRoot}/.repo/cache/breaches`],
+                  outputs: [`{workspaceRoot}/.🦑repo/⚡cache/breaches`],
                   cache: true,
                 },
               },
@@ -71,7 +73,42 @@ function policyScriptProjects(configFiles, _options, context) {
     });
 }
 
+function emojiProjectJsonNodes(configFiles, _options, context) {
+  const { workspaceRoot } = context;
+  /** @param {string} p */
+  const nxPath = (p) => p.split("\\").join("/");
+
+  return configFiles
+    .filter((configFile) => {
+      if (configFile.includes("node_modules") || configFile.includes(".🦑repo") || configFile.includes("/dist/")) {
+        return false;
+      }
+      return true;
+    })
+    .map((configFile) => {
+      const abs = join(workspaceRoot, configFile);
+      const json = JSON.parse(readFileSync(abs, "utf8"));
+      const name = json.name;
+      if (!name) return null;
+      const projectRoot = dirname(abs);
+      const root = nxPath(relative(workspaceRoot, projectRoot)) || ".";
+      return [
+        configFile,
+        {
+          projects: {
+            [name]: {
+              ...json,
+              name,
+              root,
+            },
+          },
+        },
+      ];
+    })
+    .filter(Boolean);
+}
+
 export default {
   name: "@repo/policy-scripts-file",
-  createNodesV2: ["**/script.ts", policyScriptProjects],
+  createNodesV2: [`**/${SCRIPT_BASENAME}`, policyScriptProjects],
 };

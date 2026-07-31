@@ -1164,8 +1164,8 @@ func TestExhaustiveFilterTicketWorkspaceFiles(t *testing.T) {
 		FolderPath: filepath.Join(rootDir, ".repo", "🎫", "26", "01", "20", "SAMPLE"),
 	}
 	files := []string{
-		".repo/🎫/26/01/20/SAMPLE/plan.md",
-		"./.repo/🎫/26/01/20/SAMPLE/ticket.json",
+		".🦑repo/🎫tickets/26/01/20/SAMPLE/plan.md",
+		"./.🦑repo/🎫tickets/26/01/20/SAMPLE/ticket.json",
 		filepath.Join(rootDir, ".repo", "🎫", "26", "01", "20", "SAMPLE", "extra.txt"),
 		absMain,
 	}
@@ -2121,7 +2121,7 @@ func TestFileHeaderId(t *testing.T) {
 		{"script sh", "build.sh", emojiText(EmojiFileScript) + "build"},
 		{"script bash", "deploy.bash", emojiText(EmojiFileScript) + "deploy"},
 		{"script ps1", "setup.ps1", emojiText(EmojiFileScript) + "setup"},
-		{"resource png", "🖼️🖼️logo.png", emojiText(EmojiFileResource) + "logo"},
+		{"resource png", "🖼️logo.png", emojiText(EmojiFileResource) + "logo"},
 		{"license", "LICENSE.md", emojiText(EmojiFileLicense) + "license"},
 	}
 	for _, tt := range tests {
@@ -2231,7 +2231,7 @@ func TestDeriveFileKind(t *testing.T) {
 		{"env config", ".env", FileKindConfig},
 		{"md docs", "README.md", FileKindDocs},
 		{"txt docs", "notes.txt", FileKindDocs},
-		{"png resource", "🖼️🖼️logo.png", FileKindResource},
+		{"png resource", "🖼️logo.png", FileKindResource},
 		{"svg resource", "icon.svg", FileKindResource},
 		{"wasm resource", "module.wasm", FileKindResource},
 		{"tpl template", "layout.tpl", FileKindTemplate},
@@ -2247,9 +2247,9 @@ func TestDeriveFileKind(t *testing.T) {
 		{"license md", "LICENSE.md", FileKindLicense},
 		{"licence txt", "LICENCE.txt", FileKindLicense},
 		{"gitignore config", ".gitignore", FileKindConfig},
-		{"dockerfile config", "🐳🐳Dockerfile", FileKindConfig},
+		{"dockerfile config", "🐳Dockerfile", FileKindConfig},
 		{"makefile config", "Makefile", FileKindConfig},
-		{"config suffix", "⚙️⚙️vite.config.ts", FileKindConfig},
+		{"config suffix", "⚙️vite.config.ts", FileKindConfig},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -11264,7 +11264,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "file resource",
 			kind:    "file",
-			data:    map[string]interface{}{"path": "🖼️🖼️logo.png", "kind": "resource"},
+			data:    map[string]interface{}{"path": "🖼️logo.png", "kind": "resource"},
 			wantID:  emojiText(EmojiFileResource) + "logo",
 			wantURI: "repo://file/" + emojiText(EmojiFileResource) + "logo",
 		},
@@ -15351,7 +15351,7 @@ func TestFolderPolicySkipsExcludedDirs(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	for _, dir := range []string{".git/objects", ".repo/cache", "node_modules/.cache"} {
+	for _, dir := range []string{".git/objects", ".🦑repo/cache", "node_modules/.cache"} {
 		os.MkdirAll(filepath.Join(tmpDir, dir), 0755)
 	}
 	bundles := []Bundle{}
@@ -17884,7 +17884,7 @@ func assertNoHookLogFiles(t *testing.T, tmpDir string) {
 	t.Helper()
 	logFiles := getLogFiles(t, tmpDir)
 	if len(logFiles) != 0 {
-		t.Fatalf("expected no hook log files under .repo/⚡, got %v", logFiles)
+		t.Fatalf("expected no hook log files under .🦑repo/⚡, got %v", logFiles)
 	}
 }
 
@@ -18415,8 +18415,8 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"locate", "locate main.go", ToolKindCodeSearch},
 		{"mlocate", "mlocate something", ToolKindCodeSearch},
 		{"ls", "ls -la", ToolKindCodeSearch},
-		{"ls piped", "ls .repo/ | head -20", ToolKindCodeSearch},
-		{"ls with redirect", "ls .repo/🎯/ 2>/dev/null | head -20 || ls .repo/ | head -20", ToolKindCodeSearch},
+		{"ls piped", "ls .🦑repo/ | head -20", ToolKindCodeSearch},
+		{"ls with redirect", "ls .🦑repo/🎯/ 2>/dev/null | head -20 || ls .🦑repo/ | head -20", ToolKindCodeSearch},
 		{"exa", "exa --long", ToolKindCodeSearch},
 		{"eza", "eza --tree", ToolKindCodeSearch},
 		{"tree", "tree -L 2", ToolKindCodeSearch},
@@ -18620,7 +18620,7 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 		{"find", "find . -name '*.go'"},
 		{"fd", "fd pattern"},
 		{"ls", "ls -la"},
-		{"ls piped", "ls .repo/ | head -20"},
+		{"ls piped", "ls .🦑repo/ | head -20"},
 		{"cat", "cat file.txt"},
 		{"head", "head -20 file.txt"},
 		{"tail", "tail -f log.txt"},

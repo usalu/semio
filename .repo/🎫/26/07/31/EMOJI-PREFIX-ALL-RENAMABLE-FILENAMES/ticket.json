@@ -1,9 +1,0 @@
-{
-  "title": "Emoji Prefix All Renamable Filenames",
-  "emoji": "📁",
-  "status": "closed",
-  "summary": "Renamed 3683 files under ✏️s, 🧰framework, 🌎hub, ♻️mit-bestand with emoji-prefixed basenames (locked Cargo.toml, script.ts, project.json, Next app-router files, hooks, binaries). Rewrote 522+ reference files; fixed Cargo build/bench paths, runVitest default to 🧪vitest.config.ts, double-prefix corruption, nx-plugin path, and LANG_EMOJI Dockerfile keys. Verified cargo metadata and nx show projects.",
-  "description": "Prefix renamable basenames under ✏️s, 🧰framework, 🌎hub, ♻️mit-bestand per plan emoji_prefix_files_395782b0.",
-  "goal": "🎯r2602🎯runningsketchpad",
-  "plan_id": "emoji_prefix_files_395782b0"
-}

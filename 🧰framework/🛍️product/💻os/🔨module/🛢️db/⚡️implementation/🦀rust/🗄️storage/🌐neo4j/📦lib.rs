@@ -1,7 +1,7 @@
 //! 🗄️ Db storage backend over neo4j: a `DbStorage` implementation (`db_storage`'s trait family —
 //! `WalStorage`/`SnapshotStorage`/`PayloadStorage`/`CatalogStorage`/`IndexStorage`/`LeaseStorage`)
 //! over a live Neo4j server via `neo4rs`. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, "storage substrate is pluggable"). Informed by the deleted
 //! `os-hub-storage-neo4j` crate's schema conventions (base64-encoded byte properties, `MERGE`
 //! `ON CREATE`/`ON MATCH` freshness flags for idempotent-create-with-conflict-detection).

@@ -1,6 +1,6 @@
 // #region Header
 /**
- * @emoji 🧵 `🟦🟦backbone-🟦worker.ts` — thin loader for the Rust WASM `store_worker`
+ * @emoji 🧵 `🟦backbone-worker.ts` — thin loader for the Rust WASM `store_worker`
  * actor (`store/worker/rs`). When the wasm package is unavailable (vitest/node), falls
  * back to the embedded TypeScript actor twin so dev workflows keep working.
  */

@@ -1,6 +1,6 @@
 //! 🗄️ `db_cluster` — sharding, ownership leases + epoch failover, follower WAL/snapshot
 //! replication, quorum durability, and read/preview routing for the `db` crate family. Frozen
-//! contract: `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! contract: `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`); per-crate detail in the approved plan's Part 2, `db_cluster` row.
 //!
 //! 🎯 Design choice (scope): this wave implements the mechanism every other cluster feature is

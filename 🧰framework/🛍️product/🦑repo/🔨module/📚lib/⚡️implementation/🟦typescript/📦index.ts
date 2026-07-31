@@ -471,7 +471,7 @@ export function isAdapterBoundaryFile(filePath: string, content: string): boolea
 /** 🔌Skips generated, test, and non-source paths for dependency-boundary lint. */
 export function shouldSkipDependencyBoundaryFile(filePath: string): boolean {
   const n = normalize(filePath).replaceAll("\\", "/");
-  if (n.includes("/node_modules/") || n.includes("/.repo/") || n.includes("/dist/") || n.includes("/target/")) {
+  if (n.includes("/node_modules/") || n.includes("/.🦑repo/") || n.includes("/dist/") || n.includes("/target/")) {
     return true;
   }
   const base = n.split("/").pop() ?? n;
@@ -573,7 +573,7 @@ export function dependencyBoundaryBreachesForBundleDir(repoRoot: string, bundleR
   const breachs: BreachRecord[] = [];
   const walk = (dir: string): void => {
     for (const ent of readdirSync(dir, { withFileTypes: true })) {
-      if (ent.name === "node_modules" || ent.name === "dist" || ent.name === ".repo") continue;
+      if (ent.name === "node_modules" || ent.name === "dist" || ent.name === ".🦑repo") continue;
       const abs = join(dir, ent.name);
       if (ent.isDirectory()) {
         walk(abs);
@@ -663,8 +663,8 @@ export async function runPolicyScript(
   console.log("[DEBUG] runPolicyScript starting for", scriptPath);
   const absScript = scriptPath.includes(":") || scriptPath.startsWith("/") || /^[A-Za-z]:\\/.test(scriptPath) ? scriptPath : join(repoRoot, scriptPath);
   const base = basename(absScript);
-  if (base !== "script.ts") {
-    throw new Error(`[policy-runner] expected script.ts, got ${base}`);
+  if (base !== "📜script.ts") {
+    throw new Error(`[policy-runner] expected 📜script.ts, got ${base}`);
   }
 
   console.log("[DEBUG] runPolicyScript parsing policy file export");
@@ -709,7 +709,7 @@ export async function runPolicyScript(
 
   const { mkdirSync, writeFileSync } = await import("node:fs");
   const sanitizeCacheKey = (id: string) => id.replace(/[^\w.-]+/g, "_").slice(0, 200);
-  const cacheDir = join(repoRoot, ".repo", "cache", "breaches");
+  const cacheDir = join(repoRoot, ".🦑repo", "⚡cache", "breaches");
   mkdirSync(cacheDir, { recursive: true });
   const cacheName = `${sanitizeCacheKey(entity.id)}.json`;
   const cachePath = join(cacheDir, cacheName);
@@ -789,8 +789,8 @@ export class ScriptRouter {
   /** 📋Human-readable usage line for this router. */
   usage(): string {
     const names = [...this.commands.keys()];
-    if (names.length === 0) return "bun ./script.ts policy";
-    return `bun ./script.ts <${names.join("|")}> [args…]`;
+    if (names.length === 0) return "bun ./📜script.ts policy";
+    return `bun ./📜script.ts <${names.join("|")}> [args…]`;
   }
 
   /** 📊Whether any subcommands are registered (policy-only bundles may have none). */
@@ -823,7 +823,7 @@ export type RunBundleScriptMainOptions = {
 export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
   const segments = process.argv.slice(2);
   if (await dispatchPolicyArgv(segments, scriptUrl)) return;
-  console.error("usage: bun ./script.ts policy");
+  console.error("usage: bun ./📜script.ts policy");
   process.exit(1);
 }
 
@@ -1254,9 +1254,9 @@ export function coverageEnabled(): boolean {
 
 export type CoverageKind = "js" | "rust" | "go" | "py" | "dotnet";
 
-/** 📊Per-toolchain lcov output directory under `.repo/coverage`, created on demand. */
+/** 📊Per-toolchain lcov output directory under `.🦑repo/coverage`, created on demand. */
 export function coverageDir(repoRoot: string, kind: CoverageKind): string {
-  const dir = join(repoRoot, ".repo", "coverage", kind);
+  const dir = join(repoRoot, ".🦑repo", "📊metrics", "coverage", kind);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -1771,7 +1771,7 @@ export function frameworkOsPlaygroundDefaultPort(catalog: readonly PlaygroundVar
   return renderer === "wgpu" ? row.ports.wgpu : row.ports.react;
 }
 
-/** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS plugin filter via the catalog. */
+/** @emoji 🎯 Resolves `bun ./📜script.ts dev …` segments to a framework OS plugin filter via the catalog. */
 export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundVariant[], segments: readonly string[]): { readonly plugin: string; readonly rest: readonly string[] } | null {
   if (segments.length === 0) return null;
   for (let len = segments.length; len >= 1; len--) {
@@ -1933,7 +1933,15 @@ export function resolveDevPort(host: string, preferredPort: number, maxAttempts 
   process.exit(1);
 }
 
-/** ▶️Vite dev via `bunx` with root-level `⚙️⚙️vite.config.ts`. */
+/** ⚙️ Resolves the Vite config filename present in `bundleRoot` (compound-emoji layout first). */
+function resolveViteConfigFileName(bundleRoot: string): string {
+  for (const name of ["⚙️vite.config.ts", "vite.config.ts"] as const) {
+    if (existsSync(join(bundleRoot, name))) return name;
+  }
+  return "⚙️vite.config.ts";
+}
+
+/** ▶️Vite dev via `bunx` with the package's Vite config (`⚙️vite.config.ts` / `vite.config.ts`). */
 export function runViteBunxDev(
   bundleRoot: string,
   segments: string[],
@@ -1985,7 +1993,7 @@ export function runViteBunxDev(
     if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
   }
   const wantStrictPort = opts.strictPort ?? true;
-  const viteArgs = ["vite", "--config", "⚙️⚙️vite.config.ts", "--host", host, "--port", String(port)];
+  const viteArgs = ["vite", "--config", resolveViteConfigFileName(bundleRoot), "--host", host, "--port", String(port)];
   if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
     viteArgs.push("--strictPort");
   }
@@ -2228,7 +2236,7 @@ const LANG_EMOJI: Record<string, string> = {
   Docker: "🐳",
 };
 
-const ULOC_EXCLUDE_DIRS = [".repo", "node_modules", "dist", "build", "target", ".git", ".nx", "coverage", ".cache", ".turbo", ".next", "out", "vendor", "third_party", "Carthage"];
+const ULOC_EXCLUDE_DIRS = [".🦑repo", "node_modules", "dist", "build", "target", ".git", ".nx", "coverage", ".cache", ".turbo", ".next", "out", "vendor", "third_party", "Carthage"];
 
 const MAX_METRICS_FILE_BYTES = 8 * 1024 * 1024;
 //#endregion Constants
@@ -2267,7 +2275,7 @@ function isMetricsLicenseTemplateFile(rel: string): boolean {
 /** 🗂️Whether paths must be excluded from uloc/metrics (dot paths, license templates, vendor, lockfiles). */
 export function shouldSkipPathForUloc(root: string, relPath: string): boolean {
   const rel = normalizeRepoPath(relPath);
-  if (!rel || rel === ".repo" || rel.startsWith(".repo/")) return true;
+  if (!rel || rel === ".🦑repo" || rel.startsWith(".🦑repo/")) return true;
   if (hasHiddenDotPathSegment(rel)) return true;
   if (isMetricsLicenseTemplateFile(rel)) return true;
   if (isMetricsLockOrGenerated(rel)) return true;
@@ -2966,7 +2974,7 @@ type Contributor = { alias: string; emoji: string; name: string; email: string; 
 const COUNTER_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🚩(\d+)$/;
 const BUNDLE_TAG_RE = /^(.+🎆\d{2}🌙\d{2}☀️\d{2})🚩$/;
 const NUMERIC_COUNTER_RE = /^(\d+)$/;
-const TICKET_JSON_RE = /^\.repo\/🎫\/.+\/ticket\.json$/;
+const TICKET_JSON_RE = /^\.🦑repo\/🎫tickets\/.+\/ticket\.json$/;
 export function digestMicroCommitMessage(message: string): string {
   return createHash("sha256").update(message.replace(/\r\n/g, "\n").trimEnd()).digest("hex");
 }
@@ -3050,7 +3058,7 @@ function gitEmail(root: string): string {
 
 function findContributor(root: string): Contributor | null {
   const email = gitEmail(root).toLowerCase();
-  const dir = join(root, ".repo", "🧑‍💻");
+  const dir = join(root, ".🦑repo", "🧑‍💻devs");
   if (!existsSync(dir)) return null;
   if (email) {
     for (const name of readdirSync(dir, { withFileTypes: true })) {
@@ -3086,7 +3094,7 @@ function loadLevel(root: string, contributor: Contributor, segments: string[]): 
   if (/\b(gp|gpush|push!|\+push)\b/.test(token)) return "prepare-and-commit-and-push";
   if (/\b(gc|commit!|\+commit)\b/.test(token)) return "prepare-and-commit";
   if (/\b(g\.|gprepare|prepare!|\+prepare)\b/.test(token)) return "prepare-only";
-  const path = join(root, ".repo", "🧑‍💻", contributor.alias, "micro-commit.json");
+  const path = join(root, ".🦑repo", "🧑‍💻devs", contributor.alias, "micro-commit.json");
   if (existsSync(path)) {
     const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
     if (j.level === "prepare-and-commit" || j.level === "prepare-and-commit-and-push" || j.level === "prepare-only") {
@@ -3610,8 +3618,8 @@ function writeMicroCommitHookFile(path: string, body: string): void {
 
 export function installMicroCommitGitHooks(root: string): void {
   const bunBin = resolveMicroCommitBunBin(root).replace(/\r/g, "");
-  mkdirSync(join(root, ".repo"), { recursive: true });
-  writeFileSync(join(root, ".repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
+  mkdirSync(join(root, ".🦑repo"), { recursive: true });
+  writeFileSync(join(root, ".🦑repo", MICRO_COMMIT_BUN_PIN), `${bunBin}\n`, "utf8");
   const hooksDir = join(root, ".git", "hooks");
   const repoHooksDir = join(root, "repo", "hooks");
   mkdirSync(hooksDir, { recursive: true });
@@ -3681,7 +3689,7 @@ export function runMicroCommit(root: string, segments: string[]): void {
     process.exit(0);
   }
   if (cmd !== "prepare") {
-    console.error("[micro-commit] usage: bun ./script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]");
+    console.error("[micro-commit] usage: bun ./📜script.ts micro-commit <stage|diff|prepare> [level tokens…] [-- bullets.txt]");
     process.exit(1);
   }
 
@@ -3783,7 +3791,7 @@ function commitStepsFromLevel(level: CommitLevel): CommitSteps {
 function loadCommitSteps(root: string, contributor: Contributor, segments: string[]): CommitSteps {
   const explicit = parseCommitSteps(segments);
   if (explicit.tag || explicit.squash || explicit.push) return explicit;
-  const path = join(root, ".repo", "🧑‍💻", contributor.alias, "commit.json");
+  const path = join(root, ".🦑repo", "🧑‍💻devs", contributor.alias, "commit.json");
   if (existsSync(path)) {
     const j = JSON.parse(readFileSync(path, "utf8")) as { level?: string };
     const allowed: CommitLevel[] = ["prepare-only", "prepare-and-tag", "prepare-and-tag-and-squash", "prepare-and-tag-and-squash-and-push"];
@@ -4481,7 +4489,7 @@ function emitCommitBundleAttributionNote(): void {
   console.error("commit: bundles and file→bundle mapping are NOT automatic — folder layout and bundle boundaries change between WIPs");
   console.error("commit: you must (1) read log for last bundle/WIP state, (2) read diff --stat + full diff for every path, (3) decide scopes/dates/bullets, then prepare stdin");
   console.error("commit: script only adds subject, uloc suffixes, sort order, footer, Signed-off-by — never invents bundles or bullets");
-  console.error("commit: prepare/check fail unless days→bundle, bundles→range, and languages→range (all ➕✏️➖🟰); run: bun ./script.ts commit check");
+  console.error("commit: prepare/check fail unless days→bundle, bundles→range, and languages→range (all ➕✏️➖🟰); run: bun ./📜script.ts commit check");
 }
 
 function emitCommitAnalysisHint(): void {
@@ -4611,7 +4619,7 @@ export function runCommit(root: string, segments: string[]): void {
   }
 
   if (cmd !== "prepare") {
-    console.error("[commit] usage: bun ./script.ts commit <log|diff|analyze|check|prepare> [ct|cs|cp|…] [-- body.txt]");
+    console.error("[commit] usage: bun ./📜script.ts commit <log|diff|analyze|check|prepare> [ct|cs|cp|…] [-- body.txt]");
     process.exit(1);
   }
 

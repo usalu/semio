@@ -1,0 +1,65 @@
+{
+  "name": "@semio-tech/compose-algorithm",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/dev/algorithm",
+        "command": "bun ./📜script.ts dev",
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        },
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/dev/algorithm",
+        "command": "bun ./📜script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/dev/algorithm",
+        "command": "bunx eslint --max-warnings 0 --config 🟦eslint.config.ts .",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/dev/algorithm",
+        "command": "bun ./📜script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/dev/algorithm",
+        "command": "bun ./📜script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/dev/algorithm",
+        "command": "bun ./📜script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "compose/dev/algorithm",
+        "command": "bun ./📜script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

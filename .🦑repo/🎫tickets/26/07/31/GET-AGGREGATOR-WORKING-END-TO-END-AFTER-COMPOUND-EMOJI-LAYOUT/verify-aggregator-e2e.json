@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "url": "http://127.0.0.1:6023/",
+  "at": "2026-07-31T08:30:32.127Z",
+  "shot": "/Users/ueli/Documents/semio/.🦑repo/🎫tickets/26/07/31/GET-AGGREGATOR-WORKING-END-TO-END-AFTER-COMPOUND-EMOJI-LAYOUT/aggregator-viewport.png",
+  "snapshot": {
+    "title": "Entwerfen mit Bestand · Aggregator",
+    "canvasCount": 2,
+    "hasAbbauAufbau": true,
+    "hasPerspective": true,
+    "glbProbe": {
+      "url": "/mesh/🧊hexagonal-cut-concrete-forest-left.glb",
+      "ok": true,
+      "status": 200,
+      "bytes": 86112,
+      "contentType": "model/gltf-binary"
+    }
+  },
+  "debugLogs": [],
+  "errors": []
+}

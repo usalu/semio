@@ -6,7 +6,7 @@ Shared fonts, cursors, lists, and UI chrome icons served at `/asset/*`.
 
 Chrome icons are committed SVGs under `icon/`. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
 
-Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts generate all`).
+Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./📜script.ts generate all`).
 
 ### Catalog icon ids
 

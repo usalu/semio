@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-os-dev",
   "version": "0.1.0",
-  "description": "framework · OS dev runner for S studio shell",
+  "description": "framework \u00b7 OS dev runner for S studio shell",
   "type": "module",
   "private": true,
   "bundleKind": "application",
@@ -38,6 +38,9 @@
   },
   "license": "LGPL-3.0-or-later",
   "exports": {
-    ".": "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./\ud83d\udce6index.ts"
+  },
+  "nx": {
+    "includedScripts": []
   }
 }

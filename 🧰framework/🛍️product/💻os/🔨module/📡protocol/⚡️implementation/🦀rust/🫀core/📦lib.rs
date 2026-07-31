@@ -2,7 +2,7 @@
 //! timestamps, the shared error/limit ceilings, the on-disk record-kind/flag vocabulary,
 //! lossless-by-construction scalar codecs, a deterministic dictionary builder/reader, and the
 //! crypto trait seam every other `protocol_*` crate path-deps on. Frozen contract:
-//! `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_core` + its
+//! `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_core` + its
 //! `## Amendment` section).
 
 //#region 🔖Errors

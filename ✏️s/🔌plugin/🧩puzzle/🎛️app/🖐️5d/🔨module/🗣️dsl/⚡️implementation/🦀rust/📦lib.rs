@@ -67,7 +67,7 @@ mod tests {
             // — a pre-existing DSL-text/fixture staleness issue unrelated to pack (confirmed via
             // `git status`: neither this fixture nor `dsl/core`/`dsl/derive` have any pending
             // changes in this session; likely fallout of concurrent syntax-convergence work per
-            // `.repo/🎫/26/07/27/UNIFIED-TOKEN-EFFICIENT-DSL-SYNTAX-ACROSS-ALL-TECHNOLOGIES/
+            // `.🦑repo/🎫tickets/26/07/27/UNIFIED-TOKEN-EFFICIENT-DSL-SYNTAX-ACROSS-ALL-TECHNOLOGIES/
             // wave3-final-status.md`, which recorded this exact test green earlier in the same
             // session). Out of scope for the pack/document-layer ticket either way — this was a
             // pre-existing failure before the constitutional-crate split too.

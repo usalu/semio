@@ -4,7 +4,7 @@
 //! `IndexStorage`, `LeaseStorage`) directly against one `rusqlite::Connection`, matching
 //! `db_storage::FsStorage`'s semantics byte-for-byte (same error taxonomy, same idempotence/CAS
 //! laws) but persisted in SQLite tables instead of files. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯 Design choice: this crate links the SAME bundled `rusqlite`/`libsqlite3-sys` version

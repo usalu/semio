@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/pkg/flow_core.js",
-    "./pkg/flow_core.js": "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/pkg/flow_core.js"
+    ".": "./pkg/flow_core.js",
+    "./pkg/flow_core.js": "./pkg/flow_core.js"
   }
 }

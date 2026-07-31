@@ -6,14 +6,14 @@
   "description": "ui · react",
   "type": "module",
   "exports": {
-    ".": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/📦index.tsx",
-    "./🔣components.json": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🔣components.json",
-    "./🎨globals.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨globals.css",
-    "./🎨globals-🎨ui.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨globals-ui.css",
-    "./🎨theme.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨theme.css",
-    "./tailwind.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨tailwind.config.ts",
-    "./postcss.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨postcss.config.ts",
-    "./eslint.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🟦eslint.config.ts"
+    ".": "./📦index.tsx",
+    "./🔣components.json": "./🔣components.json",
+    "./🎨globals.css": "./🎨globals.css",
+    "./🎨globals-🎨ui.css": "./🎨globals-ui.css",
+    "./🎨theme.css": "./🎨theme.css",
+    "./tailwind.config": "./🎨tailwind.config.ts",
+    "./postcss.config": "./🎨postcss.config.ts",
+    "./eslint.config": "./🟦eslint.config.ts"
   },
   "targets": {
     "lint": {

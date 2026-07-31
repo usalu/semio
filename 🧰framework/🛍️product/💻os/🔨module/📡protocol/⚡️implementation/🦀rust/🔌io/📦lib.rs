@@ -1,7 +1,7 @@
 //! 🎞️ Protocol native `.spr` file lifecycle: create/open/resume-append/read-only-open over a real
 //! file (wrapping `pack_io::FilePackSource`/`FilePackSink`), `.sprc` sidecar checkpoint bodies,
 //! forward-scan recovery, poll-based live tailing, and physical compaction. Frozen contract:
-//! `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_io`).
+//! `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_io`).
 //!
 //! Whole crate is native-only (`std::fs`) and gated behind `#[cfg(not(target_arch = "wasm32"))]`
 //! so it still compiles — as an effectively-empty crate — for a `wasm32-unknown-unknown` target

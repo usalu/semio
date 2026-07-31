@@ -6,7 +6,7 @@
 //! the 49 app document kinds is explicitly out of scope here; see `pack help`.
 //!
 //! See the `## pack_cli` section of the wave-0 contract at
-//! `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`.
+//! `.🦑repo/🎫tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`.
 
 use std::collections::HashMap;
 use std::path::Path;

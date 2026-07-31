@@ -1,7 +1,7 @@
 //! 🗄️ `db_preview` — ephemeral, speculative document overlays ("previews"): identity, base
 //! frontier, lifecycle (`Active` → `Superseded`/`Withdrawn`/`Committed`/`Rejected`/`Expired`),
 //! coalescing latest-per-`(actor, key)`, TTL, rebase-or-stale reconciliation on frontier advance,
-//! and admission budgets. Frozen contract: `.repo/🎫/26/07/27/`
+//! and admission budgets. Frozen contract: `.🦑repo/🎫tickets/26/07/27/`
 //! `INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md` (`## db crate family`,
 //! `db_preview` row).
 //!

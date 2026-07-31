@@ -1,6 +1,6 @@
 //! 📈 Criterion benchmarks for `kernel_3d_brepkit`'s hot-path BREP operations.
 //!
-//! Run via `nx run @kernel/3d-brepkit:bench` (`bun ./script.ts bench`). Each group is
+//! Run via `nx run @kernel/3d-brepkit:bench` (`bun ./📜script.ts bench`). Each group is
 //! parameterized over a scaling value (point/edge/face count) to reveal where an
 //! operation's cost curve goes superlinear, not just a single-point timing.
 

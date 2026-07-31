@@ -21992,7 +21992,7 @@ mod tests {
     #[test]
     fn metabolism_nakagin_install_hydrates_connections() {
         block_on(async {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/24/FIX-NAKAGIN-DESIGN-NOT-SHOWING-PIECES/assembled-metabolism.kit.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.🦑repo/🎫tickets/26/06/24/FIX-NAKAGIN-DESIGN-NOT-SHOWING-PIECES/assembled-metabolism.kit.json");
             if !path.exists() {
                 return;
             }

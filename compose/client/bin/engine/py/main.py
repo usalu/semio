@@ -1997,7 +1997,7 @@ _DIAGRAM_APP_RESOURCE_META = {"ui": {"resourceUri": _DIAGRAM_APP_RESOURCE_URI}, 
 
 
 def _mcp_app_html_resource_meta() -> dict[str, typing.Any]:
-    """🎁Resource _meta for MCP App HTML: hosts apply _meta.ui.csp to the sandbox (see .repo/✍️/mcp-app.md)."""
+    """🎁Resource _meta for MCP App HTML: hosts apply _meta.ui.csp to the sandbox (see .🦑repo/✍️/mcp-app.md)."""
     origins = [
         f"http://127.0.0.1:{PORT}",
         f"http://localhost:{PORT}",
@@ -4146,7 +4146,7 @@ class TestMcp:
             assert tools[name].meta["ui"]["resourceUri"] == "ui://semio/diagram-viewer"
 
     def test_mcp_app_html_resources_include_ui_csp_meta(self):
-        """🔖MCP App HTML resources expose _meta.ui.csp so hosts allow network access to the engine (see .repo//mcp-app.md)."""
+        """🔖MCP App HTML resources expose _meta.ui.csp so hosts allow network access to the engine (see .🦑repo//mcp-app.md)."""
         resources = {str(r.uri): r for r in engine.mcp._resource_manager.list_resources()}
         for uri in ("ui://semio/design-viewer", "ui://semio/kit-viewer", "ui://semio/scene-viewer", "ui://semio/diagram-viewer"):
             r = resources[uri]

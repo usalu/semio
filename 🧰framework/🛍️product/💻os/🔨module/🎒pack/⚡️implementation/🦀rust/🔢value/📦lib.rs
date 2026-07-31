@@ -7,7 +7,7 @@
 //! points every other `pack_*`/`vcs`/`dsl_derive` crate calls through.
 //!
 //! See the `## pack_value` section of the wave-0 contract at
-//! `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md` for the binding
+//! `.🦑repo/🎫tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md` for the binding
 //! byte layout this module implements against.
 
 use dsl_schema::{DslValue, FieldSpec, FieldValue, RecordSpec, RecordValue, Shape, WireNode, WireValue};

@@ -2,7 +2,7 @@
 /** @emoji 🖥️ OS dev runner — boots the Rust program framework with a selectable renderer. */
 // #endregion 🧲Header
 
-import "./🎨🎨globals.css";
+import "./🎨globals.css";
 
 export type { PluginBuildTarget } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦plugins.ts";
 export { PLUGIN_BUILD_TARGETS, PROGRAM_TARGETS, pluginModuleUrl } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦plugins.ts";

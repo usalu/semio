@@ -3,7 +3,7 @@
 //! accumulate) underneath typed per-kind index builders for all ten kinds (command, actor-seq,
 //! frontier, touched-region, inverse, commit, conflict, projection, full-text, preview — see
 //! `IndexKind`'s doc). Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`) and Part 2 of the approved plan.
 //!
 //! 🎯 Design choice: this crate has no opinion on what a key/value byte string *means* — that's

@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv } from "../../../../../../../script.ts";
+import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv } from "../../../../../../../📜script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
@@ -19,7 +19,7 @@ import {
   loadFrameworkOsPlaygroundCatalog,
   playgroundPlayViteDefine,
 } from "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
-import { playgroundStaticSiteBuildOptions } from "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦🟦vite-elements-assets.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
@@ -383,7 +383,7 @@ describe("micro-commit", () => {
     expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, "repo/AGENTS.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, "repo/CHANGELOG.md")).toBe(false);
-    expect(shouldSkipPathForUloc(root, ".repo/cache/x")).toBe(true);
+    expect(shouldSkipPathForUloc(root, ".🦑repo/⚡cache/x")).toBe(true);
     expect(shouldSkipPathForUloc(root, "framework/README.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, "puzzle/3d/src/foo.ts")).toBe(false);
   });
@@ -439,7 +439,7 @@ describe("micro-commit", () => {
     const prev = process.env.REPO_ROOT;
     process.env.REPO_ROOT = root;
     const stdin = ["🫡Only micro-commit skill docs"].join("\n");
-    const r = spawnSync(process.execPath, ["./script.ts", "micro-commit", "prepare"], {
+    const r = spawnSync(process.execPath, ["./📜script.ts", "micro-commit", "prepare"], {
       cwd: root,
       input: stdin,
       encoding: "utf8",
@@ -464,7 +464,7 @@ describe("micro-commit", () => {
       const hook = readFileSync(join(root, ".git/hooks/post-commit"), "utf8");
       expect(hook).toContain("compose_micro_commit_wipe");
       expect(hook).not.toContain("\r");
-      expect(existsSync(join(root, ".repo/compose-micro-commit-bun"))).toBe(true);
+      expect(existsSync(join(root, ".🦑repo/compose-micro-commit-bun"))).toBe(true);
       expect(renderMicroCommitGitHook("post-commit")).toContain("#!/usr/bin/env sh");
     } finally {
       rmSync(root, { recursive: true, force: true });
@@ -662,7 +662,7 @@ describe("package boundary guards", () => {
   });
 
   test("legacy package aliases are absent from source imports", () => {
-    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.repo/**", "--glob", "!**/🧪index.test.ts"], {
+    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.🦑repo/**", "--glob", "!**/🧪index.test.ts"], {
       cwd: repoRoot,
       encoding: "utf8",
     });

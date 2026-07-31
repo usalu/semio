@@ -19,6 +19,6 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "../../../../../../../✏️s/🔌plugin/📐cad/🧩extension/🔥aec-building-energy/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   }
 }

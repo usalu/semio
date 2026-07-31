@@ -2,7 +2,7 @@
 //! grammar twin (built directly on `dsl_schema`, never on `vcs`), per-kind binary payload codecs
 //! (built on `protocol_core::scalar` + `protocol_format`'s frame writer/reader), the whole-file
 //! codec, a streaming append API, and a lazy forward/reverse scan API. Frozen contract:
-//! `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_history`).
+//! `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_history`).
 //!
 //! Op payloads are opaque validated bytes to this crate — it stores, hashes, frames, and indexes
 //! them, but never interprets operation semantics (that is `protocol_command`'s concern, a sibling

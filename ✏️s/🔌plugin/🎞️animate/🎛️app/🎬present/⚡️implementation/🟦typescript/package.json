@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "../../../../../../../✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

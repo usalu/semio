@@ -4,7 +4,7 @@
 //! (with two defaulted trait methods and a `reconcile` return-type change, both called out inline)
 //! from `vcs/rs/lib.rs`'s `🔖Operation`/`🔖CollectionDiff`/`🔖CollectionOperation` regions and
 //! `framework/core`. Frozen contract:
-//! `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_command`.
+//! `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_command`.
 //!
 //! Op payloads stay schema-opaque here exactly like `protocol_history`: this crate never parses or
 //! interprets an `Op`'s fields, only threads it through the trait seams a technology implements.

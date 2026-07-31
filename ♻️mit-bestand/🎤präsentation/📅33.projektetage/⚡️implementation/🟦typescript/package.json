@@ -28,7 +28,7 @@
   },
   "bundleKind": "application",
   "exports": {
-    ".": "../../../../../♻️mit-bestand/🎤präsentation/📅33.projektetage/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   },
   "semio": {
     "app": {

@@ -16,6 +16,6 @@
   },
   "bundleKind": "asset",
   "exports": {
-    ".": "../../../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   }
 }

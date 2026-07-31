@@ -2,7 +2,7 @@
 //! concurrent `protocol_command::OperationDiff` pairs, replacing `store::merge_concurrent_diffs`
 //! (`vcs/rs/lib.rs`'s `🔖MergeStrategy` region), which today collapses all five declared
 //! strategies to a blind `absorb()` regardless of what the operation actually declared. Frozen
-//! contract: `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §
+//! contract: `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §
 //! `protocol_crdt`.
 //!
 //! # Design note (how five strategies come out of one generic signature)

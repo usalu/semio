@@ -4,7 +4,7 @@
 //! `P` is or how an op applies to it — `protocol_history::HistoryEdit`'s `ops: Vec<OpPayload>` stay
 //! opaque text/binary blobs all the way through; the `apply_edit` closure is where a downstream
 //! technology (its own `dsl`-generated `Operation` impls) turns them into real mutations. Frozen
-//! contract: `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_materialize`).
+//! contract: `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_materialize`).
 //!
 //! @emoji 🧭 `REC_PROJECTION` bodies (a complete `.spk` or dsl-text snapshot) are just as opaque to
 //! this crate as op payloads are — it stores/hashes/frames them, never decodes them; only

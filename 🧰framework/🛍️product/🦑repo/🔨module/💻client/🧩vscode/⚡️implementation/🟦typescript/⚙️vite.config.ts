@@ -34,7 +34,7 @@ const __dirname = path.dirname(__filename);
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, "🟦🟦extension.ts"),
+      entry: path.resolve(__dirname, "🟦extension.ts"),
       formats: ["cjs"],
       fileName: () => "extension",
     },

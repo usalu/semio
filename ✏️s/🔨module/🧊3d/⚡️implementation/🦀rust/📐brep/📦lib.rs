@@ -1,5 +1,5 @@
 //! 🔩 Brepkit-backed implementation of [`kernel_3d_engine::BrepKernel`] (being replaced in place by
-//! a dependency-free native kernel — see `.repo/🎫/26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`).
+//! a dependency-free native kernel — see `.🦑repo/🎫tickets/26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`).
 //! The native modules below are additive: they compile alongside the brepkit wrapper until the
 //! ticket's Flip phase swaps consumers over and deletes the wrapper.
 

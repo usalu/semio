@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "../../../../../🧰framework/🔨module/✍️editor/⚡️implementation/🦀rust/pkg/framework_editor.js",
-    "./pkg/framework_editor.js": "../../../../../🧰framework/🔨module/✍️editor/⚡️implementation/🦀rust/pkg/framework_editor.js"
+    ".": "./pkg/framework_editor.js",
+    "./pkg/framework_editor.js": "./pkg/framework_editor.js"
   },
   "bundleKind": "library"
 }

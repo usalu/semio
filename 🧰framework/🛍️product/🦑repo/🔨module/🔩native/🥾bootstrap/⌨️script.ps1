@@ -423,7 +423,7 @@ function Get-Neo4jSchemaUri {
     )
 
     $rootUri = ($RepoRoot -replace "\\", "/")
-    return "file:///$rootUri/.repo/\uD83D\uDEC2/$Technology.cypher"
+    return "file:///$rootUri/.🦑repo/\uD83D\uDEC2/$Technology.cypher"
 }
 
 function Get-RunningNeo4jDesktopDbmsHome {
@@ -698,7 +698,7 @@ function Ensure-NativeNeo4j {
     $graphDb = Resolve-NativeNeo4jGraphDatabase -RepoRoot $RepoRoot
     Write-Step "Neo4j graph database for imports (after optional CREATE DATABASE compose): $graphDb"
 
-    Write-Step "Neo4j: clearing graph in $graphDb, then loading generated .repo/🛂/*.cypher (from `bun run generate`) …"
+    Write-Step "Neo4j: clearing graph in $graphDb, then loading generated .🦑repo/🛂manifest/*.cypher (from `bun run generate`) …"
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "MATCH (n) DETACH DELETE n;" | Out-Null
 
     foreach ($technology in $technologies) {
@@ -717,7 +717,7 @@ function Ensure-NativeNeo4j {
         $env:NEO4J_DATABASE = $graphDb
         Push-Location $RepoRoot
         try {
-            & bun "./script.ts" purge neo4j | Out-Null
+            & bun "./📜script.ts" purge neo4j | Out-Null
             if ($LASTEXITCODE -ne 0) {
                 Write-Step "Neo4j legacy-property prune exited with code $LASTEXITCODE (cypher-shell may be missing)."
             }

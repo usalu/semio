@@ -1,5 +1,5 @@
 //! 🧵 WASM backbone worker — browser-side `DocumentHost` actor relaying the same protocol as
-//! `framework/product/os/core/js/🟦🟦backbone-🟦worker.ts`, without materializing projections.
+//! `framework/product/os/core/js/🟦backbone-worker.ts`, without materializing projections.
 
 use store_sync::{
     DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentHost, PersistenceBinding,

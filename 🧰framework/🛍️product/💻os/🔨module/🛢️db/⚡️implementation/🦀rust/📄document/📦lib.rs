@@ -4,7 +4,7 @@
 //! overlay), `db_wal` (durability), `db_storage` (the pluggable substrate), and `protocol`
 //! (`OperationEnvelope`/`OperationDiff`) into `DocumentEngine`, the crate's central type, plus a
 //! thin `db_actor`-mailbox wrapper (`DocumentAuthority`) around it. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_document` row).
 //!
 //! 🎯 Design choice (compatibility surface — re-checked against `db_engine`'s live state, which

@@ -177,7 +177,7 @@ impl Operation<Puzzle2dProjection> for Puzzle2dOperation {
 // #region 🔖ValueBridge
 // 🌉 `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture (out of scope for this ticket — see
-// `.repo/🎫/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dOperation`/`Puzzle2dDiff`
+// `.🦑repo/🎫tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dOperation`/`Puzzle2dDiff`
 // onto that `Value` boundary too keeps `puzzle2d_document_delta_operations(&Value, &Value)` and the
 // plugin's `DocumentApp::Projection = Value` compiling unchanged: `apply` serializes the typed
 // payload back to JSON and splices it into the id-keyed array/field exactly like the pre-migration

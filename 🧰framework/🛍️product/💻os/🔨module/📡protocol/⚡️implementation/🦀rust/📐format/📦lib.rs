@@ -4,7 +4,7 @@
 //! Owns record framing (uniform frame grammar for every record kind, including commits), the
 //! commit-chain hash algorithm, zero-copy forward/reverse frame cursors, the streaming writer, and
 //! crash-recovery (fast commit-chain probe, falling back to a bounded forward scan). Frozen
-//! contract: `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_format`).
+//! contract: `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_format`).
 //!
 //! Design note (kind-agnostic cursors): this crate never interprets what a record `kind` byte
 //! *means* beyond `REC_COMMIT` (which it must parse to maintain the chain) — deciding whether an

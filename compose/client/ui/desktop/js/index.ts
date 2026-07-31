@@ -297,7 +297,7 @@ app.whenReady().then(async () => {
 
   // #region DesktopIntegrationTests
   // VS Code-style integration tests: COMPOSE_EXTENSION_TESTS_PATH points at an ESM file that exports run(ctx).
-  // Specs: Mirrors extensionTestsPath; launcher is bun ./script.ts test (see .compose-test.mjs).
+  // Specs: Mirrors extensionTestsPath; launcher is bun ./📜script.ts test (see .compose-test.mjs).
   const extensionTestsPath = process.env.COMPOSE_EXTENSION_TESTS_PATH?.trim();
   if (extensionTestsPath) {
     try {

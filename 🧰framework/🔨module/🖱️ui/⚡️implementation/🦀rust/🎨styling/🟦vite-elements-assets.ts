@@ -623,7 +623,7 @@ function faviconVitePlugins(content: FaviconContent): Plugin[] {
 /** @emoji 🔖 Vite: serve and copy semio emblem favicons at `/favicon.svg` and `/🖼️favicon.ico`. */
 export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
   const favicons = semioFaviconSources(repoRoot);
-  return faviconVitePlugins({ svgMarkup: semioFaviconSvgMarkup(favicon🔣s.svg), icoPath: favicons.ico });
+  return faviconVitePlugins({ svgMarkup: semioFaviconSvgMarkup(favicons.svg), icoPath: favicons.ico });
 }
 
 /** @emoji 🏷️ The host-chrome surface of a shell brand (structural subset of `framework/core/js`'s `ShellBrand`, so this styling layer never imports framework types). */
@@ -655,6 +655,43 @@ function staticDeployMarkerVitePlugins(cnameHost: string | undefined): Plugin[] 
       },
     },
   ];
+}
+
+/** @emoji 🌐 Vite: treat hand-authored `🌐index.html` as the app index (`/` + build input). Vite's default
+ * `index.html` name does not match the constitutional emoji entry filename. */
+export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐index.html"): Plugin {
+  const entry = `/${fileName}`;
+  return {
+    name: "semio-emoji-index-html",
+    enforce: "pre",
+    config() {
+      return {
+        build: {
+          rollupOptions: {
+            input: resolve(rootDir, fileName),
+          },
+        },
+      };
+    },
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const url = req.url ?? "";
+        if (url === "/" || url.startsWith("/?")) {
+          req.url = `${entry}${url.slice(1)}`;
+        }
+        next();
+      });
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        const url = req.url ?? "";
+        if (url === "/" || url.startsWith("/?")) {
+          req.url = `${entry}${url.slice(1)}`;
+        }
+        next();
+      });
+    },
+  };
 }
 
 /** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
@@ -1402,11 +1439,20 @@ function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAss
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
   return (req, res, next) => {
-    if (!req.url?.startsWith(route)) {
+    const rawUrl = req.url ?? "";
+    const pathOnly = rawUrl.split(/[?#]/, 1)[0] ?? "";
+    let decodedPath = pathOnly;
+    try {
+      decodedPath = decodeURIComponent(pathOnly);
+    } catch {
       next();
       return;
     }
-    const rel = decodeURIComponent(req.url.slice(route.length).split(/[?#]/, 1)[0] ?? "");
+    if (!decodedPath.startsWith(route)) {
+      next();
+      return;
+    }
+    const rel = decodedPath.slice(route.length);
     const filePath = resolve(fixtureRoot, rel);
     const relToRoot = relative(fixtureRoot, filePath);
     if (relToRoot.startsWith("..") || isAbsolute(relToRoot) || !existsSync(filePath) || !statSync(filePath).isFile()) {

@@ -3,7 +3,7 @@
 //! db_projection, db_query, db_preview, db_security, db_document, db_compact, db_sync,
 //! db_cluster, db_observe, db_engine`, plus the optional `db_storage_sqlite`/`db_storage_postgres`/
 //! `db_storage_neo4j` backends) behind one crate. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, "Stable API" block).
 //!
 //! 🎯 Design choice (layout): the frozen `Database`/`DocumentHandle` API and its companion types

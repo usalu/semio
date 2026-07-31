@@ -619,10 +619,10 @@ pub mod catalog {
         let playgrounds = generate_playground_registry(root);
         let out_dir = generated_dir(root);
         fs::create_dir_all(&out_dir)?;
-        fs::write(out_dir.join("🔣🔣plugins.json"), emit_plugins_json(&entries))?;
-        fs::write(out_dir.join("🟦🟦plugins.ts"), emit_plugins_ts(&entries))?;
-        fs::write(out_dir.join("🔣🔣playgrounds.json"), emit_playgrounds_json(&playgrounds))?;
-        fs::write(out_dir.join("🟦🟦playgrounds.ts"), emit_playgrounds_ts(&playgrounds))?;
+        fs::write(out_dir.join("🔣plugins.json"), emit_plugins_json(&entries))?;
+        fs::write(out_dir.join("🟦plugins.ts"), emit_plugins_ts(&entries))?;
+        fs::write(out_dir.join("🔣playgrounds.json"), emit_playgrounds_json(&playgrounds))?;
+        fs::write(out_dir.join("🟦playgrounds.ts"), emit_playgrounds_ts(&playgrounds))?;
         Ok((entries.len(), playgrounds.len()))
     }
 
@@ -632,10 +632,10 @@ pub mod catalog {
         let playgrounds = generate_playground_registry(root);
         let out_dir = generated_dir(root);
         let expected = [
-            ("🔣🔣plugins.json", emit_plugins_json(&entries)),
-            ("🟦🟦plugins.ts", emit_plugins_ts(&entries)),
-            ("🔣🔣playgrounds.json", emit_playgrounds_json(&playgrounds)),
-            ("🟦🟦playgrounds.ts", emit_playgrounds_ts(&playgrounds)),
+            ("🔣plugins.json", emit_plugins_json(&entries)),
+            ("🟦plugins.ts", emit_plugins_ts(&entries)),
+            ("🔣playgrounds.json", emit_playgrounds_json(&playgrounds)),
+            ("🟦playgrounds.ts", emit_playgrounds_ts(&playgrounds)),
         ];
         let mut problems: Vec<String> = expected
             .iter()
@@ -648,7 +648,7 @@ pub mod catalog {
 
     /// 📖 Reads the committed catalog (empty if it has never been generated).
     pub fn load_playground_catalog(root: &Path) -> Vec<PlaygroundEntry> {
-        let path = generated_dir(root).join("🔣🔣playgrounds.json");
+        let path = generated_dir(root).join("🔣playgrounds.json");
         let Ok(text) = fs::read_to_string(path) else { return Vec::new() };
         let Ok(raw) = serde_json::from_str::<Vec<serde_json::Value>>(&text) else { return Vec::new() };
         raw.into_iter()
@@ -1181,7 +1181,7 @@ pub fn run(argv: Vec<String>) -> i32 {
             plugin_registry_command::run(&root, parsed.segments.get(1).map(String::as_str).unwrap_or("generate"))
         }
         _ => {
-            let mut forward = vec!["./script.ts".to_string(), parsed.verb.clone()];
+            let mut forward = vec!["./📜script.ts".to_string(), parsed.verb.clone()];
             forward.extend(parsed.segments.clone());
             let forward_refs: Vec<&str> = forward.iter().map(String::as_str).collect();
             proc::spawn_inherit("bun", &forward_refs, &root, &[])
@@ -1190,7 +1190,7 @@ pub fn run(argv: Vec<String>) -> i32 {
 }
 
 fn print_usage() {
-    eprintln!("semio — semio monorepo orchestrator\n\nUsage:\n  semio                 interactive TUI dashboard (requires a TTY)\n  semio dev <variant…>  start a plugin dev session\n  semio catalog         list playgrounds\n  semio plugin registry generate|check\n  semio <verb> …        forwarded to `bun ./script.ts <verb> …`");
+    eprintln!("semio — semio monorepo orchestrator\n\nUsage:\n  semio                 interactive TUI dashboard (requires a TTY)\n  semio dev <variant…>  start a plugin dev session\n  semio catalog         list playgrounds\n  semio plugin registry generate|check\n  semio <verb> …        forwarded to `bun ./📜script.ts <verb> …`");
 }
 // #endregion 🔖Dispatch
 

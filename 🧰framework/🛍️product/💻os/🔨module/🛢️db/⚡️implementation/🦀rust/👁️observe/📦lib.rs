@@ -3,7 +3,7 @@
 //! histogram), a bounded span registry, a component health registry, and a runtime determinism
 //! verifier (cross-checks independently-produced state-hash streams for the same document, e.g.
 //! a live execution against a replay). Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯 Design choice: every `db_*` crate below `db_document` takes `&dyn db_core::Emit` /

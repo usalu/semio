@@ -4,7 +4,7 @@
 //! command-kind matrix for structural (non-region-derived) commutativity knowledge, constraint
 //! conflicts (unique name, single parent, non-overlapping intervals — see `Constraint`), and
 //! deterministic resolution planning derived from `protocol::ConflictRule`. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_conflict` row).
 //!
 //! 🎯 Design choice: per the contract's hard rule ("command payloads are opaque

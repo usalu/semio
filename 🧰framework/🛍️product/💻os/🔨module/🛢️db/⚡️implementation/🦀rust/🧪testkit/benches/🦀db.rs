@@ -5,7 +5,7 @@
 //! full-from-genesis replay), and `preview_commit` (publishing previews must never delay a real
 //! commit — `db_preview`'s "never durable" law, structurally exercised by
 //! `db_testkit::assert_preview_never_durable`, has a latency-shaped counterpart here). Run via
-//! `nx run @db/testkit:bench` (`bun ./script.ts bench`).
+//! `nx run @db/testkit:bench` (`bun ./📜script.ts bench`).
 
 use criterion::{black_box, criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
 use db_testkit::WorkloadGen;

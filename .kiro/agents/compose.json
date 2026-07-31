@@ -5,7 +5,7 @@
   "mcpServers": {
     "repo": {
       "command": "bun",
-      "args": ["./script.ts", "dev", "mcp", "stdio", "kiro"]
+      "args": ["./📜script.ts", "dev", "mcp", "stdio", "kiro"]
     }
   },
   "tools": ["*"],

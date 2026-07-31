@@ -6,7 +6,7 @@
 //! `pack_async` style (dual blocking/async, no `tokio`), an `Actor`/`ActorContext` execution
 //! model, and `OneForOne`/`OneForAll`/`Escalate` supervision with generation bumping and
 //! `catch_unwind`-based poison isolation. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`) and Part 2 of the approved plan.
 //!
 //! 🎯 Design choice: only the mailbox core (`Envelope`, `Address`, `Receiver`, `SendFuture`,

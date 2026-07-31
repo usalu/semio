@@ -876,7 +876,7 @@ async function handleReindex(jobs: PgBoss.Job<ReindexJob>[]) {
 // #endregion 🌊Jobs
 
 // #region 🌩️Main
-/** @emoji 🌩️ Starts pg-boss workers (separate process entry via `🟦🟦worker.ts`). */
+/** @emoji 🌩️ Starts pg-boss workers (separate process entry via `🟦worker.ts`). */
 export async function runRepoServerWorker(): Promise<void> {
   const boss = new PgBoss(DATABASE_URL);
 

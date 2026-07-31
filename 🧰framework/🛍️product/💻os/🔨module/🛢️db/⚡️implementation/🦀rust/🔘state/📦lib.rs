@@ -4,7 +4,7 @@
 //! (`blake3`) primitives and `TouchedRegion` descriptors the rest of the family builds document
 //! overlays and conflict detection on top of. No `im`/`im-rc`/`rpds`/`imbl` dependency — every
 //! structure below is `Rc`-based path-copying, written against the frozen contract at
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_state` row).
 //!
 //! 🎯 Design choice: every structure clones in O(1) (an `Rc` bump) regardless of whether its

@@ -14,7 +14,7 @@ pub mod component {
 
     generate!({
         world: "plugin-world",
-        path: "wit",
+        path: "📜wit",
     });
 
     use exports::semio::framework::plugin::Guest;
@@ -1968,7 +1968,7 @@ pub fn meta(actor: &str) -> ActionMeta {
 /// `app/{slot}` when the plugin has exactly one app, or `app/<name>/{slot}` per app for multi-app
 /// plugins) each carry all seven constitutional-crate slots (`rs`, `engine`, `dsl`, `op`, `pack`,
 /// `protocol`, `ui`). Invoked automatically by `semio_plugin!`'s generated sanity test — see
-/// `.repo/🎫/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`.
+/// `.🦑repo/🎫tickets/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`.
 /// The bundle crate itself lives at `s/plugin/<p>/rs` — both `../app` and `../../app` are tried
 /// since a manual `#[path]`-included bundle could shift the depth by one. A no-op outside
 /// `s/plugin/` (e.g. `semio_plugin!`'s own in-crate macro tests, which have no real app tree) — the
@@ -3571,7 +3571,7 @@ pub trait DocumentApp: Send + 'static {
     }
 }
 
-/// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/📜📜world.wit`): `descriptor` is the
+/// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/📜world.wit`): `descriptor` is the
 /// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
 /// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port workflow
 /// via `export_media`/`import_media`) — `consume-media`/`produce-media` operate at the whole-document
@@ -3700,7 +3700,7 @@ pub trait PluginApp: Send {
     fn media_fingerprint(&mut self, _port: &str) -> Result<MediaFingerprint, MediaError> {
         Err(MediaError::NotImplemented)
     }
-    /// 🎞️ ABI-level media artifact request for one port (`framework/wit/📜📜world.wit`'s `produce-media`).
+    /// 🎞️ ABI-level media artifact request for one port (`framework/wit/📜world.wit`'s `produce-media`).
     /// Default: a whole-document passthrough (`wire: Document{schema: document_schema()}` wrapping
     /// `document_pack()`'s pack+spr bytes via `store::encode_document_pack_bytes`) — the fallback every
     /// `PluginApp` gets for free without declaring any `media_ports()`. Apps whose media output isn't
@@ -3721,7 +3721,7 @@ pub trait PluginApp: Send {
             data: store::encode_document_pack_bytes(&files.pack, &files.spr),
         })
     }
-    /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/📜📜world.wit`'s `consume-media`).
+    /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/📜world.wit`'s `consume-media`).
     /// Default: a `Document{schema}` wire matching this app's own `document_schema()` loads straight
     /// through `load_document_pack` — the same pack+spr bytes `read-app-document-pack`/
     /// `load-app-document-pack` already round-trip. Anything else (a foreign document schema, or a

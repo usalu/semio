@@ -5,7 +5,7 @@
 //! of that segment kind — and incremental generations chain via `pack::Footer.prev_footer_offset`
 //! plus the `REQUIRED_FOOTER_CHAIN` flag, also previously reserved-unused. Built strictly against
 //! the frozen contract at
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_snapshot` row).
 //!
 //! 🎯 Design choice — how `Footer.prev_footer_offset` is actually used: `db_storage::SnapshotStorage`

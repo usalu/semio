@@ -8,7 +8,7 @@
 //!   hub WebSocket, a `notify` file watcher, and reconnect/debounce timers.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on `wasm_bindgen_futures::
 //!   spawn_local` with a `web_sys::WebSocket` hub transport (no threads, no filesystem). The
-//!   production browser shell instead uses a TS twin (`🟦🟦backbone-🟦worker.ts`, WS-E); this wasm actor
+//!   production browser shell instead uses a TS twin (`🟦backbone-worker.ts`, WS-E); this wasm actor
 //!   keeps the crate coherent for a future in-wasm host.
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
@@ -1510,7 +1510,7 @@ pub enum FixtureInbound {
     /// @emoji 📬 A raw `protocol_wire::ServerFrame`'s encoded bytes (`protocol::encode_server_frame`
     /// output, `lane` byte included), delivered as if received over the hub WebSocket — already
     /// real binary, not document/op content, so it stays inline in the manifest as a JSON number
-    /// array. Driven by `🟦🟦backbone-🟦worker.ts`'s TS fallback vitest harness (which decodes these
+    /// array. Driven by `🟦backbone-worker.ts`'s TS fallback vitest harness (which decodes these
     /// bytes with its own binary decoder); the folder-only Rust harness skips these.
     HubFrame { frame_bytes: Vec<u8> },
     /// @emoji 📁 An external folder edit: `.ops`-grammar text (one or more `edit ...` blocks) to
@@ -1543,7 +1543,7 @@ struct FixtureManifest {
     expected_edit_ids: Vec<String>,
 }
 
-/// @emoji 📂 Loads every `<name>/🔣🔣fixture.json` manifest directory under `dir`, resolving each
+/// @emoji 📂 Loads every `<name>/🔣fixture.json` manifest directory under `dir`, resolving each
 /// content-bearing `RawFixtureInbound` against its sibling text file. A fixture whose manifest or
 /// any referenced file is missing/unreadable is skipped (never a partial/silently-wrong fixture).
 #[cfg(not(target_arch = "wasm32"))]
@@ -1553,7 +1553,7 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     let mut fixture_dirs: Vec<std::path::PathBuf> = entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.is_dir()).collect();
     fixture_dirs.sort();
     for fixture_dir in fixture_dirs {
-        let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("🔣🔣fixture.json")) else { continue };
+        let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("🔣fixture.json")) else { continue };
         let Ok(manifest) = serde_json::from_str::<FixtureManifest>(&manifest_text) else { continue };
         let mut inbound = Vec::with_capacity(manifest.inbound.len());
         let mut all_resolved = true;
@@ -1980,8 +1980,8 @@ mod tests {
         assert_ne!(rollback.operation_id, envelope.operation_id, "the undo gets its own operation id");
     }
 
-    /// @emoji 🎬 Canonical wire-frame byte fixtures shared with `🟦🟦backbone-🟦worker.ts`'s vitest suite
-    /// (`framework/product/os/core/js/🟦🟦backbone-🟦worker.ts` `WireBridge` region / `index.ts`'s
+    /// @emoji 🎬 Canonical wire-frame byte fixtures shared with `🟦backbone-worker.ts`'s vitest suite
+    /// (`framework/product/os/core/js/🟦backbone-worker.ts` `WireBridge` region / `index.ts`'s
     /// `encodeClientFrame`/`decodeServerFrame` twins) — both sides decode the exact same committed
     /// bytes under `store/sync/fixtures/wire/`, proving `protocol_wire`'s binary lane+tag codec
     /// round-trips identically across Rust and TS. Regenerated deterministically by this test (every

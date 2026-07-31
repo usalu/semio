@@ -3,7 +3,7 @@
 //! append, `protocol_format::recover`, `protocol_wire` frame codec, `protocol_crdt::
 //! merge_concurrent_diffs`, and `OpDag` insertion — each group parameterized over a scaling value
 //! to reveal where a cost curve goes superlinear, not just a single-point timing. Run via
-//! `nx run @protocol/testkit-rs:bench` (`bun ./script.ts bench`).
+//! `nx run @protocol/testkit-rs:bench` (`bun ./📜script.ts bench`).
 
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use protocol_testkit::{GenProfile, HistoryLogGen, OpDagGen};

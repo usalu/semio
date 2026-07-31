@@ -1,0 +1,2569 @@
+diff --git a/.cursor/plans/flow_language_slice_0a888bfc.plan.md b/.cursor/plans/flow_language_slice_0a888bfc.plan.md
+new file mode 100644
+index 000000000..c984a64cb
+--- /dev/null
++++ b/.cursor/plans/flow_language_slice_0a888bfc.plan.md
+@@ -0,0 +1,121 @@
++---
++name: flow language slice
++overview: "Stand up the \"flow\" procedural language as an end-to-end vertical slice across three parts: a headless wasm-compatible neural engine (Rust), a general-purpose DAG UI crate on the directed port graph, and a flow-specific play app, wired so a default flow (slider -> math add -> preview) actually evaluates and renders."
++todos:
++  - id: ticket
++    content: Open repo MCP ticket (read repo://goals, ticket_open/reopen); route temp files into ticket folder.
++    status: completed
++  - id: engine
++    content: "Implement neural/engine (neural_engine): Dictionary/Atom, Neuron/Synapse/Tree, NeuronKind Function registry, topo Evaluator + Cargo.toml + tests."
++    status: completed
++  - id: math
++    content: "Implement flow/modules/math (flow_module_math): math NeuronKinds (add, ...), register() + Cargo.toml + tests."
++    status: completed
++  - id: dag
++    content: "Implement mathematical/graph/port/directed/dag crate: rect IO node model, layered layout, acyclicity, fixture + Cargo.toml; add to workspace members."
++    status: completed
++  - id: core
++    content: "Implement flow/core (flow_core cdylib): Widget model, FlowSession wasm API (scene + evaluate), Cargo.toml, script.ts wasm build; add to workspace; native eval test."
++    status: completed
++  - id: react
++    content: Create flow/react FlowCanvas renderer consuming @flow/core wasm via @infinite/cavas/react-renderer + package.json/project.json/script.ts.
++    status: completed
++  - id: play
++    content: Create flow/play PlaygroundFlow + controller + declarative body + default slider->add->preview fixture + index.html/globals.css/vite/vitest/package.json/project.json/script.ts.
++    status: completed
++  - id: framework
++    content: Add FlowPlayHost region + bootFlowPlay + surface host + exports in framework playground renderer; platform/core buildFlowWindowBody if needed; vite-elements-assets flow markers.
++    status: completed
++  - id: wiring
++    content: "Root wiring: package.json workspaces + dev:flow script, root script.ts dev flow case, launch.json flow dev entry."
++    status: completed
++  - id: validate
++    content: Run cargo tests, wasm build, vitest, and dev server; confirm runtime that the slice computes and renders via temporary [DEBUG] logs.
++    status: in_progress
++isProject: false
++---
++
++# Flow Language: End-to-End Vertical Slice
++
++Build the three parts of `flow` following the established repo triple pattern (`rs` Rust+wasm crate, `react` renderer, `play` playground app) seen in `puzzle/2d`, reusing `DirectedPortGraphEngine` and the `infinite_cavas` Vello scene/React canvas. Almost all target files are currently empty stubs; only the `AGENTS.md` concept docs are filled in (and must NOT be edited).
++
++## Target architecture
++
++```mermaid
++flowchart TD
++    subgraph p1 [1. Neural engine - headless]
++      ENG["neural/engine (neural_engine, rlib, wasm-compatible)<br/>Dictionary/Kvp/Atom, Neuron/Synapse/Tree,<br/>NeuronKind registry, topo evaluator"]
++      MATH["flow/modules/math (flow_module_math, rlib)<br/>math NeuronKinds e.g. add"]
++    end
++    subgraph p2 [2. General-purpose DAG UI]
++      DAG["mathematical/graph/port/directed/dag<br/>(mathematical_graph_port_directed_dag, rlib)<br/>rect IO node (inputs|name|outputs), layered layout, fixture"]
++    end
++    subgraph p3 [3. Flow UI - specific]
++      CORE["flow/core (flow_core, cdylib wasm -> @flow/core)<br/>FlowSession: widgets, eval, cavas scene"]
++      REACT["flow/react (@flow/react) FlowCanvas"]
++      PLAY["flow/play (@flow/play) PlaygroundFlow + default fixture"]
++    end
++    MATH --> ENG
++    ENG --> CORE
++    DAG --> CORE
++    CORE -->|wasm pkg| REACT
++    REACT --> PLAY
++```
++
++## Constraints to honor (from repo AGENTS.md)
++- Do NOT edit any `AGENTS.md`. Extend existing files; add code in `#region`/`pub mod` regions; concise code, no in-body comments, emoji-prefixed docstrings.
++- Permanent scripts only in each package's `script.ts`; `project.json`/`package.json` only call `script.ts`/`nx`. No new script files.
++- Register every runnable command in `.vscode/launch.json` following existing grouping/order. Use `bun`/`nx`. No git-mutating commands.
++- External libs behind interfaces; engine must stay wasm-compatible (no native-only deps).
++
++## Step 0 - Ticket (execution time)
++Repo MCP is not connected in this session. At execution start: read `repo://goals`, `ticket_open` a new ticket associated with the best goal (or `ticket_reopen` if one covers this), and keep all temp/log files inside the ticket folder.
++
++## Part 1 - Neural engine (Rust, headless)
++- `neural/engine/lib.rs` + new `neural/engine/Cargo.toml` (`name = "neural_engine"`, `crate-type = ["rlib"]`, edition 2021, rust-version 1.88; deps: `serde`, `serde_json`). Implement:
++  - Region `Dictionary`: immutable, unordered, collision-free KVP map; `Key` (dot-separated camelCase segments), `Value` = `Atom | Dictionary`, `Atom` = `Integer | Decimal | String`. Serde JSON in/out.
++  - Region `Tree`: `Neuron { id, kind, params }`, `Synapse { id, from, to }` (handle/port endpoints), DAG storage.
++  - Region `NeuronKind`: trait `Function { fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> }` + a `Registry` mapping kind id -> `Box<dyn Function>` (this is the module extension point).
++  - Region `Evaluator`: topological evaluation over the tree producing per-neuron output dictionaries.
++  - Region `Tests`: dictionary round-trip, registry dispatch, two-neuron eval.
++
++## Part 1b - Math module (Rust)
++- `flow/modules/math/lib.rs` + new `flow/modules/math/Cargo.toml` (`name = "flow_module_math"`, rlib; dep `neural_engine = { path = "../../../neural/engine" }`). Provide `add` (and a couple more) `NeuronKind`s implementing `Function`, plus `register(registry: &mut Registry)`. Tests cover `add`.
++
++## Part 2 - General-purpose DAG UI (Rust)
++- `mathematical/graph/port/directed/dag/lib.rs` + new `mathematical/graph/port/directed/dag/Cargo.toml` (`name = "mathematical_graph_port_directed_dag"`, rlib; deps mirror sibling `normal`: `mathematical_graph_port_directed = { path = "../normal" }`, `mathematical_graph = { path = "../../.." }`, `mathematical_core = { path = "../../../core" }`, `infinite_cavas = { path = "../../../../infinite/cavas/vello" }`, `serde`, `serde_json`).
++  - `pub type DagBoardEngine = DirectedPortGraphEngine;` plus a rectangle IO-node model: left input handles, vertical center name, right output handles (per `dag/AGENTS.md`).
++  - Region `Layout`: layered (rank-by-longest-path) DAG layout writing node `x/y` into a `dag.fixture/v1` value (reuse Buchheim/`mathematical_core::tree_layout` where natural).
++  - Region `GraphExtension`: `impl`/marker for DAG semantics; acyclicity guard on edge insert.
++  - Region `Tests`: rectangle handle placement + layered layout + cycle rejection.
++- Add `"mathematical/graph/port/directed/dag"` to root [Cargo.toml](Cargo.toml) `members`.
++
++## Part 3 - Flow core (Rust cdylib -> wasm)
++- `flow/core/lib.rs` + new `flow/core/Cargo.toml` (`name = "flow_core"`, `crate-type = ["rlib","cdylib"]`; deps: `neural_engine`, `flow_module_math`, `mathematical_graph_port_directed_dag`, `infinite_cavas`, `serde`, `serde_json`; `[target.'cfg(target_arch="wasm32")'.dependencies]` `wasm-bindgen`, `serde-wasm-bindgen`, `js-sys`, `web-sys` like [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)).
++  - Region `Widget`: `Widget = Neuron | Input(Slider|Note) | Output(Preview|Action)` (per [flow/AGENTS.md](flow/AGENTS.md)); maps each widget to a DAG rect node + neural tree node.
++  - Region `FlowSession` (`#[wasm_bindgen]`, like `BoardSession`): load/serialize a `flow.fixture/v1`, build the DAG board scene (cavas `SceneDescriptorJson`), `attach_canvas`/`renderFrame`, pointer/camera input, and `evaluate()` running the neural engine (math registered) to fill `Preview` outputs.
++  - `flow/core/script.ts` (new): `runWasmPackWebBuild({ wasmBaseName: "flow_core", pkg.name: "@flow/core", skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD" })` mirroring [puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts).
++  - Add `"flow/core"` to root [Cargo.toml](Cargo.toml) `members`.
++  - Region `Tests`: end-to-end native eval of slider->add->preview fixture.
++
++## Part 3b - Flow React renderer
++- `flow/react/index.tsx` (new) + `package.json` (`@flow/react`), `project.json` (`test`), `script.ts` (prebuild wasm then vitest). Imports wasm relative `../core/pkg/flow_core.js` (top-level `await initFlowWasm()`), exports `FlowCanvas`, fixture types, `ensureFlowWasmLoaded`. Render DAG/widgets via `@infinite/cavas/react-renderer` driven by `FlowSession` (mirror `@puzzle/2d/react` `GpuWasmBridge`).
++
++## Part 3c - Flow play app
++- New under `flow/play/`: `index.ts` (replace empty stub), `index.html`, `globals.css`, `vite.config.ts`, `vitest.config.ts`, `package.json` (`@flow/play`, dep `@framework/playground/core`, devdep `@framework/playground/renderer/react`, `@flow/react`), `project.json` (`dev` env `FLOW_PLAY_PORT: "6016"`, `test` `6029`), `script.ts` (wasm -> vite dev/build/test).
++  - `index.ts`: `PlaygroundFlow extends Playground`, `FlowPlayShellController extends Controller`, declarative body via `buildFlowWindowBody(...)` (or reuse `buildPuzzle2dWindowBody` surface), default fixture = slider -> math `add` -> preview, boot gate `import.meta.env.PUZZLE_PLAY_ENTRY === "flow"` calling `bootFlowPlay(new PlaygroundFlow())`.
++  - `vite.config.ts`: `createPlaygroundPlayViteConfig({ playEntryKind: "flow", alias @flow/react })`.
++
++## Part 3d - Framework + build wiring
++- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): add region `FlowPlayHost` (copy `Puzzle2dPlayHost`): `FlowPlayPaneSurfaceHost`, `registerFlowPlaySurfaceHosts`, `FlowPlayChrome`/`mountFlowPlayChrome`, `bootFlowPlay(playground) { bootPlayground(playground, flowPlayChromeBoot) }`.
++- `framework/product/playground/renderer/react/package.json`: add `"./flow": "./index.tsx"` export + deps `@flow/play`, `@flow/react`.
++- If a dedicated surface type is needed: add `UiFlowHostSurfaceNode` + `buildFlowWindowBody` in [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts), re-export from `framework/product/playground/core/index.ts`, and register `"flow"` in `PLAYGROUND_CANVAS_HOST_TYPES` + `renderPlaygroundHostSurface`. (Reuse `puzzle2d` surface if the canvas API matches to reduce scope.)
++- `ui/styling/vite-elements-assets.ts`: extend playground kind union with `"flow"`, add boot subpath `@framework/playground/renderer/react/flow -> flow`, and `FlowPlayHost` start/end markers.
++- Root [package.json](package.json): add `flow/react`, `flow/play` to `workspaces`; add scripts `dev:flow` -> `bun ./script.ts dev flow` (extend root [script.ts](script.ts) `dev` router with a `flow` case mirroring `2d`).
++- [.vscode/launch.json](.vscode/launch.json) group `3_dev`: add `🛠️dev🌊flow` (`bun run dev:flow`, env `FLOW_PLAY_PORT: 6016`, serverReadyAction on `:6016`) ordered near the puzzle entries; optionally a `🛠️dev🌊flow🦀rs` (`bun nx run @flow/core:wasm`) entry.
++
++## Validation (must confirm at runtime, no assumptions)
++- `cargo test -p neural_engine -p flow_module_math -p mathematical_graph_port_directed_dag -p flow_core` all pass.
++- `bun nx run @flow/core:wasm` produces `flow/core/pkg`.
++- `bun nx run @flow/react:test` and `@flow/play:test` pass.
++- `bun run dev:flow` serves on 6016; confirm via console logs (`[DEBUG]` prefixed, temporary) that the default slider->add->preview flow evaluates and the preview shows the computed number, and the DAG renders rectangle IO nodes.
+\ No newline at end of file
+diff --git a/.vscode/launch.json b/.vscode/launch.json
+index 0b054e573..62243f56f 100644
+--- a/.vscode/launch.json
++++ b/.vscode/launch.json
+@@ -718,6 +718,36 @@
+         "order": 169.6
+       }
+     },
++    {
++      "name": "🛠️dev🌊flow",
++      "type": "node-terminal",
++      "request": "launch",
++      "command": "bun run dev:flow",
++      "cwd": "${workspaceFolder}",
++      "env": {
++        "FLOW_PLAY_PORT": "6016"
++      },
++      "presentation": {
++        "group": "3_dev",
++        "order": 171
++      },
++      "serverReadyAction": {
++        "action": "openExternally",
++        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6016)",
++        "uriFormat": "%s"
++      }
++    },
++    {
++      "name": "🛠️dev🌊flow🦀rs",
++      "type": "node-terminal",
++      "request": "launch",
++      "command": "bun nx run @flow/core:wasm",
++      "cwd": "${workspaceFolder}",
++      "presentation": {
++        "group": "3_dev",
++        "order": 171.5
++      }
++    },
+     {
+       "name": "🛠️dev🧩puzzle🩻2d",
+       "type": "node-terminal",
+diff --git a/Cargo.lock b/Cargo.lock
+index 34dfd8d6d..004426b65 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -1366,6 +1366,30 @@ version = "0.9.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "98de4bbd547a563b716d8dfa9aad1cb19bfab00f4fa09a6a4ed21dbcf44ce9c4"
+ 
++[[package]]
++name = "flow_core"
++version = "0.1.0"
++dependencies = [
++ "flow_module_math",
++ "infinite_cavas",
++ "js-sys",
++ "mathematical_graph_port_directed_dag",
++ "neural_engine",
++ "serde",
++ "serde-wasm-bindgen",
++ "serde_json",
++ "wasm-bindgen",
++ "wasm-bindgen-futures",
++ "web-sys",
++]
++
++[[package]]
++name = "flow_module_math"
++version = "0.1.0"
++dependencies = [
++ "neural_engine",
++]
++
+ [[package]]
+ name = "fnv"
+ version = "1.0.7"
+@@ -3003,6 +3027,18 @@ dependencies = [
+  "serde_json",
+ ]
+ 
++[[package]]
++name = "mathematical_graph_port_directed_dag"
++version = "0.1.0"
++dependencies = [
++ "infinite_cavas",
++ "mathematical_core",
++ "mathematical_graph",
++ "mathematical_graph_port_directed",
++ "serde",
++ "serde_json",
++]
++
+ [[package]]
+ name = "mathematical_graph_port_undirected"
+ version = "0.1.0"
+@@ -3270,6 +3306,14 @@ dependencies = [
+  "jni-sys 0.3.1",
+ ]
+ 
++[[package]]
++name = "neural_engine"
++version = "0.1.0"
++dependencies = [
++ "serde",
++ "serde_json",
++]
++
+ [[package]]
+ name = "nom"
+ version = "7.1.3"
+diff --git a/Cargo.toml b/Cargo.toml
+index e9bfa4db3..0c5cdfc46 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -5,8 +5,12 @@ members = [
+     "mathematical/graph",
+     "mathematical/graph/normal/directed",
+     "mathematical/graph/normal/undirected",
+-    "mathematical/graph/port/directed",
++    "mathematical/graph/port/directed/normal",
++    "mathematical/graph/port/directed/dag",
+     "mathematical/graph/port/undirected",
++    "neural/engine",
++    "flow/modules/math",
++    "flow/core",
+     "reasoning/mindmap/wires",
+     "reasoning/mindmap/rs",
+     "gis/map/rs",
+diff --git a/bun.lock b/bun.lock
+index 7b48a4108..19e7c5f49 100644
+--- a/bun.lock
++++ b/bun.lock
+@@ -159,6 +159,38 @@
+         "vite": "^6.0.0",
+       },
+     },
++    "flow/play": {
++      "name": "@flow/play",
++      "version": "0.1.0",
++      "dependencies": {
++        "@flow/react": "workspace:*",
++        "@framework/playground/core": "workspace:*",
++      },
++      "devDependencies": {
++        "@framework/playground/renderer/react": "workspace:*",
++        "@tailwindcss/vite": "^4.1.18",
++        "@vitejs/plugin-react": "^5.1.2",
++        "typescript": "^5.9.3",
++        "vite": "^7.3.1",
++        "vitest": "^4.0.17",
++      },
++    },
++    "flow/react": {
++      "name": "@flow/react",
++      "version": "0.1.0",
++      "dependencies": {
++        "react": "^19.2.3",
++        "react-dom": "^19.2.3",
++      },
++      "devDependencies": {
++        "@types/react": "^19.2.8",
++        "@types/react-dom": "^19.2.3",
++        "@vitejs/plugin-react": "^5.1.2",
++        "typescript": "^5.9.3",
++        "vite": "^7.3.1",
++        "vitest": "^4.0.17",
++      },
++    },
+     "framework/core": {
+       "name": "@framework/core",
+       "version": "0.1.0",
+@@ -213,6 +245,8 @@
+       "name": "@framework/playground/renderer/react",
+       "version": "0.1.0",
+       "dependencies": {
++        "@flow/play": "workspace:*",
++        "@flow/react": "workspace:*",
+         "@framework/platform/core": "workspace:*",
+         "@framework/platform/renderer/react": "workspace:*",
+         "@framework/playground/core": "workspace:*",
+@@ -1466,6 +1500,10 @@
+ 
+     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
+ 
++    "@flow/play": ["@flow/play@workspace:flow/play"],
++
++    "@flow/react": ["@flow/react@workspace:flow/react"],
++
+     "@framework/core": ["@framework/core@workspace:framework/core"],
+ 
+     "@framework/platform/core": ["@framework/platform/core@workspace:framework/product/platform/core"],
+diff --git a/flow/core/Cargo.toml b/flow/core/Cargo.toml
+new file mode 100644
+index 000000000..f41f7f631
+--- /dev/null
++++ b/flow/core/Cargo.toml
+@@ -0,0 +1,24 @@
++[package]
++name = "flow_core"
++version = "0.1.0"
++edition = "2021"
++rust-version = "1.88"
++
++[lib]
++crate-type = ["rlib", "cdylib"]
++path = "lib.rs"
++
++[dependencies]
++neural_engine = { path = "../../neural/engine" }
++flow_module_math = { path = "../modules/math" }
++mathematical_graph_port_directed_dag = { path = "../../mathematical/graph/port/directed/dag" }
++infinite_cavas = { path = "../../infinite/cavas/vello" }
++serde = { version = "1.0.219", features = ["derive"] }
++serde_json = "1.0.140"
++
++[target.'cfg(target_arch = "wasm32")'.dependencies]
++js-sys = "0.3.83"
++serde-wasm-bindgen = "0.6.5"
++wasm-bindgen = "0.2.106"
++wasm-bindgen-futures = "0.4.71"
++web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
+diff --git a/flow/core/lib.rs b/flow/core/lib.rs
+index e69de29bb..4f94241d9 100644
+--- a/flow/core/lib.rs
++++ b/flow/core/lib.rs
+@@ -0,0 +1,493 @@
++//! 🌊 Flow core: widgets, neural evaluation, and DAG canvas host.
++
++pub use flow_module_math;
++pub use infinite_cavas as cavas;
++pub use mathematical_graph_port_directed_dag as dag;
++pub use neural_engine as neural;
++
++use std::collections::HashMap;
++
++use dag::{apply_dag_layout_to_fixture_v1_value, would_create_cycle, DagBoardEngine, DagLayoutOptions, IoNodeSpec, IoPortSpec};
++use neural::{Atom, Dictionary, Evaluator, Neuron, Registry, Synapse, Tree, Value as NeuralValue};
++use serde::{Deserialize, Serialize};
++use serde_json::Value as JsonValue;
++
++// #region 🔖Widget
++/// 🎛️ Flow widget discriminant.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(tag = "kind", rename_all = "camelCase")]
++pub enum Widget {
++    Neuron { id: String, neuronKind: String, #[serde(default)] params: Dictionary },
++    InputSlider { id: String, #[serde(default = "default_slider_value")] value: f64 },
++    InputNote { id: String, #[serde(default)] text: String },
++    OutputPreview { id: String, #[serde(default)] preview: Dictionary },
++    OutputAction { id: String, #[serde(default)] action: String },
++}
++
++fn default_slider_value() -> f64 {
++    3.0
++}
++
++/// 🧩 Serializable flow document.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(rename_all = "camelCase")]
++pub struct FlowFixtureV1 {
++    pub schema: String,
++    pub camera: CameraJson,
++    pub widgets: Vec<Widget>,
++    pub synapses: Vec<SynapseSpec>,
++}
++
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct CameraJson {
++    pub x: f64,
++    pub y: f64,
++    pub zoom: f64,
++}
++
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(rename_all = "camelCase")]
++pub struct SynapseSpec {
++    pub id: String,
++    pub from: String,
++    pub to: String,
++}
++
++impl Default for FlowFixtureV1 {
++    fn default() -> Self {
++        Self {
++            schema: "flow.fixture/v1".into(),
++            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
++            widgets: vec![
++                Widget::InputSlider { id: "slider".into(), value: 3.0 },
++                Widget::Neuron { id: "add".into(), neuronKind: "math.add".into(), params: Dictionary::new() },
++                Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new() },
++            ],
++            synapses: vec![
++                SynapseSpec { id: "s1".into(), from: "slider".into(), to: "add".into() },
++                SynapseSpec { id: "s2".into(), from: "add".into(), to: "preview".into() },
++            ],
++        }
++    }
++}
++
++fn widget_label(widget: &Widget) -> String {
++    match widget {
++        Widget::Neuron { neuronKind, .. } => neuronKind.clone(),
++        Widget::InputSlider { .. } => "Slider".into(),
++        Widget::InputNote { .. } => "Note".into(),
++        Widget::OutputPreview { .. } => "Preview".into(),
++        Widget::OutputAction { action, .. } => action.clone(),
++    }
++}
++
++fn widget_io_ports(widget: &Widget) -> (Vec<IoPortSpec>, Vec<IoPortSpec>) {
++    match widget {
++        Widget::Neuron { .. } => (
++            vec![IoPortSpec { id: "in".into(), label: "in".into() }],
++            vec![IoPortSpec { id: "out".into(), label: "out".into() }],
++        ),
++        Widget::InputSlider { .. } | Widget::InputNote { .. } => (vec![], vec![IoPortSpec { id: "out".into(), label: "out".into() }]),
++        Widget::OutputPreview { .. } | Widget::OutputAction { .. } => (vec![IoPortSpec { id: "in".into(), label: "in".into() }], vec![]),
++    }
++}
++
++fn widget_to_io_node(widget: &Widget, index: usize) -> IoNodeSpec {
++    let (inputs, outputs) = widget_io_ports(widget);
++    let id = match widget {
++        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id.clone(),
++    };
++    IoNodeSpec {
++        id: id.clone(),
++        name: widget_label(widget),
++        inputs,
++        outputs,
++        x: (index as f64) * 200.0,
++        y: 0.0,
++        width: 160.0,
++        height: 56.0,
++    }
++}
++// #endregion 🔖Widget
++
++// #region 🔖FlowHost
++/// 🏠 Retained flow host: fixture, engine, evaluation cache.
++pub struct FlowHost {
++    pub fixture: FlowFixtureV1,
++    pub engine: DagBoardEngine,
++    pub outputs: HashMap<String, Dictionary>,
++    pub last_eval_json: String,
++    next_node_id: u64,
++    next_handle_id: u64,
++    next_edge_id: u64,
++}
++
++impl Default for FlowHost {
++    fn default() -> Self {
++        Self::from_fixture(FlowFixtureV1::default())
++    }
++}
++
++impl FlowHost {
++    pub fn from_fixture(fixture: FlowFixtureV1) -> Self {
++        let mut host = Self {
++            fixture,
++            engine: DagBoardEngine::new(),
++            outputs: HashMap::new(),
++            last_eval_json: String::new(),
++            next_node_id: 1,
++            next_handle_id: 10,
++            next_edge_id: 100,
++        };
++        host.rebuild_engine_from_fixture();
++        host.evaluate_internal();
++        host
++    }
++
++    pub fn parse_fixture_json(json: &str) -> Result<FlowFixtureV1, String> {
++        serde_json::from_str(json).map_err(|e| e.to_string())
++    }
++
++    pub fn fixture_json(&self) -> Result<String, String> {
++        serde_json::to_string(&self.fixture).map_err(|e| e.to_string())
++    }
++
++    pub fn dag_fixture_json(&self) -> Result<String, String> {
++        serde_json::to_string(&self.build_dag_fixture_value()).map_err(|e| e.to_string())
++    }
++
++    pub fn evaluate(&mut self) -> Result<String, String> {
++        self.evaluate_internal();
++        Ok(self.last_eval_json.clone())
++    }
++
++    fn evaluate_internal(&mut self) {
++        let mut registry = Registry::new();
++        flow_module_math::register(&mut registry);
++        let tree = self.build_tree();
++        let seeds = self.build_seeds();
++        match Evaluator::new(&registry).evaluate(&tree, &seeds) {
++            Ok(outputs) => {
++                self.outputs = outputs.clone();
++                self.apply_preview_outputs(&outputs);
++                self.last_eval_json = serde_json::to_string(&outputs).unwrap_or_else(|_| "{}".into());
++            }
++            Err(err) => {
++                self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
++            }
++        }
++    }
++
++    fn build_tree(&self) -> Tree {
++        let neurons = self
++            .fixture
++            .widgets
++            .iter()
++            .filter_map(|w| match w {
++                Widget::Neuron { id, neuronKind, params } => Some(Neuron { id: id.clone(), kind: neuronKind.clone(), params: params.clone() }),
++                _ => None,
++            })
++            .collect();
++        let synapses = self
++            .fixture
++            .synapses
++            .iter()
++            .map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone() })
++            .collect();
++        Tree { neurons, synapses }
++    }
++
++    fn build_seeds(&self) -> HashMap<String, Dictionary> {
++        let mut seeds = HashMap::new();
++        for widget in &self.fixture.widgets {
++            match widget {
++                Widget::InputSlider { id, value } => {
++                    seeds.insert(id.clone(), Dictionary::new().insert("number", NeuralValue::Atom(Atom::Decimal(*value))));
++                }
++                Widget::InputNote { id, text } => {
++                    seeds.insert(id.clone(), Dictionary::new().insert("text", NeuralValue::Atom(Atom::String(text.clone()))));
++                }
++                _ => {}
++            }
++        }
++        seeds
++    }
++
++    fn apply_preview_outputs(&mut self, outputs: &HashMap<String, Dictionary>) {
++        for widget in &mut self.fixture.widgets {
++            if let Widget::OutputPreview { id, preview } = widget {
++                if let Some(out) = outputs.get(id) {
++                    *preview = out.clone();
++                } else if let Some(syn) = self.fixture.synapses.iter().find(|s| s.to == *id) {
++                    if let Some(src) = outputs.get(&syn.from) {
++                        *preview = src.clone();
++                    }
++                }
++            }
++        }
++    }
++
++    fn rebuild_engine_from_fixture(&mut self) {
++        self.engine = DagBoardEngine::new();
++        self.engine.set_camera(self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom);
++        let mut dag_fixture = self.build_dag_fixture_value();
++        let _ = apply_dag_layout_to_fixture_v1_value(&mut dag_fixture, &DagLayoutOptions::default());
++        self.sync_engine_from_dag_fixture(&dag_fixture);
++    }
++
++    fn build_dag_fixture_value(&self) -> JsonValue {
++        let mut nodes = Vec::new();
++        let mut edges = Vec::new();
++        for (i, widget) in self.fixture.widgets.iter().enumerate() {
++            let io = widget_to_io_node(widget, i);
++            let mut handles = Vec::new();
++            for (idx, port) in io.inputs.iter().enumerate() {
++                let (_in_a, _out_a) = dag::io_node_handle_angles(idx, io.inputs.len(), 0, io.outputs.len().max(1));
++                handles.push(serde_json::json!({
++                    "id": format!("{}:{}", io.id, port.id),
++                    "angle": _in_a,
++                    "handleKind": port.label
++                }));
++            }
++            for (idx, port) in io.outputs.iter().enumerate() {
++                let (_in_a, out_a) = dag::io_node_handle_angles(0, io.inputs.len().max(1), idx, io.outputs.len());
++                handles.push(serde_json::json!({
++                    "id": format!("{}:{}", io.id, port.id),
++                    "angle": out_a,
++                    "handleKind": port.label
++                }));
++            }
++            nodes.push(serde_json::json!({
++                "id": io.id,
++                "x": io.x,
++                "y": io.y,
++                "width": io.width,
++                "height": io.height,
++                "shape": "rectangle",
++                "text": io.name,
++                "handles": handles
++            }));
++        }
++        let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
++        for syn in &self.fixture.synapses {
++            if would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to) {
++                continue;
++            }
++            edges.push(serde_json::json!({
++                "id": syn.id,
++                "source": format!("{}:out", syn.from),
++                "target": format!("{}:in", syn.to)
++            }));
++        }
++        serde_json::json!({
++            "schema": "dag.fixture/v1",
++            "camera": self.fixture.camera,
++            "nodes": nodes,
++            "edges": edges
++        })
++    }
++
++    fn sync_engine_from_dag_fixture(&mut self, fixture: &JsonValue) {
++        let nodes = fixture.get("nodes").and_then(|v| v.as_array()).cloned().unwrap_or_default();
++        for node in nodes {
++            let Some(obj) = node.as_object() else { continue };
++            let id = self.next_node_id;
++            self.next_node_id += 1;
++            let x = obj.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
++            let y = obj.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
++            let w = obj.get("width").and_then(|v| v.as_f64()).unwrap_or(80.0);
++            self.engine.create_node(id, x, y, (w * 0.5).max(28.0), true);
++            if let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) {
++                for h in handles {
++                    let Some(ho) = h.as_object() else { continue };
++                    let hid = self.next_handle_id;
++                    self.next_handle_id += 1;
++                    let ang = ho.get("angle").and_then(|v| v.as_f64()).unwrap_or(0.0);
++                    self.engine.create_handle(hid, id, ang);
++                }
++            }
++        }
++        let edges = fixture.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
++        let mut handle_ids: Vec<u64> = self.engine.handles.keys().copied().collect();
++        handle_ids.sort();
++        for (i, edge) in edges.iter().enumerate() {
++            let Some(eo) = edge.as_object() else { continue };
++            let eid = self.next_edge_id + i as u64;
++            let src = handle_ids.get(i * 2).copied().or_else(|| handle_ids.first().copied());
++            let tgt = handle_ids.get(i * 2 + 1).copied().or_else(|| handle_ids.get(1).copied());
++            if let (Some(s), Some(t)) = (src, tgt) {
++                self.engine.create_edge(eid, s, t);
++            }
++        }
++    }
++
++    pub fn set_slider_value(&mut self, widget_id: &str, value: f64) {
++        for widget in &mut self.fixture.widgets {
++            if let Widget::InputSlider { id, value: v } = widget {
++                if id == widget_id {
++                    *v = value;
++                }
++            }
++        }
++        let _ = self.evaluate();
++    }
++
++    pub fn preview_text(&self) -> String {
++        self.fixture
++            .widgets
++            .iter()
++            .find_map(|w| match w {
++                Widget::OutputPreview { preview, .. } => preview.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).map(|n| format!("{n}")),
++                _ => None,
++            })
++            .unwrap_or_else(|| "—".into())
++    }
++}
++
++fn widget_id(widget: &Widget) -> &str {
++    match widget {
++        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputNote { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } => id,
++    }
++}
++// #endregion 🔖FlowHost
++
++// #region 🔖WasmSession
++#[cfg(target_arch = "wasm32")]
++use std::cell::RefCell;
++#[cfg(target_arch = "wasm32")]
++use std::rc::Rc;
++#[cfg(target_arch = "wasm32")]
++use wasm_bindgen::prelude::*;
++#[cfg(target_arch = "wasm32")]
++use wasm_bindgen_futures::future_to_promise;
++#[cfg(target_arch = "wasm32")]
++use web_sys::HtmlCanvasElement;
++
++#[cfg(target_arch = "wasm32")]
++struct FlowSessionInner {
++    host: FlowHost,
++    gpu: cavas::gpu_session::CanvasGpuSession,
++}
++
++#[cfg(target_arch = "wasm32")]
++#[wasm_bindgen]
++pub struct FlowSession {
++    state: Rc<RefCell<FlowSessionInner>>,
++}
++
++#[cfg(target_arch = "wasm32")]
++#[wasm_bindgen]
++impl FlowSession {
++    #[wasm_bindgen(constructor)]
++    pub fn new() -> Self {
++        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
++    }
++
++    #[wasm_bindgen(js_name = loadFixtureJson)]
++    pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
++        let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
++        self.state.borrow_mut().host = FlowHost::from_fixture(fixture);
++        Ok(())
++    }
++
++    #[wasm_bindgen(js_name = fixtureJson)]
++    pub fn fixture_json(&self) -> Result<String, JsValue> {
++        self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e))
++    }
++
++    #[wasm_bindgen(js_name = evaluate)]
++    pub fn evaluate(&self) -> Result<String, JsValue> {
++        self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e))
++    }
++
++    #[wasm_bindgen(js_name = previewText)]
++    pub fn preview_text(&self) -> String {
++        self.state.borrow().host.preview_text()
++    }
++
++    #[wasm_bindgen(js_name = setSliderValue)]
++    pub fn set_slider_value(&self, widget_id: &str, value: f64) {
++        self.state.borrow_mut().host.set_slider_value(widget_id, value);
++    }
++
++    #[wasm_bindgen(js_name = attachCanvas)]
++    pub fn attach_canvas(&self, canvas: HtmlCanvasElement) -> js_sys::Promise {
++        let state = self.state.clone();
++        future_to_promise(async move {
++            state.borrow_mut().gpu.attach_canvas(canvas).await.map_err(|e| JsValue::from_str(&e))?;
++            Ok(JsValue::UNDEFINED)
++        })
++    }
++
++    #[wasm_bindgen(js_name = setSize)]
++    pub fn set_size(&self, width: u32, height: u32, dpr: f64) {
++        let mut inner = self.state.borrow_mut();
++        inner.host.engine.set_camera(inner.host.fixture.camera.x, inner.host.fixture.camera.y, inner.host.fixture.camera.zoom);
++        inner.gpu.resize_surface(width, height);
++        let _ = (dpr, width, height);
++    }
++
++    #[wasm_bindgen(js_name = renderFrame)]
++    pub fn render_frame(&self) -> Result<(), JsValue> {
++        let mut inner = self.state.borrow_mut();
++        let snap = inner.host.engine.render_snapshot();
++        let mut scene = cavas::vello::Scene::new();
++        use cavas::vello::kurbo::{Circle, Point};
++        use cavas::vello::peniko::{Color, Fill};
++        for (_nid, center, radius) in &snap.nodes {
++            scene.fill(Fill::NonZero, cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(90, 110, 140), None, &Circle::new(Point::new(center.x, center.y), *radius));
++        }
++        for (_hid, center, radius) in &snap.handles {
++            scene.fill(Fill::NonZero, cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(180, 200, 230), None, &Circle::new(Point::new(center.x, center.y), *radius));
++        }
++        for curve in &snap.edges {
++            scene.stroke(&cavas::vello::kurbo::Stroke::new(2.0), cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(200, 210, 230), None, curve);
++        }
++        inner.gpu.render_frame(&scene, Color::from_rgba8(20, 22, 28, 255))
++    }
++
++    #[wasm_bindgen(js_name = pointerDown)]
++    pub fn pointer_down(&self, x: f64, y: f64, extend: bool) {
++        self.state.borrow_mut().host.engine.pointer_down(x, y, extend);
++    }
++
++    #[wasm_bindgen(js_name = pointerMove)]
++    pub fn pointer_move(&self, x: f64, y: f64) {
++        self.state.borrow_mut().host.engine.pointer_move(x, y);
++    }
++
++    #[wasm_bindgen(js_name = pointerUp)]
++    pub fn pointer_up(&self) {
++        self.state.borrow_mut().host.engine.pointer_up();
++    }
++}
++// #endregion 🔖WasmSession
++
++// #region 🔖Tests
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn default_fixture_evaluates_add_preview() {
++        let mut host = FlowHost::default();
++        host.evaluate_internal();
++        assert_eq!(host.preview_text(), "3");
++    }
++
++    #[test]
++    fn slider_updates_preview() {
++        let mut host = FlowHost::default();
++        host.set_slider_value("slider", 5.0);
++        assert_eq!(host.preview_text(), "5");
++    }
++
++    #[test]
++    fn fixture_json_round_trip() {
++        let host = FlowHost::default();
++        let json = host.fixture_json().unwrap();
++        let parsed = FlowHost::parse_fixture_json(&json).unwrap();
++        assert_eq!(parsed.schema, "flow.fixture/v1");
++    }
++}
++// #endregion 🔖Tests
+diff --git a/flow/core/project.json b/flow/core/project.json
+new file mode 100644
+index 000000000..7d128f229
+--- /dev/null
++++ b/flow/core/project.json
+@@ -0,0 +1,13 @@
++{
++  "name": "@flow/core",
++  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
++  "targets": {
++    "wasm": {
++      "executor": "nx:run-commands",
++      "options": {
++        "cwd": "flow/core",
++        "command": "bun ./script.ts wasm"
++      }
++    }
++  }
++}
+diff --git a/flow/core/script.ts b/flow/core/script.ts
+new file mode 100644
+index 000000000..7b4e3ceb9
+--- /dev/null
++++ b/flow/core/script.ts
+@@ -0,0 +1,25 @@
++#!/usr/bin/env bun
++/** 🦀 `@flow/core` router: `bun ./script.ts wasm`. */
++import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../repo/lib/js/src/index.ts";
++
++class WasmScript extends BundleScript {
++  run(): void {
++    runWasmPackWebBuild({
++      rsDir: this.root,
++      skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD",
++      logPrefix: "flow/core",
++      wasmBaseName: "flow_core",
++      pkg: {
++        name: "@flow/core",
++        files: ["flow_core_bg.wasm", "flow_core.js", "flow_core.d.ts", "flow_core_bg.wasm.d.ts"],
++        main: "flow_core.js",
++        module: "flow_core.js",
++        types: "flow_core.d.ts",
++      },
++    });
++  }
++}
++
++const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript);
++
++await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });
+diff --git a/flow/modules/math/Cargo.toml b/flow/modules/math/Cargo.toml
+new file mode 100644
+index 000000000..48c300d4f
+--- /dev/null
++++ b/flow/modules/math/Cargo.toml
+@@ -0,0 +1,12 @@
++[package]
++name = "flow_module_math"
++version = "0.1.0"
++edition = "2021"
++rust-version = "1.88"
++
++[lib]
++crate-type = ["rlib"]
++path = "lib.rs"
++
++[dependencies]
++neural_engine = { path = "../../../neural/engine" }
+diff --git a/flow/modules/math/lib.rs b/flow/modules/math/lib.rs
+index e69de29bb..c0a6e5f57 100644
+--- a/flow/modules/math/lib.rs
++++ b/flow/modules/math/lib.rs
+@@ -0,0 +1,72 @@
++//! ➕ Flow math module: neuron kinds for arithmetic.
++
++use neural_engine::{Atom, Dictionary, EvalError, Function, Registry, Value};
++
++// #region 🔖Add
++/// ➕ Sums two number inputs into one number output.
++pub struct Add;
++
++impl Function for Add {
++    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
++        let a = read_number(input, "a").or_else(|_| read_number(input, "number"))?;
++        let b = read_number(input, "b").unwrap_or(0.0);
++        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a + b))))
++    }
++}
++// #endregion 🔖Add
++
++// #region 🔖Multiply
++/// ✖️ Multiplies two number inputs.
++pub struct Multiply;
++
++impl Function for Multiply {
++    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
++        let a = read_number(input, "a")?;
++        let b = read_number(input, "b")?;
++        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(a * b))))
++    }
++}
++// #endregion 🔖Multiply
++
++// #region 🔖PassThrough
++/// ➡️ Forwards the number input unchanged.
++pub struct PassThrough;
++
++impl Function for PassThrough {
++    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
++        let n = read_number(input, "number")?;
++        Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n))))
++    }
++}
++// #endregion 🔖PassThrough
++
++fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
++    input
++        .get(key)
++        .and_then(|v| v.as_atom())
++        .and_then(|a| a.as_f64())
++        .ok_or_else(|| EvalError::MissingInput(key.into()))
++}
++
++/// 📦 Registers all math neuron kinds on the registry.
++pub fn register(registry: &mut Registry) {
++    registry.register("math.add", Box::new(Add));
++    registry.register("math.multiply", Box::new(Multiply));
++    registry.register("math.passThrough", Box::new(PassThrough));
++}
++
++// #region 🔖Tests
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn add_sums_inputs() {
++        let mut reg = Registry::new();
++        register(&mut reg);
++        let input = Dictionary::new().insert("a", Value::Atom(Atom::Decimal(3.0))).insert("b", Value::Atom(Atom::Decimal(1.1)));
++        let out = reg.get("math.add").unwrap().evaluate(&input).unwrap();
++        assert_eq!(out.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.1));
++    }
++}
++// #endregion 🔖Tests
+diff --git a/flow/play/globals.css b/flow/play/globals.css
+new file mode 100644
+index 000000000..f1d8c73cd
+--- /dev/null
++++ b/flow/play/globals.css
+@@ -0,0 +1 @@
++@import "tailwindcss";
+diff --git a/flow/play/index.html b/flow/play/index.html
+new file mode 100644
+index 000000000..43cf19389
+--- /dev/null
++++ b/flow/play/index.html
+@@ -0,0 +1,12 @@
++<!doctype html>
++<html lang="en">
++  <head>
++    <meta charset="UTF-8" />
++    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
++    <title>Flow</title>
++  </head>
++  <body>
++    <div id="root"></div>
++    <script type="module" src="./index.ts"></script>
++  </body>
++</html>
+diff --git a/flow/play/index.ts b/flow/play/index.ts
+index e69de29bb..057bb4b9b 100644
+--- a/flow/play/index.ts
++++ b/flow/play/index.ts
+@@ -0,0 +1,116 @@
++// #region 🧲Header
++/** @emoji 🌊 Flow play harness on `@framework/playground/core`. */
++// #endregion 🧲Header
++
++import {
++  AppRuntime,
++  CommandBus,
++  Controller,
++  ModeRuntime,
++  Platform,
++  Playground,
++  WindowKindRuntime,
++  buildFlowWindowBody,
++  createStackLayout,
++  registerWindowBody,
++  type WindowBodyViewContext,
++  type UiNode,
++} from "@framework/playground/core";
++
++import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
++import { FLOW_DEFAULT_FIXTURE, flowFixtureToJson, type FlowFixtureV1 } from "@flow/react";
++
++export const FLOW_PLAY_APP_ID = "flow-play";
++export const FLOW_PLAY_CONTROLLER_ID = "flow-play";
++export const FLOW_PLAY_SURFACE_ID = "flow.play/v1";
++export const FLOW_PLAY_BODY_KEY_MAIN = "flow.play.main";
++export const FLOW_PLAY_WINDOW_KIND_ID = "flow-main";
++
++export const FLOW_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = FLOW_DEFAULT_FIXTURE;
++export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAULT_FIXTURE);
++
++export const FLOW_PLAY_LAYOUT = createStackLayout(FLOW_PLAY_WINDOW_KIND_ID, "Flow");
++
++/** @emoji 🎛 Flow play shell controller. */
++export class FlowPlayController extends Controller {
++  readonly mainMode = new ModeRuntime("main", "Flow", undefined);
++  private fixtureJson = FLOW_PLAY_DEFAULT_FIXTURE_JSON;
++  private previewText = "—";
++
++  constructor(commandBus: CommandBus, hostNotify: () => void) {
++    super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
++    this.mainMode.windowKinds = [new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Flow", FLOW_PLAY_BODY_KEY_MAIN)];
++  }
++
++  getFixtureJson(): string {
++    return this.fixtureJson;
++  }
++
++  getPreviewText(): string {
++    return this.previewText;
++  }
++
++  override run(command: string, args?: unknown): void {
++    if (command === "setPreviewText") {
++      const text = (args as { text?: string }).text;
++      if (typeof text === "string") {
++        this.previewText = text;
++        this.emit();
++      }
++    }
++  }
++}
++
++function buildFlowPlayMainDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
++  return buildFlowWindowBody(FLOW_PLAY_SURFACE_ID, FLOW_PLAY_CONTROLLER_ID, FLOW_PLAY_WINDOW_KIND_ID);
++}
++
++export function registerFlowPlayDeclarativeBodies(): void {
++  registerWindowBody(FLOW_PLAY_BODY_KEY_MAIN, buildFlowPlayMainDeclarativeBody);
++}
++
++export function buildFlowPlayAppRuntime(controller: FlowPlayController): AppRuntime {
++  const app = new AppRuntime(FLOW_PLAY_APP_ID, "Flow", undefined, controller, FLOW_PLAY_LAYOUT, []);
++  app.defaultModeId = controller.mainMode.id;
++  app.addMode(controller.mainMode);
++  return app;
++}
++
++export class PlaygroundFlow extends Playground {
++  readonly id = FLOW_PLAY_APP_ID;
++
++  createRuntime(): Platform {
++    const runtime = new Platform({ id: this.id });
++    const ctrl = new FlowPlayController(runtime.commandBus, () => runtime.notify());
++    runtime.addApp(buildFlowPlayAppRuntime(ctrl));
++    return runtime;
++  }
++
++  registerBodies(): void {
++    registerFlowPlayDeclarativeBodies();
++  }
++}
++
++// #region 🧪Tests
++if (import.meta.vitest) {
++  const { describe, expect, it } = import.meta.vitest;
++
++  describe("flow play shell", () => {
++    it("default fixture is slider add preview", () => {
++      expect(FLOW_PLAY_DEFAULT_FIXTURE.widgets.length).toBe(3);
++      expect(FLOW_PLAY_DEFAULT_FIXTURE.synapses.length).toBe(2);
++    });
++  });
++}
++// #endregion 🧪Tests
++
++// #region 🔖Boot
++if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "flow") {
++  bootstrapElementsSurfaceChromeDocument("system");
++  void (async () => {
++    await import("./globals.css");
++    const { bootFlowPlay } = await import("@framework/playground/renderer/react/flow");
++    bootFlowPlay(new PlaygroundFlow());
++  })();
++}
++// #endregion 🔖Boot
+diff --git a/flow/play/package.json b/flow/play/package.json
+new file mode 100644
+index 000000000..d9bf35be6
+--- /dev/null
++++ b/flow/play/package.json
+@@ -0,0 +1,35 @@
++{
++  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
++  "name": "@flow/play",
++  "version": "0.1.0",
++  "description": "flow · play",
++  "type": "module",
++  "private": true,
++  "exports": {
++    ".": "./index.ts"
++  },
++  "scripts": {
++    "dev": "bun nx run @flow/play:dev",
++    "build": "bun nx run @flow/play:build",
++    "test": "bun nx run @flow/play:test"
++  },
++  "dependencies": {
++    "@flow/react": "workspace:*",
++    "@framework/playground/core": "workspace:*"
++  },
++  "devDependencies": {
++    "@framework/playground/renderer/react": "workspace:*",
++    "@tailwindcss/vite": "^4.1.18",
++    "@vitejs/plugin-react": "^5.1.2",
++    "typescript": "^5.9.3",
++    "vite": "^7.3.1",
++    "vitest": "^4.0.17"
++  },
++  "license": "LGPL-3.0-or-later",
++  "repository": {
++    "type": "git",
++    "url": "https://github.com/usalu/semio.git",
++    "directory": "flow/play"
++  },
++  "bundleKind": "application"
++}
+diff --git a/flow/play/project.json b/flow/play/project.json
+new file mode 100644
+index 000000000..626bd9e36
+--- /dev/null
++++ b/flow/play/project.json
+@@ -0,0 +1,41 @@
++{
++  "name": "@flow/play",
++  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
++  "targets": {
++    "dev": {
++      "executor": "nx:run-commands",
++      "options": {
++        "cwd": "flow/play",
++        "command": "bun ./script.ts dev",
++        "env": {
++          "FLOW_PLAY_PORT": "6016",
++          "NODE_OPTIONS": "",
++          "NX_NATIVE_COMMAND_RUNNER": "false",
++          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
++          "NX_TUI": "false",
++          "VSCODE_INSPECTOR_OPTIONS": ""
++        },
++        "forwardAllArgs": true
++      }
++    },
++    "build": {
++      "executor": "nx:run-commands",
++      "options": {
++        "cwd": "flow/play",
++        "command": "bun ./script.ts build",
++        "forwardAllArgs": true
++      }
++    },
++    "test": {
++      "executor": "nx:run-commands",
++      "options": {
++        "cwd": "flow/play",
++        "command": "bun ./script.ts test",
++        "env": {
++          "FLOW_PLAY_PORT": "6029"
++        },
++        "forwardAllArgs": true
++      }
++    }
++  }
++}
+diff --git a/flow/play/script.ts b/flow/play/script.ts
+new file mode 100644
+index 000000000..517aa79bc
+--- /dev/null
++++ b/flow/play/script.ts
+@@ -0,0 +1,44 @@
++#!/usr/bin/env bun
++/** 🧭 `@flow/play` task router. */
++import { join } from "node:path";
++import {
++  BundleScript,
++  ScriptRouter,
++  playPollingEnv,
++  runBun,
++  runBundleScriptMain,
++  runCargo,
++  runViteBunxDev,
++  runVitest,
++} from "../../repo/lib/js/src/index.ts";
++
++const wasmScript = join(import.meta.dir, "../core/📜script.ts");
++
++class DevScript extends BundleScript {
++  run(segments: string[]): void {
++    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
++    runViteBunxDev(this.root, segments, { portEnv: "FLOW_PLAY_PORT", defaultPort: "6016" });
++  }
++}
++
++class BuildScript extends BundleScript {
++  run(segments: string[]): void {
++    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
++    runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, playPollingEnv());
++  }
++}
++
++class TestScript extends BundleScript {
++  run(segments: string[]): void {
++    runCargo(["test", "-p", "flow_core"], this.repoRoot, playPollingEnv());
++    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
++    runVitest(this.root, segments);
++  }
++}
++
++const router = new ScriptRouter(import.meta.dir)
++  .register("dev", DevScript)
++  .register("build", BuildScript)
++  .register("test", TestScript);
++
++await runBundleScriptMain(router, import.meta.url);
+diff --git a/flow/play/vite.config.ts b/flow/play/vite.config.ts
+new file mode 100644
+index 000000000..139e34d5b
+--- /dev/null
++++ b/flow/play/vite.config.ts
+@@ -0,0 +1,23 @@
++// #region 🧲Header
++/** @emoji 🛝 Vite dev/build for `@flow/play`. */
++// #endregion 🧲Header
++
++import path from "node:path";
++import { fileURLToPath } from "node:url";
++import { createPlaygroundPlayViteConfig } from "../../ui/styling/vite-elements-assets.ts";
++
++const playDir = path.dirname(fileURLToPath(import.meta.url));
++const repoRoot = path.resolve(playDir, "../..");
++
++export default createPlaygroundPlayViteConfig({
++  playDir,
++  repoRoot,
++  playEntryKind: "flow",
++  extraAliases: [{ find: "@flow/react", replacement: path.resolve(playDir, "../react/index.tsx") }],
++  resolveDedupe: ["react", "react-dom", "@flow/react"],
++  optimizeDeps: {
++    include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@flow/react"],
++    esbuildOptions: { target: "esnext" },
++  },
++  watchIgnored: ["../core/lib.rs", "../core/target/**", "../core/Cargo.toml", "../core/Cargo.lock", "../core/📜script.ts"],
++});
+diff --git a/flow/play/vitest.config.ts b/flow/play/vitest.config.ts
+new file mode 100644
+index 000000000..f624398e8
+--- /dev/null
++++ b/flow/play/vitest.config.ts
+@@ -0,0 +1,7 @@
++import { defineConfig } from "vitest/config";
++
++export default defineConfig({
++  test: {
++    environment: "node",
++  },
++});
+diff --git a/flow/react/index.tsx b/flow/react/index.tsx
+new file mode 100644
+index 000000000..0c960e85d
+--- /dev/null
++++ b/flow/react/index.tsx
+@@ -0,0 +1,180 @@
++// #region 🧲Header
++/** @emoji 🌊 `@flow/react` — WASM flow renderer + React canvas. */
++// #endregion 🧲Header
++
++import React, { useCallback, useEffect, useRef, useState } from "react";
++import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
++
++// #region 🔖GpuWasmBridge
++if (import.meta.env.VITEST) {
++  const { readFileSync } = await import("node:fs");
++  const { dirname, join } = await import("node:path");
++  const { fileURLToPath } = await import("node:url");
++  const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../core/pkg/flow_core_bg.wasm");
++  initSync({ module: readFileSync(wasmPath) });
++} else {
++  await initFlowWasm();
++}
++
++export async function ensureFlowWasmLoaded(): Promise<void> {
++  await initFlowWasm();
++}
++
++export { FlowSession };
++// #endregion 🔖GpuWasmBridge
++
++// #region 🔖Fixture
++export interface FlowFixtureV1 {
++  readonly schema: "flow.fixture/v1";
++  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
++  readonly widgets: readonly FlowWidgetV1[];
++  readonly synapses: readonly { readonly id: string; readonly from: string; readonly to: string }[];
++}
++
++export type FlowWidgetV1 =
++  | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string }
++  | { readonly kind: "inputSlider"; readonly id: string; readonly value: number }
++  | { readonly kind: "inputNote"; readonly id: string; readonly text: string }
++  | { readonly kind: "outputPreview"; readonly id: string }
++  | { readonly kind: "outputAction"; readonly id: string; readonly action: string };
++
++export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
++  schema: "flow.fixture/v1",
++  camera: { x: 0, y: 0, zoom: 1 },
++  widgets: [
++    { kind: "inputSlider", id: "slider", value: 3 },
++    { kind: "neuron", id: "add", neuronKind: "math.add" },
++    { kind: "outputPreview", id: "preview" },
++  ],
++  synapses: [
++    { id: "s1", from: "slider", to: "add" },
++    { id: "s2", from: "add", to: "preview" },
++  ],
++};
++
++export function flowFixtureToJson(fixture: FlowFixtureV1): string {
++  return JSON.stringify(fixture);
++}
++// #endregion 🔖Fixture
++
++// #region 🔖FlowCanvas
++export interface FlowCanvasProps {
++  readonly fixtureJson?: string;
++  readonly className?: string;
++  readonly onPreviewText?: (text: string) => void;
++}
++
++export function FlowCanvas({ fixtureJson, className, onPreviewText }: FlowCanvasProps): React.JSX.Element {
++  const containerRef = useRef<HTMLDivElement>(null);
++  const canvasRef = useRef<HTMLCanvasElement>(null);
++  const sessionRef = useRef<FlowSession | null>(null);
++  const rafRef = useRef<number | null>(null);
++  const [previewText, setPreviewText] = useState("—");
++  const [sliderValue, setSliderValue] = useState(3);
++
++  const renderFrame = useCallback(() => {
++    try {
++      sessionRef.current?.renderFrame();
++    } catch {
++      /* gpu not ready */
++    }
++  }, []);
++
++  const evaluate = useCallback(() => {
++    const session = sessionRef.current;
++    if (!session) return;
++    session.evaluate();
++    const text = session.previewText();
++    setPreviewText(text);
++    onPreviewText?.(text);
++    console.log(`[DEBUG] flow evaluate preview: ${text}`);
++  }, [onPreviewText]);
++
++  useEffect(() => {
++    const canvas = canvasRef.current;
++    const container = containerRef.current;
++    if (!canvas || !container) return;
++    const session = new FlowSession();
++    sessionRef.current = session;
++    const json = fixtureJson ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
++    session.loadFixtureJson(json);
++    evaluate();
++    void session.attachCanvas(canvas).then(() => {
++      const resize = () => {
++        const rect = container.getBoundingClientRect();
++        const dpr = globalThis.devicePixelRatio || 1;
++        const w = Math.max(1, Math.round(rect.width));
++        const h = Math.max(1, Math.round(rect.height));
++        canvas.width = Math.round(w * dpr);
++        canvas.height = Math.round(h * dpr);
++        canvas.style.width = `${w}px`;
++        canvas.style.height = `${h}px`;
++        session.setSize(canvas.width, canvas.height, dpr);
++        renderFrame();
++      };
++      resize();
++      const ro = new ResizeObserver(resize);
++      ro.observe(container);
++      const tick = () => {
++        renderFrame();
++        rafRef.current = requestAnimationFrame(tick);
++      };
++      rafRef.current = requestAnimationFrame(tick);
++      return () => {
++        ro.disconnect();
++        if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
++      };
++    });
++    return () => {
++      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
++      sessionRef.current = null;
++    };
++  }, [evaluate, fixtureJson, renderFrame]);
++
++  const onSliderChange = useCallback(
++    (value: number) => {
++      setSliderValue(value);
++      sessionRef.current?.setSliderValue("slider", value);
++      evaluate();
++    },
++    [evaluate],
++  );
++
++  return (
++    <div ref={containerRef} className={className ?? "relative h-full min-h-0 w-full min-w-0 bg-[var(--color-surface-1)]"}>
++      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full touch-none" />
++      <div className="pointer-events-auto absolute bottom-3 left-3 flex flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)] p-3 text-sm shadow-md">
++        <label className="flex items-center gap-2">
++          <span className="w-14">Slider</span>
++          <input
++            type="range"
++            min={0}
++            max={10}
++            step={0.1}
++            value={sliderValue}
++            onChange={(e) => onSliderChange(Number(e.target.value))}
++          />
++          <span className="tabular-nums">{sliderValue.toFixed(1)}</span>
++        </label>
++        <div>
++          Preview: <strong className="tabular-nums">{previewText}</strong>
++        </div>
++      </div>
++    </div>
++  );
++}
++// #endregion 🔖FlowCanvas
++
++// #region 🧪Tests
++if (import.meta.vitest) {
++  const { describe, expect, it } = import.meta.vitest;
++
++  describe("flow react fixture", () => {
++    it("default fixture serializes", () => {
++      const json = flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
++      expect(json).toContain("flow.fixture/v1");
++      expect(json).toContain("math.add");
++    });
++  });
++}
++// #endregion 🧪Tests
+diff --git a/flow/react/package.json b/flow/react/package.json
+new file mode 100644
+index 000000000..aeac9f5dd
+--- /dev/null
++++ b/flow/react/package.json
+@@ -0,0 +1,30 @@
++{
++  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
++  "name": "@flow/react",
++  "version": "0.1.0",
++  "description": "flow · react",
++  "type": "module",
++  "private": true,
++  "scripts": {
++    "test": "bun nx run @flow/react:test"
++  },
++  "dependencies": {
++    "react": "^19.2.3",
++    "react-dom": "^19.2.3"
++  },
++  "devDependencies": {
++    "@types/react": "^19.2.8",
++    "@types/react-dom": "^19.2.3",
++    "@vitejs/plugin-react": "^5.1.2",
++    "typescript": "^5.9.3",
++    "vite": "^7.3.1",
++    "vitest": "^4.0.17"
++  },
++  "license": "LGPL-3.0-or-later",
++  "repository": {
++    "type": "git",
++    "url": "https://github.com/usalu/semio.git",
++    "directory": "flow/react"
++  },
++  "bundleKind": "library"
++}
+diff --git a/flow/react/project.json b/flow/react/project.json
+new file mode 100644
+index 000000000..a149913f6
+--- /dev/null
++++ b/flow/react/project.json
+@@ -0,0 +1,13 @@
++{
++  "name": "@flow/react",
++  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
++  "targets": {
++    "test": {
++      "executor": "nx:run-commands",
++      "options": {
++        "cwd": "flow/react",
++        "command": "bun ./script.ts test"
++      }
++    }
++  }
++}
+diff --git a/flow/react/script.ts b/flow/react/script.ts
+new file mode 100644
+index 000000000..39cb012cc
+--- /dev/null
++++ b/flow/react/script.ts
+@@ -0,0 +1,17 @@
++#!/usr/bin/env bun
++/** 🧭 `@flow/react` task router. */
++import { join } from "node:path";
++import { BundleScript, ScriptRouter, playPollingEnv, runBun, runBundleScriptMain, runVitest } from "../../repo/lib/js/src/index.ts";
++
++const wasmScript = join(import.meta.dir, "../core/📜script.ts");
++
++class TestScript extends BundleScript {
++  run(segments: string[]): void {
++    runBun([wasmScript, "wasm"], this.root, playPollingEnv());
++    runVitest(this.root, segments);
++  }
++}
++
++const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
++
++await runBundleScriptMain(router, import.meta.url);
+diff --git a/flow/react/vitest.config.ts b/flow/react/vitest.config.ts
+new file mode 100644
+index 000000000..f624398e8
+--- /dev/null
++++ b/flow/react/vitest.config.ts
+@@ -0,0 +1,7 @@
++import { defineConfig } from "vitest/config";
++
++export default defineConfig({
++  test: {
++    environment: "node",
++  },
++});
+diff --git a/framework/product/platform/core/index.ts b/framework/product/platform/core/index.ts
+index 7df5381db..4296b8403 100644
+--- a/framework/product/platform/core/index.ts
++++ b/framework/product/platform/core/index.ts
+@@ -235,9 +235,9 @@ export function sidePanelTreeRootItems(
+ 
+ //#region 🔖ComponentKind
+ /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
+-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "panel";
++export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "panel";
+ 
+-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap"];
++const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow"];
+ //#endregion 🔖ComponentKind
+ 
+ /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
+@@ -299,6 +299,16 @@ export interface UiGisMapHostSurfaceNode {
+ 	readonly bindingId?: string;
+ }
+ 
++/** @emoji 🌊 Host-bound flow DAG surface. */
++export interface UiFlowHostSurfaceNode {
++	readonly type: "flow";
++	readonly componentKind: "flow";
++	readonly surfaceId: string;
++	readonly controllerId: string;
++	readonly paneId?: string;
++	readonly bindingId?: string;
++}
++
+ /** @emoji 📐 Host-bound CAD spatial surface. */
+ export interface UiCadHostSurfaceNode {
+ 	readonly type: "cad";
+@@ -324,6 +334,7 @@ export type UiComponentHostSurfaceNode =
+ 	| UiPuzzle3dHostSurfaceNode
+ 	| UiPuzzle5dHostSurfaceNode
+ 	| UiGisMapHostSurfaceNode
++	| UiFlowHostSurfaceNode
+ 	| UiCadHostSurfaceNode
+ 	| UiPanelHostSurfaceNode;
+ 
+@@ -448,6 +459,18 @@ export function buildMapWindowBody(surfaceId: string, controllerId: string, pane
+ 	};
+ }
+ 
++/** @emoji 🌊 Canonical flow window body. */
++export function buildFlowWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiFlowHostSurfaceNode {
++	return {
++		type: "flow",
++		componentKind: "flow",
++		surfaceId,
++		controllerId,
++		...(paneId ? { paneId } : {}),
++		...(bindingId ? { bindingId } : {}),
++	};
++}
++
+ /** @emoji 📐 Canonical CAD window body. */
+ export function buildCadWindowBody(surfaceId: string, controllerId: string, bindingId?: string): UiCadHostSurfaceNode {
+ 	return { type: "cad", componentKind: "cad", surfaceId, controllerId, ...(bindingId ? { bindingId } : {}) };
+diff --git a/framework/product/playground/core/index.ts b/framework/product/playground/core/index.ts
+index 41bbd2d73..4643ce6a5 100644
+--- a/framework/product/playground/core/index.ts
++++ b/framework/product/playground/core/index.ts
+@@ -132,6 +132,7 @@ import {
+   buildPuzzle2dWindowBody,
+   buildPuzzle3dWindowBody,
+   buildMapWindowBody,
++  buildFlowWindowBody,
+   isCanvasOnlyWindowBody,
+ } from "@framework/platform/core";
+ 
+@@ -141,6 +142,7 @@ export {
+   buildPuzzle5dWindowBody,
+   buildCadWindowBody,
+   buildMapWindowBody,
++  buildFlowWindowBody,
+   buildPanelWindowBody,
+   isCanvasOnlyWindowBody,
+ } from "@framework/platform/core";
+diff --git a/framework/product/playground/renderer/react/index.tsx b/framework/product/playground/renderer/react/index.tsx
+index a55bc3a19..beb28ea20 100644
+--- a/framework/product/playground/renderer/react/index.tsx
++++ b/framework/product/playground/renderer/react/index.tsx
+@@ -328,9 +328,11 @@ const puzzle3dSurfaceHosts = new Map<string, Puzzle3dSurfaceHost>();
+ const puzzle2dSurfaceHosts = new Map<string, Puzzle2dSurfaceHost>();
+ type GisMapSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiGisMapHostSurfaceNode }>;
+ const gisMapSurfaceHosts = new Map<string, GisMapSurfaceHost>();
++type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@framework/platform/core").UiFlowHostSurfaceNode }>;
++const flowSurfaceHosts = new Map<string, FlowSurfaceHost>();
+ const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
+ 
+-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap"]);
++const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow"]);
+ 
+ function isPlaygroundCanvasHostChild(child: UiNode): boolean {
+   return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
+@@ -356,6 +358,12 @@ export function registerUiGisMapSurfaceHost(surfaceId: string, Component: GisMap
+   registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+ }
+ 
++/** @emoji 🌊 Binds `surfaceId` from {@link UiFlowHostSurfaceNode} to a flow canvas. */
++export function registerUiFlowSurfaceHost(surfaceId: string, Component: FlowSurfaceHost): void {
++  flowSurfaceHosts.set(surfaceId, Component);
++  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
++}
++
+ /** @emoji 📊 Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
+ export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
+   tableSurfaceHosts.set(surfaceId, Component);
+@@ -383,6 +391,16 @@ function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel"):
+       );
+     }
+   }
++  if (node.type === "flow") {
++    const Host = flowSurfaceHosts.get(node.surfaceId);
++    if (Host) {
++      return (
++        <div className="absolute inset-0 min-h-0 min-w-0">
++          <Host node={node} />
++        </div>
++      );
++    }
++  }
+   if (node.type === "table") {
+     const Host = tableSurfaceHosts.get(node.surfaceId);
+     if (Host) {
+@@ -5965,6 +5983,65 @@ export function bootMapPlay(playground: Playground, rootId = "root"): void {
+ }
+ //#endregion 🔖MapPlayHost
+ 
++//#region 🔖FlowPlayHost
++import {
++  FLOW_PLAY_APP_ID,
++  FLOW_PLAY_BODY_KEY_MAIN,
++  FLOW_PLAY_CONTROLLER_ID,
++  FLOW_PLAY_DEFAULT_FIXTURE_JSON,
++  FLOW_PLAY_SURFACE_ID,
++  FLOW_PLAY_WINDOW_KIND_ID,
++  FlowPlayController,
++  registerFlowPlayDeclarativeBodies,
++} from "@flow/play";
++import { FlowCanvas } from "@flow/react";
++import type { UiFlowHostSurfaceNode } from "@framework/platform/core";
++
++let flowPlayChromeRegistered = false;
++
++function useFlowPlayController(): FlowPlayController | undefined {
++  const { runtime } = useApp();
++  return runtime.getActiveApp()?.controller as FlowPlayController | undefined;
++}
++
++function FlowPlayPaneSurfaceHost({ node: _node }: { readonly node: UiFlowHostSurfaceNode }): ReactElement {
++  const ctrl = useFlowPlayController();
++  return (
++    <FlowCanvas
++      fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
++      onPreviewText={(text) => {
++        console.log(`[DEBUG] flow play preview: ${text}`);
++        ctrl?.run("setPreviewText", { text });
++      }}
++    />
++  );
++}
++
++export function registerFlowPlaySurfaceHosts(): void {
++  if (flowPlayChromeRegistered) return;
++  flowPlayChromeRegistered = true;
++  registerUiFlowSurfaceHost(FLOW_PLAY_SURFACE_ID, FlowPlayPaneSurfaceHost);
++  registerFlowPlayDeclarativeBodies();
++}
++
++function FlowPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
++  return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} />;
++}
++
++export function mountFlowPlayChrome(playground: Playground, rootId = "root"): void {
++  mountPlaygroundApp(<FlowPlayChrome runtime={playground.runtime} />, rootId);
++}
++
++const flowPlayChromeBoot: PlaygroundChromeBoot = {
++  registerHosts: registerFlowPlaySurfaceHosts,
++  mount: mountFlowPlayChrome,
++};
++
++export function bootFlowPlay(playground: Playground, rootId = "root"): void {
++  bootPlayground(playground, flowPlayChromeBoot, rootId);
++}
++//#endregion 🔖FlowPlayHost
++
+ //#region 🔖PresentationPlayHost
+ import {
+ 	PRESENTATION_PLAY_BODY_KEY_MAIN,
+diff --git a/framework/product/playground/renderer/react/package.json b/framework/product/playground/renderer/react/package.json
+index 4bd12942a..ed2d3da3f 100644
+--- a/framework/product/playground/renderer/react/package.json
++++ b/framework/product/playground/renderer/react/package.json
+@@ -13,6 +13,7 @@
+     "./puzzle/3d": "./index.tsx",
+     "./puzzle/5d": "./index.tsx",
+     "./puzzle/map": "./index.tsx",
++    "./flow": "./index.tsx",
+     "./presentation": "./index.tsx"
+   },
+   "dependencies": {
+@@ -31,6 +32,8 @@
+     "@puzzle/5d/react": "workspace:*",
+     "@gis/map/play": "workspace:*",
+     "@gis/map/react": "workspace:*",
++    "@flow/play": "workspace:*",
++    "@flow/react": "workspace:*",
+     "@ui/react": "workspace:*",
+     "clsx": "^2.1.1",
+     "react": "^19.2.3",
+diff --git a/mathematical/graph/port/directed/dag/Cargo.toml b/mathematical/graph/port/directed/dag/Cargo.toml
+new file mode 100644
+index 000000000..6bdcf2407
+--- /dev/null
++++ b/mathematical/graph/port/directed/dag/Cargo.toml
+@@ -0,0 +1,17 @@
++[package]
++name = "mathematical_graph_port_directed_dag"
++version = "0.1.0"
++edition = "2021"
++rust-version = "1.88"
++
++[lib]
++crate-type = ["rlib"]
++path = "lib.rs"
++
++[dependencies]
++mathematical_graph_port_directed = { path = "../normal" }
++mathematical_graph = { path = "../../.." }
++mathematical_core = { path = "../../../../core" }
++infinite_cavas = { path = "../../../../../infinite/cavas/vello" }
++serde = { version = "1.0.219", features = ["derive"] }
++serde_json = "1.0.140"
+diff --git a/mathematical/graph/port/directed/dag/lib.rs b/mathematical/graph/port/directed/dag/lib.rs
+index e69de29bb..2894f16d3 100644
+--- a/mathematical/graph/port/directed/dag/lib.rs
++++ b/mathematical/graph/port/directed/dag/lib.rs
+@@ -0,0 +1,294 @@
++//! 🌳 Directed acyclic port graph: rectangle IO nodes on infinite canvas.
++
++use serde::{Deserialize, Serialize};
++
++pub use infinite_cavas as cavas;
++pub use mathematical_graph_port_directed::{
++    self as graph, apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json, BoardEngine, BoardEvent, Camera, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
++};
++
++/// 🌳 DAG board engine alias.
++pub type DagBoardEngine = DirectedPortGraphEngine;
++
++// #region 🔖IoNode
++/// 📦 Rectangle node with named inputs on the left and outputs on the right.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(rename_all = "camelCase")]
++pub struct IoNodeSpec {
++    pub id: String,
++    pub name: String,
++    pub inputs: Vec<IoPortSpec>,
++    pub outputs: Vec<IoPortSpec>,
++    #[serde(default)]
++    pub x: f64,
++    #[serde(default)]
++    pub y: f64,
++    #[serde(default = "default_node_width")]
++    pub width: f64,
++    #[serde(default = "default_node_height")]
++    pub height: f64,
++}
++
++fn default_node_width() -> f64 {
++    160.0
++}
++
++fn default_node_height() -> f64 {
++    56.0
++}
++
++/// 🪝 Named horizontal port on an IO node edge.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(rename_all = "camelCase")]
++pub struct IoPortSpec {
++    pub id: String,
++    pub label: String,
++}
++
++/// 📐 Places input handles on the left and output handles on the right of a rectangle node.
++pub fn io_node_handle_angles(input_index: usize, input_count: usize, output_index: usize, output_count: usize) -> (f64, f64) {
++    let input_angle = port_angle_on_side(input_index, input_count.max(1), true);
++    let output_angle = port_angle_on_side(output_index, output_count.max(1), false);
++    (input_angle, output_angle)
++}
++
++fn port_angle_on_side(index: usize, count: usize, left: bool) -> f64 {
++    let t = (index as f64 + 0.5) / count as f64;
++    let y = (t - 0.5) * 0.8;
++    if left {
++        std::f64::consts::PI + y * std::f64::consts::FRAC_PI_2 * 0.9
++    } else {
++        y * std::f64::consts::FRAC_PI_2 * 0.9
++    }
++}
++// #endregion 🔖IoNode
++
++// #region 🔖Acyclicity
++use std::collections::{HashMap, HashSet};
++
++/// 🚫 Returns true when adding `source -> target` would create a cycle.
++pub fn would_create_cycle(existing: &[(String, String)], source: &str, target: &str) -> bool {
++    if source == target {
++        return true;
++    }
++    let mut adj: HashMap<String, Vec<String>> = HashMap::new();
++    for (u, v) in existing {
++        adj.entry(u.clone()).or_default().push(v.clone());
++    }
++    adj.entry(source.to_string()).or_default().push(target.to_string());
++    has_path(&adj, target, source)
++}
++
++fn has_path(adj: &HashMap<String, Vec<String>>, from: &str, to: &str) -> bool {
++    let mut seen = HashSet::new();
++    let mut stack = vec![from.to_string()];
++    while let Some(n) = stack.pop() {
++        if n == to {
++            return true;
++        }
++        if !seen.insert(n.clone()) {
++            continue;
++        }
++        if let Some(next) = adj.get(&n) {
++            for m in next {
++                stack.push(m.clone());
++            }
++        }
++    }
++    false
++}
++// #endregion 🔖Acyclicity
++
++// #region 🔖Layout
++use mathematical_core::tree_layout::buchheim_positions;
++use serde_json::Value;
++
++/// 🌲 Layered DAG layout options for fixture JSON.
++#[derive(Clone, Debug, Deserialize)]
++#[serde(rename_all = "camelCase")]
++pub struct DagLayoutOptions {
++    #[serde(default = "default_layer_spacing")]
++    pub layer_spacing: f64,
++    #[serde(default = "default_sibling_gap")]
++    pub sibling_gap: f64,
++    #[serde(default)]
++    pub center_x: Option<f64>,
++    #[serde(default)]
++    pub center_y: Option<f64>,
++}
++
++fn default_layer_spacing() -> f64 {
++    120.0
++}
++
++fn default_sibling_gap() -> f64 {
++    40.0
++}
++
++impl Default for DagLayoutOptions {
++    fn default() -> Self {
++        Self { layer_spacing: default_layer_spacing(), sibling_gap: default_sibling_gap(), center_x: None, center_y: None }
++    }
++}
++
++/// 🌳 Writes node centers from a layered DAG layout into `dag.fixture/v1`.
++pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayoutOptions) -> Result<(), String> {
++    let Some(root) = fixture.as_object_mut() else {
++        return Err("fixture root must be object".into());
++    };
++    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.fixture/v1") {
++        return Err("schema must be dag.fixture/v1".into());
++    }
++    let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
++    let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
++        return Err("nodes array missing".into());
++    };
++    if nodes.is_empty() {
++        return Ok(());
++    }
++    let mut handle_to_node: HashMap<String, String> = HashMap::new();
++    let mut node_ids: HashSet<String> = HashSet::new();
++    for node in nodes.iter() {
++        let Some(obj) = node.as_object() else {
++            continue;
++        };
++        let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
++            continue;
++        };
++        node_ids.insert(nid.to_string());
++        if let Some(handles) = obj.get("handles").and_then(|v| v.as_array()) {
++            for h in handles {
++                if let Some(hid) = h.get("id").and_then(|v| v.as_str()) {
++                    handle_to_node.insert(hid.to_string(), nid.to_string());
++                }
++            }
++        }
++    }
++    let mut directed: Vec<(String, String)> = Vec::new();
++    for e in &edges_json {
++        let Some(eo) = e.as_object() else {
++            continue;
++        };
++        let src = eo.get("source").and_then(|v| v.as_str()).or_else(|| eo.get("sourceHandle").and_then(|v| v.as_str()));
++        let tgt = eo.get("target").and_then(|v| v.as_str()).or_else(|| eo.get("targetHandle").and_then(|v| v.as_str()));
++        let (Some(src_h), Some(tgt_h)) = (src, tgt) else {
++            continue;
++        };
++        let u = handle_to_node.get(src_h).cloned().unwrap_or_else(|| src_h.to_string());
++        let v = handle_to_node.get(tgt_h).cloned().unwrap_or_else(|| tgt_h.to_string());
++        if u != v && node_ids.contains(&u) && node_ids.contains(&v) {
++            directed.push((u, v));
++        }
++    }
++    let mut incoming: HashMap<String, u32> = HashMap::new();
++    for id in &node_ids {
++        incoming.insert(id.clone(), 0);
++    }
++    for (_, v) in &directed {
++        *incoming.entry(v.clone()).or_insert(0) += 1;
++    }
++    let roots: Vec<String> = node_ids.iter().filter(|id| incoming.get(*id).copied().unwrap_or(0) == 0).cloned().collect();
++    let roots = if roots.is_empty() { node_ids.iter().cloned().collect() } else { roots };
++    let mut depth: HashMap<String, i32> = HashMap::new();
++    for r in &roots {
++        depth.insert(r.clone(), 0);
++    }
++    for _ in 0..directed.len().saturating_add(node_ids.len()).saturating_add(4) {
++        let mut changed = false;
++        for (u, v) in &directed {
++            let Some(&du) = depth.get(u) else {
++                continue;
++            };
++            let nd = du + 1;
++            if depth.get(v).copied().unwrap_or(-1) < nd {
++                depth.insert(v.clone(), nd);
++                changed = true;
++            }
++        }
++        if !changed {
++            break;
++        }
++    }
++    let pos = buchheim_positions(&roots, &directed, &depth);
++    let mut minx = f64::INFINITY;
++    let mut maxx = f64::NEG_INFINITY;
++    let mut miny = f64::INFINITY;
++    let mut maxy = f64::NEG_INFINITY;
++    for (_, (x, y)) in &pos {
++        minx = minx.min(*x);
++        maxx = maxx.max(*x);
++        miny = miny.min(*y);
++        maxy = maxy.max(*y);
++    }
++    let cx = (minx + maxx) * 0.5;
++    let cy = (miny + maxy) * 0.5;
++    let gx = opts.center_x.unwrap_or(0.0);
++    let gy = opts.center_y.unwrap_or(0.0);
++    let dx = gx - cx * opts.sibling_gap;
++    let dy = gy - cy * opts.layer_spacing;
++    for node in nodes.iter_mut() {
++        let Some(obj) = node.as_object_mut() else {
++            continue;
++        };
++        let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
++            continue;
++        };
++        let Some((bx, by)) = pos.get(nid) else {
++            continue;
++        };
++        obj.insert("x".into(), serde_json::json!(bx * opts.sibling_gap + dx));
++        obj.insert("y".into(), serde_json::json!(by * opts.layer_spacing + dy));
++    }
++    Ok(())
++}
++// #endregion 🔖Layout
++
++// #region 🔖GraphExtension
++/// 🧩 DAG-specific graph extension marker.
++pub struct DagExtension;
++
++impl cavas::CanvasExtension for DagExtension {
++    fn extension_id(&self) -> &str {
++        "dag"
++    }
++}
++
++impl GraphExtension for DagExtension {}
++// #endregion 🔖GraphExtension
++
++// #region 🔖Tests
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn io_node_handle_angles_left_right() {
++        let (in_a, out_a) = io_node_handle_angles(0, 2, 0, 1);
++        assert!(in_a > std::f64::consts::FRAC_PI_2);
++        assert!(out_a.abs() < std::f64::consts::FRAC_PI_2);
++    }
++
++    #[test]
++    fn cycle_detection_blocks_back_edge() {
++        let edges = vec![("a".into(), "b".into()), ("b".into(), "c".into())];
++        assert!(would_create_cycle(&edges, "c", "a"));
++        assert!(!would_create_cycle(&edges, "a", "c"));
++    }
++
++    #[test]
++    fn dag_layout_moves_nodes() {
++        let mut fixture: Value = serde_json::json!({
++            "schema": "dag.fixture/v1",
++            "nodes": [
++                {"id": "a", "x": 0, "y": 0, "handles": []},
++                {"id": "b", "x": 0, "y": 0, "handles": []}
++            ],
++            "edges": [{"id": "e1", "source": "a", "target": "b"}]
++        });
++        apply_dag_layout_to_fixture_v1_value(&mut fixture, &DagLayoutOptions::default()).unwrap();
++        let a_y = fixture["nodes"][0]["y"].as_f64().unwrap();
++        let b_y = fixture["nodes"][1]["y"].as_f64().unwrap();
++        assert!((b_y - a_y).abs() > 1.0);
++    }
++}
++// #endregion 🔖Tests
+diff --git a/mathematical/graph/port/directed/normal/Cargo.toml b/mathematical/graph/port/directed/normal/Cargo.toml
+index 48f83d749..a60e1c5d8 100644
+--- a/mathematical/graph/port/directed/normal/Cargo.toml
++++ b/mathematical/graph/port/directed/normal/Cargo.toml
+@@ -9,9 +9,9 @@ crate-type = ["rlib"]
+ path = "lib.rs"
+ 
+ [dependencies]
+-mathematical_graph = { path = "../.." }
+-mathematical_graph_normal_undirected = { path = "../../normal/undirected" }
+-mathematical_core = { path = "../../../core" }
+-infinite_cavas = { path = "../../../../infinite/cavas/vello" }
++mathematical_graph = { path = "../../.." }
++mathematical_graph_normal_undirected = { path = "../../../normal/undirected" }
++mathematical_core = { path = "../../../../core" }
++infinite_cavas = { path = "../../../../../infinite/cavas/vello" }
+ serde = { version = "1.0.219", features = ["derive"] }
+ serde_json = "1.0.140"
+diff --git a/neural/engine/Cargo.toml b/neural/engine/Cargo.toml
+new file mode 100644
+index 000000000..a59318850
+--- /dev/null
++++ b/neural/engine/Cargo.toml
+@@ -0,0 +1,13 @@
++[package]
++name = "neural_engine"
++version = "0.1.0"
++edition = "2021"
++rust-version = "1.88"
++
++[lib]
++crate-type = ["rlib"]
++path = "lib.rs"
++
++[dependencies]
++serde = { version = "1.0.219", features = ["derive"] }
++serde_json = "1.0.140"
+diff --git a/neural/engine/lib.rs b/neural/engine/lib.rs
+index e69de29bb..360718a3e 100644
+--- a/neural/engine/lib.rs
++++ b/neural/engine/lib.rs
+@@ -0,0 +1,319 @@
++//! 🧠 Headless neural engine: dictionary in, dictionary out.
++
++use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
++
++use serde::{Deserialize, Serialize};
++
++// #region 🔖Dictionary
++/// 📚 Immutable, unordered, collision-free key-value collection.
++#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
++#[serde(transparent)]
++pub struct Dictionary {
++    pairs: BTreeMap<String, Value>,
++}
++
++impl Dictionary {
++    pub fn new() -> Self {
++        Self::default()
++    }
++
++    pub fn insert(mut self, key: impl Into<String>, value: Value) -> Self {
++        self.pairs.insert(key.into(), value);
++        self
++    }
++
++    pub fn get(&self, key: &str) -> Option<&Value> {
++        self.pairs.get(key)
++    }
++
++    pub fn keys(&self) -> impl Iterator<Item = &String> {
++        self.pairs.keys()
++    }
++
++    pub fn len(&self) -> usize {
++        self.pairs.len()
++    }
++
++    pub fn is_empty(&self) -> bool {
++        self.pairs.is_empty()
++    }
++
++    pub fn merge(&self, other: &Dictionary) -> Dictionary {
++        let mut pairs = self.pairs.clone();
++        for (k, v) in &other.pairs {
++            pairs.insert(k.clone(), v.clone());
++        }
++        Dictionary { pairs }
++    }
++}
++
++/// 🔑 Dot-separated camelCase segment path.
++pub type Key = String;
++
++/// 💎 Atom or nested dictionary.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(untagged)]
++pub enum Value {
++    Atom(Atom),
++    Dictionary(Dictionary),
++}
++
++impl Value {
++    pub fn as_atom(&self) -> Option<&Atom> {
++        match self {
++            Value::Atom(a) => Some(a),
++            _ => None,
++        }
++    }
++
++    pub fn as_dictionary(&self) -> Option<&Dictionary> {
++        match self {
++            Value::Dictionary(d) => Some(d),
++            _ => None,
++        }
++    }
++}
++
++/// ⚛️ Immutable non-dictionary value.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++#[serde(untagged)]
++pub enum Atom {
++    Integer(i64),
++    Decimal(f64),
++    String(String),
++}
++
++impl Atom {
++    pub fn as_f64(&self) -> Option<f64> {
++        match self {
++            Atom::Integer(i) => Some(*i as f64),
++            Atom::Decimal(d) => Some(*d),
++            _ => None,
++        }
++    }
++
++    pub fn as_str(&self) -> Option<&str> {
++        match self {
++            Atom::String(s) => Some(s),
++            _ => None,
++        }
++    }
++}
++// #endregion 🔖Dictionary
++
++// #region 🔖Tree
++/// 🌳 Directed acyclic graph of neurons and synapses.
++#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
++pub struct Tree {
++    pub neurons: Vec<Neuron>,
++    pub synapses: Vec<Synapse>,
++}
++
++/// 🔵 Neuron instance bound to a kind.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Neuron {
++    pub id: String,
++    pub kind: String,
++    #[serde(default)]
++    pub params: Dictionary,
++}
++
++/// 🔗 Directed connection between two port endpoints.
++#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
++pub struct Synapse {
++    pub id: String,
++    pub from: String,
++    pub to: String,
++}
++// #endregion 🔖Tree
++
++// #region 🔖NeuronKind
++/// ⚙️ Eval error from a neuron kind.
++#[derive(Clone, Debug, PartialEq)]
++pub enum EvalError {
++    UnknownKind(String),
++    MissingInput(String),
++    InvalidInput(String),
++    CycleDetected,
++}
++
++impl std::fmt::Display for EvalError {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        match self {
++            EvalError::UnknownKind(k) => write!(f, "unknown kind: {k}"),
++            EvalError::MissingInput(k) => write!(f, "missing input: {k}"),
++            EvalError::InvalidInput(m) => write!(f, "invalid input: {m}"),
++            EvalError::CycleDetected => write!(f, "cycle detected"),
++        }
++    }
++}
++
++impl std::error::Error for EvalError {}
++
++/// 🧮 Computational unit: one dictionary to another.
++pub trait Function: Send + Sync {
++    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError>;
++}
++
++/// 📋 Registry of neuron kinds by id.
++pub struct Registry {
++    kinds: HashMap<String, Box<dyn Function>>,
++}
++
++impl Default for Registry {
++    fn default() -> Self {
++        Self { kinds: HashMap::new() }
++    }
++}
++
++impl Registry {
++    pub fn new() -> Self {
++        Self::default()
++    }
++
++    pub fn register(&mut self, kind_id: impl Into<String>, function: Box<dyn Function>) {
++        self.kinds.insert(kind_id.into(), function);
++    }
++
++    pub fn get(&self, kind_id: &str) -> Option<&dyn Function> {
++        self.kinds.get(kind_id).map(|b| b.as_ref())
++    }
++}
++// #endregion 🔖NeuronKind
++
++// #region 🔖Evaluator
++/// 🔄 Topological evaluation over a neural tree.
++pub struct Evaluator<'a> {
++    registry: &'a Registry,
++}
++
++impl<'a> Evaluator<'a> {
++    pub fn new(registry: &'a Registry) -> Self {
++        Self { registry }
++    }
++
++    pub fn evaluate(&self, tree: &Tree, seeds: &HashMap<String, Dictionary>) -> Result<HashMap<String, Dictionary>, EvalError> {
++        let order = topo_order(tree)?;
++        let mut outputs: HashMap<String, Dictionary> = seeds.clone();
++        for neuron_id in order {
++            let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
++            let input = collect_neuron_input(tree, &outputs, &neuron_id);
++            if let Some(seed) = seeds.get(&neuron_id) {
++                outputs.insert(neuron_id.clone(), seed.clone());
++                continue;
++            }
++            let kind = self.registry.get(&neuron.kind).ok_or_else(|| EvalError::UnknownKind(neuron.kind.clone()))?;
++            let out = kind.evaluate(&input.merge(&neuron.params))?;
++            outputs.insert(neuron_id.clone(), out);
++        }
++        Ok(outputs)
++    }
++}
++
++fn collect_neuron_input(tree: &Tree, outputs: &HashMap<String, Dictionary>, neuron_id: &str) -> Dictionary {
++    let mut acc = Dictionary::new();
++    for syn in &tree.synapses {
++        if syn.to != neuron_id {
++            continue;
++        }
++        if let Some(src_out) = outputs.get(&syn.from) {
++            acc = acc.merge(src_out);
++        }
++    }
++    acc
++}
++
++fn topo_order(tree: &Tree) -> Result<Vec<String>, EvalError> {
++    let ids: HashSet<String> = tree.neurons.iter().map(|n| n.id.clone()).collect();
++    let mut incoming: HashMap<String, Vec<String>> = HashMap::new();
++    for id in &ids {
++        incoming.insert(id.clone(), vec![]);
++    }
++    for syn in &tree.synapses {
++        if !ids.contains(&syn.from) || !ids.contains(&syn.to) {
++            continue;
++        }
++        incoming.entry(syn.to.clone()).or_default().push(syn.from.clone());
++    }
++    let mut indegree: HashMap<String, usize> = incoming.iter().map(|(k, v)| (k.clone(), v.len())).collect();
++    let mut queue: VecDeque<String> = indegree.iter().filter(|(_, &d)| d == 0).map(|(k, _)| k.clone()).collect();
++    queue.make_contiguous().sort();
++    let mut order = Vec::new();
++    while let Some(n) = queue.pop_front() {
++        order.push(n.clone());
++        for syn in &tree.synapses {
++            if syn.from != n {
++                continue;
++            }
++            if let Some(d) = indegree.get_mut(&syn.to) {
++                *d = d.saturating_sub(1);
++                if *d == 0 {
++                    queue.push_back(syn.to.clone());
++                }
++            }
++        }
++    }
++    if order.len() != ids.len() {
++        return Err(EvalError::CycleDetected);
++    }
++    Ok(order)
++}
++// #endregion 🔖Evaluator
++
++// #region 🔖Tests
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    struct Echo;
++
++    impl Function for Echo {
++        fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
++            Ok(input.clone())
++        }
++    }
++
++    struct Double;
++
++    impl Function for Double {
++        fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
++            let n = input.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput("number".into()))?;
++            Ok(Dictionary::new().insert("number", Value::Atom(Atom::Decimal(n * 2.0))))
++        }
++    }
++
++    #[test]
++    fn dictionary_json_round_trip() {
++        let d = Dictionary::new().insert("number", Value::Atom(Atom::Decimal(3.1))).insert("text", Value::Atom(Atom::String("hi".into())));
++        let json = serde_json::to_string(&d).unwrap();
++        let back: Dictionary = serde_json::from_str(&json).unwrap();
++        assert_eq!(d, back);
++    }
++
++    #[test]
++    fn registry_dispatches_kind() {
++        let mut reg = Registry::new();
++        reg.register("echo", Box::new(Echo));
++        let out = reg.get("echo").unwrap().evaluate(&Dictionary::new().insert("x", Value::Atom(Atom::Integer(1)))).unwrap();
++        assert_eq!(out.get("x").and_then(|v| v.as_atom()), Some(&Atom::Integer(1)));
++    }
++
++    #[test]
++    fn two_neuron_pipeline() {
++        let mut reg = Registry::new();
++        reg.register("echo", Box::new(Echo));
++        reg.register("double", Box::new(Double));
++        let tree = Tree {
++            neurons: vec![
++                Neuron { id: "a".into(), kind: "echo".into(), params: Dictionary::new() },
++                Neuron { id: "b".into(), kind: "double".into(), params: Dictionary::new() },
++            ],
++            synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into() }],
++        };
++        let mut seeds = HashMap::new();
++        seeds.insert("a".into(), Dictionary::new().insert("number", Value::Atom(Atom::Decimal(2.0))));
++        let out = Evaluator::new(&reg).evaluate(&tree, &seeds).unwrap();
++        assert_eq!(out.get("b").and_then(|d| d.get("number")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(4.0));
++    }
++}
++// #endregion 🔖Tests
+diff --git a/package.json b/package.json
+index e8d849241..6dd48cbe0 100644
+--- a/package.json
++++ b/package.json
+@@ -30,6 +30,8 @@
+     "puzzle/5d/play",
+     "gis/map/play",
+     "gis/map/react",
++    "flow/react",
++    "flow/play",
+     "cad/js/core",
+     "cad/js/kernel/brepjs",
+     "cad/js/machine/stately",
+@@ -81,6 +83,7 @@
+     "dev:gis:map": "bun nx run @gis/map/play:dev",
+     "dev:reasoning:wires": "bun nx run @reasoning/mindmap/wires/play:dev",
+     "dev:cad": "bun ./script.ts dev cad",
++    "dev:flow": "bun ./script.ts dev flow",
+     "generate": "bun ./script.ts generate",
+     "lint": "bun ./script.ts lint",
+     "format": "bun ./script.ts format",
+diff --git a/puzzle/2d/rs/Cargo.toml b/puzzle/2d/rs/Cargo.toml
+index ff4c0217f..4ced98933 100644
+--- a/puzzle/2d/rs/Cargo.toml
++++ b/puzzle/2d/rs/Cargo.toml
+@@ -18,7 +18,7 @@ serde_json = "1.0.140"
+ [dependencies]
+ infinite_cavas = { path = "../../../infinite/cavas/vello" }
+ mathematical_graph_normal_undirected = { path = "../../../mathematical/graph/normal/undirected" }
+-mathematical_graph_port_directed = { path = "../../../mathematical/graph/port/directed" }
++mathematical_graph_port_directed = { path = "../../../mathematical/graph/port/directed/normal" }
+ gis_map = { path = "../../../gis/map/rs" }
+ reasoning_mindmap = { path = "../../../reasoning/mindmap" }
+ serde = { version = "1.0.219", features = ["derive"] }
+diff --git a/script.ts b/script.ts
+index 5b9af7dcb..6747d98f0 100644
+--- a/script.ts
++++ b/script.ts
+@@ -245,6 +245,10 @@ export class DevScript extends Script {
+       runCmd("bun", ["nx", "run", "@puzzle/5d/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+       return;
+     }
++    if (segments[0] === "flow") {
++      runCmd("bun", ["nx", "run", "@flow/play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
++      return;
++    }
+     if (segments[0] === "cad") {
+       runCmd("bun", ["nx", "run", "@cad/js/renderer:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+       return;
+diff --git a/ui/styling/vite-elements-assets.ts b/ui/styling/vite-elements-assets.ts
+index 39eca611b..3c7019fd9 100644
+--- a/ui/styling/vite-elements-assets.ts
++++ b/ui/styling/vite-elements-assets.ts
+@@ -233,13 +233,14 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
+ const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
+ const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
+ 
+-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "presentation" | "wires";
++export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "presentation" | "wires";
+ 
+ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
+   "@framework/playground/renderer/react/puzzle/2d": "2d",
+   "@framework/playground/renderer/react/puzzle/3d": "3d",
+   "@framework/playground/renderer/react/puzzle/5d": "5d",
+   "@framework/playground/renderer/react/puzzle/map": "map",
++  "@framework/playground/renderer/react/flow": "flow",
+   "@framework/playground/renderer/react/presentation": "presentation",
+   "@framework/playground/renderer/react/reasoning/wires": "wires",
+ };
+@@ -249,6 +250,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
+   "5d": { start: "//#region 🔖Puzzle5dPlayHost", end: "//#endregion 🔖Puzzle5dPlayHost" },
+   "2d": { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
+   map: { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
++  flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
+   presentation: { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
+   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
+ };

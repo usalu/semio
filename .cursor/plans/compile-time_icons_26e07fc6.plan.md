@@ -35,8 +35,8 @@ Goal association when opening the ticket: `R26-02/RUNNING-SKETCHPAD`.
 
 ```mermaid
 flowchart LR
-  svgUi["ui/asset/icon/*.svg"] --> codegen["ui/asset/script.ts"]
-  svgMeta["asset/metabolism/icon/*.svg"] --> codegenMeta["asset/script.ts"]
+  svgUi["ui/asset/icon/*.svg"] --> codegen["ui/asset/📜script.ts"]
+  svgMeta["asset/metabolism/icon/*.svg"] --> codegenMeta["asset/📜script.ts"]
   codegen --> iconName["IconName + ICONS + Rust enum"]
   codegenMeta --> metaName["MetabolismIconName + METABOLISM_ICONS"]
   callSite["window_kind / Icon / utility"] -->|"IconName"| resolve["resolveIconSvg"]

@@ -1,5 +1,5 @@
 // #region 🧲Header
-/** @emoji 🎭 `@semio-tech/cad-js-machine-stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.repo/✍️/spatial.md`. */
+/** @emoji 🎭 `@semio-tech/cad-js-machine-stately` — XState `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.🦑repo/✍️/spatial.md`. */
 // #endregion 🧲Header
 
 // #region 🔌Adapters

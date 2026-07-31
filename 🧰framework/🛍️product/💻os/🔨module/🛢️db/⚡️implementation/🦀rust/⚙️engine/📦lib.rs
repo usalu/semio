@@ -2,7 +2,7 @@
 //! other `db_*` crate into the stable, contract-frozen `Database`/`DocumentHandle` API
 //! (`Database::{open, open_at, create_document, document, catalog, health, shutdown}`;
 //! `DocumentHandle::{submit, query, subscribe, frontier, preview, history, snapshot_now}`).
-//! Frozen contract: `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! Frozen contract: `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_engine` row + "Stable API" block).
 //!
 //! 🎯 Design choice (compatibility surface): `db_document` (a concurrent sibling session) commits

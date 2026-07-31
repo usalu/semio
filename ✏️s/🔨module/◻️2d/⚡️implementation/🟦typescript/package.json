@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "../../../../../✏️s/🔨module/◻️2d/⚡️implementation/🟦typescript/📦index.ts"
+    ".": "./📦index.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/kernel-2d-js:test"

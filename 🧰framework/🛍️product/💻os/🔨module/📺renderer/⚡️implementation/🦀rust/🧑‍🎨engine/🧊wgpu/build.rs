@@ -34,7 +34,7 @@ fn main() {
     entries.sort();
 
     let mut out = String::from("// @emoji 🖼 Auto-generated icon SVG embeds — do not edit by hand.\n\n");
-    out.push_str("pub const SEMIO_LOGO_SVG: &str = include_str!(\"🔣semio_🔣logo.svg\");\n\n");
+    out.push_str("pub const SEMIO_LOGO_SVG: &str = include_str!(\"🔣semio_logo.svg\");\n\n");
     out.push_str("pub static ICON_SVGS: &[(&str, &str)] = &[\n");
     for id in &entries {
         out.push_str(&format!("    (\"{id}\", include_str!(\"icons/{id}.svg\")),\n"));

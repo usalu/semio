@@ -139,7 +139,7 @@ pub trait DocumentDsl: Sized {
 //#region 🔖Pack
 //#region 🔖Pack
 /// @emoji 📦 Binary counterpart of `🔖Text` above — see the wave-1 design at
-/// `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
+/// `.🦑repo/🎫tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
 /// contract. `pack`'s own `EncodeOptions`/`DecodeOptions`/`VerificationLevel` are re-exported under
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `DocumentPack` impl and
 /// every downstream caller spell them `store::PackEncodeOptions`/`store::PackDecodeOptions`/

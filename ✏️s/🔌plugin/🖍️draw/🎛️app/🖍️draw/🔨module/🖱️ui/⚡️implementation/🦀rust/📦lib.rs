@@ -439,7 +439,7 @@ fn gesture_context_from_input(_input: ()) -> GestureContext {
 /// `semio:draw`), so it cannot reach that API directly. The one cross-sandbox channel this crate can
 /// reach, `store::BackboneMessage` (via `host_backbone_send`), has no preview-shaped variant yet — adding
 /// one is a `vcs`/WIT/`framework/plugin/host` change outside this ticket's plugin-crate-only file
-/// ownership. See `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+/// ownership. See `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
 fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Option<Value> {
     if is_idle {
         return None;

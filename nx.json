@@ -124,6 +124,10 @@
     {
       "plugin": "./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/🟨nx-plugin.mjs",
       "options": {}
+    },
+    {
+      "plugin": "./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/🟨nx-emoji-project-plugin.mjs",
+      "options": {}
     }
   ]
 }

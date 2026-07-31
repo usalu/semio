@@ -6,7 +6,7 @@
 //! 🔖Frame` note below for how the handful of frozen wire constants that implies get sourced.
 //!
 //! See the `## protocol_cli` section (plus the amendment's workspace-wide notes) of the frozen
-//! contract at `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`.
+//! contract at `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::Write as _;

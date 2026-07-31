@@ -4,7 +4,7 @@
 //! amendment (`protocol_command/causal/crdt/wire`). Every downstream crate (`db`, `vcs`, app-layer
 //! `#[derive(dsl::DslOps)]` consumers) depends on `protocol`, never on the individual sub-crates
 //! directly, so this file's re-export surface IS the family's frozen public API. Frozen contracts:
-//! `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol (facade)` +
+//! `.🦑repo/🎫tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol (facade)` +
 //! `### protocol (facade) — additional re-exports`).
 
 //#region 🔖Reexports

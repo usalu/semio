@@ -3,7 +3,7 @@
 //! tree with typed convenience conversions, a `Predicate`/`Select`/`Query` IR, a minimal
 //! cost-free planner that recognizes full-text-pushdown opportunities, a streaming `QueryStream`,
 //! and `LiveQuery` incremental diffing. Frozen contract:
-//! `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🦑repo/🎫tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`) and Part 2 of the approved plan.
 //!
 //! 🎯 Design choice: `db_state`'s persistent structures (`PMap`/`PVec`/…) are `Rc`-based —
