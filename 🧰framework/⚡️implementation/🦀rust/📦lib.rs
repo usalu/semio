@@ -3239,13 +3239,15 @@ pub struct Keybinding {
 pub enum ActionKind {
     /// Mutates the document — dispatched as VCS operations with a true inverse, recorded in history.
     Operation,
-    /// Ephemeral view state (camera, selection, hover, active utility) — not recorded in history.
+    /// Ephemeral view state (camera, selection, hover, active utility) — recorded in the session
+    /// command log, never as a VCS edit.
     View,
     /// Framework-provided undo/redo/checkpoint/alternative — auto-injected, never app-declared.
     History,
     /// Framework-provided copy/cut/paste — auto-injected, never app-declared (mirrors `History`).
     Clipboard,
-    /// Shell-only effect (navigate, export, spawn) — no document mutation.
+    /// Shell-only effect (navigate, export, spawn) — recorded in the session command log via
+    /// dispatch or the `noteShellCommand` mechanism, no document mutation.
     Shell,
 }
 
@@ -3477,6 +3479,27 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
         ..ActionDefinition::new(SET_HISTORY_COMMAND_FILTER_ACTION_ID, "Set History Filter", ActionKind::View)
     }
     .with_args([ActionArgDef::select("value", "Filter", options).default_value(serde_json::json!("all"))])
+}
+
+/// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
+/// spawn, …) into the session command log without any document mutation — mirrors
+/// `SET_HISTORY_COMMAND_FILTER_ACTION_ID`'s auto-injected-constant pattern.
+pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
+
+/// @emoji 🗒️ The framework-injected `noteShellCommand` Shell action (never in the palette): records a
+/// shell-kind effect that already happened into the session command log, for effects dispatched
+/// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
+/// optional free-text elaboration shown in the history panel.
+pub fn note_shell_command_action_definition() -> ActionDefinition {
+    ActionDefinition {
+        in_palette: false,
+        ..ActionDefinition::new(NOTE_SHELL_COMMAND_ACTION_ID, "Note Shell Command", ActionKind::Shell)
+    }
+    .with_args([
+        ActionArgDef::text("commandId", "Command").required(),
+        ActionArgDef::text("label", "Label").required(),
+        ActionArgDef::text("detail", "Detail"),
+    ])
 }
 
 //#region 🔖Clipboard

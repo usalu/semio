@@ -188,13 +188,13 @@ use semio_framework_core::{
         ArtifactKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition, record_tutorial_action_definition,
-    start_tutorial_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
+    start_tutorial_action_definition, note_shell_command_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
     ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WorkflowDefinition, ToolDefinition, ToolRef, TutorialDefinition,
     UtilityDefinition, UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID,
-    UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
+    NOTE_SHELL_COMMAND_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor,
@@ -931,6 +931,9 @@ impl AppBuilder {
         }
         if declared_action_ids.insert(SET_HISTORY_COMMAND_FILTER_ACTION_ID.to_string()) {
             actions.push(set_history_command_filter_action_definition());
+        }
+        if declared_action_ids.insert(NOTE_SHELL_COMMAND_ACTION_ID.to_string()) {
+            actions.push(note_shell_command_action_definition());
         }
         let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
         let mut keybindings: Vec<Keybinding> = self
@@ -3128,6 +3131,10 @@ pub struct CommandLogEntry {
     /// @emoji 🔗 Set iff this command created/amended a VCS edit — `None` for pure cursor motion
     /// (undo/redo/revert) and view-kind commands that never reach `dispatch_emit`.
     pub edit_id: Option<String>,
+    /// @emoji 🔢 How many consecutive identical `View`/`Shell` dispatches folded into this one row —
+    /// see `VcsDocumentApp::record_command`. Always `1` for `Operation`/`History`/`Clipboard` entries
+    /// and for anything carrying an `edit_id`, which never fold.
+    pub count: u32,
 }
 
 /// @emoji 🧾 One row of the merged command+operation timeline handed to renderers — `CommandLogEntry`
@@ -3147,6 +3154,8 @@ pub struct CommandView {
     pub applied: bool,
     /// @emoji ⏪ `applied` AND authored by the local actor — only these entries offer "backwards".
     pub revertible: bool,
+    /// @emoji 🔢 See `CommandLogEntry::count`.
+    pub count: u32,
 }
 
 /// @emoji 📜 Checkpoint/alternative history summary exposed to apps — the swimlane columns, the
@@ -3205,7 +3214,10 @@ fn history_panel_icon_id(kind: ActionKind) -> IconName {
         ActionKind::Operation => IconName::Pencil,
         ActionKind::History => IconName::Undo,
         ActionKind::Clipboard => IconName::Clipboard,
-        ActionKind::View | ActionKind::Shell => IconName::CircleDot,
+        // 🕶️ View is ephemeral cursor/selection/camera state; Shell is an outside-the-document
+        // host effect — distinct icons so a folded ×count row reads at a glance.
+        ActionKind::View => IconName::Eye,
+        ActionKind::Shell => IconName::Monitor,
     }
 }
 
@@ -3261,7 +3273,9 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
         })
         .take(HISTORY_PANEL_ROW_LIMIT)
         .map(|entry| {
-            let mut item = UiTreeItemNode::base(format!("framework.history.entry.{}", entry.seq), entry.label.clone());
+            // 🔢 A folded row (`count > 1`) shows "Label xN" instead of the bare label.
+            let label = if entry.count > 1 { format!("{} x{}", entry.label, entry.count) } else { entry.label.clone() };
+            let mut item = UiTreeItemNode::base(format!("framework.history.entry.{}", entry.seq), label);
             item.description = if entry.op_lines.is_empty() { None } else { Some(entry.op_lines.join(" · ")) };
             item.icon_id = Some(history_panel_icon_id(entry.kind));
             item.dimmed = (entry.edit_id.is_some() && !entry.applied).then_some(true);
@@ -3781,18 +3795,24 @@ impl AppActionRegistry {
 /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Operation>` — the single source of
 /// truth for the app's document across every call — intercepts the six injected history actions into
 /// `DocumentCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
-/// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection cache
-/// keyed on the store's generation counter keeps renders O(1). Holds an {@link AppActionRegistry} to
-/// enforce the actions contract before/after delegating to the app.
+/// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection+history
+/// cache keyed on `(store generation, log generation, history filter)` keeps renders O(1). Holds an
+/// {@link AppActionRegistry} to enforce the actions contract before/after delegating to the app.
 pub struct VcsDocumentApp<A: DocumentApp> {
     app: A,
     store: DocumentStore<A::Projection, A::Operation>,
-    cache: Option<(u64, A::Projection, HistoryView)>,
+    /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
+    /// changing invalidates the cached projection/`HistoryView` pair.
+    cache: Option<((u64, u64, HistoryCommandFilter), A::Projection, HistoryView)>,
     registry: AppActionRegistry,
     /// @emoji 🧾 Append-only session command log — see `🔖CommandLog`. Never persisted, never
     /// truncated: undo/redo/revert push entries, they never remove any.
     command_log: Vec<CommandLogEntry>,
     next_command_seq: u64,
+    /// @emoji 🗂️ Bumped by `push_log_entry`/`record_command` on every log mutation (a push OR a fold)
+    /// — part of the cache key so a folded ×count bump alone (no store-generation change) still
+    /// invalidates a stale render.
+    log_generation: u64,
     history_filter: HistoryCommandFilter,
 }
 
@@ -3832,6 +3852,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             registry,
             command_log: Vec::new(),
             next_command_seq: 0,
+            log_generation: 0,
             history_filter: HistoryCommandFilter::default(),
         }
     }
@@ -3839,6 +3860,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     #[cfg(test)]
     pub(crate) fn test_projection(&self) -> A::Projection {
         self.store.projection().expect("materialize projection")
+    }
+
+    /// @emoji 🧪 Direct access to the wrapped app — used to assert on app-private test fixtures (e.g.
+    /// `TestApp::received_actions`) that a framework-owned interception must never populate.
+    #[cfg(test)]
+    pub(crate) fn test_app(&self) -> &A {
+        &self.app
     }
 
     /// @emoji 🧪 Refreshes (backfilling the command log) and returns the current `HistoryView` —
@@ -3868,8 +3896,9 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     }
 
     /// @emoji 🧾 Appends one entry to the session command log. `timestamp: None` stamps "now"
-    /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill).
-    fn log_command(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, timestamp: Option<String>) {
+    /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
+    /// fresh row (`count: 1`) — folding consecutive `View`/`Shell` dispatches is `record_command`'s job.
+    fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, timestamp: Option<String>) {
         self.next_command_seq += 1;
         self.command_log.push(CommandLogEntry {
             seq: self.next_command_seq,
@@ -3878,14 +3907,41 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             kind,
             timestamp: timestamp.unwrap_or_else(store::now_iso),
             edit_id,
+            count: 1,
         });
+        self.log_generation += 1;
+    }
+
+    /// @emoji 🧾 The single entry point every live dispatch logs through (`push_log_entry` remains for
+    /// backfill, which never folds). Consecutive `View`/`Shell` dispatches of the SAME `(action_id,
+    /// kind)` with no `edit_id` fold into one row — its `count` increments and its `label`/`timestamp`
+    /// refresh, but its ORIGINAL `seq` is kept so the panel's tree-item id stays stable across
+    /// re-renders. `Operation`/`History`/`Clipboard` entries and anything with an `edit_id` never fold.
+    fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>) {
+        let label = label
+            .or_else(|| self.registry.get(action_id).map(|def| def.label.clone()))
+            .or_else(|| self.registry.get_command(action_id).map(|def| def.label.clone()))
+            .unwrap_or_else(|| action_id.to_string());
+        let folds = edit_id.is_none()
+            && matches!(kind, ActionKind::View | ActionKind::Shell)
+            && self.command_log.last().is_some_and(|last| last.action_id == action_id && last.kind == kind && last.edit_id.is_none());
+        if folds {
+            let last = self.command_log.last_mut().expect("checked above");
+            last.count += 1;
+            last.label = label;
+            last.timestamp = store::now_iso();
+            self.log_generation += 1;
+            return;
+        }
+        self.push_log_entry(action_id, label, kind, edit_id, None);
     }
 
     /// @emoji 🕰️ Appends a command-log entry for every VCS edit not yet referenced by the log —
     /// covers seeded (`app.seed`), ingested (`ingest_operations*`), and loaded
     /// (`load_document_text`/`load_document_pack`) edits that never passed through `dispatch_emit`.
     /// Invariant: after this runs, every `envelope.vcs.edits` entry is referenced by exactly one
-    /// `CommandLogEntry`. Idempotent — re-running finds nothing missing.
+    /// `CommandLogEntry`. Idempotent — re-running finds nothing missing. Always `push_log_entry`
+    /// (never `record_command`) — a backfilled edit is always its own distinct row, never folded.
     fn backfill_command_log(&mut self) {
         let logged: HashSet<&str> = self.command_log.iter().filter_map(|entry| entry.edit_id.as_deref()).collect();
         let missing: Vec<(String, String, String)> = self
@@ -3901,7 +3957,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             })
             .collect();
         for (edit_id, label, timestamp) in missing {
-            self.log_command("apply", label, ActionKind::Operation, Some(edit_id), Some(timestamp));
+            self.push_log_entry("apply", label, ActionKind::Operation, Some(edit_id), Some(timestamp));
         }
     }
 
@@ -3928,6 +3984,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     op_lines,
                     applied,
                     revertible,
+                    count: entry.count,
                 }
             })
             .collect();
@@ -3943,15 +4000,25 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         }
     }
 
-    /// @emoji 🗂️ Refreshes the projection cache if the store advanced since the last materialization.
+    /// @emoji 🗂️ Refreshes the projection cache if the store advanced, the command log grew/folded, or
+    /// the history filter changed since the last materialization. The key is recomputed a SECOND time
+    /// after `backfill_command_log` — backfill itself may `push_log_entry` (bumping `log_generation`),
+    /// so keying only on the pre-backfill snapshot would store a stale key and thrash on every call.
     fn refresh_cache(&mut self) -> Result<(), String> {
-        let generation = self.store.generation();
-        if self.cache.as_ref().map(|(gen, _, _)| *gen) != Some(generation) {
-            self.backfill_command_log();
-            let projection = self.store.projection().map_err(|error| error.to_string())?;
-            let history = self.build_history_view();
-            self.cache = Some((generation, projection, history));
+        let key = (self.store.generation(), self.log_generation, self.history_filter);
+        if self.cache.as_ref().map(|(cached_key, _, _)| *cached_key) == Some(key) {
+            return Ok(());
         }
+        self.backfill_command_log();
+        let key = (self.store.generation(), self.log_generation, self.history_filter);
+        let projection = match self.cache.take() {
+            // 🗂️ Only the store's generation actually invalidates the materialized projection — a
+            // log-generation/filter-only change reuses it instead of re-replaying the whole document.
+            Some((cached_key, projection, _)) if cached_key.0 == key.0 => projection,
+            _ => self.store.projection().map_err(|error| error.to_string())?,
+        };
+        let history = self.build_history_view();
+        self.cache = Some((key, projection, history));
         Ok(())
     }
 
@@ -4100,13 +4167,27 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         Ok(Value::Object(merged))
     }
 
-    /// @emoji 🧬 Shared dispatch tail for `handle_action`/`handle_command`: given the app's `ActionEmit`,
-    /// either returns an empty result (no operations) or commits `Apply`/`AmendLast` and builds the
-    /// `InvocationResult` from the just-recorded edit. `verb` is the action/command id, used only to
-    /// synthesize the `InvocationId`.
+    /// @emoji 🧬 Shared dispatch tail for `handle_action`/`handle_command`/`import_media`: given the
+    /// app's `ActionEmit`, either records the op-less dispatch and returns an empty result, or commits
+    /// `Apply`/`AmendLast`, records the resulting edit, and builds the `InvocationResult` from it.
+    /// `verb` is the action/command id, used to resolve the registry kind/label and to synthesize the
+    /// `InvocationId`.
     fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Operation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
         let ActionEmit { operations, description, coalesce_key, effects, events, ui_scope } = emit;
         if operations.is_empty() {
+            // 🧾 The bugfix this ticket is about: an op-less dispatch used to return here without ever
+            // reaching the command log. An app-declared action logs under its declared kind (so an
+            // `Operation`-kind action that happened to produce zero operations — e.g. paste with no
+            // clipboard fragment — still gets a real row, `edit_id: None`, correctly filed under
+            // "Without Operations"); a declared command (no `ActionKind` of its own) logs as `Shell`;
+            // anything unresolved (registry-less test construction, an ad-hoc verb like an
+            // import-media port id) logs as `View`.
+            let kind = match self.registry.get(verb) {
+                Some(def) => def.kind,
+                None if self.registry.get_command(verb).is_some() => ActionKind::Shell,
+                None => ActionKind::View,
+            };
+            self.record_command(verb, kind, description.clone(), None);
             return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
         }
         self.store.set_local_actor_id(Some(meta.actor.clone()));
@@ -4138,35 +4219,18 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 // `CommandDefinition` has no `ActionKind` (commands aren't View/Shell/History), and
                 // reaching here means operations were dispatched, so `Operation` is always correct.
                 let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Operation);
-                let registry_label = self.registry.get(verb).map(|def| def.label.clone()).or_else(|| self.registry.get_command(verb).map(|def| def.label.clone()));
-                let label = log_label.or(registry_label).unwrap_or_else(|| verb.to_string());
-                self.log_command(verb, label, kind, Some(edit_id), None);
+                self.record_command(verb, kind, log_label, Some(edit_id));
             }
         }
         let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
         Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset))
     }
-}
 
-/// @emoji 📣 Signals the shell that the document's checkpoint/alternative history changed (after an
-/// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
-fn history_changed_event() -> AppEvent {
-    AppEvent {
-        kind: "history-changed".into(),
-        payload: Value::Null,
-    }
-}
-
-impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
-    fn app_id(&self) -> &str {
-        self.app.app_id()
-    }
-
-    fn document_schema(&self) -> &str {
-        self.app.document_schema()
-    }
-
-    fn handle_action(
+    /// @emoji 🕰️ The actual body of `PluginApp::handle_action` — renamed to an inherent method so
+    /// `handle_action` itself can stay a thin `finish_recorded` wrapper (see `🔖CommandLog`). Intercepts
+    /// the injected history/revert/filter/`noteShellCommand` actions before the app ever sees them;
+    /// everything else (clipboard, and the app's own declared actions) falls through to `dispatch_emit`.
+    fn dispatch_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
@@ -4181,8 +4245,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                     self.cache = None;
                     // 🧾 Undo/redo/checkpoint/alternative are pure cursor motion (`edit_id: None`) —
                     // append-only: this NEVER removes a prior entry, including undo's.
-                    let label = self.registry.get(action).map(|def| def.label.clone()).unwrap_or_else(|| action.to_string());
-                    self.log_command(action, label, ActionKind::History, None, None);
+                    self.record_command(action, ActionKind::History, None, None);
                     // 🐢 History actions (undo/redo/checkpoint/alternative) can touch any part of the
                     // document — always Full, never opt into a narrower scope.
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
@@ -4223,7 +4286,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                     self.cache = None;
                     // 🧾 One entry for the revert itself — the internal undos it performs are an
                     // implementation detail, not separately logged commands.
-                    self.log_command(action, "Revert to Command".into(), ActionKind::History, None, None);
+                    self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None);
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
                 }
                 None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
@@ -4236,10 +4299,32 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                 "onlyOperations" => HistoryCommandFilter::OnlyOperations,
                 _ => HistoryCommandFilter::All,
             };
-            // 🗂️ The store's generation counter doesn't bump for a filter-only change — clear the
-            // cache explicitly or the next render would still see the old `command_filter`.
-            self.cache = None;
-            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::Full))
+            // 🗂️ Deliberately UNLOGGED — the panel operating its own filter chrome shouldn't fill the
+            // very list it's filtering. No explicit cache invalidation either: `history_filter` is part
+            // of `refresh_cache`'s key tuple now, so the next refresh naturally rebuilds.
+            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::Partial {
+                window_bodies: Vec::new(),
+                panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()],
+                utilities: false,
+                tools: false,
+                engagements: false,
+                measures: false,
+                labels: false,
+            }))
+        } else if action == NOTE_SHELL_COMMAND_ACTION_ID {
+            // 🗒️ Interception happens BEFORE the app ever sees this action — records a shell effect
+            // that already happened (dock drag, window resize/close, theme/locale change, …) into the
+            // session command log for effects dispatched outside the normal `ActionEmit`/`dispatch_emit` path.
+            let command_id = args.and_then(|value| value.get("commandId")).and_then(Value::as_str)
+                .ok_or_else(|| "noteShellCommand missing required commandId".to_string())?;
+            let label = args.and_then(|value| value.get("label")).and_then(Value::as_str).unwrap_or(command_id);
+            let detail = args.and_then(|value| value.get("detail")).and_then(Value::as_str);
+            let label = match detail {
+                Some(detail) => format!("{label} - {detail}"),
+                None => label.to_string(),
+            };
+            self.record_command(command_id, ActionKind::Shell, Some(label), None);
+            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
         } else if CLIPBOARD_ACTION_IDS.contains(&action) {
             self.refresh_cache()?;
             let emit = {
@@ -4307,7 +4392,8 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         }
     }
 
-    fn handle_command(
+    /// @emoji 🕰️ The actual body of `PluginApp::handle_command` — see `dispatch_action`'s doc.
+    fn dispatch_command(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -4325,6 +4411,97 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             app.handle_command(command, Some(&materialized_args), &doc, view_state)
         };
         self.dispatch_emit(command, emit, meta)
+    }
+
+    /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
+    fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        self.refresh_cache()?;
+        let emit = {
+            let VcsDocumentApp { app, cache, .. } = self;
+            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { projection, history };
+            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+        };
+        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+    }
+
+    /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
+    /// `dispatch_action`/`dispatch_command`/`dispatch_import_media` actually logged something
+    /// (`log_generation` advanced) — the seam that makes the panel live without every action opting in.
+    fn finish_recorded(&self, log_generation_before: u64, mut result: InvocationResult) -> InvocationResult {
+        if self.log_generation != log_generation_before {
+            result.ui_scope = with_history_panel_scope(result.ui_scope);
+        }
+        result
+    }
+}
+
+/// @emoji 📣 Signals the shell that the document's checkpoint/alternative history changed (after an
+/// undo/redo/checkpoint/alternative command) so it can re-render history-dependent surfaces.
+fn history_changed_event() -> AppEvent {
+    AppEvent {
+        kind: "history-changed".into(),
+        payload: Value::Null,
+    }
+}
+
+/// @emoji 🕰️ Upgrades a returned `UiDirtyScope` to also cover the framework history panel body
+/// (`FRAMEWORK_HISTORY_BODY_KEY`) — `Full` is already maximal and passes through unchanged, `None`
+/// becomes a `Partial` naming just the history body, and an existing `Partial` gains it alongside
+/// whatever the app already asked to refresh (idempotent — checks before pushing).
+fn with_history_panel_scope(scope: semio_framework_core::kernel::UiDirtyScope) -> semio_framework_core::kernel::UiDirtyScope {
+    use semio_framework_core::kernel::UiDirtyScope;
+    match scope {
+        UiDirtyScope::Full => UiDirtyScope::Full,
+        UiDirtyScope::None => UiDirtyScope::Partial {
+            window_bodies: Vec::new(),
+            panel_bodies: vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()],
+            utilities: false,
+            tools: false,
+            engagements: false,
+            measures: false,
+            labels: false,
+        },
+        UiDirtyScope::Partial { window_bodies, mut panel_bodies, utilities, tools, engagements, measures, labels } => {
+            if !panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY) {
+                panel_bodies.push(FRAMEWORK_HISTORY_BODY_KEY.to_string());
+            }
+            UiDirtyScope::Partial { window_bodies, panel_bodies, utilities, tools, engagements, measures, labels }
+        }
+    }
+}
+
+impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
+    fn app_id(&self) -> &str {
+        self.app.app_id()
+    }
+
+    fn document_schema(&self) -> &str {
+        self.app.document_schema()
+    }
+
+    fn handle_action(
+        &mut self,
+        action: &str,
+        args: Option<&Value>,
+        view_state: &ViewState,
+        meta: &ActionMeta,
+    ) -> Result<InvocationResult, String> {
+        let log_generation_before = self.log_generation;
+        let result = self.dispatch_action(action, args, view_state, meta)?;
+        Ok(self.finish_recorded(log_generation_before, result))
+    }
+
+    fn handle_command(
+        &mut self,
+        command: &str,
+        args: Option<&Value>,
+        view_state: &ViewState,
+        meta: &ActionMeta,
+    ) -> Result<InvocationResult, String> {
+        let log_generation_before = self.log_generation;
+        let result = self.dispatch_command(command, args, view_state, meta)?;
+        Ok(self.finish_recorded(log_generation_before, result))
     }
 
     fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String> {
@@ -4470,14 +4647,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     }
 
     fn import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
-        self.refresh_cache()?;
-        let emit = {
-            let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
-        };
-        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+        let log_generation_before = self.log_generation;
+        let result = self.dispatch_import_media(port, media, meta)?;
+        Ok(self.finish_recorded(log_generation_before, result))
     }
 
     fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
@@ -5220,8 +5392,9 @@ mod semio_plugin_macro_tests {
         PluginApp, VcsDocumentApp, ui_history_panel,
     };
     use crate::{ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
-    use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
-    use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+    use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
+    use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
+    use ui_wgpu::FRAMEWORK_HISTORY_BODY_KEY;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
@@ -5287,9 +5460,12 @@ mod semio_plugin_macro_tests {
 
     /// 🧪 App under test: `selected` is ephemeral view state living in the app struct (never in the
     /// document), demonstrating that view actions mutate the struct and emit no operations.
+    /// `received_actions` records every action id THIS app's own `handle_action` was actually called
+    /// with — used to prove framework-owned interceptions (e.g. `noteShellCommand`) never reach it.
     #[derive(Default)]
     struct TestApp {
         selected: Option<String>,
+        received_actions: Vec<String>,
     }
 
     impl DocumentApp for TestApp {
@@ -5315,6 +5491,7 @@ mod semio_plugin_macro_tests {
             doc: &DocumentView<'_, TestProjection>,
             view_state: &ViewState,
         ) -> ActionEmit<TestOperation> {
+            self.received_actions.push(action.to_string());
             let label_arg = || {
                 args.and_then(|value| value.get("value"))
                     .and_then(Value::as_str)
@@ -5353,6 +5530,23 @@ mod semio_plugin_macro_tests {
                     ActionEmit::default()
                 }
                 "navigate" => ActionEmit::effect(HostEffect::Navigate { uri: "semio://home".into() }),
+                // 🧪 Declared `Operation`-kind (see `contract_registry`) but deliberately emits nothing.
+                "noopOperation" => ActionEmit::default(),
+                // 🧪 Op-less View actions that explicitly opt into a narrow `ui_scope` — fixtures for the
+                // `finish_recorded`/`with_history_panel_scope` upgrade matrix.
+                "viewNoScope" => ActionEmit { ui_scope: UiDirtyScope::None, ..Default::default() },
+                "viewPartialScope" => ActionEmit {
+                    ui_scope: UiDirtyScope::Partial {
+                        window_bodies: vec!["some.window".into()],
+                        panel_bodies: Vec::new(),
+                        utilities: false,
+                        tools: false,
+                        engagements: false,
+                        measures: false,
+                        labels: false,
+                    },
+                    ..Default::default()
+                },
                 _ => ActionEmit::default(),
             }
         }
@@ -5446,6 +5640,9 @@ mod semio_plugin_macro_tests {
                 .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
                 .operation("setLabelDefault", "Set Label Default")
                 .action_args("setLabelDefault", vec![ActionArgDef::text("value", "Value").default_value("seed")])
+                // 🧪 `Operation`-kind by declaration, but `TestApp` emits zero operations for it — the
+                // "declared Operation action that happened to produce nothing" fixture.
+                .operation("noopOperation", "Noop Operation")
                 .view_action("badView", "Bad View")
                 .utility_simple("brush", "Brush", IconName::Paintbrush)
                 .app_command("incrementViaCommand", "Increment", "counter")
@@ -5749,6 +5946,7 @@ mod semio_plugin_macro_tests {
                     op_lines: vec!["set-count value=1".into()],
                     applied: true,
                     revertible: true,
+                    count: 1,
                 },
                 CommandView {
                     seq: 2,
@@ -5760,6 +5958,7 @@ mod semio_plugin_macro_tests {
                     op_lines: Vec::new(),
                     applied: false,
                     revertible: false,
+                    count: 1,
                 },
             ],
             command_filter: HistoryCommandFilter::All,
@@ -5781,6 +5980,131 @@ mod semio_plugin_macro_tests {
         let UiNode::Tree(no_ops_tree) = &no_ops_stack.children[2] else { panic!("expected the tree as the third child") };
         assert_eq!(no_ops_tree.sections[0].items.len(), 1);
         assert_eq!(no_ops_tree.sections[0].items[0].id, "framework.history.entry.2");
+    }
+
+    #[test]
+    fn an_op_less_view_action_is_logged_with_edit_id_none_and_count_one() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("select", Some(&json!({ "id": "node-1" })), &ViewState::default(), &meta()).expect("select");
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), 1);
+        let entry = &history.commands[0];
+        assert_eq!(entry.action_id, "select");
+        assert_eq!(entry.kind, ActionKind::View);
+        assert!(entry.edit_id.is_none());
+        assert_eq!(entry.count, 1);
+    }
+
+    #[test]
+    fn consecutive_identical_view_dispatches_fold_into_one_entry_with_a_growing_count() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        for id in ["node-1", "node-2", "node-3"] {
+            app.handle_action("select", Some(&json!({ "id": id })), &ViewState::default(), &meta()).expect("select");
+        }
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), 1, "folding must not grow the log");
+        assert_eq!(history.commands[0].count, 3);
+    }
+
+    #[test]
+    fn folding_breaks_across_an_interleaved_different_entry() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("select", Some(&json!({ "id": "a" })), &ViewState::default(), &meta()).expect("select a");
+        app.handle_action("select", Some(&json!({ "id": "b" })), &ViewState::default(), &meta()).expect("select b");
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        app.handle_action("select", Some(&json!({ "id": "c" })), &ViewState::default(), &meta()).expect("select c");
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), 3, "folded select x2, one increment, one fresh select — the interleaved operation breaks the fold");
+        let select_counts: Vec<u32> = history.commands.iter().filter(|entry| entry.action_id == "select").map(|entry| entry.count).collect();
+        assert_eq!(select_counts.len(), 2, "two distinct select entries, not one");
+        assert!(select_counts.contains(&2), "the first two selects folded together");
+        assert!(select_counts.contains(&1), "the select after the interleaved increment starts a fresh entry");
+    }
+
+    #[test]
+    fn note_shell_command_is_intercepted_before_the_app_and_folds_on_repeat() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let args = json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" });
+        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &ViewState::default(), &meta()).expect("noteShellCommand");
+        assert!(app.test_app().received_actions.is_empty(), "interception must happen before the app ever sees noteShellCommand");
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), 1);
+        let entry = &history.commands[0];
+        assert_eq!(entry.action_id, "os.setThemeId");
+        assert_eq!(entry.kind, ActionKind::Shell);
+        assert!(entry.label.contains("dark"));
+
+        app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &ViewState::default(), &meta()).expect("noteShellCommand again");
+        assert!(app.test_app().received_actions.is_empty());
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), 1, "the same commandId folds instead of appending");
+        assert_eq!(history.commands[0].count, 2);
+    }
+
+    #[test]
+    fn scope_upgrade_none_becomes_partial_naming_the_history_body() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("viewNoScope", None, &ViewState::default(), &meta()).expect("viewNoScope");
+        let UiDirtyScope::Partial { panel_bodies, .. } = result.ui_scope else { panic!("expected an upgraded Partial scope") };
+        assert!(panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY));
+    }
+
+    #[test]
+    fn scope_upgrade_partial_keeps_window_bodies_and_gains_the_history_body() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("viewPartialScope", None, &ViewState::default(), &meta()).expect("viewPartialScope");
+        let UiDirtyScope::Partial { window_bodies, panel_bodies, .. } = result.ui_scope else { panic!("expected a Partial scope") };
+        assert_eq!(window_bodies, vec!["some.window".to_string()], "the app's own window_bodies must survive the upgrade");
+        assert!(panel_bodies.iter().any(|key| key == FRAMEWORK_HISTORY_BODY_KEY));
+    }
+
+    #[test]
+    fn scope_upgrade_full_stays_full() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("select", Some(&json!({ "id": "x" })), &ViewState::default(), &meta()).expect("select");
+        assert_eq!(result.ui_scope, UiDirtyScope::Full);
+    }
+
+    #[test]
+    fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let before_len = app.test_history().commands.len();
+        let result = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
+        assert_eq!(app.test_history().commands.len(), before_len);
+    }
+
+    #[test]
+    fn set_history_command_filter_is_never_logged() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let before_len = app.test_history().commands.len();
+        app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &ViewState::default(), &meta())
+            .expect("setHistoryCommandFilter");
+        assert_eq!(app.test_history().commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
+    }
+
+    #[test]
+    fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render before");
+        app.handle_action("select", Some(&json!({ "id": "x" })), &ViewState::default(), &meta()).expect("select");
+        let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewState::default()).expect("render after");
+        let UiNode::Stack(stack) = rendered else { panic!("expected a Stack root") };
+        let UiNode::Tree(tree) = &stack.children[2] else { panic!("expected the tree as the third child") };
+        assert_eq!(tree.sections[0].items.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");
+    }
+
+    #[test]
+    fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
+        let mut app = contract_app_under_test();
+        app.handle_action("noopOperation", None, &ViewState::default(), &meta()).expect("noopOperation");
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), 1);
+        let entry = &history.commands[0];
+        assert_eq!(entry.action_id, "noopOperation");
+        assert_eq!(entry.kind, ActionKind::Operation);
+        assert!(entry.edit_id.is_none(), "no operations means no VCS edit, even though the action is Operation-kind");
+        assert_eq!(entry.count, 1);
     }
     //#endregion 🔖CommandLogTests
 

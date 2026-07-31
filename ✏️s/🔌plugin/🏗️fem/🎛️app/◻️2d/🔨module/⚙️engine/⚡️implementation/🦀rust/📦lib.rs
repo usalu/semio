@@ -413,7 +413,7 @@ pub fn fem2d_nodal_von_mises(doc: &Fem2dDocument, case_id: &str) -> Result<HashM
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fem2d::{FemAnalysisSettings, FemCamera, FemCombination, FemCombinationTerm, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+    use fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
     use fem_core::ElementResult;
 
     // #region 🔖Fixtures
@@ -428,7 +428,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "dead".into(), name: "dead".into(), loads: vec![FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
@@ -451,7 +450,6 @@ mod tests {
             }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
@@ -474,7 +472,6 @@ mod tests {
             }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
@@ -492,7 +489,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "self".into(), name: "self weight".into(), loads: vec![], self_weight: true }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 

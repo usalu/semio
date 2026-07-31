@@ -12,9 +12,6 @@ elements {
 analysis {
   modal-count=3 buckling-count=3 deformation-scale=300
 }
-camera {
-  x=4 y=2 zoom=0.12
-}
 nodes [id:TEXT x:NUM y:NUM] {
   n1 0 -4
   n2 0 0

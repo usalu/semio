@@ -1776,7 +1776,7 @@ fn create_architect_app() -> App {
             .operation("importRegistersCsv", "Import Registers CSV")
             .operation("applyTemplate", "Apply Template")
             .operation("nodeGraphEdit", "Node Graph Edit")
-            .operation("nodeGraphViewport", "Node Graph Viewport")
+            .view_action("nodeGraphViewport", "Node Graph Viewport")
             .view_action("selectRegister", "Select Register")
             .view_action("addElement", "Add Element")
             .view_action("removeElement", "Remove Element")

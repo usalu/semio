@@ -176,7 +176,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            inner.host.fixture.camera = sequence_camera_from_dag(inner.host.dag.fixture.camera.clone());
+            inner.host.camera = sequence_camera_from_dag(inner.host.dag.fixture.camera.clone());
             let mut scene = infinite_cavas::Scene::new();
             let clear = inner.host.dag.canvas_theme.raster_clear;
             inner.host.dag.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);

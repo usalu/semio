@@ -59,6 +59,9 @@ struct ShootingPlayRuntime {
     center_model: bool,
     fit_revision: u32,
     camera_draft_label: String,
+    /// 🎥 The free/live viewport camera — session-only view state (never a VCS-tracked document
+    /// field): see `"setCamera"`/`"loadSavedCamera"` in `handle_action` below.
+    camera: ShootingCamera,
 }
 
 impl Default for ShootingPlayRuntime {
@@ -71,6 +74,7 @@ impl Default for ShootingPlayRuntime {
             center_model: true,
             fit_revision: 0,
             camera_draft_label: String::new(),
+            camera: ShootingCamera::default(),
         }
     }
 }
@@ -225,8 +229,8 @@ fn shooting_fit_json(runtime: &ShootingPlayRuntime) -> String {
     json!({ "enabled": runtime.center_model, "revision": runtime.fit_revision, "padding": 1.25 }).to_string()
 }
 
-fn shooting_icon_render_request_json(fixture: &ShootingFixture, shot: &ShootingShot, asset: &ShootingAsset) -> String {
-    let camera = shooting_resolve_shot_camera(fixture, shot);
+fn shooting_icon_render_request_json(fixture: &ShootingFixture, shot: &ShootingShot, asset: &ShootingAsset, fallback_camera: &ShootingCamera) -> String {
+    let camera = shooting_resolve_shot_camera(fixture, shot, fallback_camera);
     let scene = &fixture.scene;
     let mut camera_value = json!({
         "position": camera.position,
@@ -441,9 +445,9 @@ fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> Ui
 
 fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
     let shot_items = vec![
-        catalog_shot_item("svg-rect", label🔣s.svg_rectangle, "svg", "rectangle"),
+        catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
         catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
-        catalog_shot_item("svg-ellipse", label🔣s.svg_ellipse, "svg", "ellipse"),
+        catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
         catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
     ];
     let asset_items = vec![tree_item_with_icon(
@@ -638,7 +642,7 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, 
             frame_json: active_shot(fixture).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(runtime)),
             ..world3d_scene(
-                camera_json(&fixture.camera),
+                camera_json(&runtime.camera),
                 world_meshes_json(fixture),
                 world_instances_json(fixture, runtime),
                 world_selection_json(fixture, runtime, active_utility),
@@ -648,10 +652,10 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, 
     )
 }
 
-fn render_icon_scene(fixture: &ShootingFixture) -> UiNode {
+fn render_icon_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> UiNode {
     let (request_json, footer) = match (active_shot(fixture), active_asset(fixture)) {
         (Some(shot), Some(asset)) => (
-            shooting_icon_render_request_json(fixture, shot, asset),
+            shooting_icon_render_request_json(fixture, shot, asset, &runtime.camera),
             Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase())),
         ),
         _ => ("null".into(), None),
@@ -977,18 +981,19 @@ impl DocumentApp for ShootingPlayApp {
                 }
             }
             "setCamera" => {
+                // 🎥 View action: the free/live viewport camera never touches the document — it's
+                // written straight into `self.runtime`, session-only, no VCS edit, no undo entry.
                 if let Some(camera_value) = args.and_then(|value| value.get("camera")) {
                     if let Ok(camera) = serde_json::from_value::<ShootingCamera>(camera_value.clone()) {
-                        return ActionEmit {
-                            operations: vec![ShootingOperation::SetCamera { camera }],
-                            coalesce_key: Some("camera".into()),
-                            ..Default::default()
-                        };
+                        self.runtime.camera = camera;
                     }
                 }
                 ActionEmit::default()
             }
             "setShotCamera" => {
+                // 🎥 Deliberately overwrites shot_id's *saved* camera with the given pose — a real,
+                // undoable document edit. A no-op when that shot has no saved camera (the free/live
+                // camera is `"setCamera"`'s job, above, and never reaches this operation).
                 let shot_id = args.and_then(|value| value.get("shotId")).and_then(|value| value.as_str()).map(str::to_string);
                 if let (Some(shot_id), Some(camera_value)) = (shot_id, args.and_then(|value| value.get("camera"))) {
                     if let Ok(camera) = serde_json::from_value::<ShootingCamera>(camera_value.clone()) {
@@ -1001,7 +1006,7 @@ impl DocumentApp for ShootingPlayApp {
                 let draft = self.runtime.camera_draft_label.trim().to_string();
                 let label = if draft.is_empty() { format!("Camera {}", fixture.saved_cameras.len() + 1) } else { draft };
                 self.runtime.camera_draft_label.clear();
-                let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: fixture.camera.clone() };
+                let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: self.runtime.camera.clone() };
                 ActionEmit::operations(vec![ShootingOperation::SavedCameras(CollectionOperation::Add {
                     id: saved_camera.id.clone(),
                     item: saved_camera,
@@ -1009,11 +1014,13 @@ impl DocumentApp for ShootingPlayApp {
                 })])
             }
             "loadSavedCamera" => {
+                // 🎥 View action: loads a saved preset into the live viewport (`self.runtime`) — never
+                // mutates the saved camera itself, so this never touches the document either.
                 let camera_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).unwrap_or("");
-                match fixture.saved_cameras.iter().find(|entry| entry.id == camera_id) {
-                    Some(saved) => ActionEmit::operations(vec![ShootingOperation::SetCamera { camera: saved.camera.clone() }]),
-                    None => ActionEmit::default(),
+                if let Some(saved) = fixture.saved_cameras.iter().find(|entry| entry.id == camera_id) {
+                    self.runtime.camera = saved.camera.clone();
                 }
+                ActionEmit::default()
             }
             "setCameraDraftLabel" => {
                 self.runtime.camera_draft_label = args
@@ -1146,7 +1153,7 @@ impl DocumentApp for ShootingPlayApp {
                         .iter()
                         .map(|shot| IconRenderExportItem {
                             filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                            request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(fixture, shot, asset)).unwrap_or(Value::Null),
+                            request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(fixture, shot, asset, &self.runtime.camera)).unwrap_or(Value::Null),
                         })
                         .collect();
                     if !items.is_empty() {
@@ -1326,7 +1333,7 @@ impl DocumentApp for ShootingPlayApp {
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_UTILITY_DEFAULT);
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, &self.runtime, active_utility),
-            SHOOTING_PLAY_BODY_ICON => render_icon_scene(fixture),
+            SHOOTING_PLAY_BODY_ICON => render_icon_scene(fixture, &self.runtime),
             SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(fixture, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
             SHOOTING_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, &self.runtime, labels),
@@ -1412,10 +1419,10 @@ pub fn create_shooting_app() -> App {
             .operation("setActiveExample", "Set Active Example")
             .operation("setActiveShot", "Set Active Shot")
             .operation("setActiveAsset", "Set Active Asset")
-            .operation("setCamera", "Set Camera")
+            .view_action("setCamera", "Set Camera")
             .operation("setShotCamera", "Set Shot Camera")
             .operation("saveCamera", "Save Camera")
-            .operation("loadSavedCamera", "Load Saved Camera")
+            .view_action("loadSavedCamera", "Load Saved Camera")
             .operation("setSunAzimuth", "Set Sun Azimuth")
             .operation("setSunElevation", "Set Sun Elevation")
             .operation("setSunIntensity", "Set Sun Intensity")
@@ -1764,7 +1771,7 @@ mod tests {
         let mut app = new_app();
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("mesh:base"));
+        assert!(json.contains("mesh:🧊base"));
         assert!(json.contains("/mesh/🧊base.glb"));
     }
 
@@ -1805,8 +1812,11 @@ mod tests {
         );
     }
 
+    /// 🎥 `"setCamera"` is a View action now (see the ticket notes) — dragging the viewport camera
+    /// through several ticks must never create a VCS edit/undo step at all (replacing the old
+    /// "coalesced drag produces exactly one edit" proof, which assumed camera was document state).
     #[test]
-    fn coalesced_camera_drag_produces_one_undo_step() {
+    fn camera_drag_never_creates_an_undo_step() {
         let mut app = new_app();
         for position in [[1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]] {
             app.handle_action(
@@ -1817,11 +1827,15 @@ mod tests {
             )
             .expect("drag tick");
         }
-        assert_eq!(app.projection().expect("materialize projection").camera.position, [3.0, 0.0, 0.0]);
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
-        // The coalesced drag is one edit: undoing it restores the fixture's original camera, not an
-        // intermediate drag position.
-        assert_eq!(app.projection().expect("materialize projection").camera.position, default_fixture().camera.position);
+        let camera_position = |app: &mut VcsDocumentApp<ShootingPlayApp>| -> Value {
+            let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
+            let payload: Value = serde_json::to_value(&node).unwrap();
+            let camera: Value = serde_json::from_str(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
+            camera["position"].clone()
+        };
+        assert_eq!(camera_position(&mut app), json!([3.0, 0.0, 0.0]), "runtime camera reflects the last drag tick");
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo (no-op: nothing to undo)");
+        assert_eq!(camera_position(&mut app), json!([3.0, 0.0, 0.0]), "undo has nothing to revert — the drag never touched the document");
     }
 
     /// 🧪 The definitional regression proof: two independent instances start from the same fixture,

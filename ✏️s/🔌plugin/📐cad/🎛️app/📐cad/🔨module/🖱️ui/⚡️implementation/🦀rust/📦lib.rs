@@ -1,7 +1,7 @@
 //! 🎮 Cad app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use cad_document::{
-    cad_all_objects, cad_find_object_pane, cad_pane_camera, cad_pane_from_model_definition_id, cad_pane_geometry,
+    cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_geometry,
     cad_pane_objects, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadReference,
     CadScene, CAD_DOCUMENT_SCHEMA,
 };
@@ -19,7 +19,7 @@ use cad_document_engine::{
     cad_brep_kernel, cad_camera_distance, cad_camera_projection_config,
     cad_camera_set_projection_config,
     collect_mesh_urls, default_document, ensure_object_solid_handle,
-    export_solids_as, forest_play_scene, import_cad_object_by_extension, next_cad_id, object_mesh_data,
+    export_solids_as, forest_play_camera, forest_play_scene, import_cad_object_by_extension, next_cad_id, object_mesh_data,
     object_scale_json, primary_primitive_kind,
     resolve_object_mesh_url, scene_from_spatial_payload, unwrap_spatial_load_payload,
     CadSolidExport,
@@ -281,6 +281,16 @@ struct CadPlayRuntime {
     last_finalized_interaction_id: Option<String>,
     #[serde(default)]
     sun: WorldSunConfig,
+    /// 🎥 Per-pane camera pose — session-only view state (never a VCS-tracked document field): see
+    /// `"setCamera"`/`"setProjection"`/`"setProjectionParam"` in `handle_action` below.
+    #[serde(default)]
+    camera: CadCamera,
+    #[serde(default)]
+    camera_building: CadCamera,
+    #[serde(default)]
+    camera_energy: CadCamera,
+    #[serde(default)]
+    camera_structure_classic: CadCamera,
 }
 
 fn default_selection_method() -> String {
@@ -312,7 +322,32 @@ impl Default for CadPlayRuntime {
             engagement_session: None,
             last_finalized_interaction_id: None,
             sun: WorldSunConfig::default(),
+            camera: CadCamera::default(),
+            camera_building: CadCamera::default(),
+            camera_energy: CadCamera::default(),
+            camera_structure_classic: CadCamera::default(),
         }
+    }
+}
+
+/// 🎥 Reads the runtime-owned camera for `pane` — the session-only replacement for the old
+/// document-backed `cad_pane_camera`.
+fn cad_pane_camera_runtime(runtime: &CadPlayRuntime, pane: CadPaneId) -> &CadCamera {
+    match pane {
+        CadPaneId::Shape => &runtime.camera,
+        CadPaneId::Building => &runtime.camera_building,
+        CadPaneId::Energy => &runtime.camera_energy,
+        CadPaneId::StructureClassic => &runtime.camera_structure_classic,
+    }
+}
+
+/// 🎥 Mutable counterpart of `cad_pane_camera_runtime`.
+fn cad_pane_camera_runtime_mut(runtime: &mut CadPlayRuntime, pane: CadPaneId) -> &mut CadCamera {
+    match pane {
+        CadPaneId::Shape => &mut runtime.camera,
+        CadPaneId::Building => &mut runtime.camera_building,
+        CadPaneId::Energy => &mut runtime.camera_energy,
+        CadPaneId::StructureClassic => &mut runtime.camera_structure_classic,
     }
 }
 
@@ -807,7 +842,7 @@ fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_i
         surface_id,
         CAD_PLAY_APP_ID,
         world3d_scene_extended(
-            camera_json(cad_pane_camera(&envelope.document, pane)),
+            camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
             world_meshes_json(objects, cad_pane_geometry(&envelope.document, pane)),
             world_instances_json(objects, &envelope.runtime),
             world_selection_json(&envelope.document, &envelope.runtime, active_utility),
@@ -2118,10 +2153,15 @@ impl DocumentApp for CadPlayApp {
                 let (scene, runtime) = if example_id.is_empty() {
                     (default_document(), CadPlayRuntime::default())
                 } else if example_id == CAD_EXAMPLE_FOREST_LEFT || example_id == "forest-left" {
+                    let forest_camera = forest_play_camera();
                     (
                         forest_play_scene(),
                         CadPlayRuntime {
                             active_example_id: Some(CAD_EXAMPLE_FOREST_LEFT.into()),
+                            camera: forest_camera.clone(),
+                            camera_building: forest_camera.clone(),
+                            camera_energy: forest_camera.clone(),
+                            camera_structure_classic: forest_camera,
                             ..CadPlayRuntime::default()
                         },
                     )
@@ -2172,11 +2212,7 @@ impl DocumentApp for CadPlayApp {
                             .and_then(|v| v.as_str())
                             .map(cad_pane_id_from_surface_id)
                             .unwrap_or(CadPaneId::Shape);
-                        return ActionEmit {
-                            operations: vec![CadOperation::SetCamera { pane, camera: parsed }],
-                            coalesce_key: Some(format!("camera:{}", pane.model_definition_id())),
-                            ..Default::default()
-                        };
+                        *cad_pane_camera_runtime_mut(&mut self.runtime, pane) = parsed;
                     }
                 }
                 ActionEmit::default()
@@ -2187,7 +2223,7 @@ impl DocumentApp for CadPlayApp {
                     .and_then(|v| v.as_str())
                     .map(cad_pane_id_from_surface_id)
                     .unwrap_or(CadPaneId::Shape);
-                let mut camera = cad_pane_camera(document, pane).clone();
+                let mut camera = cad_pane_camera_runtime(&self.runtime, pane).clone();
                 let mut config = cad_camera_projection_config(&camera);
                 let moves_pose = world3d_projection_action_moves_pose(action, args);
                 apply_world3d_projection_action(&mut config, action, args);
@@ -2196,11 +2232,8 @@ impl DocumentApp for CadPlayApp {
                     camera.position = position;
                 }
                 cad_camera_set_projection_config(&mut camera, &config);
-                ActionEmit {
-                    operations: vec![CadOperation::SetCamera { pane, camera }],
-                    coalesce_key: Some(format!("camera:{}", pane.model_definition_id())),
-                    ..Default::default()
-                }
+                *cad_pane_camera_runtime_mut(&mut self.runtime, pane) = camera;
+                ActionEmit::default()
             }
             "translateSelection" => {
                 let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
@@ -2815,11 +2848,10 @@ impl DocumentApp for CadPlayApp {
         ])
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, CadScene>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let document = doc.projection;
+    fn window_measures(&self, _doc: &DocumentView<'_, CadScene>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let pane_measures = |pane: CadPaneId| {
             vec![
-                world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera(document, pane)), cad_action),
+                world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera_runtime(&self.runtime, pane)), cad_action),
                 world3d_sun_measures("cad", &self.runtime.sun, cad_action),
             ]
         };
@@ -2951,9 +2983,9 @@ pub fn create_cad_app() -> App {
             .operation("importCadFile", "Import CAD File")
             .operation("patchCadPlayReference", "Patch Reference")
             .operation("engagementSubmit", "Engagement Submit")
-            .operation("setCamera", "Set Camera")
-            .operation("setProjection", "Set Projection")
-            .operation("setProjectionParam", "Set Projection Parameter")
+            .view_action("setCamera", "Set Camera")
+            .view_action("setProjection", "Set Projection")
+            .view_action("setProjectionParam", "Set Projection Parameter")
             .operation("focusModelDefinition", "Focus Model Definition")
             .operation("setActiveExample", "Set Active Example")
             .view_action("setSelection", "Set Selection")
@@ -3400,6 +3432,24 @@ mod tests {
         assert!(selection.contains("\"transformMode\":\"rotate\""), "gumball utility sourced from ViewState::active_utility_id");
         assert!(selection.contains("\"gumballActive\":true"));
         assert!(selection.contains("\"gumballTarget\""));
+    }
+
+    /// 🎥 `setCamera`/`setProjection`/`setProjectionParam` are `ActionKind::View` (see the `.view_action`
+    /// registrations below) — they must never emit a `CadOperation` (no VCS edit, no undo entry) and
+    /// instead write straight into the app's ephemeral `CadPlayRuntime`, isolated per pane.
+    #[test]
+    fn set_camera_writes_runtime_not_operations() {
+        let mut app = CadPlayApp::default();
+        let scene = default_document();
+        let emit = drive(
+            &mut app,
+            &scene,
+            "setCamera",
+            Some(json!({ "surfaceId": "cad.play.scene3d/building", "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0, "fov": 60.0 } })),
+        );
+        assert!(emit.operations.is_empty(), "setCamera must not emit a VCS operation");
+        assert_eq!(cad_pane_camera_runtime(&app.runtime, CadPaneId::Building).zoom, 2.0);
+        assert_eq!(cad_pane_camera_runtime(&app.runtime, CadPaneId::Shape).zoom, 1.0, "panes stay isolated");
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! ⚡ Sequence app — operation enum + laws (constitutional: op).
 
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Operation, OperationDiff};
-use sequence::{sequence_edge_from_dsl, sequence_edge_to_dsl, SequenceCamera, SequenceEdge, SequenceEdgeDsl, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch};
+use sequence::{sequence_edge_from_dsl, sequence_edge_to_dsl, SequenceEdge, SequenceEdgeDsl, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖Store
@@ -43,8 +43,9 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 //#endregion 🔖Collections
 
 //#region 🔖Operations
-/// 🧮 Typed sequence operation: id-keyed step/edge collection edits plus the scalar canvas camera.
-/// Flattened into one keyword-tagged variant per {@link protocol::CollectionOperation} case rather
+/// 🧮 Typed sequence operation: id-keyed step/edge collection edits. The canvas camera is
+/// session-only runtime state now (never a document field — see `SequencePlayRuntime::camera` in the
+/// ui crate). Flattened into one keyword-tagged variant per {@link protocol::CollectionOperation} case rather
 /// than wrapping that generic type directly — `CollectionOperation` is foreign (defined in
 /// `protocol`) and generic, so it can never itself implement `dsl::DslField`/`dsl::DslVariants` from
 /// this crate (the orphan rule requires a local type to anchor the impl on, and its OWN outer type
@@ -65,7 +66,6 @@ pub enum SequenceOperation {
     EdgesRemove { id: String },
     EdgesMove { id: String, to_index: usize },
     EdgesPatch { id: String, patch: SequenceEdgePatch },
-    SetCamera { camera: SequenceCamera },
 }
 
 /// 🔁 Converts a generic step `CollectionOperation` (as produced by `protocol::invert_collection_operation`)
@@ -94,7 +94,6 @@ fn edges_operation_from_collection(operation: CollectionOperation<String, Sequen
 pub struct SequenceDiff {
     pub steps: Option<CollectionDiff<String, SequenceStepPatch, SequenceStep>>,
     pub edges: Option<CollectionDiff<String, SequenceEdgePatch, SequenceEdge>>,
-    pub camera: Option<SequenceCamera>,
 }
 
 impl OperationDiff<SequenceFixture> for SequenceDiff {
@@ -106,18 +105,12 @@ impl OperationDiff<SequenceFixture> for SequenceDiff {
         if let Some(diff) = &self.edges {
             apply_collection_diff(&mut next.edges, diff);
         }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
         next
     }
 
     fn absorb(&mut self, other: Self) {
         absorb_collection_diff(&mut self.steps, other.steps);
         absorb_collection_diff(&mut self.edges, other.edges);
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
     }
 }
 
@@ -146,7 +139,6 @@ impl Operation<SequenceFixture> for SequenceOperation {
             SequenceOperation::EdgesPatch { id, patch } => {
                 SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() }
             }
-            SequenceOperation::SetCamera { camera } => SequenceDiff { camera: Some(camera.clone()), ..Default::default() },
         }
     }
 
@@ -168,13 +160,12 @@ impl Operation<SequenceFixture> for SequenceOperation {
             SequenceOperation::EdgesPatch { id, patch } => {
                 vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))]
             }
-            SequenceOperation::SetCamera { .. } => vec![SequenceOperation::SetCamera { camera: projection.camera.clone() }],
         }
     }
 }
 
-/// 🔀 Diffs two fixtures into a minimal typed operation set: removed/added/patched steps and edges plus a
-/// camera change. Lets action handlers keep computing the target fixture via `sequence_engine::SequenceHost`
+/// 🔀 Diffs two fixtures into a minimal typed operation set: removed/added/patched steps and edges.
+/// Lets action handlers keep computing the target fixture via `sequence_engine::SequenceHost`
 /// (with all its cycle/slot/layout logic) while emitting granular, mergeable operations.
 pub fn sequence_fixture_operations(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceOperation> {
     let mut operations = Vec::new();
@@ -215,9 +206,6 @@ pub fn sequence_fixture_operations(before: &SequenceFixture, after: &SequenceFix
             }
         }
     }
-    if before.camera != after.camera {
-        operations.push(SequenceOperation::SetCamera { camera: after.camera.clone() });
-    }
     operations
 }
 //#endregion 🔖Operations
@@ -252,10 +240,6 @@ enum SequenceOperationDsl {
         #[dsl(block)]
         patch: SequenceEdgePatch,
     },
-    SetCamera {
-        #[dsl(block)]
-        camera: SequenceCamera,
-    },
 }
 
 fn sequence_operation_to_dsl(operation: &SequenceOperation) -> SequenceOperationDsl {
@@ -268,7 +252,6 @@ fn sequence_operation_to_dsl(operation: &SequenceOperation) -> SequenceOperation
         SequenceOperation::EdgesRemove { id } => SequenceOperationDsl::EdgesRemove { id: id.clone() },
         SequenceOperation::EdgesMove { id, to_index } => SequenceOperationDsl::EdgesMove { id: id.clone(), to_index: *to_index },
         SequenceOperation::EdgesPatch { id, patch } => SequenceOperationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
-        SequenceOperation::SetCamera { camera } => SequenceOperationDsl::SetCamera { camera: camera.clone() },
     }
 }
 
@@ -282,7 +265,6 @@ fn sequence_operation_from_dsl(operation: SequenceOperationDsl) -> Result<Sequen
         SequenceOperationDsl::EdgesRemove { id } => SequenceOperation::EdgesRemove { id },
         SequenceOperationDsl::EdgesMove { id, to_index } => SequenceOperation::EdgesMove { id, to_index },
         SequenceOperationDsl::EdgesPatch { id, patch } => SequenceOperation::EdgesPatch { id, patch },
-        SequenceOperationDsl::SetCamera { camera } => SequenceOperation::SetCamera { camera },
     })
 }
 
@@ -341,13 +323,6 @@ mod tests {
         assert_eq!(patched.steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
         let removed = round_trip(&patched, &SequenceOperation::StepsRemove { id: "step-99".into() });
         assert!(!removed.steps.iter().any(|step| step.id == "step-99"));
-    }
-
-    #[test]
-    fn set_camera_round_trip() {
-        let fixture = default_fixture();
-        let next = round_trip(&fixture, &SequenceOperation::SetCamera { camera: SequenceCamera { x: 10.0, y: 20.0, zoom: 2.0 } });
-        assert_eq!(next.camera.zoom, 2.0);
     }
 
     #[test]
@@ -435,9 +410,5 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
     }
 
-    #[test]
-    fn op_text_round_trips_set_camera() {
-        store::test_support::assert_op_line_round_trip(&SequenceOperation::SetCamera { camera: SequenceCamera { x: 10.5, y: -20.25, zoom: 2.0 } });
-    }
 }
 //#endregion 🧪Tests

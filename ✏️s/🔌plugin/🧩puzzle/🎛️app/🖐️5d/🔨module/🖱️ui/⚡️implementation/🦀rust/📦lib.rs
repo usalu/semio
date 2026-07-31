@@ -432,10 +432,6 @@ struct Puzzle5dDocument {
     #[serde(default)]
     domain: String,
     #[serde(default)]
-    camera2d: Puzzle5dCamera2d,
-    #[serde(default)]
-    camera3d: Puzzle5dCamera3d,
-    #[serde(default)]
     parts: Vec<Puzzle5dPart>,
     #[serde(default)]
     fasteners: Vec<Puzzle5dFastener>,
@@ -463,6 +459,12 @@ struct Puzzle5dSelection {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle5dRuntime {
+    /// 📷 Camera pose — session-only view state (`ActionKind::View`), never a VCS document field:
+    /// see `setCamera`/`setCamera2d`/`setCamera3d` in `Puzzle5dPlayApp::handle_action`.
+    #[serde(default)]
+    camera2d: Puzzle5dCamera2d,
+    #[serde(default)]
+    camera3d: Puzzle5dCamera3d,
     #[serde(default)]
     selection: Puzzle5dSelection,
     #[serde(default = "default_selection_method")]
@@ -497,6 +499,8 @@ struct Puzzle5dRuntime {
 impl Default for Puzzle5dRuntime {
     fn default() -> Self {
         Self {
+            camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
+            camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0 },
             selection: Puzzle5dSelection::default(),
             selection_method: default_selection_method(),
             hovered_part_id: None,
@@ -597,8 +601,6 @@ fn empty_document() -> Puzzle5dDocument {
     Puzzle5dDocument {
         schema: PUZZLE5D_SCHEMA.into(),
         domain: "architecture".into(),
-        camera2d: Puzzle5dCamera2d { x: 0.0, y: 0.0, zoom: 1.0 },
-        camera3d: Puzzle5dCamera3d { position: [8.0, -8.0, 8.0], target: [0.0, 0.0, 0.0], zoom: 1.0 },
         parts: Vec::new(),
         fasteners: Vec::new(),
         meta: None,
@@ -1010,7 +1012,7 @@ fn board_kind_catalogs_value(document: &Puzzle5dDocument) -> Value {
     })
 }
 
-fn board_fixture_value(document: &Puzzle5dDocument) -> Value {
+fn board_fixture_value(document: &Puzzle5dDocument, camera2d: &Puzzle5dCamera2d) -> Value {
     let nodes: Vec<Value> = document.parts.iter().map(board_node_value).collect();
     let edges: Vec<Value> = document
         .fasteners
@@ -1026,7 +1028,7 @@ fn board_fixture_value(document: &Puzzle5dDocument) -> Value {
         .collect();
     json!({
         "schema": PUZZLE5D_BOARD_FIXTURE_SCHEMA,
-        "camera": board_camera_value(&document.camera2d),
+        "camera": board_camera_value(camera2d),
         "nodes": nodes,
         "edges": edges,
         "wires": [],
@@ -1043,8 +1045,8 @@ fn board_brush_weights_json(runtime: &Puzzle5dRuntime) -> String {
 
 fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
     Board2dScene {
-        fixture_json: board_fixture_value(&envelope.document).to_string(),
-        camera_json: board_camera_value(&envelope.document.camera2d).to_string(),
+        fixture_json: board_fixture_value(&envelope.document, &envelope.runtime.camera2d).to_string(),
+        camera_json: board_camera_value(&envelope.runtime.camera2d).to_string(),
         glyph_catalogs_json: board_kind_catalogs_value(&envelope.document).to_string(),
         selection_json: serde_json::to_string(&selection_flat_ids(&envelope.runtime.selection)).unwrap_or_else(|_| "[]".into()),
         interactive: true,
@@ -2212,7 +2214,7 @@ impl Puzzle5dPlayApp {
             match name {
                 "camera" => {
                     if let Ok(camera) = serde_json::from_value::<Puzzle5dCamera2d>(payload) {
-                        envelope.document.camera2d = camera;
+                        envelope.runtime.camera2d = camera;
                     }
                 }
                 "select" => {
@@ -2477,14 +2479,14 @@ impl DocumentApp for Puzzle5dPlayApp {
                 let Some(target) = gumball_target_world(&envelope) else {
                     return ActionEmit::default();
                 };
-                let camera = &mut envelope.document.camera3d;
+                let camera = &mut envelope.runtime.camera3d;
                 let offset = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
                 camera.target = target;
                 camera.position = [target[0] + offset[0], target[1] + offset[1], target[2] + offset[2]];
                 let selected_2d: Vec<(f64, f64)> = envelope.document.parts.iter().filter(|part| envelope.runtime.selection.part_ids.contains(&part.id)).map(|part| (part.part_2d.x, part.part_2d.y)).collect();
                 if !selected_2d.is_empty() {
-                    envelope.document.camera2d.x = selected_2d.iter().map(|(x, _)| x).sum::<f64>() / selected_2d.len() as f64;
-                    envelope.document.camera2d.y = selected_2d.iter().map(|(_, y)| y).sum::<f64>() / selected_2d.len() as f64;
+                    envelope.runtime.camera2d.x = selected_2d.iter().map(|(x, _)| x).sum::<f64>() / selected_2d.len() as f64;
+                    envelope.runtime.camera2d.y = selected_2d.iter().map(|(_, y)| y).sum::<f64>() / selected_2d.len() as f64;
                 }
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
@@ -2757,29 +2759,31 @@ impl DocumentApp for Puzzle5dPlayApp {
                     }
                 }
             }
+            // 📷 Camera pose is session-only view state (`ActionKind::View`) — writes runtime directly
+            // and never touches the document, so it never emits a VCS operation.
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or("");
                     if surface_id == PUZZLE5D_PLAY_SURFACE_2D || camera.get("position").is_none() {
                         if let Ok(parsed) = serde_json::from_value::<Puzzle5dCamera2d>(camera.clone()) {
-                            envelope.document.camera2d = parsed;
+                            envelope.runtime.camera2d = parsed;
                         }
                     } else if let Ok(parsed) = serde_json::from_value::<Puzzle5dCamera3d>(camera.clone()) {
-                        envelope.document.camera3d = parsed;
+                        envelope.runtime.camera3d = parsed;
                     }
                 }
             }
             "setCamera2d" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        envelope.document.camera2d = parsed;
+                        envelope.runtime.camera2d = parsed;
                     }
                 }
             }
             "setCamera3d" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        envelope.document.camera3d = parsed;
+                        envelope.runtime.camera3d = parsed;
                     }
                 }
             }
@@ -2986,7 +2990,7 @@ impl DocumentApp for Puzzle5dPlayApp {
                     PUZZLE5D_PLAY_SURFACE_3D,
                     PUZZLE5D_PLAY_CONTROLLER_ID,
                     world3d_scene_extended(
-                        camera3d_json(&envelope.document.camera3d),
+                        camera3d_json(&envelope.runtime.camera3d),
                         world_meshes_json(&envelope.document),
                         world_instances_json(&envelope.document, &envelope.runtime),
                         world_selection_json_ex(&envelope),
@@ -3195,15 +3199,15 @@ pub fn create_puzzle5d_app() -> App {
             .operation("patchGrip", "Patch Grip")
             .operation("patchFastener", "Patch Fastener")
             .operation("importComposeKit", "Import Compose Kit")
-            .operation("setCamera", "Set Camera")
-            .operation("setCamera2d", "Set Camera 2D")
-            .operation("setCamera3d", "Set Camera 3D")
             .operation("translateSelection", "Translate Selection")
             .operation("rotateSelection", "Rotate Selection")
             .operation("scaleSelection", "Scale Selection")
             .operation("worldRelocate", "Relocate Part")
             .operation("applyBoardEvents", "Apply Board Events")
-            // 👁️ Ephemeral view state — selection, hover, utility parameters, brush cycling.
+            // 👁️ Ephemeral view state — selection, hover, utility parameters, brush cycling, camera pose.
+            .view_action("setCamera", "Set Camera")
+            .view_action("setCamera2d", "Set Camera 2D")
+            .view_action("setCamera3d", "Set Camera 3D")
             .view_action("setSelection", "Set Selection")
             .view_action("documentSelect", "Document Select")
             .view_action("clearSelection", "Clear Selection")
@@ -3603,6 +3607,25 @@ mod tests {
         assert!(result.operations.is_empty(), "utility switching never emits document operations");
         assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
         assert_eq!(app.projection().expect("projection").0, before, "utility switching does not mutate the document");
+    }
+
+    #[test]
+    fn set_camera_actions_write_runtime_and_emit_no_operations() {
+        // 📷 Camera pose is session-only view state (`ActionKind::View`): `setCamera2d`/`setCamera3d`
+        // must mutate the app's runtime (visible via the rendered scene) without ever touching the
+        // VCS-tracked document or emitting an operation.
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        let before = app.projection().expect("projection").0;
+        let camera2d_result = app.handle_action("setCamera2d", Some(&json!({ "camera": { "x": 12.5, "y": -6.5, "zoom": 3.5 } })), &ViewState::default(), &testkit::meta("local")).expect("setCamera2d");
+        assert!(camera2d_result.operations.is_empty(), "setCamera2d is a View action and must never emit a document operation");
+        assert_eq!(app.projection().expect("projection").0, before, "setCamera2d must not mutate the document");
+        let board = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_2D, None, &ViewState::default()).expect("render 2d")).unwrap();
+        assert!(board.contains("12.5") && board.contains("-6.5"), "the new 2D camera pose must be reflected in the rendered runtime state");
+        let camera3d_result = app.handle_action("setCamera3d", Some(&json!({ "camera": { "position": [42.5, 7.5, 3.5], "target": [1.5, 2.5, 3.5], "zoom": 5.5 } })), &ViewState::default(), &testkit::meta("local")).expect("setCamera3d");
+        assert!(camera3d_result.operations.is_empty(), "setCamera3d is a View action and must never emit a document operation");
+        assert_eq!(app.projection().expect("projection").0, before, "setCamera3d must not mutate the document");
+        let world = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_3D, None, &ViewState::default()).expect("render 3d")).unwrap();
+        assert!(world.contains("42.5") && world.contains("7.5") && world.contains("1.5"), "the new 3D camera pose must be reflected in the rendered runtime state");
     }
 
     #[test]

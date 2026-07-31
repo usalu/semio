@@ -17,7 +17,7 @@ pub fn decode(bytes: &[u8]) -> Result<RasterProjection, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use raster::{RasterCamera, RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use std::collections::BTreeMap;
 
     #[test]
@@ -46,7 +46,6 @@ mod tests {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
             title: Some("Representative \"Doc\"".into()),
-            camera: RasterCamera { x: 12.5, y: -4.0, zoom: 1.5 },
             assets,
             layers: vec![
                 RasterLayerNode::Pixel {

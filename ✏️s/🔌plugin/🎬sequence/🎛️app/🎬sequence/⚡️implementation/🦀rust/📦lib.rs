@@ -63,6 +63,12 @@ pub struct SequenceCamera {
     pub zoom: f64,
 }
 
+impl Default for SequenceCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
+}
+
 /// 🎯 Only ever embedded `#[dsl(block)]`-wrapped (on `SequenceStep::slot`), so it carries no
 /// `#[dsl(keyword = "...")]` of its own — the embedding field already supplies the bare `slot`
 /// leading keyword.
@@ -112,7 +118,6 @@ pub struct SequenceEdge {
 #[serde(rename_all = "camelCase")]
 pub struct SequenceFixture {
     pub schema: String,
-    pub camera: SequenceCamera,
     pub steps: Vec<SequenceStep>,
     pub edges: Vec<SequenceEdge>,
 }
@@ -126,7 +131,6 @@ impl Default for SequenceFixture {
 pub fn default_fixture() -> SequenceFixture {
     SequenceFixture {
         schema: "sequence.fixture".into(),
-        camera: SequenceCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         steps: vec![
             SequenceStep {
                 id: "step-1".into(),
@@ -263,8 +267,6 @@ pub fn sequence_edge_from_dsl(edge: SequenceEdgeDsl) -> Result<SequenceEdge, Str
 #[dsl(layout = "lines")]
 struct SequenceFixtureDsl {
     schema: String,
-    #[dsl(block)]
-    camera: SequenceCamera,
     #[dsl(table)]
     steps: Vec<SequenceStep>,
     #[dsl(table)]
@@ -272,11 +274,11 @@ struct SequenceFixtureDsl {
 }
 
 fn sequence_fixture_to_dsl(fixture: &SequenceFixture) -> SequenceFixtureDsl {
-    SequenceFixtureDsl { schema: fixture.schema.clone(), camera: fixture.camera.clone(), steps: fixture.steps.clone(), edges: fixture.edges.iter().map(sequence_edge_to_dsl).collect() }
+    SequenceFixtureDsl { schema: fixture.schema.clone(), steps: fixture.steps.clone(), edges: fixture.edges.iter().map(sequence_edge_to_dsl).collect() }
 }
 
 fn sequence_fixture_dsl_to_fixture(fixture: SequenceFixtureDsl) -> Result<SequenceFixture, String> {
-    Ok(SequenceFixture { schema: fixture.schema, camera: fixture.camera, steps: fixture.steps, edges: fixture.edges.into_iter().map(sequence_edge_from_dsl).collect::<Result<Vec<_>, _>>()? })
+    Ok(SequenceFixture { schema: fixture.schema, steps: fixture.steps, edges: fixture.edges.into_iter().map(sequence_edge_from_dsl).collect::<Result<Vec<_>, _>>()? })
 }
 
 impl store::DocumentDsl for SequenceFixture {

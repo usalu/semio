@@ -181,7 +181,6 @@ pub enum RasterOperation {
     RemoveLayer { #[dsl(key = "id")] layer_id: String },
     PatchLayer { #[dsl(key = "id")] layer_id: String, #[dsl(block)] patch: RasterLayerPatch },
     MoveLayer { #[dsl(key = "id")] layer_id: String, #[dsl(key = "parent")] parent_id: Option<String>, index: usize },
-    SetCamera { #[dsl(block)] camera: raster::RasterCamera },
     ReplaceDocument { #[dsl(block)] document: RasterProjection },
 }
 
@@ -189,7 +188,6 @@ pub enum RasterOperation {
 #[serde(rename_all = "camelCase")]
 pub struct RasterDiff {
     pub steps: Vec<RasterStep>,
-    pub camera: Option<raster::RasterCamera>,
     pub replace: Option<Box<RasterProjection>>,
 }
 
@@ -198,9 +196,6 @@ impl OperationDiff<RasterProjection> for RasterDiff {
         let mut next = self.replace.as_ref().map(|document| (**document).clone()).unwrap_or_else(|| projection.clone());
         for step in &self.steps {
             apply_step(&mut next.layers, step);
-        }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
         }
         next
     }
@@ -211,9 +206,6 @@ impl OperationDiff<RasterProjection> for RasterDiff {
             self.steps.clear();
         }
         self.steps.extend(other.steps);
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
     }
 }
 
@@ -236,7 +228,6 @@ impl Operation<RasterProjection> for RasterOperation {
             RasterOperation::MoveLayer { layer_id, parent_id, index } => {
                 step_diff(RasterStep::MoveLayer { layer_id: layer_id.clone(), parent_id: parent_id.clone(), index: *index })
             }
-            RasterOperation::SetCamera { camera } => RasterDiff { camera: Some(camera.clone()), ..Default::default() },
             RasterOperation::ReplaceDocument { document } => RasterDiff { replace: Some(Box::new(document.clone())), ..Default::default() },
         }
     }
@@ -259,7 +250,6 @@ impl Operation<RasterProjection> for RasterOperation {
                 Some((parent_id, index)) => vec![RasterOperation::MoveLayer { layer_id: layer_id.clone(), parent_id, index }],
                 None => Vec::new(),
             },
-            RasterOperation::SetCamera { .. } => vec![RasterOperation::SetCamera { camera: projection.camera.clone() }],
             RasterOperation::ReplaceDocument { .. } => vec![RasterOperation::ReplaceDocument { document: projection.clone() }],
         }
     }
@@ -273,7 +263,7 @@ pub type RasterStore = store::DocumentStore<RasterProjection, RasterOperation>;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use raster::{RasterCamera, RasterImageAsset, RasterLayerMask, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use raster::{RasterImageAsset, RasterLayerMask, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use raster_engine::empty_raster_projection;
     use std::collections::BTreeMap;
     use store::{create_document_envelope, DocumentCommand};
@@ -340,10 +330,8 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_and_replace_round_trip() {
+    fn replace_document_round_trip() {
         let projection = empty_raster_projection();
-        let next = round_trip(&projection, &RasterOperation::SetCamera { camera: RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
-        assert_eq!(next.camera.zoom, 2.0);
         let mut replacement = empty_raster_projection();
         replacement.layers.push(pixel_layer("l9", "Replaced"));
         let replaced = round_trip(&projection, &RasterOperation::ReplaceDocument { document: replacement.clone() });
@@ -387,7 +375,6 @@ mod tests {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
             title: Some("Representative \"Doc\"".into()),
-            camera: RasterCamera { x: 12.5, y: -4.0, zoom: 1.5 },
             assets,
             layers: vec![
                 RasterLayerNode::Pixel {
@@ -492,7 +479,6 @@ mod tests {
         });
         store::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: Some("g2".into()), index: 1 });
         store::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: None, index: 0 });
-        store::test_support::assert_op_line_round_trip(&RasterOperation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.5, zoom: 2.0 } });
         store::test_support::assert_op_line_round_trip(&RasterOperation::ReplaceDocument { document: representative_raster_document() });
     }
     //#endregion 🔖OpText

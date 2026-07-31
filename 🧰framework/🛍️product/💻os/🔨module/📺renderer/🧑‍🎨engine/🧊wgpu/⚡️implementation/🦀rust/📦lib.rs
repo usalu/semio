@@ -8078,6 +8078,12 @@ struct SceneSurfaceState {
     //#region GenericPointerDispatch
     last_pointer_pos: (f32, f32),
     //#endregion GenericPointerDispatch
+    /// 🕒 The controller id a Canvas2d/Paint2d surface's settled `setCamera` dispatch should target —
+    /// stashed here (rather than threaded through `SCENE_CAMERA_DISPATCH_DEADLINES_MS`) since that map
+    /// only needs a bare surface-id -> deadline shape to stay a drop-in match for
+    /// `sweep_expired_camera_dispatch_deadlines`. Set on every wheel/pan mutation, read (never cleared)
+    /// by `sweep_expired_scene_camera_dispatches` at expiry.
+    camera_dispatch_controller_id: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -8091,6 +8097,12 @@ pub struct PendingRasterUpload {
 thread_local! {
     static SCENE_STATE: RefCell<HashMap<String, SceneSurfaceState>> = RefCell::new(HashMap::new());
     static GRAPH_NODE_CTX: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
+    /// 🕒 Canvas2d/Paint2d's settle-then-dispatch deadline map — surface id -> the timestamp its
+    /// debounced `setCamera` should fire at. Same shape/sweep (`sweep_expired_camera_dispatch_deadlines`)
+    /// as `AppRuntime`'s `world3d_camera_dispatch_deadlines_ms`; kept thread-local here rather than on
+    /// `AppRuntime` because `handle_scene_wheel`/`handle_scene_pointer_move` (this module's wheel/pan
+    /// mutators) only ever see a `&UiComponentSceneNode`, never `AppRuntime` itself.
+    static SCENE_CAMERA_DISPATCH_DEADLINES_MS: RefCell<HashMap<String, f64>> = RefCell::new(HashMap::new());
 }
 
 /** @emoji 🕸️ Clears per-frame graph node metadata used by context menus. */
@@ -8192,6 +8204,50 @@ fn mutate_scene_state(surface_id: &str, f: impl FnOnce(&mut SceneSurfaceState)) 
         f(entry);
     });
 }
+
+//#region SceneCameraDispatch
+/// 🕒 Pushes a Canvas2d/Paint2d surface's settled `setCamera` deadline ~350ms out — called on every
+/// wheel/pan mutation (see `handle_scene_wheel`'s `Canvas2d`/`Paint2d` arms and
+/// `handle_scene_pointer_move`'s `PanViewport` arm), same 350ms settle window as
+/// `AppRuntime::world3d_camera_dispatch_deadlines_ms`.
+fn schedule_scene_camera_dispatch(surface_id: &str) {
+    SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
+        cell.borrow_mut().insert(surface_id.to_string(), crate::app_now_ms() + 350.0);
+    });
+}
+
+/// 🕒 A Canvas2d/Paint2d `setCamera` action from a bare surface id/controller id/viewport — same
+/// `{surfaceId, camera: {x, y, zoom}}` shape `ink_set_camera_action` already uses for `InkCanvas`'s own
+/// camera dispatch (this crate's one other camera-from-viewport builder), reused here since neither
+/// `Paint2dHost`'s React source nor this repo's own Ink precedent key it any other way.
+fn scene_camera_action(surface_id: &str, controller_id: &str, viewport: Viewport) -> ActionDescriptor {
+    ActionDescriptor {
+        controller_id: controller_id.to_string(),
+        action: "setCamera".into(),
+        args: Some(json!({ "surfaceId": surface_id, "camera": { "x": viewport.x, "y": viewport.y, "zoom": viewport.zoom } })),
+    }
+}
+
+/// 🕒 `AppRuntime::frame`'s per-frame hook into this module's settle-then-dispatch deadlines —
+/// sweeps `SCENE_CAMERA_DISPATCH_DEADLINES_MS` via the shared pure
+/// `sweep_expired_camera_dispatch_deadlines`, then builds each expired surface's `setCamera` action
+/// from its last-known viewport + stashed controller id (`camera_dispatch_controller_id`; `None` only
+/// if a deadline outlives its `SCENE_STATE` entry, which never happens in practice since both are
+/// written together in `schedule_scene_camera_dispatch`'s call sites).
+pub fn sweep_expired_scene_camera_dispatches(now_ms: f64) -> Vec<ActionDescriptor> {
+    let expired = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| crate::sweep_expired_camera_dispatch_deadlines(&mut cell.borrow_mut(), now_ms));
+    expired
+        .into_iter()
+        .filter_map(|surface_id| {
+            let state = scene_state(&surface_id);
+            state
+                .camera_dispatch_controller_id
+                .clone()
+                .map(|controller_id| scene_camera_action(&surface_id, &controller_id, state.viewport))
+        })
+        .collect()
+}
+//#endregion SceneCameraDispatch
 
 /** @emoji 🖱️ Cheap read of a surface's pointer edge-detection fields, avoiding a full `SceneSurfaceState` clone. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler — the sole caller of `handle_scene_pointer_button`/`handle_scene_pointer_move` now, `RenderEntry`'s own once-per-render-frame `apply_scene_wheel`/`apply_scene_pointer` having been deleted once every generic-fallback surface was proven reachable through this path) can read `pointer_was_down`/`last_pointer_pos` to derive `handle_scene_pointer_move`'s `down`/drag-delta parameters. */
 pub(crate) fn scene_pointer_edge_state(surface_id: &str) -> (bool, f32, f32) {
@@ -8331,7 +8387,9 @@ pub fn handle_scene_wheel(
             mutate_scene_state(&scene.surface_id, |state| {
                 let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
                 state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.125, 8.0);
+                state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
             });
+            schedule_scene_camera_dispatch(&scene.surface_id);
             Vec::new()
         }
         SurfaceKind::Paint2d => {
@@ -8347,7 +8405,9 @@ pub fn handle_scene_wheel(
                     }
                     let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
                     state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.05, 32.0);
+                    state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
                 });
+                schedule_scene_camera_dispatch(&scene.surface_id);
             }
             Vec::new()
         }
@@ -8413,7 +8473,9 @@ pub fn handle_scene_pointer_move(
                     mutate_scene_state(&scene.surface_id, |state| {
                         state.viewport.x -= drag_dx / vp.zoom.max(0.01);
                         state.viewport.y -= drag_dy / vp.zoom.max(0.01);
+                        state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
                     });
+                    schedule_scene_camera_dispatch(&scene.surface_id);
                 }
                 SceneDragMode::MoveNode { node_id, grab_x, grab_y } => {
                     let vp = state.viewport;
@@ -11962,6 +12024,63 @@ mod canvas2d_tests {
             !vertex_colors.contains(&[theme.accent.r, theme.accent.g, theme.accent.b, theme.accent.a]),
             "the selection ring must no longer use theme.accent (the app's red/crimson token), got {vertex_colors:?}"
         );
+    }
+
+    /// 🕒 `scene_camera_action`'s exact key names — `{surfaceId, camera: {x, y, zoom}}`, matching
+    /// `ink_set_camera_action`'s own shape (this crate's other camera-from-viewport builder).
+    #[test]
+    fn scene_camera_action_uses_surface_id_and_nested_camera_xyz_keys() {
+        let action = scene_camera_action("s-cam-1", "controller-1", Viewport { x: 12.5, y: -3.0, zoom: 2.0 });
+        assert_eq!(action.controller_id, "controller-1");
+        assert_eq!(action.action, "setCamera");
+        let args = action.args.expect("setCamera always carries args");
+        assert_eq!(args["surfaceId"], json!("s-cam-1"));
+        assert_eq!(args["camera"]["x"], json!(12.5));
+        assert_eq!(args["camera"]["y"], json!(-3.0));
+        assert_eq!(args["camera"]["zoom"], json!(2.0));
+    }
+
+    /// 🕒 A Canvas2d wheel tick mutates the viewport immediately but only SCHEDULES its `setCamera` —
+    /// nothing is due yet, and nothing is dispatched, until the deadline sweep says otherwise.
+    #[test]
+    fn canvas2d_wheel_schedules_a_settled_camera_dispatch_without_firing_immediately() {
+        let surface_id = "wheel-settle-canvas2d";
+        let node = canvas_scene(surface_id, "[]".to_string());
+        let actions = handle_scene_wheel(&node, Rect::new(0.0, 0.0, 400.0, 300.0), 50.0, 50.0, -100.0, false);
+        assert!(actions.is_empty(), "wheel-zoom never dispatches inline anymore");
+        let immediate = sweep_expired_scene_camera_dispatches(crate::app_now_ms());
+        assert!(
+            immediate.iter().all(|action| action.args.as_ref().unwrap()["surfaceId"] != json!(surface_id)),
+            "sweeping immediately (before the ~350ms settle window) must not yet report this surface"
+        );
+        let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+        let matched = due
+            .iter()
+            .find(|action| action.args.as_ref().unwrap()["surfaceId"] == json!(surface_id))
+            .expect("this surface's setCamera fires once its deadline has passed");
+        assert_eq!(matched.controller_id, "controller");
+        assert_eq!(matched.action, "setCamera");
+    }
+
+    /// 🕒 A Canvas2d pan-drag (`SceneDragMode::PanViewport`) gets the identical settle-then-dispatch
+    /// treatment as wheel-zoom — same deadline map, same sweep.
+    #[test]
+    fn canvas2d_pan_drag_schedules_a_settled_camera_dispatch() {
+        let surface_id = "pan-settle-canvas2d";
+        let node = canvas_scene(surface_id, "[]".to_string());
+        mutate_scene_state(surface_id, |state| {
+            state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport, button: 1 });
+        });
+        let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+        let actions = handle_scene_pointer_move(&node, bounds, 60.0, 60.0, true, 1, 5.0, 5.0);
+        assert!(
+            actions.iter().all(|action| action.action != "setCamera"),
+            "the pan itself never dispatches setCamera inline, even though Canvas2d's own \
+             canvasPointerMove tracking action still fires alongside it"
+        );
+        let due = sweep_expired_scene_camera_dispatches(crate::app_now_ms() + 400.0);
+        assert_eq!(due.len(), 1);
+        assert_eq!(due[0].args.as_ref().unwrap()["surfaceId"], json!(surface_id));
     }
 }
 //#endregion Canvas2dTests
@@ -18060,6 +18179,7 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                     {
                         self.appearance_id = value.to_string();
+                        self.note_shell_setting_command("os.setAppearance", Some(value)).await?;
                     }
                     return Ok(());
                 }
@@ -18071,6 +18191,7 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                     {
                         self.driver_id = value.to_string();
+                        self.note_shell_setting_command("os.setDriver", Some(value)).await?;
                     }
                     return Ok(());
                 }
@@ -18082,6 +18203,7 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                     {
                         self.locale_id = value.to_string();
+                        self.note_shell_setting_command("os.setLocale", Some(value)).await?;
                     }
                     return Ok(());
                 }
@@ -18093,6 +18215,7 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                     {
                         self.terminology_id = value.to_string();
+                        self.note_shell_setting_command("os.setTerminology", Some(value)).await?;
                     }
                     return Ok(());
                 }
@@ -18109,11 +18232,13 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                     {
                         set_active_theme_id(value);
+                        self.note_shell_setting_command("os.setThemeId", Some(value)).await?;
                     }
                     return Ok(());
                 }
                 "resetThemeId" => {
                     set_active_theme_id("semio");
+                    self.note_shell_setting_command("os.resetThemeId", Some("semio")).await?;
                     return Ok(());
                 }
                 "deleteThemeId" => {
@@ -18124,6 +18249,7 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                     {
                         delete_custom_theme(value);
+                        self.note_shell_setting_command("os.deleteThemeId", Some(value)).await?;
                     }
                     return Ok(());
                 }
@@ -18726,6 +18852,10 @@ impl ShellState {
                     .is_some_and(|id| id.starts_with("dock.split.") || id.starts_with("dock.corner."))
                 {
                     self.persist_dock_layout();
+                    if let Some(controller_id) = self.host_controller_id() {
+                        let note = Self::note_shell_command_action(&controller_id, "shell.windowResize", "Resize Window", None);
+                        self.dispatch_action(note).await?;
+                    }
                 }
             }
             return Ok(());
@@ -19178,6 +19308,15 @@ impl ShellState {
                 self.active_window_id = Some(drag.payload.window_id.clone());
                 self.dock.sync_active_window(&drag.payload.window_id);
                 self.persist_dock_layout();
+                if let Some(controller_id) = self.host_controller_id() {
+                    let note = Self::note_shell_command_action(
+                        &controller_id,
+                        "shell.windowMove",
+                        "Move Window",
+                        Some(serde_json::json!({ "windowId": drag.payload.window_id })),
+                    );
+                    self.dispatch_action(note).await?;
+                }
             } else {
                 self.restore_dock_drag_snapshot();
             }
@@ -19503,6 +19642,7 @@ impl ShellState {
                     self.active_right_kind = RightPanelKind::Details;
                     self.right_panel_open = true;
                 }
+                self.note_panel_toggle_command(id, "details").await?;
                 return Ok(true);
             }
             "ui.panelToggle.settings" => {
@@ -19512,6 +19652,7 @@ impl ShellState {
                     self.active_right_kind = RightPanelKind::Settings;
                     self.right_panel_open = true;
                 }
+                self.note_panel_toggle_command(id, "settings").await?;
                 return Ok(true);
             }
             "ui.fullscreen.toggle" => {
@@ -19549,6 +19690,7 @@ impl ShellState {
                 let path = parse_path(id.trim_start_matches("dock.focus."));
                 self.dock.toggle_maximize(&path);
                 self.persist_dock_layout();
+                self.note_control_command(id, None).await?;
                 return Ok(true);
             }
             id if id.starts_with("dock.close.") => {
@@ -19556,6 +19698,7 @@ impl ShellState {
                 if self.dock.close_active_in_stack(&path) {
                     self.active_window_id = self.dock.active_window_id.clone();
                     self.persist_dock_layout();
+                    self.note_control_command(id, None).await?;
                 }
                 return Ok(true);
             }
@@ -19566,6 +19709,7 @@ impl ShellState {
                         self.layout_override = Some(named.layout.clone());
                         self.sync_dock();
                         self.active_window_id = self.dock.active_window_id.clone();
+                        self.note_control_command(id, Some(serde_json::json!({ "layoutId": layout_id }))).await?;
                     }
                 }
                 return Ok(true);
@@ -20759,6 +20903,38 @@ mod shell_input_tests {
         let window_id = "w2-input-wiring-test-window-d";
         note_content_focus_commands(&[ui_wgpu::UiCommand::ClipboardPasteRequested { window_id: window_id.to_string() }]);
         assert!(!content_has_focus(window_id));
+    }
+
+    /// 🕒 `finish_dock_drag`'s successful-drop branch persists the new layout and clears the drag —
+    /// unchanged behavior this ticket's `noteShellCommand` dispatch is appended after, not instead of.
+    /// No host app is configured (`ShellState::new`'s bare fixture, same "impractically large" 90+-field
+    /// constraint as `dock_window_order`'s own fixture note above), so `host_controller_id()` is `None`
+    /// and the new dispatch is a documented no-op here — this pins the "must still complete without a
+    /// host to log against" half of that behavior; `note_shell_command_action`'s own shape (the other
+    /// half) is covered directly in `command_registry_tests`.
+    #[test]
+    fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
+        let mut shell = ShellState::new(Vec::new(), String::new());
+        shell.dock.root = crate::dock::DockNode::Row(vec![(
+            crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() },
+            1.0,
+        )]);
+        assert!(shell.dock.remove_window("a"));
+        let payload = DockDragPayload {
+            kind: DockDragKind::Tab,
+            window_id: "a".into(),
+            source_path: vec![0],
+            tab_index: 0,
+            ghost_label: "a".into(),
+        };
+        let zone = DockDropZone::Tab { stack_path: vec![0], index: 2 };
+        shell.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(zone) });
+        assert!(shell.layout_override.is_none(), "sanity: nothing persisted yet");
+        let input = InputState::<ActionDescriptor>::default();
+        let result = pollster::block_on(shell.finish_dock_drag(10.0, 10.0, &input));
+        assert!(result.is_ok(), "finish_dock_drag must not error even without a host app to log a shell.windowMove against");
+        assert!(shell.layout_override.is_some(), "a successful drop persists the new dock layout");
+        assert!(shell.dock_drag.is_none(), "the transient drag state is always taken");
     }
 }
 //#endregion ShellInput
@@ -22041,6 +22217,116 @@ impl ShellState {
         }
     }
 
+    //#region ShellCommandHistory
+    /// 🕒 Looks up an `os.*` setting command's display label from `build_os_commands`' registry
+    /// (`os.setAppearance`/`os.setDriver`/`os.setLocale`/`os.setTerminology`/`os.setThemeId`), falling
+    /// back to the theme reset/delete buttons' own `shell_chrome_string` i18n labels for the two
+    /// `build_settings_theme_ui` commands that never got a `CommandDefinition` (see that fn's own
+    /// `os.setThemeId`-only doc comment) — the single label source `note_shell_command_action` call
+    /// sites below draw from, so a chrome label edit never drifts from what the history panel shows.
+    fn shell_command_label_for_setting(&self, command_id: &str) -> String {
+        match command_id {
+            "os.resetThemeId" => shell_chrome_string("settings.theme.reset", self.locale_id == "de").to_string(),
+            "os.deleteThemeId" => shell_chrome_string("settings.theme.delete", self.locale_id == "de").to_string(),
+            _ => self
+                .build_os_commands()
+                .into_iter()
+                .find(|definition| definition.id == command_id)
+                .map(|definition| definition.label)
+                .unwrap_or_else(|| command_id.to_string()),
+        }
+    }
+
+    /// 🕒 Maps a chrome control id to its `noteShellCommand` `(commandId, label)` pair — factored out
+    /// of `handle_shell_hit`'s per-arm dispatch so the mapping is unit-testable without a full
+    /// `ShellState` fixture. Only control ids that represent a discrete, loggable user command are
+    /// covered; everything else is `None` (`handle_shell_hit` keeps its existing behavior either way).
+    fn shell_command_for_control(control_id: &str, is_de: bool) -> Option<(&'static str, String)> {
+        if control_id.starts_with("dock.close.") {
+            return Some(("shell.windowClose", "Close".to_string()));
+        }
+        if control_id.starts_with("dock.focus.") {
+            return Some(("shell.windowMaximize", "Focus".to_string()));
+        }
+        if control_id.starts_with("shell.layout.") {
+            return Some(("shell.applyNamedLayout", "Apply Layout".to_string()));
+        }
+        if control_id == "ui.panelToggle.details" {
+            return Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", is_de).to_string()));
+        }
+        if control_id == "ui.panelToggle.settings" {
+            return Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", is_de).to_string()));
+        }
+        None
+    }
+
+    /// 🕒 Builds a `noteShellCommand` `ActionDescriptor` — same inline-construction shape as
+    /// `map_action`/`scene_action`/`board_action` elsewhere in this crate, targeting the
+    /// framework-injected, session-only command-history tap (Shell-kind, intercepted before the app
+    /// ever sees it — see the plugin crate's universal command-recording mechanism). `detail` is the
+    /// caller-supplied JSON payload (e.g. `{"value": ...}`/`{"windowId": ...}`), left out of `args`
+    /// entirely when `None` rather than serialized as `null`.
+    fn note_shell_command_action(controller_id: &str, command_id: &str, label: &str, detail: Option<serde_json::Value>) -> ActionDescriptor {
+        let mut args = serde_json::json!({ "commandId": command_id, "label": label });
+        if let Some(detail) = detail {
+            args["detail"] = detail;
+        }
+        ActionDescriptor {
+            controller_id: controller_id.to_string(),
+            action: "noteShellCommand".into(),
+            args: Some(args),
+        }
+    }
+
+    /// 🕒 The `dispatch_action`-recursion delivery path (mechanism (a) — a `noteShellCommand`'s
+    /// action id falls through every special-cased arm, including this one's own `"framework"`
+    /// branch, straight to the normal plugin-forwarding tail) for the framework settings arms below.
+    /// `Box::pin` sidesteps `dispatch_action` calling itself inside its own generated future
+    /// (rustc E0733) — the recursion itself is exactly what the ticket calls for. No-ops without an
+    /// active session: nothing to log a shell command against.
+    async fn note_shell_setting_command(&mut self, command_id: &str, value: Option<&str>) -> Result<(), String> {
+        let Some(controller_id) = self.host_controller_id() else {
+            return Ok(());
+        };
+        let label = self.shell_command_label_for_setting(command_id);
+        let detail = value.map(|value| serde_json::json!({ "value": value }));
+        let note = Self::note_shell_command_action(&controller_id, command_id, &label, detail);
+        Box::pin(self.dispatch_action(note)).await
+    }
+
+    /// 🕒 `handle_shell_hit`'s generic seam into `shell_command_for_control`'s `(commandId, label)`
+    /// mapping — every discrete chrome-control arm that should log a history row calls this instead
+    /// of hand-rolling the same `host_controller_id`/`dispatch_action` boilerplate. A silent no-op for
+    /// any control id `shell_command_for_control` doesn't recognize, and without an active session
+    /// (nothing to log a shell command against). Not itself inside `dispatch_action`, so a plain
+    /// `.await` (no `Box::pin`) suffices here.
+    async fn note_control_command(&mut self, control_id: &str, detail: Option<serde_json::Value>) -> Result<(), String> {
+        let Some((command_id, label)) = Self::shell_command_for_control(control_id, self.locale_id == "de") else {
+            return Ok(());
+        };
+        let Some(controller_id) = self.host_controller_id() else {
+            return Ok(());
+        };
+        let note = Self::note_shell_command_action(&controller_id, command_id, &label, detail);
+        self.dispatch_action(note).await
+    }
+
+    /// 🕒 `ui.panelToggle.details`/`ui.panelToggle.settings` share this: both log the same
+    /// `shell.panelToggle` command, differing only in the `panel` id and the post-toggle `visible`
+    /// flag — the caller has already flipped `right_panel_open`/`active_right_kind` before this runs,
+    /// so `visible` reads the POST-toggle state directly (no separate before/after bookkeeping).
+    async fn note_panel_toggle_command(&mut self, control_id: &str, panel: &str) -> Result<(), String> {
+        let visible = self.right_panel_open
+            && match panel {
+                "details" => self.active_right_kind == RightPanelKind::Details,
+                "settings" => self.active_right_kind == RightPanelKind::Settings,
+                _ => false,
+            };
+        self.note_control_command(control_id, Some(serde_json::json!({ "panel": panel, "visible": visible })))
+            .await
+    }
+    //#endregion ShellCommandHistory
+
     /// 🎛️ Data-complete "Commands" panel content — the wgpu mirror of React's
     /// `buildCommandCategoryTabs`/`buildCommandCategoryTree`, folded into a single flat, category-headed
     /// `UiNode` tree (the honestly-scoped fallback: React surfaces this as a persistent `bottom-middle`
@@ -22571,6 +22857,72 @@ mod command_registry_tests {
     fn fuzzy_match_score_is_case_insensitive() {
         assert_eq!(fuzzy_match_score("SET", "set locale"), fuzzy_match_score("set", "SET LOCALE"));
     }
+
+    //#region ShellCommandHistoryTests
+    #[test]
+    fn note_shell_command_action_carries_command_id_label_and_detail() {
+        let action = ShellState::note_shell_command_action(
+            "controller-1",
+            "os.setLocale",
+            "Set Locale",
+            Some(serde_json::json!({ "value": "de" })),
+        );
+        assert_eq!(action.controller_id, "controller-1");
+        assert_eq!(action.action, "noteShellCommand");
+        let args = action.args.expect("noteShellCommand always carries args");
+        assert_eq!(args["commandId"], serde_json::json!("os.setLocale"));
+        assert_eq!(args["label"], serde_json::json!("Set Locale"));
+        assert_eq!(args["detail"]["value"], serde_json::json!("de"));
+    }
+
+    #[test]
+    fn note_shell_command_action_omits_detail_entirely_when_none() {
+        let action = ShellState::note_shell_command_action("controller-1", "shell.windowResize", "Resize Window", None);
+        let args = action.args.expect("args always present");
+        assert!(args.get("detail").is_none(), "no detail key at all, not a serialized null");
+    }
+
+    #[test]
+    fn shell_command_label_for_setting_matches_build_os_commands_and_theme_chrome_labels() {
+        let shell = test_shell_state();
+        assert_eq!(shell.shell_command_label_for_setting("os.setAppearance"), "Set Appearance");
+        assert_eq!(shell.shell_command_label_for_setting("os.setDriver"), "Set Driver");
+        assert_eq!(shell.shell_command_label_for_setting("os.setLocale"), "Set Locale");
+        assert_eq!(shell.shell_command_label_for_setting("os.setTerminology"), "Set Terminology");
+        assert_eq!(shell.shell_command_label_for_setting("os.setThemeId"), "Set Theme");
+        assert_eq!(shell.shell_command_label_for_setting("os.resetThemeId"), shell_chrome_string("settings.theme.reset", false));
+        assert_eq!(shell.shell_command_label_for_setting("os.deleteThemeId"), shell_chrome_string("settings.theme.delete", false));
+    }
+
+    /// 🕒 The `handle_shell_hit` control-id-to-shell-command mapping table: every discrete window/panel
+    /// chrome command this ticket wires, plus a representative non-matching id proving the mapping
+    /// doesn't fire on everything.
+    #[test]
+    fn shell_command_for_control_maps_dock_and_panel_control_ids() {
+        assert_eq!(
+            ShellState::shell_command_for_control("dock.close.0.a", false),
+            Some(("shell.windowClose", "Close".to_string()))
+        );
+        assert_eq!(
+            ShellState::shell_command_for_control("dock.focus.0", false),
+            Some(("shell.windowMaximize", "Focus".to_string()))
+        );
+        assert_eq!(
+            ShellState::shell_command_for_control("shell.layout.compact", false),
+            Some(("shell.applyNamedLayout", "Apply Layout".to_string()))
+        );
+        assert_eq!(
+            ShellState::shell_command_for_control("ui.panelToggle.details", false),
+            Some(("shell.panelToggle", shell_chrome_string("panelToggle.details", false).to_string()))
+        );
+        assert_eq!(
+            ShellState::shell_command_for_control("ui.panelToggle.settings", true),
+            Some(("shell.panelToggle", shell_chrome_string("panelToggle.settings", true).to_string()))
+        );
+        assert_eq!(ShellState::shell_command_for_control("ui.panelToggle.display", false), None, "left-panel toggles are out of scope");
+        assert_eq!(ShellState::shell_command_for_control("ui.nav.back", false), None);
+    }
+    //#endregion ShellCommandHistoryTests
 }
 //#endregion ActionPanelAndUtilities
 
@@ -23760,6 +24112,11 @@ impl ShellState {
                 // 🎥 Camera changes are sampled directly from the orbit controller (`tutorial_recorder_sample`),
                 // never re-recorded as an annotational event too.
                 if action.action == "setCamera" {
+                    return;
+                }
+                // 🕒 Session-only command-history log rows, never part of a tutorial's own replayable
+                // action track (mirrors the `setCamera` skip just above).
+                if action.action == "noteShellCommand" {
                     return;
                 }
                 let at = runtime.playhead_ms.max(0.0) as u64;
@@ -29767,7 +30124,7 @@ use interpreter::{apply_ui_image_bytes, collect_pending_ui_image_fetches};
 use infinite_world::{
     apply_glb_bytes, apply_world_action_preview, collect_pending_glb_fetches, fetch_url_bytes,
     handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag,
-    handle_world3d_pointer_move, handle_world3d_wheel,
+    handle_world3d_pointer_move, handle_world3d_wheel, orbit_camera_action,
 };
 use ui_wgpu::ActionDescriptor;
 use shell::ShellState;
@@ -29842,16 +30199,76 @@ fn appearance_is_dark(appearance_id: &str) -> bool {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn app_now_ms() -> f64 {
+pub(crate) fn app_now_ms() -> f64 {
     js_sys::Date::now()
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn app_now_ms() -> f64 {
+pub(crate) fn app_now_ms() -> f64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|duration| duration.as_secs_f64() * 1000.0)
         .unwrap_or(0.0)
+}
+
+/// 🕒 Pure sweep for a per-surface "pending camera dispatch" deadline map (`wheel_zoom_deadline_ms`'s
+/// single-surface precedent above, generalized to many surfaces at once): returns the surface ids
+/// whose deadline is at-or-past `now_ms`, removing them from `pending` — callers build+dispatch each
+/// surface's `setCamera` action from whatever per-surface state it still needs to look up. Kept
+/// free of any `AppRuntime`/`ShellState` coupling so it's testable with a bare `HashMap` + timestamp.
+pub(crate) fn sweep_expired_camera_dispatch_deadlines(pending: &mut std::collections::HashMap<String, f64>, now_ms: f64) -> Vec<String> {
+    let expired: Vec<String> = pending
+        .iter()
+        .filter(|(_, deadline)| now_ms >= **deadline)
+        .map(|(surface_id, _)| surface_id.clone())
+        .collect();
+    for surface_id in &expired {
+        pending.remove(surface_id);
+    }
+    expired
+}
+
+#[cfg(test)]
+mod camera_dispatch_deadline_tests {
+    use super::*;
+
+    #[test]
+    fn not_yet_expired_deadline_is_left_pending() {
+        let mut pending = std::collections::HashMap::from([("s1".to_string(), 1_000.0)]);
+        let expired = sweep_expired_camera_dispatch_deadlines(&mut pending, 999.0);
+        assert!(expired.is_empty());
+        assert_eq!(pending.get("s1"), Some(&1_000.0));
+    }
+
+    #[test]
+    fn deadline_exactly_at_now_is_expired() {
+        let mut pending = std::collections::HashMap::from([("s1".to_string(), 1_000.0)]);
+        let expired = sweep_expired_camera_dispatch_deadlines(&mut pending, 1_000.0);
+        assert_eq!(expired, vec!["s1".to_string()]);
+        assert!(pending.is_empty(), "an expired surface is removed from the map");
+    }
+
+    #[test]
+    fn already_expired_deadline_is_swept() {
+        let mut pending = std::collections::HashMap::from([("s1".to_string(), 500.0)]);
+        let expired = sweep_expired_camera_dispatch_deadlines(&mut pending, 1_000.0);
+        assert_eq!(expired, vec!["s1".to_string()]);
+        assert!(pending.is_empty());
+    }
+
+    #[test]
+    fn multiple_surfaces_expire_independently() {
+        let mut pending = std::collections::HashMap::from([
+            ("expired-a".to_string(), 100.0),
+            ("expired-b".to_string(), 200.0),
+            ("still-pending".to_string(), 5_000.0),
+        ]);
+        let mut expired = sweep_expired_camera_dispatch_deadlines(&mut pending, 1_000.0);
+        expired.sort();
+        assert_eq!(expired, vec!["expired-a".to_string(), "expired-b".to_string()]);
+        assert_eq!(pending.len(), 1, "only the still-pending surface remains");
+        assert!(pending.contains_key("still-pending"));
+    }
 }
 
 struct AppRuntime {
@@ -29874,6 +30291,11 @@ struct AppRuntime {
     wheel_delta: f32,
     space_pressed: bool,
     wheel_zoom_deadline_ms: f64,
+    /// 🕒 World3D wheel-zoom's settle-then-dispatch: surface id -> the timestamp its debounced
+    /// `setCamera` should fire at, swept every `frame()` by `sweep_expired_camera_dispatch_deadlines`.
+    /// The pointer-release path dispatches immediately instead and clears its surface's entry here
+    /// first, so a wheel gesture immediately followed by a release-orbit never double-dispatches.
+    world3d_camera_dispatch_deadlines_ms: std::collections::HashMap<String, f64>,
     caret_blink_at_ms: f64,
     caret_blink_visible: bool,
     asset_poll_pending: bool,
@@ -29987,6 +30409,37 @@ impl AppRuntime {
             self.wheel_zoom_deadline_ms = 0.0;
             engine_canvas::node_graph_clear_wheel_zoom_active();
         }
+        // 🕒 World3D wheel-zoom's settled `setCamera` dispatch — see `world3d_camera_dispatch_deadlines_ms`'s
+        // own doc comment; each surface's expiry fires exactly once per settle, same as the graph/map/
+        // board wheel-action dispatches just below reuse `spawn_app_task` for their own async hop.
+        let expired_world3d_surfaces = sweep_expired_camera_dispatch_deadlines(&mut self.world3d_camera_dispatch_deadlines_ms, app_now_ms());
+        if !expired_world3d_surfaces.is_empty() {
+            let camera_actions: Vec<ActionDescriptor> = expired_world3d_surfaces
+                .iter()
+                .filter_map(|surface_id| self.shell.world3d_states.get(surface_id).map(orbit_camera_action))
+                .collect();
+            if !camera_actions.is_empty() {
+                let runtime = self.self_weak.clone();
+                spawn_app_task(async move {
+                    if let Some(runtime) = runtime.upgrade() {
+                        if let Ok(mut app) = runtime.try_borrow_mut() {
+                            app.dispatch_actions(camera_actions).await;
+                        }
+                    }
+                });
+            }
+        }
+        let scene_camera_actions = scenes::sweep_expired_scene_camera_dispatches(app_now_ms());
+        if !scene_camera_actions.is_empty() {
+            let runtime = self.self_weak.clone();
+            spawn_app_task(async move {
+                if let Some(runtime) = runtime.upgrade() {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        app.dispatch_actions(scene_camera_actions).await;
+                    }
+                }
+            });
+        }
         if app_now_ms() - self.caret_blink_at_ms >= 500.0 {
             self.caret_blink_at_ms = app_now_ms();
             self.caret_blink_visible = !self.caret_blink_visible;
@@ -30047,6 +30500,10 @@ impl AppRuntime {
                 for state in self.shell.world3d_states.values_mut() {
                     if state.bounds.contains(x, y) {
                         handle_world3d_wheel(state, wheel_delta);
+                        // 🕒 Settle-then-dispatch (see `world3d_camera_dispatch_deadlines_ms`): each
+                        // further wheel tick just pushes this surface's deadline back out, so a
+                        // `setCamera` only fires ~350ms after the LAST wheel tick, not every tick.
+                        self.world3d_camera_dispatch_deadlines_ms.insert(state.surface_id.clone(), app_now_ms() + 350.0);
                     }
                 }
                 let mut graph_actions = Vec::new();
@@ -30394,6 +30851,12 @@ impl AppRuntime {
                     button,
                     &modifiers,
                 ) {
+                    if action.action == "setCamera" {
+                        // 🕒 Immediate dispatch below beats any still-pending wheel-settle deadline
+                        // for this surface — drop it so the debounce sweep doesn't re-dispatch a now-stale
+                        // orbit pose a moment later.
+                        self.world3d_camera_dispatch_deadlines_ms.remove(&state.surface_id);
+                    }
                     apply_world_action_preview(state, &action);
                     world_actions.push(action);
                 }
@@ -30443,6 +30906,9 @@ impl AppRuntime {
                 button,
                 &modifiers,
             ) {
+                if action.action == "setCamera" {
+                    self.world3d_camera_dispatch_deadlines_ms.remove(&state.surface_id);
+                }
                 apply_world_action_preview(state, &action);
                 world_actions.push(action);
             }
@@ -30904,6 +31370,7 @@ async fn boot_runtime(
         wheel_delta: 0.0,
         space_pressed: false,
         wheel_zoom_deadline_ms: 0.0,
+        world3d_camera_dispatch_deadlines_ms: std::collections::HashMap::new(),
         caret_blink_at_ms: 0.0,
         caret_blink_visible: true,
         asset_poll_pending: false,

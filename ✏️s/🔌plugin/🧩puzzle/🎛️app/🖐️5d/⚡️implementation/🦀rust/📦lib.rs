@@ -14,44 +14,6 @@ pub enum Puzzle5dError {
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 
 // #region 🔖Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle5dCamera2d {
-    #[serde(default)]
-    pub x: f64,
-    #[serde(default)]
-    pub y: f64,
-    #[serde(default = "puzzle5d_one_f64")]
-    pub zoom: f64,
-}
-
-impl Default for Puzzle5dCamera2d {
-    fn default() -> Self {
-        Self { x: 0.0, y: 0.0, zoom: 1.0 }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle5dCamera3d {
-    #[serde(default)]
-    pub position: [f64; 3],
-    #[serde(default)]
-    pub target: [f64; 3],
-    #[serde(default = "puzzle5d_one_f64")]
-    pub zoom: f64,
-}
-
-impl Default for Puzzle5dCamera3d {
-    fn default() -> Self {
-        Self { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0 }
-    }
-}
-
-fn puzzle5d_one_f64() -> f64 {
-    1.0
-}
-
 /// 📝 Free-text scene description — the only field seen under the fixture's top-level `meta`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
@@ -286,9 +248,10 @@ pub struct Puzzle5dKindCatalogs {
     pub ropes: Vec<Puzzle5dCatalogRope>,
 }
 
-/// 👯 The puzzle-5d projection: a typed unified 2d+3d document (schema/domain/label/camera2d/
-/// camera3d/meta/kindCatalogs/kindCompatibility/parts/fasteners) — see `puzzle/5d/example/*.5d.json`
-/// for real-world shapes.
+/// 👯 The puzzle-5d projection: a typed unified 2d+3d document (schema/domain/label/meta/
+/// kindCatalogs/kindCompatibility/parts/fasteners) — see `puzzle/5d/example/*.5d.json` for
+/// real-world shapes. Camera pose is session-only app runtime state, never part of this
+/// VCS-tracked document — see `puzzle_5d_ui`'s `Puzzle5dRuntime`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "puzzle5d", layout = "lines")]
@@ -298,12 +261,6 @@ pub struct Puzzle5dProjection {
     pub domain: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
-    #[dsl(block)]
-    #[serde(default)]
-    pub camera2d: Puzzle5dCamera2d,
-    #[dsl(block)]
-    #[serde(default)]
-    pub camera3d: Puzzle5dCamera3d,
     #[dsl(block)]
     #[serde(default)]
     pub meta: Puzzle5dMeta,
@@ -326,8 +283,6 @@ impl Default for Puzzle5dProjection {
             schema: PUZZLE_5D_SCHEMA.to_string(),
             domain: "architecture".to_string(),
             label: None,
-            camera2d: Puzzle5dCamera2d::default(),
-            camera3d: Puzzle5dCamera3d::default(),
             meta: Puzzle5dMeta::default(),
             kind_catalogs: None,
             kind_compatibility: Vec::new(),

@@ -346,7 +346,7 @@ pub fn fem3d_nodal_von_mises(doc: &Fem3dDocument, case_id: &str) -> Result<HashM
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fem3d::{FemAnalysisSettings, FemCamera, FemCombination, FemDof, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+    use fem3d::{FemAnalysisSettings, FemCombination, FemDof, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use fem_core::ElementResult;
     use std::collections::BTreeMap;
 
@@ -370,7 +370,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         };
         (doc, e, iy, l, p, iz)
     }
@@ -396,7 +395,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: FemDof::Tz, value: -1000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
@@ -424,7 +422,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
     // #endregion 🔖Fixtures

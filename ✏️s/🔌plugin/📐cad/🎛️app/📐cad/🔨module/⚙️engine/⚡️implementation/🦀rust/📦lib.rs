@@ -603,7 +603,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_wire_chains_reversed_edges_by_vertex_id() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
             let edges = edge_map(&geometry);
@@ -627,7 +627,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_shape_geometry_imports_solid_handle() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
             let objects = root
@@ -658,7 +658,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_energy_surface_tessellates_at_authored_height() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/2/model/geometry"));
             let objects = root
@@ -688,7 +688,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_structure_surface_tessellates_at_authored_height() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
             let objects = root
@@ -718,7 +718,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_structure_curve_wires_tessellate_as_centerlines() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
             let objects = root
@@ -1316,7 +1316,7 @@ pub mod interaction {
         ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣networkSrf.json")),
         ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣offsetSurface.json")),
         ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣plane.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣poly🔣line.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣polyline.json")),
         ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣rotate.json")),
         ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣scale1d.json")),
         ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣scale3d.json")),
@@ -2360,7 +2360,7 @@ const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 const FOREST_LEFT_MODEL_JSON: &str =
-    include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
+    include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.model.json");
 
 pub const CAD_MODEL_DEFINITION_SHAPE: &str = "spatial.shape";
 
@@ -2569,20 +2569,9 @@ pub fn typology_mesh_kind(typology: &str) -> &'static str {
 }
 
 pub fn default_document() -> CadScene {
-    let default_cam = CadCamera {
-        position: [12.0, -12.0, 8.0],
-        target: [0.0, 0.0, 0.0],
-        zoom: 1.0,
-        fov: 50.0,
-        projection: Value::Null,
-    };
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
-        camera: default_cam.clone(),
-        camera_building: default_cam.clone(),
-        camera_energy: default_cam.clone(),
-        camera_structure_classic: default_cam.clone(),
         objects: vec![CadObject {
             id: "object-box-1".into(),
             label: "Box".into(),
@@ -2636,20 +2625,9 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
     let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
     let (structure_classic_objects, structure_classic_geometry) =
         cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
-    let default_cam = CadCamera {
-        position: [12.0, -12.0, 8.0],
-        target: [5.4, 2.34, 1.5],
-        zoom: 1.0,
-        fov: 50.0,
-        projection: Value::Null,
-    };
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: id.into(),
-        camera: default_cam.clone(),
-        camera_building: default_cam.clone(),
-        camera_energy: default_cam.clone(),
-        camera_structure_classic: default_cam.clone(),
         objects: shape_objects,
         nodes: vec![CadNode {
             id: "node-root".into(),
@@ -2677,6 +2655,19 @@ pub fn forest_play_scene() -> CadScene {
 pub fn next_cad_id(prefix: &str) -> String {
     let next = CAD_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("{prefix}-{next}")
+}
+
+/// 🌲 The initial per-pane camera for the Concrete Forest Left example — session-only runtime state
+/// now (camera moved off `CadScene`), matching the pose the document used to carry before the
+/// camera-as-View-action refactor.
+pub fn forest_play_camera() -> CadCamera {
+    CadCamera {
+        position: [12.0, -12.0, 8.0],
+        target: [5.4, 2.34, 1.5],
+        zoom: 1.0,
+        fov: 50.0,
+        projection: Value::Null,
+    }
 }
 
 /// 📐 Reads `camera.projection`'s raw json into the shared taxonomy config, defaulting when absent/stale.

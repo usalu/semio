@@ -1,9 +1,14 @@
 {
   "title": "Window Options Tree Icon Checkbox",
   "emoji": "🎛️",
-  "status": "closed",
+  "status": "open",
   "description": "UI: The tree items of window options should have the icon in front of the label and just have a checkbox instead of the icon toggle.",
   "summary": "Window-option toggle tree rows now show the semantic icon before the label and a compact checkbox control on the right instead of an icon Toggle. Extracted shared TreeCheckbox; WindowMeasureTreeLeaf accepts an optional leading icon; measures mapping/render use that layout. WindowMeasuresTree vitest 7/7 pass.",
-  "goal": "R26-02/RUNNING-SKETCHPAD",
-  "sessions": []
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2394"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3ec4087f45f445bd8f46d6a4106b9087"
+  ]
 }

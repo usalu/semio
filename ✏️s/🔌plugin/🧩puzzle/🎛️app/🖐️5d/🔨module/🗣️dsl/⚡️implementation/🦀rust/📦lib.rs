@@ -21,7 +21,7 @@ pub fn print_dsl(document: &Puzzle5dProjection) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use puzzle_5d::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
+    use puzzle_5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
 
     #[test]
     fn puzzle5d_projection_dsl_round_trips() {
@@ -30,8 +30,6 @@ mod tests {
         store::test_support::assert_dsl_pack_equivalence(&empty);
         let mut projection = Puzzle5dProjection::default();
         projection.label = Some("Concrete Forest".into());
-        projection.camera2d = Puzzle5dCamera2d { x: 230.7, y: 93.5, zoom: 2.0 };
-        projection.camera3d = Puzzle5dCamera3d { position: [30.0, -30.0, 20.0], target: [7.0, 0.0, 3.0], zoom: 3.0 };
         projection.meta = Puzzle5dMeta { description: "Unified puzzle 5d source".into() };
         projection.parts.push(Puzzle5dPart {
             id: "seed-left-001".into(),
@@ -61,16 +59,7 @@ mod tests {
             store::test_support::assert_dsl_round_trip(&projection);
             // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: same
             // `pack/value/rs` table-column bug as `puzzle5d_projection_dsl_round_trips` above
-            // (this fixture's `parts` rows have the identical shape). NOTE: as of this writing
-            // this whole test is ALREADY failing before reaching this line, at the `parse_dsl`
-            // call above ("expected LBrace, found Ident 'x'", `🧩concrete-forest.puzzle5d:50:54``)
-            // — a pre-existing DSL-text/fixture staleness issue unrelated to pack (confirmed via
-            // `git status`: neither this fixture nor `dsl/core`/`dsl/derive` have any pending
-            // changes in this session; likely fallout of concurrent syntax-convergence work per
-            // `.🦑repo/🎫tickets/26/07/27/UNIFIED-TOKEN-EFFICIENT-DSL-SYNTAX-ACROSS-ALL-TECHNOLOGIES/
-            // wave3-final-status.md`, which recorded this exact test green earlier in the same
-            // session). Out of scope for the pack/document-layer ticket either way — this was a
-            // pre-existing failure before the constitutional-crate split too.
+            // (this fixture's `parts` rows have the identical shape).
         }
     }
 }

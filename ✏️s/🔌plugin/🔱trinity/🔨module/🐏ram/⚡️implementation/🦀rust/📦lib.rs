@@ -142,6 +142,8 @@ pub struct GraphFixture {
     pub manifest_id: Option<String>,
     #[serde(default)]
     pub manifest: Manifest,
+    /// 🌱 Seed-only initial viewport framing for curated examples — consumed once into an app's
+    /// runtime camera when a fixture is first loaded, never written back to by any operation.
     pub camera: Camera,
     pub nodes: Vec<Node>,
     pub edges: Vec<Edge>,
@@ -450,9 +452,6 @@ pub struct TrinityGraphDiff {
     pub edges: CollectionDiff<String, PropertyPatch, Edge>,
     pub node_properties: Vec<ItemPatch<String, PropertyPatch>>,
     pub edge_properties: Vec<ItemPatch<String, PropertyPatch>>,
-    /// 📷 Last-write-wins camera replacement (viewport pan/zoom), independent of the node/edge diff.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub camera: Option<Camera>,
     /// 📦 Whole-fixture replacement (preset load, node-graph drag import) — the base the rest of the diff layers onto.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub set_fixture: Option<GraphFixture>,
@@ -517,9 +516,6 @@ impl OperationDiff<GraphFixture> for TrinityGraphDiff {
                 }
             }
         }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
         if self.recompute_derived {
             if let Ok(mut graph) = Graph::from_fixture(next.clone()) {
                 graph.recompute_derived();
@@ -540,9 +536,6 @@ impl OperationDiff<GraphFixture> for TrinityGraphDiff {
         self.edges.added.extend(other.edges.added);
         self.node_properties.extend(other.node_properties);
         self.edge_properties.extend(other.edge_properties);
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
         self.recompute_derived |= other.recompute_derived;
     }
 }
@@ -590,10 +583,6 @@ pub enum TrinityGraphOperation {
     ClearDataProperty {
         entity: EntityRef,
         key: String,
-    },
-    /// 📷 Replace the viewport camera (pan/zoom) — coalesced so a drag is a single undo step.
-    SetCamera {
-        camera: Camera,
     },
     /// 📦 Replace the whole fixture (preset load, node-graph drag import); the inverse restores the prior fixture.
     SetFixture {
@@ -660,7 +649,7 @@ pub fn validate_trinity_graph_operation(operation: &TrinityGraphOperation, fixtu
         TrinityGraphOperation::ClearDataProperty { entity, key } => {
             validate_clear_data_property(fixture, entity, key)?;
         }
-        TrinityGraphOperation::SetCamera { .. } | TrinityGraphOperation::SetFixture { .. } => {}
+        TrinityGraphOperation::SetFixture { .. } => {}
     }
     Ok(())
 }
@@ -862,7 +851,6 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
                     EntityRef::Edge(id) => TrinityGraphDiff { edge_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: key == "u" || key == "v", ..Default::default() },
                 }
             }
-            TrinityGraphOperation::SetCamera { camera } => TrinityGraphDiff { camera: Some(camera.clone()), ..Default::default() },
             TrinityGraphOperation::SetFixture { fixture } => TrinityGraphDiff { set_fixture: Some(fixture.clone()), recompute_derived: true, ..Default::default() },
         }
     }
@@ -899,7 +887,6 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
                 }
             }
             TrinityGraphOperation::ClearDataProperty { entity, key } => entity_property_value(projection, entity, key).map(|old| vec![TrinityGraphOperation::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default(),
-            TrinityGraphOperation::SetCamera { .. } => vec![TrinityGraphOperation::SetCamera { camera: projection.camera.clone() }],
             TrinityGraphOperation::SetFixture { .. } => vec![TrinityGraphOperation::SetFixture { fixture: projection.clone() }],
         }
     }
@@ -1110,7 +1097,6 @@ enum TrinityGraphOperationDsl {
     Reposition { id: String, x: f64, y: f64 },
     SetDataProperty { entity: EntityRefDsl, key: String, value: PropertyValue },
     ClearDataProperty { entity: EntityRefDsl, key: String },
-    SetCamera { camera: Camera },
     SetFixture { fixture: GraphFixture },
 }
 
@@ -1128,7 +1114,6 @@ fn trinity_graph_operation_to_dsl(operation: &TrinityGraphOperation) -> TrinityG
         TrinityGraphOperation::Reposition { id, x, y } => TrinityGraphOperationDsl::Reposition { id: id.clone(), x: *x, y: *y },
         TrinityGraphOperation::SetDataProperty { entity, key, value } => TrinityGraphOperationDsl::SetDataProperty { entity: entity.into(), key: key.clone(), value: value.clone() },
         TrinityGraphOperation::ClearDataProperty { entity, key } => TrinityGraphOperationDsl::ClearDataProperty { entity: entity.into(), key: key.clone() },
-        TrinityGraphOperation::SetCamera { camera } => TrinityGraphOperationDsl::SetCamera { camera: camera.clone() },
         TrinityGraphOperation::SetFixture { fixture } => TrinityGraphOperationDsl::SetFixture { fixture: fixture.clone() },
     }
 }
@@ -1145,7 +1130,6 @@ fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> Trin
         TrinityGraphOperationDsl::Reposition { id, x, y } => TrinityGraphOperation::Reposition { id, x, y },
         TrinityGraphOperationDsl::SetDataProperty { entity, key, value } => TrinityGraphOperation::SetDataProperty { entity: entity.into(), key, value },
         TrinityGraphOperationDsl::ClearDataProperty { entity, key } => TrinityGraphOperation::ClearDataProperty { entity: entity.into(), key },
-        TrinityGraphOperationDsl::SetCamera { camera } => TrinityGraphOperation::SetCamera { camera },
         TrinityGraphOperationDsl::SetFixture { fixture } => TrinityGraphOperation::SetFixture { fixture },
     }
 }
@@ -1630,11 +1614,6 @@ mod tests {
     }
 
     #[test]
-    fn op_text_round_trip_set_camera() {
-        assert_op_line_round_trip(&TrinityGraphOperation::SetCamera { camera: Camera { x: 1.0, y: 2.0, zoom: 1.5 } });
-    }
-
-    #[test]
     fn op_text_round_trip_set_fixture() {
         assert_op_line_round_trip(&TrinityGraphOperation::SetFixture { fixture: mini_fixture() });
     }
@@ -1951,12 +1930,12 @@ mod tests {
         assert_eq!(value, Some(PropertyValue::String("first".into())));
     }
 
+    /// 🌱 `camera` is now a seed-only field on `GraphFixture` (never touched by any operation — see
+    /// `nodeGraphViewport`'s runtime-only handling in the jack/rewrite apps), so this only exercises
+    /// `SetFixture`'s undo; it no longer asserts camera-as-a-document-operation behavior.
     #[test]
-    fn graph_op_set_camera_and_set_fixture_undo() {
+    fn graph_op_set_fixture_undo() {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
-        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetCamera { camera: Camera { x: 5.0, y: 5.0, zoom: 2.0 } }]).expect("set camera");
-        assert_eq!(store.projection().unwrap().camera, Camera { x: 5.0, y: 5.0, zoom: 2.0 });
-        store.dispatch(DocumentCommand::Undo).expect("undo camera");
         assert_eq!(store.projection().unwrap().camera, Camera::default());
 
         let replacement = GraphFixture { name: "replacement".into(), ..mini_fixture() };
@@ -1970,15 +1949,13 @@ mod tests {
     //#region 🔖TrinityGraphDiffTests
     #[test]
     fn trinity_graph_diff_absorb_merges_fields() {
-        let mut diff = TrinityGraphDiff { camera: Some(Camera { x: 1.0, y: 2.0, zoom: 1.0 }), ..Default::default() };
+        let mut diff = TrinityGraphDiff { recompute_derived: false, ..Default::default() };
         let other = TrinityGraphDiff {
-            camera: Some(Camera { x: 5.0, y: 6.0, zoom: 2.0 }),
             recompute_derived: true,
             nodes: CollectionDiff { added: vec![Node { id: "x".into(), kind: "Piece".into(), name: "x".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: vec![] }], ..Default::default() },
             ..Default::default()
         };
         diff.absorb(other);
-        assert_eq!(diff.camera, Some(Camera { x: 5.0, y: 6.0, zoom: 2.0 }));
         assert!(diff.recompute_derived);
         assert_eq!(diff.nodes.added.len(), 1);
     }

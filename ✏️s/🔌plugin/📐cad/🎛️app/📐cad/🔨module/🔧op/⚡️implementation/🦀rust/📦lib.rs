@@ -1,6 +1,6 @@
 //! ⚡ Cad app — operation enum + laws (constitutional: op).
 
-use cad_document::{cad_pane_camera, cad_pane_camera_mut, cad_pane_objects, CadCamera, CadNode, CadObject, CadPaneId, CadReference, CadScene};
+use cad_document::{cad_pane_objects, CadNode, CadObject, CadPaneId, CadReference, CadScene};
 use protocol::{CollectionDiff, ItemPatch, Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -28,15 +28,6 @@ pub struct CadObjectPatch {
 #[serde(rename_all = "camelCase")]
 pub struct CadNodePatch {
     pub label: Option<String>,
-}
-
-/// 🎥 A per-pane camera assignment carried by `CadOperation::SetCamera`/`CadDiff` — pairs the target pane
-/// with its new camera so viewpoint moves flow through the store like any other document operation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CadCameraSet {
-    pub pane: CadPaneId,
-    pub camera: CadCamera,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -69,7 +60,6 @@ pub enum CadOperation {
     PatchReference { model_definition_id: String, reference_id: String, #[dsl(block)] patch: CadReferencePatch },
     SetReferences { model_definition_id: String, references: Vec<CadReference> },
     SetActiveModelDefinition { model_definition_id: String },
-    SetCamera { pane: CadPaneId, #[dsl(block)] camera: CadCamera },
     SetScene { #[dsl(block)] scene: Box<CadScene> },
 }
 
@@ -83,7 +73,6 @@ pub struct CadDiff {
     pub references_by_model_definition_id: Option<BTreeMap<String, Vec<CadReference>>>,
     pub nodes: Option<CollectionDiff<String, CadNodePatch, CadNode>>,
     pub active_model_definition_id: Option<String>,
-    pub camera: Option<CadCameraSet>,
     pub scene: Option<Box<CadScene>>,
 }
 
@@ -224,9 +213,6 @@ impl OperationDiff<CadScene> for CadDiff {
         if let Some(active_model_definition_id) = &self.active_model_definition_id {
             next.active_model_definition_id = active_model_definition_id.clone();
         }
-        if let Some(set) = &self.camera {
-            *cad_pane_camera_mut(&mut next, set.pane) = set.camera.clone();
-        }
         next
     }
 
@@ -254,9 +240,6 @@ impl OperationDiff<CadScene> for CadDiff {
         }
         if other.active_model_definition_id.is_some() {
             self.active_model_definition_id = other.active_model_definition_id;
-        }
-        if other.camera.is_some() {
-            self.camera = other.camera;
         }
     }
 }
@@ -337,7 +320,6 @@ impl Operation<CadScene> for CadOperation {
             }
             CadOperation::SetReferences { model_definition_id, references } => CadDiff { references_by_model_definition_id: Some(BTreeMap::from([(model_definition_id.clone(), references.clone())])), ..Default::default() },
             CadOperation::SetActiveModelDefinition { model_definition_id } => CadDiff { active_model_definition_id: Some(model_definition_id.clone()), ..Default::default() },
-            CadOperation::SetCamera { pane, camera } => CadDiff { camera: Some(CadCameraSet { pane: *pane, camera: camera.clone() }), ..Default::default() },
             CadOperation::SetScene { scene } => CadDiff { scene: Some(scene.clone()), ..Default::default() },
         }
     }
@@ -377,7 +359,6 @@ impl Operation<CadScene> for CadOperation {
                 vec![CadOperation::SetReferences { model_definition_id: model_definition_id.clone(), references: before }]
             }
             CadOperation::SetActiveModelDefinition { .. } => vec![CadOperation::SetActiveModelDefinition { model_definition_id: projection.active_model_definition_id.clone() }],
-            CadOperation::SetCamera { pane, .. } => vec![CadOperation::SetCamera { pane: *pane, camera: cad_pane_camera(projection, *pane).clone() }],
             CadOperation::SetScene { .. } => vec![CadOperation::SetScene { scene: Box::new(projection.clone()) }],
         }
     }
@@ -520,7 +501,6 @@ mod tests {
 
     fn sample_scene() -> CadScene {
         let mut scene = empty_cad_projection();
-        scene.camera.zoom = 2.0;
         scene.objects.push(sample_object("object-1"));
         scene.building_objects.push(sample_object("object-2"));
         scene.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
@@ -546,7 +526,6 @@ mod tests {
             CadOperation::PatchReference { model_definition_id: "spatial.shape".into(), reference_id: "ref-1".into(), patch: CadReferencePatch { hidden: Some(true), ..Default::default() } },
             CadOperation::SetReferences { model_definition_id: "spatial.shape".into(), references: vec![sample_reference()] },
             CadOperation::SetActiveModelDefinition { model_definition_id: "aec.building".into() },
-            CadOperation::SetCamera { pane: CadPaneId::StructureClassic, camera: CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0, projection: Value::Null } },
             CadOperation::SetScene { scene: Box::new(sample_scene()) },
         ];
         for op in ops {

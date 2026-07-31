@@ -236,18 +236,6 @@ pub struct CadScene {
     pub schema: String,
     pub id: String,
     #[serde(default)]
-    #[dsl(block)]
-    pub camera: CadCamera,
-    #[serde(default)]
-    #[dsl(block)]
-    pub camera_building: CadCamera,
-    #[serde(default)]
-    #[dsl(block)]
-    pub camera_energy: CadCamera,
-    #[serde(default)]
-    #[dsl(block)]
-    pub camera_structure_classic: CadCamera,
-    #[serde(default)]
     #[dsl(table)]
     pub objects: Vec<CadObject>,
     #[serde(default)]
@@ -298,24 +286,6 @@ pub fn cad_pane_geometry_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut Opti
     }
 }
 
-pub fn cad_pane_camera(scene: &CadScene, pane: CadPaneId) -> &CadCamera {
-    match pane {
-        CadPaneId::Shape => &scene.camera,
-        CadPaneId::Building => &scene.camera_building,
-        CadPaneId::Energy => &scene.camera_energy,
-        CadPaneId::StructureClassic => &scene.camera_structure_classic,
-    }
-}
-
-pub fn cad_pane_camera_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut CadCamera {
-    match pane {
-        CadPaneId::Shape => &mut scene.camera,
-        CadPaneId::Building => &mut scene.camera_building,
-        CadPaneId::Energy => &mut scene.camera_energy,
-        CadPaneId::StructureClassic => &mut scene.camera_structure_classic,
-    }
-}
-
 fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
@@ -324,10 +294,6 @@ pub fn empty_cad_projection() -> CadScene {
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
-        camera: CadCamera::default(),
-        camera_building: CadCamera::default(),
-        camera_energy: CadCamera::default(),
-        camera_structure_classic: CadCamera::default(),
         objects: Vec::new(),
         building_objects: Vec::new(),
         energy_objects: Vec::new(),
@@ -968,29 +934,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pane_cameras_isolate_states() {
-        let mut scene = empty_cad_projection();
-
-        // Assert initial defaults
-        assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).fov, 50.0);
-        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).fov, 50.0);
-
-        // Update Shape camera
-        cad_pane_camera_mut(&mut scene, CadPaneId::Shape).fov = 40.0;
-
-        // Verify isolation
-        assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).fov, 40.0);
-        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).fov, 50.0);
-
-        // Update Building camera
-        cad_pane_camera_mut(&mut scene, CadPaneId::Building).fov = 60.0;
-
-        // Verify isolation
-        assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).fov, 40.0);
-        assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).fov, 60.0);
-    }
-
-    #[test]
     fn interaction_spec_parses_box_asset() {
         let raw = include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣box.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣box.json parses as InteractionSpec");
@@ -1041,7 +984,7 @@ mod tests {
     /// `InteractionSpec` — catches schema drift between the JSON assets and these Rust types.
     #[test]
     fn every_interaction_asset_on_disk_parses_as_interaction_spec() {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../asset/modelDefinition");
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../🖼️asset/🏗️modelDefinition");
         fn walk(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
             let Ok(entries) = std::fs::read_dir(dir) else { return };
             for entry in entries.flatten() {

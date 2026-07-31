@@ -73,7 +73,7 @@ mod wasm_bridge {
 mod tests {
     use super::*;
     use protocol::CollectionOperation;
-    use shooting::{ShootingAsset, ShootingCamera, SHOOTING_FIXTURE_SCHEMA};
+    use shooting::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_FIXTURE_SCHEMA};
     use store::DocumentCommand;
 
     fn sample_asset(id: &str) -> ShootingAsset {
@@ -95,13 +95,31 @@ mod tests {
         assert_eq!(store.projection().expect("projection").assets.len(), 1);
     }
 
+    /// 🎥 The free/live viewport camera is session-only runtime state now (never a VCS-tracked document
+    /// field — see `ShootingPlayRuntime::camera` in the ui crate), so this no longer exercises `SetCamera`
+    /// (removed); it instead seeds a shot that references a saved camera and drags *that* pose via
+    /// `SetShotCamera`, preserving the original "coalesced drag produces one edit" store-level intent.
     #[test]
     fn coalesced_camera_drag_produces_one_edit() {
         let mut store = ShootingStore::new(store::create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", shooting::empty_shooting_fixture(), None));
-        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("first drag tick");
-        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("second drag tick");
-        assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
-        assert_eq!(store.projection().expect("projection").camera.position, [2.0, 0.0, 0.0]);
+        store
+            .dispatch(DocumentCommand::Apply {
+                operations: vec![
+                    ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, at: 0 }),
+                    ShootingOperation::Shots(CollectionOperation::Add {
+                        id: "s1".into(),
+                        item: ShootingShot { id: "s1".into(), label: "Shot".into(), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: Some("cam1".into()) },
+                        at: 0,
+                    }),
+                ],
+                description: None,
+            })
+            .expect("seed saved camera + referencing shot");
+        let edits_before = store.envelope().vcs.edits.len();
+        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("first drag tick");
+        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("second drag tick");
+        assert_eq!(store.envelope().vcs.edits.len(), edits_before + 1, "coalesced drag must produce exactly one edit");
+        assert_eq!(store.projection().expect("projection").saved_cameras[0].camera.position, [2.0, 0.0, 0.0]);
     }
 
     #[test]

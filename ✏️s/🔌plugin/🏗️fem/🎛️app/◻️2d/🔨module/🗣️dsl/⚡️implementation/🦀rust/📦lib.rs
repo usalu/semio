@@ -21,7 +21,7 @@ pub fn print_dsl(document: &Fem2dDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fem2d::{FemAnalysisSettings, FemCamera, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+    use fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 
     // #region 🔖Fixtures
     fn simply_supported_beam_doc() -> Fem2dDocument {
@@ -35,7 +35,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "dead".into(), name: "dead".into(), loads: vec![FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
@@ -58,7 +57,6 @@ mod tests {
             }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
@@ -73,7 +71,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "self".into(), name: "self weight".into(), loads: vec![], self_weight: true }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 

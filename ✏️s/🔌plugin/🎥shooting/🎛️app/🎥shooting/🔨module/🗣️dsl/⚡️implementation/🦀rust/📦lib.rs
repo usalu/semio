@@ -37,7 +37,6 @@ mod tests {
                 },
                 ShootingAsset { id: "a2".into(), name: "Plain".into(), url: "/mesh/a2.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None },
             ],
-            camera: ShootingCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 1.5, fov: 45.0, up: Some([0.0, 0.0, 1.0]), projection: Some("perspective".into()) },
             saved_cameras: vec![ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera { position: [9.0, 9.0, 9.0], ..Default::default() } }],
             scene: ShootingSceneLighting {
                 background: "#111111".into(),

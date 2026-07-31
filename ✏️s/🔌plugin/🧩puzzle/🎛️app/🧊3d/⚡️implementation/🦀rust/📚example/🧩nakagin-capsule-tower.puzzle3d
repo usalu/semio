@@ -1,7 +1,4 @@
 schema=puzzle.3d.fixture domain=architecture
-camera {
-  position=420,-420,320 target=0,0.0000000000000024492935982947065,40 zoom=1
-}
 meta {
   kind-catalogs=
   objects [id:TEXT label:TEXT name:TEXT mesh-url:TEXT vortices:LIST] {

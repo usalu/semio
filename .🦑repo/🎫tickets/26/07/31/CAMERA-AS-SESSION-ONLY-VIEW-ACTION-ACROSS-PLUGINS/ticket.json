@@ -1,0 +1,13 @@
+{
+  "title": "Camera As Session-Only View Action Across Plugins",
+  "emoji": "🎥",
+  "status": "open",
+  "description": "Convert camera/projection/viewport actions from ActionKind::Operation (VCS-tracked document edits) to ActionKind::View (session-only, non-undoable, non-replicated) across the cad, fem (2d+3d), shooting, writer, sequence, mathematical, lowpoly plugin apps. This is the prerequisite/sibling piece of work for the new universal command-logging mechanism in semio-framework-plugin (that logging work is out of scope here). Per plugin: find the camera action builder call, change its ActionKind to View, move the camera/projection field out of the document/fixture struct into the app's ephemeral runtime state struct, rewrite the handler to write runtime directly and emit empty operations, update render/serialize call sites to read camera from runtime, and delete the now-dead camera operation variant (and all its match arms) from the sibling op crate. Hand-fix any fixture/example/test that references the deleted operation. Verify each touched crate with cargo check + cargo test. Work through plugins sequentially: cad, fem/2d, fem/3d, shooting, writer, sequence, mathematical, lowpoly. Skip plugins with no Operation-kind camera action.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2389"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯apps",
+  "sessions": [
+    "⚪a83f5f7bd37c412fb62829d482bf7339"
+  ]
+}

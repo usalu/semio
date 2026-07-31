@@ -226,7 +226,9 @@ impl Default for FemCamera {
     }
 }
 
-/// 🧾 Persistent fem-3d document — nodes, members, catalogs, supports and load cases plus camera state.
+/// 🧾 Persistent fem-3d document — nodes, members, catalogs, supports and load cases. The camera is
+/// session-only view state (never a VCS-tracked document field) — see `Fem3dPlayApp::camera` in the
+/// ui crate.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "fem3d", layout = "lines")]
@@ -249,7 +251,5 @@ pub struct Fem3dDocument {
     pub combinations: Vec<FemCombination>,
     #[dsl(block)]
     pub analysis: FemAnalysisSettings,
-    #[dsl(block)]
-    pub camera: FemCamera,
 }
 // #endregion 🔖Document

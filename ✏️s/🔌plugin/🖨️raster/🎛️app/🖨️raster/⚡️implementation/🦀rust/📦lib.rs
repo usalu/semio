@@ -15,10 +15,10 @@ pub fn default_true() -> bool {
     true
 }
 
-/// 🎞️ Non-destructive raster document: a nested layer tree (pixel/group/adjustment) over a pannable
-/// camera, plus embedded image assets. This is the authoritative projection shared by the wasm
-/// compositor bridge and the `raster-plugin` `DocumentApp`. Ephemeral tool/brush/selection state
-/// lives in the plugin's app struct, never here.
+/// 🎞️ Non-destructive raster document: a nested layer tree (pixel/group/adjustment) plus embedded
+/// image assets. This is the authoritative projection shared by the wasm compositor bridge and the
+/// `raster-plugin` `DocumentApp`. Ephemeral tool/brush/selection/camera state lives in the plugin's
+/// app runtime struct, never here.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct RasterCamera {
@@ -157,9 +157,6 @@ pub struct RasterProjection {
     pub id: String,
     #[serde(default)]
     pub title: Option<String>,
-    #[dsl(block)]
-    #[serde(default)]
-    pub camera: RasterCamera,
     #[dsl(statements, block)]
     #[serde(default)]
     pub layers: Vec<RasterLayerNode>,

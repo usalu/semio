@@ -1,0 +1,14 @@
+{
+  "title": "Puzzle 5D Camera As Session-only View Action",
+  "emoji": "📷",
+  "status": "closed",
+  "description": "Move puzzle-5d app's camera2d/camera3d pose out of the document (VCS-tracked) into session-only runtime state, and reclassify setCamera/setCamera2d/setCamera3d actions from ActionKind::Operation to ActionKind::View, so camera changes are no longer undoable/replicated document edits and instead surface as session-only rows in the new universal command-log. Delete Puzzle5dOperation::SetCamera2d/SetCamera3d and their diff/invert/apply/DSL arms from the op crate entirely (no compat shim). Update UI crate's handler/render/sync to read camera from runtime state, and fix any camera round-trip tests / transform-operation-id lists to assert runtime state instead of document state. Prerequisite/sibling work to the separate command-log logging mechanism (not touching that mechanism itself). Crates: ✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/⚡️implementation/🦀rust (document entities), .../🔨module/🔧op (op crate), .../🔨module/🖱️ui (ui crate), plus 📡protocol/🎒pack/🗣️dsl/⚙️engine modules referencing camera as needed. Verify with cargo check/test per touched package.",
+  "summary": "Moved puzzle-5d's camera2d/camera3d pose out of the VCS-tracked document into the ui crate's Puzzle5dRuntime (session-only), and reclassified setCamera/setCamera2d/setCamera3d from ActionKind::Operation to ActionKind::View. Deleted Puzzle5dOperation::SetCamera2d/SetCamera3d and all diff/backwards/apply/DSL/delta-computation arms from the op crate, and removed the camera2d/camera3d fields (and their now-dead Puzzle5dCamera2d/Puzzle5dCamera3d types) from the puzzle_5d document-entities crate's Puzzle5dProjection. Hand-fixed both .puzzle5d example fixtures (removed camera2d/camera3d DSL blocks) and the dsl crate's round-trip test. Added a new ui-crate test asserting setCamera2d/setCamera3d write runtime and emit zero operations. cargo check + cargo test pass for all 4 touched packages (semio-s-app-puzzle-5d: 0 tests; semio-s-app-puzzle-5d-op: 1 test; semio-s-app-puzzle-5d-dsl: 2 tests; semio-s-app-puzzle-5d-ui: 22 tests) — 25/25 passing, no failures.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2388"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪e66b764fe195408eaec40c85522d48f6"
+  ]
+}

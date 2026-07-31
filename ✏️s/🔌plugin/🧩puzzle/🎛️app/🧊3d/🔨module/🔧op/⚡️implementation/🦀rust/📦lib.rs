@@ -1,6 +1,6 @@
 //! ⚡ Puzzle 3d app — operation enum + laws (constitutional: op).
 
-use puzzle_3d::{Puzzle3dAttraction, Puzzle3dCamera, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
+use puzzle_3d::{Puzzle3dAttraction, Puzzle3dMeta, Puzzle3dObject, Puzzle3dProjection, Puzzle3dReference, Puzzle3dTargetVolume};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 
@@ -77,7 +77,8 @@ fn puzzle3d_index_of<T: Puzzle3dHasId>(items: &[T], id: &str) -> Option<usize> {
 // #endregion 🔖Collections
 
 // #region 🔖Operations
-/// 🩹 Sparse puzzle-3d diff over every id-keyed collection plus the scalar camera/meta.
+/// 🩹 Sparse puzzle-3d diff over every id-keyed collection plus the scalar meta. Camera is
+/// intentionally absent — it is session-only per-window runtime state, never a document operation.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dDiff {
@@ -87,7 +88,6 @@ pub struct Puzzle3dDiff {
     pub attractions: Puzzle3dAttractionsDiff,
     pub target_volumes: Puzzle3dTargetVolumesDiff,
     pub references: Puzzle3dReferencesDiff,
-    pub camera: Option<Puzzle3dCamera>,
     pub meta: Option<Puzzle3dMeta>,
 }
 
@@ -104,9 +104,6 @@ fn puzzle3d_diff_absorb(diff: &mut Puzzle3dDiff, other: Puzzle3dDiff) {
     diff.target_volumes.set.extend(other.target_volumes.set);
     diff.references.removed.extend(other.references.removed);
     diff.references.set.extend(other.references.set);
-    if other.camera.is_some() {
-        diff.camera = other.camera;
-    }
     if other.meta.is_some() {
         diff.meta = other.meta;
     }
@@ -122,9 +119,6 @@ impl OperationDiff<Puzzle3dProjection> for Puzzle3dDiff {
         apply_puzzle3d_collection_diff(&mut next.attractions, &self.attractions.removed, &self.attractions.set);
         apply_puzzle3d_collection_diff(&mut next.target_volumes, &self.target_volumes.removed, &self.target_volumes.set);
         apply_puzzle3d_collection_diff(&mut next.references, &self.references.removed, &self.references.set);
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
         if let Some(meta) = &self.meta {
             next.meta = meta.clone();
         }
@@ -136,8 +130,8 @@ impl OperationDiff<Puzzle3dProjection> for Puzzle3dDiff {
     }
 }
 
-/// 🧮 Puzzle-3d operation: id-keyed collection edits plus scalar camera/meta, each with a true
-/// inverse computed from the pre-operation projection, and a whole-document replace for example loads.
+/// 🧮 Puzzle-3d operation: id-keyed collection edits plus scalar meta, each with a true inverse
+/// computed from the pre-operation projection, and a whole-document replace for example loads.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Puzzle3dOperation {
@@ -157,8 +151,6 @@ pub enum Puzzle3dOperation {
     SetReference { index: usize, #[dsl(block)] reference: Puzzle3dReference },
     #[dsl(key = "removeReference")]
     RemoveReference { id: String },
-    #[dsl(key = "setCamera")]
-    SetCamera { #[dsl(block)] camera: Puzzle3dCamera },
     #[dsl(key = "setMeta")]
     SetMeta { #[dsl(block)] meta: Puzzle3dMeta },
     /// 🌍 Replaces the whole document (example import / reset / engine fill).
@@ -177,7 +169,6 @@ fn puzzle3d_operation_diff(operation: &Puzzle3dOperation) -> Puzzle3dDiff {
         Puzzle3dOperation::RemoveTargetVolume { id } => diff.target_volumes.removed.push(id.clone()),
         Puzzle3dOperation::SetReference { index, reference } => diff.references.set.push((*index, reference.clone())),
         Puzzle3dOperation::RemoveReference { id } => diff.references.removed.push(id.clone()),
-        Puzzle3dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
         Puzzle3dOperation::SetMeta { meta } => diff.meta = Some(meta.clone()),
         Puzzle3dOperation::SetDocument { document } => diff.document = Some(document.clone()),
     }
@@ -215,7 +206,6 @@ impl Operation<Puzzle3dProjection> for Puzzle3dOperation {
                 None => vec![Puzzle3dOperation::RemoveReference { id: reference.id.clone() }],
             },
             Puzzle3dOperation::RemoveReference { id } => puzzle3d_index_of(&projection.references, id).map(|index| vec![Puzzle3dOperation::SetReference { index, reference: projection.references[index].clone() }]).unwrap_or_default(),
-            Puzzle3dOperation::SetCamera { .. } => vec![Puzzle3dOperation::SetCamera { camera: projection.camera.clone() }],
             Puzzle3dOperation::SetMeta { .. } => vec![Puzzle3dOperation::SetMeta { meta: projection.meta.clone() }],
             Puzzle3dOperation::SetDocument { .. } => vec![Puzzle3dOperation::SetDocument { document: projection.clone() }],
         }
@@ -265,11 +255,6 @@ fn apply_puzzle3d_operation_to_value(document: &mut serde_json::Value, operation
         Puzzle3dOperation::RemoveTargetVolume { id } => puzzle3d_remove_value_item(document, "targetVolumes", id),
         Puzzle3dOperation::SetReference { index, reference } => puzzle3d_upsert_value_item(document, "references", *index, serde_json::to_value(reference).unwrap_or(serde_json::Value::Null)),
         Puzzle3dOperation::RemoveReference { id } => puzzle3d_remove_value_item(document, "references", id),
-        Puzzle3dOperation::SetCamera { camera } => {
-            if let Some(object) = document.as_object_mut() {
-                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(serde_json::Value::Null));
-            }
-        }
         Puzzle3dOperation::SetMeta { meta } => {
             if let Some(object) = document.as_object_mut() {
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(serde_json::Value::Null));
@@ -319,11 +304,6 @@ impl OperationDiff<serde_json::Value> for Puzzle3dDiff {
         for (index, reference) in &self.references.set {
             puzzle3d_upsert_value_item(&mut next, "references", *index, serde_json::to_value(reference).unwrap_or(serde_json::Value::Null));
         }
-        if let Some(camera) = &self.camera {
-            if let Some(object) = next.as_object_mut() {
-                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(serde_json::Value::Null));
-            }
-        }
         if let Some(meta) = &self.meta {
             if let Some(object) = next.as_object_mut() {
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(serde_json::Value::Null));
@@ -371,10 +351,6 @@ impl Operation<serde_json::Value> for Puzzle3dOperation {
             },
             Puzzle3dOperation::RemoveReference { id } => {
                 puzzle3d_value_item_index::<Puzzle3dReference>(projection, "references", id).map(|(index, previous)| vec![Puzzle3dOperation::SetReference { index, reference: previous }]).unwrap_or_default()
-            }
-            Puzzle3dOperation::SetCamera { .. } => {
-                let camera: Puzzle3dCamera = projection.get("camera").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-                vec![Puzzle3dOperation::SetCamera { camera }]
             }
             Puzzle3dOperation::SetMeta { .. } => {
                 let meta: Puzzle3dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
@@ -428,7 +404,7 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
         return fallback(after);
     };
-    const KNOWN_KEYS: [&str; 8] = ["schema", "domain", "camera", "meta", "objects", "attractions", "targetVolumes", "references"];
+    const KNOWN_KEYS: [&str; 7] = ["schema", "domain", "meta", "objects", "attractions", "targetVolumes", "references"];
     if before_object.keys().chain(after_object.keys()).any(|key| !KNOWN_KEYS.contains(&key.as_str())) {
         return fallback(after);
     }
@@ -455,14 +431,6 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
     collect_collection!("attractions", |(index, attraction)| Puzzle3dOperation::SetAttraction { index, attraction }, |id| Puzzle3dOperation::RemoveAttraction { id }, Puzzle3dAttraction);
     collect_collection!("targetVolumes", |(index, target_volume)| Puzzle3dOperation::SetTargetVolume { index, target_volume }, |id| Puzzle3dOperation::RemoveTargetVolume { id }, Puzzle3dTargetVolume);
     collect_collection!("references", |(index, reference)| Puzzle3dOperation::SetReference { index, reference }, |id| Puzzle3dOperation::RemoveReference { id }, Puzzle3dReference);
-    let before_camera = before_object.get("camera");
-    let after_camera = after_object.get("camera");
-    if before_camera != after_camera {
-        let Some(camera) = after_camera.and_then(|value| serde_json::from_value::<Puzzle3dCamera>(value.clone()).ok()) else {
-            return fallback(after);
-        };
-        operations.push(Puzzle3dOperation::SetCamera { camera });
-    }
     let before_meta = before_object.get("meta");
     let after_meta = after_object.get("meta");
     if before_meta != after_meta {
@@ -554,9 +522,9 @@ mod tests {
     #[test]
     fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
         let before =
-            serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": { "position": [0.0, 0.0, 0.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 }, "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o2", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
+            serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o2", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
         let after =
-            serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": { "position": [0.0, 0.0, 0.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0 }, "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o3", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
+            serde_json::json!({ "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o3", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
         let operations = puzzle3d_document_delta_operations(&before, &after);
         assert!(!operations.iter().any(|operation| matches!(operation, Puzzle3dOperation::SetDocument { .. })));
         let mut forward = before.clone();
@@ -578,7 +546,7 @@ mod tests {
     #[test]
     fn puzzle3d_collection_delta_only_touches_changed_entries() {
         let before = serde_json::json!({
-            "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": {}, "attractions": [],
+            "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "attractions": [],
             "objects": [
                 { "id": "unchanged", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
                 { "id": "updated", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
@@ -586,7 +554,7 @@ mod tests {
             ],
         });
         let after = serde_json::json!({
-            "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": {}, "attractions": [],
+            "schema": puzzle_3d::PUZZLE_3D_SCHEMA, "domain": "architecture", "attractions": [],
             "objects": [
                 { "id": "unchanged", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
                 { "id": "updated", "origin": [1.0, 5.0, 0.0], "vortices": [], "hidden": false, "locked": false },

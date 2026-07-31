@@ -1,6 +1,6 @@
 //! ⚙️ Shooting app — headless compute (constitutional: engine).
 
-use shooting::{default_camera_position, default_fov, empty_shooting_fixture, ShootingAsset, ShootingCamera, ShootingFixture, ShootingShot};
+use shooting::{empty_shooting_fixture, ShootingAsset, ShootingFixture, ShootingShot};
 use serde_json::Value;
 use std::sync::atomic::{AtomicU32, Ordering};
 use store::DocumentDsl;
@@ -99,34 +99,14 @@ pub fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32)
 //#endregion 🔖MediaExport
 
 //#region 🔖MediaImport
-/// 🎯 Frames a `ShootingCamera` around a DWG extent, reusing the default studio angle but
-/// scaling distance to the drawing's bounding box; degenerates gracefully for an empty drawing.
-fn shooting_camera_from_dwg_bounds(extmin: [f64; 3], extmax: [f64; 3]) -> ShootingCamera {
-    let center = [
-        (extmin[0] + extmax[0]) * 0.5,
-        (extmin[1] + extmax[1]) * 0.5,
-        (extmin[2] + extmax[2]) * 0.5,
-    ];
-    let span = [(extmax[0] - extmin[0]).abs(), (extmax[1] - extmin[1]).abs(), (extmax[2] - extmin[2]).abs()];
-    let radius = span[0].max(span[1]).max(span[2]) * 0.5;
-    let distance = if radius > 1e-6 { radius * 2.6 } else { 600.0 };
-    let direction = default_camera_position();
-    let direction_len = (direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]).sqrt().max(1e-6);
-    let position = [
-        center[0] + direction[0] / direction_len * distance,
-        center[1] + direction[1] / direction_len * distance,
-        center[2] + direction[2] / direction_len * distance,
-    ];
-    ShootingCamera { position, target: center, zoom: 1.0, fov: default_fov(), up: None, projection: None }
-}
-
-/// 📥 Tier C DWG import for `2d.shooting`: the format has no wall/obstacle concept, so this
-/// always returns the default studio fixture with the camera reframed to the drawing extent —
-/// never errors, including for a structurally empty `DwgDrawing`.
-pub fn shooting_document_json_from_dwg(drawing: &semio_framework_plugin::DwgDrawing) -> Result<Value, String> {
-    let mut fixture = default_fixture();
-    fixture.camera = shooting_camera_from_dwg_bounds(drawing.extmin, drawing.extmax);
-    serde_json::to_value(&fixture).map_err(|error| error.to_string())
+/// 📥 Tier C DWG import for `2d.shooting`: the format has no wall/obstacle concept, so this always
+/// returns the default studio fixture — never errors, including for a structurally empty `DwgDrawing`.
+/// The camera is session-only runtime state now (never a document field — see
+/// `ShootingPlayRuntime::camera` in the ui crate), and `register_dwg_import_handler`'s callback
+/// signature (`&DwgDrawing -> Result<Value, String>`) has no channel back into that runtime state, so
+/// this no longer reframes the camera to the drawing extent (dropped, not moved — see the ticket notes).
+pub fn shooting_document_json_from_dwg(_drawing: &semio_framework_plugin::DwgDrawing) -> Result<Value, String> {
+    serde_json::to_value(&default_fixture()).map_err(|error| error.to_string())
 }
 //#endregion 🔖MediaImport
 
@@ -165,8 +145,12 @@ mod tests {
         assert!(!svg.contains("Shooting"), "export renders the real scene, not the generic title card");
     }
 
+    /// 🎥 The camera used to be reframed to the DWG extent here; now that it's session-only runtime
+    /// state (never a document field), the import hook has no channel back into it (see
+    /// `shooting_document_json_from_dwg`'s doc comment) — this asserts the surviving intent: import
+    /// still succeeds and stays schema-valid for a non-trivial extent.
     #[test]
-    fn dwg_import_frames_camera_to_extent_and_stays_schema_valid() {
+    fn dwg_import_stays_schema_valid_for_a_non_trivial_extent() {
         let mut drawing = semio_framework_plugin::DwgDrawing::default();
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [100.0, 200.0, 0.0];
@@ -174,8 +158,6 @@ mod tests {
         let fixture: ShootingFixture = serde_json::from_value(document).expect("schema-valid fixture");
         assert_eq!(fixture.schema, SHOOTING_FIXTURE_SCHEMA);
         assert!(!fixture.shots.is_empty());
-        assert_eq!(fixture.camera.target, [50.0, 100.0, 0.0]);
-        assert_ne!(fixture.camera.position, ShootingCamera::default().position);
     }
 
     #[test]
@@ -184,7 +166,6 @@ mod tests {
         let document = shooting_document_json_from_dwg(&drawing).expect("dwg import never errors on empty drawing");
         let fixture: ShootingFixture = serde_json::from_value(document).expect("schema-valid fixture");
         assert_eq!(fixture.schema, SHOOTING_FIXTURE_SCHEMA);
-        assert_eq!(fixture.camera.target, [0.0, 0.0, 0.0]);
     }
 }
 //#endregion 🧪Tests

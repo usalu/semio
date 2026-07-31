@@ -95,6 +95,8 @@ import {
   resolveWorldSelectionMergeMode,
   resolveWorldContextMenuTarget,
   shouldReattachWorldViewportCamera,
+  worldCameraPoseApproxEqual,
+  buildWorldCameraDispatchArgs,
   snapWorldPointToGrid,
   world3dViewportCameraSeedKey,
   worldInstancePickBlocked,
@@ -166,6 +168,9 @@ import {
   isRevealCutoffHidden,
   PUZZLE3D_FILL_REVEAL_GROUP_ID,
   dispatchOsCommand,
+  classifyWindowLayoutChange,
+  buildNoteShellCommandAction,
+  TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS,
   mergeShellLockSources,
   resolveBootExampleId,
   resolveShellDefaults,
@@ -2176,6 +2181,37 @@ describe("framework renderer hosts", () => {
     expect(merged.fov).toBe(45);
     expect(merged.explicitProjection).toBe(true);
     expect(merged.up).toEqual([0, 1, 0]);
+  });
+
+  it("buildWorldCameraDispatchArgs carries position/target/zoom/up but never a projection field", () => {
+    const withUp = buildWorldCameraDispatchArgs({ position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1], projection: "orthographic" });
+    expect(withUp).toEqual({ position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1] });
+    expect(withUp).not.toHaveProperty("projection");
+    expect(withUp).not.toHaveProperty("projectionSpec");
+
+    const withoutUp = buildWorldCameraDispatchArgs({ position: [1, 2, 3], target: [0, 0, 0], zoom: 1, projection: "perspective" });
+    expect(withoutUp).toEqual({ position: [1, 2, 3], target: [0, 0, 0], zoom: 1 });
+    expect(withoutUp).not.toHaveProperty("up");
+    expect(withoutUp).not.toHaveProperty("projection");
+  });
+
+  it("worldCameraPoseApproxEqual matches exact poses and float-noise, rejects a genuinely different pose", () => {
+    const base = { position: [1, 2, 3] as const, target: [0, 0, 0] as const, zoom: 1 };
+    expect(worldCameraPoseApproxEqual(base, { position: [1, 2, 3], target: [0, 0, 0], zoom: 1 })).toBe(true);
+    expect(worldCameraPoseApproxEqual(base, { position: [1.0000001, 2.0000001, 3], target: [0, 0, 1e-9], zoom: 1.0000001 })).toBe(true);
+    expect(worldCameraPoseApproxEqual(base, { position: [9, 2, 3], target: [0, 0, 0], zoom: 1 })).toBe(false);
+    expect(worldCameraPoseApproxEqual(base, { position: [1, 2, 3], target: [0, 0, 0], zoom: 5 })).toBe(false);
+  });
+
+  it("shouldReattachWorldViewportCamera suppresses a self-echo of the last dispatched camera but not a genuinely different pose", () => {
+    const previous = '{"position":[1,2,3],"target":[0,0,0],"zoom":1}';
+    const dispatched = { position: [4, 5, 6] as const, target: [0, 0, 0] as const, zoom: 2 };
+    const echoedJson = '{"position":[4.0000001,5,6],"target":[0,0,0],"zoom":2}';
+    const differentJson = '{"position":[9,9,9],"target":[0,0,0],"zoom":1}';
+    expect(shouldReattachWorldViewportCamera(previous, echoedJson, dispatched)).toBe(false);
+    expect(shouldReattachWorldViewportCamera(previous, differentJson, dispatched)).toBe(true);
+    expect(shouldReattachWorldViewportCamera(previous, previous, dispatched)).toBe(false);
+    expect(shouldReattachWorldViewportCamera(previous, differentJson, null)).toBe(true);
   });
 
   it("preserves projectionSpec.view from gizmo snaps instead of clobbering to top", () => {
@@ -4873,5 +4909,65 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     ];
     const request = buildUiRefreshRequest({ kind: "full" }, windowInstances, [], {}, new Map());
     expect(request?.windows?.map((window) => window.key)).toEqual(["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"]);
+  });
+});
+
+describe("classifyWindowLayoutChange", () => {
+  const twoStackRow = (leftSize: number, rightSize: number) => ({
+    kind: "row" as const,
+    size: 100,
+    children: [
+      { kind: "stack" as const, size: leftSize, children: [{ kind: "window" as const, id: "a" }] },
+      { kind: "stack" as const, size: rightSize, children: [{ kind: "window" as const, id: "b" }] },
+    ],
+  });
+
+  it("returns null when the layout is identical (deep-equal, not just same reference)", () => {
+    expect(classifyWindowLayoutChange(twoStackRow(50, 50), twoStackRow(50, 50))).toBeNull();
+    const same = twoStackRow(50, 50);
+    expect(classifyWindowLayoutChange(same, same)).toBeNull();
+  });
+
+  it("returns null for a pure active-window-flag change (skeleton and sizes both unchanged)", () => {
+    const previous = { kind: "stack" as const, size: 100, activeId: "a", children: [{ kind: "window" as const, id: "a" }, { kind: "window" as const, id: "b" }] };
+    const next = { ...previous, activeId: "b" };
+    expect(classifyWindowLayoutChange(previous, next)).toBeNull();
+  });
+
+  it("returns 'resize' when only pane sizes differ", () => {
+    expect(classifyWindowLayoutChange(twoStackRow(50, 50), twoStackRow(30, 70))).toBe("resize");
+  });
+
+  it("returns 'rearrange' when window ids/nesting structure differ (drag-to-new-position, split, close)", () => {
+    const previous = twoStackRow(50, 50);
+    const swapped = { ...previous, children: [previous.children[1]!, previous.children[0]!] };
+    expect(classifyWindowLayoutChange(previous, swapped)).toBe("rearrange");
+    const closed = { kind: "stack" as const, children: [{ kind: "window" as const, id: "a" }] };
+    expect(classifyWindowLayoutChange(previous, closed)).toBe("rearrange");
+    expect(classifyWindowLayoutChange(null, previous)).toBe("rearrange");
+    expect(classifyWindowLayoutChange(previous, null)).toBe("rearrange");
+  });
+
+  it("returns null when both are null", () => {
+    expect(classifyWindowLayoutChange(null, null)).toBeNull();
+  });
+});
+
+describe("noteShellCommand", () => {
+  it("buildNoteShellCommandAction builds a noteShellCommand action descriptor targeting the given controller, carrying detail only when provided", () => {
+    expect(buildNoteShellCommandAction("puzzle3d-play", "shell.windowClose", "Close Window", { windowId: "w1" })).toEqual({
+      controllerId: "puzzle3d-play",
+      action: "noteShellCommand",
+      args: { commandId: "shell.windowClose", label: "Close Window", detail: { windowId: "w1" } },
+    });
+    expect(buildNoteShellCommandAction("puzzle3d-play", "os.resetDock", "Reset Panels")).toEqual({
+      controllerId: "puzzle3d-play",
+      action: "noteShellCommand",
+      args: { commandId: "os.resetDock", label: "Reset Panels" },
+    });
+  });
+
+  it("is excluded from tutorial recording, alongside world-navigation/introduction/tutorial-control action ids", () => {
+    expect(TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS.has("noteShellCommand")).toBe(true);
   });
 });

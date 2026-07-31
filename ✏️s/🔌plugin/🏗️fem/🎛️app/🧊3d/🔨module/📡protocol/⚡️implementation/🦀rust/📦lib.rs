@@ -17,7 +17,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Fem3dOperation, protocol::ProtocolError
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fem3d::{FemAnalysisSettings, FemCamera, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
+    use fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
     use store::{create_document_envelope, DocumentCommand};
 
     fn cantilever_fixture() -> fem3d::Fem3dDocument {
@@ -31,13 +31,12 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -5000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } };
+        let operation = Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

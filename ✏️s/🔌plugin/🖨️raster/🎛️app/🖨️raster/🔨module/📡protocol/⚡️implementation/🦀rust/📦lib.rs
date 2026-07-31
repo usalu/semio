@@ -17,12 +17,27 @@ pub fn decode_op(bytes: &[u8]) -> Result<RasterOperation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use raster::RASTER_DOCUMENT_SCHEMA;
+    use raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let document = raster_engine::empty_raster_document();
-        let operation = RasterOperation::SetCamera { camera: document.camera };
+        let operation = RasterOperation::AddLayer {
+            parent_id: None,
+            index: document.layers.len(),
+            layer: Box::new(RasterLayerNode::Pixel {
+                id: "op-binary-test".into(),
+                name: "Op Binary Test".into(),
+                visible: true,
+                opacity: 1.0,
+                blend_mode: "normal".into(),
+                transform: RasterTransform::default(),
+                mask: None,
+                width: Some(64),
+                height: Some(64),
+                image_key: None,
+            }),
+        };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

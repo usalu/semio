@@ -1,6 +1,6 @@
 //! ⚡ FEM 3D app — operation enum + laws (constitutional: op).
 
-use fem3d::{element_id, Fem3dDocument, FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
+use fem3d::{element_id, Fem3dDocument, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
@@ -171,7 +171,8 @@ fn apply_combinations_diff(combinations: &mut Vec<FemCombination>, diff: &Combin
 // #endregion 🔖Collections
 
 // #region 🔖Operations
-/// 🩹 Sparse fem-3d diff over every document collection plus the scalar camera field.
+/// 🩹 Sparse fem-3d diff over every document collection (camera is session-only runtime state, not a
+/// document field — see `Fem3dPlayApp::camera` in the ui crate).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fem3dDiff {
@@ -185,7 +186,6 @@ pub struct Fem3dDiff {
     pub supports: SupportsDiff,
     pub load_cases: LoadCasesDiff,
     pub combinations: CombinationsDiff,
-    pub camera: Option<FemCamera>,
     pub analysis: Option<FemAnalysisSettings>,
 }
 
@@ -203,9 +203,6 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
         apply_supports_diff(&mut next.supports, &self.supports);
         apply_load_cases_diff(&mut next.load_cases, &self.load_cases);
         apply_combinations_diff(&mut next.combinations, &self.combinations);
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
         if let Some(analysis) = &self.analysis {
             next.analysis = analysis.clone();
         }
@@ -233,9 +230,6 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
         self.load_cases.set.extend(other.load_cases.set);
         self.combinations.removed.extend(other.combinations.removed);
         self.combinations.set.extend(other.combinations.set);
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
         if other.analysis.is_some() {
             self.analysis = other.analysis;
         }
@@ -243,7 +237,7 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
 }
 
 /// 🧮 Fem-3d operation: id-keyed collection edits over nodes/elements/materials/sections/supports/load
-/// cases, plus the scalar camera, each with a true inverse via `backwards`.
+/// cases, each with a true inverse via `backwards`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Fem3dOperation {
@@ -270,10 +264,6 @@ pub enum Fem3dOperation {
     RemoveLoadCase { id: String },
     SetCombination { index: usize, combination: FemCombination },
     RemoveCombination { id: String },
-    SetCamera {
-        #[dsl(block)]
-        camera: FemCamera,
-    },
     SetAnalysisSettings {
         #[dsl(block)]
         settings: FemAnalysisSettings,
@@ -339,7 +329,6 @@ impl Operation<Fem3dDocument> for Fem3dOperation {
             Fem3dOperation::RemoveLoadCase { id } => diff.load_cases.removed.push(id.clone()),
             Fem3dOperation::SetCombination { index, combination } => diff.combinations.set.push((*index, combination.clone())),
             Fem3dOperation::RemoveCombination { id } => diff.combinations.removed.push(id.clone()),
-            Fem3dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
             Fem3dOperation::SetAnalysisSettings { settings } => diff.analysis = Some(settings.clone()),
             Fem3dOperation::SetDocument { document } => diff.document = Some(document.clone()),
         }
@@ -390,7 +379,6 @@ impl Operation<Fem3dDocument> for Fem3dOperation {
                 None => vec![Fem3dOperation::RemoveCombination { id: combination.id.clone() }],
             },
             Fem3dOperation::RemoveCombination { id } => combination_index(projection, id).map(|index| vec![Fem3dOperation::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
-            Fem3dOperation::SetCamera { .. } => vec![Fem3dOperation::SetCamera { camera: projection.camera.clone() }],
             Fem3dOperation::SetAnalysisSettings { .. } => vec![Fem3dOperation::SetAnalysisSettings { settings: projection.analysis.clone() }],
             Fem3dOperation::SetDocument { .. } => vec![Fem3dOperation::SetDocument { document: projection.clone() }],
         }
@@ -428,7 +416,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![fem3d::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         };
         (doc, e, iy, l, p, iz)
     }
@@ -457,7 +444,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
     // #endregion 🔖Fixtures
@@ -531,12 +517,6 @@ mod tests {
     }
 
     #[test]
-    fn camera_set_round_trips() {
-        let base = Fem3dDocument::default();
-        round_trip(&base, &Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } });
-    }
-
-    #[test]
     fn analysis_settings_set_round_trips() {
         let base = Fem3dDocument::default();
         let settings = FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 25.0 };
@@ -555,7 +535,7 @@ mod tests {
     fn document_diff_absorb_wins_over_granular_changes() {
         let (base, ..) = cantilever_fixture();
         let replacement = solid_slab_doc();
-        let mut diff = Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } }.diff(&base);
+        let mut diff = Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 1, buckling_count: 1, deformation_scale: 1.0 } }.diff(&base);
         diff.absorb(Fem3dOperation::SetDocument { document: replacement.clone() }.diff(&base));
         assert_eq!(diff.apply(&base), replacement);
     }
@@ -621,7 +601,6 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveLoadCase { id: "point".into() });
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetCombination { index: 0, combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("live".into(), 1.5)]) } });
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveCombination { id: "uls".into() });
-        store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } });
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         let (cantilever, ..) = cantilever_fixture();
         store::test_support::assert_op_line_round_trip(&Fem3dOperation::SetDocument { document: cantilever });

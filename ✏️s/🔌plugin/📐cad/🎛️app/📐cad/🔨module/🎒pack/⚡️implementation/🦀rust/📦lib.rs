@@ -66,7 +66,6 @@ mod tests {
 
     fn sample_scene() -> CadScene {
         let mut scene = empty_cad_projection();
-        scene.camera.zoom = 2.0;
         scene.objects.push(sample_object("object-1"));
         scene.building_objects.push(sample_object("object-2"));
         scene.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });

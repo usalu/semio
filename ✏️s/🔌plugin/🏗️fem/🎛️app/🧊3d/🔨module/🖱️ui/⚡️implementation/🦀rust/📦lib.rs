@@ -1,6 +1,6 @@
 //! 🖼️ FEM 3D app — `DocumentApp` impl, render, manifest (constitutional: ui).
 
-use fem3d::Fem3dDocument;
+use fem3d::{Fem3dDocument, FemCamera};
 use fem_core::Dof;
 use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, parse_result_display, result_display_action_args, von_mises_color, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO};
 use semio_framework_plugin::{
@@ -250,11 +250,11 @@ fn fem3d_scene_parts(doc: &Fem3dDocument, displacements: Option<&HashMap<String,
     (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
 }
 
-fn fem3d_camera_json(doc: &Fem3dDocument) -> String {
-    if doc.camera.json == "{}" {
+fn fem3d_camera_json(camera: &FemCamera) -> String {
+    if camera.json == "{}" {
         world3d_default_camera()
     } else {
-        doc.camera.json.clone()
+        camera.json.clone()
     }
 }
 
@@ -265,21 +265,21 @@ fn with_caption(scene: UiNode, caption: String) -> UiNode {
     ui_stack_vertical(vec![ui_text(caption), scene])
 }
 
-fn render_fem3d_model(doc: &Fem3dDocument) -> UiNode {
+fn render_fem3d_model(doc: &Fem3dDocument, camera: &FemCamera) -> UiNode {
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, doc.analysis.deformation_scale, None);
     build_world_3d_scene(
         FEM3D_BODY_MODEL,
         FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
+        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
     )
 }
 
 /// 📊 Results window dispatcher — picks the static/modal/buckling render based on `display`.
-fn render_fem3d_results(doc: &Fem3dDocument, display: &ResultDisplay) -> UiNode {
+fn render_fem3d_results(doc: &Fem3dDocument, display: &ResultDisplay, camera: &FemCamera) -> UiNode {
     match display.mode {
-        DisplayMode::Static => render_fem3d_results_static(doc, display.source_id.as_deref()),
-        DisplayMode::Modal(mode_index) => render_fem3d_results_modal(doc, mode_index),
-        DisplayMode::Buckling(mode_index) => render_fem3d_results_buckling(doc, display.source_id.as_deref(), mode_index),
+        DisplayMode::Static => render_fem3d_results_static(doc, display.source_id.as_deref(), camera),
+        DisplayMode::Modal(mode_index) => render_fem3d_results_modal(doc, mode_index, camera),
+        DisplayMode::Buckling(mode_index) => render_fem3d_results_buckling(doc, display.source_id.as_deref(), mode_index, camera),
     }
 }
 
@@ -287,7 +287,7 @@ fn render_fem3d_results(doc: &Fem3dDocument, display: &ResultDisplay) -> UiNode 
 /// solid instances as the model window, offset by the solved displacements, solids additionally colored
 /// by nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all` case/combination id,
 /// falling back to the first load case when `None`/unknown. Caption names the active case.
-fn render_fem3d_results_static(doc: &Fem3dDocument, source_id: Option<&str>) -> UiNode {
+fn render_fem3d_results_static(doc: &Fem3dDocument, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
     let results = match fem3d_engine::fem3d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return ui_text(format!("Analysis error: {e}")),
@@ -311,7 +311,7 @@ fn render_fem3d_results_static(doc: &Fem3dDocument, source_id: Option<&str>) -> 
     let scene = build_world_3d_scene(
         FEM3D_BODY_RESULTS,
         FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
+        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
     );
     with_caption(scene, format!("Case: {case_id}"))
 }
@@ -319,7 +319,7 @@ fn render_fem3d_results_static(doc: &Fem3dDocument, source_id: Option<&str>) -> 
 /// 📊 Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent (see `normalize_mode_shape`),
 /// with a frequency caption.
-fn render_fem3d_results_modal(doc: &Fem3dDocument, mode_index: usize) -> UiNode {
+fn render_fem3d_results_modal(doc: &Fem3dDocument, mode_index: usize, camera: &FemCamera) -> UiNode {
     let (freq_hz, mut disp_map) = match fem3d_engine::fem3d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(format!("Modal analysis error: {e}")),
@@ -329,7 +329,7 @@ fn render_fem3d_results_modal(doc: &Fem3dDocument, mode_index: usize) -> UiNode 
     let scene = build_world_3d_scene(
         FEM3D_BODY_RESULTS,
         FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
+        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
     );
     with_caption(scene, format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1))
 }
@@ -338,7 +338,7 @@ fn render_fem3d_results_modal(doc: &Fem3dDocument, mode_index: usize) -> UiNode 
 /// peak then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent (see
 /// `normalize_mode_shape`). `source_id` selects the reference load case, falling back to the first
 /// load case when `None`. Caption names the mode and its load factor.
-fn render_fem3d_results_buckling(doc: &Fem3dDocument, source_id: Option<&str>, mode_index: usize) -> UiNode {
+fn render_fem3d_results_buckling(doc: &Fem3dDocument, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text("No load case defined");
     };
@@ -351,7 +351,7 @@ fn render_fem3d_results_buckling(doc: &Fem3dDocument, source_id: Option<&str>, m
     let scene = build_world_3d_scene(
         FEM3D_BODY_RESULTS,
         FEM3D_APP_ID,
-        world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
+        world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
     );
     with_caption(scene, format!("Buckling mode {}: factor {factor:.3}", mode_index + 1))
 }
@@ -364,6 +364,9 @@ fn render_fem3d_results_buckling(doc: &Fem3dDocument, source_id: Option<&str>, m
 #[derive(Default)]
 pub struct Fem3dPlayApp {
     result_display: ResultDisplay,
+    /// 🎥 Camera pose (opaque JSON, plugin-layer-owned shape) — session-only view state (never a
+    /// VCS-tracked document field): see `"setCamera"` in `handle_action` below.
+    camera: FemCamera,
 }
 
 impl DocumentApp for Fem3dPlayApp {
@@ -571,7 +574,7 @@ impl DocumentApp for Fem3dPlayApp {
             }
             "setCamera" => {
                 if let Some(json_str) = args.and_then(|v| v.get("json")).and_then(Value::as_str) {
-                    return ActionEmit::amend(vec![fem3d_op::Fem3dOperation::SetCamera { camera: fem3d::FemCamera { json: json_str.into() } }], "camera");
+                    self.camera = FemCamera { json: json_str.into() };
                 }
             }
             "setResultDisplay" => {
@@ -585,6 +588,7 @@ impl DocumentApp for Fem3dPlayApp {
                     fem3d_engine::empty_fem3d_projection()
                 };
                 self.result_display = ResultDisplay::default();
+                self.camera = FemCamera::default();
                 return ActionEmit::operations(vec![fem3d_op::Fem3dOperation::SetDocument { document }]);
             }
             _ => {}
@@ -594,8 +598,8 @@ impl DocumentApp for Fem3dPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Fem3dDocument>, _view_state: &ViewState) -> UiNode {
         match body_key {
-            FEM3D_BODY_MODEL => render_fem3d_model(doc.projection),
-            FEM3D_BODY_RESULTS => render_fem3d_results(doc.projection, &self.result_display),
+            FEM3D_BODY_MODEL => render_fem3d_model(doc.projection, &self.camera),
+            FEM3D_BODY_RESULTS => render_fem3d_results(doc.projection, &self.result_display, &self.camera),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -729,7 +733,7 @@ pub fn create_fem3d_app() -> App {
                 ActionArgDef::number("deformationScale", "Deformation Scale"),
             ])
             .operation("removeSelection", "Remove Selection")
-            .operation("setCamera", "Set Camera")
+            .view_action("setCamera", "Set Camera")
             .operation("setActiveExample", "Set Active Example")
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![ActionArgOption::new("default", "Default")]).default_value("default")])
             .view_action("setResultDisplay", "Set Result Display")
@@ -905,7 +909,7 @@ mod tests {
     //#region 🔖ModeShapeRender
     #[test]
     fn results_window_renders_modal_mode_shape_3d() {
-        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
+        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, camera: FemCamera::default() };
         let projection: Fem3dDocument = Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -917,7 +921,7 @@ mod tests {
 
     #[test]
     fn results_window_renders_buckling_mode_shape_3d() {
-        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) } };
+        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) }, camera: FemCamera::default() };
         let projection: Fem3dDocument = Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -944,7 +948,7 @@ mod tests {
 
     #[test]
     fn results_scene_includes_solid_vertex_colors_3d() {
-        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
+        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, camera: FemCamera::default() };
         let projection: Fem3dDocument = Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -957,7 +961,7 @@ mod tests {
 
     #[test]
     fn results_scene_captions_name_mode_and_factor_3d() {
-        let app_modal = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
+        let app_modal = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, camera: FemCamera::default() };
         let projection: Fem3dDocument = Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -965,7 +969,7 @@ mod tests {
         let json_modal = serde_json::to_string(&node_modal).unwrap();
         assert!(json_modal.contains("Hz"), "expected a frequency caption: {json_modal}");
 
-        let app_buckling = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) } };
+        let app_buckling = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) }, camera: FemCamera::default() };
         let node_buckling = app_buckling.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
         let json_buckling = serde_json::to_string(&node_buckling).unwrap();
         assert!(json_buckling.contains("factor"), "expected a load-factor caption: {json_buckling}");
@@ -1069,7 +1073,7 @@ mod tests {
 
     #[test]
     fn results_window_buckling_with_no_load_case_shows_placeholder_3d() {
-        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) } };
+        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) }, camera: FemCamera::default() };
         let projection = fem3d_engine::empty_fem3d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -1125,17 +1129,14 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_action_amends_3d() {
+    fn set_camera_action_writes_runtime_not_operations() {
         let mut app = Fem3dPlayApp::default();
         let projection = fem3d_engine::empty_fem3d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("setCamera", Some(&json!({ "json": "{\"x\":1}" })), &doc, &ViewState::default());
-        assert_eq!(emit.coalesce_key.as_deref(), Some("camera"));
-        match &emit.operations[0] {
-            fem3d_op::Fem3dOperation::SetCamera { camera } => assert_eq!(camera.json, "{\"x\":1}"),
-            _ => panic!("expected SetCamera"),
-        }
+        assert!(emit.operations.is_empty(), "setCamera must not emit a VCS operation");
+        assert_eq!(app.camera.json, "{\"x\":1}");
     }
     //#endregion 🔖MoreStructureAndLoadActions
 }

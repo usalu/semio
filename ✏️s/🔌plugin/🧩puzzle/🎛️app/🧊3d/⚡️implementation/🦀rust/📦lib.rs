@@ -18,34 +18,6 @@ pub enum Puzzle3dError {
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
 // #region 🔖Document
-/// 📐 The world-3d viewport camera: orbit position/target/zoom, optional up vector, and an optional
-/// (freeform — see `framework_plugin::WorldProjectionConfig`, an app-layer preset this headless
-/// document crate does not depend on) projection preset.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct Puzzle3dCamera {
-    #[serde(default)]
-    pub position: [f64; 3],
-    #[serde(default)]
-    pub target: [f64; 3],
-    #[serde(default = "puzzle3d_one_f64")]
-    pub zoom: f64,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub up: Option<[f64; 3]>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub projection: Option<serde_json::Value>,
-}
-
-fn puzzle3d_one_f64() -> f64 {
-    1.0
-}
-
-impl Default for Puzzle3dCamera {
-    fn default() -> Self {
-        Self { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: None, projection: None }
-    }
-}
-
 /// 🔘 One vortex on an object's rim — `vortex_kind` gates attraction compatibility, `position`/
 /// `direction` place and orient it, `radius` sizes its brush-fill collision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -264,8 +236,10 @@ pub struct Puzzle3dMeta {
     pub kind_compatibility: Vec<Puzzle3dKindCompatibility>,
 }
 
-/// 🧩 The puzzle-3d projection: a typed fixture document (schema/domain/camera/meta/objects/
+/// 🧩 The puzzle-3d projection: a typed fixture document (schema/domain/meta/objects/
 /// attractions/targetVolumes/references) — see `puzzle/3d/example/*.3d.json` for real-world shapes.
+/// Camera is intentionally absent: it is session-only per-window runtime state (never a document
+/// field), owned by the app's `Puzzle3dWindowOptions` — see that crate's ticket-driven cutover.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "puzzle3d", layout = "lines")]
@@ -273,9 +247,6 @@ pub struct Puzzle3dProjection {
     pub schema: String,
     #[serde(default)]
     pub domain: String,
-    #[dsl(block)]
-    #[serde(default)]
-    pub camera: Puzzle3dCamera,
     #[dsl(block)]
     #[serde(default)]
     pub meta: Puzzle3dMeta,
@@ -295,6 +266,6 @@ pub struct Puzzle3dProjection {
 
 impl Default for Puzzle3dProjection {
     fn default() -> Self {
-        Self { schema: PUZZLE_3D_SCHEMA.to_string(), domain: "architecture".to_string(), camera: Puzzle3dCamera::default(), meta: Puzzle3dMeta::default(), objects: Vec::new(), attractions: Vec::new(), target_volumes: Vec::new(), references: Vec::new() }
+        Self { schema: PUZZLE_3D_SCHEMA.to_string(), domain: "architecture".to_string(), meta: Puzzle3dMeta::default(), objects: Vec::new(), attractions: Vec::new(), target_volumes: Vec::new(), references: Vec::new() }
     }
 }

@@ -1,6 +1,6 @@
 //! ⚡ Puzzle 5d app — operation enum + laws (constitutional: op).
 
-use puzzle_5d::{Puzzle5dCamera2d, Puzzle5dCamera3d, Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dProjection};
+use puzzle_5d::{Puzzle5dFastener, Puzzle5dMeta, Puzzle5dPart, Puzzle5dProjection};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -55,7 +55,8 @@ fn puzzle5d_index_of<T: Puzzle5dHasId>(items: &[T], id: &str) -> Option<usize> {
 // #endregion 🔖Collections
 
 // #region 🔖Operations
-/// 🩹 Sparse puzzle-5d diff over both id-keyed collections plus the scalar camera2d/camera3d/meta.
+/// 🩹 Sparse puzzle-5d diff over both id-keyed collections plus the scalar meta. Camera pose is
+/// session-only app runtime state, never part of this diff — see `puzzle_5d_ui`'s `Puzzle5dRuntime`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dDiff {
@@ -63,8 +64,6 @@ pub struct Puzzle5dDiff {
     pub document: Option<Puzzle5dProjection>,
     pub parts: Puzzle5dPartsDiff,
     pub fasteners: Puzzle5dFastenersDiff,
-    pub camera2d: Option<Puzzle5dCamera2d>,
-    pub camera3d: Option<Puzzle5dCamera3d>,
     pub meta: Option<Puzzle5dMeta>,
 }
 
@@ -77,12 +76,6 @@ fn puzzle5d_diff_absorb(diff: &mut Puzzle5dDiff, other: Puzzle5dDiff) {
     diff.parts.set.extend(other.parts.set);
     diff.fasteners.removed.extend(other.fasteners.removed);
     diff.fasteners.set.extend(other.fasteners.set);
-    if other.camera2d.is_some() {
-        diff.camera2d = other.camera2d;
-    }
-    if other.camera3d.is_some() {
-        diff.camera3d = other.camera3d;
-    }
     if other.meta.is_some() {
         diff.meta = other.meta;
     }
@@ -96,12 +89,6 @@ impl OperationDiff<Puzzle5dProjection> for Puzzle5dDiff {
         let mut next = projection.clone();
         apply_puzzle5d_collection_diff(&mut next.parts, &self.parts.removed, &self.parts.set);
         apply_puzzle5d_collection_diff(&mut next.fasteners, &self.fasteners.removed, &self.fasteners.set);
-        if let Some(camera2d) = &self.camera2d {
-            next.camera2d = camera2d.clone();
-        }
-        if let Some(camera3d) = &self.camera3d {
-            next.camera3d = camera3d.clone();
-        }
         if let Some(meta) = &self.meta {
             next.meta = meta.clone();
         }
@@ -113,10 +100,11 @@ impl OperationDiff<Puzzle5dProjection> for Puzzle5dDiff {
     }
 }
 
-/// 🧮 Puzzle-5d operation: id-keyed part/fastener edits plus scalar camera2d/camera3d/meta, each with
-/// a true inverse computed from the pre-operation projection, and a whole-document replace for
-/// example loads (also the only path that changes `schema`/`domain`/`label`/`kindCatalogs`/
-/// `kindCompatibility` — static/rare fields with no granular editor today).
+/// 🧮 Puzzle-5d operation: id-keyed part/fastener edits plus scalar meta, each with a true inverse
+/// computed from the pre-operation projection, and a whole-document replace for example loads (also
+/// the only path that changes `schema`/`domain`/`label`/`kindCatalogs`/`kindCompatibility` —
+/// static/rare fields with no granular editor today). Camera pose is session-only app runtime state
+/// (`ActionKind::View`), never a document operation — see `puzzle_5d_ui`'s `Puzzle5dRuntime`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Puzzle5dOperation {
@@ -128,10 +116,6 @@ pub enum Puzzle5dOperation {
     SetFastener { index: usize, #[dsl(block)] fastener: Puzzle5dFastener },
     #[dsl(key = "removeFastener")]
     RemoveFastener { id: String },
-    #[dsl(key = "setCamera2d")]
-    SetCamera2d { #[dsl(block)] camera2d: Puzzle5dCamera2d },
-    #[dsl(key = "setCamera3d")]
-    SetCamera3d { #[dsl(block)] camera3d: Puzzle5dCamera3d },
     #[dsl(key = "setMeta")]
     SetMeta { #[dsl(block)] meta: Puzzle5dMeta },
     /// 🌍 Replaces the whole document (example import / reset / engine fill).
@@ -146,8 +130,6 @@ fn puzzle5d_operation_diff(operation: &Puzzle5dOperation) -> Puzzle5dDiff {
         Puzzle5dOperation::RemovePart { id } => diff.parts.removed.push(id.clone()),
         Puzzle5dOperation::SetFastener { index, fastener } => diff.fasteners.set.push((*index, fastener.clone())),
         Puzzle5dOperation::RemoveFastener { id } => diff.fasteners.removed.push(id.clone()),
-        Puzzle5dOperation::SetCamera2d { camera2d } => diff.camera2d = Some(camera2d.clone()),
-        Puzzle5dOperation::SetCamera3d { camera3d } => diff.camera3d = Some(camera3d.clone()),
         Puzzle5dOperation::SetMeta { meta } => diff.meta = Some(meta.clone()),
         Puzzle5dOperation::SetDocument { document } => diff.document = Some(document.clone()),
     }
@@ -173,8 +155,6 @@ impl Operation<Puzzle5dProjection> for Puzzle5dOperation {
                 None => vec![Puzzle5dOperation::RemoveFastener { id: fastener.id.clone() }],
             },
             Puzzle5dOperation::RemoveFastener { id } => puzzle5d_index_of(&projection.fasteners, id).map(|index| vec![Puzzle5dOperation::SetFastener { index, fastener: projection.fasteners[index].clone() }]).unwrap_or_default(),
-            Puzzle5dOperation::SetCamera2d { .. } => vec![Puzzle5dOperation::SetCamera2d { camera2d: projection.camera2d.clone() }],
-            Puzzle5dOperation::SetCamera3d { .. } => vec![Puzzle5dOperation::SetCamera3d { camera3d: projection.camera3d.clone() }],
             Puzzle5dOperation::SetMeta { .. } => vec![Puzzle5dOperation::SetMeta { meta: projection.meta.clone() }],
             Puzzle5dOperation::SetDocument { .. } => vec![Puzzle5dOperation::SetDocument { document: projection.clone() }],
         }
@@ -220,16 +200,6 @@ fn apply_puzzle5d_operation_to_value(document: &mut Value, operation: &Puzzle5dO
         Puzzle5dOperation::RemovePart { id } => puzzle5d_remove_value_item(document, "parts", id),
         Puzzle5dOperation::SetFastener { index, fastener } => puzzle5d_upsert_value_item(document, "fasteners", *index, serde_json::to_value(fastener).unwrap_or(Value::Null)),
         Puzzle5dOperation::RemoveFastener { id } => puzzle5d_remove_value_item(document, "fasteners", id),
-        Puzzle5dOperation::SetCamera2d { camera2d } => {
-            if let Some(object) = document.as_object_mut() {
-                object.insert("camera2d".to_string(), serde_json::to_value(camera2d).unwrap_or(Value::Null));
-            }
-        }
-        Puzzle5dOperation::SetCamera3d { camera3d } => {
-            if let Some(object) = document.as_object_mut() {
-                object.insert("camera3d".to_string(), serde_json::to_value(camera3d).unwrap_or(Value::Null));
-            }
-        }
         Puzzle5dOperation::SetMeta { meta } => {
             if let Some(object) = document.as_object_mut() {
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
@@ -267,16 +237,6 @@ impl OperationDiff<Value> for Puzzle5dDiff {
         for (index, fastener) in &self.fasteners.set {
             puzzle5d_upsert_value_item(&mut next, "fasteners", *index, serde_json::to_value(fastener).unwrap_or(Value::Null));
         }
-        if let Some(camera2d) = &self.camera2d {
-            if let Some(object) = next.as_object_mut() {
-                object.insert("camera2d".to_string(), serde_json::to_value(camera2d).unwrap_or(Value::Null));
-            }
-        }
-        if let Some(camera3d) = &self.camera3d {
-            if let Some(object) = next.as_object_mut() {
-                object.insert("camera3d".to_string(), serde_json::to_value(camera3d).unwrap_or(Value::Null));
-            }
-        }
         if let Some(meta) = &self.meta {
             if let Some(object) = next.as_object_mut() {
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
@@ -310,14 +270,6 @@ impl Operation<Value> for Puzzle5dOperation {
             },
             Puzzle5dOperation::RemoveFastener { id } => {
                 puzzle5d_value_item_index::<Puzzle5dFastener>(projection, "fasteners", id).map(|(index, previous)| vec![Puzzle5dOperation::SetFastener { index, fastener: previous }]).unwrap_or_default()
-            }
-            Puzzle5dOperation::SetCamera2d { .. } => {
-                let camera2d: Puzzle5dCamera2d = projection.get("camera2d").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-                vec![Puzzle5dOperation::SetCamera2d { camera2d }]
-            }
-            Puzzle5dOperation::SetCamera3d { .. } => {
-                let camera3d: Puzzle5dCamera3d = projection.get("camera3d").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-                vec![Puzzle5dOperation::SetCamera3d { camera3d }]
             }
             Puzzle5dOperation::SetMeta { .. } => {
                 let meta: Puzzle5dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
@@ -372,7 +324,7 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
         return fallback(after);
     };
-    const KNOWN_KEYS: [&str; 10] = ["schema", "domain", "label", "camera2d", "camera3d", "meta", "kindCatalogs", "kindCompatibility", "parts", "fasteners"];
+    const KNOWN_KEYS: [&str; 8] = ["schema", "domain", "label", "meta", "kindCatalogs", "kindCompatibility", "parts", "fasteners"];
     if before_object.keys().chain(after_object.keys()).any(|key| !KNOWN_KEYS.contains(&key.as_str())) {
         return fallback(after);
     }
@@ -399,22 +351,6 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
     }
     collect_collection!("parts", |(index, part)| Puzzle5dOperation::SetPart { index, part }, |id| Puzzle5dOperation::RemovePart { id }, Puzzle5dPart);
     collect_collection!("fasteners", |(index, fastener)| Puzzle5dOperation::SetFastener { index, fastener }, |id| Puzzle5dOperation::RemoveFastener { id }, Puzzle5dFastener);
-    let before_camera2d = before_object.get("camera2d");
-    let after_camera2d = after_object.get("camera2d");
-    if before_camera2d != after_camera2d {
-        let Some(camera2d) = after_camera2d.and_then(|value| serde_json::from_value::<Puzzle5dCamera2d>(value.clone()).ok()) else {
-            return fallback(after);
-        };
-        operations.push(Puzzle5dOperation::SetCamera2d { camera2d });
-    }
-    let before_camera3d = before_object.get("camera3d");
-    let after_camera3d = after_object.get("camera3d");
-    if before_camera3d != after_camera3d {
-        let Some(camera3d) = after_camera3d.and_then(|value| serde_json::from_value::<Puzzle5dCamera3d>(value.clone()).ok()) else {
-            return fallback(after);
-        };
-        operations.push(Puzzle5dOperation::SetCamera3d { camera3d });
-    }
     let before_meta = before_object.get("meta");
     let after_meta = after_object.get("meta");
     if before_meta != after_meta {
@@ -506,7 +442,6 @@ mod tests {
     fn puzzle5d_delta_ops_round_trip_and_stay_granular() {
         let before = serde_json::json!({
             "schema": puzzle_5d::PUZZLE_5D_SCHEMA, "domain": "architecture",
-            "camera2d": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "camera3d": { "position": [0.0,0.0,0.0], "target": [0.0,0.0,0.0], "zoom": 1.0 },
             "meta": { "description": "" },
             "parts": [
                 { "id": "p1", "2d": { "x": 0.0, "y": 0.0 }, "3d": { "origin": [0.0,0.0,0.0] }, "grips": [] },
@@ -516,7 +451,6 @@ mod tests {
         });
         let after = serde_json::json!({
             "schema": puzzle_5d::PUZZLE_5D_SCHEMA, "domain": "architecture",
-            "camera2d": { "x": 5.0, "y": 0.0, "zoom": 1.0 }, "camera3d": { "position": [0.0,0.0,0.0], "target": [0.0,0.0,0.0], "zoom": 1.0 },
             "meta": { "description": "" },
             "parts": [
                 { "id": "p2", "2d": { "x": 9.0, "y": 0.0 }, "3d": { "origin": [9.0,0.0,0.0] }, "grips": [] },

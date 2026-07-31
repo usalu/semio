@@ -1,6 +1,6 @@
 //! ⚡ Puzzle 2d app — operation enum + laws (constitutional: op).
 
-use puzzle_2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dProjection};
+use puzzle_2d::{Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dProjection};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -60,7 +60,10 @@ fn puzzle2d_index_of<T: Puzzle2dHasId>(items: &[T], id: &str) -> Option<usize> {
 // #endregion 🔖Collections
 
 // #region 🔖Operations
-/// 🩹 Sparse puzzle-2d diff over both id-keyed collections plus the scalar camera/meta.
+/// 🩹 Sparse puzzle-2d diff over both id-keyed collections plus the scalar meta. The camera is
+/// deliberately absent: it is session-only `Puzzle2dPlayRuntime` state in the play app (see
+/// `setCamera`'s `ActionKind::View`), never a document field, so there is no `SetCamera` operation
+/// left to diff.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle2dDiff {
@@ -68,7 +71,6 @@ pub struct Puzzle2dDiff {
     pub document: Option<Puzzle2dProjection>,
     pub nodes: Puzzle2dNodesDiff,
     pub edges: Puzzle2dEdgesDiff,
-    pub camera: Option<Puzzle2dCamera>,
     pub meta: Option<Puzzle2dMeta>,
 }
 
@@ -81,9 +83,6 @@ fn puzzle2d_diff_absorb(diff: &mut Puzzle2dDiff, other: Puzzle2dDiff) {
     diff.nodes.set.extend(other.nodes.set);
     diff.edges.removed.extend(other.edges.removed);
     diff.edges.set.extend(other.edges.set);
-    if other.camera.is_some() {
-        diff.camera = other.camera;
-    }
     if other.meta.is_some() {
         diff.meta = other.meta;
     }
@@ -97,9 +96,6 @@ impl OperationDiff<Puzzle2dProjection> for Puzzle2dDiff {
         let mut next = projection.clone();
         apply_puzzle2d_collection_diff(&mut next.nodes, &self.nodes.removed, &self.nodes.set);
         apply_puzzle2d_collection_diff(&mut next.edges, &self.edges.removed, &self.edges.set);
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
-        }
         if let Some(meta) = &self.meta {
             next.meta = meta.clone();
         }
@@ -111,8 +107,10 @@ impl OperationDiff<Puzzle2dProjection> for Puzzle2dDiff {
     }
 }
 
-/// 🧮 Puzzle-2d operation: id-keyed node/edge edits plus scalar camera/meta, each with a true inverse
+/// 🧮 Puzzle-2d operation: id-keyed node/edge edits plus scalar meta, each with a true inverse
 /// computed from the pre-operation projection, and a whole-document replace for example loads.
+/// There is deliberately no camera operation: the camera is session-only `Puzzle2dPlayRuntime`
+/// state in the play app (see `setCamera`'s `ActionKind::View`), never a VCS-tracked document edit.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Puzzle2dOperation {
@@ -124,8 +122,6 @@ pub enum Puzzle2dOperation {
     SetEdge { index: usize, #[dsl(block)] edge: Puzzle2dEdge },
     #[dsl(key = "removeEdge")]
     RemoveEdge { id: String },
-    #[dsl(key = "setCamera")]
-    SetCamera { #[dsl(block)] camera: Puzzle2dCamera },
     #[dsl(key = "setMeta")]
     SetMeta { #[dsl(block)] meta: Puzzle2dMeta },
     /// 🌍 Replaces the whole document (example import / reset / engine fill).
@@ -140,7 +136,6 @@ fn puzzle2d_operation_diff(operation: &Puzzle2dOperation) -> Puzzle2dDiff {
         Puzzle2dOperation::RemoveNode { id } => diff.nodes.removed.push(id.clone()),
         Puzzle2dOperation::SetEdge { index, edge } => diff.edges.set.push((*index, edge.clone())),
         Puzzle2dOperation::RemoveEdge { id } => diff.edges.removed.push(id.clone()),
-        Puzzle2dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
         Puzzle2dOperation::SetMeta { meta } => diff.meta = Some(meta.clone()),
         Puzzle2dOperation::SetDocument { document } => diff.document = Some(document.clone()),
     }
@@ -166,7 +161,6 @@ impl Operation<Puzzle2dProjection> for Puzzle2dOperation {
                 None => vec![Puzzle2dOperation::RemoveEdge { id: edge.id.clone() }],
             },
             Puzzle2dOperation::RemoveEdge { id } => puzzle2d_index_of(&projection.edges, id).map(|index| vec![Puzzle2dOperation::SetEdge { index, edge: projection.edges[index].clone() }]).unwrap_or_default(),
-            Puzzle2dOperation::SetCamera { .. } => vec![Puzzle2dOperation::SetCamera { camera: projection.camera.clone() }],
             Puzzle2dOperation::SetMeta { .. } => vec![Puzzle2dOperation::SetMeta { meta: projection.meta.clone() }],
             Puzzle2dOperation::SetDocument { .. } => vec![Puzzle2dOperation::SetDocument { document: projection.clone() }],
         }
@@ -218,11 +212,6 @@ fn apply_puzzle2d_operation_to_value(document: &mut Value, operation: &Puzzle2dO
         Puzzle2dOperation::RemoveNode { id } => puzzle2d_remove_value_item(document, "nodes", id),
         Puzzle2dOperation::SetEdge { index, edge } => puzzle2d_upsert_value_item(document, "edges", *index, serde_json::to_value(edge).unwrap_or(Value::Null)),
         Puzzle2dOperation::RemoveEdge { id } => puzzle2d_remove_value_item(document, "edges", id),
-        Puzzle2dOperation::SetCamera { camera } => {
-            if let Some(object) = document.as_object_mut() {
-                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(Value::Null));
-            }
-        }
         Puzzle2dOperation::SetMeta { meta } => {
             if let Some(object) = document.as_object_mut() {
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
@@ -260,11 +249,6 @@ impl OperationDiff<Value> for Puzzle2dDiff {
         for (index, edge) in &self.edges.set {
             puzzle2d_upsert_value_item(&mut next, "edges", *index, serde_json::to_value(edge).unwrap_or(Value::Null));
         }
-        if let Some(camera) = &self.camera {
-            if let Some(object) = next.as_object_mut() {
-                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(Value::Null));
-            }
-        }
         if let Some(meta) = &self.meta {
             if let Some(object) = next.as_object_mut() {
                 object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
@@ -297,10 +281,6 @@ impl Operation<Value> for Puzzle2dOperation {
                 None => vec![Puzzle2dOperation::RemoveEdge { id: edge.id.clone() }],
             },
             Puzzle2dOperation::RemoveEdge { id } => puzzle2d_value_item_index::<Puzzle2dEdge>(projection, "edges", id).map(|(index, previous)| vec![Puzzle2dOperation::SetEdge { index, edge: previous }]).unwrap_or_default(),
-            Puzzle2dOperation::SetCamera { .. } => {
-                let camera: Puzzle2dCamera = projection.get("camera").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
-                vec![Puzzle2dOperation::SetCamera { camera }]
-            }
             Puzzle2dOperation::SetMeta { .. } => {
                 let meta: Puzzle2dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 vec![Puzzle2dOperation::SetMeta { meta }]
@@ -340,11 +320,13 @@ where
 }
 
 /// 🧮 Computes the granular typed operation sequence turning `before` into `after` (both the bare
-/// fixture JSON `puzzle-plugin` mutates). Node/edge arrays diff per element id; camera/meta become
-/// `SetCamera`/`SetMeta`. Falls back to a single `SetDocument` whenever the granular replay would not
-/// reproduce `after` exactly (reorders, id-less entries, malformed entries, unrecognized top-level
-/// keys, schema changes) — so the emitted operations are always exact while staying granular for the
-/// common edits.
+/// fixture JSON `puzzle-plugin` mutates). Node/edge arrays diff per element id; meta becomes
+/// `SetMeta`. Falls back to a single `SetDocument` whenever the granular replay would not reproduce
+/// `after` exactly (reorders, id-less entries, malformed entries, unrecognized top-level keys,
+/// schema changes) — so the emitted operations are always exact while staying granular for the
+/// common edits. The camera is deliberately not a known key: it is session-only
+/// `Puzzle2dPlayRuntime` state (see `setCamera`'s `ActionKind::View`), never persisted on the
+/// document, so a fixture must never carry a top-level `"camera"` key at all.
 pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle2dOperation> {
     if before == after {
         return Vec::new();
@@ -353,7 +335,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
     let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
         return fallback(after);
     };
-    const KNOWN_KEYS: [&str; 5] = ["schema", "camera", "nodes", "edges", "meta"];
+    const KNOWN_KEYS: [&str; 4] = ["schema", "nodes", "edges", "meta"];
     if before_object.keys().chain(after_object.keys()).any(|key| !KNOWN_KEYS.contains(&key.as_str())) {
         return fallback(after);
     }
@@ -382,14 +364,6 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         }
         operations.extend(removed.into_iter().map(|id| Puzzle2dOperation::RemoveEdge { id }));
         operations.extend(set.into_iter().map(|(index, edge)| Puzzle2dOperation::SetEdge { index, edge }));
-    }
-    let before_camera = before_object.get("camera");
-    let after_camera = after_object.get("camera");
-    if before_camera != after_camera {
-        let Some(camera) = after_camera.and_then(|value| serde_json::from_value::<Puzzle2dCamera>(value.clone()).ok()) else {
-            return fallback(after);
-        };
-        operations.push(Puzzle2dOperation::SetCamera { camera });
     }
     let before_meta = before_object.get("meta");
     let after_meta = after_object.get("meta");
@@ -485,9 +459,11 @@ mod tests {
         use serde_json::Value;
         use protocol::{Operation, OperationDiff};
 
-        let before = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n1", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
-        // Move n2, add n3, remove n1, pan the camera — a disjoint mix of granular edits.
-        let after = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 5.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n2", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
+        let before = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n1", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
+        // Move n2, add n3, remove n1 — a disjoint mix of granular edits. The camera is deliberately
+        // absent here: it is session-only `Puzzle2dPlayRuntime` state (see `setCamera`'s
+        // `ActionKind::View`), never a document field the delta operations need to diff.
+        let after = json!({ "schema": PUZZLE_2D_SCHEMA, "nodes": [{ "id": "n2", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
         let operations = puzzle2d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::SetNode { .. })));
         assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::SetDocument { .. })), "granular delta must not fall back to whole-document replace here");

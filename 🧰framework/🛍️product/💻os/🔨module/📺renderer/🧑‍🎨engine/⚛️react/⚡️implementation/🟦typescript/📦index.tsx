@@ -1995,6 +1995,25 @@ const APP_DOCUMENT_SEPARATOR = " · ";
  * (never forwarded to the program), args `{ windowId: string, gestures: readonly string[] }`. */
 const NOTE_WORLD_NAVIGATION_ACTION_ID = "noteWorldNavigation";
 
+/** 🧭 Framework-injected action id, dispatched via `noteShellCommand` (see `onAction`'s central funnel) to
+ * log a shell-chrome command (theme/appearance/locale/driver/layout change, dock drag, window
+ * resize/rearrange/activate/close/split, panel toggle/tab) into the plugin's session-only command-history
+ * panel — intercepted by the plugin BEFORE the app ever sees it, args `{ commandId: string, label: string,
+ * detail?: unknown }`. Routed through the exact same `handleAction` dispatch path as every other action
+ * (unlike {@link NOTE_WORLD_NAVIGATION_ACTION_ID}, which is fully shell-intercepted and never forwarded). */
+const NOTE_SHELL_COMMAND_ACTION_ID = "noteShellCommand";
+
+/** 🧭 Builds the `noteShellCommand` action descriptor `noteShellCommand` (the component helper) dispatches
+ * through the standard `onAction` funnel — pure so it's testable without a session/component. */
+export function buildNoteShellCommandAction(controllerId: string, commandId: string, label: string, detail?: Record<string, unknown>): ActionDescriptor {
+  return { controllerId, action: NOTE_SHELL_COMMAND_ACTION_ID, args: { commandId, label, ...(detail ? { detail } : {}) } };
+}
+
+/** 🧭 Action ids the tutorial recorder never captures (see `onAction`'s recorder tap) — telemetry/chrome
+ * noise a tutorial replay should never literally reproduce, or actions the director/recorder itself just
+ * dispatched. Exported so it's independently testable. */
+export const TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS: ReadonlySet<string> = new Set([NOTE_WORLD_NAVIGATION_ACTION_ID, NOTE_SHELL_COMMAND_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID]);
+
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
 
@@ -2909,6 +2928,43 @@ function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, ext
   if (root.kind === "window") return { root: { kind: "stack", children: [root] } };
   return { root };
 }
+
+//#region WindowLayoutChangeClassify
+/** 🪟 Trailing settle delay for `Mode.onLayoutChange` (fires continuously during a live drag/resize) before
+ * noting one `shell.windowResize`/`shell.windowMove` command for the whole gesture — matches Board2dHost's
+ * own camera-sync settle debounce (`beginCameraInteraction`), the only precedent for this kind of
+ * drag-settle pattern already in this file. */
+const LAYOUT_CHANGE_SETTLE_MS = 350;
+
+/** 🪟 Recursive skeleton of a {@link WindowLayoutNode} — kind/id/nesting only, stripping `size` (resize) and
+ * a stack's `activeId` (mere focus echo) — so two trees compare equal here iff neither differs. */
+type WindowLayoutSkeletonNode = { readonly kind: string; readonly id?: string; readonly children?: readonly WindowLayoutSkeletonNode[] };
+function windowLayoutSkeleton(node: WindowLayoutNode): WindowLayoutSkeletonNode {
+  if (node.kind === "window") return { kind: node.kind, id: node.id };
+  return { kind: node.kind, children: node.children.map((child) => windowLayoutSkeleton(child as WindowLayoutNode)) };
+}
+
+/** 🪟 Like {@link windowLayoutSkeleton} but keeps each node's `size` (still ignores a stack's `activeId`) —
+ * comparing two of these (after their plain skeletons already matched) is how {@link classifyWindowLayoutChange}
+ * tells a pure resize apart from no change at all. */
+type WindowLayoutSizedSkeletonNode = { readonly kind: string; readonly id?: string; readonly size?: number; readonly children?: readonly WindowLayoutSizedSkeletonNode[] };
+function windowLayoutSizedSkeleton(node: WindowLayoutNode): WindowLayoutSizedSkeletonNode {
+  if (node.kind === "window") return { kind: node.kind, id: node.id, size: node.size };
+  return { kind: node.kind, size: node.size, children: node.children.map((child) => windowLayoutSizedSkeleton(child as WindowLayoutNode)) };
+}
+
+/** 🪟 Classifies a `Mode.onLayoutChange` delta by comparing the previous and next layout tree — `"rearrange"`
+ * when window ids/nesting structure differ (drag-to-new-position, split, close), `"resize"` when only pane
+ * sizes differ, `null` when neither differs (a pure active-window-flag echo, handled by the dedicated
+ * active-window seam instead — never worth its own shell command). */
+export function classifyWindowLayoutChange(previous: WindowLayoutNode | null, next: WindowLayoutNode | null): "resize" | "rearrange" | null {
+  if (previous === next) return null;
+  if (!previous || !next) return "rearrange";
+  if (JSON.stringify(windowLayoutSkeleton(previous)) !== JSON.stringify(windowLayoutSkeleton(next))) return "rearrange";
+  if (JSON.stringify(windowLayoutSizedSkeleton(previous)) !== JSON.stringify(windowLayoutSizedSkeleton(next))) return "resize";
+  return null;
+}
+//#endregion WindowLayoutChangeClassify
 
 function windowEngagementControlToSpec(control: WindowEngagementControl | undefined, onAction: (action: ActionDescriptor) => void): EngagementControl | undefined {
   if (!control) return undefined;
@@ -6307,8 +6363,7 @@ export function FrameworkOsShell({
       // re-dispatched on playback. Skips navigation/introduction/tutorial-control actions (noise, or
       // meaningless to replay) and anything the director itself just dispatched.
       if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
-        const excludedFromRecording = new Set([NOTE_WORLD_NAVIGATION_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID]);
-        if (!excludedFromRecording.has(action.action)) {
+        if (!TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS.has(action.action)) {
           tutorialRecorderRef.current?.recordEvent({ kind: "action", action: action.action, args: action.args as Record<string, unknown> | undefined });
         }
       }
@@ -6517,6 +6572,19 @@ export function FrameworkOsShell({
       hostCatalogueTabId,
       completeIntroductionInteraction,
     ],
+  );
+
+  /** 🧭 Logs a shell-chrome command (theme change, dock drag, window resize, panel toggle, …) into the
+   * plugin's session-only command-history panel — routed through the exact same `onAction` funnel as every
+   * other action (see `NOTE_SHELL_COMMAND_ACTION_ID`) so it lands on `targetSession.instanceId` via the
+   * standard `handleAction` call, just tagged with an id the plugin intercepts before the app sees it.
+   * No-ops when there's no active app session. */
+  const noteShellCommand = useCallback(
+    (commandId: string, label: string, detail?: Record<string, unknown>) => {
+      if (!session) return;
+      onAction(buildNoteShellCommandAction(session.app.controllerId, commandId, label, detail));
+    },
+    [session, onAction],
   );
 
   const onActionRef = useRef(onAction);
@@ -6880,8 +6948,14 @@ export function FrameworkOsShell({
   }, [studioSessionActive, studioSessionControllerId, ephemeral]);
 
   usePanelChromeHotkeys({
-    // 📱 All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile.
-    onToggle: (anchor) => (mobile ? dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: (visible) => !visible }) : dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible })),
+    // 📱 All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile. Same `shell.panelToggle`
+    // commandId as the mouse-driven toggle in `buildPanelSelectionProps` (so keyboard/mouse fold together),
+    // flagged `hotkey: true` in detail.
+    onToggle: (anchor) => {
+      if (mobile) dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: (visible) => !visible });
+      else dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible });
+      noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor: mobile ? undefined : anchor, hotkey: true });
+    },
   });
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver });
@@ -7010,8 +7084,9 @@ export function FrameworkOsShell({
         },
       });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
+      noteShellCommand("shell.windowSplit", shellLabel("ui.shellCommand.windowSplit"), { windowKindId: payload.windowKindId, instanceId });
     },
-    [appLabelsOverlay, refreshUi, session],
+    [appLabelsOverlay, refreshUi, session, noteShellCommand],
   );
 
   const displayHostRef = useRef<DisplayHostApi | null>(null);
@@ -7035,6 +7110,18 @@ export function FrameworkOsShell({
     [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable],
   );
 
+  /** 🧭 Direct theme/appearance/locale/terminology/driver/layout setters below (settings panel, theme/driver
+   * editors) bypass `dispatchOsCommand`'s named-command path entirely — this reuses the exact same `os.*`
+   * command id (and its `osCommands`-resolved, locale-adapted label) so a direct-path change folds together
+   * with a command-palette-triggered one in the history panel regardless of which path triggered it. */
+  const noteOsCommand = useCallback(
+    (commandId: string, detail?: Record<string, unknown>) => {
+      const label = osCommands.find((entry) => entry.id === commandId)?.label ?? commandId;
+      noteShellCommand(commandId, label, detail);
+    },
+    [osCommands, noteShellCommand],
+  );
+
   const draftThemePatch = useCallback(
     (patch: (next: UiTheme) => void) => {
       const next = structuredClone(uiThemeBase);
@@ -7044,10 +7131,14 @@ export function FrameworkOsShell({
     [uiThemeBase],
   );
 
-  const setThemeId = useCallback((id: string) => {
-    dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
-    dispatch({ type: "SET_UI_THEME_ID", value: id });
-  }, []);
+  const setThemeId = useCallback(
+    (id: string) => {
+      dispatch({ type: "SET_UI_THEME_DRAFT", value: null });
+      dispatch({ type: "SET_UI_THEME_ID", value: id });
+      noteOsCommand("os.setThemeId", { themeId: id });
+    },
+    [noteOsCommand],
+  );
 
   const setThemeColor = useCallback(
     (key: string, hex: string) =>
@@ -7162,10 +7253,14 @@ export function FrameworkOsShell({
   const uiDriverBase = uiDriverDraft ?? uiDriver;
   const uiDriverDirty = uiDriverDraft !== null;
 
-  const setDriverId = useCallback((id: string) => {
-    dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
-    dispatch({ type: "SET_UI_DRIVER_ID", value: id });
-  }, []);
+  const setDriverId = useCallback(
+    (id: string) => {
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+      dispatch({ type: "SET_UI_DRIVER_ID", value: id });
+      noteOsCommand("os.setDriver", { driver: id });
+    },
+    [noteOsCommand],
+  );
 
   const setDriverField = useCallback(
     <K extends keyof Omit<UiDriver, "id" | "label">>(key: K, value: UiDriver[K]) => {
@@ -7226,19 +7321,32 @@ export function FrameworkOsShell({
       driverSaveLabel,
       setDriverSaveLabel,
       appearance: uiAppearance,
-      setAppearance: (value: string) => dispatch({ type: "SET_UI_APPEARANCE", value: value as ElementsSurfaceAppearance }),
+      setAppearance: (value: string) => {
+        dispatch({ type: "SET_UI_APPEARANCE", value: value as ElementsSurfaceAppearance });
+        noteOsCommand("os.setAppearance", { appearance: value });
+      },
       layout: uiLayout,
-      setLayout: (value: UiChromeLayout) => dispatch({ type: "SET_UI_LAYOUT", value }),
+      setLayout: (value: UiChromeLayout) => {
+        dispatch({ type: "SET_UI_LAYOUT", value });
+        noteOsCommand("os.setLayout", { layout: value });
+      },
       mobileActive: mobile,
       onResetDock: () => {
         dispatch({ type: "RESET_DOCK" });
         dockLayoutStore.reset();
         dockUiStateStore.reset();
+        noteOsCommand("os.resetDock");
       },
       locale: uiLocale,
-      setLocale: (value: UiLocale) => dispatch({ type: "SET_UI_LOCALE", value }),
+      setLocale: (value: UiLocale) => {
+        dispatch({ type: "SET_UI_LOCALE", value });
+        noteOsCommand("os.setLocale", { locale: value });
+      },
       terminology: uiTerminology,
-      setTerminology: (value: string) => dispatch({ type: "SET_UI_TERMINOLOGY", value }),
+      setTerminology: (value: string) => {
+        dispatch({ type: "SET_UI_TERMINOLOGY", value });
+        noteOsCommand("os.setTerminology", { terminology: value });
+      },
       terminologies: [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])],
       theme: uiThemeBase,
       themeId: uiThemeId,
@@ -7301,6 +7409,7 @@ export function FrameworkOsShell({
       importTheme,
       themeSaveLabel,
       setThemeSaveLabel,
+      noteOsCommand,
     ],
   );
   settingsHostRef.current = settingsHost;
@@ -7553,6 +7662,8 @@ export function FrameworkOsShell({
       }
       if (source.kind === "os") {
         dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore, locks);
+        const label = resolvedCommands.find((entry) => entry.definition.id === commandId)?.definition.label ?? commandId;
+        noteShellCommand(commandId, label, args);
         return;
       }
       if (!session) return;
@@ -7570,7 +7681,7 @@ export function FrameworkOsShell({
           console.error("[DEBUG] command failed", commandError);
         });
     },
-    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks],
+    [applyHostEffects, dockLayoutStore, dockUiStateStore, injectActiveUtility, loadedPlugins, session, locks, resolvedCommands, noteShellCommand],
   );
 
   const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
@@ -7702,8 +7813,9 @@ export function FrameworkOsShell({
         dispatch({ type: "SET_PANEL_PATH", anchor: move.fromAnchor, value: (prev) => reconcileActivePath(sourceTabs, prev, panelTabChildren) });
       }
       dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
+      noteShellCommand("shell.dockMove", shellLabel("ui.shellCommand.dockMove"), { tabId: move.tabId, fromAnchor: move.fromAnchor, toAnchor: move.target.anchor });
     },
-    [dock, defaultDock],
+    [dock, defaultDock, noteShellCommand],
   );
 
   const handleTreeUnitDockDrop = useCallback(
@@ -7714,8 +7826,9 @@ export function FrameworkOsShell({
       const defaultSkeleton = dockSkeletonOf(defaultDock);
       dispatch({ type: "SET_DOCK_OVERRIDE", value: dockSkeletonsEqual(nextSkeleton, defaultSkeleton) ? null : nextSkeleton });
       dispatch({ type: "SET_PANEL_VISIBLE", anchor: move.target.anchor, value: true });
+      noteShellCommand("shell.dockMove", shellLabel("ui.shellCommand.dockMove"), { toAnchor: move.target.anchor });
     },
-    [dock, defaultDock],
+    [dock, defaultDock, noteShellCommand],
   );
 
   const studioOverrideTabId = studioMode && session?.app.id === hostAppId ? (panel?.activePanelTab ?? hostCatalogueTabId) : undefined;
@@ -8019,9 +8132,13 @@ export function FrameworkOsShell({
     (anchor: Anchor): PanelTabSelectionOptions => ({
       tabs: dock.anchors[anchor],
       visible: panels[anchor].visible,
-      onVisibleChange: (value: boolean) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value }),
+      onVisibleChange: (value: boolean) => {
+        dispatch({ type: "SET_PANEL_VISIBLE", anchor, value });
+        noteShellCommand("shell.panelToggle", shellLabel("ui.shellCommand.panelToggle"), { anchor, visible: value });
+      },
       activeTabPath: panelActivePaths[anchor],
       onActiveTabPathChange: (path: readonly string[]) => {
+        const pathChanged = (panelActivePaths[anchor] ?? []).join("/") !== path.join("/");
         dispatch({ type: "SET_PANEL_PATH", anchor, value: path });
         // 🎛️ Command palette only: switching category leaves always collapses any expanded arg form — the
         // next hierarchy level up only makes sense under its own category's command list (mirrors the old
@@ -8044,11 +8161,12 @@ export function FrameworkOsShell({
         if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
+        if (pathChanged && tabId) noteShellCommand("shell.panelTab", shellLabel("ui.shellCommand.panelTab"), { anchor, tabId });
       },
       pathMemory: panelPathMemory,
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
     }),
-    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode, hostAppId],
+    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode, hostAppId, noteShellCommand],
   );
   //#endregion 🎛️PanelTabBarHosting
 
@@ -8389,6 +8507,48 @@ export function FrameworkOsShell({
     [appLabelsOverlay, session, shellLayout],
   );
 
+  const handleActiveWindowChange = useCallback(
+    (value: string | null) => {
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value });
+      if (value) noteShellCommand("shell.windowActivate", shellLabel("ui.shellCommand.windowActivate"), { windowId: value });
+    },
+    [noteShellCommand],
+  );
+
+  // 🪟 `Mode.onLayoutChange` fires continuously during a live drag/resize (one call per frame) — classify
+  // each delta against the last-seen layout, remember only the latest non-null classification, and note a
+  // single shell command once the drag settles (see `LAYOUT_CHANGE_SETTLE_MS`). A pure active-window-flag
+  // echo classifies `null` and is silently skipped here (handled by `handleActiveWindowChange` instead).
+  const layoutChangeSettleTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const layoutChangeClassificationRef = useRef<"resize" | "rearrange" | null>(null);
+  const layoutChangePreviousRef = useRef<WindowLayoutNode | null>(effectiveModeLayout);
+  useEffect(() => {
+    layoutChangePreviousRef.current = effectiveModeLayout;
+  }, [effectiveModeLayout]);
+  useEffect(
+    () => () => {
+      if (layoutChangeSettleTimeoutRef.current) clearTimeout(layoutChangeSettleTimeoutRef.current);
+    },
+    [],
+  );
+  const handleModeLayoutChange = useCallback(
+    (value: WindowLayoutNode) => {
+      dispatch({ type: "SET_SHELL_LAYOUT", value });
+      const classification = classifyWindowLayoutChange(layoutChangePreviousRef.current, value);
+      layoutChangePreviousRef.current = value;
+      if (classification) layoutChangeClassificationRef.current = classification;
+      if (layoutChangeSettleTimeoutRef.current) clearTimeout(layoutChangeSettleTimeoutRef.current);
+      layoutChangeSettleTimeoutRef.current = setTimeout(() => {
+        layoutChangeSettleTimeoutRef.current = null;
+        const finalClassification = layoutChangeClassificationRef.current;
+        layoutChangeClassificationRef.current = null;
+        if (finalClassification === "resize") noteShellCommand("shell.windowResize", shellLabel("ui.shellCommand.windowResize"));
+        else if (finalClassification === "rearrange") noteShellCommand("shell.windowMove", shellLabel("ui.shellCommand.windowMove"));
+      }, LAYOUT_CHANGE_SETTLE_MS);
+    },
+    [noteShellCommand],
+  );
+
   const canvas = useMemo(() => {
     if (!session) return <p className="p-double text-sm text-muted-foreground">{shellLabel("ui.common.loadingPlugins")}</p>;
     if (error)
@@ -8463,10 +8623,11 @@ export function FrameworkOsShell({
               windows={modeWindows}
               layout={effectiveModeLayout}
               activeWindowId={activeWindowId}
-              onActiveWindowChange={(value) => dispatch({ type: "SET_ACTIVE_WINDOW_ID", value })}
-              onLayoutChange={(value) => dispatch({ type: "SET_SHELL_LAYOUT", value })}
+              onActiveWindowChange={handleActiveWindowChange}
+              onLayoutChange={handleModeLayoutChange}
               onTemplateDrop={mobile ? undefined : handleTemplateDrop}
               onWindowClose={(windowId) => {
+                noteShellCommand("shell.windowClose", shellLabel("ui.shellCommand.windowClose"), { windowId });
                 if (studioMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
                   const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
                   updateSpacePanel(buildSpacePanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
@@ -8490,7 +8651,7 @@ export function FrameworkOsShell({
         </div>
       </div>
     );
-  }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, uiTerminology, updateSpacePanel]);
+  }, [activeWindowId, effectiveModeLayout, error, handleActiveWindowChange, handleModeLayoutChange, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, noteShellCommand, onAction, panel, session, studioMode, uiLocale, uiTerminology, updateSpacePanel]);
 
   const footerItems = useMemo((): NavbarItem[] => {
     // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
@@ -12080,9 +12241,40 @@ export function world3dViewportCameraSeedKey(sceneCameraJson: string, detachEpoc
   return detachEpoch === 0 ? sceneCameraJson : `viewport:${detachEpoch}`;
 }
 
-/** 📷 True when `scene.cameraJson` changed from outside this viewport (view preset, focus, example load). */
-export function shouldReattachWorldViewportCamera(previousSceneCameraJson: string, nextSceneCameraJson: string): boolean {
-  return previousSceneCameraJson !== nextSceneCameraJson;
+/** 📷 Builds the `setCamera` dispatch payload from a viewport camera pose — deliberately omits `projection`
+ * (the binary family string, e.g. "orthographic"/"perspective") since the Rust camera struct's `projection`
+ * field expects the full taxonomy spec object; forwarding the bare family string there fails deserialization
+ * of the whole camera value and silently drops the entire dispatch. */
+export function buildWorldCameraDispatchArgs(camera: WorldCameraState): Record<string, unknown> {
+  const args: Record<string, unknown> = { position: camera.position, target: camera.target, zoom: camera.zoom };
+  if (camera.up) args.up = camera.up;
+  return args;
+}
+
+/** 📷 Default float-noise tolerance for {@link worldCameraPoseApproxEqual} — a scene camera echoed back
+ * through JSON/f64 serialization never comes back bit-identical to what was sent. */
+const WORLD_CAMERA_ECHO_EPSILON = 1e-6;
+
+/** 📷 Approx-equality of two camera poses (position/target/zoom) within `epsilon`, used by
+ * {@link shouldReattachWorldViewportCamera} to recognize the plugin echoing back this component's own
+ * just-dispatched pose rather than a genuinely external change. */
+export function worldCameraPoseApproxEqual(a: WorldCameraState, b: WorldCameraState, epsilon: number = WORLD_CAMERA_ECHO_EPSILON): boolean {
+  const vectorClose = (x?: readonly number[], y?: readonly number[]): boolean => {
+    if (!x || !y) return x === y;
+    if (x.length !== y.length) return false;
+    return x.every((value, index) => Math.abs(value - y[index]) <= epsilon);
+  };
+  return vectorClose(a.position, b.position) && vectorClose(a.target, b.target) && Math.abs(a.zoom - b.zoom) <= epsilon;
+}
+
+/** 📷 True when `scene.cameraJson` changed from outside this viewport (view preset, focus, example load) —
+ * false both for a byte-identical string and for one that merely echoes `lastDispatchedCamera` (this
+ * component's own just-sent `setCamera` pose, within {@link worldCameraPoseApproxEqual} float-noise
+ * tolerance) so a self-echo never visually snaps the orbit controls back to where they already are. */
+export function shouldReattachWorldViewportCamera(previousSceneCameraJson: string, nextSceneCameraJson: string, lastDispatchedCamera?: WorldCameraState | null): boolean {
+  if (previousSceneCameraJson === nextSceneCameraJson) return false;
+  if (lastDispatchedCamera && worldCameraPoseApproxEqual(parseCameraState(nextSceneCameraJson), lastDispatchedCamera)) return false;
+  return true;
 }
 //#endregion WorldViewportCamera
 
@@ -14796,9 +14988,15 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const [viewportOwned, setViewportOwned] = useState(false);
   const [detachEpoch, setDetachEpoch] = useState(0);
   const previousSceneCameraJsonRef = useRef(sceneCameraJson);
+  /** 🧭 The last camera pose this component itself dispatched via debounced `setCamera` — lets the reattach
+   * effect below recognize the plugin echoing it straight back (see `shouldReattachWorldViewportCamera`). */
+  const lastDispatchedWorldCameraRef = useRef<WorldCameraState | null>(null);
   useEffect(() => {
-    if (!shouldReattachWorldViewportCamera(previousSceneCameraJsonRef.current, sceneCameraJson)) return;
+    // 🧭 Always advance the tracking ref, even when we're about to suppress a reattach below — otherwise the
+    // NEXT comparison would still diff against this stale value instead of the pose we just saw.
+    const previousSceneCameraJson = previousSceneCameraJsonRef.current;
     previousSceneCameraJsonRef.current = sceneCameraJson;
+    if (!shouldReattachWorldViewportCamera(previousSceneCameraJson, sceneCameraJson, lastDispatchedWorldCameraRef.current)) return;
     setViewportCamera(null);
     setViewportOwned(false);
     setDetachEpoch(0);
@@ -14966,6 +15164,30 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       if (applyToRig) setDetachEpoch((epoch) => epoch + 1);
     },
     [node.surfaceId, sceneCamera],
+  );
+
+  // 🧭 Syncs a completed user-driven camera gesture (orbit/pan/zoom end, gizmo view snap) to the plugin so
+  // the shell-side command-history panel has something to show — trailing-debounced like the 2D canvas'
+  // own camera sync (`CAMERA_SYNC_DEBOUNCE_MS`) so a scroll/wheel burst doesn't spam one dispatch per tick.
+  // Never wired into a programmatic camera change (auto-fit, scene-camera echo reattach) — only genuine
+  // user gestures call this.
+  const cameraDispatchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dispatchWorldCameraDebounced = useCallback(
+    (state: WorldCameraState) => {
+      if (cameraDispatchTimeoutRef.current) clearTimeout(cameraDispatchTimeoutRef.current);
+      cameraDispatchTimeoutRef.current = setTimeout(() => {
+        cameraDispatchTimeoutRef.current = null;
+        lastDispatchedWorldCameraRef.current = state;
+        dispatch("setCamera", { windowId: windowInstanceId ?? node.surfaceId, ...buildWorldCameraDispatchArgs(state) });
+      }, CAMERA_SYNC_DEBOUNCE_MS);
+    },
+    [dispatch, node.surfaceId, windowInstanceId],
+  );
+  useEffect(
+    () => () => {
+      if (cameraDispatchTimeoutRef.current) clearTimeout(cameraDispatchTimeoutRef.current);
+    },
+    [],
   );
 
   const referenceSelectedIds = useMemo(() => {
@@ -15372,7 +15594,20 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch],
   );
 
+  // 🧭 Completed user orbit/pan/zoom gesture (`WorldOrbitGated.onCamera`, fired on gesture end) — the only
+  // camera-change handler wired to a real user interaction, so it's the only one that also dispatches.
   const handleCameraChange = useCallback(
+    (state: WorldCameraState) => {
+      adoptViewportCamera(state, false);
+      dispatchWorldCameraDebounced(state);
+    },
+    [adoptViewportCamera, dispatchWorldCameraDebounced],
+  );
+
+  // 🧭 Programmatic auto-fit-to-content camera change (`WorldAutoFit.onFitted`, runs after a document/scene
+  // loads or content changes) — deliberately split from `handleCameraChange` so this path never dispatches;
+  // only a genuine user gesture should sync a camera to the plugin.
+  const handleAutoFitCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, false);
     },
@@ -15393,23 +15628,32 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     if (pending) syncProjectionWindowChrome(pending);
   }, [syncProjectionWindowChrome, windowInstanceId]);
 
+  // 🧭 Gizmo/axis-indicator camera snap — a discrete view change the user clicked, so (like
+  // `handleCameraChange`) it also dispatches, debounced identically.
   const handleGizmoCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, true);
       if (state.projectionSpec) syncProjectionWindowChrome(state.projectionSpec);
+      dispatchWorldCameraDebounced(state);
     },
-    [adoptViewportCamera, syncProjectionWindowChrome],
+    [adoptViewportCamera, syncProjectionWindowChrome, dispatchWorldCameraDebounced],
   );
 
   const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
   const [pendingProjectionSpec, setPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
 
+  // 🧭 User-driven projection-kind switch (`WorldOrbitProjectionSwitchPane`) — dispatches `setProjection` so
+  // the plugin (and command-history panel) learns of it too. ⚠️ Best-effort arg shape: the only existing
+  // `setProjection` consumer found (`apply_world3d_projection_action` in the framework plugin's Rust) takes
+  // granular `{field, value}` pairs from window-measure Select controls, a different contract than this
+  // whole-template switch — falls back to the family string per the ticket's documented fallback.
   const handleProjectionKindChange = useCallback(
     (spec: WorldProjectionSpec) => {
       setExternalPendingProjectionSpec(spec);
       syncProjectionWindowChrome(spec);
+      dispatch("setProjection", { windowId: windowInstanceId ?? node.surfaceId, projection: worldProjectionFamily(spec) === "parallel" ? "orthographic" : "perspective" });
     },
-    [syncProjectionWindowChrome],
+    [syncProjectionWindowChrome, dispatch, windowInstanceId, node.surfaceId],
   );
 
   const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
@@ -15842,7 +16086,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
                 <directionalLight position={[0, 0, -16]} intensity={0.75} />
               </>
             )}
-            {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleCameraChange} /> : null}
+            {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleAutoFitCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
             <RaycasterPickTuning />
             {windowInstanceId ? (
@@ -20485,7 +20729,12 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
           const bootCamera = renderer.readCameraFromSession();
           if (bootCamera) {
             renderer.applyCameraToSession(bootCamera);
-            dispatchCameraRef.current(bootCamera);
+            // 🧭 Skip the dispatch when this boot-time read is just mirroring back the camera the
+            // scene/document already provided — otherwise opening the app logs a phantom "Set Camera" row
+            // in the command-history panel before the user has done anything.
+            const providedCamera = parseCameraJson(scene.cameraJson);
+            const isPhantomBootCamera = providedCamera != null && Math.abs(bootCamera.x - providedCamera.x) < 1e-6 && Math.abs(bootCamera.y - providedCamera.y) < 1e-6 && Math.abs(bootCamera.zoom - providedCamera.zoom) < 1e-6;
+            if (!isPhantomBootCamera) dispatchCameraRef.current(bootCamera);
           }
         }
         renderer.syncDescriptor(scene.mapFixtureJson);

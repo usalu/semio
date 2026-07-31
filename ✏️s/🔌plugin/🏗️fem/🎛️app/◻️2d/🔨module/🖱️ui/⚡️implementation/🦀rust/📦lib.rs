@@ -1,6 +1,6 @@
 //! 🖼️ FEM 2D app — `DocumentApp` impl, render, manifest (constitutional: ui).
 
-use fem2d::Fem2dDocument;
+use fem2d::{Fem2dDocument, FemCamera};
 use fem_core::{Dof, ElementResult};
 use fem_shared::{hex_to_rgb01, next_id, normalize_mode_shape, parse_result_display, result_display_action_args, DisplayMode, ResultDisplay, MODE_SHAPE_AMPLITUDE_RATIO, VON_MISES_BANDS};
 use semio_framework_plugin::{
@@ -274,7 +274,7 @@ fn fem2d_deformed_shape_layers(doc: &Fem2dDocument, disp_map: &HashMap<String, [
     layers
 }
 
-fn render_fem2d_model(doc: &Fem2dDocument) -> UiNode {
+fn render_fem2d_model(doc: &Fem2dDocument, camera: &FemCamera) -> UiNode {
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
@@ -286,15 +286,15 @@ fn render_fem2d_model(doc: &Fem2dDocument) -> UiNode {
         }));
     }
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(FEM2D_BODY_MODEL, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+    build_canvas_2d_scene(FEM2D_BODY_MODEL, FEM2D_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 
 /// 📊 Results window dispatcher — picks the static/modal/buckling render based on `display`.
-fn render_fem2d_results(doc: &Fem2dDocument, display: &ResultDisplay) -> UiNode {
+fn render_fem2d_results(doc: &Fem2dDocument, display: &ResultDisplay, camera: &FemCamera) -> UiNode {
     match display.mode {
-        DisplayMode::Static => render_fem2d_results_static(doc, display.source_id.as_deref()),
-        DisplayMode::Modal(mode_index) => render_fem2d_results_modal(doc, mode_index),
-        DisplayMode::Buckling(mode_index) => render_fem2d_results_buckling(doc, display.source_id.as_deref(), mode_index),
+        DisplayMode::Static => render_fem2d_results_static(doc, display.source_id.as_deref(), camera),
+        DisplayMode::Modal(mode_index) => render_fem2d_results_modal(doc, mode_index, camera),
+        DisplayMode::Buckling(mode_index) => render_fem2d_results_buckling(doc, display.source_id.as_deref(), mode_index, camera),
     }
 }
 
@@ -303,7 +303,7 @@ fn render_fem2d_results(doc: &Fem2dDocument, display: &ResultDisplay) -> UiNode 
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn render_fem2d_results_static(doc: &Fem2dDocument, source_id: Option<&str>) -> UiNode {
+fn render_fem2d_results_static(doc: &Fem2dDocument, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
     let results = match fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return ui_text(format!("Analysis error: {e}")),
@@ -403,13 +403,13 @@ fn render_fem2d_results_static(doc: &Fem2dDocument, source_id: Option<&str>) -> 
     //#endregion 🔖StressContour
 
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 
 /// 📊 Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-fn render_fem2d_results_modal(doc: &Fem2dDocument, mode_index: usize) -> UiNode {
+fn render_fem2d_results_modal(doc: &Fem2dDocument, mode_index: usize, camera: &FemCamera) -> UiNode {
     let (freq_hz, mut disp_map) = match fem2d_engine::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(format!("Modal analysis error: {e}")),
@@ -423,14 +423,14 @@ fn render_fem2d_results_modal(doc: &Fem2dDocument, mode_index: usize) -> UiNode 
         "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 
 /// 📊 Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-fn render_fem2d_results_buckling(doc: &Fem2dDocument, source_id: Option<&str>, mode_index: usize) -> UiNode {
+fn render_fem2d_results_buckling(doc: &Fem2dDocument, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text("No load case defined");
     };
@@ -447,7 +447,7 @@ fn render_fem2d_results_buckling(doc: &Fem2dDocument, source_id: Option<&str>, m
         "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 //#endregion 🔖Fem2dRender
 
@@ -461,6 +461,9 @@ fn render_fem2d_results_buckling(doc: &Fem2dDocument, source_id: Option<&str>, m
 #[derive(Default)]
 pub struct Fem2dPlayApp {
     result_display: ResultDisplay,
+    /// 🎥 Canvas pan/zoom — session-only view state (never a VCS-tracked document field): see
+    /// `"setCamera"` in `handle_action` below.
+    camera: FemCamera,
 }
 
 impl DocumentApp for Fem2dPlayApp {
@@ -649,7 +652,7 @@ impl DocumentApp for Fem2dPlayApp {
                     args.and_then(|v| v.get("y")).and_then(Value::as_f64),
                     args.and_then(|v| v.get("zoom")).and_then(Value::as_f64),
                 ) {
-                    return ActionEmit::amend(vec![fem2d_op::Fem2dOperation::SetCamera { camera: fem2d::FemCamera { x, y, zoom } }], "camera");
+                    self.camera = FemCamera { x, y, zoom };
                 }
             }
             "setResultDisplay" => {
@@ -663,6 +666,7 @@ impl DocumentApp for Fem2dPlayApp {
                     fem2d_engine::empty_fem2d_projection()
                 };
                 self.result_display = ResultDisplay::default();
+                self.camera = FemCamera::default();
                 return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetDocument { document }]);
             }
             _ => {}
@@ -672,8 +676,8 @@ impl DocumentApp for Fem2dPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Fem2dDocument>, _view_state: &ViewState) -> UiNode {
         match body_key {
-            FEM2D_BODY_MODEL => render_fem2d_model(doc.projection),
-            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &self.result_display),
+            FEM2D_BODY_MODEL => render_fem2d_model(doc.projection, &self.camera),
+            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &self.result_display, &self.camera),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -801,7 +805,7 @@ pub fn create_fem2d_app() -> App {
                 ActionArgDef::number("deformationScale", "Deformation Scale"),
             ])
             .operation("removeSelection", "Remove Selection")
-            .operation("setCamera", "Set Camera")
+            .view_action("setCamera", "Set Camera")
             .operation("setActiveExample", "Set Active Example")
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![ActionArgOption::new("default", "Default")]).default_value("default")])
             .view_action("setResultDisplay", "Set Result Display")
@@ -1017,7 +1021,7 @@ mod tests {
     //#region 🔖ContourRender
     #[test]
     fn results_window_renders_contour_for_region() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, camera: FemCamera::default() };
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -1033,7 +1037,7 @@ mod tests {
     //#region 🔖ReactionLabels
     #[test]
     fn results_window_renders_reaction_labels_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, camera: FemCamera::default() };
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -1046,7 +1050,7 @@ mod tests {
     //#region 🔖ModeShapeRender
     #[test]
     fn results_window_renders_modal_mode_shape_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) }, camera: FemCamera::default() };
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -1058,7 +1062,7 @@ mod tests {
 
     #[test]
     fn results_window_renders_buckling_mode_shape_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) } };
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) }, camera: FemCamera::default() };
         let projection: Fem2dDocument = Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -1235,7 +1239,7 @@ mod tests {
 
     #[test]
     fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
-        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) } };
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) }, camera: FemCamera::default() };
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -1345,20 +1349,16 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_action_amends_2d() {
+    fn set_camera_action_writes_runtime_not_operations() {
         let mut app = Fem2dPlayApp::default();
         let projection = fem2d_engine::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("setCamera", Some(&json!({ "x": 1.0, "y": 2.0, "zoom": 1.5 })), &doc, &ViewState::default());
-        assert_eq!(emit.coalesce_key.as_deref(), Some("camera"));
-        match &emit.operations[0] {
-            fem2d_op::Fem2dOperation::SetCamera { camera } => {
-                assert_eq!(camera.x, 1.0);
-                assert_eq!(camera.zoom, 1.5);
-            }
-            _ => panic!("expected SetCamera"),
-        }
+        assert!(emit.operations.is_empty(), "setCamera must not emit a VCS operation");
+        assert_eq!(app.camera.x, 1.0);
+        assert_eq!(app.camera.y, 2.0);
+        assert_eq!(app.camera.zoom, 1.5);
     }
 
     #[test]

@@ -21,8 +21,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let fixture = default_fixture();
-        let operation = SequenceOperation::SetCamera { camera: fixture.camera };
+        let operation = SequenceOperation::StepsPatch { id: "step-1".into(), patch: sequence::SequenceStepPatch { x: Some(42.0), ..Default::default() } };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

@@ -54,6 +54,7 @@ struct RasterPlayRuntime {
     brush_size: f32,
     brush_opacity: f32,
     composite_viewport: Option<RasterViewportSize>,
+    camera: RasterCamera,
 }
 
 impl RasterPlayRuntime {
@@ -64,6 +65,7 @@ impl RasterPlayRuntime {
             brush_size: 24.0,
             brush_opacity: 1.0,
             composite_viewport: None,
+            camera: RasterCamera::default(),
         }
     }
 }
@@ -360,12 +362,11 @@ fn render_properties_panel(document: &RasterDocument, runtime: &RasterPlayRuntim
 //#endregion 🔖Panels
 
 //#region 🔖Render
-/// 📡 Document JSON for the WASM compositor, omitting embedded assets/camera/utility/brush — mirrors premigration `rasterDocumentToSyncJson`.
+/// 📡 Document JSON for the WASM compositor, omitting embedded assets/utility/brush — mirrors premigration `rasterDocumentToSyncJson`.
 fn document_sync_json(document: &RasterDocument) -> String {
     let mut value = serde_json::to_value(document).unwrap_or(Value::Null);
     if let Value::Object(ref mut map) = value {
         map.remove("assets");
-        map.remove("camera");
         map.remove("brushSize");
         map.remove("brushOpacity");
     }
@@ -376,7 +377,7 @@ fn raster_scene(document: &RasterDocument, runtime: &RasterPlayRuntime, active_u
     Paint2dScene {
         document_sync_json: document_sync_json(document),
         assets_json: serde_json::to_string(&document.assets).unwrap_or_else(|_| "{}".into()),
-        camera_json: serde_json::to_string(&document.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
+        camera_json: serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into()),
         selection_json: serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into()),
         hovered_id: runtime.hovered_id.clone(),
         active_utility: active_utility.into(),
@@ -551,14 +552,15 @@ impl DocumentApp for RasterPlayApp {
                     .collect();
                 ActionEmit::default()
             }
-            // 📷 Camera — a coalesced scalar operation so a pan/zoom gesture is one undo step.
+            // 📷 Camera — session-only runtime pose, never a document operation.
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value::<RasterCamera>(value.clone()).ok()) {
-                    return ActionEmit { operations: vec![RasterOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
+                    self.runtime.camera = camera;
+                    return ActionEmit::default();
                 }
                 if let Some(zoom) = args.and_then(|value| value.get("zoom")).and_then(|value| value.as_f64()) {
-                    let camera = RasterCamera { zoom, ..document.camera.clone() };
-                    return ActionEmit { operations: vec![RasterOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
+                    self.runtime.camera = RasterCamera { zoom, ..self.runtime.camera.clone() };
+                    return ActionEmit::default();
                 }
                 ActionEmit::default()
             }
@@ -721,7 +723,7 @@ impl DocumentApp for RasterPlayApp {
 
 //#region 🔖Manifest
 /// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary
-/// dispatched by the layer tree, catalogue drops, camera and inspector, never a palette command.
+/// dispatched by the layer tree, catalogue drops and inspector, never a palette command.
 fn raster_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
 }
@@ -781,9 +783,7 @@ pub fn create_raster_app() -> App {
             .operation("addLayer", "Add Layer")
             .operation("setDocument", "Set Document")
             .operation("setActiveExample", "Set Active Example")
-            // 🔧 Internal content operations — layer-tree / catalogue-drop / camera / inspector bound.
-            .action_with(raster_internal_action("setCamera", "Set Camera", ActionKind::Operation))
-            .action_with(raster_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::Operation))
+            // 🔧 Internal content operations — layer-tree / catalogue-drop / inspector bound.
             .action_with(raster_internal_action("setLayerVisible", "Set Layer Visible", ActionKind::Operation))
             .action_with(raster_internal_action("toggleLayerVisible", "Toggle Layer Visible", ActionKind::Operation))
             .action_with(raster_internal_action("dropLayerKind", "Drop Layer Kind", ActionKind::Operation))
@@ -792,13 +792,15 @@ pub fn create_raster_app() -> App {
             .action_with(raster_internal_action("patchLayer", "Patch Layer", ActionKind::Operation))
             .action_with(raster_internal_action("patchLayers", "Patch Layers", ActionKind::Operation))
             .action_with(raster_internal_action("moveLayer", "Move Layer", ActionKind::Operation))
-            // 👁️ Ephemeral view state — selection, hover, live brush controls, navigator viewport.
+            // 👁️ Ephemeral view state — selection, hover, live brush controls, navigator viewport, camera.
             .view_action("selectAll", "Select All")
             .action_with(raster_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(raster_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(raster_internal_action("setBrushSize", "Set Brush Size", ActionKind::View))
             .action_with(raster_internal_action("setBrushOpacity", "Set Brush Opacity", ActionKind::View))
             .action_with(raster_internal_action("setCompositeViewport", "Set Composite Viewport", ActionKind::View))
+            .action_with(raster_internal_action("setCamera", "Set Camera", ActionKind::View))
+            .action_with(raster_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
             // 📝 Staged palette-form arguments for the two palette operations.
             .action_args("addLayer", vec![
                 ActionArgDef::select("kind", "Layer Kind", vec![
@@ -918,7 +920,6 @@ mod tests {
         let document = semio_example_document();
         let sync_json = document_sync_json(&document);
         assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
-        assert!(!sync_json.contains("\"camera\""), "sync json must omit camera");
         assert!(sync_json.contains("\"params\""), "adjustment params must survive document→sync roundtrip for the paint host");
         let sync_value: Value = serde_json::from_str(&sync_json).expect("sync json");
         let layers = sync_value.get("layers").and_then(Value::as_array).expect("layers");
@@ -962,6 +963,33 @@ mod tests {
         assert!(json.contains("compositeViewportJson"));
         assert!(json.contains(r#"\"width\":640.0"#));
         assert!(json.contains(r#"\"height\":480.0"#));
+    }
+
+    #[test]
+    fn set_camera_mutates_runtime_and_emits_no_operations() {
+        let mut app = testkit::new_app::<RasterPlayApp>();
+        let before = app.projection().expect("projection");
+        let result = app
+            .handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 2.0 } })), &ViewState::default(), &testkit::meta("local"))
+            .expect("set camera");
+        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
+        let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        assert!(json.contains(r#"\"zoom\":2.0"#), "composite scene camera reflects runtime state: {json}");
+        assert!(json.contains(r#"\"x\":4.0"#), "composite scene camera reflects runtime state: {json}");
+    }
+
+    #[test]
+    fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
+        let mut app = testkit::new_app::<RasterPlayApp>();
+        app.handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("set camera");
+        let result = app
+            .handle_action("setCameraZoom", Some(&json!({ "zoom": 3.0 })), &ViewState::default(), &testkit::meta("local"))
+            .expect("set camera zoom");
+        assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
+        let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        assert!(json.contains(r#"\"zoom\":3.0"#), "zoom updated: {json}");
+        assert!(json.contains(r#"\"x\":4.0"#), "pan preserved across zoom-only update: {json}");
     }
 
     #[test]

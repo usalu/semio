@@ -1,7 +1,4 @@
 schema=shooting.fixture active-shot-id=overview-svg active-asset-id=base
-camera {
-  position=420,-420,320 target=0,0,40 zoom=1 fov=50
-}
 scene {
   background=""
   sun {

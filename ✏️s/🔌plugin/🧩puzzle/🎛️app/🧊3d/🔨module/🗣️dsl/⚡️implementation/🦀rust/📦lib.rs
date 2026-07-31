@@ -21,7 +21,7 @@ pub fn print_dsl(document: &Puzzle3dProjection) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use puzzle_3d::{Puzzle3dAttraction, Puzzle3dCamera, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume, Puzzle3dVortex};
+    use puzzle_3d::{Puzzle3dAttraction, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dReference, Puzzle3dReferenceSource, Puzzle3dTargetVolume, Puzzle3dVortex};
 
     /// 📜 Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
     /// 🎫convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
@@ -35,16 +35,15 @@ mod tests {
         }
     }
 
-    /// 📜 A representative in-memory projection (camera pan, one object with two vortices, one
-    /// attraction, a target volume, a reference plane, and a link-compatibility rule) round-trips
-    /// through `print_dsl`/`parse_dsl` exactly.
+    /// 📜 A representative in-memory projection (one object with two vortices, one attraction, a
+    /// target volume, a reference plane, and a link-compatibility rule) round-trips through
+    /// `print_dsl`/`parse_dsl` exactly.
     #[test]
     fn puzzle3d_projection_dsl_round_trips() {
         let empty = Puzzle3dProjection::default();
         store::test_support::assert_dsl_round_trip(&empty);
         store::test_support::assert_dsl_pack_equivalence(&empty);
         let mut projection = Puzzle3dProjection::default();
-        projection.camera = Puzzle3dCamera { position: [30.0, -30.0, 20.0], target: [7.0, 0.0, 3.0], zoom: 3.0, up: Some([0.0, 0.0, 1.0]), projection: None };
         projection.objects.push(Puzzle3dObject {
             id: "seed-left-001".into(),
             label: Some("Seed Left".into()),

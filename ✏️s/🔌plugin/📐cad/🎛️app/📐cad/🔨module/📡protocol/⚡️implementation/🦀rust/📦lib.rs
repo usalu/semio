@@ -72,9 +72,8 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cad_document::{CadCamera, CadNode, CadObject, CadPaneId, CadPrimitiveSlot};
+    use cad_document::{CadNode, CadObject, CadPaneId, CadPrimitiveSlot};
     use cad_document_op::CadOperation;
-    use serde_json::Value;
     use store::{create_document_envelope, DocumentCommand};
 
     #[test]
@@ -149,17 +148,5 @@ mod tests {
         assert!(store.projection().expect("projection").nodes.is_empty());
     }
 
-    #[test]
-    fn set_camera_flows_through_operations() {
-        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
-        let camera = CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0, projection: Value::Null };
-        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::SetCamera { pane: CadPaneId::Building, camera: camera.clone() }], description: None }).expect("apply");
-        let scene = store.projection().expect("projection");
-        assert_eq!(cad_document::cad_pane_camera(&scene, CadPaneId::Building).zoom, 2.0);
-        assert_eq!(cad_document::cad_pane_camera(&scene, CadPaneId::Shape).zoom, 1.0);
-        store.dispatch(DocumentCommand::Undo).expect("undo");
-        let scene = store.projection().expect("projection");
-        assert_eq!(cad_document::cad_pane_camera(&scene, CadPaneId::Building).zoom, 1.0);
-    }
 }
 //#endregion 🧪Tests

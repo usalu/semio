@@ -1,6 +1,6 @@
 //! ⚡ FEM 2D app — operation enum + laws (constitutional: op).
 
-use fem2d::{element_id, Fem2dDocument, FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+use fem2d::{element_id, Fem2dDocument, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
@@ -131,7 +131,8 @@ fn index_of<T: HasId>(items: &[T], id: &str) -> Option<usize> {
 // #endregion 🔖Collections
 
 // #region 🔖Operations
-/// 🩹 Sparse fem-2d diff over every document collection plus the scalar camera.
+/// 🩹 Sparse fem-2d diff over every document collection (camera is session-only runtime state, not a
+/// document field — see `Fem2dPlayApp::camera` in the ui crate).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fem2dDiff {
@@ -146,7 +147,6 @@ pub struct Fem2dDiff {
     pub load_cases: LoadCasesDiff,
     pub combinations: CombinationsDiff,
     pub analysis: Option<FemAnalysisSettings>,
-    pub camera: Option<FemCamera>,
 }
 
 impl OperationDiff<Fem2dDocument> for Fem2dDiff {
@@ -165,9 +165,6 @@ impl OperationDiff<Fem2dDocument> for Fem2dDiff {
         apply_collection_diff(&mut next.combinations, &self.combinations.removed, &self.combinations.set);
         if let Some(analysis) = &self.analysis {
             next.analysis = analysis.clone();
-        }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
         }
         next
     }
@@ -196,14 +193,11 @@ impl OperationDiff<Fem2dDocument> for Fem2dDiff {
         if other.analysis.is_some() {
             self.analysis = other.analysis;
         }
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
     }
 }
 
-/// 🧮 Fem-2d operation: id-keyed document-collection edits plus the scalar camera, each with a
-/// true inverse computed from the pre-operation projection.
+/// 🧮 Fem-2d operation: id-keyed document-collection edits, each with a true inverse computed from
+/// the pre-operation projection.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Fem2dOperation {
@@ -224,7 +218,6 @@ pub enum Fem2dOperation {
     SetCombination { index: usize, #[dsl(block)] combination: FemCombination },
     RemoveCombination { id: String },
     SetAnalysisSettings { #[dsl(block)] settings: FemAnalysisSettings },
-    SetCamera { #[dsl(block)] camera: FemCamera },
     /// 🌍 Replaces the whole document (example import / reset).
     SetDocument { #[dsl(block)] document: Fem2dDocument },
 }
@@ -252,7 +245,6 @@ impl Operation<Fem2dDocument> for Fem2dOperation {
             Fem2dOperation::SetCombination { index, combination } => diff.combinations.set.push((*index, combination.clone())),
             Fem2dOperation::RemoveCombination { id } => diff.combinations.removed.push(id.clone()),
             Fem2dOperation::SetAnalysisSettings { settings } => diff.analysis = Some(settings.clone()),
-            Fem2dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
             Fem2dOperation::SetDocument { document } => diff.document = Some(document.clone()),
         }
         diff
@@ -301,7 +293,6 @@ impl Operation<Fem2dDocument> for Fem2dOperation {
             },
             Fem2dOperation::RemoveCombination { id } => index_of(&projection.combinations, id).map(|index| vec![Fem2dOperation::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
             Fem2dOperation::SetAnalysisSettings { .. } => vec![Fem2dOperation::SetAnalysisSettings { settings: projection.analysis.clone() }],
-            Fem2dOperation::SetCamera { .. } => vec![Fem2dOperation::SetCamera { camera: projection.camera.clone() }],
             Fem2dOperation::SetDocument { .. } => vec![Fem2dOperation::SetDocument { document: projection.clone() }],
         }
     }
@@ -328,7 +319,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "dead".into(), name: "dead".into(), loads: vec![fem2d::FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
 
@@ -345,7 +335,6 @@ mod tests {
             load_cases: vec![FemLoadCase { id: "self".into(), name: "self weight".into(), loads: vec![], self_weight: true }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
-            camera: FemCamera::default(),
         }
     }
     // #endregion 🔖Fixtures
@@ -406,13 +395,6 @@ mod tests {
     }
 
     #[test]
-    fn camera_op_round_trips() {
-        let base = simply_supported_beam_doc();
-        let after = round_trip(&base, &Fem2dOperation::SetCamera { camera: FemCamera { x: 7.0, y: 8.0, zoom: 2.0 } });
-        assert_eq!(after.camera.zoom, 2.0);
-    }
-
-    #[test]
     fn region_op_round_trips() {
         let base = rectangle_region_doc();
         let updated = FemRegion { id: "r1".into(), name: "slab v2".into(), outline: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.03, material_id: "steel".into(), mesh_size: 0.5 };
@@ -450,7 +432,7 @@ mod tests {
     fn document_diff_absorb_wins_over_granular_changes() {
         let base = simply_supported_beam_doc();
         let replacement = rectangle_region_doc();
-        let mut diff = Fem2dOperation::SetCamera { camera: FemCamera { x: 1.0, y: 2.0, zoom: 3.0 } }.diff(&base);
+        let mut diff = Fem2dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 1, buckling_count: 1, deformation_scale: 1.0 } }.diff(&base);
         diff.absorb(Fem2dOperation::SetDocument { document: replacement.clone() }.diff(&base));
         assert_eq!(diff.apply(&base), replacement);
     }
@@ -506,7 +488,6 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetCombination { index: 0, combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![fem2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, fem2d::FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] } });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveCombination { id: "uls".into() });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
-        store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetCamera { camera: FemCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
         store::test_support::assert_op_line_round_trip(&Fem2dOperation::SetDocument { document: simply_supported_beam_doc() });
     }
     // #endregion 🔖OpText

@@ -1,6 +1,6 @@
 //! ⚙️ Raster app — headless compute (constitutional: engine).
 
-use raster::{RasterCamera, RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterProjection, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use raster::{RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterProjection, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -24,7 +24,6 @@ pub fn empty_raster_projection() -> RasterProjection {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: "raster".into(),
         title: Some("Untitled".into()),
-        camera: RasterCamera::default(),
         layers: Vec::new(),
         assets: BTreeMap::new(),
     }
@@ -256,7 +255,6 @@ pub fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: create_raster_id("dwg-import"),
         title: Some("DWG Import".into()),
-        camera: RasterCamera::default(),
         layers: vec![layer],
         assets,
     };

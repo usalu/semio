@@ -81,6 +81,11 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 #[derive(Clone, Debug, Default, PartialEq)]
 struct RewritePlayRuntime {
     selected_node_ids: Vec<String>,
+    /// 📷 Live viewport pan/zoom of the Before pane — session-only (never a VCS operation); seeded
+    /// once from the initial before-fixture's seed-only `camera` field, then only ever written by
+    /// `nodeGraphViewport`. The before-pane's render composes it over `before_fixture_json` at
+    /// render time instead of round-tripping it through the document.
+    before_pane_camera: Camera,
     reorganize_epoch: u64,
     active_hover_var: String,
     hover_epoch: u64,
@@ -140,6 +145,12 @@ fn default_rule_state() -> RewriteRuleState {
     };
     state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
     state
+}
+
+/// 🌱 Reads `RewriteRuleState.before_fixture_json`'s seed-only `camera` field once — the one place a
+/// before-fixture's initial framing is consumed into the app's live runtime camera.
+fn seed_before_pane_camera(state: &RewriteRuleState) -> Camera {
+    parse_fixture_json(&state.before_fixture_json).map(|fixture| fixture.camera).unwrap_or_default()
 }
 
 fn rewrite_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1073,9 +1084,11 @@ fn render_rule_graph(
     runtime: &RewritePlayRuntime,
     hover_node_id: &str,
     editable: bool,
+    camera_override: Option<&Camera>,
 ) -> UiNode {
     let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
-    let (nodes_json, edges_json, viewport_json) = fixture_to_workflow(&fixture);
+    let (nodes_json, edges_json, fixture_viewport_json) = fixture_to_workflow(&fixture);
+    let viewport_json = camera_override.map(|camera| serde_json::to_string(camera).unwrap_or_else(|_| fixture_viewport_json.clone())).unwrap_or(fixture_viewport_json);
     let hover_json = graph_hover_json(fixture_json, &runtime.active_hover_var, hover_node_id);
     let selection_json = graph_selection_json(fixture_json, &runtime.active_select_var, &runtime.selected_node_ids);
     build_node_graph_scene(
@@ -1092,8 +1105,8 @@ fn render_rule_graph(
     )
 }
 
-fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, runtime: &RewritePlayRuntime, editable: bool) -> UiNode {
-    render_rule_graph(surface_id, window_id, fixture_json, runtime, "", editable)
+fn render_fixture_graph(surface_id: &str, window_id: &str, fixture_json: &str, runtime: &RewritePlayRuntime, editable: bool, camera_override: Option<&Camera>) -> UiNode {
+    render_rule_graph(surface_id, window_id, fixture_json, runtime, "", editable, camera_override)
 }
 
 fn var_occurrences_json(text: &str, var: &str) -> Option<String> {
@@ -1140,9 +1153,14 @@ fn render_jack_editor(state: &RewriteRuleState, runtime: &RewritePlayRuntime) ->
 /// ♻️ Trinity Rewrite play app — a parametric-rewrite editor over a {@link RewriteRuleState}
 /// projection. Every rule/parameter/before-fixture mutation flows through the single LWW
 /// {@link RewriteRuleOperation::SetState}; hover/select var focus, epochs and LOD are runtime.
-#[derive(Default)]
 pub struct TrinityRewritePlayApp {
     runtime: RewritePlayRuntime,
+}
+
+impl Default for TrinityRewritePlayApp {
+    fn default() -> Self {
+        Self { runtime: RewritePlayRuntime { before_pane_camera: seed_before_pane_camera(&default_rule_state()), ..Default::default() } }
+    }
 }
 
 impl DocumentApp for TrinityRewritePlayApp {
@@ -1206,14 +1224,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 if surface_id == TRINITY_REWRITE_PLAY_SURFACE_BEFORE {
                     if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                         if let Ok(camera) = serde_json::from_str::<Camera>(viewport_json) {
-                            let mut next = state.clone();
-                            if let Some(mut fixture) = parse_fixture_json(&next.before_fixture_json) {
-                                fixture.camera = camera;
-                                if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
-                                    next.before_fixture_json = json;
-                                    return ActionEmit::amend(vec![RewriteRuleOperation::SetState { state: next }], "viewport");
-                                }
-                            }
+                            self.runtime.before_pane_camera = camera;
                         }
                     }
                 }
@@ -1287,7 +1298,11 @@ impl DocumentApp for TrinityRewritePlayApp {
                 self.runtime.reorganize_epoch += 1;
                 ActionEmit::default()
             }
-            "resetRule" => set_state_emit(state, default_rule_state()),
+            "resetRule" => {
+                let next = default_rule_state();
+                self.runtime.before_pane_camera = seed_before_pane_camera(&next);
+                set_state_emit(state, next)
+            }
             "graphPointerDown" => {
                 if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(|v| v.as_str()) {
                     self.runtime.selected_node_ids = vec![node_id.into()];
@@ -1356,6 +1371,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 &state.before_fixture_json,
                 runtime,
                 true,
+                Some(&runtime.before_pane_camera),
             ),
             TRINITY_REWRITE_PLAY_BODY_AFTER => render_fixture_graph(
                 TRINITY_REWRITE_PLAY_SURFACE_AFTER,
@@ -1363,6 +1379,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 &after_fixture_json(state),
                 runtime,
                 false,
+                None,
             ),
             TRINITY_REWRITE_PLAY_BODY_LHS => render_fixture_graph(
                 TRINITY_REWRITE_PLAY_SURFACE_LHS,
@@ -1370,6 +1387,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 &lhs_graph_fixture_json(&state.lhs_json, &state.rule_layout),
                 runtime,
                 true,
+                None,
             ),
             TRINITY_REWRITE_PLAY_BODY_RHS => render_fixture_graph(
                 TRINITY_REWRITE_PLAY_SURFACE_RHS,
@@ -1377,6 +1395,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 &rhs_graph_fixture_json(&state.rhs_json, &state.rule_layout),
                 runtime,
                 true,
+                None,
             ),
             TRINITY_REWRITE_PLAY_BODY_JACK => render_jack_editor(state, runtime),
             TRINITY_REWRITE_PLAY_BODY_PARAMETERS => build_parameters_panel(state, labels),
@@ -1499,7 +1518,6 @@ pub fn create_rewrite_app() -> App {
             .operation("setParameter", "Set Parameter")
             .operation("patchTrinityNodes", "Patch Nodes")
             .operation("nodeGraphEdit", "Edit Graph")
-            .operation("nodeGraphViewport", "Set Graph Viewport")
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setLhsJson", "Set LHS Json", ActionKind::Operation) })
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setRhsJson", "Set RHS Json", ActionKind::Operation) })
@@ -1508,6 +1526,7 @@ pub fn create_rewrite_app() -> App {
             .view_action("selectNode", "Select Node")
             .view_action("nodeGraphSelect", "Select Graph Node")
             .view_action("nodeGraphHover", "Hover Graph Node")
+            .view_action("nodeGraphViewport", "Set Graph Viewport")
             .view_action("graphPointerDown", "Graph Pointer Down")
             .view_action("textSelect", "Select Text")
             .view_action("textHover", "Hover Text")
@@ -1561,6 +1580,25 @@ mod tests {
         let after = app.render(TRINITY_REWRITE_PLAY_BODY_AFTER, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&before).unwrap().contains("node-graph"));
         assert!(serde_json::to_string(&after).unwrap().contains("node-graph"));
+    }
+
+    /// 🎥 `nodeGraphViewport` on the Before pane is `ActionKind::View`: it writes the app's own
+    /// runtime camera and emits zero operations (no whole-document `SetState` replace per pan tick),
+    /// and the Before pane's render composes that runtime camera over `before_fixture_json` instead
+    /// of round-tripping it through the document.
+    #[test]
+    fn node_graph_viewport_writes_before_pane_runtime_camera_without_operations() {
+        let mut app = new_app();
+        let before_state = app.projection().unwrap();
+        let result = dispatch(
+            &mut app,
+            "nodeGraphViewport",
+            Some(&json!({ "surfaceId": TRINITY_REWRITE_PLAY_SURFACE_BEFORE, "viewportJson": json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() })),
+        );
+        assert!(result.operations.is_empty(), "camera is a view action, no operations");
+        assert_eq!(app.projection().unwrap(), before_state, "document is untouched by a viewport pan");
+        let before = app.render(TRINITY_REWRITE_PLAY_BODY_BEFORE, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&before).unwrap().contains("2.5"), "render reads the live runtime camera");
     }
 
     #[test]

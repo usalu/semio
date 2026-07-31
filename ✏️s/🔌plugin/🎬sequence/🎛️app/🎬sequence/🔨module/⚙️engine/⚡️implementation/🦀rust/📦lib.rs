@@ -171,6 +171,11 @@ pub enum SequenceCoreError {
 //#region 🔖Host
 pub struct SequenceHost {
     pub fixture: SequenceFixture,
+    /// 🎥 The canvas camera — session-only host state (never a `SequenceFixture` document field; see
+    /// `ShootingPlayRuntime`-style camera fields in the ui crate's own `SequencePlayRuntime`). Persists
+    /// across `rebuild_dag()` calls within this `SequenceHost` instance (each document mutation rebuilds
+    /// `dag` from scratch, so this is what the rebuilt `dag`'s camera gets reseeded from).
+    pub camera: SequenceCamera,
     pub dag: DagHost,
     registry: Registry,
     next_serial: u64,
@@ -185,8 +190,13 @@ impl Default for SequenceHost {
 impl SequenceHost {
     pub fn from_fixture(fixture: SequenceFixture) -> Self {
         let next_serial = max_serial_in_fixture(&fixture).max(100);
-        let mut host =
-            Self { fixture, dag: DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }), registry: imperative_module_registry(), next_serial };
+        let mut host = Self {
+            fixture,
+            camera: SequenceCamera::default(),
+            dag: DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            registry: imperative_module_registry(),
+            next_serial,
+        };
         host.rebuild_dag();
         host
     }
@@ -376,7 +386,7 @@ impl SequenceHost {
     }
 
     pub fn sync_from_dag(&mut self) {
-        self.fixture.camera = sequence_camera_from_dag(self.dag.fixture.camera.clone());
+        self.camera = sequence_camera_from_dag(self.dag.fixture.camera.clone());
         self.sync_edges_from_dag();
         for step in &mut self.fixture.steps {
             let Some(node) = self.dag.fixture.nodes.iter().find(|node| node.id == step.id) else {
@@ -508,7 +518,7 @@ impl SequenceHost {
         let selected = self.dag.selected_node_ids();
         let dag_fixture = self.build_dag_fixture();
         self.dag = DagHost::from_fixture_without_layout(dag_fixture);
-        self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom);
+        self.dag.set_camera(self.camera.x, self.camera.y, self.camera.zoom);
         if !selected.is_empty() {
             self.dag.set_selection(&selected);
         }
@@ -526,7 +536,7 @@ impl SequenceHost {
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
             .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}@{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}@{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
             .collect();
-        DagFixture { schema: "dag.fixture".into(), camera: dag_camera_from_sequence(self.fixture.camera.clone()), nodes, edges }
+        DagFixture { schema: "dag.fixture".into(), camera: dag_camera_from_sequence(self.camera.clone()), nodes, edges }
     }
 
     fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
@@ -849,7 +859,7 @@ mod tests {
 
     #[test]
     fn load_json_rejects_unsupported_schema() {
-        let result = SequenceHost::load_json(r#"{"schema":"other","camera":{"x":0.0,"y":0.0,"zoom":1.0},"steps":[],"edges":[]}"#);
+        let result = SequenceHost::load_json(r#"{"schema":"other","steps":[],"edges":[]}"#);
         assert!(matches!(result, Err(SequenceCoreError::UnsupportedSchema(schema)) if schema == "other"));
     }
 

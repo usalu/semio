@@ -206,7 +206,8 @@ impl Default for FemCamera {
 }
 
 /// 🧾 Persistent fem-2d document — nodes, members, meshed regions, materials/sections, supports,
-/// load cases/combinations, analysis settings and camera.
+/// load cases/combinations and analysis settings. The camera (pan/zoom) is session-only view state —
+/// see `Fem2dPlayApp::camera` in the ui crate — never a VCS-tracked document field.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "fem2d", layout = "lines")]
@@ -229,7 +230,5 @@ pub struct Fem2dDocument {
     pub combinations: Vec<FemCombination>,
     #[dsl(block)]
     pub analysis: FemAnalysisSettings,
-    #[dsl(block)]
-    pub camera: FemCamera,
 }
 // #endregion 🔖Document

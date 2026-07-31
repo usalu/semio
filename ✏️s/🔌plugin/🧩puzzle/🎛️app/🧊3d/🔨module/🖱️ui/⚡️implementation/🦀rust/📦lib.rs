@@ -226,8 +226,6 @@ struct Puzzle3dFixture {
     #[serde(default)]
     domain: String,
     #[serde(default)]
-    camera: Puzzle3dCamera,
-    #[serde(default)]
     meta: Puzzle3dFixtureMeta,
     #[serde(default)]
     objects: Vec<Puzzle3dObject>,
@@ -356,6 +354,11 @@ struct Puzzle3dRuntime {
     vortex_direction: String,
     #[serde(default)]
     sun: WorldSunConfig,
+    /// 🎥 Session-only viewport camera for the window instance currently materialized onto this
+    /// runtime (via `load_window`/`save_window`) — never persisted to the document; see
+    /// [`Puzzle3dWindowOptions::camera`].
+    #[serde(default)]
+    camera: Puzzle3dCamera,
     /// 🪟 Per-window-instance snapshot of view-local chrome options, keyed by window INSTANCE id (never
     /// by window kind) — see [`Puzzle3dWindowOptions`]. The flat fields that mirror those options are a
     /// scratch, currently-materialized-window working copy: `load_window`/`save_window` swap them in/out
@@ -400,6 +403,7 @@ impl Default for Puzzle3dRuntime {
             vortex_show: default_vortex_show(),
             vortex_direction: default_vortex_direction(),
             sun: WorldSunConfig::default(),
+            camera: Puzzle3dCamera::default(),
             window_options: BTreeMap::new(),
         }
     }
@@ -434,10 +438,16 @@ fn default_voxel_dims() -> [u32; 3] {
 }
 
 /// 🪟 View-local chrome options a puzzle3d window exposes (grid, LOD, selection method/mode, vortex
-/// display, sun, voxel steppers) — stored per window INSTANCE in [`Puzzle3dRuntime::window_options`].
-/// Fill count, distribution weights, and overlap budget are intentionally absent: they drive the shared
-/// document/precompute plan and live only on the flat [`Puzzle3dRuntime`] fields so split panes can never
-/// disagree about which fill objects are shown. See `load_window`/`save_window`.
+/// display, sun, voxel steppers, camera) — stored per window INSTANCE in
+/// [`Puzzle3dRuntime::window_options`]. Fill count, distribution weights, and overlap budget are
+/// intentionally absent: they drive the shared document/precompute plan and live only on the flat
+/// [`Puzzle3dRuntime`] fields so split panes can never disagree about which fill objects are shown.
+/// See `load_window`/`save_window`.
+///
+/// 🎥 `camera` is session-only per-window state — orbiting/panning/zooming one window instance (via
+/// `setCamera`/`setProjection`/`setProjectionParam`/`focusSelection`) must never move any sibling
+/// instance's camera and must never become a VCS-tracked document edit (see those actions'
+/// `ActionKind::View`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle3dWindowOptions {
@@ -459,6 +469,7 @@ struct Puzzle3dWindowOptions {
     vortex_show: String,
     vortex_direction: String,
     sun: WorldSunConfig,
+    camera: Puzzle3dCamera,
 }
 
 impl Default for Puzzle3dWindowOptions {
@@ -482,6 +493,7 @@ impl Default for Puzzle3dWindowOptions {
             vortex_show: default_vortex_show(),
             vortex_direction: default_vortex_direction(),
             sun: WorldSunConfig::default(),
+            camera: Puzzle3dCamera::default(),
         }
     }
 }
@@ -510,6 +522,7 @@ impl Puzzle3dRuntime {
             vortex_show: self.vortex_show.clone(),
             vortex_direction: self.vortex_direction.clone(),
             sun: self.sun.clone(),
+            camera: self.camera.clone(),
         }
     }
 
@@ -535,6 +548,7 @@ impl Puzzle3dRuntime {
         self.vortex_show = options.vortex_show.clone();
         self.vortex_direction = options.vortex_direction.clone();
         self.sun = options.sun.clone();
+        self.camera = options.camera.clone();
     }
 
     /// 🪟 Materializes `window_id`'s stored options (the type default, for a window never touched yet)
@@ -647,7 +661,6 @@ fn empty_fixture() -> Puzzle3dFixture {
     Puzzle3dFixture {
         schema: PUZZLE3D_FIXTURE_SCHEMA.into(),
         domain: "architecture".into(),
-        camera: Puzzle3dCamera::default(),
         meta: Puzzle3dFixtureMeta::default(),
         objects: Vec::new(),
         attractions: Vec::new(),
@@ -674,7 +687,7 @@ fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_ut
 /// 🧮 Document ops for a fixture mutation — normalizes `before` through the same program typed
 /// round-trip as `after` so View-kind actions that only touch runtime never trip the
 /// "must not emit operations" guard when the live store still holds a `puzzle_3d`-shaped
-/// projection (`skip_serializing_if` / optional `camera.projection`) from a prior op apply.
+/// projection (`skip_serializing_if`-elided optional fields) from a prior op apply.
 fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dOperation> {
     let before_normalized = serde_json::to_value(serde_json::from_value::<Puzzle3dFixture>(before.clone()).unwrap_or_else(|_| empty_fixture())).unwrap_or_else(|_| before.clone());
     let after = serde_json::to_value(after_fixture).unwrap_or_else(|_| before_normalized.clone());
@@ -1481,7 +1494,8 @@ fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut env
 }
 
 /// 🎯 Mirrors the host's client-side `handleZoomToSelection` framing math so a keybinding/engagement-token
-/// driven focus (which bypasses that host interception) still produces a sensible camera.
+/// driven focus (which bypasses that host interception) still produces a sensible camera. Camera-only:
+/// writes `envelope.runtime.camera` (session-only per-window state), never the shared `fixture`.
 fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene) {
     let selected_origins: Vec<[f64; 3]> = envelope.fixture.objects.iter().filter(|object| envelope.runtime.selection.object_ids.contains(&object.id)).map(|object| object.origin).collect();
     if selected_origins.is_empty() {
@@ -1505,8 +1519,8 @@ fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene) {
         })
         .fold(1.0_f64, f64::max);
     let distance = max_distance * 3.0 + 2.0;
-    envelope.fixture.camera.position = [center[0] + distance * 0.6, center[1] - distance * 0.6, center[2] + distance * 0.5];
-    envelope.fixture.camera.target = center;
+    envelope.runtime.camera.position = [center[0] + distance * 0.6, center[1] - distance * 0.6, center[2] + distance * 0.5];
+    envelope.runtime.camera.target = center;
 }
 
 fn next_object_id() -> String {
@@ -3593,7 +3607,7 @@ fn puzzle3d_transform_utility_options(runtime: &Puzzle3dRuntime, labels: &Puzzle
 
 fn puzzle3d_window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
     vec![
-        world3d_projection_measures("puzzle3d", &envelope.fixture.camera.projection, puzzle3d_action),
+        world3d_projection_measures("puzzle3d", &envelope.runtime.camera.projection, puzzle3d_action),
         puzzle3d_vortex_show_measure(&envelope.runtime, labels),
         puzzle3d_vortex_direction_measure(&envelope.runtime, labels),
         puzzle3d_lod_measures_group(&envelope.runtime, labels),
@@ -3929,20 +3943,24 @@ impl DocumentApp for Puzzle3dPlayApp {
                 envelope.runtime.selection.object_ids = envelope.fixture.objects.iter().filter(|object| object.object_kind.as_deref() == Some(kind.as_str())).map(|object| object.id.clone()).collect();
             }
             "setCamera" => {
+                // 🎥 Session-only per-window state (View-kind, see the app builder below) — writes the
+                // materialized-window camera on `runtime`, never the shared `fixture`, so this never
+                // creates a VCS edit and never moves any sibling window instance's camera.
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        envelope.fixture.camera = parsed;
+                        envelope.runtime.camera = parsed;
                     }
                 }
             }
             "setProjection" | "setProjectionParam" => {
+                // 🎥 Session-only per-window state (View-kind, see the app builder below) — same as `setCamera`.
                 let moves_pose = world3d_projection_action_moves_pose(action, args);
-                apply_world3d_projection_action(&mut envelope.fixture.camera.projection, action, args);
+                apply_world3d_projection_action(&mut envelope.runtime.camera.projection, action, args);
                 if moves_pose {
-                    let distance = puzzle3d_camera_distance(&envelope.fixture.camera);
-                    let (position, up) = world3d_projection_pose(&envelope.fixture.camera.projection, envelope.fixture.camera.target, distance);
-                    envelope.fixture.camera.position = position;
-                    envelope.fixture.camera.up = Some(up);
+                    let distance = puzzle3d_camera_distance(&envelope.runtime.camera);
+                    let (position, up) = world3d_projection_pose(&envelope.runtime.camera.projection, envelope.runtime.camera.target, distance);
+                    envelope.runtime.camera.position = position;
+                    envelope.runtime.camera.up = Some(up);
                 }
             }
             "setVortexShow" => {
@@ -4552,7 +4570,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             _ => {}
         }
         ui_scope = match action {
-            "setHover" | "worldHover" => puzzle3d_viewport_scope(),
+            "setHover" | "worldHover" | "setCamera" | "setProjection" | "setProjectionParam" | "focusSelection" => puzzle3d_viewport_scope(),
             "worldPick" | "worldSelect" | "setSelection" | "clearSelection" | "selectAll" | "worldVortexHover" | "worldVortexSelect" => puzzle3d_selection_scope(),
             _ => ui_scope,
         };
@@ -4609,7 +4627,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                     PUZZLE3D_PLAY_SURFACE_VIEWPORT,
                     PUZZLE3D_PLAY_APP_ID,
                     world3d_scene_extended(
-                        camera_json(&envelope.fixture.camera),
+                        camera_json(&envelope.runtime.camera),
                         world_meshes_json(&envelope.fixture),
                         world_instances_json(&envelope.fixture, &envelope.runtime),
                         world_selection_json(&envelope),
@@ -5025,9 +5043,6 @@ pub fn create_puzzle3d_app() -> App {
             .operation("addObjectKind", "Add Object")
             .operation("deleteSelection", "Delete Selection")
             .operation("duplicateSelection", "Duplicate Selection")
-            .operation("setCamera", "Set Camera")
-            .operation("setProjection", "Set Projection")
-            .operation("setProjectionParam", "Set Projection Parameter")
             .operation("translateSelection", "Translate Selection")
             .operation("rotateSelection", "Rotate Selection")
             .operation("scaleSelection", "Scale Selection")
@@ -5035,7 +5050,6 @@ pub fn create_puzzle3d_app() -> App {
             .operation("worldRelocate", "Relocate Object")
             .operation("setSelectionFlag", "Set Selection Flag")
             .operation("patchInspector", "Patch Inspector")
-            .operation("focusSelection", "Focus Selection")
             .operation("engagementSubmit", "Engagement Submit")
             .operation("engagementRepeatLast", "Engagement Repeat Last")
             .operation("createAttraction", "Create Attraction")
@@ -5049,6 +5063,10 @@ pub fn create_puzzle3d_app() -> App {
             // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog.
             .shell_action("openAddObjectDialog", "Add Object…")
             // 👁️ Ephemeral view state — selection, hover, camera scratch, utility-parameter runtime.
+            .view_action("setCamera", "Set Camera")
+            .view_action("setProjection", "Set Projection")
+            .view_action("setProjectionParam", "Set Projection Parameter")
+            .view_action("focusSelection", "Focus Selection")
             .view_action("setSelection", "Set Selection")
             .view_action("selectSameKindSelection", "Select Same Kind")
             .view_action("setJackQuery", "Set Jack Query")
@@ -5591,6 +5609,10 @@ mod tests {
         node.pointer("/world3d/lodJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
     }
 
+    fn camera_of(node: &Value) -> Value {
+        node.pointer("/world3d/cameraJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
+    }
+
     /// 🔍 Depth-first search for a [`WindowMeasure::Slider`]'s value by id, descending into groups (the
     /// fill-count slider now nests inside the fill Utility Options group rather than sitting on the engagement).
     fn find_measure_slider(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
@@ -5911,6 +5933,54 @@ mod tests {
         let second_composite = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &second_window_view).expect("render second window");
         let second_lod = lod_of(&serde_json::to_value(&second_composite).unwrap());
         assert_eq!(second_lod.get("showLodGrid").and_then(Value::as_bool), Some(false));
+    }
+
+    /// 🎥 `setCamera`/`setProjection`/`setProjectionParam`/`focusSelection` moved off the document —
+    /// they are View-kind and must never emit VCS operations, no matter what they mutate.
+    #[test]
+    fn camera_actions_are_view_actions_that_emit_no_document_operations() {
+        let app = create_puzzle3d_app();
+        for action_id in ["setCamera", "setProjection", "setProjectionParam", "focusSelection"] {
+            let def = app.definition.actions.iter().find(|entry| entry.id == action_id).unwrap_or_else(|| panic!("{action_id} declared"));
+            assert_eq!(def.kind, ActionKind::View, "{action_id} must be a View action — camera is session-only, never a VCS edit");
+        }
+        let mut live = new_app_with_registry();
+        let before = live.projection().expect("projection").0.clone();
+        let result = live.handle_action("setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [4.0, 5.0, 6.0], "zoom": 2.5 } })), &ViewState::default(), &testkit::meta("local")).expect("setCamera");
+        assert!(result.operations.is_empty(), "setCamera must not emit document operations");
+        assert_eq!(live.projection().expect("projection").0, before, "setCamera must not mutate the document");
+    }
+
+    /// 🪟📷 The hard dependency for the React 3D viewport's per-window `setCamera` dispatch: orbiting one
+    /// window instance's camera must never move any sibling instance's camera, and must never touch the
+    /// shared document (dispatching `setCamera` for window A leaves window B's rendered camera and the
+    /// document itself untouched).
+    #[test]
+    fn set_camera_is_per_window_and_leaves_sibling_windows_and_the_document_untouched() {
+        let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+        let window_a = "puzzle3d-main-a";
+        let window_b = "puzzle3d-main-b";
+        let instances = vec![
+            ViewWindowInstance { id: window_a.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+            ViewWindowInstance { id: window_b.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+        ];
+        let window_a_view = ViewState { window_id: Some(window_a.to_string()), window_instances: instances.clone(), ..ViewState::default() };
+        let window_b_view = ViewState { window_id: Some(window_b.to_string()), window_instances: instances.clone(), ..ViewState::default() };
+
+        let before_document = app.projection().expect("projection").0.clone();
+        let camera_b_before = camera_of(&serde_json::to_value(&app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &window_b_view).expect("render window B before")).unwrap());
+
+        let result = app
+            .handle_action("setCamera", Some(&json!({ "camera": { "position": [11.0, 22.0, 33.0], "target": [1.0, 2.0, 3.0], "zoom": 4.0 } })), &window_a_view, &testkit::meta("local"))
+            .expect("setCamera on window A");
+        assert!(result.operations.is_empty(), "setCamera must not emit document operations");
+        assert_eq!(app.projection().expect("projection").0, before_document, "setCamera must never mutate the shared document");
+
+        let camera_a_after = camera_of(&serde_json::to_value(&app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &window_a_view).expect("render window A after")).unwrap());
+        assert_eq!(camera_a_after.get("position").and_then(|value| value.as_array()).cloned(), Some(vec![json!(11.0), json!(22.0), json!(33.0)]), "window A's own rendered camera picks up the new pose");
+
+        let camera_b_after = camera_of(&serde_json::to_value(&app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &window_b_view).expect("render window B after")).unwrap());
+        assert_eq!(camera_b_after, camera_b_before, "window B's rendered camera must be unaffected by window A's setCamera");
     }
 
     /// 🪣 Fill count drives the shared document + reveal cutoff — split top/perspective panes must never
@@ -6654,7 +6724,7 @@ mod tests {
     #[test]
     fn set_hover_is_a_view_action_with_no_ops_after_document_mutation() {
         // 🖱️ After a real document edit the live store holds a `puzzle_3d`-shaped projection
-        // (optional camera.projection, skipped nulls). Hover must still round-trip as View-kind
+        // (skip_serializing_if-elided optional fields). Hover must still round-trip as View-kind
         // with zero operations — not fall into a spurious SetDocument from serde shape noise.
         let mut app = new_app_with_registry();
         app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 2.0, 3.0] })), &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");

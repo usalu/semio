@@ -2996,6 +2996,18 @@ export type UiTranslationSchema = {
       readonly setTerminology: UiLabelValue;
       readonly setDriver: UiLabelValue;
     };
+    /** @emoji 🧭 Labels for `noteShellCommand`'s shell-chrome commandIds (dock drag, window resize/rearrange/
+     * activate/close/split, panel toggle/tab) — logged into the plugin's session-only command-history panel. */
+    readonly shellCommand: {
+      readonly dockMove: UiLabelValue;
+      readonly windowResize: UiLabelValue;
+      readonly windowMove: UiLabelValue;
+      readonly windowActivate: UiLabelValue;
+      readonly windowClose: UiLabelValue;
+      readonly windowSplit: UiLabelValue;
+      readonly panelToggle: UiLabelValue;
+      readonly panelTab: UiLabelValue;
+    };
     readonly ribbon: {
       readonly group: {
         readonly parent: UiLabelValue;
@@ -3627,6 +3639,16 @@ export const uiChromeTranslationBundles = {
           setTerminology: { label: { normal: "Terminologie festlegen", beginner: "Terminologie festlegen" } },
           setDriver: { label: { normal: "Treiber festlegen", beginner: "Treiber festlegen" } },
         },
+        shellCommand: {
+          dockMove: { label: { normal: "Panel-Tab verschieben", beginner: "Panel-Tab verschieben" } },
+          windowResize: { label: { normal: "Fenster skalieren", beginner: "Fenster skalieren" } },
+          windowMove: { label: { normal: "Fenster neu anordnen", beginner: "Fenster neu anordnen" } },
+          windowActivate: { label: { normal: "Fenster aktivieren", beginner: "Fenster aktivieren" } },
+          windowClose: { label: { normal: "Fenster schließen", beginner: "Fenster schließen" } },
+          windowSplit: { label: { normal: "Fenster teilen", beginner: "Fenster teilen" } },
+          panelToggle: { label: { normal: "Panel umschalten", beginner: "Panel umschalten" } },
+          panelTab: { label: { normal: "Panel-Tab wechseln", beginner: "Panel-Tab wechseln" } },
+        },
         ribbon: {
           group: {
             parent: {
@@ -4241,6 +4263,16 @@ export const uiChromeTranslationBundles = {
           setLocale: { label: { normal: "Set Locale", beginner: "Set Locale" } },
           setTerminology: { label: { normal: "Set Terminology", beginner: "Set Terminology" } },
           setDriver: { label: { normal: "Set Driver", beginner: "Set Driver" } },
+        },
+        shellCommand: {
+          dockMove: { label: { normal: "Move Panel Tab", beginner: "Move Panel Tab" } },
+          windowResize: { label: { normal: "Resize Window", beginner: "Resize Window" } },
+          windowMove: { label: { normal: "Rearrange Windows", beginner: "Rearrange Windows" } },
+          windowActivate: { label: { normal: "Activate Window", beginner: "Activate Window" } },
+          windowClose: { label: { normal: "Close Window", beginner: "Close Window" } },
+          windowSplit: { label: { normal: "Split Window", beginner: "Split Window" } },
+          panelToggle: { label: { normal: "Toggle Panel", beginner: "Toggle Panel" } },
+          panelTab: { label: { normal: "Switch Panel Tab", beginner: "Switch Panel Tab" } },
         },
         ribbon: {
           group: {

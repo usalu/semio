@@ -35,11 +35,22 @@ const NAKAGIN_EXAMPLE_DSL: &str = puzzle_2d_dsl::PUZZLE2D_NAKAGIN_EXAMPLE_TEXT;
 /// 🌉 This app's own `Puzzle2dScene.fixture` (and `DocumentApp::Projection`) stays a bare
 /// `serde_json::Value` — see `puzzle_2d`'s `🔖ValueBridge` region — so the DSL-text example
 /// fixtures are parsed once into the typed `Puzzle2dProjection` and re-serialized to the JSON
-/// string this module's `serde_json::from_str`/`.example(...)` call sites expect.
-static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> =
-    LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as store::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
-static NAKAGIN_EXAMPLE_JSON: LazyLock<String> =
-    LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as store::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
+/// string this module's `serde_json::from_str`/`.example(...)` call sites expect. The typed bridge
+/// still carries a mandatory `camera` block (that DSL-derive struct is out of scope here — see
+/// `.🦑repo/🎫tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`) — strip it before handing the JSON
+/// back, since the play app's own document must never carry a `"camera"` key (see `setCamera`'s
+/// `ActionKind::View`): leaving it in would permanently trip `puzzle2d_document_delta_operations`'s
+/// known-keys guard on every subsequent action.
+fn parse_example_dsl_without_camera(dsl_text: &str, label: &str) -> String {
+    let projection = <Puzzle2dProjection as store::DocumentDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
+    let mut value = serde_json::to_value(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"));
+    if let Some(object) = value.as_object_mut() {
+        object.remove("camera");
+    }
+    serde_json::to_string(&value).unwrap_or_else(|error| panic!("re-serialize {label} example fixture: {error}"))
+}
+static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl_without_camera(CONCRETE_FOREST_EXAMPLE_DSL, "concrete-forest"));
+static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl_without_camera(NAKAGIN_EXAMPLE_DSL, "nakagin"));
 /// 🧰 The three canvas utilities declared to the framework utility bar (host-owned active utility, never a doc field).
 const PUZZLE2D_UTILITY_SELECT: &str = "select";
 const PUZZLE2D_UTILITY_BRUSH: &str = "brush";
@@ -92,11 +103,23 @@ fn default_lod_mode_by_pane() -> BTreeMap<String, String> {
     BTreeMap::from([(PUZZLE2D_PANE_OVERVIEW.to_string(), PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()), (PUZZLE2D_PANE_DETAIL.to_string(), "detail".to_string()), (PUZZLE2D_PANE_SELECTION.to_string(), PUZZLE2D_LOD_MODE_AUTOMATIC.to_string())])
 }
 
+fn default_camera_zoom() -> f64 {
+    1.0
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle2dPlayRuntime {
     #[serde(default)]
     selected_ids: Vec<String>,
+    /// 🎥 The canvas camera (pan/zoom) — session-only view state, never a document/fixture field
+    /// (see `setCamera`'s `ActionKind::View`): moving the camera must never create a VCS edit.
+    #[serde(default)]
+    camera_x: f64,
+    #[serde(default)]
+    camera_y: f64,
+    #[serde(default = "default_camera_zoom")]
+    camera_zoom: f64,
     #[serde(default = "default_lod_mode_by_pane")]
     lod_mode_by_pane: BTreeMap<String, String>,
     #[serde(default)]
@@ -128,6 +151,9 @@ impl Default for Puzzle2dPlayRuntime {
     fn default() -> Self {
         Self {
             selected_ids: Vec::new(),
+            camera_x: 0.0,
+            camera_y: 0.0,
+            camera_zoom: default_camera_zoom(),
             lod_mode_by_pane: default_lod_mode_by_pane(),
             engagement_input_by_pane: BTreeMap::new(),
             brush_candidate_index: 0,
@@ -159,7 +185,6 @@ struct Puzzle2dScene {
 fn default_empty_fixture() -> Value {
     json!({
         "schema": PUZZLE2D_FIXTURE_SCHEMA,
-        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
         "nodes": [],
         "edges": []
     })
@@ -202,13 +227,10 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
     args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()]).unwrap_or_default()
 }
 
-fn fixture_camera(fixture: &Value) -> (f64, f64, f64) {
-    let camera = fixture.get("camera");
-    (
-        camera.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0),
-        camera.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0),
-        camera.and_then(|value| value.get("zoom")).and_then(|value| value.as_f64()).unwrap_or(1.0),
-    )
+/// 🎥 The camera lives on `Puzzle2dPlayRuntime` — session-only view state, never a fixture field
+/// (see `setCamera`'s `ActionKind::View`).
+fn runtime_camera(runtime: &Puzzle2dPlayRuntime) -> (f64, f64, f64) {
+    (runtime.camera_x, runtime.camera_y, runtime.camera_zoom)
 }
 
 fn fixture_nodes(fixture: &Value) -> &[Value] {
@@ -443,9 +465,17 @@ fn select_same_kind_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
     ids
 }
 
-fn set_fixture_camera(fixture: &mut Value, camera: &Value) {
-    if let Some(obj) = fixture.as_object_mut() {
-        obj.insert("camera".to_string(), camera.clone());
+/// 🎥 Writes an `{ x, y, zoom }` camera payload into `Puzzle2dPlayRuntime` — session-only view
+/// state, never the fixture (see `setCamera`'s `ActionKind::View`).
+fn set_runtime_camera(runtime: &mut Puzzle2dPlayRuntime, camera: &Value) {
+    if let Some(x) = camera.get("x").and_then(Value::as_f64) {
+        runtime.camera_x = x;
+    }
+    if let Some(y) = camera.get("y").and_then(Value::as_f64) {
+        runtime.camera_y = y;
+    }
+    if let Some(zoom) = camera.get("zoom").and_then(Value::as_f64) {
+        runtime.camera_zoom = zoom;
     }
 }
 
@@ -515,9 +545,7 @@ fn apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dScene)
         let payload = event.get("payload").cloned().unwrap_or(Value::Null);
         match name {
             "camera" => {
-                if let Some(obj) = envelope.fixture.as_object_mut() {
-                    obj.insert("camera".into(), payload);
-                }
+                set_runtime_camera(&mut envelope.runtime, &payload);
             }
             "select" => {
                 if let Some(ids) = payload.get("ids").and_then(|value| serde_json::from_value(value.clone()).ok()) {
@@ -723,9 +751,9 @@ fn puzzle2d_select_scope() -> semio_framework_core::kernel::UiDirtyScope {
 /// 🪞 Re-syncs `envelope.runtime.selected_ids` from `self.host` for engine-driven selection changes
 /// (e.g. `delete_selection`, brush commit). Camera is deliberately NOT mirrored here: every action
 /// that moves the camera (`setCamera`, `focusSelection`, the `camera` board event) already writes
-/// `envelope.fixture`'s camera directly — re-deriving it from `host.camera` here used to blindly
-/// overwrite that write with the *pre-action* host camera (since nothing had told `self.host` about
-/// the new value yet), silently reverting every plain `camera` echo from the client.
+/// `envelope.runtime`'s camera fields directly — re-deriving it from `host.camera` here used to
+/// blindly overwrite that write with the *pre-action* host camera (since nothing had told
+/// `self.host` about the new value yet), silently reverting every plain `camera` echo from the client.
 fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dScene) {
     let events_raw = host.drain_events_json();
     apply_board_events_from_json(&events_raw, envelope);
@@ -1016,8 +1044,8 @@ fn puzzle2d_fixture_world_bounds(fixture: &Value) -> (f64, f64, f64) {
 }
 
 /// 📷 Triptych camera for a pane: overview is zoomed out and centered on the fixture, detail zooms into the last-placed node, selection frames a lower-left quadrant — mirrors the pre-migration `puzzle2dPlayTriptychCameraForPane`.
-fn puzzle2d_pane_camera(fixture: &Value, pane: &str) -> (f64, f64, f64) {
-    let (camera_x, camera_y, camera_zoom) = fixture_camera(fixture);
+fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane: &str) -> (f64, f64, f64) {
+    let (camera_x, camera_y, camera_zoom) = runtime_camera(runtime);
     if pane == PUZZLE2D_PANE_OVERVIEW {
         return (camera_x, camera_y, puzzle2d_clamp_zoom(camera_zoom));
     }
@@ -1079,7 +1107,7 @@ fn cached_fixture_json(document_json: &str, fixture: &Value) -> String {
 
 fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane: &str) -> Board2dScene {
     let fixture = &envelope.fixture;
-    let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, pane);
+    let (camera_x, camera_y, zoom) = puzzle2d_pane_camera(fixture, &envelope.runtime, pane);
     let camera_json = json!({ "x": camera_x, "y": camera_y, "zoom": zoom }).to_string();
     let glyph_catalogs_json = fixture.get("meta").and_then(|value| value.get("kindCatalogs")).map(|value| value.to_string()).unwrap_or_else(|| "{}".into());
     let selection_json = serde_json::to_string(&envelope.runtime.selected_ids).unwrap_or_else(|_| "[]".into());
@@ -1651,7 +1679,9 @@ impl DocumentApp for Puzzle2dPlayApp {
             self.last_synced_fixture = Some(envelope.fixture.clone());
         }
         sync_host_runtime_state(&mut self.host, &envelope);
-        let mut coalesce_key: Option<String> = None;
+        // 🎥 No action coalesces anymore: `setCamera` used to be the sole `coalesce_key` writer, but
+        // it is now a View-kind action that never touches the document (see `ActionKind::View` above).
+        let coalesce_key: Option<String> = None;
         let mut effects: Vec<HostEffect> = Vec::new();
         // 🐢 Default to Full (safe: every unrecognized/rare action re-renders everything, same as
         // before this ticket); the narrow-tier arms below override it to the smallest scope that
@@ -1701,12 +1731,13 @@ impl DocumentApp for Puzzle2dPlayApp {
                 }
             }
             "setCamera" => {
+                // 🎥 View-kind: the camera is session-only runtime state, never a document edit — no
+                // operation is emitted (nothing to coalesce, so no `coalesce_key` either).
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let (Some(x), Some(y), Some(zoom)) = (camera.get("x").and_then(|value| value.as_f64()), camera.get("y").and_then(|value| value.as_f64()), camera.get("zoom").and_then(|value| value.as_f64())) {
                         self.host.set_camera(x, y, zoom);
                     }
-                    set_fixture_camera(&mut envelope.fixture, camera);
-                    coalesce_key = Some("camera".into());
+                    set_runtime_camera(&mut envelope.runtime, camera);
                     ui_scope = puzzle2d_window_only_scope();
                 }
             }
@@ -2010,15 +2041,15 @@ impl DocumentApp for Puzzle2dPlayApp {
                         max_y = max_y.max(y + radius);
                     }
                     if min_x.is_finite() {
+                        // 🎥 The camera is session-only runtime state (see `setCamera`'s
+                        // `ActionKind::View`) — write it directly, never the fixture.
                         let camera = json!({
                             "x": (min_x + max_x) * 0.5,
                             "y": (min_y + max_y) * 0.5,
                             "zoom": 1.0,
                         });
-                        set_fixture_camera(&mut envelope.fixture, &camera);
-                        if let (Some(x), Some(y), Some(zoom)) = (camera.get("x").and_then(|value| value.as_f64()), camera.get("y").and_then(|value| value.as_f64()), camera.get("zoom").and_then(|value| value.as_f64())) {
-                            self.host.set_camera(x, y, zoom);
-                        }
+                        set_runtime_camera(&mut envelope.runtime, &camera);
+                        self.host.set_camera(envelope.runtime.camera_x, envelope.runtime.camera_y, envelope.runtime.camera_zoom);
                         {}
                     } else {
                         {}
@@ -2242,7 +2273,6 @@ pub fn create_puzzle2d_app() -> App {
             .view_action("selectSameKind", "Select Same Kind")
             // 🔧 Internal content operations — inspector/panel/board/import-bound, not palette commands.
             .action_with(puzzle2d_internal_action("setSelectionFlag", "Set Selection Flag", ActionKind::Operation))
-            .action_with(puzzle2d_internal_action("setCamera", "Set Camera", ActionKind::Operation))
             .action_with(puzzle2d_internal_action("patchInspectorNodes", "Patch Inspector Nodes", ActionKind::Operation))
             .action_with(puzzle2d_internal_action("redrawHandles", "Redraw Handles", ActionKind::Operation))
             .action_with(puzzle2d_internal_action("reorganize", "Reorganize", ActionKind::Operation))
@@ -2251,6 +2281,9 @@ pub fn create_puzzle2d_app() -> App {
             .action_with(puzzle2d_internal_action("brushFillSessionStep", "Brush Fill Session Step", ActionKind::Operation))
             .action_with(puzzle2d_internal_action("brushCommitSlot", "Brush Commit Slot", ActionKind::Operation))
             // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
+            // 🎥 `setCamera` is session-only view state (never a VCS edit — see `Puzzle2dPlayRuntime`'s
+            // camera fields), so it belongs in this View-kind group, not the operations above.
+            .action_with(puzzle2d_internal_action("setCamera", "Set Camera", ActionKind::View))
             .action_with(puzzle2d_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(puzzle2d_internal_action("documentSelect", "Document Select", ActionKind::View))
             .action_with(puzzle2d_internal_action("engagementInput", "Engagement Input", ActionKind::View))
@@ -2305,14 +2338,13 @@ fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
     semio_framework_os::title_card_svg(value, "Puzzle 2D", 1024, 768)
 }
 
-/// 📥 Tier C DWG import — the puzzle-2d fixture only supports circle/rectangle nodes (no polygonal outlines), so this
-/// always returns an empty board whose camera is framed to the DWG's extents; never errors on a structurally valid DWG.
-fn puzzle2d_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
-    let mut fixture = default_empty_fixture();
-    let center_x = (drawing.extmin[0] + drawing.extmax[0]) / 2.0;
-    let center_y = (drawing.extmin[1] + drawing.extmax[1]) / 2.0;
-    fixture["camera"] = json!({ "x": center_x, "y": center_y, "zoom": 1.0 });
-    Ok(fixture)
+/// 📥 Tier C DWG import — the puzzle-2d fixture only supports circle/rectangle nodes (no polygonal
+/// outlines), so this always returns an empty board; never errors on a structurally valid DWG.
+/// The DWG's extents no longer frame a camera here: the camera is session-only `Puzzle2dPlayRuntime`
+/// state (see `setCamera`'s `ActionKind::View`), and this import path produces a bare document with
+/// no live app instance to receive that runtime write.
+fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
+    Ok(default_empty_fixture())
 }
 
 pub fn register_puzzle2d_exports() {
@@ -2346,6 +2378,27 @@ mod tests {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
         app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load concrete forest");
         app
+    }
+
+    /// 🎥 Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
+    /// `Board2dScene.cameraJson` — the only externally observable surface for the runtime camera
+    /// (see `setCamera`'s `ActionKind::View`: the camera is never a document field, so it cannot be
+    /// read back off `app.projection()`).
+    fn rendered_camera(rendered: &UiNode) -> (f64, f64, f64) {
+        fn find_camera_json(value: &Value) -> Option<String> {
+            if let Some(json) = value.get("cameraJson").and_then(Value::as_str) {
+                return Some(json.to_string());
+            }
+            match value {
+                Value::Object(map) => map.values().find_map(find_camera_json),
+                Value::Array(items) => items.iter().find_map(find_camera_json),
+                _ => None,
+            }
+        }
+        let value = serde_json::to_value(rendered).expect("serialize rendered node");
+        let camera_json = find_camera_json(&value).expect("rendered scene must carry cameraJson");
+        let camera: Value = serde_json::from_str(&camera_json).expect("cameraJson parses");
+        (camera.get("x").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("y").and_then(Value::as_f64).unwrap_or(f64::NAN), camera.get("zoom").and_then(Value::as_f64).unwrap_or(f64::NAN))
     }
 
     #[test]
@@ -2401,17 +2454,21 @@ mod tests {
         assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 1);
     }
 
+    /// 🎥 `setCamera` is session-only view state (see `ActionKind::View`): a camera drag never
+    /// creates a VCS edit, so there is nothing to coalesce and nothing for `undo` to revert.
     #[test]
-    fn camera_drag_coalesces_into_one_undo_step() {
+    fn set_camera_is_session_only_and_never_undoable() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        let camera_x = |app: &VcsDocumentApp<Puzzle2dPlayApp>| app.projection().expect("projection").0.get("camera").and_then(|camera| camera.get("x")).and_then(|value| value.as_f64()).unwrap_or(f64::NAN);
-        let origin_x = camera_x(&app);
         for x in [1.0, 2.0, 3.0] {
-            app.handle_action("setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("camera");
+            let result = app.handle_action("setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("camera");
+            assert!(result.operations.is_empty(), "setCamera must never produce a document operation");
         }
-        assert_eq!(camera_x(&app), 3.0);
-        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
-        assert_eq!(camera_x(&app), origin_x, "the coalesced drag is a single undo step back to the loaded camera");
+        let rendered = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
+        assert_eq!(rendered_camera(&rendered).0, 3.0, "the camera must update immediately in the rendered scene");
+        let undo = app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        assert!(undo.operations.is_empty(), "there is no document edit to undo");
+        let rendered_after_undo = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
+        assert_eq!(rendered_camera(&rendered_after_undo).0, 3.0, "the camera is session state — undo must not revert it");
     }
 
     /// 🐢 Regression test for a perf-round-2 bug: `sync_host_from_envelope`'s `parse_fixture_v1`
@@ -2450,16 +2507,20 @@ mod tests {
     }
 
     /// 🪞 Regression test: `apply_host_events` used to epsilon-compare `host.camera` (still the
-    /// *pre-action* value) against the fixture and blindly overwrite the fixture with it, reverting
-    /// a plain `camera` board event (used for the live wheel-zoom echo) before it ever committed.
+    /// *pre-action* value) against the runtime and blindly overwrite it, reverting a plain `camera`
+    /// board event (used for the live wheel-zoom echo) before it ever committed. The camera is
+    /// session-only `Puzzle2dPlayRuntime` state (see `setCamera`'s `ActionKind::View`) — it must
+    /// commit into the rendered scene and never produce a document operation.
     #[test]
     fn apply_board_events_camera_event_commits() {
         let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-        app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
-        let camera = app.projection().expect("projection").0.get("camera").cloned().expect("camera field");
-        assert_eq!(camera.get("x").and_then(Value::as_f64), Some(5.0));
-        assert_eq!(camera.get("y").and_then(Value::as_f64), Some(6.0));
-        assert_eq!(camera.get("zoom").and_then(Value::as_f64), Some(1.2));
+        let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
+        assert!(result.operations.is_empty(), "a camera board event must never produce a document operation");
+        let rendered = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
+        let (x, y, zoom) = rendered_camera(&rendered);
+        assert_eq!(x, 5.0);
+        assert_eq!(y, 6.0);
+        assert_eq!(zoom, 1.2);
     }
 
     /// 🐢 A pure selection change is runtime state, not document state — it must not produce any
@@ -2567,15 +2628,18 @@ mod tests {
         }
     }
 
+    /// 🎥 The camera is session-only runtime state, never a document field — a DWG import (which has
+    /// no live app instance to receive a runtime write) must produce a bare empty board with no
+    /// `"camera"` key at all, regardless of the drawing's extents.
     #[test]
-    fn dwg_import_returns_empty_board_framed_to_extents() {
+    fn dwg_import_returns_empty_board_with_no_camera_field() {
         let mut drawing = semio_framework_os::DwgDrawing::default();
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [100.0, 200.0, 0.0];
         let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();
         assert_eq!(fixture.get("schema").and_then(|value| value.as_str()), Some(PUZZLE2D_FIXTURE_SCHEMA));
         assert!(fixture_nodes(&fixture).is_empty());
-        assert_eq!(fixture_camera(&fixture), (50.0, 100.0, 1.0));
+        assert!(fixture.get("camera").is_none(), "the document must never carry a camera field");
     }
 
     /// 🧪 Definitional convergence proof: two instances on one backbone make DISJOINT node edits
@@ -2717,6 +2781,7 @@ mod tests {
         let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
         let view_dispatches: Vec<(&str, Value)> = vec![
             ("setSelection", json!({ "ids": [node_id.clone()] })),
+            ("setCamera", json!({ "camera": { "x": 7.0, "y": 8.0, "zoom": 1.5 } })),
             ("selectAll", Value::Null),
             ("selectSameKind", Value::Null),
             ("clearSelection", Value::Null),

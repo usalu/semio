@@ -182,8 +182,6 @@ pub struct ShootingFixture {
     #[serde(default)]
     pub assets: Vec<ShootingAsset>,
     #[serde(default)]
-    pub camera: ShootingCamera,
-    #[serde(default)]
     pub saved_cameras: Vec<ShootingSavedCamera>,
     #[serde(default)]
     pub scene: ShootingSceneLighting,
@@ -199,7 +197,6 @@ pub fn empty_shooting_fixture() -> ShootingFixture {
     ShootingFixture {
         schema: SHOOTING_FIXTURE_SCHEMA.into(),
         assets: Vec::new(),
-        camera: ShootingCamera::default(),
         saved_cameras: Vec::new(),
         scene: ShootingSceneLighting::default(),
         shots: Vec::new(),
@@ -236,9 +233,11 @@ pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
     [ax / len * s, ay / len * s, az / len * s, half.cos()]
 }
 
-/// 🎯 Resolves the effective camera for `shot`: the saved camera it references, or the fixture's own.
-pub fn shooting_resolve_shot_camera(fixture: &ShootingFixture, shot: &ShootingShot) -> ShootingCamera {
-    shot.camera_id.as_ref().and_then(|camera_id| fixture.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map(|entry| entry.camera.clone()).unwrap_or_else(|| fixture.camera.clone())
+/// 🎯 Resolves the effective camera for `shot`: the saved camera it references, or `fallback` — the
+/// app's session-only live camera (never a document field; see `ShootingPlayRuntime::camera` in the
+/// ui crate) when the shot has no saved camera of its own.
+pub fn shooting_resolve_shot_camera(fixture: &ShootingFixture, shot: &ShootingShot, fallback: &ShootingCamera) -> ShootingCamera {
+    shot.camera_id.as_ref().and_then(|camera_id| fixture.saved_cameras.iter().find(|entry| &entry.id == camera_id)).map(|entry| entry.camera.clone()).unwrap_or_else(|| fallback.clone())
 }
 //#endregion 🔖Domain
 
@@ -401,8 +400,6 @@ struct ShootingFixtureDsl {
     active_shot_id: String,
     active_asset_id: String,
     #[dsl(block)]
-    camera: ShootingCamera,
-    #[dsl(block)]
     scene: ShootingSceneLighting,
     #[dsl(table)]
     assets: Vec<ShootingAsset>,
@@ -417,7 +414,6 @@ fn shooting_fixture_to_dsl(fixture: &ShootingFixture) -> ShootingFixtureDsl {
         schema: fixture.schema.clone(),
         active_shot_id: fixture.active_shot_id.clone(),
         active_asset_id: fixture.active_asset_id.clone(),
-        camera: fixture.camera.clone(),
         scene: fixture.scene.clone(),
         assets: fixture.assets.clone(),
         shots: fixture.shots.clone(),
@@ -429,7 +425,6 @@ fn shooting_fixture_from_dsl(dsl_fixture: ShootingFixtureDsl) -> ShootingFixture
     ShootingFixture {
         schema: dsl_fixture.schema,
         assets: dsl_fixture.assets,
-        camera: dsl_fixture.camera,
         saved_cameras: dsl_fixture.saved_cameras,
         scene: dsl_fixture.scene,
         shots: dsl_fixture.shots,

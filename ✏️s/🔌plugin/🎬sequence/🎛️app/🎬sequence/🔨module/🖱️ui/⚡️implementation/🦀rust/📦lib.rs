@@ -7,7 +7,7 @@ use semio_framework_plugin::{
     PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use sequence::{default_fixture, SequenceFixture, SequenceStep, SlotRef, SEQUENCE_FIXTURE_SCHEMA};
+use sequence::{default_fixture, SequenceCamera, SequenceFixture, SequenceStep, SlotRef, SEQUENCE_FIXTURE_SCHEMA};
 use sequence_engine::{control_slots, is_control_kind, sequence_example_json, SequenceHost};
 use sequence_op::{sequence_fixture_operations, SequenceOperation};
 use serde::{Deserialize, Serialize};
@@ -39,6 +39,9 @@ struct SequencePlayRuntime {
     selected_step_ids: Vec<String>,
     last_run_json: String,
     orientation: DagLayoutOrientation,
+    /// 🎥 The node-graph viewport pan/zoom — session-only view state (never a VCS-tracked document
+    /// field): see `"nodeGraphViewport"` in `handle_action` below.
+    camera: SequenceCamera,
 }
 
 #[derive(Serialize)]
@@ -315,7 +318,7 @@ fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -
     let mut host = host_from_fixture(fixture);
     host.layout_expanded_slots();
     let (nodes_json, edges_json) = fixture_to_workflow(&host.dag.fixture);
-    let viewport_json = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let viewport_json = serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let selection_json = if runtime.selected_step_ids.is_empty() { None } else { serde_json::to_string(&runtime.selected_step_ids).ok() };
     build_node_graph_scene(
         SEQUENCE_PLAY_SURFACE_MAIN,
@@ -407,10 +410,11 @@ impl DocumentApp for SequencePlayApp {
                 self.runtime.last_run_json.clear();
                 ActionEmit::default()
             }
-            // 📷 Camera — a coalesced scalar operation so a pan/zoom gesture is one undo step.
+            // 👁️ View action: the node-graph viewport never touches the document — it's written
+            // straight into `self.runtime`, session-only, no VCS edit, no undo entry.
             "nodeGraphViewport" => {
                 if let Some(camera) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()).and_then(|json| serde_json::from_str(json).ok()) {
-                    return ActionEmit::amend(vec![SequenceOperation::SetCamera { camera }], "camera");
+                    self.runtime.camera = camera;
                 }
                 ActionEmit::default()
             }
@@ -671,7 +675,7 @@ pub fn create_sequence_app() -> App {
             .operation("setStepCollapsed", "Set Step Collapsed")
             .operation("reorganize", "Reorganize")
             .operation("nodeGraphEdit", "Node Graph Edit")
-            .operation("nodeGraphViewport", "Node Graph Viewport")
+            .view_action("nodeGraphViewport", "Node Graph Viewport")
             // 👁️ Ephemeral view state — selection, run output, layout orientation.
             .view_action("setSelection", "Set Selection")
             .view_action("selectNode", "Select Node")
@@ -748,6 +752,21 @@ mod tests {
         assert!(result.operations.is_empty(), "run is a view action and emits no operations");
         let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("run result"));
+    }
+
+    /// 🎥 `"nodeGraphViewport"` is a View action — it must never emit a `SequenceOperation` (no VCS
+    /// edit, no undo entry) and instead write straight into `self.runtime`.
+    #[test]
+    fn node_graph_viewport_writes_runtime_not_operations() {
+        let mut app = new_app();
+        let result = app
+            .handle_action("nodeGraphViewport", Some(&json!({ "viewportJson": r#"{"x":5.0,"y":6.0,"zoom":2.0}"# })), &ViewState::default(), &testkit::meta("local"))
+            .expect("viewport pan/zoom");
+        assert!(result.operations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
+        let node = app.render(SEQUENCE_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let payload: Value = serde_json::to_value(&node).unwrap();
+        let viewport: Value = serde_json::from_str(payload["nodeGraph"]["viewportJson"].as_str().unwrap()).unwrap();
+        assert_eq!(viewport["zoom"], json!(2.0));
     }
 
     #[test]

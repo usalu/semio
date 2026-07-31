@@ -58,6 +58,9 @@ struct TrinityEditorSelection {
 #[derive(Clone, Debug, Default, PartialEq)]
 struct TrinityJackRuntime {
     selected_node_ids: Vec<String>,
+    /// 📷 Live viewport pan/zoom — session-only (never a VCS operation); seeded once from the
+    /// initial fixture's seed-only `camera` field, then only ever written by `nodeGraphViewport`.
+    camera: Camera,
     active_fixture_id: String,
     jack_query: String,
     jack_result_json: String,
@@ -111,8 +114,10 @@ fn default_fixture() -> GraphFixture {
 
 /// 🌱 Seeds the runtime with the default query and its result table so the Results window is populated on load.
 fn seeded_jack_runtime() -> TrinityJackRuntime {
-    let (result_json, _) = run_jack_query(&default_fixture(), TRINITY_JACK_DEFAULT_QUERY);
+    let fixture = default_fixture();
+    let (result_json, _) = run_jack_query(&fixture, TRINITY_JACK_DEFAULT_QUERY);
     TrinityJackRuntime {
+        camera: fixture.camera.clone(),
         active_fixture_id: "nakagin".into(),
         jack_query: TRINITY_JACK_DEFAULT_QUERY.into(),
         jack_result_json: result_json,
@@ -658,7 +663,8 @@ fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, te
 
 //#region 🔖Render
 fn render_graph(fixture: &GraphFixture, runtime: &TrinityJackRuntime) -> UiNode {
-    let (nodes_json, edges_json, viewport_json) = fixture_to_workflow(fixture);
+    let (nodes_json, edges_json, _) = fixture_to_workflow(fixture);
+    let viewport_json = serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let selection_json = if runtime.selected_node_ids.is_empty() {
         None
     } else {
@@ -767,7 +773,7 @@ impl DocumentApp for TrinityJackPlayApp {
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                     if let Ok(camera) = serde_json::from_str::<Camera>(viewport_json) {
-                        return ActionEmit::amend(vec![TrinityGraphOperation::SetCamera { camera }], "viewport");
+                        self.runtime.camera = camera;
                     }
                 }
                 ActionEmit::default()
@@ -869,6 +875,7 @@ impl DocumentApp for TrinityJackPlayApp {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("");
                 if let Some(next) = fixture_dsl_for_preset(example_id).and_then(|dsl| GraphFixture::parse_dsl(dsl).ok()) {
                     self.runtime.active_fixture_id = example_id.into();
+                    self.runtime.camera = next.camera.clone();
                     self.runtime.jack_query = preset_query(example_id).into();
                     let (result_json, _) = run_jack_query(&next, &self.runtime.jack_query);
                     self.runtime.jack_result_json = result_json;
@@ -1054,7 +1061,6 @@ pub fn create_trinity_jack_app() -> App {
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
             .operation("nodeGraphEdit", "Edit Graph")
-            .operation("nodeGraphViewport", "Set Graph Viewport")
             .operation("patchTrinityNodes", "Patch Nodes")
             .operation("reorganize", "Reorganize")
             .operation("runJackQuery", "Run Jack Query")
@@ -1065,6 +1071,7 @@ pub fn create_trinity_jack_app() -> App {
             .view_action("selectNode", "Select Node")
             .view_action("nodeGraphSelect", "Select Graph Node")
             .view_action("nodeGraphHover", "Hover Graph Node")
+            .view_action("nodeGraphViewport", "Set Graph Viewport")
             .view_action("textEdit", "Edit Jack Query")
             .view_action("textSelect", "Select Jack Query Text")
             .view_action("textHover", "Hover Jack Query Text")
@@ -1311,22 +1318,26 @@ mod tests {
         assert_eq!(renamed, "renamed-node");
     }
 
+    /// 🎥 `nodeGraphViewport` is now `ActionKind::View`: it writes the app's own runtime camera and
+    /// emits zero operations, so the document's seed-only `camera` field is never touched and there
+    /// is nothing to undo. Rendering reads the live viewport from runtime instead of the fixture.
     #[test]
-    fn node_graph_viewport_emits_coalesced_set_camera() {
+    fn node_graph_viewport_writes_runtime_camera_without_operations() {
         let mut app = new_app();
         for zoom in [1.5, 2.0, 2.5] {
-            app.handle_action(
-                "nodeGraphViewport",
-                Some(&json!({ "viewportJson": json!({ "x": 10.0, "y": 20.0, "zoom": zoom }).to_string() })),
-                &ViewState::default(),
-                &meta("local"),
-            )
-            .expect("viewport");
+            let result = app
+                .handle_action(
+                    "nodeGraphViewport",
+                    Some(&json!({ "viewportJson": json!({ "x": 10.0, "y": 20.0, "zoom": zoom }).to_string() })),
+                    &ViewState::default(),
+                    &meta("local"),
+                )
+                .expect("viewport");
+            assert!(result.operations.is_empty(), "camera is a view action, no operations");
         }
-        assert_eq!(app.projection().expect("projection").camera.zoom, 2.5);
-        // Coalesced into a single undo step: undo restores the original camera, not an intermediate zoom.
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").camera.zoom, default_fixture().camera.zoom);
+        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewState::default()).expect("render");
+        assert!(serde_json::to_string(&node).unwrap().contains("2.5"), "render reads the live runtime camera");
     }
 
     #[test]

@@ -1627,7 +1627,11 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
     None
 }
 
-fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
+/// 🕒 `pub` (was crate-private) so the wgpu renderer's wheel-zoom settle-then-dispatch sweep
+/// (`AppRuntime::frame`'s `pending_camera_dispatch_deadlines_ms`) can build the same `setCamera`
+/// action the pointer-release path below already dispatches — one orbit-to-action mapping, two
+/// trigger sites (immediate on release, debounced on wheel settle).
+pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
     let camera = state.orbit.to_camera();
     ActionDescriptor {
         controller_id: state.controller_id.clone(),
