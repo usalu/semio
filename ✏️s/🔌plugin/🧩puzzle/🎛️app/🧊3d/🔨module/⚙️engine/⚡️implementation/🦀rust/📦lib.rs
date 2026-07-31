@@ -3,7 +3,7 @@
 
 use puzzle_3d::{Puzzle3dError, Puzzle3dProjection};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 //#region 🔒GeometryAdapter
 /// 🔒 Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this crate depends on.
 
@@ -367,6 +367,15 @@ pub struct BrushPreviewState {
 struct BrushCollisionFreeResult {
     free: Vec<BrushCompatibleCandidate>,
     unknown_pending: bool,
+    #[serde(default)]
+    resume_candidate_index: usize,
+}
+
+/// 🚦 Which background precompute lane a tick should advance — fill and brush never share one FIFO queue.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PrecomputeLane {
+    Brush,
+    Fill,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -394,6 +403,15 @@ pub struct FillBuildProgress {
     appended_attractions: Vec<AttractionProps>,
     #[serde(default)]
     sequence: Vec<BrushPlacePayload>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FillProgressSummary {
+    pub count: usize,
+    pub applied_count: usize,
+    pub max_count: usize,
+    pub done: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -427,12 +445,6 @@ struct BrushFillVortexTarget {
     object_kind: Option<String>,
     vortex_kind: Option<String>,
     vortex_index: usize,
-}
-
-#[derive(Debug, Clone)]
-enum PrecomputeTask {
-    BrushTarget(String),
-    FillStep,
 }
 
 fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
@@ -1219,26 +1231,55 @@ struct Puzzle3dEngine {
     /// `brush_cache`/`fill`/`queue` and restarting suggestion+fill precompute from zero every time.
     scene_json: Option<String>,
     meshes: HashMap<String, CollisionBody>,
+    mesh_is_fallback: HashMap<String, bool>,
     brush_cache: HashMap<String, BrushCollisionFreeResult>,
+    brush_queue: VecDeque<String>,
+    fill_steps_remaining: usize,
     fill: Option<FillBuilder>,
-    queue: Vec<PrecomputeTask>,
 }
 
 impl Puzzle3dEngine {
     fn new() -> Self {
-        Self { scene: None, scene_json: None, meshes: HashMap::new(), brush_cache: HashMap::new(), fill: None, queue: Vec::new() }
+        Self {
+            scene: None,
+            scene_json: None,
+            meshes: HashMap::new(),
+            mesh_is_fallback: HashMap::new(),
+            brush_cache: HashMap::new(),
+            brush_queue: VecDeque::new(),
+            fill_steps_remaining: 0,
+            fill: None,
+        }
+    }
+
+    fn fill_lane_active(&self) -> bool {
+        self.fill.as_ref().is_some_and(|fill| !fill.stalled && fill.sequence.len() < fill.max_count && self.fill_steps_remaining > 0)
+    }
+
+    fn brush_lane_active(&self) -> bool {
+        !self.brush_queue.is_empty()
+    }
+
+    fn re_enqueue_brush_targets(&mut self) {
+        let Some(scene) = &self.scene else {
+            return;
+        };
+        for target in enumerate_brush_fill_vortex_targets(&scene.fixture) {
+            if !self.brush_queue.iter().any(|id| id == &target.full_id) {
+                self.brush_queue.push_back(target.full_id);
+            }
+        }
     }
 
     fn rebuild_queue(&mut self) {
-        self.queue.clear();
+        self.brush_queue.clear();
         self.brush_cache.clear();
+        self.fill_steps_remaining = 0;
         if let Some(scene) = &self.scene {
             for target in enumerate_brush_fill_vortex_targets(&scene.fixture) {
-                self.queue.push(PrecomputeTask::BrushTarget(target.full_id));
+                self.brush_queue.push_back(target.full_id);
             }
-            for _ in 0..FILL_COUNT_MAX {
-                self.queue.push(PrecomputeTask::FillStep);
-            }
+            self.fill_steps_remaining = FILL_COUNT_MAX;
             let catalogs = scene.kind_catalogs.clone().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
             self.fill = Some(FillBuilder::new(scene.fixture.clone(), scene.seed, &self.meshes, &catalogs));
         } else {
@@ -1263,8 +1304,7 @@ impl Puzzle3dEngine {
         fill.placed.retain(|entry| retained_ids.contains(entry.object_id.as_str()));
         fill.candidate_cache.clear();
         fill.stalled = false;
-        self.queue.retain(|task| !matches!(task, PrecomputeTask::FillStep));
-        self.queue.extend((applied..fill.max_count).map(|_| PrecomputeTask::FillStep));
+        self.fill_steps_remaining = fill.max_count.saturating_sub(applied);
     }
 
     fn update_kind_weights(&mut self, object_weights: HashMap<String, f64>, vortex_weights: HashMap<String, f64>) {
@@ -1333,13 +1373,29 @@ impl Puzzle3dEngine {
         Ok(())
     }
 
-    fn register_mesh(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>) {
-        if let Some(body) = collision_body_from_buffers(&positions, &indices) {
-            self.meshes.insert(url, body);
-            // 🧊 A newly registered/replaced mesh invalidates any cached brush candidates/fill progress
-            // computed against a different (or fallback-box) body for this url.
-            self.rebuild_queue();
+    fn install_collision_mesh(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>, is_fallback: bool) {
+        let Some(body) = collision_body_from_buffers(&positions, &indices) else {
+            return;
+        };
+        if !is_fallback && self.mesh_is_fallback.get(&url) == Some(&false) {
+            return;
         }
+        if is_fallback && self.mesh_is_fallback.get(&url) == Some(&false) {
+            return;
+        }
+        self.meshes.insert(url.clone(), body);
+        self.mesh_is_fallback.insert(url, is_fallback);
+        self.brush_cache.clear();
+        self.soft_replan_fill_tail();
+        self.re_enqueue_brush_targets();
+    }
+
+    fn register_mesh_fallback(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>) {
+        self.install_collision_mesh(url, positions, indices, true);
+    }
+
+    fn register_mesh(&mut self, url: String, positions: Vec<f32>, indices: Vec<u32>) {
+        self.install_collision_mesh(url, positions, indices, false);
     }
 
     fn has_mesh(&self, url: &str) -> bool {
@@ -1350,8 +1406,14 @@ impl Puzzle3dEngine {
     /// suggestion popup is not stuck on a stale empty / pending result.
     fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
         self.brush_cache.remove(vortex_full_id);
-        self.queue.retain(|task| !matches!(task, PrecomputeTask::BrushTarget(id) if id == vortex_full_id));
-        self.queue.insert(0, PrecomputeTask::BrushTarget(vortex_full_id.to_string()));
+        self.brush_queue.retain(|id| id != vortex_full_id);
+        self.brush_queue.push_front(vortex_full_id.to_string());
+    }
+
+    fn enqueue_brush_target(&mut self, vortex_full_id: &str) {
+        if !self.brush_queue.iter().any(|id| id == vortex_full_id) {
+            self.brush_queue.push_back(vortex_full_id.to_string());
+        }
     }
 
     /// 🧊 Recomputes and caches brush candidates for one vortex immediately (used when opening / accepting
@@ -1364,8 +1426,13 @@ impl Puzzle3dEngine {
     fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], overlap_budget: f64, sample_count: usize) -> Option<bool> {
         let preview_body = meshes.get(&preview.mesh_url)?;
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
+        let (pmin, pmax) = world_bounds(preview_body, &preview_world);
         for entry in placed {
             let other = meshes.get(&entry.mesh_url)?;
+            let (omin, omax) = world_bounds(other, &entry.world);
+            if pmax.x() < omin.x() || pmin.x() > omax.x() || pmax.y() < omin.y() || pmin.y() > omax.y() || pmax.z() < omin.z() || pmin.z() > omax.z() {
+                continue;
+            }
             let vol = solid_overlap_volume(preview_body, &preview_world, other, &entry.world, sample_count, overlap_budget);
             if vol > overlap_budget {
                 return Some(true);
@@ -1374,9 +1441,17 @@ impl Puzzle3dEngine {
         Some(false)
     }
 
-    fn brush_collision_free(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64) -> BrushCollisionFreeResult {
+    fn brush_collision_free_until(
+        &self,
+        target_full_id: &str,
+        candidates: &[BrushCompatibleCandidate],
+        overlap_budget: f64,
+        resume_from: usize,
+        mut free: Vec<BrushCompatibleCandidate>,
+        deadline_ms: f64,
+    ) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
-            return BrushCollisionFreeResult { free: vec![], unknown_pending: true };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
         };
         let empty_catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
         let catalogs = scene.kind_catalogs.as_ref().unwrap_or(&empty_catalogs);
@@ -1391,10 +1466,10 @@ impl Puzzle3dEngine {
             })
         });
         let Some((host, vortex_index, _)) = target_obj else {
-            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
         let Some((position, direction)) = vortex_world_from_object(host, vortex_index) else {
-            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let host_id = host.id.clone();
@@ -1411,9 +1486,11 @@ impl Puzzle3dEngine {
                 Some(PlacedCollisionEntry { object_id: obj.id.clone(), mesh_url, world: pose_isometry(obj.origin, obj.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &obj.scale) })
             })
             .collect();
-        let mut free = Vec::new();
         let mut unknown_pending = false;
-        for candidate in candidates {
+        for (index, candidate) in candidates.iter().enumerate().skip(resume_from) {
+            if puzzle3d_now_ms() >= deadline_ms {
+                return BrushCollisionFreeResult { free, unknown_pending: true, resume_candidate_index: index };
+            }
             let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
             let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.fixture) else {
                 continue;
@@ -1428,12 +1505,17 @@ impl Puzzle3dEngine {
                 Some(false) => free.push(candidate.clone()),
             }
         }
-        BrushCollisionFreeResult { free, unknown_pending }
+        BrushCollisionFreeResult { free, unknown_pending, resume_candidate_index: 0 }
+    }
+
+    fn brush_collision_free(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64) -> BrushCollisionFreeResult {
+        let deadline = puzzle3d_now_ms() + PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS * 8.0;
+        self.brush_collision_free_until(target_full_id, candidates, overlap_budget, 0, Vec::new(), deadline)
     }
 
     fn compute_brush_cache_entry(&self, target_full_id: &str) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
-            return BrushCollisionFreeResult { free: vec![], unknown_pending: true };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 };
         };
         let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
         let target_obj = scene.fixture.objects.iter().find_map(|o| {
@@ -1447,11 +1529,11 @@ impl Puzzle3dEngine {
             })
         });
         let Some((host, _, vortex)) = target_obj else {
-            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         };
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone() };
         if !brush_target_vortex_allows_suggestion(vortex.vortex_kind.as_deref(), &scene.weights) {
-            return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: false, resume_candidate_index: 0 };
         }
         let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
         let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
@@ -1460,7 +1542,10 @@ impl Puzzle3dEngine {
 
     pub fn brush_preview_json(&self, target_full_id: &str, candidate_index: usize) -> Option<String> {
         let scene = self.scene.as_ref()?;
-        let result = self.brush_cache.get(target_full_id).cloned().unwrap_or_else(|| self.compute_brush_cache_entry(target_full_id));
+        let result = self.brush_cache.get(target_full_id)?;
+        if result.unknown_pending && result.free.is_empty() {
+            return None;
+        }
         if result.free.is_empty() {
             return None;
         }
@@ -1484,7 +1569,7 @@ impl Puzzle3dEngine {
         serde_json::to_string(&preview).ok()
     }
 
-    fn precompute_step(&mut self, budget: u32) -> bool {
+    fn precompute_step_lane(&mut self, lane: PrecomputeLane, budget: u32) -> bool {
         let start = puzzle3d_now_ms();
         let mut remaining = budget as usize;
         let mut steps_done = 0usize;
@@ -1492,30 +1577,93 @@ impl Puzzle3dEngine {
             if steps_done > 0 && puzzle3d_now_ms() - start >= PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS {
                 break;
             }
-            let task = match self.queue.first().cloned() {
-                Some(t) => t,
-                None => return false,
-            };
-            match task {
-                PrecomputeTask::BrushTarget(full_id) => {
-                    let result = self.compute_brush_cache_entry(&full_id);
+            match lane {
+                PrecomputeLane::Brush => {
+                    let Some(full_id) = self.brush_queue.pop_front() else {
+                        break;
+                    };
+                    let prior = self.brush_cache.get(&full_id).cloned();
+                    let resume_from = prior.as_ref().map(|entry| entry.resume_candidate_index).unwrap_or(0);
+                    let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
+                    let deadline = puzzle3d_now_ms() + PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS;
+                    let result = self.compute_brush_cache_entry_partial(&full_id, resume_from, prior_free, deadline);
+                    let needs_resume = result.unknown_pending && result.resume_candidate_index > 0;
+                    if needs_resume {
+                        self.brush_queue.push_front(full_id.clone());
+                    }
                     self.brush_cache.insert(full_id, result);
-                    self.queue.remove(0);
                 }
-                PrecomputeTask::FillStep => {
+                PrecomputeLane::Fill => {
+                    if self.fill_steps_remaining == 0 {
+                        break;
+                    }
                     if !self.fill_step_one() {
-                        while matches!(self.queue.first(), Some(PrecomputeTask::FillStep)) {
-                            self.queue.remove(0);
-                        }
+                        self.fill_steps_remaining = 0;
                     } else {
-                        self.queue.remove(0);
+                        self.fill_steps_remaining = self.fill_steps_remaining.saturating_sub(1);
                     }
                 }
             }
             steps_done += 1;
             remaining -= 1;
         }
-        !self.queue.is_empty()
+        match lane {
+            PrecomputeLane::Brush => self.brush_lane_active(),
+            PrecomputeLane::Fill => self.fill_lane_active(),
+        }
+    }
+
+    fn compute_brush_cache_entry_partial(&self, target_full_id: &str, resume_from: usize, prior_free: Vec<BrushCompatibleCandidate>, deadline_ms: f64) -> BrushCollisionFreeResult {
+        let Some(scene) = &self.scene else {
+            return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: resume_from };
+        };
+        let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
+        let target_obj = scene.fixture.objects.iter().find_map(|o| {
+            o.vortices.iter().enumerate().find_map(|(i, v)| {
+                let full_id = puzzle3d_vortex_full_id(&o.id, &v.id);
+                if full_id == target_full_id {
+                    Some((o, i, v))
+                } else {
+                    None
+                }
+            })
+        });
+        let Some((host, _, vortex)) = target_obj else {
+            return BrushCollisionFreeResult { free: prior_free, unknown_pending: false, resume_candidate_index: 0 };
+        };
+        let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone() };
+        if !brush_target_vortex_allows_suggestion(vortex.vortex_kind.as_deref(), &scene.weights) {
+            return BrushCollisionFreeResult { free: prior_free, unknown_pending: false, resume_candidate_index: 0 };
+        }
+        let compatible = brush_compatible_candidates(&target_ctx, &catalogs, &scene.kind_compatibility, &scene.host_rules);
+        let compatible: Vec<BrushCompatibleCandidate> = compatible.into_iter().filter(|candidate| brush_candidate_suggestion_weight(candidate, &scene.weights, &catalogs) > 0.0).collect();
+        self.brush_collision_free_until(target_full_id, &compatible, scene.overlap_budget, resume_from, prior_free, deadline_ms)
+    }
+
+    fn precompute_step(&mut self, budget: u32) -> bool {
+        let half = (budget / 2).max(1);
+        let fill = self.precompute_step_lane(PrecomputeLane::Fill, half);
+        let brush = self.precompute_step_lane(PrecomputeLane::Brush, budget.saturating_sub(half));
+        fill || brush || self.fill_lane_active() || self.brush_lane_active()
+    }
+
+    fn fill_progress_summary(&self) -> FillProgressSummary {
+        self.fill.as_ref().map(|fill| FillProgressSummary {
+            count: fill.sequence.len(),
+            applied_count: fill.applied_count,
+            max_count: fill.max_count,
+            done: fill.stalled || fill.sequence.len() >= fill.max_count,
+        }).unwrap_or(FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn work_pending_for_test(&self) -> usize {
+        self.brush_queue.len() + self.fill_steps_remaining
+    }
+
+    #[cfg(test)]
+    pub(crate) fn fill_steps_pending_for_test(&self) -> usize {
+        self.fill_steps_remaining
     }
 
     fn fill_step_one(&mut self) -> bool {
@@ -1761,12 +1909,24 @@ impl Puzzle3dPrecomputeSession {
         self.engine.register_mesh(url.to_string(), positions.to_vec(), indices.to_vec());
     }
 
+    pub fn register_mesh_fallback(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
+        self.engine.register_mesh_fallback(url.to_string(), positions.to_vec(), indices.to_vec());
+    }
+
     pub fn has_mesh(&self, url: &str) -> bool {
         self.engine.has_mesh(url)
     }
 
     pub fn precompute_step(&mut self, budget: u32) -> bool {
         self.engine.precompute_step(budget)
+    }
+
+    pub fn precompute_step_lane(&mut self, lane: PrecomputeLane, budget: u32) -> bool {
+        self.engine.precompute_step_lane(lane, budget)
+    }
+
+    pub fn enqueue_brush_target(&mut self, vortex_full_id: &str) {
+        self.engine.enqueue_brush_target(vortex_full_id);
     }
 
     pub fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
@@ -1781,8 +1941,7 @@ impl Puzzle3dPrecomputeSession {
         if let Some(hit) = self.engine.brush_cache.get(vortex_full_id) {
             return serde_json::to_string(hit).unwrap_or_else(|_| "{}".to_string());
         }
-        let result = self.engine.compute_brush_cache_entry(vortex_full_id);
-        serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
+        serde_json::to_string(&BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 }).unwrap_or_else(|_| "{}".to_string())
     }
 
     pub fn brush_preview_json(&self, vortex_full_id: &str, candidate_index: usize) -> Option<String> {
@@ -1792,6 +1951,10 @@ impl Puzzle3dPrecomputeSession {
     pub fn fill_progress(&self) -> String {
         let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
+    }
+
+    pub fn fill_progress_summary(&self) -> String {
+        serde_json::to_string(&self.engine.fill_progress_summary()).unwrap_or_else(|_| "{}".to_string())
     }
 
     /// 🪣 O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` JSON
@@ -2110,7 +2273,7 @@ mod tests {
         assert!(count_ms < 5.0, "fill count apply took {count_ms}ms");
         assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 5);
 
-        let queue_before = engine.queue.len();
+        let queue_before = engine.work_pending_for_test();
         let weight_start = std::time::Instant::now();
         let mut object_weights = HashMap::new();
         object_weights.insert("Placed".to_string(), 1.0);
@@ -2119,10 +2282,10 @@ mod tests {
         vortex_weights.insert("b-s".to_string(), 0.5);
         engine.update_kind_weights(object_weights, vortex_weights);
         let weight_ms = weight_start.elapsed().as_secs_f64() * 1000.0;
-        println!("[DEBUG] update_kind_weights: {weight_ms:.3}ms queue_before={queue_before} queue_after={}", engine.queue.len());
+        println!("[DEBUG] update_kind_weights: {weight_ms:.3}ms queue_before={queue_before} queue_after={}", engine.work_pending_for_test());
         assert!(weight_ms < 50.0, "weight update took {weight_ms}ms");
         let fill = engine.fill.as_ref().expect("fill");
-        let fill_steps = engine.queue.iter().filter(|task| matches!(task, PrecomputeTask::FillStep)).count();
+        let fill_steps = engine.fill_steps_pending_for_test();
         assert_eq!(fill_steps, fill.max_count - fill.applied_count, "weight update must soft-replan the tail without a full queue wipe");
         assert_eq!(fill.applied_count, 5, "applied fill objects must survive weight edits");
     }
@@ -2156,7 +2319,7 @@ mod tests {
         engine.fill = Some(fill);
 
         engine.apply_fill_count(8).expect("apply up to 8");
-        let queue_before = engine.queue.len();
+        let queue_before = engine.work_pending_for_test();
         let placed_before = engine.fill.as_ref().unwrap().placed.len();
         let sequence_before = engine.fill.as_ref().unwrap().sequence.len();
 
@@ -2167,7 +2330,7 @@ mod tests {
         assert_eq!(fill.appended_objects.len(), sequence_before);
         assert_eq!(fill.appended_attractions.len(), sequence_before);
         assert_eq!(fill.placed.len(), placed_before, "placed collision entries survive a downward move");
-        assert_eq!(engine.queue.len(), queue_before, "no FillSteps get re-enqueued on a downward move");
+        assert_eq!(engine.work_pending_for_test(), queue_before, "no FillSteps get re-enqueued on a downward move");
 
         let fixture = engine.apply_fill_count(7).expect("apply back up to 7");
         assert_eq!(fixture.objects.len(), base.objects.len() + 7, "moving back up is instant — the plan was never discarded");
@@ -2178,9 +2341,9 @@ mod tests {
         let mut engine = Puzzle3dEngine::new();
         let json = single_object_scene_json();
         engine.set_scene(&json).expect("seed scene");
-        let queue_len_after_seed = engine.queue.len();
+        let queue_len_after_seed = engine.work_pending_for_test();
         engine.precompute_step(8);
-        let queue_len_after_step = engine.queue.len();
+        let queue_len_after_step = engine.work_pending_for_test();
         assert!(queue_len_after_step < queue_len_after_seed);
 
         let mut object_weights = HashMap::new();
@@ -2193,8 +2356,8 @@ mod tests {
 
         assert_eq!(engine.fill.as_ref().map(|fill| fill.applied_count).unwrap_or(0), 0, "weight-only edits must not change applied count");
         assert_eq!(engine.fill.as_ref().map(|fill| fill.sequence.len()).unwrap_or(0), 0, "planned tail must be discarded for replanning");
-        assert!(engine.queue.len() >= queue_len_after_step, "fill steps must be re-enqueued without a full queue wipe");
-        assert!(engine.queue.iter().any(|task| matches!(task, PrecomputeTask::FillStep)), "fill planning must continue after weight edits");
+        assert!(engine.work_pending_for_test() >= queue_len_after_step, "fill steps must be re-enqueued without a full queue wipe");
+        assert!(engine.fill_steps_pending_for_test() > 0, "fill planning must continue after weight edits");
     }
 
     #[test]
@@ -2202,21 +2365,21 @@ mod tests {
         let mut engine = Puzzle3dEngine::new();
         let json = single_object_scene_json();
         engine.set_scene(&json).expect("first set_scene should succeed");
-        let queue_len_before = engine.queue.len();
+        let queue_len_before = engine.work_pending_for_test();
         assert!(queue_len_before > 0, "rebuild_queue should have enqueued at least the fill steps");
         engine.precompute_step(4);
-        let queue_len_after_step = engine.queue.len();
+        let queue_len_after_step = engine.work_pending_for_test();
         assert!(queue_len_after_step < queue_len_before, "precompute_step should have drained some queue items");
 
         engine.set_scene(&json).expect("resync with identical json should succeed");
-        assert_eq!(engine.queue.len(), queue_len_after_step, "identical scene JSON must not rebuild (wipe) the queue");
+        assert_eq!(engine.work_pending_for_test(), queue_len_after_step, "identical scene JSON must not rebuild (wipe) the queue");
 
         // A genuinely different scene (different object count) must still rebuild.
         let mut scene: serde_json::Value = serde_json::from_str(&json).unwrap();
         scene["fixture"]["objects"].as_array_mut().unwrap().push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [] }));
         let changed_json = serde_json::to_string(&scene).unwrap();
         engine.set_scene(&changed_json).expect("set_scene with a genuinely different scene should succeed");
-        assert_ne!(engine.queue.len(), queue_len_after_step, "a changed scene must rebuild the queue");
+        assert_ne!(engine.work_pending_for_test(), queue_len_after_step, "a changed scene must rebuild the queue");
     }
 
     #[test]
@@ -2250,7 +2413,7 @@ mod tests {
         assert_eq!(fill.applied_count, 1);
         assert!(fill.stalled, "apply_fill_count never touches stalled — only actual planning (fill_step_one) does");
         assert_eq!(fill.rng_state, rng_state, "no replanning happens, so the random stream is untouched");
-        assert!(engine.queue.is_empty(), "no FillSteps get enqueued by a downward move");
+        assert_eq!(engine.fill_steps_pending_for_test(), 0, "no FillSteps get enqueued by a downward move");
 
         let fixture = engine.apply_fill_count(0).expect("zero fill count");
         assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"], "zero applies nothing to the document");
@@ -2316,12 +2479,12 @@ mod tests {
     fn register_mesh_invalidates_cached_precompute_state() {
         let mut engine = Puzzle3dEngine::new();
         engine.set_scene(&single_object_scene_json()).expect("set_scene should succeed");
-        let queue_len_before = engine.queue.len();
+        let applied_before = engine.fill.as_ref().map(|fill| fill.applied_count).unwrap_or(0);
         let positions: Vec<f32> = vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0];
         let indices: Vec<u32> = vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2];
         engine.register_mesh("/test/host.glb".to_string(), positions, indices);
-        assert_eq!(engine.queue.len(), queue_len_before, "registering a mesh rebuilds the same scene, so the queue shape is unchanged, but the cache/fill must have been recomputed fresh");
-        assert!(engine.brush_cache.is_empty(), "rebuild_queue clears brush_cache; a stale entry from before the real mesh arrived must not survive");
+        assert!(engine.brush_cache.is_empty(), "mesh registration must invalidate stale brush cache entries");
+        assert_eq!(engine.fill.as_ref().map(|fill| fill.applied_count), Some(applied_before), "mesh registration must not reset applied fill count");
     }
 
     fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
@@ -2875,10 +3038,7 @@ mod tests {
         assert!(engine.has_mesh("/test/host.glb"));
 
         engine.invalidate_brush_target("host:v0");
-        match engine.queue.first() {
-            Some(PrecomputeTask::BrushTarget(id)) => assert_eq!(id.as_str(), "host:v0"),
-            other => panic!("expected the invalidated target requeued at the front, got {other:?}"),
-        }
+        assert_eq!(engine.brush_queue.front().map(String::as_str), Some("host:v0"), "invalidated brush target must be requeued at the front");
         assert!(!engine.brush_cache.contains_key("host:v0"));
 
         engine.refresh_brush_candidates("host:v0");
@@ -2927,6 +3087,30 @@ mod tests {
         assert!(session.fill_is_done());
         assert_eq!(session.fill_available_count(), 0);
     }
+
+    #[test]
+    fn fill_lane_advances_while_brush_targets_remain_queued() {
+        let mut engine = Puzzle3dEngine::new();
+        engine.set_scene(&single_object_scene_json()).expect("seed");
+        assert!(engine.fill_steps_pending_for_test() > 0, "seed scene must schedule fill steps");
+        assert!(!engine.brush_queue.is_empty(), "seed scene must schedule brush targets");
+        let before = engine.fill_progress_summary().count;
+        for _ in 0..24 {
+            engine.precompute_step_lane(PrecomputeLane::Fill, 4);
+        }
+        let after = engine.fill_progress_summary().count;
+        println!("[DEBUG] fill_lane planning count before={before} after={after}");
+        assert!(after > before || engine.fill_progress_summary().done, "fill lane must make planning progress without draining brush first");
+    }
+
+    #[test]
+    fn brush_candidates_cold_cache_returns_pending_without_populating_cache() {
+        let mut session = Puzzle3dPrecomputeSession::new();
+        session.set_scene(&single_object_scene_json()).expect("seed");
+        let json = session.brush_candidates("host:v0");
+        assert!(json.contains("unknownPending"), "cold cache must surface pending state: {json}");
+        assert!(session.brush_preview_json("host:v0", 0).is_none());
+    }
 }
 
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
@@ -2950,12 +3134,24 @@ impl Puzzle3dPrecomputeSession {
         self.engine.register_mesh(url.to_string(), positions.to_vec(), indices.to_vec());
     }
 
+    pub fn register_mesh_fallback(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
+        self.engine.register_mesh_fallback(url.to_string(), positions.to_vec(), indices.to_vec());
+    }
+
     pub fn has_mesh(&self, url: &str) -> bool {
         self.engine.has_mesh(url)
     }
 
     pub fn precompute_step(&mut self, budget: u32) -> bool {
         self.engine.precompute_step(budget)
+    }
+
+    pub fn precompute_step_lane(&mut self, lane: PrecomputeLane, budget: u32) -> bool {
+        self.engine.precompute_step_lane(lane, budget)
+    }
+
+    pub fn enqueue_brush_target(&mut self, vortex_full_id: &str) {
+        self.engine.enqueue_brush_target(vortex_full_id);
     }
 
     pub fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
@@ -2970,8 +3166,7 @@ impl Puzzle3dPrecomputeSession {
         if let Some(hit) = self.engine.brush_cache.get(vortex_full_id) {
             return serde_json::to_string(hit).unwrap_or_else(|_| "{}".to_string());
         }
-        let result = self.engine.compute_brush_cache_entry(vortex_full_id);
-        serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
+        serde_json::to_string(&BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 }).unwrap_or_else(|_| "{}".to_string())
     }
 
     pub fn brush_preview_json(&self, vortex_full_id: &str, candidate_index: usize) -> Option<String> {
@@ -2981,6 +3176,10 @@ impl Puzzle3dPrecomputeSession {
     pub fn fill_progress(&self) -> String {
         let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
+    }
+
+    pub fn fill_progress_summary(&self) -> String {
+        serde_json::to_string(&self.engine.fill_progress_summary()).unwrap_or_else(|_| "{}".to_string())
     }
 
     /// 🪣 O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` JSON

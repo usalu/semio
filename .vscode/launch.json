@@ -1759,14 +1759,14 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://[^\\s]+:6274/\\?MCP_PROXY_AUTH_TOKEN=[^\\s]+)",
-        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./repo/client/mcp/go&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
+        "uriFormat": "%s&transport=stdio&serverCommand=go&serverArgs=run&serverArgs=./🧰framework/🛍️product/🦑repo/🔨module/💻client/🔌mcp/⚡️implementation/🐹go&MCP_PROXY_FULL_ADDRESS=http://127.0.0.1:6277"
       }
     },
     {
       "name": "🛠️dev🧰repo🤖mcp⌨️cursor",
       "type": "node-terminal",
       "request": "launch",
-      "command": "./repo/client/client mcp cursor",
+      "command": "./🧰framework/🛍️product/🦑repo/🔨module/💻client/client mcp cursor",
       "env": {
         "GOWORK": "${workspaceFolder}/go.work"
       },
@@ -1780,7 +1780,7 @@
       "name": "🛠️dev🧰repo⌨️client",
       "type": "node-terminal",
       "request": "launch",
-      "command": "go build -o repo/client/client ./repo/client/mcp/go && ./repo/client/client --help",
+      "command": "go build -o 🧰framework/🛍️product/🦑repo/🔨module/💻client/client ./🧰framework/🛍️product/🦑repo/🔨module/💻client/🔌mcp/⚡️implementation/🐹go && ./🧰framework/🛍️product/🦑repo/🔨module/💻client/client --help",
       "env": {
         "GOWORK": "${workspaceFolder}/go.work"
       },

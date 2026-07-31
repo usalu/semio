@@ -6863,7 +6863,7 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // #endregion 🩻Monorepo Tree
 
 // #region 🎊Query Cache
-// Local Bleve index under .🦑repo/cache for keyword search. Uses composite git fingerprint (supertechnology HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
+// Local Bleve index under .🦑repo/⚡cache for keyword search. Uses composite git fingerprint (supertechnology HEAD, dirty state, submodule pointers and working state) for invalidation. Supports incremental updates via git diff.
 // 📌cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
 const cacheSchemaVersion = 3
 
@@ -6885,7 +6885,7 @@ type cacheMeta struct {
 func getCacheDir() string {
 	abs, _ := filepath.Abs(GetRootDir())
 	h := sha256.Sum256([]byte(abs))
-	return filepath.Join(GetRepoMetaDir(), "cache", hex.EncodeToString(h[:]))
+	return filepath.Join(GetRepoMetaDir(), "⚡cache", hex.EncodeToString(h[:]))
 }
 
 func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
@@ -8203,7 +8203,7 @@ func locContributorAlias(name, email string) string {
 	return FindAndUpdateContributor(author)
 }
 
-// 🪷 locPathSkipped returns true for paths that must not be counted (.repo, gitignore).
+// 🪷 locPathSkipped returns true for paths that must not be counted (.🦑repo, gitignore).
 // 🗂️ locPathSkipped filters repo-internal and gitignored relative paths.
 func locPathSkipped(relPath string) bool {
 	rel := normalizeRepoPath(relPath)
@@ -8231,7 +8231,7 @@ func locPathHasHiddenSegment(relPath string) bool {
 	return false
 }
 
-// 🗂️ locPathSkippedForLoc combines gitignore/.repo skips with hidden-directory-segment skips for `loc`.
+// 🗂️ locPathSkippedForLoc combines gitignore/.🦑repo skips with hidden-directory-segment skips for `loc`.
 func locPathSkippedForLoc(relPath string) bool {
 	if locPathSkipped(relPath) {
 		return true
@@ -10652,7 +10652,7 @@ func (d *Draft) GetURI() string {
 // 📝GetDraftsPath MUST return the stored value without modification.
 // 📦GetDraftsPath returns the drafts path of the value.
 func GetDraftsPath() string {
-	return GetRepoMetaPath("✍️")
+	return GetRepoMetaPath("✍️notes")
 }
 
 // 📸ListDrafts MUST return a consistent snapshot of available entries.
@@ -25102,7 +25102,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noM
 }
 
 // 🔖ToolGoalList MUST complete the operation successfully.
-// Lists goals from `.🦑repo/🎯` only — avoids BuildMonorepoTree (full repo walk) while
+// Lists goals from `.🦑repo/🎯goals` only — avoids BuildMonorepoTree (full repo walk) while
 // keeping the same markdown lines as goal nodes in the monorepo tree.
 func ToolGoalList() ToolResult {
 	goals, err := ListGoals()
@@ -34343,7 +34343,7 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 // Request handler functions for CLI and MCP operations.
 // ⏹️renderPromptTemplate holds the data fields for a renderPromptTemplate record.
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
-	path := GetRepoMetaPath(filepath.Join("💬", "📋", name+".tpl"))
+	path := GetRepoMetaPath(filepath.Join("💬prompts", name+".tpl"))
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -36494,7 +36494,7 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 // 🔖ListContributors returns a list of contributors entries.
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
-	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻")
+	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻devs")
 	if !FileExists(dir) {
 		return []Contributor{{Alias: "unknown", Github: "unknown", Name: "Unknown"}}, nil
 	}
@@ -36584,19 +36584,19 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 // 📨GetContributorAvatarPath MUST retrieve the requested value or return an error.
 // 🔖GetContributorAvatarPath retrieves and returns the contributor avatar path.
 func GetContributorAvatarPath(alias string) string {
-	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias, "avatar.png")
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻devs", alias, "avatar.png")
 }
 
 // ❌GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
 // 🔖GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
 func GetContributorAvatarRoundPath(alias string) string {
-	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias, "avatar-round.png")
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻devs", alias, "avatar-round.png")
 }
 
 // 🛤️GetContributorPath MUST retrieve the requested value or return an error.
 // 🔖GetContributorPath retrieves and returns the contributor path.
 func GetContributorPath(alias string) string {
-	return filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias)
+	return filepath.Join(GetRepoMetaDir(), "🧑‍💻devs", alias)
 }
 
 // 🆕CreateContributor MUST create a new entry and return an error on conflict.
@@ -36654,7 +36654,7 @@ func SaveContributor(c Contributor) error {
 // 🚚RemoveContributor MUST remove the target and return an error on failure.
 // 🔖RemoveContributor removes the specified contributor.
 func RemoveContributor(alias string) error {
-	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻", alias)
+	dir := filepath.Join(GetRepoMetaDir(), "🧑‍💻devs", alias)
 	if !FileExists(dir) {
 		return fmt.Errorf("contributor not found: %s", alias)
 	}
@@ -36995,7 +36995,7 @@ func parseBenchmarkOutput(results *[]BenchmarkResult, lang string, output string
 
 // ✏️writeBenchmarkReport holds the data fields for a writeBenchmarkReport record.
 func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
-	reportFile := filepath.Join(rootDir, "📊", "benchmark.csv")
+	reportFile := filepath.Join(rootDir, ".🦑repo", "📊metrics", "benchmark.csv")
 	if err := os.MkdirAll(filepath.Dir(reportFile), 0755); err != nil {
 		return err
 	}
@@ -39835,7 +39835,7 @@ func isDeeperGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) >= 2
 }
 
-// 🛤️goalIDForFilesystem maps repo emoji goal IDs to `.🦑repo/🎯/...` paths for filesystem access.
+// 🛤️goalIDForFilesystem maps repo emoji goal IDs to `.🦑repo/🎯goals/...` paths for filesystem access.
 func goalIDForFilesystem(goalID string) string {
 	goalID = strings.TrimSpace(goalID)
 	if goalID == "" {

@@ -6,7 +6,7 @@ import { readdirSync, statSync, readFileSync, writeFileSync } from "fs";
 import { join, dirname, relative, resolve } from "path";
 
 const root = process.cwd();
-const skipDirs = new Set(["node_modules", ".git", "target", "dist", "build", ".repo"]);
+const skipDirs = new Set(["node_modules", ".git", "target", "dist", "build", ".🦑repo", ".repo"]);
 
 const pkgFiles: string[] = [];
 function walk(dir: string) {

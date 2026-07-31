@@ -10,15 +10,15 @@ const root = dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   root,
   resolve: {
-    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../../../ui/js/react/index.tsx") }],
+    alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../../../../../../🔨module/🖱️ui/⚛️react/⚡️implementation/🟦typescript/📦index.tsx") }],
   },
   test: {
     name: "@semio-tech/infinite-world-r3f",
     mode: "test",
     environment: "jsdom",
-    include: ["index.tsx"],
-    coverage: { include: ["index.tsx"] },
-    includeSource: ["index.tsx"],
+    include: ["📦index.tsx"],
+    coverage: { include: ["📦index.tsx"] },
+    includeSource: ["📦index.tsx"],
     passWithNoTests: true,
   },
 });

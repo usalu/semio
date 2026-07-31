@@ -15,7 +15,6 @@ export default defineConfig({
   test: {
     name: "@semio-tech/ui-react",
     environment: "jsdom",
-    include: ["📦index.tsx"],
     includeSource: ["📦index.tsx"],
     coverage: { include: ["📦index.tsx"] },
     passWithNoTests: true,

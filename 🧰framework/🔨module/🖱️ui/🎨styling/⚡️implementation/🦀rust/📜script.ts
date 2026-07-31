@@ -828,7 +828,7 @@ function collectPxViolations(repoRoot: string): { file: string; line: number; ki
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name === ".repo") {
+        if (entry.name === "node_modules" || entry.name === ".🦑repo" || entry.name === ".repo") {
           continue;
         }
         walk(full);
@@ -957,7 +957,7 @@ function collectColorViolations(repoRootPath: string): { file: string; line: num
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name === ".repo") {
+        if (entry.name === "node_modules" || entry.name === ".🦑repo" || entry.name === ".repo") {
           continue;
         }
         walk(full);

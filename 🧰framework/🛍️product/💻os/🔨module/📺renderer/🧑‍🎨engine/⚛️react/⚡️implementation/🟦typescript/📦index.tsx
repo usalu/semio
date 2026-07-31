@@ -52,6 +52,7 @@ import {
   Textarea,
   Toggle,
   Tree,
+  TreeCheckbox,
   VirtualFileSystem,
   borderElementClass,
   borderNormalTopClass,
@@ -3601,6 +3602,35 @@ export function createInFlightSkippingInterval(run: () => unknown, delayMs: numb
   };
 }
 
+/**
+ * @emoji 🎯 Coalesces rapid dispatches to the latest value — skips when unchanged and keeps at most one
+ * in-flight round trip (used by World3dHost hover so pointermove cannot flood the WASM handle).
+ */
+export function createCoalescingActionDispatcher<T>(dispatch: (value: T) => unknown, isEqual: (a: T, b: T) => boolean = (a, b) => Object.is(a, b)): (value: T) => void {
+  let inFlight = false;
+  let pending: T | undefined;
+  let lastSent: T | undefined;
+  const flush = () => {
+    if (inFlight || pending === undefined) return;
+    const next = pending;
+    pending = undefined;
+    if (lastSent !== undefined && isEqual(lastSent, next)) return;
+    lastSent = next;
+    inFlight = true;
+    void Promise.resolve(dispatch(next)).finally(() => {
+      inFlight = false;
+      flush();
+    });
+  };
+  return (value: T) => {
+    if (pending === undefined && lastSent !== undefined && isEqual(lastSent, value)) return;
+    pending = value;
+    flush();
+  };
+}
+
+const registeredPuzzle3dBrushMeshes = new Set<string>();
+
 /** @emoji 🎚️ Whether any measure (including nested group children) declares `id`. */
 export function windowMeasureTreeContainsId(measures: readonly WindowMeasure[], id: string): boolean {
   for (const measure of measures) {
@@ -3707,15 +3737,20 @@ function windowMeasureSelectControl(measure: Extract<WindowMeasure, { kind: "sel
 }
 
 function windowMeasureToggleControl(measure: Extract<WindowMeasure, { kind: "toggle" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
+  const label = measure.label ?? measure.text ?? measure.id;
   return (
-    <Toggle
+    <TreeCheckbox
       id={measure.id}
-      pressed={measure.pressed}
-      text={measure.text}
-      icon={<Icon icon={measure.iconId as IconName} size="small" />}
-      onPressedChange={(pressed) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
+      checked={measure.pressed}
+      title={label}
+      ariaLabel={label}
+      onCheckedChange={(pressed) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
     />
   );
+}
+
+function windowMeasureToggleIcon(measure: Extract<WindowMeasure, { kind: "toggle" }>): ReactNode {
+  return <Icon icon={measure.iconId as IconName} size={12} />;
 }
 
 /**
@@ -3753,6 +3788,7 @@ function windowMeasuresToTreeItems(measures: readonly WindowMeasure[], onAction:
     return {
       id: measure.id,
       label: measure.label ?? measure.text ?? "",
+      icon: windowMeasureToggleIcon(measure),
       control: windowMeasureToggleControl(measure, onAction),
     };
   };
@@ -3784,7 +3820,7 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   }
   if (measure.kind === "toggle") {
     return (
-      <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label ?? measure.text} icon={windowMeasureToggleIcon(measure)}>
         {windowMeasureToggleControl(measure, onAction)}
       </WindowMeasureTreeLeaf>
     );
@@ -3795,6 +3831,11 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
 function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown, direction: "up" | "down" = "down"): ReactNode | undefined {
   if (!measures || measures.length === 0) return undefined;
   return <WindowMeasuresTree direction={direction}>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
+}
+
+/** @emoji 🪟 Public window-options tree for measures rails and tests — icon before label, checkbox for toggles. */
+export function renderWindowMeasuresTree(measures: readonly WindowMeasure[], onAction: (action: ActionDescriptor) => unknown, direction: "up" | "down" = "down"): ReactNode | undefined {
+  return windowMeasuresOverlay(measures, onAction, direction);
 }
 
 function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void }) {
@@ -15001,7 +15042,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch],
   );
 
-  const registeredBrushMeshesRef = useRef(new Set<string>());
+  const registeredBrushMeshesRef = useRef(registeredPuzzle3dBrushMeshes);
   const handleRegisterBrushMesh = useCallback(
     (url: string, positions: number[], indices: number[]) => {
       if (registeredBrushMeshesRef.current.has(url)) return;
@@ -15174,15 +15215,29 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch, instances, selection.selectionMergeMode, selectionMode],
   );
 
+  const dispatchInstanceHover = useMemo(
+    () =>
+      createCoalescingActionDispatcher<string | null>((id) => {
+        if (id == null) dispatch("setHover", {});
+        else dispatch("setHover", { objectId: id, mode: "mesh", id: 0 });
+      }),
+    [dispatch],
+  );
+
+  const dispatchVortexHover = useMemo(
+    () =>
+      createCoalescingActionDispatcher<string | null>((fullId) => {
+        if (!fullId) dispatch("worldVortexHover", {});
+        else dispatch("worldVortexHover", { fullId });
+      }),
+    [dispatch],
+  );
+
   const handleInstancePointerMove = useCallback(
     (id: string | null) => {
-      if (id == null) {
-        dispatch("setHover", {});
-        return;
-      }
-      dispatch("setHover", { objectId: id, mode: "mesh", id: 0 });
+      dispatchInstanceHover(id);
     },
-    [dispatch],
+    [dispatchInstanceHover],
   );
 
   const handleComponentHover = useCallback(
@@ -15198,13 +15253,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleVortexHover = useCallback(
     (fullId: string | null) => {
-      if (!fullId) {
-        dispatch("worldVortexHover", {});
-        return;
-      }
-      dispatch("worldVortexHover", { fullId });
+      dispatchVortexHover(fullId);
     },
-    [dispatch],
+    [dispatchVortexHover],
   );
 
   const handleVortexSelect = useCallback(

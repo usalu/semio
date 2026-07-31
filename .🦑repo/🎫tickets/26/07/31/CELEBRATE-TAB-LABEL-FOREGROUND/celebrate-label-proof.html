@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @property --celebrate-border-angle {
+        syntax: "<angle>";
+        inherits: true;
+        initial-value: 0deg;
+      }
+      @keyframes celebrate-border-spin {
+        to {
+          --celebrate-border-angle: 360deg;
+        }
+      }
+      :root {
+        animation: celebrate-border-spin 1.2s linear infinite;
+        --color-primary: #ff344f;
+        --color-secondary: #00c4a7;
+        --color-tertiary: #ffc700;
+      }
+      [data-celebrated="true"] {
+        --celebrate-conic: conic-gradient(
+          from var(--celebrate-border-angle),
+          var(--color-primary),
+          var(--color-secondary),
+          var(--color-tertiary),
+          var(--color-primary)
+        );
+      }
+      [data-celebrated="true"][data-slot="panel-tab-button"] :is([data-slot="tree-label"], [data-slot="inline-label"]) {
+        background-image: var(--celebrate-conic);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+      }
+      [data-celebrated="true"][data-slot="panel-tab-button"] :is([data-icon], [data-icon-kind="catalog"]) {
+        background-image: var(--celebrate-conic);
+        -webkit-mask-image: var(--icon-mask, linear-gradient(#0000 0 0));
+        mask-image: var(--icon-mask, linear-gradient(#0000 0 0));
+        -webkit-mask-size: 100% 100%;
+        mask-size: 100% 100%;
+        mask-repeat: no-repeat;
+        width: 16px;
+        height: 16px;
+      }
+      [data-celebrated="true"][data-slot="panel-tab-button"] :is([data-icon], [data-icon-kind="catalog"]) > svg {
+        visibility: hidden;
+      }
+      body {
+        margin: 16px;
+        background: #1a1a1a;
+      }
+      button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        background: #2a2a2a;
+        border: 1px solid #444;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <button type="button" data-slot="panel-tab-button" data-celebrated="true">
+      <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+        <span
+          data-icon="layers"
+          data-icon-kind="catalog"
+          style="--icon-mask: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23000%22 stroke-width=%222%22%3E%3Cpath d=%22M12 2L2 7l10 5 10-5-10-5z%22/%3E%3Cpath d=%22M2 17l10 5 10-5%22/%3E%3Cpath d=%22M2 12l10 5 10-5%22/%3E%3C/svg%3E')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+        </span>
+        <span data-slot="inline-label" class="truncate">Catalog</span>
+      </div>
+    </button>
+  </body>
+</html>

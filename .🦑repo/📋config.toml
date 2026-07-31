@@ -1,5 +1,5 @@
 [logging]
-# Write per-session session.json hook logs under .repo/⚡/🤖/...
+# Write per-session session.json hook logs under .🦑repo/⚡cache/🤖generated/...
 session = false
 # Include derived agent.<op>.<phase> events (only applies when session = true)
 operations = true

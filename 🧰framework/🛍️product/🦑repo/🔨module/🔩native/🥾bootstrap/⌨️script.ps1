@@ -242,7 +242,7 @@ function Install-EditorExtensions {
 
     $extensionsPath = Join-Path $RepoRoot ".vscode\extensions.json"
     $recommendations = (Get-Content $extensionsPath -Raw | ConvertFrom-Json).recommendations
-    $vsixPath = Join-Path $RepoRoot "repo\vscode\🧩repo.vsix"
+    $vsixPath = Join-Path $RepoRoot "🧰framework\🛍️product\🦑repo\🔨module\💻client\🧩vscode\⚡️implementation\🟦typescript\🧩🧩repo.vsix"
 
     $bunPathLocal = Get-CommandPathOrThrow -Label "bun" -Candidates @("bun.exe", "bun")
     Invoke-RepoCommand -FilePath $bunPathLocal -ArgumentList @("nx", "run", "repo:build") -WorkingDirectory $RepoRoot
@@ -380,10 +380,10 @@ function Invoke-Neo4jCypher {
     )
 
     Use-MicrosoftOpenJdk21
-    $runtimeCypherShell = Join-Path $RepoRoot ".repo\cache\neo4j\neo4j-community-$($script:Neo4jVersion)\bin\cypher-shell.bat"
+    $runtimeCypherShell = Join-Path $RepoRoot ".🦑repo\⚡cache\neo4j\neo4j-community-$($script:Neo4jVersion)\bin\cypher-shell.bat"
     $cypherShell = Get-FirstCommandPath @($runtimeCypherShell, "cypher-shell.cmd", "cypher-shell.exe", "cypher-shell")
     if ($cypherShell) {
-        $logRoot = Join-Path $RepoRoot ".repo\cache\neo4j"
+        $logRoot = Join-Path $RepoRoot ".🦑repo\⚡cache\neo4j"
         Ensure-Directory -Path $logRoot
         $logId = "{0}-{1}" -f $PID, ([Guid]::NewGuid().ToString("N"))
         $stdout = Join-Path $logRoot "cypher-shell.$logId.stdout.log"
@@ -558,7 +558,7 @@ function Get-JavaMajorVersion {
     if (-not $java) {
         return 0
     }
-    $logRoot = Join-Path (Get-RepoRoot) ".repo\cache\neo4j"
+    $logRoot = Join-Path (Get-RepoRoot) ".🦑repo\⚡cache\neo4j"
     Ensure-Directory -Path $logRoot
     $stdout = Join-Path $logRoot "java-version.stdout.log"
     $stderr = Join-Path $logRoot "java-version.stderr.log"
@@ -584,7 +584,7 @@ function Use-MicrosoftOpenJdk21 {
 function Ensure-NativeNeo4jTools {
     param([string]$RepoRoot)
 
-    $cacheRoot = Join-Path $RepoRoot ".repo\cache\neo4j"
+    $cacheRoot = Join-Path $RepoRoot ".🦑repo\⚡cache\neo4j"
     $runtimeRoot = Join-Path $cacheRoot ("neo4j-community-{0}" -f $script:Neo4jVersion)
     $zipPath = Join-Path $cacheRoot ("neo4j-community-{0}-windows.zip" -f $script:Neo4jVersion)
     Ensure-Directory -Path $cacheRoot
@@ -702,7 +702,7 @@ function Ensure-NativeNeo4j {
     Invoke-Neo4jCypher -RepoRoot $RepoRoot -Database $graphDb -Cypher "MATCH (n) DETACH DELETE n;" | Out-Null
 
     foreach ($technology in $technologies) {
-        $schemaFile = Join-Path $RepoRoot ".repo\🛂\$technology.cypher"
+        $schemaFile = Join-Path $RepoRoot ".🦑repo\🛂manifest\$technology.cypher"
         if (Test-Path -LiteralPath $schemaFile) {
             $meaningfulLine = Get-Content -LiteralPath $schemaFile | Where-Object { $_ -notmatch '^\s*(//|:|$)' } | Select-Object -First 1
             if ($meaningfulLine) {
@@ -813,7 +813,7 @@ if (-not $SkipMachineInstall) {
 $playwrightPath = Join-Path $repoRoot "node_modules\.cache\ms-playwright"
 Ensure-Directory -Path $playwrightPath
 Set-UserEnvironmentVariable -Name "DEVCONTAINER" -Value "false"
-Set-UserEnvironmentVariable -Name "VCPKG_ROOT" -Value (Join-Path $repoRoot ".repo\cache\vcpkg")
+Set-UserEnvironmentVariable -Name "VCPKG_ROOT" -Value (Join-Path $repoRoot ".🦑repo\⚡cache\vcpkg")
 Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath

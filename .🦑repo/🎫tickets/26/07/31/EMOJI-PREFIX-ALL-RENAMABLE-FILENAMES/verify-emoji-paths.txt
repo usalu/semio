@@ -1,0 +1,13 @@
+go build: ok (root go.work, mcp package)
+go test -short -run TestRenderPromptTemplateUsesRepoMetaRoot|TestGetRepoMetaDir: PASS
+binary embeds: .🦑repo, 🎫tickets, ⚡cache (remaining .repo strings are non-meta e.g. mcp_servers.repo)
+relocated .repo/🎫 tickets → .🦑repo/🎫tickets; removed .repo root
+
+e2e surfaces updated:
+- .gitignore (.repo legacy + .🦑repo outputs + client binary + vsix)
+- .devcontainer/devcontainer.json + post-start.sh + README (🛂manifest, ⚡cache/cmake)
+- .vscode/settings.json (eslint cwd, cmake already .🦑repo)
+- .storybook/main.ts, .dependency-cruiser.cjs
+- framework UI skip dirs (react + styling rust)
+- bootstrap ps1 (vsix path, neo4j/manifest already .🦑repo)
+- mit-bestand recherche meta docs (ticket paths)

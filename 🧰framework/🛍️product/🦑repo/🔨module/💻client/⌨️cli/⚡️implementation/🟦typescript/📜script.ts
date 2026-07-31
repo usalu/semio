@@ -7,6 +7,10 @@ import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, resolveCliBin, r
 
 export const policyFile = "main.go";
 
+const REPO_CLIENT_DIR = join("🧰framework", "🛍️product", "🦑repo", "🔨module", "💻client");
+const REPO_MCP_GO = join(REPO_CLIENT_DIR, "🔌mcp", "⚡️implementation", "🐹go");
+const REPO_CLI_GO = join(REPO_CLIENT_DIR, "⌨️cli", "⚡️implementation", "🐹go");
+
 export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
   const n = l.lines().length;
   if (n > 10000) {
@@ -28,7 +32,7 @@ class DevScript extends BundleScript {
   run(segments: string[]): void {
     const bin = resolveCliBin(this.repoRoot);
     if (!existsSync(bin)) {
-      runCmd("go", ["build", "-o", bin, "./repo/client/mcp/go"], {
+      runCmd("go", ["build", "-o", bin, `./${REPO_MCP_GO}`], {
         cwd: this.repoRoot,
         env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
         budgetMs: buildBudgetMs(),
@@ -43,7 +47,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(): void {
-    runCmd("go", ["build", "-o", join(this.repoRoot, "repo", "client", process.platform === "win32" ? "client.exe" : "client"), "./repo/client/mcp/go"], {
+    runCmd("go", ["build", "-o", join(this.repoRoot, REPO_CLIENT_DIR, process.platform === "win32" ? "client.exe" : "client"), `./${REPO_MCP_GO}`], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
       budgetMs: buildBudgetMs(),
@@ -54,7 +58,7 @@ class BuildScript extends BundleScript {
 /** ⏱️Default `test` MUST stay ≤30s — `-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `main_test.go`; run `bun ./📜script.ts test -- -run TestX` or drop `-short` for the full suite. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runTestBudgeted("go", ["test", "./repo/client/cli/go", "-short", ...segments], {
+    runTestBudgeted("go", ["test", `./${REPO_CLI_GO}`, "-short", ...segments], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
     });

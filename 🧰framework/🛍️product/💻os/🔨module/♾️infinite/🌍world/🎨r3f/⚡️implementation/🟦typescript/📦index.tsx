@@ -777,12 +777,20 @@ export const WORLD_LOD_GRID_FADE_HEIGHT_FACTOR = 32;
 export const WORLD_LOD_GRID_FADE_STRENGTH = 1.5;
 export const WORLD_ORBIT_CAMERA_MIN_FAR = 524_288;
 export const WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR = 1024;
+/** @emoji 📶 Reference perspective FOV (°) used to map orthographic zoom onto an equivalent orbit distance for automatic LOD / grid banding — matches the default three-point FOV. */
+export const WORLD_LOD_REFERENCE_FOV_DEG = 50;
 
 /** @emoji 📶 Maps orbit camera distance to scene LOD (`distance / reference`). */
 export function lodFromCameraDistance(distance: number, reference: number): number {
   const d = Math.max(distance, 1e-6);
   const ref = Math.max(reference, 1e-6);
   return d / ref;
+}
+
+/** @emoji 📶 Orbit distance that drives automatic LOD — perspective uses eye→target; orthographic maps `zoom` through {@link worldProjectionMatchedPerspectiveDistance} so scroll (which changes zoom, not dolly) still retunes the grid. */
+export function lodOrbitDistanceForCamera(camera: Camera, orbitDistance: number, viewportHeight: number): number {
+  if (!worldCameraIsOrthographic(camera)) return Math.max(orbitDistance, 1e-6);
+  return worldProjectionMatchedPerspectiveDistance(WORLD_LOD_REFERENCE_FOV_DEG, worldCameraZoom(camera), viewportHeight);
 }
 
 /** @emoji 📶 Picks the closest available LOD; on log-distance ties prefers the smaller (more detailed) LOD. */
@@ -950,6 +958,7 @@ function LodFrameRunner(props: {
 }): null {
   const cam = useThree((s) => s.camera);
   const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
+  const size = useThree((s) => s.size);
   const invalidate = useThree((s) => s.invalidate);
   const tmpT = reactHostPort.useMemo(() => new Vector3(), []);
   const ctxSig = reactHostPort.useRef("");
@@ -964,7 +973,8 @@ function LodFrameRunner(props: {
         invalidate();
       }
     }
-    const autoLod = lodFromCameraDistance(dist, props.distanceReference);
+    const lodDist = lodOrbitDistanceForCamera(cam, dist, size.height);
+    const autoLod = lodFromCameraDistance(lodDist, props.distanceReference);
     const sceneLod = props.automaticLod ? autoLod : props.depthVariableLod ? autoLod : props.manualLod;
     props.lodRef.current = sceneLod;
     const runtime = props.lodRuntimeRef.current;
@@ -1011,6 +1021,8 @@ export function WorldLodBridge(props: WorldLodBridgeProps): ReactElement {
   const lodForWorldPosition = reactHostPort.useCallback((position: Vec3) => {
     const r = lodRuntimeRef.current;
     if (!r.depthVariable || !r.camera) return r.sceneLod;
+    // Parallel projection has uniform screen scale — depth-variable LOD collapses to the scene band (already zoom-aware).
+    if (worldCameraIsOrthographic(r.camera)) return r.sceneLod;
     r.tmpWorld.set(position[0], position[1], position[2]);
     return lodFromCameraDistance(r.camera.position.distanceTo(r.tmpWorld), r.distanceReference);
   }, []);
@@ -2568,6 +2580,11 @@ function halfFovTan(fovDeg: number): number {
  * scale at `distance` from the target, so a persp→ortho snap doesn't jump to the legacy zoom-50 default. */
 export function worldProjectionMatchedOrthoZoom(fovDeg: number, distance: number, viewportHeight: number): number {
   return viewportHeight / (2 * Math.max(distance, ORBIT_CAMERA_VIEW_EPSILON) * halfFovTan(fovDeg));
+}
+
+/** @emoji 📐 Perspective orbit distance reproducing an orthographic zoom's apparent scale — inverse of {@link worldProjectionMatchedOrthoZoom}; used by automatic LOD so ortho scroll retunes the grid. */
+export function worldProjectionMatchedPerspectiveDistance(fovDeg: number, zoom: number, viewportHeight: number): number {
+  return Math.max(viewportHeight, 1) / (2 * Math.max(zoom, 1e-6) * halfFovTan(fovDeg));
 }
 
 /** @emoji 🪞 Oblique receding-axis shear matrix — extracted from {@link WorldProjectionMatrixDriver} so
@@ -4774,6 +4791,12 @@ if (import.meta.vitest) {
       expect(worldProjectionMatchedOrthoZoom(50, 240, 720)).toBeCloseTo(zoom / 2, 6);
       expect(worldProjectionMatchedOrthoZoom(50, 120, 1440)).toBeCloseTo(zoom * 2, 6);
     });
+
+    it("round-trips with worldProjectionMatchedPerspectiveDistance", () => {
+      const zoom = worldProjectionMatchedOrthoZoom(50, 180, 720);
+      expect(worldProjectionMatchedPerspectiveDistance(50, zoom, 720)).toBeCloseTo(180, 6);
+      expect(worldProjectionMatchedOrthoZoom(50, worldProjectionMatchedPerspectiveDistance(50, 40, 900), 900)).toBeCloseTo(40, 6);
+    });
   });
 
   describe("worldObliqueShearMatrix", () => {
@@ -4988,6 +5011,26 @@ if (import.meta.vitest) {
     it("maps orbit distance to scale ratio", () => {
       expect(lodFromCameraDistance(100, 100)).toBe(1);
       expect(lodFromCameraDistance(20000, 100)).toBe(200);
+    });
+  });
+
+  describe("lodOrbitDistanceForCamera", () => {
+    it("keeps perspective eye distance and maps orthographic zoom through the matched-perspective inverse so scroll retunes LOD", () => {
+      const perspective = new ThreePerspectiveCamera(50, 16 / 9, 0.1, 500_000);
+      perspective.position.set(0, -600, 200);
+      expect(lodOrbitDistanceForCamera(perspective, 640, 720)).toBeCloseTo(640, 6);
+
+      const orthographic = new ThreeOrthographicCamera(-360, 360, 360, -360, 0.1, 500_000);
+      orthographic.position.set(0, 0, 600);
+      orthographic.zoom = 50;
+      const near = lodOrbitDistanceForCamera(orthographic, 600, 720);
+      orthographic.zoom = 2;
+      const far = lodOrbitDistanceForCamera(orthographic, 600, 720);
+      expect(near).toBeCloseTo(worldProjectionMatchedPerspectiveDistance(WORLD_LOD_REFERENCE_FOV_DEG, 50, 720), 6);
+      expect(far).toBeCloseTo(worldProjectionMatchedPerspectiveDistance(WORLD_LOD_REFERENCE_FOV_DEG, 2, 720), 6);
+      expect(far).toBeGreaterThan(near * 10);
+      expect(lodFromCameraDistance(far, 100)).toBeGreaterThan(lodFromCameraDistance(near, 100));
+      expect(lodGridStepWorld(lodFromCameraDistance(far, 100), 10)).toBeGreaterThan(lodGridStepWorld(lodFromCameraDistance(near, 100), 10)!);
     });
   });
 

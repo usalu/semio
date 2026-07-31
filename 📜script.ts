@@ -124,7 +124,7 @@ function ensureSccache(): void {
   const dest = join(binDir, binName);
   if (existsSync(dest)) return;
 
-  const cacheDir = join(WORKSPACE_ROOT, ".repo", "cache", "sccache");
+  const cacheDir = join(WORKSPACE_ROOT, ".🦑repo", "⚡cache", "sccache");
   mkdirSync(cacheDir, { recursive: true });
   const archive = join(cacheDir, asset);
   const url = `https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/${asset}`;
@@ -734,8 +734,8 @@ export class TestScript extends Script {
     ];
     const merged = mergeLcov(recordSets);
     const summary = summarizeCoverage(merged);
-    writeFileSync(join(this.root, ".repo", "coverage", "lcov.info"), renderLcov(merged));
-    writeFileSync(join(this.root, ".repo", "coverage", "summary.json"), JSON.stringify(summary, null, 2));
+    writeFileSync(join(this.root, ".🦑repo", "📊metrics", "coverage", "lcov.info"), renderLcov(merged));
+    writeFileSync(join(this.root, ".🦑repo", "📊metrics", "coverage", "summary.json"), JSON.stringify(summary, null, 2));
     enforceCoverageThreshold(summary, 95);
   }
 
@@ -946,7 +946,7 @@ export class CppScript extends Script {
     const vcpkgRoot = this.vcpkgRoot();
     const vcpkgExe = join(vcpkgRoot, process.platform === "win32" ? "vcpkg.exe" : "vcpkg");
     if (!existsSync(vcpkgRoot)) {
-      mkdirSync(join(this.root, ".repo", "cache"), { recursive: true });
+      mkdirSync(join(this.root, ".🦑repo", "⚡cache"), { recursive: true });
       runCmd("git", ["clone", "--depth", "1", "https://github.com/microsoft/vcpkg.git", vcpkgRoot], { cwd: this.root, budgetMs: buildBudgetMs() });
     }
     if (!existsSync(vcpkgExe)) {
@@ -969,7 +969,7 @@ export class CppScript extends Script {
   }
 
   private vcpkgRoot(): string {
-    return process.env.VCPKG_ROOT || join(this.root, ".repo", "cache", "vcpkg");
+    return process.env.VCPKG_ROOT || join(this.root, ".🦑repo", "⚡cache", "vcpkg");
   }
 
   private ensureWindowsMsvc(): void {
@@ -981,7 +981,7 @@ export class CppScript extends Script {
   }
 
   private purgeStaleCmakeCache(preset: string): void {
-    const cacheDir = join(this.root, ".repo", "cache", "cmake", preset);
+    const cacheDir = join(this.root, ".🦑repo", "⚡cache", "cmake", preset);
     const cacheFile = join(cacheDir, "CMakeCache.txt");
     if (!existsSync(cacheFile)) return;
     const content = readFileSync(cacheFile, "utf8");
@@ -1187,7 +1187,7 @@ export class Neo4jCypherExport {
 
   resolveCypherShell(): string | null {
     const runtimeName = process.platform === "win32" ? "cypher-shell.bat" : "cypher-shell";
-    const cachedShell = join(this.repoRoot, ".repo", "cache", "neo4j", `neo4j-community-${NEO4J_VERSION}`, "bin", runtimeName);
+    const cachedShell = join(this.repoRoot, ".🦑repo", "⚡cache", "neo4j", `neo4j-community-${NEO4J_VERSION}`, "bin", runtimeName);
     const candidates = [process.env.NEO4J_CYPHER_SHELL, cachedShell, runtimeName].filter((value): value is string => Boolean(value));
 
     for (const candidate of candidates) {
@@ -1223,7 +1223,7 @@ export class Neo4jCypherExport {
       return { ok: false, stdout: "", stderr: "cypher-shell not found (install Neo4j tools or set NEO4J_CYPHER_SHELL)." };
     }
 
-    const queryDir = join(this.repoRoot, ".repo", "cache");
+    const queryDir = join(this.repoRoot, ".🦑repo", "⚡cache");
     mkdirSync(queryDir, { recursive: true });
     const queryPath = join(queryDir, `neo4j-generate-query-${process.pid}-${Date.now()}.cypher`);
     writeFileSync(queryPath, `${cypher.trim()}\n`, "utf8");
@@ -1303,11 +1303,11 @@ export class Neo4jCypherExport {
 
     const technology = joined;
     const database = process.env.NEO4J_DATABASE ?? joined;
-    const outDir = join(this.repoRoot, ".repo", "🛂");
+    const outDir = join(this.repoRoot, ".🦑repo", "🛂manifest");
     mkdirSync(outDir, { recursive: true });
 
     const finalAbs = join(outDir, `${technology}.cypher`);
-    const cacheDir = join(this.repoRoot, ".repo", "cache");
+    const cacheDir = join(this.repoRoot, ".🦑repo", "⚡cache");
     mkdirSync(cacheDir, { recursive: true });
     const tmpAbs = join(cacheDir, `.generate-${technology}-${process.pid}.tmp.cypher`);
 
@@ -1356,7 +1356,7 @@ export class Neo4jCypherExport {
  */
 
 //#region 🔧PolicyFsScan
-const POLICY_SKIP_DIRS = new Set(["node_modules", ".git", ".repo", "target", "dist", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
+const POLICY_SKIP_DIRS = new Set(["node_modules", ".git", ".🦑repo", "target", "dist", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
 /** 🔎Repo-relative `…/plugin/rs` dirs holding a `lib.rs` + `Cargo.toml` (app plugin crates, plus `framework/plugin/rs` itself). */
 function policyDiscoverPluginCrateDirs(repoRoot: string): string[] {
@@ -2612,7 +2612,7 @@ function policyStripTsCommentsAndStrings(content: string): string {
   return out.join("");
 }
 
-/** 🔎Repo-wide `script.ts` file paths (repo-relative), skipping node_modules/target/.repo and other policy skip dirs. */
+/** 🔎Repo-wide `script.ts` file paths (repo-relative), skipping node_modules/target/.🦑repo and other policy skip dirs. */
 function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {

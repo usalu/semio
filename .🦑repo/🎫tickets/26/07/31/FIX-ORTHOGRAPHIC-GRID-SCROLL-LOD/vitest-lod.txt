@@ -1,0 +1,8 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/🧰framework/🛍️product/💻os/🔨module/♾️infinite/🌍world/🎨r3f/⚡️implementation/🟦typescript
+
+No test files found, exiting with code 0
+
+include: index.tsx
+exclude:  **/node_modules/**, **/.git/**
+

@@ -375,7 +375,7 @@ describe("micro-commit", () => {
     ).toBe(true);
   });
 
-  test("shouldSkipPathForUloc skips dot paths license templates and .repo", async () => {
+  test("shouldSkipPathForUloc skips dot paths license templates and .🦑repo", async () => {
     const { shouldSkipPathForUloc } = await import("../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts");
     const root = process.cwd();
     expect(shouldSkipPathForUloc(root, ".cursor/plans/foo.plan.md")).toBe(true);
@@ -639,7 +639,7 @@ describe("package boundary guards", () => {
     const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of require("node:fs").readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".repo" || entry.name === "dist" || entry.name === "target" || entry.name === ".claude") continue;
+        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".🦑repo" || entry.name === "dist" || entry.name === "target" || entry.name === ".claude") continue;
         const full = join(dir, entry.name);
         if (entry.isDirectory()) {
           walk(full);

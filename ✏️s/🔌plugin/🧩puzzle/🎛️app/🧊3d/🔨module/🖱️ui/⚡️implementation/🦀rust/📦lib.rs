@@ -1,7 +1,7 @@
 //! 🧊 Puzzle 3d app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use puzzle_3d::Puzzle3dProjection;
-use puzzle_3d_engine::{BrushPlacePayload, Puzzle3dPrecomputeSession};
+use puzzle_3d_engine::{BrushPlacePayload, PrecomputeLane, Puzzle3dPrecomputeSession};
 use puzzle_3d_op::{puzzle3d_document_delta_operations, Puzzle3dOperation, Puzzle3dPlayProjection};
 use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
@@ -17,7 +17,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::LazyLock;
+use std::sync::{LazyLock, Mutex};
 
 //#region 🔖Constants
 const PUZZLE3D_PLAY_APP_ID: &str = "puzzle3d-play";
@@ -1088,7 +1088,7 @@ fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecompute
             "candidates": candidates,
         })
     });
-    let fill_build: Value = serde_json::from_str(&session.fill_progress()).unwrap_or(Value::Null);
+    let fill_build: Value = serde_json::from_str(&session.fill_progress_summary()).unwrap_or(Value::Null);
     let fill_build = json!({
         "count": fill_build.get("count").cloned().unwrap_or(json!(0)),
         "appliedCount": fill_build.get("appliedCount").cloned().unwrap_or(json!(0)),
@@ -1146,7 +1146,31 @@ fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzz
 /// what froze the UI for minutes: 128×32 Monte-Carlo collision task units, blocking, every single tick.
 fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     sync_precompute_session(session, envelope);
-    session.precompute_step(8);
+    session.precompute_step_lane(PrecomputeLane::Brush, 8);
+}
+
+fn puzzle3d_viewport_scope() -> semio_framework_core::kernel::UiDirtyScope {
+    semio_framework_core::kernel::UiDirtyScope::Partial {
+        window_bodies: vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()],
+        panel_bodies: Vec::new(),
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: false,
+        labels: false,
+    }
+}
+
+fn puzzle3d_selection_scope() -> semio_framework_core::kernel::UiDirtyScope {
+    semio_framework_core::kernel::UiDirtyScope::Partial {
+        window_bodies: vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()],
+        panel_bodies: vec![PUZZLE3D_PLAY_BODY_DOCUMENT.to_string(), PUZZLE3D_PLAY_BODY_INSPECTOR.to_string()],
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: false,
+        labels: false,
+    }
 }
 
 /// 🐢 Background fill planning only mutates the main world body's `fillBuild` interaction JSON and the
@@ -1280,11 +1304,11 @@ fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &P
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
     let fallback_positions = scaled_mesh_positions(&fallback.positions, PUZZLE3D_FALLBACK_MESH_SCALE);
     if !session.has_mesh(PUZZLE3D_FALLBACK_MESH_KIND) {
-        session.register_mesh(PUZZLE3D_FALLBACK_MESH_KIND, &fallback_positions, &fallback.indices);
+        session.register_mesh_fallback(PUZZLE3D_FALLBACK_MESH_KIND, &fallback_positions, &fallback.indices);
     }
     for url in collect_mesh_urls(&envelope.fixture) {
         if !session.has_mesh(&url) {
-            session.register_mesh(&url, &fallback_positions, &fallback.indices);
+            session.register_mesh_fallback(&url, &fallback_positions, &fallback.indices);
         }
     }
 }
@@ -1362,8 +1386,7 @@ fn fixture_from_engine_json(envelope: &Puzzle3dScene, fixture_json: &str) -> Opt
     Some(next)
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Deserialize, Clone)]
 struct Puzzle3dFillDisplayPayload {
     #[serde(default)]
     objects: Vec<Puzzle3dObject>,
@@ -1371,29 +1394,73 @@ struct Puzzle3dFillDisplayPayload {
     attractions: Vec<Puzzle3dAttraction>,
 }
 
-/// 🪣 Appends ONLY the not-yet-committed tail of the fill plan (`applied_count..available_count`,
-/// each tagged `revealIndex`) onto the live projection fixture — everything up to `applied_count`
-/// is already correctly present in `fixture` (with its true `locked`/`hidden`/selection state, none
-/// of which the engine's `Fixture`/`FixtureObject` type carries). Replacing `fixture.objects`
-/// wholesale with the engine's composed view — the previous approach — silently dropped those flags
-/// for EVERY object on every render, not just the planned ones, because the engine round trip is
-/// lossy by design (it only needs geometry for collision planning). `compose_fill_display`'s output
-/// is `fill.base.objects ++ appended.take(available_count)`; since `fixture` already holds exactly
-/// `fill.base.len() + applied_count` objects, the tail beyond that boundary is exactly the newly
-/// revealed, not-yet-committed objects — no duplication, no overwrite.
+#[derive(Clone)]
+struct FillDisplayMemo {
+    plan_count: u32,
+    available_count: u32,
+    applied_count: u32,
+    payload: Puzzle3dFillDisplayPayload,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FillProgressSummaryJson {
+    count: u32,
+}
+
+fn append_fill_display_tail(fixture: &mut Puzzle3dFixture, payload: &Puzzle3dFillDisplayPayload, applied_count: u32, available_count: u32) {
+    let reveal_count = (available_count - applied_count) as usize;
+    let objects_tail_start = payload.objects.len().saturating_sub(reveal_count);
+    fixture.objects.extend(payload.objects.iter().skip(objects_tail_start).cloned());
+    let attractions_tail_start = payload.attractions.len().saturating_sub(reveal_count);
+    fixture.attractions.extend(payload.attractions.iter().skip(attractions_tail_start).cloned());
+}
+
 fn puzzle3d_fixture_with_fill_display(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, applied_count: u32, available_count: u32) -> Puzzle3dFixture {
     if available_count <= applied_count {
         return fixture;
     }
     if let Ok(display_json) = precompute.compose_fill_display_rust(available_count) {
         if let Ok(payload) = serde_json::from_str::<Puzzle3dFillDisplayPayload>(&display_json) {
-            let reveal_count = (available_count - applied_count) as usize;
-            let objects_tail_start = payload.objects.len().saturating_sub(reveal_count);
-            fixture.objects.extend(payload.objects.into_iter().skip(objects_tail_start));
-            let attractions_tail_start = payload.attractions.len().saturating_sub(reveal_count);
-            fixture.attractions.extend(payload.attractions.into_iter().skip(attractions_tail_start));
+            append_fill_display_tail(&mut fixture, &payload, applied_count, available_count);
         }
     }
+    fixture
+}
+
+fn puzzle3d_fixture_with_fill_display_memo(
+    mut fixture: Puzzle3dFixture,
+    precompute: &Puzzle3dPrecomputeSession,
+    applied_count: u32,
+    available_count: u32,
+    memo: &Mutex<Option<FillDisplayMemo>>,
+) -> Puzzle3dFixture {
+    if available_count <= applied_count {
+        return fixture;
+    }
+    let plan_count: u32 = serde_json::from_str::<FillProgressSummaryJson>(&precompute.fill_progress_summary())
+        .map(|summary| summary.count)
+        .unwrap_or(0);
+    let cached = memo.lock().ok().and_then(|guard| {
+        guard.as_ref().filter(|entry| entry.plan_count == plan_count && entry.available_count == available_count && entry.applied_count == applied_count).cloned()
+    });
+    let payload = if let Some(entry) = cached {
+        entry.payload
+    } else {
+        let payload = precompute
+            .compose_fill_display_rust(available_count)
+            .ok()
+            .and_then(|display_json| serde_json::from_str::<Puzzle3dFillDisplayPayload>(&display_json).ok());
+        if let Some(payload) = payload {
+            if let Ok(mut guard) = memo.lock() {
+                *guard = Some(FillDisplayMemo { plan_count, available_count, applied_count, payload: payload.clone() });
+            }
+            payload
+        } else {
+            return fixture;
+        }
+    };
+    append_fill_display_tail(&mut fixture, &payload, applied_count, available_count);
     fixture
 }
 
@@ -3360,7 +3427,7 @@ fn puzzle3d_vortex_direction_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3
 /// preserves the action semantics). The label stays fixed; preload progress is the ready extent + loading ring.
 /// The slider range stays fixed at [`PUZZLE3D_FILL_COUNT_MAX`]; `ready` tracks how far planning has preloaded.
 fn puzzle3d_fill_count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
-    let progress: Value = serde_json::from_str(&precompute.fill_progress()).unwrap_or(Value::Null);
+    let progress: Value = serde_json::from_str(&precompute.fill_progress_summary()).unwrap_or(Value::Null);
     let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
     let available_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
     WindowMeasure::Slider {
@@ -3445,10 +3512,11 @@ fn puzzle3d_brush_utility_options(envelope: &Puzzle3dScene, precompute: &Puzzle3
         },
         puzzle3d_distribution_group(envelope, labels, Some(false)),
     ];
-    if let Some(target) = puzzle3d_brush_target_vortex(envelope) {
-        let raw = precompute.brush_candidates(&target);
-        let candidates = parse_brush_candidates_free(&raw);
-        if !candidates.is_empty() {
+    if envelope.active_utility == "brush" {
+        if let Some(target) = puzzle3d_brush_target_vortex(envelope) {
+            let raw = precompute.brush_candidates(&target);
+            let candidates = parse_brush_candidates_free(&raw);
+            if !candidates.is_empty() {
             let items: Vec<MeasureSelectItem> = candidates
                 .iter()
                 .enumerate()
@@ -3466,6 +3534,7 @@ fn puzzle3d_brush_utility_options(envelope: &Puzzle3dScene, precompute: &Puzzle3
                 items,
                 on_change: puzzle3d_action("engagementControlSelect", None),
             });
+            }
         }
     }
     WindowMeasure::Group {
@@ -3556,6 +3625,7 @@ pub struct Puzzle3dPlayApp {
     transform_scratch: Option<Puzzle3dFixture>,
     /// 👻 Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖GesturePreview`.
     preview_seq: u64,
+    fill_display_memo: Mutex<Option<FillDisplayMemo>>,
 }
 
 impl Default for Puzzle3dPlayApp {
@@ -3567,6 +3637,7 @@ impl Default for Puzzle3dPlayApp {
             transform_base: None,
             transform_scratch: None,
             preview_seq: 0,
+            fill_display_memo: Mutex::new(None),
         }
     }
 }
@@ -4456,7 +4527,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                 // reveal-tagged instances already show. Ticks purely advance background planning.
                 let available_before = self.precompute.fill_available_count();
                 let done_before = self.precompute.fill_is_done();
-                self.precompute.precompute_step(8);
+                self.precompute.precompute_step_lane(PrecomputeLane::Fill, 8);
                 let available_after = self.precompute.fill_available_count();
                 let done_after = self.precompute.fill_is_done();
                 ui_scope = if available_after != available_before || done_after != done_before {
@@ -4480,6 +4551,11 @@ impl DocumentApp for Puzzle3dPlayApp {
             "worldPointerDown" => {}
             _ => {}
         }
+        ui_scope = match action {
+            "setHover" | "worldHover" => puzzle3d_viewport_scope(),
+            "worldPick" | "worldSelect" | "setSelection" | "clearSelection" | "selectAll" | "worldVortexHover" | "worldVortexSelect" => puzzle3d_selection_scope(),
+            _ => ui_scope,
+        };
         let next_active_utility = envelope.active_utility.clone();
         envelope.runtime.save_window(&wid);
         self.runtime = envelope.runtime;
@@ -4517,7 +4593,13 @@ impl DocumentApp for Puzzle3dPlayApp {
         // 🪣 Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture
         // (see `puzzle3d_fixture_with_fill_display`) — safe even during a live gumball scratch drag,
         // since it never touches/replaces any already-present object (the dragged one included).
-        let fixture = puzzle3d_fixture_with_fill_display(self.render_fixture(&doc.projection.0), &self.precompute, runtime_for_window.fill_count, self.precompute.fill_available_count());
+        let fixture = puzzle3d_fixture_with_fill_display_memo(
+            self.render_fixture(&doc.projection.0),
+            &self.precompute,
+            runtime_for_window.fill_count,
+            self.precompute.fill_available_count(),
+            &self.fill_display_memo,
+        );
         let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility: active_utility.clone() };
         let labels = puzzle3d_labels(view_state);
         match body_key {
@@ -6591,6 +6673,15 @@ mod tests {
         let result = app.handle_action("setHover", Some(&json!({ "objectId": object_id })), &ViewState::default(), &testkit::meta("local")).expect("setHover");
         assert!(result.operations.is_empty(), "setHover must not emit document operations");
         assert_eq!(app.projection().expect("projection").0, before, "setHover must not mutate the document");
+        use semio_framework_core::kernel::UiDirtyScope;
+        match result.ui_scope {
+            UiDirtyScope::Partial { window_bodies, panel_bodies, measures, utilities, tools, engagements, labels } => {
+                assert_eq!(window_bodies, vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()]);
+                assert!(panel_bodies.is_empty());
+                assert!(!measures && !utilities && !tools && !engagements && !labels);
+            }
+            other => panic!("setHover must narrow dirty scope to the viewport composite, got {other:?}"),
+        }
         let clear = app.handle_action("setHover", None, &ViewState::default(), &testkit::meta("local")).expect("clear hover");
         assert!(clear.operations.is_empty(), "clearing hover must not emit document operations");
     }
@@ -6628,6 +6719,22 @@ mod tests {
         assert_eq!(tool_ids, vec!["fill"]);
         assert_eq!(definition.modes[0].tools, vec![ToolRef::new("fill")]);
         assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
+    }
+
+    #[test]
+    fn world_pick_declares_selection_ui_scope() {
+        use semio_framework_core::kernel::UiDirtyScope;
+        let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+        let result = app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("worldPick");
+        match result.ui_scope {
+            UiDirtyScope::Partial { window_bodies, panel_bodies, measures, utilities, tools, engagements, labels } => {
+                assert_eq!(window_bodies, vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()]);
+                assert!(panel_bodies.contains(&PUZZLE3D_PLAY_BODY_DOCUMENT.to_string()));
+                assert!(panel_bodies.contains(&PUZZLE3D_PLAY_BODY_INSPECTOR.to_string()));
+                assert!(!measures && !utilities && !tools && !engagements && !labels);
+            }
+            other => panic!("worldPick must narrow dirty scope to selection surfaces, got {other:?}"),
+        }
     }
 
     #[test]

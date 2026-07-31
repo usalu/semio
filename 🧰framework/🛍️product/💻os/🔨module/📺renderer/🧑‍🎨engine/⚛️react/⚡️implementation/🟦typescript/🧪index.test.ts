@@ -160,6 +160,7 @@ import {
   createLatestAsyncDispatcher,
   createDirectionalAsyncDispatcher,
   createInFlightSkippingInterval,
+  createCoalescingActionDispatcher,
   createRevealCutoffStore,
   worldRevealCutoffStore,
   isRevealCutoffHidden,
@@ -198,6 +199,7 @@ import {
   resolveFrameworkLayoutSeed,
   introductionTargetsWindow,
   windowMeasureTreeContainsId,
+  renderWindowMeasuresTree,
   buildToolTabs,
   toolIdFromPanelTabId,
 } from "../../../../🧑‍🎨engine/⚛️react/⚡️implementation/🟦typescript/📦index.tsx";
@@ -385,6 +387,26 @@ describe("in-flight skipping interval", () => {
     timers[0]!();
     expect(runs).toEqual([1, 2]);
     stop();
+  });
+});
+
+describe("coalescing action dispatcher", () => {
+  it("dedupes unchanged values and keeps at most one in-flight dispatch", async () => {
+    const calls: string[] = [];
+    let finishFirst = () => {};
+    const send = createCoalescingActionDispatcher<string | null>((value) => {
+      calls.push(value ?? "null");
+      if (calls.length === 1) return new Promise<void>((resolve) => (finishFirst = resolve));
+    });
+    send("a");
+    send("a");
+    send("b");
+    expect(calls).toEqual(["a"]);
+    finishFirst();
+    await Promise.resolve();
+    expect(calls).toEqual(["a", "b"]);
+    send("b");
+    expect(calls).toEqual(["a", "b"]);
   });
 });
 
@@ -4726,6 +4748,34 @@ describe("windowMeasureTreeContainsId", () => {
     expect(windowMeasureTreeContainsId(measures, "puzzle3d-play-vortex-show")).toBe(true);
     expect(windowMeasureTreeContainsId(measures, "nested-toggle")).toBe(true);
     expect(windowMeasureTreeContainsId(measures, "missing")).toBe(false);
+  });
+});
+
+describe("renderWindowMeasuresTree", () => {
+  it("puts toggle icons before labels and uses checkboxes instead of icon toggles", () => {
+    const measures: WindowMeasure[] = [
+      {
+        kind: "toggle",
+        id: "grid-visible",
+        iconId: "layout-grid",
+        label: "Grid",
+        pressed: true,
+        onChange: { controllerId: "x", action: "setGridVisible" },
+      },
+    ];
+    const markup = renderToStaticMarkup(renderWindowMeasuresTree(measures, () => undefined) as ReactElement);
+    const iconIdx = markup.indexOf('data-slot="tree-icon"');
+    const labelIdx = markup.indexOf('data-slot="tree-label"');
+    const checkboxIdx = markup.indexOf('data-slot="tree-action-checkbox"');
+    expect(iconIdx).toBeGreaterThan(-1);
+    expect(labelIdx).toBeGreaterThan(iconIdx);
+    expect(checkboxIdx).toBeGreaterThan(labelIdx);
+    expect(markup).toContain('type="checkbox"');
+    expect(markup).toContain('id="grid-visible"');
+    expect(markup).toContain('data-icon="layout-grid"');
+    expect(markup).toContain("Grid");
+    expect(markup).toContain("checked");
+    expect(markup).not.toContain('data-state="on"');
   });
 });
 

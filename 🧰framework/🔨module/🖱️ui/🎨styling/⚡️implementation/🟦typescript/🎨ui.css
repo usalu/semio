@@ -6978,18 +6978,20 @@
   [data-slot="mode-dock-tab"],
   [data-slot="panel-tab-button"],
   [data-slot="pane-chrome"],
+  [data-slot="window-pane-chrome-toggle"],
   [data-slot="tree-item-row"],
   [data-slot="tree-section-row"],
   [data-slot="tree-property-item"],
   [data-slot="tree-row"],
   [data-slot="control-tree-row"],
   [data-slot="window-measure-tree-row"]
-) [data-slot="tree-label"],
+) :is([data-slot="tree-label"], [data-slot="inline-label"]),
 [data-celebrated="true"][data-slot="introduction-interaction-label"] {
   background-image: var(--celebrate-conic);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 [data-celebrated="true"]:is(
@@ -6999,6 +7001,7 @@
   [data-slot="mode-dock-tab"],
   [data-slot="panel-tab-button"],
   [data-slot="pane-chrome"],
+  [data-slot="window-pane-chrome-toggle"],
   [data-slot="tree-item-row"],
   [data-slot="tree-section-row"],
   [data-slot="tree-property-item"],
@@ -7021,6 +7024,7 @@
   [data-slot="mode-dock-tab"],
   [data-slot="panel-tab-button"],
   [data-slot="pane-chrome"],
+  [data-slot="window-pane-chrome-toggle"],
   [data-slot="tree-item-row"],
   [data-slot="tree-section-row"],
   [data-slot="tree-property-item"],
@@ -7038,6 +7042,7 @@
   [data-slot="mode-dock-tab"],
   [data-slot="panel-tab-button"],
   [data-slot="pane-chrome"],
+  [data-slot="window-pane-chrome-toggle"],
   [data-slot="tree-item-row"],
   [data-slot="tree-section-row"],
   [data-slot="tree-property-item"],
@@ -7049,6 +7054,7 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 [data-celebrated="true"]:is(

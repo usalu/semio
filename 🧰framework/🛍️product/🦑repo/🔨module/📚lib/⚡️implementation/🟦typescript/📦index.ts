@@ -69,7 +69,7 @@ export function fixtureItemsOf<T = Record<string, unknown>>(node: unknown): read
 
 function defaultCliBin(root: string): string {
   const win = process.platform === "win32";
-  return join(root, "repo", "client", win ? "client.exe" : "client");
+  return join(root, "🧰framework/🛍️product/🦑repo/🔨module/💻client", win ? "client.exe" : "client");
 }
 
 export function resolveCliBin(root = getWorkspaceRoot()): string {
@@ -3570,12 +3570,12 @@ const MICRO_COMMIT_RESOLVE_REPO_CLI_SH = `compose_resolve_repo_cli() {
     echo "$REPO_CLI_BIN"
     return
   fi
-  if [ -x "$ROOT/repo/client/client" ]; then
-    echo "$ROOT/repo/client/client"
+  if [ -x "$ROOT/🧰framework/🛍️product/🦑repo/🔨module/💻client/client" ]; then
+    echo "$ROOT/🧰framework/🛍️product/🦑repo/🔨module/💻client/client"
     return
   fi
-  if [ -x "$ROOT/repo/client/client.exe" ]; then
-    echo "$ROOT/repo/client/client.exe"
+  if [ -x "$ROOT/🧰framework/🛍️product/🦑repo/🔨module/💻client/client.exe" ]; then
+    echo "$ROOT/🧰framework/🛍️product/🦑repo/🔨module/💻client/client.exe"
     return
   fi
 }`;

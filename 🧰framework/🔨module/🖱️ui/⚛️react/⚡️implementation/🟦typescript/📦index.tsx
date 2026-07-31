@@ -7967,14 +7967,22 @@ const PanelTabButton: React.FC<{
         {windowTabChrome ? (
           <div className={modeDockTabLabelClassName}>
             <Icon size={12} className="shrink-0" />
-            {inlineText !== undefined ? <span className="truncate">{inlineText}</span> : null}
+            {inlineText !== undefined ? (
+              <span data-slot="inline-label" className="truncate">
+                {inlineText}
+              </span>
+            ) : null}
           </div>
         ) : (
           <>
             <span className={panelTabIconSlotClass}>
               <Icon size={12} />
             </span>
-            {inlineText !== undefined ? <span className={panelTabLabelClass}>{inlineText}</span> : null}
+            {inlineText !== undefined ? (
+              <span data-slot="inline-label" className={panelTabLabelClass}>
+                {inlineText}
+              </span>
+            ) : null}
           </>
         )}
         {draggable && !surfaceDrag ? <DragHandle onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
@@ -11627,7 +11635,11 @@ function ActionGroupItem({
       {...(props as any)}
     >
       {children}
-      {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
+      {text ? (
+        <span data-slot="inline-label" className="text-tiny whitespace-nowrap">
+          {text}
+        </span>
+      ) : null}
       {renderControlIcon(icon, "tiny")}
     </Component>
   );
@@ -11869,7 +11881,11 @@ function ButtonGroupItem({
       {...(props as any)}
     >
       {children}
-      {inlineText ? <span className={cn("min-w-0 text-xs whitespace-nowrap", /\bjustify-between\b/.test(String(className ?? "")) && "flex-1 truncate")}>{inlineText}</span> : null}
+      {inlineText ? (
+        <span data-slot="inline-label" className={cn("min-w-0 text-xs whitespace-nowrap", /\bjustify-between\b/.test(String(className ?? "")) && "flex-1 truncate")}>
+          {inlineText}
+        </span>
+      ) : null}
       {renderControlIcon(icon)}
     </Comp>
   );
@@ -15693,34 +15709,47 @@ export interface TreeCheckboxAction {
 
 export type TreeHeaderAction = TreeSectionAction | TreeCheckboxAction;
 
+export interface TreeCheckboxProps {
+  id?: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  title?: string;
+  disabled?: boolean;
+  ariaLabel?: string;
+}
+
+/** @emoji ☑️ Compact tree-row checkbox used as a property control or header action. */
+export const TreeCheckbox: React.FC<TreeCheckboxProps> = ({ id, checked, onCheckedChange, title, disabled, ariaLabel }) => (
+  <label
+    data-slot="tree-action-checkbox-wrapper"
+    className="inline-flex h-medium min-w-tiny flex-shrink-0 cursor-pointer items-center justify-center"
+    title={title}
+    onClick={(event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    }}
+  >
+    <input
+      data-slot="tree-action-checkbox"
+      id={id}
+      type="checkbox"
+      className="m-0 size-tiny cursor-pointer accent-foreground"
+      aria-label={ariaLabel ?? title ?? id}
+      checked={checked}
+      disabled={disabled}
+      onChange={(event) => {
+        event.stopPropagation();
+        onCheckedChange(event.currentTarget.checked);
+      }}
+    />
+  </label>
+);
+
 const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
   <div data-slot="tree-header-actions" className={treeHeaderActionsClassName}>
     {actions.map((action, index) =>
       action.kind === "checkbox" ? (
-        <label
-          key={action.id ?? index}
-          data-slot="tree-action-checkbox-wrapper"
-          className="inline-flex h-medium min-w-tiny flex-shrink-0 cursor-pointer items-center justify-center"
-          title={action.title}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-        >
-          <input
-            data-slot="tree-action-checkbox"
-            id={action.id}
-            type="checkbox"
-            className="m-0 size-tiny cursor-pointer accent-foreground"
-            aria-label={action.ariaLabel ?? action.title ?? action.id}
-            checked={action.checked}
-            disabled={action.disabled}
-            onChange={(event) => {
-              event.stopPropagation();
-              action.onCheckedChange(event.currentTarget.checked);
-            }}
-          />
-        </label>
+        <TreeCheckbox key={action.id ?? index} id={action.id} checked={action.checked} onCheckedChange={action.onCheckedChange} title={action.title} disabled={action.disabled} ariaLabel={action.ariaLabel} />
       ) : (
         <span key={action.id ?? index} className={cn(action.revealOnHover ? "opacity-0 transition-opacity group-hover:opacity-100" : undefined)}>
           <Action
@@ -19176,20 +19205,27 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
 
 export interface WindowMeasureTreeLeafProps {
   label?: string;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   fullWidth?: boolean;
   loading?: boolean;
   waiting?: boolean;
 }
 
-/** @emoji 🌳 Measure control leaf aligned like a tree row (label + value or full-width control). */
-export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, children, fullWidth = false, loading = false, waiting = false }) => {
+/** @emoji 🌳 Measure control leaf aligned like a tree row (icon + label + value or full-width control). */
+export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, icon, children, fullWidth = false, loading = false, waiting = false }) => {
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   const labelNode = label ? (
     <span data-slot="tree-label" className={cn("truncate select-none", windowMeasureTreeLeafLabelClass)} style={treeItemLabelStyle}>
       {label}
     </span>
   ) : null;
+  const leading = (
+    <>
+      {icon != null ? renderTreeRowIcon(icon, "file-text") : null}
+      {labelNode}
+    </>
+  );
   if (fullWidth) {
     return (
       <WindowMeasureTreeRow
@@ -19211,7 +19247,7 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
       waiting={waiting}
       left={
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-double">
-          {labelNode}
+          {leading}
         </TreeAlignedRow>
       }
       right={
@@ -19260,7 +19296,11 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
       {...(draggable && surfaceDrag ? dragPointerProps : {})}
     >
       <span className={panelTabIconSlotClass}>{renderControlIcon(icon, "tiny")}</span>
-      {inlineText !== undefined ? <span className={panelTabLabelClass}>{inlineText}</span> : null}
+      {inlineText !== undefined ? (
+        <span data-slot="inline-label" className={panelTabLabelClass}>
+          {inlineText}
+        </span>
+      ) : null}
       {draggable && !surfaceDrag ? <DragHandle {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} /> : null}
     </button>
   );
@@ -20080,13 +20120,12 @@ const Panel: React.FC<PanelProps> = ({
 
   // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
   // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner or edge-middle panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a top/bottom-middle panel is centered and grows both ways, resizable from either edge.
-  // Chrome-hosted open: pull the cap into the navbar/footer band so tabs stay where the folded {@link PanelChromeTabBar} was (unfold in place); stack above shell chrome so the overlapping cap is visible.
   const positionStyle = {
     ...(isChromeHosted && visible ? chromeHostedOpenPanelPositionStyle(anchor) : anchorPositionStyle(anchor)),
     width: visible ? `${size}px` : undefined,
     ...(zIndex !== undefined ? { zIndex } : {}),
   };
-  const panelZClass = isChromeHosted && visible ? "z-navbar" : getLevelZClass("panel");
+  const panelZClass = getLevelZClass("panel");
   const panelFoldControl =
     visible && onVisibleChange
       ? {
@@ -26881,7 +26920,9 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, iconId
     <div data-slot="mode-dock-drag-preview" data-level="window" className={cn(modeDockInactiveTabClass, "pointer-events-none flex max-w-[12rem] shrink-0 items-center px-single text-xs text-element shadow-md select-none", glassClass, className)} style={style}>
       <div className={modeDockTabLabelClassName}>
         {iconId ? <Icon icon={iconId} size="small" className="shrink-0" /> : null}
-        <span className="truncate">{title}</span>
+        <span data-slot="inline-label" className="truncate">
+          {title}
+        </span>
       </div>
     </div>
   ) : (
@@ -26889,7 +26930,9 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, iconId
       <div data-slot="mode-dock-drag-preview-cap" data-level="window" className={cn(windowCapFrameClass, "relative z-[2] flex h-medium shrink-0 items-stretch px-single", glassClass)}>
         <div className={modeDockTabLabelClassName}>
           {iconId ? <Icon icon={iconId} size="small" className="shrink-0" /> : null}
-          <span className="truncate">{title}</span>
+          <span data-slot="inline-label" className="truncate">
+            {title}
+          </span>
         </div>
       </div>
       <div data-slot="mode-dock-drag-preview-body" data-level="base" className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}>
@@ -26961,7 +27004,9 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     <div data-slot="mode-dock-tab-insert-preview" className={modeDockTabInsertPreviewClass} aria-hidden>
       <div className={modeDockTabLabelClassName}>
         <Icon icon={tab.iconId} size="small" className="shrink-0" />
-        <span className="truncate">{tab.title}</span>
+        <span data-slot="inline-label" className="truncate">
+          {tab.title}
+        </span>
       </div>
     </div>
   );
@@ -26996,7 +27041,9 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       >
         <div className={modeDockTabLabelClassName}>
           <Icon icon={tab.iconId} size="small" className="shrink-0" />
-          <span className="truncate">{tab.title}</span>
+          <span data-slot="inline-label" className="truncate">
+            {tab.title}
+          </span>
         </div>
         <DragHandle onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
       </div>
@@ -28180,6 +28227,8 @@ if (import.meta.vitest) {
       expect(celebrateContent).toMatch(/mask-image:\s*var\(--icon-mask, linear-gradient\(#0000 0 0\)/);
       expect(celebrateContent).toMatch(/\[data-icon-kind="themed"\]/);
       expect(celebrateContent).toMatch(/> svg[\s\S]*?visibility:\s*hidden/);
+      expect(celebrateContent).toMatch(/:is\(\[data-slot="tree-label"\], \[data-slot="inline-label"\]\)/);
+      expect(celebrateContent).toMatch(/-webkit-text-fill-color:\s*transparent/);
       expect(celebrateContent).toMatch(/:is\(\[data-tree-guide-line\], \[data-slot="tree-branch-elbow"\], \[data-slot="tree-branch-stem"\]\)/);
       expect(celebrateContent).toContain('[data-slot="tree-section-content"]');
       expect(celebrateContent).toContain('> [data-slot="tree-guide"] [data-tree-guide-line]');
@@ -30583,6 +30632,7 @@ if (import.meta.vitest) {
       );
       const content = document.querySelector('[data-slot="popover-content"]');
       expect(content?.getAttribute("data-level")).toBe("menu");
+      expect(content?.className).toContain("z-menu");
       expect(content?.className).toContain("ui-glass");
       expect(content?.className).not.toContain("ui-glass-panel");
       expect(content?.className).not.toContain("ui-glass-menu");
@@ -31184,7 +31234,8 @@ if (import.meta.vitest) {
       const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
       expect(panel).toBeTruthy();
       expect(panel.getAttribute("data-panel-chrome-hosted")).toBe("true");
-      expect(panel.className).toContain("z-navbar");
+      expect(panel.className).toContain("z-panel");
+      expect(panel.className).not.toContain("z-navbar");
       expect(panel.style.top).toContain("size-large");
       expect(panel.style.top).toContain("size-medium");
       expect(panel.style.top).not.toContain("spacing-single");
@@ -36514,6 +36565,29 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="tree-section-row"');
     });
 
+    it("puts the toggle icon before the label and a checkbox on the right", () => {
+      const markup = renderToStaticMarkup(
+        <WindowMeasuresTree>
+          <WindowMeasureTreeLeaf label="Grid" icon={<Icon icon="layout-grid" size={12} />}>
+            <TreeCheckbox id="grid-visible" checked title="Grid" onCheckedChange={() => undefined} />
+          </WindowMeasureTreeLeaf>
+        </WindowMeasuresTree>,
+      );
+      const iconIdx = markup.indexOf('data-slot="tree-icon"');
+      const labelIdx = markup.indexOf('data-slot="tree-label"');
+      const checkboxIdx = markup.indexOf('data-slot="tree-action-checkbox"');
+      const rightIdx = markup.indexOf('data-slot="window-measure-tree-row-right"');
+      expect(iconIdx).toBeGreaterThan(-1);
+      expect(labelIdx).toBeGreaterThan(iconIdx);
+      expect(checkboxIdx).toBeGreaterThan(labelIdx);
+      expect(rightIdx).toBeGreaterThan(-1);
+      expect(checkboxIdx).toBeGreaterThan(rightIdx);
+      expect(markup).toContain('type="checkbox"');
+      expect(markup).toContain('id="grid-visible"');
+      expect(markup).toContain("Grid");
+      expect(markup).toContain('data-icon="layout-grid"');
+    });
+
     it("keeps measure-row hover fill and puts slider loading on the track wrap only", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
@@ -36874,6 +36948,7 @@ if (treeVitest) {
       );
       const content = document.querySelector('[data-slot="select-content"]');
       expect(content?.getAttribute("data-level")).toBe("menu");
+      expect(content?.className).toContain("z-menu");
       expect(content?.className).toContain("ui-glass");
       expect(content?.className).toContain("text-popover-foreground");
       expect(content?.className).not.toContain("bg-transparent");

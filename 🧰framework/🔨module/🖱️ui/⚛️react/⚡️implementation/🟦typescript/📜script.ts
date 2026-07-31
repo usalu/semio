@@ -92,7 +92,7 @@ export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
   "framework/product/os/module/infinite/world/r3f/index.tsx",
 ] as const;
 
-const UI_PRIMITIVES_SKIP_DIRS = new Set(["node_modules", "dist", "target", ".repo", "storybook-static", ".claude", ".git"]);
+const UI_PRIMITIVES_SKIP_DIRS = new Set(["node_modules", "dist", "target", ".🦑repo", ".repo", "storybook-static", ".claude", ".git"]);
 
 const UI_PRIMITIVES_EXEMPT_PREFIX = ".storybook/stories/ui/";
 

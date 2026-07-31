@@ -19,10 +19,10 @@ todos:
     status: completed
   - id: verify
     content: Run ui-react + ui-styling tests, storybook playwright, and capture a screenshot proof into the ticket folder
-    status: in_progress
+    status: completed
   - id: ticket
     content: Reopen 2026/07/25/CELEBRATE-CONIC-CONTENT-PAINT, keep artifacts in the folder, close with summary and files
-    status: pending
+    status: completed
 isProject: false
 ---
 
