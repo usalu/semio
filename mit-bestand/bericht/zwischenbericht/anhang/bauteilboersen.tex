@@ -149,42 +149,75 @@ Systematische Erhebung von Bauteilbörsen und Wiederverwendungsplattformen als S
   \SemioTableRow{BB-50 & \SemioCellList[,]{Bilder, Artikelnummer, Preis, Menge, Maße, Gewicht, Material, Zustand, Farbe, Alter, Marke, Verfügbarkeit, Materialstandort, Herkunft, Dokumente} & \SemioCellList[,]{Kategorien, Suche, Filter, Merkliste} & \SemioCellList[,]{Anfrage, Reservierung, Warenkorb, Bestellung} & \SemioCellList[,]{Abholung, Lieferung}}
 }
 
-\appendixsection[B]{Begriffe und Abgrenzungen}
+%#region 🔑 Leseschlüssel
 
-\SemioTableLong{Begriffe und Abgrenzungen}{0.25,0.75}{Begriff & Verbindliche Abgrenzung}{%
-  \SemioTableRow{Angebotsform & Darstellung eines Angebots- oder Bestandsbereichs: Angebotsübersicht, Detailseite, Katalog oder Karte\SemioSlash{}GIS.}
-  \SemioTableRow{Zugang & Grundlegende Zugänglichkeit des Angebots- oder Bestandsbereichs: öffentlich, Registrierung oder Mitgliedschaft. Mehrere Ausprägungen werden durch Komma verbunden -- etwa öffentlich, Registrierung, wenn Angebote frei einsehbar sind, Kontaktaufnahme, Inserieren oder Beschaffung jedoch eine Registrierung voraussetzen.}
-  \SemioTableRow{Digitaler Kanal & Kanal der Angebotsbereitstellung: eigene Website, App, externer Marktplatz (Angebote auf einer Fremdplattform wie Ricardo) oder gemeinsamer Shop (geteilter Verkaufskanal mehrerer Betreiber).}
-  \SemioTableRow{Physischer Zugang & Standort nur bei eigenen, öffentlich zugänglichen Räumen der Plattform (Shop, Depot, Lager); reine Marktplätze, die ausschließlich Läden Dritter listen, erhalten keinen Standort (—).}
-  \SemioTableRow{Angebotsbezogene Datenfelder & Inhalte oder Attribute eines einzelnen Angebots beziehungsweise Materialdatensatzes; keine System-, Such- oder Prozessfunktionen.}
-  \SemioTableRow{Such- und Auswahlfunktionen & Plattformweite Werkzeuge zum Finden, Eingrenzen, Speichern, Überwachen oder Ordnen mehrerer Angebote, Bestände oder Anbieter.}
-  \SemioTableRow{Material & Datenfeld am einzelnen Angebot; Kategorien oder Materialfilter werden separat als Suchfunktion codiert.}
-  \SemioTableRow{Materialstandort & Standortangabe am einzelnen Angebot; keine automatische Karte\SemioSlash{}GIS-Codierung.}
-  \SemioTableRow{Anbieterangabe & Anbietername am Einzelangebot; kein Verkäuferverzeichnis.}
-  \SemioTableRow{Kategorien & Navigierbare Gliederung mehrerer Angebote oder Bestände; eine statische Sortimentsliste reicht nicht aus.}
-  \SemioTableRow{Suche & Sichtbares oder offiziell dokumentiertes Suchfeld.}
-  \SemioTableRow{Filter & Aktive Einschränkung einer Ergebnisliste; Kategorien allein gelten nicht als Filter.}
-  \SemioTableRow{Karte\SemioSlash{}GIS & Unter Angebotsform bei räumlicher Darstellung; unter Suche nur bei interaktiver räumlicher Entdeckung oder Eingrenzung.}
-  \SemioTableRow{Merkliste & Explizite Favoriten-, Beobachtungs- oder Merkfunktion.}
-  \SemioTableRow{Suchbenachrichtigung & Gespeicherte Suchkriterien oder automatische Hinweise zu passenden neuen Angeboten.}
-  \SemioTableRow{Auswahlliste & Projekt-, anfrage- oder interessenbezogene Zusammenstellung; weder Warenkorb noch gewöhnliche Merkliste.}
-  \SemioTableRow{Verkäuferverzeichnis & Von Einzelangeboten unabhängige, navigierbare oder durchsuchbare Anbieterliste.}
-  \SemioTableRow{Kontakt & Direkter E-Mail-, Telefon- oder persönlicher Kontakt mit Beschaffungsbezug.}
-  \SemioTableRow{Anfrage & Strukturierte oder angebotsspezifische Anfrage.}
-  \SemioTableRow{Reservierung & Vorläufige oder verbindliche Sicherung eines Angebots; eine Interessenbekundung reicht nicht aus.}
-  \SemioTableRow{Warenkorb & Sammel- und Bestellfunktion, die ein oder mehrere Angebote zu einer Bestellung zusammenfasst.}
-  \SemioTableRow{Bestellung & Verbindlicher Abschluss eines Auftrags nach Auswahl; auch dokumentierte Auftragsbestätigung.}
-  \SemioTableRow{Zahlung & Über die Plattform dokumentierte Online-Zahlung oder Zahlungsabwicklung.}
-  \SemioTableRow{Kauf & Direkter Kaufweg, wenn kein spezifischerer Transaktionsschritt dokumentiert ist.}
-  \SemioTableRow{stationärer Kauf & Ausdrücklich dokumentierter Kauf am physischen Standort; nicht aus Standort oder Abholung abgeleitet.}
-  \SemioTableRow{Abholung & Dokumentierte Abholung an Shop, Depot, Lager, Projekt- oder Angebotsstandort.}
-  \SemioTableRow{Lieferung & Ausdrücklich angebotener oder organisierter Transport zum Abnehmer.}
-  \SemioTableRow{direkte Übergabe & Unmittelbare Übergabe zwischen Anbieter und Abnehmer ohne dokumentierten zentralen Abholort.}
-}
+\clearpage
 
 \appendixsection[L]{Leseschlüssel}
 
-\begin{itemize}
-  \item \texttt{—} = Dimension geprüft, aber keine entsprechende öffentliche oder offiziell dokumentierte Angabe gefunden.
-  \item \texttt{n.\ p.} = aufgrund technischer oder zugangsbezogener Beschränkungen nicht prüfbar, zum Beispiel wegen App-, Login- oder Mitgliedschaftspflicht.
-\end{itemize}
+\SemioTableLong{Zeichen und Angaben}{0.25,0.75}{Zeichen oder Angabe & Bedeutung}{%
+  \SemioTableRow{\texttt{—} & Geprüft, aber keine öffentliche oder offiziell dokumentierte Angabe gefunden.}
+  \SemioTableRow{\texttt{n.\ p.} & Wegen technischer oder zugangsbezogener Beschränkungen nicht prüfbar.}
+  \SemioTableRow{Kommagetrennte Zugänge & Unterschiedliche Zugangsbedingungen für Ansicht, Kontakt, Inserat oder Beschaffung.}
+}
+
+\SemioTableLong{Angebotsformen und Abgrenzungen}{0.25,0.75}{Angebotsform & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Angebotsübersicht & Listen- oder Rasteransicht mehrerer Angebote oder Bestände.}
+  \SemioTableRow{Detailseite & Eigene Ansicht eines einzelnen Angebots oder Materialdatensatzes.}
+  \SemioTableRow{Katalog & Strukturierte, navigierbare Sammlung von Komponenten oder Materialien.}
+  \SemioTableRow{Karte\SemioSlash{}GIS & Räumliche Darstellung mehrerer Angebote oder Bestände.}
+}
+
+\SemioTableLong{Zugänge und Abgrenzungen}{0.25,0.75}{Zugang & Verbindliche Abgrenzung}{%
+  \SemioTableRow{öffentlich & Ohne Konto oder Mitgliedschaft zugänglich.}
+  \SemioTableRow{Registrierung & Konto für mindestens eine erfasste Funktion erforderlich.}
+  \SemioTableRow{Mitgliedschaft & Formale Mitgliedschaft für mindestens eine erfasste Funktion erforderlich.}
+}
+
+\SemioTableLong{Kanäle und Standorte}{0.25,0.75}{Kanal oder Zugang & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Website & Eigener oder unmittelbar zugeordneter Webauftritt.}
+  \SemioTableRow{App & Eigenständige Anwendung für mobile oder stationäre Geräte.}
+  \SemioTableRow{externer Marktplatz & Angebote auf einer Fremdplattform.}
+  \SemioTableRow{gemeinsamer Shop & Geteilter Verkaufskanal mehrerer Betreiber.}
+  \SemioTableRow{Standort & Eigener, öffentlich zugänglicher Shop-, Depot- oder Lagerraum; gelistete Räume Dritter zählen nicht.}
+}
+
+\clearpage
+
+\SemioTableLong{Datenfelder und Abgrenzungen}{0.25,0.75}{Datenfeld & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Material & Angabe am Einzelangebot; Kategorien oder Materialfilter zählen als Suchfunktion.}
+  \SemioTableRow{Materialstandort & Standortangabe am Einzelangebot; keine automatische Karte\SemioSlash{}GIS-Codierung.}
+  \SemioTableRow{Anbieterangabe & Anbietername am Einzelangebot; kein Verkäuferverzeichnis.}
+}
+
+\SemioTableLong{Such- und Auswahlfunktionen}{0.25,0.75}{Funktion & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Kategorien & Navigierbare Gliederung mehrerer Angebote oder Bestände; keine statische Sortimentsliste.}
+  \SemioTableRow{Suche & Sichtbares oder offiziell dokumentiertes Suchfeld.}
+  \SemioTableRow{Filter & Aktive Einschränkung einer Ergebnisliste; Kategorien allein zählen nicht.}
+  \SemioTableRow{Karte\SemioSlash{}GIS & Interaktive räumliche Entdeckung oder Eingrenzung.}
+  \SemioTableRow{Merkliste & Explizite Favoriten-, Beobachtungs- oder Merkfunktion.}
+  \SemioTableRow{Suchbenachrichtigung & Gespeicherte Suche oder automatischer Hinweis auf passende neue Angebote.}
+  \SemioTableRow{Auswahlliste & Projekt-, anfrage- oder interessenbezogene Zusammenstellung; kein Warenkorb und keine gewöhnliche Merkliste.}
+  \SemioTableRow{Verkäuferverzeichnis & Von Einzelangeboten unabhängige, navigierbare oder durchsuchbare Anbieterliste.}
+}
+
+\clearpage
+
+\SemioTableLong{Beschaffungsschritte und Abgrenzungen}{0.25,0.75}{Beschaffungsschritt & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Kontakt & Direkter E-Mail-, Telefon- oder persönlicher Kontakt mit Beschaffungsbezug.}
+  \SemioTableRow{Anfrage & Strukturierte oder angebotsspezifische Anfrage.}
+  \SemioTableRow{Reservierung & Vorläufige oder verbindliche Sicherung eines Angebots; keine reine Interessenbekundung.}
+  \SemioTableRow{Warenkorb & Sammelfunktion für eine Bestellung aus einem oder mehreren Angeboten.}
+  \SemioTableRow{Bestellung & Verbindlicher Auftrag nach Auswahl.}
+  \SemioTableRow{Zahlung & Dokumentierte Online-Zahlung oder Zahlungsabwicklung.}
+  \SemioTableRow{Kauf & Direkter Kaufweg, wenn kein spezifischerer Transaktionsschritt dokumentiert ist.}
+  \SemioTableRow{stationärer Kauf & Dokumentierter Kauf am physischen Standort; nicht aus Standort oder Abholung abgeleitet.}
+}
+
+\SemioTableLong{Übergabeformen und Abgrenzungen}{0.25,0.75}{Übergabeform & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Abholung & Abholung an Shop, Depot, Lager, Projekt- oder Angebotsstandort.}
+  \SemioTableRow{Lieferung & Angebotener oder organisierter Transport zum Abnehmer.}
+  \SemioTableRow{direkte Übergabe & Übergabe zwischen Anbieter und Abnehmer ohne dokumentierten zentralen Abholort.}
+}
+
+%#endregion

@@ -1,0 +1,15 @@
+{
+  "title": "Consistent Projects and Bauteilb?rsen Leseschl?ssel",
+  "emoji": "🔑",
+  "status": "closed",
+  "description": "In the Zwischenbericht Projekte appendix, rename the section immediately after the catalogue from Verfahren to Leseschl?ssel, matching the Bauteilb?rsen appendix terminology. Rebuild and verify the report.",
+  "summary": "Replaced the separate Bauteilb?rsen Begriffe section and minimal key after the resource catalogues with one structured Leseschl?ssel consistent with the Projects appendix. Split the content into eight concise, non-redundant tables for signs, offer forms, access, channels and locations, data fields, search and selection, procurement, and handover. Built both light and dark Zwischenbericht PDFs, verified labels BB.L.a through BB.L.h with no BB.B remainder, and visually inspected all three affected pages in both themes for clean page breaks, clipping, and overlap.",
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪7df0bf3dd3ef4e82a8cf925e348439b5",
+    "⚪5414c061dc624086b79f794b17a78f2d",
+    "⚪a06767b1db994d93bea0112fbf676aa8",
+    "⚪e93834c8781d4694906778fba16edc6b",
+    "⚪b7ba2bf206444ce5835caae964d5f351"
+  ]
+}
