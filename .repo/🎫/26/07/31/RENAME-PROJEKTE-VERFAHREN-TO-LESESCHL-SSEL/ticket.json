@@ -1,0 +1,13 @@
+{
+  "title": "Rename Projekte Verfahren To Leseschl?ssel",
+  "emoji": "🔑",
+  "status": "open",
+  "description": "In the Zwischenbericht Projekte appendix, rename the section immediately after the catalogue from Verfahren to Leseschl?ssel, matching the Bauteilb?rsen appendix terminology. Rebuild and verify the report.",
+  "summary": "Expanded the Projekte appendix Leseschl?ssel into three complete tables covering notation, ReUse-Ort categories, project types, processing statuses, Herkunft-to-Ziel semantics, and procedure definitions. Corrected the appendix introduction to use the actual missing-data dash convention. Added a clean page boundary after visual PDF review exposed an orphaned empty table header. Rebuilt both themes without Nx cache; verified P.L.a-c registration and visually inspected pages 46-47 in light and dark with no clipping, overlap, or orphan headers.",
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪7df0bf3dd3ef4e82a8cf925e348439b5",
+    "⚪5414c061dc624086b79f794b17a78f2d",
+    "⚪a06767b1db994d93bea0112fbf676aa8"
+  ]
+}

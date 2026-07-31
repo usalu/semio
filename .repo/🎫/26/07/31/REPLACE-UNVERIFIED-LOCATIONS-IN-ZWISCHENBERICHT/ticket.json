@@ -1,0 +1,11 @@
+{
+  "title": "Replace Unverified Locations In Zwischenbericht",
+  "emoji": "📍",
+  "status": "closed",
+  "description": "Replace every exact Standort zu verifizieren placeholder in the Zwischenbericht project appendix with an em dash, preserving verified location values.",
+  "summary": "Replaced all 83 exact Standort zu verifizieren placeholders in the Zwischenbericht project appendix with em dashes while preserving every concrete location classification. Rebuilt both light and dark Zwischenbericht PDFs successfully with the Nx build target.",
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪1c756c1e82c34ceca82c75e5106f691b"
+  ]
+}
