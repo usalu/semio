@@ -571,7 +571,7 @@ nul
 !elements/server/bin
 
 #--------------------------------------MEDIA--------------------------------------
-*.mp4
-*.mp3
+tutorial/**/*.mp4
+tutorial/**/*.mp3
 tutorial/**/*.svg
-*.wav
+tutorial/**/*.wav

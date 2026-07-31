@@ -1,0 +1,16 @@
+[project]
+name = "tutorial"
+version = "0.1.0"
+description = "Tutorial animation & media generation package"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "manim>=0.18.0",
+    "numpy>=1.26.0",
+    "gtts>=2.5.0",
+    "openai>=1.0.0",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"

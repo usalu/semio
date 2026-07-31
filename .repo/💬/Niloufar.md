@@ -167,4 +167,9 @@ There are a few issues: when I select these faces, they don't highlight correctl
 
 ---
 
+Make a micro-commit for adding the cooling demand tutorial animation, introduction section, audio files, tutorial pyproject.toml, and gitignore configuration.
+
+---
+
 TODO: Start implementing missing pieces for the UI.
+

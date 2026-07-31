@@ -17,7 +17,8 @@ dependencies = [
 ]
 
 [tool.uv.workspace]
-members = ["semio/py", "semio/engine"]
+members = ["semio/py", "semio/engine", "tutorial"]
+
 
 [dependency-groups]
 dev = [
