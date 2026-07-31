@@ -103,6 +103,7 @@
 \GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall für die Entwicklung und schrittweise Prüfung der digitalen Kette.}
 
 \AbbreviationDefine{AP}{Arbeitspaket}{Ein klar abgegrenzter Teilbereich des Projekts mit eigenen Zielen und Aufgaben, in den das Gesamtprojekt zur besseren Steuerung unterteilt ist.}
+\AbbreviationDefine{API}{Application Programming Interface}{Eine festgelegte Programmierschnittstelle, über die zwei Computerprogramme miteinander kommunizieren und Daten austauschen.}
 \AbbreviationDefine{KI}{Künstliche Intelligenz}{Oberbegriff für Computerprogramme, die Aufgaben lösen, für die normalerweise menschliches Denken nötig ist, etwa Sprache verstehen oder Muster erkennen.}
 \AbbreviationDefine{LLM}{Large-Language-Model}{Ein Computerprogramm, das mit sehr großen Textmengen trainiert wurde und dadurch selbstständig Texte verstehen, beantworten und formulieren kann.}
 \AbbreviationDefine{HID}{Human Interface Design}{Die Gestaltung, wie Menschen ein Computerprogramm bedienen und mit ihm interagieren, etwa über Bildschirmansichten.}
@@ -221,7 +222,7 @@ Ergänzend zur Recherche wurden externe fachliche Perspektiven einbezogen. Sie d
 
 \begin{SemioNest}
 \paragraph{Sekundärbefund: Interview- und Umfragestudie}
-Die im Dezember 2025 veröffentlichte Studie „ReUse in der Bauindustrie stärken“ wurde als ergänzender externer Befund in die Auswertung einbezogen \cite{baselcircular-reuse-2025}. Sie basiert auf 18 qualitativen Interviews mit Akteur:innen aus unterschiedlichen Bereichen der Bauindustrie und einer anschließenden quantitativen Befragung von 94 Teilnehmenden.
+Die im Dezember~2025 veröffentlichte Studie „ReUse in der Bauindustrie stärken“ wurde als ergänzender externer Befund in die Auswertung einbezogen \cite{baselcircular-reuse-2025}. Sie basiert auf 18 qualitativen Interviews mit Akteur:innen aus unterschiedlichen Bereichen der Bauindustrie und einer anschließenden quantitativen Befragung von 94 Teilnehmenden.
 
 Die Studie bestätigt zentrale Ergebnisse der eigenen Recherche: die Bedeutung einer frühen Einbindung, strukturierter Inventare, interoperabler Schnittstellen und einer eindeutigen Identifikation der Baukomponenten.
 
@@ -240,7 +241,7 @@ Das Gespräch mit Raoul Bunschoten zeigt, dass Wiederverwendung nicht allein als
 Informationen zu Verfügbarkeit, Annahmen, Risiken und getroffenen Entscheidungen müssen deshalb über den gesamten Prozess hinweg nachvollziehbar bleiben. Eine digitale Arbeitsumgebung sollte bestehende Werkzeuge und Beteiligte miteinander verbinden, unterschiedliche Varianten vergleichbar machen und die jeweiligen Entscheidungsgrundlagen transparent dokumentieren.
 
 \paragraph{Tragwerksplanung}
-Das Gespräch mit Eike Schling konkretisiert die Anforderungen an den Umgang mit tragenden Baukomponenten (vgl.\ \appendixref{anlage:interview-schling}). Ein digitales Reuse-Werkzeug muss über ein reines Inventar hinausgehen und die für eine tragwerkliche Einordnung erforderlichen Informationen zugänglich und nachvollziehbar machen.
+Das Gespräch mit Eike Schling konkretisiert die Anforderungen an den Umgang mit tragenden Baukomponenten (vgl.\ \appendixref{anlage:interview-schling}). Ein digitales ReUse-Werkzeug muss über ein reines Inventar hinausgehen und die für eine tragwerkliche Einordnung erforderlichen Informationen zugänglich und nachvollziehbar machen.
 
 Welche Angaben benötigt werden und wie belastbar sie sind, hängt von Material, Bauteilart und vorgesehener Verwendung ab. Neben der Geometrie müssen insbesondere Informationen zu ursprünglicher Lagerung, Bewehrung, Zerlegung und Anschlüssen erhalten bleiben. Eine frühe digitale Bewertung sollte zwischen vorhandenen Angaben, Annahmen und offenem Prüfbedarf unterscheiden.
 
@@ -283,7 +284,7 @@ Die technische Grundlage der Generatoren ist funktionsfähig; der Stützengenera
 \end{Figure}
 
 \subsubsection{Bauteileinspeisung}
-Baukomponentendaten gelangen manuell über das Bauteilportal oder strukturiert über die REST-Schnittstelle in das System.
+Baukomponentendaten gelangen manuell über das Bauteilportal oder strukturiert über die \Abbr{REST}-Schnittstelle in das System.
 
 \begin{SemioNest}
 \paragraph{Bauteilportal}
@@ -345,7 +346,7 @@ Die Infrastruktur zur Erzeugung, Zuordnung und Nutzung tragwerklicher Repräsent
 \subsubsection{KI-Assistenz}
 Im Vorhaben werden zwei Einsatzbereiche für \Abbr{KI} untersucht. Im Bauteilportal soll eine \Abbr{LLM}-basierte Assistenz die Auswertung vorhandener Dokumente und die Eingabe im Wizard unterstützen. Im Entwurfswerkzeug ist eine Assistenz vorgesehen, die geeignete Baukomponenten oder mögliche Verknüpfungen vorschlägt.
 
-Die \Abbr{KI} dient dabei ausschließlich als Unterstützung. Vorschläge müssen nachvollziehbar, überprüfbar und korrigierbar bleiben; die Entscheidung liegt weiterhin bei den Nutzenden. Die beiden KI-Anwendungsbereiche sind konzeptionell ausgearbeitet. Die technische Umsetzung beginnt in der nächsten Projektphase.
+Die \Abbr{KI} dient dabei ausschließlich als Unterstützung. Vorschläge müssen nachvollziehbar, überprüfbar und korrigierbar bleiben; die Entscheidung liegt weiterhin bei den Nutzenden. Die beiden \Abbr{KI}-Anwendungsbereiche sind konzeptionell ausgearbeitet. Die technische Umsetzung beginnt in der nächsten Projektphase.
 
 \subsection{AP-Validierung}
 
@@ -380,7 +381,7 @@ Der formale Durchführungszeitraum reicht vom 03.11.2025 bis 02.05.2027. Die ope
   \SemioTableRow{2 & Die konkrete Ausgestaltung des User-Interfaces und die verwendbaren Technologien wurden festgelegt. & M9\newline noch nicht fällig & Systemarchitektur sowie erste Oberflächen- und Navigationsstände liegen vor.}
   \SemioTableRow{3 & Das Treibhauspotenzial für die Lebenszyklusphasen A--D wird berechnet. & M12\newline noch nicht fällig & Die Infrastruktur zur Zuordnung ökologischer Bewertungsinformationen liegt vor.}
   \SemioTableRow{4 & Die Standsicherheit für den Entwurf wird vereinfacht nachgewiesen; alternativ werden nur Teile des Tragsystems betrachtet. & M12\newline noch nicht fällig & Die Infrastruktur für tragwerkliche Repräsentationen liegt vor.}
-  \SemioTableRow{5 & Eine API für Bauteilkataloge wurde in die Plattform integriert; alternativ ist eine statische, intervallbasiert aktualisierte Schnittstelle vorgesehen. & M14\newline noch nicht fällig & Eine prototypische \Abbr{REST}-Schnittstelleninfrastruktur liegt vor.}
+  \SemioTableRow{5 & Eine \Abbr{API} für Bauteilkataloge wurde in die Plattform integriert; alternativ ist eine statische, intervallbasiert aktualisierte Schnittstelle vorgesehen. & M14\newline noch nicht fällig & Eine prototypische \Abbr{REST}-Schnittstelleninfrastruktur liegt vor.}
   \SemioTableRow{6 & Ein Chat-Interface dient als Interaktionsmöglichkeit mit der \Abbr{KI}; alternativ werden einzelne \Abbr{KI}-gestützte Anwendungsfälle umgesetzt. & M15\newline noch nicht fällig & Die \Abbr{KI}-Anwendungsbereiche für Dateneingabe und Entwurf sind definiert.}
   \SemioTableRow{7 & Ein eigenständiges User-Interface ist benutzbar; alternativ wird ein Plugin innerhalb bestehender Software bereitgestellt. & M16\newline noch nicht fällig & Prototypische Oberflächen und Navigationsstände liegen vor.}
   \SemioTableRow{8 & Eine Website mit Lernmaterialien ist online; alternativ werden dokumentbasierte Anleitungen bereitgestellt. & M18\newline noch nicht fällig & —}
@@ -442,7 +443,7 @@ Methodische Präzisierung. Die Arbeitsgeometrie wird parametrisch durch einen Ge
 
 Derzeitiger Stand. Eine prototypische \Abbr{REST}-Schnittstelleninfrastruktur liegt vor.
 
-Weiteres Vorgehen. Eine externe Referenzquelle wird ausgewählt und über eine API oder eine statische, intervallbasierte Übertragung angebunden. Schnittstellen- und Schemabeschreibung, Fehlerfälle und Integrationstest werden versioniert dokumentiert. Auch die Einbindung eines Transferpartners wird dokumentiert.
+Weiteres Vorgehen. Eine externe Referenzquelle wird ausgewählt und über eine \Abbr{API} oder eine statische, intervallbasierte Übertragung angebunden. Schnittstellen- und Schemabeschreibung, Fehlerfälle und Integrationstest werden versioniert dokumentiert. Auch die Einbindung eines Transferpartners wird dokumentiert.
 
 \subsection{AP-Tool}
 
@@ -585,6 +586,27 @@ Entwurfsstudio.
 \end{Blockquote}
 
 \makeappendices
+
+% \SemioCellList — shared bullet-list cell formatter for the appendix tables
+% (Bauteilbörsen, Typologie). Defined once here, before the appendices are
+% input, so those files no longer carry duplicate \ProvideDocumentCommand
+% definitions that could silently drift apart.
+\ExplSyntaxOn
+\ProvideDocumentCommand \SemioCellList { O{;} m }
+  {
+    \seq_set_split:Nnn \l_tmpa_seq {#1} {#2}
+    \int_zero:N \l_tmpa_int
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        \int_incr:N \l_tmpa_int
+        \int_compare:nNnT \l_tmpa_int > 1 { \par \noindent }
+        \hangindent=0.8em \hangafter=1
+        \textcolor{semio-chrome-border-normal}{\textendash}~%
+        \tl_trim_spaces:n {##1}%
+      }
+  }
+\ExplSyntaxOff
+
 \appendixinput[P]{Projekte}{anhang/projekte}
 \appendixinput[H]{Hürden der Wiederverwendung}{anhang/huerden}
 \appendixinput[BB]{Bauteilbörsen}{anhang/bauteilboersen}

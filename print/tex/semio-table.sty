@@ -939,6 +939,11 @@
 \newcommand{\semio@project@meta}[6]{%
   \begingroup
   \setlength{\extrarowheight}{0pt}%
+  % Row pitch is INTENTIONALLY denser than the component body: that section uses
+  % the airy symmetric-strut model (\semio@table@vtop/@vbot), but the band is a
+  % compact 7-row key–value list where full strut air would balloon the 26mm band.
+  % \arraystretch 1.2 is the deliberate compact rhythm; kept as a literal because
+  % the strut tokens don't apply to this plain l l tabular.
   \renewcommand{\arraystretch}{1.2}%
   % Labels use the SAME synthetic-bold face as the component column headers. Anta
   % ships Regular only, so \bfseries is a no-op here; the headers get their weight
@@ -946,7 +951,11 @@
   % \semio@table@header@cell is redefined to \SemioSansBold\semio@table@fontsize@apply).
   % Mirror that exactly in the label column so labels and headers share one face
   % and size. Values stay regular weight in the muted text colour.
-  \begin{tabular}[t]{@{}>{\SemioSansBold\semio@table@fontsize@apply\color{semio-chrome-foreground}}l@{\hspace{1.2em}}>{\color{semio-chrome-text-normal}}l@{}}
+  % Label→value gap sourced from the shared cell-pad token (2·\semio@table@long@cellpad
+  % = the same width as every inter-column gap in the component body) instead of a
+  % literal 1.2em, so it tracks the system's spacing. Purely horizontal — the value
+  % column shifts, the band height is unchanged.
+  \begin{tabular}[t]{@{}>{\SemioSansBold\semio@table@fontsize@apply\color{semio-chrome-foreground}}l@{\hspace{2\semio@table@long@cellpad}}>{\color{semio-chrome-text-normal}}l@{}}
     Stadt & #1\tabularnewline
     Land & #2\tabularnewline
     Jahr & #3\tabularnewline
