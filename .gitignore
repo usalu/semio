@@ -569,3 +569,9 @@ nul
 !elements/client/bin
 !elements/server/lib
 !elements/server/bin
+
+#--------------------------------------MEDIA--------------------------------------
+*.mp4
+*.mp3
+tutorial/**/*.svg
+*.wav
