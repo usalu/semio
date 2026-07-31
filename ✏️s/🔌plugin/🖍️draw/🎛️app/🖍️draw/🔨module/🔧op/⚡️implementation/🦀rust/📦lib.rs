@@ -1,6 +1,6 @@
 //! ⚡ Draw app — operation enum + laws (constitutional: op).
 
-use draw::{DrawCamera, DrawDocument, DrawLayerNode, DrawTextBody, DrawTransform, DrawTraceParams, FillStyle, PathSegment, StrokeStyle};
+use draw::{DrawDocument, DrawLayerNode, DrawTextBody, DrawTransform, DrawTraceParams, FillStyle, PathSegment, StrokeStyle};
 use draw_engine::{
     clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer,
     remove_layer_from_tree, update_layer_in_tree,
@@ -78,10 +78,6 @@ pub enum DrawOperation {
         parent_id: Option<String>,
         index: usize,
     },
-    SetCamera {
-        #[dsl(block)]
-        camera: DrawCamera,
-    },
     SetDocument {
         #[dsl(block)]
         document: DrawDocument,
@@ -91,7 +87,6 @@ pub enum DrawOperation {
 fn apply_draw_edit_operation(doc: &DrawDocument, edit: &DrawOperation) -> DrawDocument {
     match edit {
         DrawOperation::SetDocument { document } => document.clone(),
-        DrawOperation::SetCamera { camera } => DrawDocument { camera: camera.clone(), ..doc.clone() },
         DrawOperation::SetLayerVisible { layer_id, visible } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).visible = *visible;
         }),
@@ -252,7 +247,6 @@ pub struct DrawLayerTreeAdd {
 #[serde(rename_all = "camelCase")]
 pub struct DrawDiff {
     pub document: Option<DrawDocument>,
-    pub camera: Option<DrawCamera>,
     pub layer_patches: Vec<DrawLayerTreePatch>,
     pub layers_removed: Vec<String>,
     pub layers_added: Vec<DrawLayerTreeAdd>,
@@ -263,9 +257,6 @@ impl OperationDiff<DrawDocument> for DrawDiff {
         let mut next = projection.clone();
         if let Some(document) = &self.document {
             return document.clone();
-        }
-        if let Some(camera) = &self.camera {
-            next.camera = camera.clone();
         }
         for patch in &self.layer_patches {
             update_layer_in_tree(&mut next.layers, &patch.layer_id, &mut |layer| {
@@ -302,9 +293,6 @@ impl OperationDiff<DrawDocument> for DrawDiff {
             *self = other;
             return;
         }
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
         self.layer_patches.extend(other.layer_patches);
         self.layers_removed.extend(other.layers_removed);
         self.layers_added.extend(other.layers_added);
@@ -317,7 +305,6 @@ impl Operation<DrawDocument> for DrawOperation {
     fn diff(&self, _projection: &DrawDocument) -> DrawDiff {
         match self {
             DrawOperation::SetDocument { document } => DrawDiff { document: Some(document.clone()), ..Default::default() },
-            DrawOperation::SetCamera { camera } => DrawDiff { camera: Some(camera.clone()), ..Default::default() },
             DrawOperation::SetLayerVisible { layer_id, visible } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { visible: Some(*visible), ..Default::default() } }], ..Default::default() },
             DrawOperation::SetLayerLocked { layer_id, locked } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { locked: Some(*locked), ..Default::default() } }], ..Default::default() },
             DrawOperation::SetLayerName { layer_id, name } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() },
@@ -397,7 +384,6 @@ mod tests {
             schema: DRAW_DOCUMENT_SCHEMA.into(),
             id: "dsl-fixture".into(),
             title: Some("DSL Fixture \"Quotes\" \\ backslash".into()),
-            camera: DrawCamera { x: 12.5, y: -3.0, zoom: 2.25 },
             layers: vec![rect_shape, line_shape, polygon_shape, path_layer, text_layer, image_layer, trace_layer, boolean_layer, group_layer],
             assets: Some(assets),
             artboard: Some(DrawArtboard { width: 640.0, height: 480.0 }),
@@ -435,7 +421,6 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&DrawOperation::RemoveLayer { layer_id: "layer-1".into() });
         store::test_support::assert_op_line_round_trip(&DrawOperation::ReorderLayer { layer_id: "layer-1".into(), parent_id: None, index: 0 });
         store::test_support::assert_op_line_round_trip(&DrawOperation::ReorderLayer { layer_id: "layer-1".into(), parent_id: Some("group-1".into()), index: 3 });
-        store::test_support::assert_op_line_round_trip(&DrawOperation::SetCamera { camera: DrawCamera { x: 10.0, y: 20.0, zoom: 1.5 } });
         store::test_support::assert_op_line_round_trip(&DrawOperation::SetDocument { document: representative_draw_document() });
     }
 
@@ -516,9 +501,6 @@ mod tests {
         let mut doc = default_draw_document("apply-ops", None);
         doc.layers = vec![group];
 
-        let with_camera = apply_draw_edit_operation(&doc, &DrawOperation::SetCamera { camera: DrawCamera { x: 5.0, y: 6.0, zoom: 2.0 } });
-        assert_eq!(with_camera.camera, DrawCamera { x: 5.0, y: 6.0, zoom: 2.0 });
-
         let with_lock = apply_draw_edit_operation(&doc, &DrawOperation::SetLayerLocked { layer_id: child_id.clone(), locked: true });
         assert!(find_draw_layer(&with_lock, &child_id).map(|layer| layer_base(layer).locked).unwrap());
 
@@ -588,10 +570,6 @@ mod tests {
         let after_add = add_diff.apply(&doc);
         assert_eq!(after_add.layers.len(), 2);
 
-        let camera_op = DrawOperation::SetCamera { camera: DrawCamera { x: 3.0, y: 4.0, zoom: 1.5 } };
-        let camera_diff = camera_op.diff(&doc);
-        assert_eq!(camera_diff.apply(&doc).camera, DrawCamera { x: 3.0, y: 4.0, zoom: 1.5 });
-
         let remove_op = DrawOperation::RemoveLayer { layer_id: rect_id.clone() };
         let remove_diff = remove_op.diff(&doc);
         assert!(remove_diff.apply(&doc).layers.is_empty());
@@ -610,19 +588,16 @@ mod tests {
         assert!(matches!(&backwards[0], DrawOperation::SetDocument { document } if *document == doc));
 
         let mut absorb_target = DrawDiff {
-            camera: Some(DrawCamera { x: 1.0, y: 1.0, zoom: 1.0 }),
             layer_patches: vec![DrawLayerTreePatch { layer_id: rect_id.clone(), base: DrawLayerBasePatch { visible: Some(false), ..Default::default() } }],
             ..Default::default()
         };
         let more_patches = DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: "other".into(), base: DrawLayerBasePatch { locked: Some(true), ..Default::default() } }], ..Default::default() };
         absorb_target.absorb(more_patches);
         assert_eq!(absorb_target.layer_patches.len(), 2);
-        assert_eq!(absorb_target.camera, Some(DrawCamera { x: 1.0, y: 1.0, zoom: 1.0 }));
 
         let document_override = DrawDiff { document: Some(doc.clone()), ..Default::default() };
         absorb_target.absorb(document_override);
         assert_eq!(absorb_target.document, Some(doc.clone()));
-        assert_eq!(absorb_target.camera, None);
     }
 
     #[test]

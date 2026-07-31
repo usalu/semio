@@ -17,7 +17,7 @@ pub fn decode(bytes: &[u8]) -> Result<LayoutDocument, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use layout::{Frame, GridSettings, Layer, LayoutBounds, LayoutCamera, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
+    use layout::{Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
 
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {
@@ -32,8 +32,6 @@ mod tests {
         let document = LayoutDocument {
             schema: LAYOUT_FIXTURE_SCHEMA.into(),
             name: "Empty".into(),
-            camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-            preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
             character_styles: vec![serde_json::json!({"id": "char.emph", "italic": true})],
@@ -52,8 +50,6 @@ mod tests {
         let document = LayoutDocument {
             schema: LAYOUT_FIXTURE_SCHEMA.into(),
             name: "Flags".into(),
-            camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-            preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
             character_styles: Vec::new(),

@@ -17,13 +17,14 @@ pub fn decode_op(bytes: &[u8]) -> Result<LayoutOperation, protocol::ProtocolErro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use layout::{LayoutCamera, PagePatch};
+    use layout::PagePatch;
     use protocol::CollectionOperation;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let document = layout_engine::default_document();
-        let operation = LayoutOperation::SetCamera { blueprint: true, camera: document.camera };
+        let page_id = document.pages[0].id.clone();
+        let operation = LayoutOperation::Pages(CollectionOperation::Patch { id: page_id, patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } });
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -37,8 +38,11 @@ mod tests {
         let envelope = store::create_document_envelope(LAYOUT_FIXTURE_SCHEMA, "layout-doc-text-test", initial, None);
         let mut doc_store: store::DocumentStore<layout::LayoutDocument, LayoutOperation> = store::DocumentStore::new(envelope);
         doc_store
-            .dispatch(store::DocumentCommand::Apply { operations: vec![LayoutOperation::SetCamera { blueprint: true, camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } }], description: Some("pan camera".into()) })
-            .expect("apply set camera");
+            .dispatch(store::DocumentCommand::Apply {
+                operations: vec![LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { width: Some(640.0), ..Default::default() } })],
+                description: Some("resize page".into()),
+            })
+            .expect("apply patch page width");
         doc_store
             .dispatch(store::DocumentCommand::Apply {
                 operations: vec![LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } })],

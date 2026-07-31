@@ -2,17 +2,20 @@
   "title": "Fix Orthographic Grid Scroll Lod",
   "emoji": "🐛",
   "status": "closed",
-  "description": "3d: The grid adjustment to scrolling works fine in perspective windows but e.g. in top view it doesnt work. Make sure all projects have this. MCP unavailable; ticket on disk. Goal: 🎯r2602/🎯runningsketchpad. Root cause: automatic LOD/grid step uses camera distance, but orthographic zoom changes zoom without dollying.",
+  "description": "Follow-up: when zooming largely on e.g. Top, parts of the grid are missing on the right — always show a clean grid covering the complete screen. Screenshot shows hard vertical cutoff.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [],
-  "summary": "Fixed orthographic (e.g. Top) LOD grid not retuning on scroll. Automatic LOD previously used only camera eye→target distance; ortho scroll changes zoom without dollying, so the grid froze. Shared infinite-world R3F bridge now maps ortho zoom to an equivalent perspective distance via the inverse of worldProjectionMatchedOrthoZoom (50° reference FOV), so puzzle3d/cad/aggregator and every WorldLodBridge consumer inherit the fix. Vitest 192 pass; verify-ortho-lod.mjs confirms zoom-out coarsens the grid. Also repaired world-r3f vitest include/alias after emoji path layout. MCP unavailable for ticket_open/close — ticket kept on disk.",
+  "summary": "Follow-up: hard vertical grid cutoff when zooming in orthographic Top was the drei Grid plane (sized from fadeDistance) undershooting the live frustum — fade tracked camera Z, not ortho zoom. cameraGridFadeDistance now sizes from cameraGridVisibleRadius × 32 so the plane always overfills the viewport with clean corner opacity. Vitest 196 pass; verify-fade-coverage.mjs ok.",
   "files": [
+    ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/grid-missing-right.png",
     ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/notes.md",
     ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/ticket.json",
+    ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/verify-fade-coverage.mjs",
+    ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/verify-fade-coverage.txt",
     ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/verify-ortho-lod.mjs",
     ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/verify-ortho-lod.txt",
+    ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/vitest-fade-coverage.txt",
     ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/vitest-full.txt",
-    ".🦑repo/🎫tickets/26/07/31/FIX-ORTHOGRAPHIC-GRID-SCROLL-LOD/vitest-lod.txt",
     "🧰framework/🛍️product/💻os/🔨module/♾️infinite/🌍world/🎨r3f/⚡️implementation/🟦typescript/📦index.tsx",
     "🧰framework/🛍️product/💻os/🔨module/♾️infinite/🌍world/🎨r3f/⚡️implementation/🟦typescript/🧪vitest.config.ts"
   ]

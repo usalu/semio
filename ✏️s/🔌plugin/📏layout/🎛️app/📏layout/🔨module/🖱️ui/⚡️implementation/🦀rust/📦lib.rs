@@ -58,6 +58,12 @@ struct LayoutPlayRuntime {
     drop_preview: Option<LayoutDropPreviewState>,
     #[serde(default)]
     engagement_input: String,
+    /// 👁️ Ephemeral blueprint-surface camera pose — never in `LayoutDocument`, see `LayoutCamera`'s doc.
+    #[serde(default)]
+    camera: LayoutCamera,
+    /// 👁️ Ephemeral preview-surface camera pose — independent of `camera` above.
+    #[serde(default)]
+    preview_camera: LayoutCamera,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -76,6 +82,8 @@ impl Default for LayoutPlayRuntime {
             hovered_id: None,
             drop_preview: None,
             engagement_input: String::new(),
+            camera: LayoutCamera::default(),
+            preview_camera: LayoutCamera::default(),
         }
     }
 }
@@ -329,9 +337,9 @@ fn surface_is_blueprint(args: Option<&Value>) -> bool {
         .is_none_or(|surface| surface.contains("blueprint"))
 }
 
-fn screen_to_world_for_surface(doc: &LayoutDocument, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
-    let camera_doc = if blueprint { &doc.camera } else { &doc.preview_camera };
-    let camera = infinite_cavas::camera::Camera { x: camera_doc.x, y: camera_doc.y, zoom: camera_doc.zoom.max(0.0001) };
+fn screen_to_world_for_surface(runtime: &LayoutPlayRuntime, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
+    let camera_runtime = if blueprint { &runtime.camera } else { &runtime.preview_camera };
+    let camera = infinite_cavas::camera::Camera { x: camera_runtime.x, y: camera_runtime.y, zoom: camera_runtime.zoom.max(0.0001) };
     let viewport = infinite_cavas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
     let world = infinite_cavas::camera::screen_to_world(&camera, &viewport, infinite_cavas::Point::new(sx, sy));
     (world.x, world.y)
@@ -348,7 +356,7 @@ fn pointer_args(args: Option<&Value>) -> (f64, f64, f64, f64) {
 fn hit_test_at(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, args: Option<&Value>, blueprint: bool) -> Option<String> {
     let page = active_page(doc, runtime)?;
     let (sx, sy, width, height) = pointer_args(args);
-    let (wx, wy) = screen_to_world_for_surface(doc, blueprint, sx, sy, width, height);
+    let (wx, wy) = screen_to_world_for_surface(runtime, blueprint, sx, sy, width, height);
     let list = build_display_list_for_page(doc, page, &page.id, &runtime.selected_ids, runtime.hovered_id.as_deref(), blueprint);
     list.hit_test(wx as f32, wy as f32)
 }
@@ -1192,7 +1200,7 @@ fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str, labels: &L
 
 //#region 🔖Render
 fn render_blueprint(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
-    let camera = &doc.camera;
+    let camera = &runtime.camera;
     build_canvas_2d_scene(
         LAYOUT_PLAY_SURFACE_BLUEPRINT,
         LAYOUT_PLAY_APP_ID,
@@ -1206,7 +1214,7 @@ fn render_blueprint(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode
 }
 
 fn render_preview(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
-    let camera = &doc.preview_camera;
+    let camera = &runtime.preview_camera;
     build_canvas_2d_scene(
         LAYOUT_PLAY_SURFACE_PREVIEW,
         LAYOUT_PLAY_APP_ID,
@@ -1367,13 +1375,30 @@ impl DocumentApp for LayoutPlayApp {
                     })
                     .unwrap_or_else(|| "unknown".into());
                 let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(document, blueprint, sx, sy, width, height);
+                let (wx, wy) = screen_to_world_for_surface(&self.runtime, blueprint, sx, sy, width, height);
                 self.runtime.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
                 self.preview_seq = self.preview_seq.wrapping_add(1);
                 ActionEmit::default()
             }
             "canvasDragLeave" => {
                 self.runtime.drop_preview = None;
+                ActionEmit::default()
+            }
+            "setCamera" => {
+                let blueprint = surface_is_blueprint(args);
+                if let Some(camera_value) = args.and_then(|value| value.get("camera")) {
+                    let x = camera_value.get("x").and_then(Value::as_f64);
+                    let y = camera_value.get("y").and_then(Value::as_f64);
+                    let zoom = camera_value.get("zoom").and_then(Value::as_f64);
+                    if let (Some(x), Some(y), Some(zoom)) = (x, y, zoom) {
+                        let camera = LayoutCamera { x, y, zoom };
+                        if blueprint {
+                            self.runtime.camera = camera;
+                        } else {
+                            self.runtime.preview_camera = camera;
+                        }
+                    }
+                }
                 ActionEmit::default()
             }
             //#endregion 👁️View
@@ -1569,22 +1594,6 @@ impl DocumentApp for LayoutPlayApp {
                     _ => ActionEmit::default(),
                 }
             }
-            "setCamera" => {
-                let blueprint = surface_is_blueprint(args);
-                if let Some(camera_value) = args.and_then(|value| value.get("camera")) {
-                    let x = camera_value.get("x").and_then(Value::as_f64);
-                    let y = camera_value.get("y").and_then(Value::as_f64);
-                    let zoom = camera_value.get("zoom").and_then(Value::as_f64);
-                    if let (Some(x), Some(y), Some(zoom)) = (x, y, zoom) {
-                        return ActionEmit {
-                            operations: vec![LayoutOperation::SetCamera { blueprint, camera: LayoutCamera { x, y, zoom } }],
-                            coalesce_key: Some(if blueprint { "camera-blueprint".into() } else { "camera-preview".into() }),
-                            ..Default::default()
-                        };
-                    }
-                }
-                ActionEmit::default()
-            }
             "canvasDrop" => {
                 let blueprint = surface_is_blueprint(args);
                 self.runtime.drop_preview = None;
@@ -1602,7 +1611,7 @@ impl DocumentApp for LayoutPlayApp {
                     return ActionEmit::default();
                 };
                 let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(document, blueprint, sx, sy, width, height);
+                let (wx, wy) = screen_to_world_for_surface(&self.runtime, blueprint, sx, sy, width, height);
                 if kind == "page" {
                     self.handle_action("addPage", None, doc, view_state)
                 } else {
@@ -1802,12 +1811,11 @@ pub fn create_layout_app() -> App {
             .shell_action("exportSvg", "Export Svg")
             .shell_action("exportPdf", "Export Pdf")
             .shell_action("exportPackage", "Export Package")
-            // 🔧 Internal document operations — inspector/DnD/camera-bound, not palette commands.
+            // 🔧 Internal document operations — inspector/DnD-bound, not palette commands.
             .action_with(layout_internal_action("patchPage", "Patch Page", ActionKind::Operation))
             .action_with(layout_internal_action("patchFrame", "Patch Frame", ActionKind::Operation))
-            .action_with(layout_internal_action("setCamera", "Set Camera", ActionKind::Operation))
             .action_with(layout_internal_action("canvasDrop", "Canvas Drop", ActionKind::Operation))
-            // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, pointer, engagement draft.
+            // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, pointer, camera, engagement draft.
             .action_with(layout_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(layout_internal_action("setActivePage", "Set Active Page", ActionKind::View))
             .action_with(layout_internal_action("setHover", "Set Hover", ActionKind::View))
@@ -1818,6 +1826,7 @@ pub fn create_layout_app() -> App {
             .action_with(layout_internal_action("canvasPointerUp", "Canvas Pointer Up", ActionKind::View))
             .action_with(layout_internal_action("canvasDragOver", "Canvas Drag Over", ActionKind::View))
             .action_with(layout_internal_action("canvasDragLeave", "Canvas Drag Leave", ActionKind::View))
+            .action_with(layout_internal_action("setCamera", "Set Camera", ActionKind::View))
             // 🐚 Engagement submit — routes typed export intents through the host, emits only shell effects.
             .action_with(layout_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Shell))
             // 📇 Per-window action scoping — the content-authoring operations only make sense on the
@@ -2366,8 +2375,9 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_updates_surface_camera() {
+    fn set_camera_mutates_runtime_and_emits_no_operations() {
         let mut app = testkit::new_app::<LayoutPlayApp>();
+        let before = app.projection().expect("projection");
         let result = app
             .handle_action(
                 "setCamera",
@@ -2376,18 +2386,38 @@ mod tests {
                 &testkit::meta("local"),
             )
             .expect("camera");
-        assert_eq!(result.operations.len(), 1);
-        let doc = app.projection().expect("projection");
-        assert_eq!(doc.camera.x, 10.0);
-        assert_eq!(doc.camera.y, 20.0);
-        assert_eq!(doc.camera.zoom, 1.5);
-        assert_eq!(doc.preview_camera.x, 0.0);
+        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
+        let json = render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
+        assert!(json.contains(r#""cameraX":10.0"#), "blueprint scene reflects runtime camera: {json}");
+        assert!(json.contains(r#""cameraY":20.0"#), "blueprint scene reflects runtime camera: {json}");
+        assert!(json.contains(r#""zoom":1.5"#), "blueprint scene reflects runtime camera: {json}");
+    }
+
+    #[test]
+    fn set_camera_preview_surface_updates_independently_of_blueprint() {
+        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let result = app
+            .handle_action(
+                "setCamera",
+                Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_PREVIEW, "camera": { "x": 3.0, "y": 4.0, "zoom": 2.0 } })),
+                &ViewState::default(),
+                &testkit::meta("local"),
+            )
+            .expect("camera");
+        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        let preview_json = render_json(&mut app, LAYOUT_PLAY_BODY_PREVIEW);
+        assert!(preview_json.contains(r#""cameraX":3.0"#), "preview scene reflects runtime camera: {preview_json}");
+        assert!(preview_json.contains(r#""zoom":2.0"#), "preview scene reflects runtime camera: {preview_json}");
+        let blueprint_json = render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
+        assert!(blueprint_json.contains(r#""cameraX":0.0"#), "blueprint surface camera stays independent: {blueprint_json}");
+        assert!(blueprint_json.contains(r#""zoom":1.0"#), "blueprint surface camera stays at default zoom: {blueprint_json}");
     }
 
     #[test]
     fn pointer_down_selects_frame_via_hit_test() {
         let mut app = testkit::new_app::<LayoutPlayApp>();
-        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 136.0, 435.0);
+        let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
         app.handle_action(
             "canvasPointerDown",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "button": 0 })),
@@ -2402,7 +2432,7 @@ mod tests {
     #[test]
     fn pointer_move_updates_hover_highlight() {
         let mut app = testkit::new_app::<LayoutPlayApp>();
-        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
+        let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
         let result = app.handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &testkit::meta("local")).expect("move");
         assert!(result.operations.is_empty(), "hover is a view action, not an operation");
@@ -2413,7 +2443,10 @@ mod tests {
     #[test]
     fn canvas_drop_adds_frame_at_world_coords() {
         let mut app = testkit::new_app::<LayoutPlayApp>();
-        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 100.0, 200.0);
+        // 👁️ Camera pose is now runtime-default (see `LayoutCamera::default`), not a document field —
+        // the screen point is computed against that same default (x=0 y=0 zoom=1.0), not the app's
+        // former fixture-authored zoom=0.5.
+        let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
         let drag_data = json!({ "kind": "rect" }).to_string();
         let result = app
             .handle_action(
@@ -2570,8 +2603,6 @@ mod tests {
         let json = r#"{
             "schema": "layout.fixture",
             "name": "Preflight Fixture",
-            "camera": {"x":0,"y":0,"zoom":1},
-            "previewCamera": {"x":0,"y":0,"zoom":1},
             "grid": {"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},
             "paragraphStyles": [{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],
             "characterStyles": [
@@ -2671,7 +2702,7 @@ mod tests {
         // 🧬 canvasPointerMove is declared `View`: it mutates only runtime hover state and must
         // never emit an operation, which the registry kind-discipline check enforces.
         let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
-        let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
+        let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
         let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
         let result = app
             .handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &testkit::meta("local"))

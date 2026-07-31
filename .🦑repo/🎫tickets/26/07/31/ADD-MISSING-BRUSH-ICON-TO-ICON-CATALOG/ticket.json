@@ -1,0 +1,14 @@
+{
+  "title": "Add Missing Brush Icon to Icon Catalog",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Add missing brush icon to icon catalog for raster plugin",
+  "summary": "Updated raster plugin utility paintBrush icon ID from 'brush' to 'paintbrush' in create_raster_app() to match the icon asset catalog convention across all plugins.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2400"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪2274c967fd3a49c8accfcc558252a8e2"
+  ]
+}

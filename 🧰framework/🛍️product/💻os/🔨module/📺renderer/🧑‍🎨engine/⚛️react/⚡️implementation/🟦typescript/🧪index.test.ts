@@ -97,6 +97,7 @@ import {
   shouldReattachWorldViewportCamera,
   worldCameraPoseApproxEqual,
   buildWorldCameraDispatchArgs,
+  worldCameraSetCameraDispatchArgs,
   snapWorldPointToGrid,
   world3dViewportCameraSeedKey,
   worldInstancePickBlocked,
@@ -165,6 +166,7 @@ import {
   createCoalescingActionDispatcher,
   createRevealCutoffStore,
   worldRevealCutoffStore,
+  reconcileCommittedRevealCutoffs,
   isRevealCutoffHidden,
   PUZZLE3D_FILL_REVEAL_GROUP_ID,
   dispatchOsCommand,
@@ -360,6 +362,20 @@ describe("reveal cutoff store", () => {
     expect(isRevealCutoffHidden({ revealIndex: null as unknown as undefined })).toBe(false);
     expect(isRevealCutoffHidden({})).toBe(false);
     expect(isRevealCutoffHidden({ revealIndex: 0 })).toBe(true);
+  });
+
+  it("committed reveal cutoff reconciliation ignores same-value identity churn so a live fill drag is not reset by fillBuildTick", () => {
+    const committedRef: { current: Readonly<Record<string, number>> } = { current: {} };
+
+    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRef, { [PUZZLE3D_FILL_REVEAL_GROUP_ID]: 0 });
+    expect(worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID)).toBe(0);
+
+    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 17);
+    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRef, { [PUZZLE3D_FILL_REVEAL_GROUP_ID]: 0 });
+    expect(worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID), "fillBuildTick must not clobber a live slider drag back to the still-committed 0").toBe(17);
+
+    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRef, { [PUZZLE3D_FILL_REVEAL_GROUP_ID]: 17 });
+    expect(worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID)).toBe(17);
   });
 });
 
@@ -2193,6 +2209,15 @@ describe("framework renderer hosts", () => {
     expect(withoutUp).toEqual({ position: [1, 2, 3], target: [0, 0, 0], zoom: 1 });
     expect(withoutUp).not.toHaveProperty("up");
     expect(withoutUp).not.toHaveProperty("projection");
+  });
+
+  it("worldCameraSetCameraDispatchArgs nests the camera pose under a `camera` key, never flat alongside windowId", () => {
+    const args = worldCameraSetCameraDispatchArgs("puzzle.3d.play.viewport", { position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1], projection: "orthographic" });
+    expect(args).toEqual({ windowId: "puzzle.3d.play.viewport", camera: { position: [1, 2, 3], target: [0, 0, 0], zoom: 2, up: [0, 0, 1] } });
+    expect(args).not.toHaveProperty("position");
+    expect(args).not.toHaveProperty("target");
+    expect(args).not.toHaveProperty("zoom");
+    expect(args).not.toHaveProperty("up");
   });
 
   it("worldCameraPoseApproxEqual matches exact poses and float-noise, rejects a genuinely different pose", () => {

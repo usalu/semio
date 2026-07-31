@@ -17,7 +17,6 @@ pub fn decode(bytes: &[u8]) -> Result<WriterProjection, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use writer::WriterCamera;
 
     /// ✍️ Hand-built representative document — verbatim from the original file's `🔖DslAndOpText`
     /// test region (duplicated per-crate since each constitutional crate's tests compile independently).
@@ -28,7 +27,6 @@ mod tests {
             language_id: "jack".into(),
             uri: "writer://jack".into(),
             text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-            camera: WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         }
     }
 

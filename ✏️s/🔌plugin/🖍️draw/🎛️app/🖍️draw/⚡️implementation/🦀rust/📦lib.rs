@@ -12,16 +12,26 @@ pub const DRAW_SHAPE_KINDS: &[&str] = &["rect", "ellipse", "circle", "line", "po
 pub const DRAW_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"];
 
 //#region 🔖Domain
-// No `#[dsl(keyword = ...)]` on `DrawCamera`/`DrawTransform`/`DrawTraceParams`/`DrawArtboard`:
-// every field of these types is itself `#[dsl(block)]`, which already supplies the bare leading
-// keyword from the FIELD's own name — an inner keyword too would double it (`camera { camera
-// x=0 ... }`), same reasoning as `note`'s `NoteCamera`.
+// No `#[dsl(keyword = ...)]` on `DrawTransform`/`DrawTraceParams`/`DrawArtboard`: every field of
+// these types is itself `#[dsl(block)]`, which already supplies the bare leading keyword from the
+// FIELD's own name — an inner keyword too would double it (`transform { transform x=0 ... }`),
+// same reasoning as `note`'s `NoteImageAsset`.
+/// 🎥 Camera pose (pan + zoom). Ephemeral view state owned by the `draw-plugin` app runtime struct
+/// (`DrawInteractionState`), never a `DrawDocument` field — see `.🦑repo/🎫tickets/26/07/31/
+/// MOVE-DRAW-PLUGIN-CAMERA-TO-RUNTIME-STATE`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawCamera {
     pub x: f64,
     pub y: f64,
     pub zoom: f64,
+}
+
+impl Default for DrawCamera {
+    /// 🎯 Matches the pre-migration `default_draw_document` camera: centered on its 1024x1024 artboard.
+    fn default() -> Self {
+        Self { x: 512.0, y: 512.0, zoom: 0.75 }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -340,8 +350,6 @@ pub struct DrawDocument {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[dsl(block)]
-    pub camera: DrawCamera,
     #[dsl(statements, block)]
     pub layers: Vec<DrawLayerNode>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -1,10 +1,4 @@
 schema=layout.fixture name=Untitled print-target=print
-camera {
-  x=0 y=0 zoom=0.5
-}
-preview-camera {
-  x=0 y=0 zoom=0.5
-}
 grid {
   baseline-grid=12 baseline-offset=0 snap-to-baseline=true
 }

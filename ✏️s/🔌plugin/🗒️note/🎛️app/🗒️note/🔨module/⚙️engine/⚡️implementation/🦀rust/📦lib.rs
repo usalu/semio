@@ -1,6 +1,6 @@
 //! ⚙️ Note app — headless compute (constitutional: engine).
 
-use note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use note::{NoteBlockNode, NoteDocument, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -39,7 +39,6 @@ pub fn empty_note_document() -> NoteDocument {
         schema: NOTE_DOCUMENT_SCHEMA.into(),
         id: "empty".into(),
         title: None,
-        camera: note::default_camera(),
         blocks: Vec::new(),
         grid_visible: Some(true),
         grid_spacing: Some(32.0),
@@ -753,11 +752,6 @@ pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
     let mut document = empty_note_document();
     document.id = create_note_id("dwg-import");
     document.title = Some("Imported Drawing".into());
-    document.camera = NoteCamera {
-        x: (drawing.extmin[0] + drawing.extmax[0]) / 2.0,
-        y: (drawing.extmin[1] + drawing.extmax[1]) / 2.0,
-        zoom: 1.0,
-    };
     for entity in &drawing.entities {
         match &entity.geometry {
             DwgGeometry::Line { start, end } => {
@@ -840,8 +834,6 @@ mod tests {
         let document: NoteDocument = serde_json::from_value(value).unwrap();
         assert_eq!(document.schema, NOTE_DOCUMENT_SCHEMA);
         assert_eq!(document.blocks.len(), 2);
-        assert_eq!(document.camera.x, 5.0);
-        assert_eq!(document.camera.y, 5.0);
         let ink_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Ink { .. })).count();
         let text_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Text { .. })).count();
         assert_eq!(ink_count, 1);

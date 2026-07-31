@@ -20,8 +20,7 @@ mod tests {
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
-        let document = note_engine::empty_note_document();
-        let operation = NoteOperation::SetCamera { camera: document.camera };
+        let operation = NoteOperation::SetGridSpacing { spacing: Some(24.0) };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

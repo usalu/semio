@@ -20,7 +20,7 @@ pub fn print_dsl(document: &DrawDocument) -> String {
 mod tests {
     use super::*;
     use draw::{
-        DrawArtboard, DrawCamera, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody,
+        DrawArtboard, DrawCircle, DrawEllipse, DrawGroupBody, DrawImageAsset, DrawLayerNode, DrawLine, DrawPolygon, DrawShapeBody, DrawTextBody,
         FillStyle, GradientStop, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
     };
     use draw_engine::{create_draw_boolean_layer, create_draw_image_layer, create_draw_path_layer, create_draw_shape_layer_rect, create_draw_trace_layer, default_draw_document, default_layer_base, layer_id};
@@ -76,7 +76,6 @@ mod tests {
             schema: DRAW_DOCUMENT_SCHEMA.into(),
             id: "dsl-fixture".into(),
             title: Some("DSL Fixture \"Quotes\" \\ backslash".into()),
-            camera: DrawCamera { x: 12.5, y: -3.0, zoom: 2.25 },
             layers: vec![rect_shape, line_shape, polygon_shape, path_layer, text_layer, image_layer, trace_layer, boolean_layer, group_layer],
             assets: Some(assets),
             artboard: Some(DrawArtboard { width: 640.0, height: 480.0 }),
@@ -107,11 +106,8 @@ mod tests {
     }
 
     #[test]
-    fn draw_document_parse_dsl_reports_errors_for_missing_camera_and_unknown_layer_kind() {
-        let missing_camera = DrawDocument::parse_dsl("schema=\"draw.document\" id=\"test\"\nlayers {\n}\n");
-        assert!(missing_camera.is_err(), "a document missing its required camera block must fail to parse");
-
-        let unknown_layer = DrawDocument::parse_dsl("schema=\"draw.document\" id=\"test\"\ncamera {\n  x=0 y=0 zoom=1\n}\nlayers {\n  weird id=\"layer-1\"\n}\n");
+    fn draw_document_parse_dsl_reports_error_for_unknown_layer_kind() {
+        let unknown_layer = DrawDocument::parse_dsl("schema=\"draw.document\" id=\"test\"\nlayers {\n  weird id=\"layer-1\"\n}\n");
         assert!(unknown_layer.is_err(), "an unrecognized layer keyword must fail to parse");
     }
 }

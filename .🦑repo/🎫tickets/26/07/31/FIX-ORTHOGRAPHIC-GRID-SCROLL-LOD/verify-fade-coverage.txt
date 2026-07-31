@@ -1,0 +1,8 @@
+[DEBUG] ortho zoom → fade vs visible radius + corner alpha
+[DEBUG] zoom=80 visible=6.3 fade=320.0 covers=true cornerAlpha=0.971
+[DEBUG] zoom=40 visible=12.5 fade=640.0 covers=true cornerAlpha=0.971
+[DEBUG] zoom=10 visible=50.0 fade=2560.0 covers=true cornerAlpha=0.971
+[DEBUG] zoom=2 visible=250.0 fade=10240.0 covers=true cornerAlpha=0.964
+[DEBUG] zoom=0.5 visible=1000.0 fade=40960.0 covers=true cornerAlpha=0.964
+[DEBUG] zoom=0.1 visible=5000.0 fade=163840.0 covers=true cornerAlpha=0.955
+[DEBUG] ok: fade overfills viewport with clean corner opacity at every zoom

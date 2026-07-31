@@ -814,7 +814,7 @@ pub fn create_raster_app() -> App {
             ])
             // 🧰 Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
-            .utility(raster_utility("paintBrush", "Brush", "brush", "Paint", UtilityCategory::Utilities))
+            .utility(raster_utility("paintBrush", "Brush", "paintbrush", "Paint", UtilityCategory::Utilities))
             .utility(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Utilities))
             .window_kind_utilities(RASTER_PLAY_WINDOW_COMPOSITE, vec![
                 "selectMarquee".into(), "paintBrush".into(), "paintEraser".into(),

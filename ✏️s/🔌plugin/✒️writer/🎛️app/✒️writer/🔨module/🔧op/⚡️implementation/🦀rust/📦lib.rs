@@ -1,19 +1,17 @@
 //! ⚡ Writer app — operation enum + laws (constitutional: op).
 
 use protocol::{Operation, OperationDiff};
-use writer::{WriterCamera, WriterProjection};
+use writer::WriterProjection;
 
 //#region 🔖Types
-/// 📐 Typed content mutation for a `WriterProjection`. Each variant's op keyword is the
-/// auto-derived kebab-case of its own name (`SetText` -> `set-text`, ...) — see {@link protocol::OpText}.
+/// 📐 Typed content mutation for a `WriterProjection`. The editor viewport camera is session-only
+/// runtime state now (never a document operation — see `WriterPlayRuntime::camera` in the ui crate).
+/// Each variant's op keyword is the auto-derived kebab-case of its own name (`SetText` -> `set-text`,
+/// ...) — see {@link protocol::OpText}.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum WriterOperation {
     SetText { text: String },
-    SetCamera {
-        #[dsl(block)]
-        camera: WriterCamera,
-    },
     SetDocument {
         #[dsl(block)]
         document: WriterProjection,
@@ -24,7 +22,6 @@ pub enum WriterOperation {
 #[serde(rename_all = "camelCase")]
 pub struct WriterDiff {
     pub text: Option<String>,
-    pub camera: Option<WriterCamera>,
     pub document: Option<WriterProjection>,
 }
 
@@ -33,7 +30,7 @@ impl OperationDiff<WriterProjection> for WriterDiff {
         if let Some(document) = &self.document {
             return document.clone();
         }
-        WriterProjection { text: self.text.clone().unwrap_or_else(|| projection.text.clone()), camera: self.camera.clone().unwrap_or_else(|| projection.camera.clone()), ..projection.clone() }
+        WriterProjection { text: self.text.clone().unwrap_or_else(|| projection.text.clone()), ..projection.clone() }
     }
 
     fn absorb(&mut self, other: Self) {
@@ -44,9 +41,6 @@ impl OperationDiff<WriterProjection> for WriterDiff {
         if other.text.is_some() {
             self.text = other.text;
         }
-        if other.camera.is_some() {
-            self.camera = other.camera;
-        }
     }
 }
 
@@ -56,7 +50,6 @@ impl Operation<WriterProjection> for WriterOperation {
     fn diff(&self, _projection: &WriterProjection) -> WriterDiff {
         match self {
             WriterOperation::SetText { text } => WriterDiff { text: Some(text.clone()), ..Default::default() },
-            WriterOperation::SetCamera { camera } => WriterDiff { camera: Some(camera.clone()), ..Default::default() },
             WriterOperation::SetDocument { document } => WriterDiff { document: Some(document.clone()), ..Default::default() },
         }
     }
@@ -64,7 +57,6 @@ impl Operation<WriterProjection> for WriterOperation {
     fn backwards(&self, projection: &WriterProjection) -> Vec<Self> {
         match self {
             WriterOperation::SetText { .. } => vec![WriterOperation::SetText { text: projection.text.clone() }],
-            WriterOperation::SetCamera { .. } => vec![WriterOperation::SetCamera { camera: projection.camera.clone() }],
             WriterOperation::SetDocument { .. } => vec![WriterOperation::SetDocument { document: projection.clone() }],
         }
     }
@@ -91,14 +83,9 @@ mod tests {
     }
 
     #[test]
-    fn writer_document_vcs_replays_camera_and_document_operations() {
+    fn writer_document_vcs_replays_document_operation() {
         let mut store = seeded_store();
-        store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }], description: None }).expect("apply camera");
-        let projection = store.projection().expect("projection");
-        assert_eq!(projection.camera.x, 4.0);
-        assert_eq!(projection.camera.zoom, 2.0);
-
-        let replacement = WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a) RETURN a".into(), camera: writer::default_camera() };
+        let replacement = WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a) RETURN a".into() };
         store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetDocument { document: replacement }], description: None }).expect("apply document");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.id, "jack");
@@ -122,14 +109,12 @@ mod tests {
             language_id: "jack".into(),
             uri: "writer://jack".into(),
             text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-            camera: WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         }
     }
 
     #[test]
     fn writer_op_text_round_trips_every_variant() {
         store::test_support::assert_op_line_round_trip(&WriterOperation::SetText { text: "line one\nline two".into() });
-        store::test_support::assert_op_line_round_trip(&WriterOperation::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
         store::test_support::assert_op_line_round_trip(&WriterOperation::SetDocument { document: jack_projection() });
     }
 }

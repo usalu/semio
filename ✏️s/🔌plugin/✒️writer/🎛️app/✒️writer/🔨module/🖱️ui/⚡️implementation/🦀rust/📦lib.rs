@@ -107,6 +107,10 @@ struct WriterPlayRuntime {
     editor_hover_offset: Option<usize>,
     #[serde(default)]
     engagement_input: String,
+    /// 🎥 Editor viewport pan/zoom — session-only view state (never a VCS-tracked document field):
+    /// see `"setCamera"` in `handle_action` below.
+    #[serde(default)]
+    camera: WriterCamera,
 }
 //#endregion 🔖Types
 
@@ -269,7 +273,7 @@ fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
 }])
 }
 
-fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabels) -> UiNode {
+fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterPlayLabels) -> UiNode {
     let mut sections = vec![
         UiSectionNode {
             id: "writer-inspector.document".into(),
@@ -289,9 +293,9 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabel
             label: Some(labels.camera.into()),
             default_open: Some(false),
             children: vec![
-                ui_text(format!("x: {}", document.camera.x)),
-                ui_text(format!("y: {}", document.camera.y)),
-                ui_text(format!("zoom: {}", document.camera.zoom)),
+                ui_text(format!("x: {}", runtime.camera.x)),
+                ui_text(format!("y: {}", runtime.camera.y)),
+                ui_text(format!("zoom: {}", runtime.camera.zoom)),
             ],
             presence: UiPresence::default(),
 },
@@ -391,7 +395,7 @@ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -
             extra_carets_json,
             selectable_spans_json,
             settings_json: Some(serde_json::to_string(&runtime.editor_settings).unwrap_or_else(|_| "{}".into())),
-            camera_json: Some(json!({ "x": document.camera.x, "y": document.camera.y, "zoom": document.camera.zoom }).to_string()),
+            camera_json: Some(json!({ "x": runtime.camera.x, "y": runtime.camera.y, "zoom": runtime.camera.zoom }).to_string()),
             hover_json,
             newline_gates_json,
             rename_json,
@@ -519,11 +523,12 @@ impl DocumentApp for WriterPlayApp {
                 };
                 ActionEmit::operations(vec![WriterOperation::SetDocument { document }])
             }
+            // 🎥 View action: the editor viewport never touches the document — it's written straight
+            // into `self.runtime`, session-only, no VCS edit, no undo entry.
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value::<WriterCamera>(camera.clone()) {
-                        // 🎥 Camera is a doc operation by policy; a pan/zoom drag coalesces into one undo step.
-                        return ActionEmit::amend(vec![WriterOperation::SetCamera { camera: parsed }], "writer-camera");
+                        self.runtime.camera = parsed;
                     }
                 }
                 ActionEmit::default()
@@ -692,7 +697,7 @@ impl DocumentApp for WriterPlayApp {
             WRITER_PLAY_BODY_MAIN => render_main_scene(document, &self.runtime),
             WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, &self.runtime, labels),
             WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
-            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, labels),
+            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, &self.runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -873,7 +878,7 @@ pub fn create_writer_app() -> App {
             // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", "Edit Text"))
             .action_with(writer_hidden_operation("setText", "Set Text"))
-            .action_with(writer_hidden_operation("setCamera", "Set Camera"))
+            .action_with(writer_hidden_view("setCamera", "Set Camera"))
             .action_with(writer_hidden_operation("commitRename", "Commit Rename"))
             .action_with(writer_hidden_operation("engagementSubmit", "Engagement Submit"))
             .action_with(writer_hidden_operation("setDocument", "Set Document"))
@@ -1017,13 +1022,18 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_action_updates_projection() {
+    /// 🎥 `"setCamera"` is a View action — it must never emit a `WriterOperation` (no VCS edit, no
+    /// undo entry) and instead write straight into the app's ephemeral runtime, reflected in render.
+    #[test]
+    fn set_camera_action_writes_runtime_not_operations() {
         let mut app = new_app::<WriterPlayApp>();
         let result = app.handle_action("setCamera", Some(&json!({ "camera": { "x": 3.0, "y": 4.0, "zoom": 2.0 } })), &ViewState::default(), &meta("local")).expect("set camera");
-        assert_eq!(result.operations.len(), 1);
-        let projection = app.projection().expect("projection");
-        assert_eq!(projection.camera.x, 3.0);
-        assert_eq!(projection.camera.zoom, 2.0);
+        assert!(result.operations.is_empty(), "setCamera must not emit a VCS operation");
+        let node = app.render(WRITER_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+        let payload: Value = serde_json::to_value(&node).unwrap();
+        let camera: Value = serde_json::from_str(payload["textEditor"]["cameraJson"].as_str().unwrap()).unwrap();
+        assert_eq!(camera["x"], json!(3.0));
+        assert_eq!(camera["zoom"], json!(2.0));
     }
 
     #[test]

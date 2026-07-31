@@ -3118,6 +3118,17 @@ pub enum HistoryCommandFilter {
     OnlyOperations,
 }
 
+/// @emoji ⏪ A stored, replayable inverse for a `View`/`Shell`-kind command — the memory-only
+/// counterpart to a VCS edit's `Operation::backwards`. `action_id` is a plugin action id (`View` rows —
+/// replayed locally via `dispatch_action`) or a shell command id (`Shell` rows — bubbled out as
+/// `HostEffect::ReplayShellCommand` since the plugin has no access to shell-owned state). Never
+/// persisted: it lives only on the in-memory `CommandLogEntry`/`CommandView`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct InverseAction {
+    pub action_id: String,
+    pub args: Option<Value>,
+}
+
 /// @emoji 🧾 One appended session-command record — runtime-only, never persisted (the VCS envelope
 /// is the persisted half; see `CommandView::op_lines`, derived live from `envelope.vcs.edits`).
 /// Append-only: `VcsDocumentApp` only ever pushes to `command_log`, including for undo/redo.
@@ -3135,6 +3146,9 @@ pub struct CommandLogEntry {
     /// see `VcsDocumentApp::record_command`. Always `1` for `Operation`/`History`/`Clipboard` entries
     /// and for anything carrying an `edit_id`, which never fold.
     pub count: u32,
+    /// @emoji ⏪ A real inverse for an `edit_id: None` row (`View`/`Shell` kind only) — see
+    /// `InverseAction`. `None` means this row has no working backwards (not just unauthored/foreign).
+    pub inverse: Option<InverseAction>,
 }
 
 /// @emoji 🧾 One row of the merged command+operation timeline handed to renderers — `CommandLogEntry`
@@ -3152,10 +3166,13 @@ pub struct CommandView {
     pub op_lines: Vec<String>,
     /// @emoji ✅ The linked edit is currently on the applied stack (`false` once undone).
     pub applied: bool,
-    /// @emoji ⏪ `applied` AND authored by the local actor — only these entries offer "backwards".
+    /// @emoji ⏪ Either (edit-linked) `applied` AND authored by the local actor, or (memory-only) this
+    /// row carries a stored `inverse` — only these entries offer "backwards".
     pub revertible: bool,
     /// @emoji 🔢 See `CommandLogEntry::count`.
     pub count: u32,
+    /// @emoji ⏪ See `CommandLogEntry::inverse`.
+    pub inverse: Option<InverseAction>,
 }
 
 /// @emoji 📜 Checkpoint/alternative history summary exposed to apps — the swimlane columns, the
@@ -3321,6 +3338,12 @@ pub struct ActionEmit<Operation> {
     /// 🐢 Which rendered UI sections this action actually invalidates — `Full` (the default) preserves
     /// today's whole-shell-refresh behavior for every app that doesn't opt in to narrower scopes.
     pub ui_scope: semio_framework_core::kernel::UiDirtyScope,
+    /// @emoji ⏪ A real backwards for a `View`-kind action with no document operations: the app computes
+    /// its OWN inverse from state it already holds (e.g. `setCamera`'s inverse is another `setCamera`
+    /// carrying the pre-dispatch pose) and hands it back here. `dispatch_emit` stores it on the
+    /// resulting `CommandLogEntry`; `revertToCommand` replays it via `dispatch_action`. Ignored for
+    /// `Operation`-kind emits (the VCS edit's own `Operation::backwards` is already the real inverse).
+    pub inverse: Option<InverseAction>,
 }
 
 impl<Operation> Default for ActionEmit<Operation> {
@@ -3332,6 +3355,7 @@ impl<Operation> Default for ActionEmit<Operation> {
             effects: Vec::new(),
             events: Vec::new(),
             ui_scope: semio_framework_core::kernel::UiDirtyScope::default(),
+            inverse: None,
         }
     }
 }
@@ -3364,6 +3388,12 @@ impl<Operation> ActionEmit<Operation> {
     /// @emoji 📣 A single app event and no operations.
     pub fn event(event: AppEvent) -> Self {
         Self { events: vec![event], ..Default::default() }
+    }
+
+    /// @emoji ⏪ A `View`-kind emission with a real backwards: no document operations, but a stored
+    /// `InverseAction` that `revertToCommand` can replay. See `ActionEmit::inverse`'s doc.
+    pub fn view_with_inverse(inverse: InverseAction) -> Self {
+        Self { inverse: Some(inverse), ..Default::default() }
     }
 }
 
@@ -3898,7 +3928,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// @emoji 🧾 Appends one entry to the session command log. `timestamp: None` stamps "now"
     /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill). Always a
     /// fresh row (`count: 1`) — folding consecutive `View`/`Shell` dispatches is `record_command`'s job.
-    fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, timestamp: Option<String>) {
+    fn push_log_entry(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, timestamp: Option<String>, inverse: Option<InverseAction>) {
         self.next_command_seq += 1;
         self.command_log.push(CommandLogEntry {
             seq: self.next_command_seq,
@@ -3908,6 +3938,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             timestamp: timestamp.unwrap_or_else(store::now_iso),
             edit_id,
             count: 1,
+            inverse,
         });
         self.log_generation += 1;
     }
@@ -3917,7 +3948,10 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// kind)` with no `edit_id` fold into one row — its `count` increments and its `label`/`timestamp`
     /// refresh, but its ORIGINAL `seq` is kept so the panel's tree-item id stays stable across
     /// re-renders. `Operation`/`History`/`Clipboard` entries and anything with an `edit_id` never fold.
-    fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>) {
+    /// `inverse` (computed from state BEFORE this dispatch) is only stored on a FRESH row — a folded
+    /// row keeps its original inverse, since backwards on a folded "×N" row must undo the whole run,
+    /// not just the last dispatch that folded into it.
+    fn record_command(&mut self, action_id: &str, kind: ActionKind, label: Option<String>, edit_id: Option<String>, inverse: Option<InverseAction>) {
         let label = label
             .or_else(|| self.registry.get(action_id).map(|def| def.label.clone()))
             .or_else(|| self.registry.get_command(action_id).map(|def| def.label.clone()))
@@ -3933,7 +3967,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             self.log_generation += 1;
             return;
         }
-        self.push_log_entry(action_id, label, kind, edit_id, None);
+        self.push_log_entry(action_id, label, kind, edit_id, None, inverse);
     }
 
     /// @emoji 🕰️ Appends a command-log entry for every VCS edit not yet referenced by the log —
@@ -3957,7 +3991,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             })
             .collect();
         for (edit_id, label, timestamp) in missing {
-            self.push_log_entry("apply", label, ActionKind::Operation, Some(edit_id), Some(timestamp));
+            self.push_log_entry("apply", label, ActionKind::Operation, Some(edit_id), Some(timestamp), None);
         }
     }
 
@@ -3973,7 +4007,10 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 // 🪞 Mirrors `store::DocumentStore::edit_is_local` (private to that crate): an edit
                 // with no recorded actor is treated as local, same as a real undo would.
                 let applied = entry.edit_id.as_deref().is_some_and(|edit_id| applied_ids.contains(edit_id));
-                let revertible = applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor);
+                // ⏪ Two disjoint ways a row earns "backwards": edit-linked (applied + locally authored,
+                // the persisted VCS path) or memory-only (a stored `InverseAction`, the `View`/`Shell` path).
+                let revertible = (applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor))
+                    || entry.inverse.is_some();
                 CommandView {
                     seq: entry.seq,
                     action_id: entry.action_id.clone(),
@@ -3985,6 +4022,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     applied,
                     revertible,
                     count: entry.count,
+                    inverse: entry.inverse.clone(),
                 }
             })
             .collect();
@@ -4173,7 +4211,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// `verb` is the action/command id, used to resolve the registry kind/label and to synthesize the
     /// `InvocationId`.
     fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Operation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
-        let ActionEmit { operations, description, coalesce_key, effects, events, ui_scope } = emit;
+        let ActionEmit { operations, description, coalesce_key, effects, events, ui_scope, inverse } = emit;
         if operations.is_empty() {
             // 🧾 The bugfix this ticket is about: an op-less dispatch used to return here without ever
             // reaching the command log. An app-declared action logs under its declared kind (so an
@@ -4187,7 +4225,12 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 None if self.registry.get_command(verb).is_some() => ActionKind::Shell,
                 None => ActionKind::View,
             };
-            self.record_command(verb, kind, description.clone(), None);
+            // ⏪ `inverse` only makes sense for a `View` row this app computed itself — an unresolved or
+            // `Shell`-kind verb dispatched straight through `dispatch_emit` (rather than the
+            // `noteShellCommand` interception, which builds its own inverse from its own args) has no
+            // app behind it to have computed one, so it's dropped rather than stored misleadingly.
+            let inverse = matches!(kind, ActionKind::View).then_some(inverse).flatten();
+            self.record_command(verb, kind, description.clone(), None, inverse);
             return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
         }
         self.store.set_local_actor_id(Some(meta.actor.clone()));
@@ -4219,7 +4262,9 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 // `CommandDefinition` has no `ActionKind` (commands aren't View/Shell/History), and
                 // reaching here means operations were dispatched, so `Operation` is always correct.
                 let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Operation);
-                self.record_command(verb, kind, log_label, Some(edit_id));
+                // ⏪ No memory `inverse` for an edit-linked row — the VCS edit's own `Operation::backwards`
+                // is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
+                self.record_command(verb, kind, log_label, Some(edit_id), None);
             }
         }
         let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
@@ -4245,7 +4290,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     self.cache = None;
                     // 🧾 Undo/redo/checkpoint/alternative are pure cursor motion (`edit_id: None`) —
                     // append-only: this NEVER removes a prior entry, including undo's.
-                    self.record_command(action, ActionKind::History, None, None);
+                    self.record_command(action, ActionKind::History, None, None, None);
                     // 🐢 History actions (undo/redo/checkpoint/alternative) can touch any part of the
                     // document — always Full, never opt into a narrower scope.
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
@@ -4262,34 +4307,55 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         } else if action == REVERT_TO_COMMAND_ACTION_ID {
             self.refresh_cache()?;
             let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(Value::as_u64);
-            // ⏪ Only a `revertible` entry (applied, edit-linked, locally authored) has a real anchor
-            // to revert to — see `CommandView::revertible` in `build_history_view`.
-            let target_edit_id = entry_seq.and_then(|seq| {
+            // ⏪ Only a `revertible` entry has a real anchor to revert to — see `CommandView::revertible`
+            // in `build_history_view`. Three disjoint shapes, branched below: (1) edit-linked (VCS undo
+            // to position), (2) `View`-kind memory-only (replay the inverse locally), (3) `Shell`-kind
+            // memory-only (bubble the inverse out — the plugin can't touch shell-owned state itself).
+            let target = entry_seq.and_then(|seq| {
                 self.cache
                     .as_ref()
                     .and_then(|(_, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible))
-                    .and_then(|entry| entry.edit_id.clone())
+                    .map(|entry| (entry.edit_id.clone(), entry.kind, entry.inverse.clone()))
             });
-            let target_position = target_edit_id.and_then(|edit_id| self.store.applied_edit_ids().iter().position(|id| *id == edit_id));
-            match target_position {
-                Some(position) => {
-                    let undo_count = self.store.applied_edit_ids().len() - (position + 1);
-                    for _ in 0..undo_count {
-                        match self.store.dispatch(DocumentCommand::Undo) {
-                            Ok(()) => {}
-                            // 🛑 Stop early rather than error — a foreign edit further up the stack
-                            // still leaves the revert partially applied, which is the best this can do.
-                            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
-                            Err(error) => return Err(error.to_string()),
+            match target {
+                Some((Some(edit_id), _, _)) => {
+                    let target_position = self.store.applied_edit_ids().iter().position(|id| *id == edit_id);
+                    match target_position {
+                        Some(position) => {
+                            let undo_count = self.store.applied_edit_ids().len() - (position + 1);
+                            for _ in 0..undo_count {
+                                match self.store.dispatch(DocumentCommand::Undo) {
+                                    Ok(()) => {}
+                                    // 🛑 Stop early rather than error — a foreign edit further up the stack
+                                    // still leaves the revert partially applied, which is the best this can do.
+                                    Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
+                                    Err(error) => return Err(error.to_string()),
+                                }
+                            }
+                            self.cache = None;
+                            // 🧾 One entry for the revert itself — the internal undos it performs are an
+                            // implementation detail, not separately logged commands.
+                            self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None, None);
+                            Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
                         }
+                        None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
                     }
-                    self.cache = None;
-                    // 🧾 One entry for the revert itself — the internal undos it performs are an
-                    // implementation detail, not separately logged commands.
-                    self.record_command(action, ActionKind::History, Some("Revert to Command".to_string()), None);
-                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
                 }
-                None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
+                // ⏪ `View`-kind memory-only: replay the stored inverse through the normal dispatch path —
+                // it logs its own new row (append-only, same invariant as VCS undo), so "backwards of
+                // backwards" naturally redoes. The app's own `handle_action` computes what happens.
+                Some((None, ActionKind::View, Some(inverse))) => self.dispatch_action(&inverse.action_id, inverse.args.as_ref(), view_state, meta),
+                // ⏪ `Shell`-kind memory-only: the plugin has no access to shell-owned state (theme/dock/
+                // panel layout live client-side), so it can't replay this itself — bubble the inverse out
+                // as a `HostEffect` for the shell to redispatch through its own command funnel.
+                Some((None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(
+                    action,
+                    meta,
+                    vec![HostEffect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }],
+                    Vec::new(),
+                    semio_framework_core::kernel::UiDirtyScope::None,
+                )),
+                _ => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
             }
         } else if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
             // 🎚️ Arg key is `"value"`, not `"filter"` — see `set_history_command_filter_action_definition`'s doc.
@@ -4323,7 +4389,17 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 Some(detail) => format!("{label} - {detail}"),
                 None => label.to_string(),
             };
-            self.record_command(command_id, ActionKind::Shell, Some(label), None);
+            // ⏪ Optional real inverse: the shell already knows the pre-change value at its call site
+            // (e.g. the previous theme id) and can supply the command that restores it, giving this row
+            // a working Backwards button too — see `HostEffect::ReplayShellCommand`.
+            let inverse = args
+                .and_then(|value| value.get("inverseCommandId"))
+                .and_then(Value::as_str)
+                .map(|inverse_command_id| InverseAction {
+                    action_id: inverse_command_id.to_string(),
+                    args: args.and_then(|value| value.get("inverseArgs")).cloned(),
+                });
+            self.record_command(command_id, ActionKind::Shell, Some(label), None, inverse);
             Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None))
         } else if CLIPBOARD_ACTION_IDS.contains(&action) {
             self.refresh_cache()?;
@@ -5389,7 +5465,7 @@ mod semio_plugin_macro_tests {
 
     use crate::app::{
         ActionEmit, ActionMeta, App, AppActionRegistry, CommandView, DocumentApp, DocumentView, HistoryCommandFilter, HistoryView,
-        PluginApp, VcsDocumentApp, ui_history_panel,
+        InverseAction, PluginApp, VcsDocumentApp, ui_history_panel,
     };
     use crate::{ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
     use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
@@ -5522,12 +5598,18 @@ mod semio_plugin_macro_tests {
                     kind: "active-utility".into(),
                     payload: json!({ "utilityId": view_state.active_utility_id.clone().unwrap_or_default() }),
                 }),
+                // 🧪 A real `View`-kind inverse, computed from the app's own runtime state (mirrors
+                // camera-style apps): captures the pre-dispatch selection so backwards can restore it.
                 "select" => {
+                    let previous = self.selected.clone();
                     self.selected = args
                         .and_then(|value| value.get("id"))
                         .and_then(Value::as_str)
                         .map(str::to_string);
-                    ActionEmit::default()
+                    ActionEmit::view_with_inverse(InverseAction {
+                        action_id: "select".into(),
+                        args: Some(json!({ "id": previous })),
+                    })
                 }
                 "navigate" => ActionEmit::effect(HostEffect::Navigate { uri: "semio://home".into() }),
                 // 🧪 Declared `Operation`-kind (see `contract_registry`) but deliberately emits nothing.
@@ -5705,6 +5787,69 @@ mod semio_plugin_macro_tests {
         assert!(result.requested_effects.is_empty());
         // A view action never advances the document.
         assert_eq!(app.test_projection(), TestProjection::default());
+    }
+
+    #[test]
+    fn view_action_with_inverse_is_revertible_and_backwards_restores_app_runtime_state() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        // Keep the two selects from folding into one row by dispatching an unrelated Operation between them.
+        app.handle_action("select", Some(&json!({ "id": "a" })), &ViewState::default(), &meta()).expect("select a");
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        app.handle_action("select", Some(&json!({ "id": "b" })), &ViewState::default(), &meta()).expect("select b");
+        assert_eq!(app.test_app().selected, Some("b".to_string()));
+
+        let history = app.test_history();
+        let select_b = history
+            .commands
+            .iter()
+            .find(|entry| entry.action_id == "select" && entry.inverse.as_ref().is_some_and(|inverse| inverse.args.as_ref().and_then(|value| value.get("id")).and_then(Value::as_str) == Some("a")))
+            .expect("select-b row carrying the a-restoring inverse");
+        assert!(select_b.revertible, "a View row with a stored inverse must be revertible");
+        let seq = select_b.seq;
+        let log_len_before = history.commands.len();
+
+        app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &ViewState::default(), &meta())
+            .expect("revertToCommand on a View row");
+
+        assert_eq!(app.test_app().selected, Some("a".to_string()), "backwards must replay the stored inverse and restore runtime state");
+        let after = app.test_history();
+        // ⏪ The replay redispatches "select" through the normal `dispatch_action` path, which folds
+        // consecutive identical (action_id, kind, edit_id: None) rows just like any other View dispatch
+        // — so this does NOT append a new row, it grows the existing one's `count` (append-only still
+        // holds: nothing is ever REMOVED, the row that already represented "select" absorbs it).
+        assert_eq!(after.commands.len(), log_len_before, "the replay folds into the existing select row rather than appending");
+        let folded = after.commands.iter().find(|entry| entry.seq == seq).expect("original row survives the fold");
+        assert_eq!(folded.count, 2, "the fold counter reflects both the original select-b and the replayed select-a");
+    }
+
+    #[test]
+    fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action(
+            NOTE_SHELL_COMMAND_ACTION_ID,
+            Some(&json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } })),
+            &ViewState::default(),
+            &meta(),
+        )
+        .expect("noteShellCommand with inverse");
+
+        let history = app.test_history();
+        let entry = history.commands.first().expect("one logged shell row");
+        assert_eq!(entry.kind, ActionKind::Shell);
+        assert!(entry.revertible, "a Shell row with a stored inverse must be revertible");
+        let seq = entry.seq;
+
+        let result = app
+            .handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &ViewState::default(), &meta())
+            .expect("revertToCommand on a Shell row");
+
+        // The plugin cannot touch shell-owned state itself — it bubbles the inverse out as an effect
+        // instead of replaying anything locally, and does NOT append a new log entry on its own.
+        assert_eq!(
+            result.requested_effects,
+            vec![HostEffect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(json!({ "themeId": "light" })) }]
+        );
+        assert_eq!(app.test_history().commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
     }
 
     #[test]
@@ -5947,6 +6092,7 @@ mod semio_plugin_macro_tests {
                     applied: true,
                     revertible: true,
                     count: 1,
+                    inverse: None,
                 },
                 CommandView {
                     seq: 2,
@@ -5959,6 +6105,7 @@ mod semio_plugin_macro_tests {
                     applied: false,
                     revertible: false,
                     count: 1,
+                    inverse: None,
                 },
             ],
             command_filter: HistoryCommandFilter::All,

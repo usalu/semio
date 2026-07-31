@@ -1,6 +1,6 @@
 //! ⚡ Layout app — operation enum + laws (constitutional: op).
 
-use layout::{Frame, FramePatch, ImageLink, ImageLinkPatch, LayoutCamera, LayoutDocument, Page, PagePatch, TextStory, TextStoryPatch};
+use layout::{Frame, FramePatch, ImageLink, ImageLinkPatch, LayoutDocument, Page, PagePatch, TextStory, TextStoryPatch};
 use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, OpBinary, OpText, Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use store::TextError;
@@ -75,7 +75,8 @@ pub fn apply_frame_patch(frame: &mut Frame, patch: &FramePatch) -> FramePatch {
 
 //#region 🔖Operation
 /// 🧺 The typed layout document operation. Pages/stories/links are flat id-keyed collections; frames
-/// are nested per-page so they get bespoke add/remove/patch variants; camera is a coalesced view operation.
+/// are nested per-page so they get bespoke add/remove/patch variants. Camera pose is ephemeral
+/// per-surface view state owned by the layout-ui app's runtime, never a document operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum LayoutOperation {
@@ -85,7 +86,6 @@ pub enum LayoutOperation {
     AddFrame { page_id: String, index: usize, frame: Frame, layer_id: Option<String> },
     RemoveFrame { page_id: String, frame_id: String },
     PatchFrame { page_id: String, frame_id: String, patch: FramePatch },
-    SetCamera { blueprint: bool, camera: LayoutCamera },
 }
 
 fn apply_layout_operation(doc: &mut LayoutDocument, operation: &LayoutOperation) {
@@ -119,13 +119,6 @@ fn apply_layout_operation(doc: &mut LayoutDocument, operation: &LayoutOperation)
                 }
             }
         }
-        LayoutOperation::SetCamera { blueprint, camera } => {
-            if *blueprint {
-                doc.camera = camera.clone();
-            } else {
-                doc.preview_camera = camera.clone();
-            }
-        }
     }
 }
 
@@ -157,12 +150,11 @@ fn backwards_layout_operation(doc: &LayoutDocument, operation: &LayoutOperation)
             }
             Vec::new()
         }
-        LayoutOperation::SetCamera { blueprint, .. } => vec![LayoutOperation::SetCamera { blueprint: *blueprint, camera: if *blueprint { doc.camera.clone() } else { doc.preview_camera.clone() } }],
     }
 }
 
-/// 📦 Operation-list diff: layout operations fold sequentially over a cloned projection. `absorb` concatenates —
-/// coalesced camera drags stay one edit whose forwards replay to last-wins.
+/// 📦 Operation-list diff: layout operations fold sequentially over a cloned projection. `absorb`
+/// concatenates — sequential edits replay forwards in order.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LayoutDiff {
     pub operations: Vec<LayoutOperation>,
@@ -340,11 +332,6 @@ enum LayoutOperationDsl {
         #[dsl(block)]
         patch: FramePatchDsl,
     },
-    SetCamera {
-        blueprint: bool,
-        #[dsl(block)]
-        camera: LayoutCamera,
-    },
 }
 
 fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
@@ -368,7 +355,6 @@ fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
         LayoutOperation::PatchFrame { page_id, frame_id, patch } => {
             LayoutOperationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) }
         }
-        LayoutOperation::SetCamera { blueprint, camera } => LayoutOperationDsl::SetCamera { blueprint: *blueprint, camera: camera.clone() },
     }
 }
 
@@ -389,7 +375,6 @@ fn layout_operation_from_dsl(operation: LayoutOperationDsl) -> LayoutOperation {
         LayoutOperationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutOperation::AddFrame { page_id, index, frame: *frame, layer_id },
         LayoutOperationDsl::RemoveFrame { page_id, frame_id } => LayoutOperation::RemoveFrame { page_id, frame_id },
         LayoutOperationDsl::PatchFrame { page_id, frame_id, patch } => LayoutOperation::PatchFrame { page_id, frame_id, patch: frame_patch_from_dsl(patch) },
-        LayoutOperationDsl::SetCamera { blueprint, camera } => LayoutOperation::SetCamera { blueprint, camera },
     }
 }
 
@@ -422,7 +407,7 @@ mod tests {
     use super::*;
     use layout::LayoutBounds;
 
-    const SAMPLE: &str = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
+    const SAMPLE: &str = r#"{"schema":"layout.fixture","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
 
     fn sample_doc() -> LayoutDocument {
         layout_engine::parse_layout_document(SAMPLE).expect("sample doc")
@@ -490,15 +475,6 @@ mod tests {
         let link = LayoutOperation::Links(CollectionOperation::Patch { id: "link-1".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } });
         let relinked = round_trip(&doc, &link);
         assert_eq!(relinked.links[0].path, "b.png");
-    }
-
-    #[test]
-    fn set_camera_round_trips_per_surface() {
-        let doc = sample_doc();
-        let operation = LayoutOperation::SetCamera { blueprint: true, camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 2.0 } };
-        let moved = round_trip(&doc, &operation);
-        assert_eq!(moved.camera.x, 5.0);
-        assert_eq!(moved.preview_camera.x, 0.0);
     }
 
     fn new_text(id: &str) -> Frame {
@@ -609,8 +585,6 @@ mod tests {
             patch: FramePatch { x: Some(10.0), fill: Some(Some([0.5, 0.5, 0.5, 1.0])), stroke: Some(None), ..Default::default() },
         });
         store::test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-text-1".into(), patch: FramePatch::default() });
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::SetCamera { blueprint: true, camera: LayoutCamera { x: 5.0, y: -6.5, zoom: 2.25 } });
-        store::test_support::assert_op_line_round_trip(&LayoutOperation::SetCamera { blueprint: false, camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 } });
     }
 
     #[test]
@@ -627,7 +601,7 @@ mod tests {
 
     #[test]
     fn parse_op_reports_engine_parser_errors() {
-        assert!(LayoutOperation::parse_op("setCamera blueprint=true camera=1,2,3").is_err(), "camera must be a block, not a bare tuple attribute");
+        assert!(LayoutOperation::parse_op("patch-frame page-id=page-1 frame-id=frame-1 patch=1,2,3").is_err(), "patch must be a block, not a bare tuple attribute");
     }
 
     #[test]

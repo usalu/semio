@@ -106,7 +106,7 @@ pub use grammar::{tokenize_language, GrammarToken};
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use writer::{default_camera, WriterProjection, WRITER_DOCUMENT_SCHEMA};
+use writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
 
 //#region 🔖Examples
 /// 📄 The `jack` example, parsed once from {@link writer_dsl::JACK_EXAMPLE_TEXT} — the source of truth
@@ -136,7 +136,7 @@ pub fn dag_jack_example_json() -> String {
 
 //#region 🔖DocumentHelpers
 pub fn empty_writer_projection() -> WriterProjection {
-    WriterProjection { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new(), camera: default_camera() }
+    WriterProjection { schema: WRITER_DOCUMENT_SCHEMA.into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new() }
 }
 
 //#region 🔖JackAst

@@ -7,7 +7,7 @@ use writer::WriterProjection;
 /// the only ways it should be consumed.
 pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/✒️writer/📚example/✒️jack.writer");
 /// 📄 The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
-pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/✒️writer/📚example/✒️dag.✒️jack.writer");
+pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/✒️writer/📚example/✒️dag.jack.writer");
 
 /// 📖 Parses `.writer` DSL text into a `WriterProjection`.
 pub fn parse_dsl(text: &str) -> Result<WriterProjection, store::TextError> {
@@ -23,7 +23,6 @@ pub fn print_dsl(projection: &WriterProjection) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use writer::WriterCamera;
 
     #[test]
     fn jack_example_dsl_round_trips() {
@@ -46,7 +45,6 @@ mod tests {
             language_id: "jack".into(),
             uri: "writer://jack".into(),
             text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-            camera: WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         }
     }
 
@@ -65,7 +63,6 @@ mod tests {
         assert!(printed.contains("id=jack"));
         assert!(printed.contains("language-id=jack"));
         assert!(printed.contains("uri=\"writer://jack\""));
-        assert!(printed.contains("camera {"));
         // The multiline query text is a single escaped-quoted field (`\n`, not raw newlines); the
         // embedded Jack string literal uses the unified double-quoting too, so its own `"` is
         // backslash-escaped one level deeper inside the outer DSL string.

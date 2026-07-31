@@ -8,11 +8,19 @@ pub const LAYOUT_FIXTURE_SCHEMA: &str = "layout.fixture";
 //#endregion 🔖Constants
 
 //#region 🔖Types
+/// 📷 Ephemeral per-surface camera pose (blueprint/preview). Never part of `LayoutDocument` — lives
+/// in the layout-ui app's runtime struct instead, so it stays out of undo history and off the wire.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct LayoutCamera {
     pub x: f64,
     pub y: f64,
     pub zoom: f64,
+}
+
+impl Default for LayoutCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -309,11 +317,6 @@ pub struct GridSettings {
 pub struct LayoutDocument {
     pub schema: String,
     pub name: String,
-    #[dsl(block)]
-    pub camera: LayoutCamera,
-    #[serde(rename = "previewCamera")]
-    #[dsl(block)]
-    pub preview_camera: LayoutCamera,
     #[dsl(block)]
     pub grid: GridSettings,
     #[serde(rename = "paragraphStyles")]

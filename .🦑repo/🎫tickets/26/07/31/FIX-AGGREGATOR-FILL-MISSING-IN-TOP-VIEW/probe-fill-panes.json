@@ -1,0 +1,41 @@
+{
+  "before": {
+    "canvasCount": 2,
+    "titles": [
+      "\n  \n  \n  \n  \nTop\n  \n  \n  \n  \n  \n  \n\n  \n ",
+      "",
+      "\n  \n  \n  \n  \nProjektion\n  \n  \n  \n  \n  \n ",
+      "",
+      "\n  \n  \n  \n  \nPerspective\n  \n  \n  \n  \n  \n",
+      "",
+      "\n  \n  \n  \n  \nProjektion\n  \n  \n  \n  \n  \n ",
+      "",
+      "Gefördert durch",
+      ""
+    ],
+    "bodySnippet": "Dokument\nKatalog\nInspektion\nVollbild\nEntwerfen mit Bestand · Aggregator\nBeispiel\nAbbau Aufbau\nTop\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nPerspective\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nVerlauf\nWerkzeug\nBefehl\nSuche\n\nNach Elementen suchen\n\nFinden\n\nElemente in dieser Ansicht finden\n\nWillkommen bei Entwerfen mit Bestand\nÜberspringen\n\nDer Aggregator ist der Demonstrator des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.\n\n1 / 12\nWeiter"
+  },
+  "probe": [
+    {
+      "width": 470,
+      "height": 807,
+      "hasState": false,
+      "camType": "undefined",
+      "camPos": null,
+      "visibleMeshes": 0,
+      "hiddenMeshes": 0,
+      "groups": 0
+    },
+    {
+      "width": 947,
+      "height": 807,
+      "hasState": false,
+      "camType": "undefined",
+      "camPos": null,
+      "visibleMeshes": 0,
+      "hiddenMeshes": 0,
+      "groups": 0
+    }
+  ],
+  "logs": []
+}

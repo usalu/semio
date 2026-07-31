@@ -775,6 +775,8 @@ export const WORLD_LOD_GRID_BASE_LOD = 2;
 export const WORLD_LOD_GRID_MIN_FADE_CELLS = 24;
 export const WORLD_LOD_GRID_FADE_HEIGHT_FACTOR = 32;
 export const WORLD_LOD_GRID_FADE_STRENGTH = 1.5;
+/** @emoji 🌫️ Multiplier on the live frustum radius so the procedural grid plane always overfills the viewport (including corners) with near-uniform opacity under {@link WORLD_LOD_GRID_FADE_STRENGTH}. */
+export const WORLD_LOD_GRID_COVERAGE_MARGIN = 32;
 export const WORLD_ORBIT_CAMERA_MIN_FAR = 524_288;
 export const WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR = 1024;
 /** @emoji 📶 Reference perspective FOV (°) used to map orthographic zoom onto an equivalent orbit distance for automatic LOD / grid banding — matches the default three-point FOV. */
@@ -852,12 +854,32 @@ export function lodGridStepWorld(lod: number, gridFactor: number): number | null
   return gridFactor * quantum * magnitude;
 }
 
-/** @emoji 🌫️ Stable world-space fade radius for the procedural grid before camera clipping becomes visible. */
-export function cameraGridFadeDistance(camera: Camera, planeZ: number, stepWorld: number): number {
-  const height = Math.abs(camera.position.z - planeZ);
-  const target = Math.max(stepWorld * WORLD_LOD_GRID_MIN_FADE_CELLS, height * WORLD_LOD_GRID_FADE_HEIGHT_FACTOR);
-  const cells = 2 ** Math.ceil(Math.log2(target / stepWorld));
-  return Math.min(stepWorld * cells, camera.far * 0.25);
+/** @emoji 🌫️ World-space radius of the camera frustum on the grid plane — orthographic uses zoomed pixel extent; perspective uses FOV × height above the plane. */
+export function cameraGridVisibleRadius(camera: Camera, planeZ: number, viewport: { readonly width: number; readonly height: number }): number {
+  const width = Math.max(viewport.width, 1);
+  const height = Math.max(viewport.height, 1);
+  if (worldCameraIsOrthographic(camera)) {
+    const zoom = Math.max(worldCameraZoom(camera), 1e-6);
+    return Math.hypot(width * 0.5 / zoom, height * 0.5 / zoom);
+  }
+  const distance = Math.max(Math.abs(camera.position.z - planeZ), 1e-3);
+  const fov = worldCameraFov(camera) ?? WORLD_LOD_REFERENCE_FOV_DEG;
+  const halfHeight = distance * Math.tan((fov * Math.PI) / 360);
+  const halfWidth = halfHeight * (width / height);
+  return Math.hypot(halfWidth, halfHeight);
+}
+
+/** @emoji 🌫️ Stable world-space fade radius for the procedural grid that always overfills the live viewport so ortho/persp zoom never reveals a hard plane edge. */
+export function cameraGridFadeDistance(camera: Camera, planeZ: number, stepWorld: number, viewport?: { readonly width: number; readonly height: number }): number {
+  const coverage =
+    viewport != null
+      ? cameraGridVisibleRadius(camera, planeZ, viewport) * WORLD_LOD_GRID_COVERAGE_MARGIN
+      : Math.abs(camera.position.z - planeZ) * WORLD_LOD_GRID_FADE_HEIGHT_FACTOR;
+  const target = Math.max(stepWorld * WORLD_LOD_GRID_MIN_FADE_CELLS, coverage);
+  const cells = 2 ** Math.ceil(Math.log2(Math.max(target / stepWorld, 1)));
+  const fade = stepWorld * cells;
+  const farCap = Number.isFinite(camera.far) && camera.far > 0 ? camera.far * 0.25 : fade;
+  return Math.max(coverage, Math.min(fade, Math.max(farCap, coverage)));
 }
 
 /** @emoji 📷 Quantized far clipping distance that follows arbitrarily large orbit distances. */
@@ -898,14 +920,17 @@ const worldRaycastNone: Object3D["raycast"] = () => undefined;
 export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactElement | null {
   const lod = useLod();
   const camera = useThree((s) => s.camera);
+  const size = useThree((s) => s.size);
   const invalidate = useThree((s) => s.invalidate);
   const datum = props.gridDatum ?? DEFAULT_GRID_PLANE_ANCHOR_CAD;
   const stepWorld = lodGridStepWorld(lod.lod, lod.gridFactor);
-  const [fadeDistance, setFadeDistance] = reactHostPort.useState(() => (stepWorld == null ? 1 : cameraGridFadeDistance(camera, datum[2], stepWorld)));
+  const [fadeDistance, setFadeDistance] = reactHostPort.useState(() =>
+    stepWorld == null ? 1 : cameraGridFadeDistance(camera, datum[2], stepWorld, size),
+  );
   const gridRef = reactHostPort.useRef<Mesh | null>(null);
   useFrame(() => {
     if (stepWorld == null) return;
-    const next = cameraGridFadeDistance(camera, datum[2], stepWorld);
+    const next = cameraGridFadeDistance(camera, datum[2], stepWorld, size);
     setFadeDistance((previous) => (previous === next ? previous : next));
   });
   const [gridColor, setGridColor] = reactHostPort.useState<number>(() => resolveThreeColor(themeColorVar("element"), "gray"));
@@ -1375,7 +1400,6 @@ function resolveWorldGizmoNeutralColor(): string {
 type ProjectionGizmoVisualState = "idle" | "hover" | "dimmed";
 
 interface ProjectionGizmoVisualPalette {
-  readonly labelColor: string;
   readonly neutralHover: string;
   readonly brighten: string;
   readonly idleOpacity: number;
@@ -1385,7 +1409,6 @@ interface ProjectionGizmoVisualPalette {
 
 function resolveProjectionGizmoVisualPalette(): ProjectionGizmoVisualPalette {
   return {
-    labelColor: resolveColorHex(tokenVar("light"), "light"),
     neutralHover: resolveColorHex(themeColorVar("emphasized"), "dark"),
     brighten: resolveColorHex(tokenVar("light"), "light"),
     idleOpacity: 0.88,
@@ -1442,7 +1465,6 @@ interface WorldProjectionGizmoViewportProps {
   readonly axisColors: { readonly x: string; readonly y: string; readonly z: string };
   readonly neutralColor: string;
   readonly axisScale: [number, number, number];
-  readonly font: string;
   readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
 }
 
@@ -1485,8 +1507,7 @@ function WorldProjectionGizmoHitHead(props: {
   readonly position: [number, number, number];
   readonly hit: ProjectionGizmoHit;
   readonly color: string;
-  readonly label?: string;
-  readonly font: string;
+  readonly prominent?: boolean;
   readonly palette: ProjectionGizmoVisualPalette;
   readonly visualState: ProjectionGizmoVisualState;
   readonly neutral: boolean;
@@ -1506,20 +1527,14 @@ function WorldProjectionGizmoHitHead(props: {
       return new CanvasTexture(canvas);
     }
     context.beginPath();
-    context.arc(32, 32, props.label ? 16 : 12, 0, 2 * Math.PI);
+    context.arc(32, 32, props.prominent ? 16 : 12, 0, 2 * Math.PI);
     context.closePath();
     context.fillStyle = fillColor;
     context.fill();
-    if (props.label) {
-      context.font = props.font;
-      context.textAlign = "center";
-      context.fillStyle = props.palette.labelColor;
-      context.fillText(props.label, 32, props.label.length > 2 ? 38 : 41);
-    }
     return new CanvasTexture(canvas);
-  }, [fillColor, props.font, props.label, props.palette.labelColor]);
+  }, [fillColor, props.prominent]);
   reactHostPort.useEffect(() => () => texture.dispose(), [texture]);
-  const scale = (props.label ? 1 : 0.65) * props.axisHeadScale * (props.visualState === "hover" ? 1.1 : 1);
+  const scale = (props.prominent ? 1 : 0.65) * props.axisHeadScale * (props.visualState === "hover" ? 1.1 : 1);
   return (
     <sprite
       scale={scale}
@@ -1563,7 +1578,6 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
   }, [hoveredHit, invalidate, palette]);
   const axisHeadScale = 0.62;
   const headBase = {
-    font: props.font,
     palette,
     axisHeadScale,
     onHitSelect: props.onHitSelect,
@@ -1579,12 +1593,12 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
     return 1;
   };
   const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
-  // 🧭 Upper corners keep labeled heads; lower corners match negative-axis ends (small unlabeled circles) — less relevant under-views.
-  const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: ProjectionGizmoHit; readonly label?: string }[] = [
-    { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "upper" }, label: "NE" },
-    { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "upper" }, label: "NW" },
-    { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se", hemisphere: "upper" }, label: "SE" },
-    { position: [-0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "upper" }, label: "SW" },
+  // 🧭 Upper corners keep prominent heads; lower corners match negative-axis ends — less relevant under-views.
+  const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: ProjectionGizmoHit; readonly prominent?: boolean }[] = [
+    { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "upper" }, prominent: true },
+    { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "upper" }, prominent: true },
+    { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se", hemisphere: "upper" }, prominent: true },
+    { position: [-0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "upper" }, prominent: true },
     { position: [0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "lower" } },
     { position: [-0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "lower" } },
     { position: [0.72, -0.72, -0.72], hit: { type: "corner", quadrant: "se", hemisphere: "lower" } },
@@ -1598,16 +1612,16 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
       {cornerHits.map((corner) => (
         <WorldProjectionGizmoCornerShaft key={`shaft-${corner.hit.quadrant}-${corner.hit.hemisphere}`} to={corner.position} color={props.neutralColor} opacity={shaftOpacity} />
       ))}
-      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} label="X" color={props.axisColors.x} neutral={false} visualState={visualState(faceHit("x", 1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} prominent color={props.axisColors.x} neutral={false} visualState={visualState(faceHit("x", 1))} {...headBase} />
       <WorldProjectionGizmoHitHead position={[-1, 0, 0]} hit={faceHit("x", -1)} color={props.axisColors.x} neutral={false} visualState={visualState(faceHit("x", -1))} {...headBase} />
-      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} label="Y" color={props.axisColors.y} neutral={false} visualState={visualState(faceHit("y", 1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} prominent color={props.axisColors.y} neutral={false} visualState={visualState(faceHit("y", 1))} {...headBase} />
       <WorldProjectionGizmoHitHead position={[0, -1, 0]} hit={faceHit("y", -1)} color={props.axisColors.y} neutral={false} visualState={visualState(faceHit("y", -1))} {...headBase} />
-      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} label="Z" color={props.axisColors.z} neutral={false} visualState={visualState(faceHit("z", 1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} prominent color={props.axisColors.z} neutral={false} visualState={visualState(faceHit("z", 1))} {...headBase} />
       <WorldProjectionGizmoHitHead position={[0, 0, -1]} hit={faceHit("z", -1)} color={props.axisColors.z} neutral={false} visualState={visualState(faceHit("z", -1))} {...headBase} />
       {cornerHits.map((corner) => (
-        <WorldProjectionGizmoHitHead key={`${corner.hit.type}-${corner.hit.quadrant}-${corner.hit.hemisphere}`} position={corner.position} hit={corner.hit} label={corner.label} color={props.neutralColor} neutral visualState={visualState(corner.hit)} {...headBase} />
+        <WorldProjectionGizmoHitHead key={`${corner.hit.type}-${corner.hit.quadrant}-${corner.hit.hemisphere}`} position={corner.position} hit={corner.hit} prominent={corner.prominent} color={props.neutralColor} neutral visualState={visualState(corner.hit)} {...headBase} />
       ))}
-      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} label="3D" color={props.neutralColor} neutral visualState={visualState({ type: "center" })} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} prominent color={props.neutralColor} neutral visualState={visualState({ type: "center" })} {...headBase} />
     </group>
   );
 }
@@ -1637,7 +1651,6 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
         axisColors={axisColors}
         neutralColor={neutralColor}
         axisScale={axisScale}
-        font="12px Inter var, Arial, sans-serif"
         onHitSelect={(hit) => {
           const spec = resolveProjectionGizmoSpec(hit, props.projectionSpec);
           // 🧭 Skip only true no-operations (e.g. center while already on the same perspective kind).
@@ -2372,6 +2385,13 @@ export function worldSceneContentBounds(
     center: [(minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5],
     halfExtent: [Math.max((maxX - minX) * 0.5, 0.5), Math.max((maxY - minY) * 0.5, 0.5), Math.max((maxZ - minZ) * 0.5, 0.5)],
   };
+}
+
+/** @emoji 📷 Stable key for {@link WorldSceneContentBounds} — used to re-frame projection panes when fill (or any edit) expands the scene. */
+export function worldSceneContentBoundsKey(bounds: WorldSceneContentBounds | null | undefined): string | null {
+  if (!bounds) return null;
+  const round = (value: number) => Math.round(value * 1e3) / 1e3;
+  return `${round(bounds.center[0])},${round(bounds.center[1])},${round(bounds.center[2])}:${round(bounds.halfExtent[0])},${round(bounds.halfExtent[1])},${round(bounds.halfExtent[2])}`;
 }
 
 /** @emoji 📷 Cardinal face look direction (Z-up CAD). */
@@ -4896,6 +4916,7 @@ if (import.meta.vitest) {
       const neutralHover = projectionGizmoHeadFillColor("#9aa0ab", "hover", palette, true);
       expect(axisHover).not.toBe("#ff344f");
       expect(neutralHover).toBe(palette.neutralHover);
+      expect(palette).not.toHaveProperty("labelColor");
     });
   });
 
@@ -4911,6 +4932,13 @@ if (import.meta.vitest) {
       expect(state.projection).toBe("orthographic");
       // visible half-width = (viewportWidth/2) / zoom = 25 * 1.35 ⇒ zoom = 200 / 33.75
       expect(state.zoom).toBeCloseTo(200 / (25 * 1.35), 5);
+    });
+
+    it("worldSceneContentBoundsKey changes when fill expands the scene footprint", () => {
+      const seed = worldSceneContentBounds([{ position: [0, 0, 0] }]);
+      const filled = worldSceneContentBounds([{ position: [0, 0, 0] }, { position: [40, -12, 3] }]);
+      expect(worldSceneContentBoundsKey(seed)).not.toBe(worldSceneContentBoundsKey(filled));
+      expect(worldSceneContentBoundsKey(filled)).toBe(worldSceneContentBoundsKey(filled));
     });
   });
 
@@ -5050,11 +5078,44 @@ if (import.meta.vitest) {
     it("grows with camera Z while fading fully before the far clipping plane", () => {
       const camera = new ThreePerspectiveCamera(45, 16 / 9, 0.1, 500_000);
       camera.position.set(0, -100, 100);
-      const near = cameraGridFadeDistance(camera, 0, 10);
+      const near = cameraGridFadeDistance(camera, 0, 10, { width: 800, height: 450 });
       camera.position.z = 2_000;
-      const far = cameraGridFadeDistance(camera, 0, 10);
+      const far = cameraGridFadeDistance(camera, 0, 10, { width: 800, height: 450 });
       expect(far).toBeGreaterThan(near);
-      expect(far).toBeLessThanOrEqual(camera.far * 0.25);
+      expect(far).toBeGreaterThanOrEqual(cameraGridVisibleRadius(camera, 0, { width: 800, height: 450 }) * WORLD_LOD_GRID_COVERAGE_MARGIN);
+    });
+
+    it("grows with orthographic zoom-out so the plane always overfills the viewport corners", () => {
+      const camera = new ThreeOrthographicCamera(-400, 400, 300, -300, 0.1, 500_000);
+      camera.position.set(0, 0, 600);
+      const viewport = { width: 800, height: 600 };
+      camera.zoom = 40;
+      const zoomedInRadius = cameraGridVisibleRadius(camera, 0, viewport);
+      const zoomedIn = cameraGridFadeDistance(camera, 0, 10, viewport);
+      camera.zoom = 0.25;
+      const zoomedOutRadius = cameraGridVisibleRadius(camera, 0, viewport);
+      const zoomedOut = cameraGridFadeDistance(camera, 0, 10, viewport);
+      expect(zoomedIn).toBeGreaterThanOrEqual(zoomedInRadius * WORLD_LOD_GRID_COVERAGE_MARGIN);
+      expect(zoomedOut).toBeGreaterThan(zoomedIn);
+      expect(zoomedOut).toBeGreaterThanOrEqual(zoomedOutRadius * WORLD_LOD_GRID_COVERAGE_MARGIN);
+    });
+  });
+
+  describe("cameraGridVisibleRadius", () => {
+    it("scales inversely with orthographic zoom and with perspective distance", () => {
+      const orthographic = new ThreeOrthographicCamera(-400, 400, 300, -300, 0.1, 500_000);
+      orthographic.zoom = 20;
+      const near = cameraGridVisibleRadius(orthographic, 0, { width: 800, height: 600 });
+      orthographic.zoom = 5;
+      const far = cameraGridVisibleRadius(orthographic, 0, { width: 800, height: 600 });
+      expect(far).toBeCloseTo(near * 4, 6);
+
+      const perspective = new ThreePerspectiveCamera(50, 800 / 600, 0.1, 500_000);
+      perspective.position.set(0, 0, 100);
+      const close = cameraGridVisibleRadius(perspective, 0, { width: 800, height: 600 });
+      perspective.position.z = 400;
+      const distant = cameraGridVisibleRadius(perspective, 0, { width: 800, height: 600 });
+      expect(distant).toBeCloseTo(close * 4, 6);
     });
   });
 

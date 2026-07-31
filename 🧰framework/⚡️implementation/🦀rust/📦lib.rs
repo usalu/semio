@@ -6218,6 +6218,18 @@ pub enum HostEffect {
         args: Option<Value>,
         delay_ms: u64,
     },
+    /// @emoji ⏪ Asks the shell to redispatch a shell-owned command (dock/theme/locale/panel chrome)
+    /// whose real mutation and its inverse both live client-side — the plugin has no access to that
+    /// state, so `revertToCommand` on a `Shell`-kind history row bubbles the row's stored inverse out
+    /// here instead of replaying it internally the way a `View`-kind row does (see
+    /// `NOTE_SHELL_COMMAND_ACTION_ID` and `VcsDocumentApp::dispatch_action`'s `REVERT_TO_COMMAND_ACTION_ID`
+    /// arm). The shell is expected to redispatch `action_id`/`args` through its normal command funnel,
+    /// which itself calls `noteShellCommand` again — so the revert is itself a new, further-revertible row.
+    ReplayShellCommand {
+        action_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        args: Option<Value>,
+    },
 }
 
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene

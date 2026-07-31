@@ -46,7 +46,6 @@ pub struct MathGraph {
     pub directed: bool,
     pub nodes: Vec<MathNode>,
     pub edges: Vec<MathEdge>,
-    pub camera: MathCamera,
     pub algorithm: String,
     #[serde(default)]
     pub algorithm_seed: Option<String>,
@@ -68,7 +67,6 @@ impl Default for MathGraph {
                 MathEdge { id: "e3".into(), source: "b".into(), target: "d".into() },
                 MathEdge { id: "e4".into(), source: "c".into(), target: "d".into() },
             ],
-            camera: MathCamera::default(),
             algorithm: "topo".into(),
             algorithm_seed: None,
         }
@@ -163,8 +161,6 @@ pub struct MathGraphDsl {
     nodes: Vec<MathNode>,
     #[dsl(table)]
     edges: Vec<MathEdgeDsl>,
-    #[dsl(block)]
-    camera: MathCamera,
     algorithm: String,
     algorithm_seed: Option<String>,
 }
@@ -174,7 +170,6 @@ pub fn math_graph_to_dsl(graph: &MathGraph) -> MathGraphDsl {
         directed: graph.directed,
         nodes: graph.nodes.clone(),
         edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(),
-        camera: graph.camera.clone(),
         algorithm: graph.algorithm.clone(),
         algorithm_seed: graph.algorithm_seed.clone(),
     }
@@ -185,7 +180,6 @@ pub fn math_graph_from_dsl(graph: MathGraphDsl) -> Result<MathGraph, String> {
         directed: graph.directed,
         nodes: graph.nodes,
         edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?,
-        camera: graph.camera,
         algorithm: graph.algorithm,
         algorithm_seed: graph.algorithm_seed,
     })

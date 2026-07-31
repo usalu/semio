@@ -77,9 +77,9 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
     }
 }
 
-fn render_graph_window(graph: &MathGraph) -> UiNode {
+fn render_graph_window(graph: &MathGraph, camera: &MathCamera) -> UiNode {
     let (nodes_json, edges_json) = workflow_json(graph);
-    let viewport_json = serde_json::to_string(&graph.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let viewport_json = serde_json::to_string(camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let mut scene = empty_component_scene(MATH_BODY_GRAPH, SurfaceKind::NodeGraph);
     scene.node_graph = Some(NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes_json, edges_json, viewport_json) });
     UiNode::ComponentScene(scene)
@@ -93,8 +93,17 @@ fn render_geometry_window(geometry: &MathGeometry) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖MathematicalPlayApp
+/// 🎛️ Ephemeral view state (node-graph camera) — lives in the app struct, not the document, so it
+/// stays out of undo history and off the operation channel.
+#[derive(Clone, Debug, Default, PartialEq)]
+struct MathPlayRuntime {
+    camera: MathCamera,
+}
+
 #[derive(Default)]
-pub struct MathematicalPlayApp;
+pub struct MathematicalPlayApp {
+    runtime: MathPlayRuntime,
+}
 
 impl DocumentApp for MathematicalPlayApp {
     type Projection = MathProjection;
@@ -175,12 +184,12 @@ impl DocumentApp for MathematicalPlayApp {
                     return ActionEmit::operations(vec![MathOperation::SetGraph { graph }]);
                 }
             }
+            // 👁️ View action: the node-graph viewport never touches the document — it's written
+            // straight into `self.runtime`, session-only, no VCS edit, no undo entry.
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(Value::as_str) {
                     if let Ok(camera) = serde_json::from_str::<MathCamera>(viewport_json) {
-                        let mut graph = doc.projection.graph.clone();
-                        graph.camera = camera;
-                        return ActionEmit::amend(vec![MathOperation::SetGraph { graph }], "viewport");
+                        self.runtime.camera = camera;
                     }
                 }
             }
@@ -196,7 +205,7 @@ impl DocumentApp for MathematicalPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, MathProjection>, _view_state: &ViewState) -> UiNode {
         match body_key {
-            MATH_BODY_GRAPH => render_graph_window(&doc.projection.graph),
+            MATH_BODY_GRAPH => render_graph_window(&doc.projection.graph, &self.runtime.camera),
             MATH_BODY_GEOMETRY => render_geometry_window(&doc.projection.geometry),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -231,7 +240,7 @@ pub fn create_mathematical_app() -> App {
             .operation("setAlgorithm", "Set Algorithm")
             .operation("setDirected", "Set Directed")
             .operation("nodeGraphEdit", "Node Graph Edit")
-            .operation("nodeGraphViewport", "Node Graph Viewport")
+            .view_action("nodeGraphViewport", "Node Graph Viewport")
             .operation("setPoints", "Set Points")
             // 📝 Staged argument forms for the graph analysis controls.
             .action_args("setAlgorithm", vec![
@@ -258,7 +267,7 @@ mod tests {
 
     #[test]
     fn renders_node_graph_scene() {
-        let app = MathematicalPlayApp;
+        let app = MathematicalPlayApp::default();
         let projection = MathProjection::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -269,13 +278,31 @@ mod tests {
 
     #[test]
     fn renders_canvas_2d_scene() {
-        let app = MathematicalPlayApp;
+        let app = MathematicalPlayApp::default();
         let projection = MathProjection::default();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(MATH_BODY_GEOMETRY, &doc, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
+    }
+
+    /// 🎥 `"nodeGraphViewport"` is a View action — it must never emit a `MathOperation` (no VCS edit,
+    /// no undo entry) and instead write straight into `self.runtime`.
+    #[test]
+    fn node_graph_viewport_writes_runtime_not_operations() {
+        let mut app = MathematicalPlayApp::default();
+        let projection = MathProjection::default();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let emit = app.handle_action("nodeGraphViewport", Some(&serde_json::json!({ "viewportJson": r#"{"x":5.0,"y":6.0,"zoom":2.0}"# })), &doc, &ViewState::default());
+        assert!(emit.operations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
+        assert_eq!(app.runtime.camera.zoom, 2.0);
+        assert_eq!(app.runtime.camera.x, 5.0);
+        let node = app.render(MATH_BODY_GRAPH, &doc, &ViewState::default());
+        let payload: Value = serde_json::to_value(&node).unwrap();
+        let viewport: Value = serde_json::from_str(payload["nodeGraph"]["viewportJson"].as_str().unwrap()).unwrap();
+        assert_eq!(viewport["zoom"], serde_json::json!(2.0));
     }
 }
 //#endregion 🧪Tests

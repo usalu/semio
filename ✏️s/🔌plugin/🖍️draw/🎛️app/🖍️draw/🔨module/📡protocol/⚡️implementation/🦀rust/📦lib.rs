@@ -23,7 +23,7 @@ mod tests {
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
         let document = default_draw_document("doc-text-test", None);
-        let operation = DrawOperation::SetCamera { camera: document.camera };
+        let operation = DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(create_draw_shape_layer_rect("Op Binary Test")) };
         store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);

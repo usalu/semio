@@ -49,6 +49,10 @@ struct DrawInteractionState {
     hovered_id: Option<String>,
     #[serde(default)]
     engagement_input: String,
+    /// 🎥 Per-session camera pose — session-only view state (never a VCS-tracked document field): see
+    /// `.🦑repo/🎫tickets/26/07/31/MOVE-DRAW-PLUGIN-CAMERA-TO-RUNTIME-STATE`.
+    #[serde(default)]
+    camera: draw::DrawCamera,
 }
 //#endregion 🔖Types
 
@@ -215,7 +219,7 @@ fn best_pick_layer_id(targets: &[DrawPickTarget]) -> Option<String> {
 }
 
 fn apply_point_pick(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2], shift: bool, ctrl: bool, meta: bool, include_control_points: bool) {
-    let tolerance = DRAW_PICK_TOLERANCE_PX / doc.camera.zoom.max(1e-6);
+    let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
     let targets = resolve_pick_targets_at(doc, world, tolerance, include_control_points);
     let picked = best_pick_layer_id(&targets);
     let mode = selection_merge_mode(shift, ctrl, meta);
@@ -363,7 +367,7 @@ fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, util
 /// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset) and records it as
 /// the current selection; empty when no bitmap source is available.
 fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOperation> {
-    let tolerance = DRAW_PICK_TOLERANCE_PX / doc.camera.zoom.max(1e-6);
+    let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
     let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, false));
     let source_key = hit_layer_id
         .and_then(|id| find_draw_layer(doc, &id).cloned())
@@ -880,7 +884,7 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
         ("shape:rect", labels.kind_rectangle, "square"),
         ("shape:ellipse", labels.kind_ellipse, "circle"),
         ("shape:line", labels.kind_line, "minus"),
-        ("shape:polygon", labels.kind_polygon, "pentagon"),
+        ("shape:polygon", labels.kind_polygon, "hexagon"),
         ("text", labels.kind_text, "type"),
         ("image", labels.kind_image, "image"),
         ("group", labels.kind_group, "folder"),
@@ -1557,9 +1561,9 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, ge
         DRAW_PLAY_SURFACE_ID,
         DRAW_PLAY_CONTROLLER_ID,
         Canvas2dScene {
-            camera_x: document.camera.x,
-            camera_y: document.camera.y,
-            zoom: document.camera.zoom,
+            camera_x: interaction.camera.x,
+            camera_y: interaction.camera.y,
+            zoom: interaction.camera.zoom,
             layers_json: serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()),
         },
     )
@@ -1678,25 +1682,17 @@ impl DocumentApp for DrawPlayApp {
                 self.step_gesture(draw_gesture::Event::UtilityChanged, document);
                 ActionEmit::default()
             }
+            // 📷 Camera — session-only runtime pose, never a document operation (`ActionKind::View`).
             "setCamera" => {
-                if let Some(camera) = args.and_then(|value| value.get("camera")) {
-                    if let Ok(camera) = serde_json::from_value::<draw::DrawCamera>(camera.clone()) {
-                        if camera == document.camera {
-                            return ActionEmit::default();
-                        }
-                        return ActionEmit { operations: vec![DrawOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
-                    }
+                if let Some(camera) = args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value::<draw::DrawCamera>(value.clone()).ok()) {
+                    self.interaction.camera = camera;
                 }
                 ActionEmit::default()
             }
             "setCameraZoom" => {
-                let zoom = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let mut camera = document.camera.clone();
-                camera.zoom = zoom;
-                if camera == document.camera {
-                    return ActionEmit::default();
-                }
-                ActionEmit { operations: vec![DrawOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() }
+                let zoom = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(self.interaction.camera.zoom);
+                self.interaction.camera.zoom = zoom;
+                ActionEmit::default()
             }
             "setSelectedOpacity" => {
                 let opacity = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
@@ -1895,7 +1891,7 @@ impl DocumentApp for DrawPlayApp {
                 let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&document.camera, x, y, viewport_w, viewport_h);
+                let (world_x, world_y) = canvas_point_to_world(&self.interaction.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
                 self.step_gesture(draw_gesture::Event::PointerDown { utility: active_utility.clone(), world, shift, ctrl, meta }, document)
             }
@@ -1905,16 +1901,16 @@ impl DocumentApp for DrawPlayApp {
                 let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
                 let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
                 let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&document.camera, x, y, viewport_w, viewport_h);
+                let (world_x, world_y) = canvas_point_to_world(&self.interaction.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
                 if self.gesture.matches("idle") {
                     let utility = active_utility.clone();
                     let include_control_points = utility == "selectDirect";
-                    let tolerance = DRAW_PICK_TOLERANCE_PX / document.camera.zoom.max(1e-6);
+                    let tolerance = DRAW_PICK_TOLERANCE_PX / self.interaction.camera.zoom.max(1e-6);
                     self.interaction.hovered_id = best_pick_layer_id(&resolve_pick_targets_at(document, world, tolerance, include_control_points));
                     return ActionEmit::default();
                 }
-                let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / document.camera.zoom.max(1e-6);
+                let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / self.interaction.camera.zoom.max(1e-6);
                 self.step_gesture(draw_gesture::Event::PointerMove { world, marquee_threshold_world }, document)
             }
             "canvasPointerUp" => {
@@ -1926,7 +1922,7 @@ impl DocumentApp for DrawPlayApp {
                 let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&document.camera, x, y, viewport_w, viewport_h);
+                let (world_x, world_y) = canvas_point_to_world(&self.interaction.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
                 self.step_gesture(draw_gesture::Event::PointerUp { utility: active_utility.clone(), world, shift, ctrl, meta }, document)
             }
@@ -2029,8 +2025,6 @@ pub fn create_draw_app() -> App {
             .action_with(draw_internal_action("setDocument", "Set Document", ActionKind::Operation))
             .action_with(draw_internal_action("commitDocument", "Commit Document", ActionKind::Operation))
             .action_with(draw_internal_action("setFixtureJson", "Set Fixture Json", ActionKind::Operation))
-            .action_with(draw_internal_action("setCamera", "Set Camera", ActionKind::Operation))
-            .action_with(draw_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::Operation))
             .action_with(draw_internal_action("setSelectedOpacity", "Set Selected Opacity", ActionKind::Operation))
             .action_with(draw_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Operation))
             .action_with(draw_internal_action("dropLayerKind", "Drop Layer Kind", ActionKind::Operation))
@@ -2053,6 +2047,9 @@ pub fn create_draw_app() -> App {
             .action_with(draw_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(draw_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(draw_internal_action("engagementInput", "Engagement Input", ActionKind::View))
+            // 📷 Camera — session-only runtime pose, never a document operation.
+            .action_with(draw_internal_action("setCamera", "Set Camera", ActionKind::View))
+            .action_with(draw_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
             // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(draw_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
@@ -2061,7 +2058,7 @@ pub fn create_draw_app() -> App {
             .utility(draw_utility("shapeRect", "Rectangle", "rectangle-tool", "Draw", UtilityCategory::Utilities))
             .utility(draw_utility("shapeEllipse", "Ellipse", "circle", "Draw", UtilityCategory::Utilities))
             .utility(draw_utility("shapeLine", "Line", "minus", "Draw", UtilityCategory::Utilities))
-            .utility(draw_utility("shapePolygon", "Polygon", "pentagon", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapePolygon", "Polygon", "hexagon", "Draw", UtilityCategory::Utilities))
             .utility(draw_utility("booleanCombine", "Boolean", "combine", "Combine", UtilityCategory::Utilities))
             .utility(draw_utility("trace", "Trace", "scan-line", "Combine", UtilityCategory::Utilities))
             .utility(draw_utility("transformMove", "Pan", "move", "View", UtilityCategory::Utilities))
@@ -2458,13 +2455,30 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_emits_one_coalesced_operation() {
+    fn set_camera_writes_runtime_and_emits_no_operations() {
         let mut app = new_app();
+        let before = app.projection().expect("projection");
         let result = app
             .handle_action("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &ViewState::default(), &testkit::meta("local"))
             .expect("camera");
-        assert_eq!(result.operations.len(), 1);
-        assert_eq!(app.projection().unwrap().camera.zoom, 2.0);
+        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
+        let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        assert!(json.contains(r#""zoom":2.0"#), "composite scene camera reflects runtime state: {json}");
+        assert!(json.contains(r#""cameraX":5.0"#), "composite scene camera reflects runtime state: {json}");
+    }
+
+    #[test]
+    fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
+        let mut app = new_app();
+        app.handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("set camera");
+        let result = app
+            .handle_action("setCameraZoom", Some(&json!({ "value": 3.0 })), &ViewState::default(), &testkit::meta("local"))
+            .expect("set camera zoom");
+        assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
+        let json = serde_json::to_string(&app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        assert!(json.contains(r#""zoom":3.0"#), "zoom updated: {json}");
+        assert!(json.contains(r#""cameraX":4.0"#), "pan preserved across zoom-only update: {json}");
     }
 
     #[test]

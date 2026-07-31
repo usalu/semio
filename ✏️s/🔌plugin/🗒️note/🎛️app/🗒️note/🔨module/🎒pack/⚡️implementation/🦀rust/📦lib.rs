@@ -1,6 +1,6 @@
 //! 📦 Note app — binary document surface + laws (constitutional: pack).
 
-use note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use note::{NoteBlockNode, NoteDocument, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 use store::PackError;
 
@@ -38,7 +38,6 @@ mod tests {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: "doc-1".into(),
             title: Some("Representative \"Doc\"".into()),
-            camera: NoteCamera { x: 12.5, y: -4.0, zoom: 1.5 },
             grid_visible: Some(true),
             grid_spacing: Some(32.0),
             grid_subdivisions: None,

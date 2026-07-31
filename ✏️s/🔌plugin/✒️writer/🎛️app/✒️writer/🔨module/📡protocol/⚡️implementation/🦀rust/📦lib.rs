@@ -18,7 +18,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<WriterOperation, protocol::ProtocolErro
 mod tests {
     use super::*;
     use store::{create_document_envelope, DocumentCommand, DocumentStore};
-    use writer::{WriterCamera, WriterProjection};
+    use writer::WriterProjection;
 
     #[test]
     fn op_binary_round_trips_and_agrees_with_text() {
@@ -37,7 +37,6 @@ mod tests {
             language_id: "jack".into(),
             uri: "writer://jack".into(),
             text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
-            camera: WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         }
     }
 

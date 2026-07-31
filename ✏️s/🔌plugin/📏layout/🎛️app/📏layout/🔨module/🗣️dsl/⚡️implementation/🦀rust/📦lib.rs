@@ -19,14 +19,12 @@ pub fn print_dsl(document: &LayoutDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use layout::{Frame, GridSettings, Layer, LayoutBounds, LayoutCamera, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
+    use layout::{Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
 
     fn minimal_document_with_character_style() -> LayoutDocument {
         LayoutDocument {
             schema: LAYOUT_FIXTURE_SCHEMA.into(),
             name: "Empty".into(),
-            camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-            preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
             character_styles: vec![serde_json::json!({"id": "char.emph", "italic": true})],
@@ -43,8 +41,6 @@ mod tests {
         LayoutDocument {
             schema: LAYOUT_FIXTURE_SCHEMA.into(),
             name: "Flags".into(),
-            camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-            preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
             character_styles: Vec::new(),
@@ -106,10 +102,10 @@ mod tests {
         assert!(parse_dsl("schema=\"layout.fixture\" name=\"t\"").is_err(), "quoted schema must fail: schema is a bare ident");
         assert!(parse_dsl("schema=layout.fixture name=unquoted").is_err(), "unquoted name must fail: name is a quoted string");
         assert!(
-            parse_dsl("schema=layout.fixture name=\"t\" camera { x=notanumber y=0 zoom=1 }").is_err(),
-            "non-numeric camera field must fail"
+            parse_dsl("schema=layout.fixture name=\"t\" grid { baselineGrid=notanumber baselineOffset=0 snapToBaseline=true }").is_err(),
+            "non-numeric grid field must fail"
         );
-        let bad_bool = "schema=layout.fixture name=\"t\" camera { x=0 y=0 zoom=1 } previewCamera { x=0 y=0 zoom=1 } grid { baselineGrid=12 baselineOffset=0 snapToBaseline=maybe }";
+        let bad_bool = "schema=layout.fixture name=\"t\" grid { baselineGrid=12 baselineOffset=0 snapToBaseline=maybe }";
         assert!(parse_dsl(bad_bool).is_err(), "non-boolean grid flag must fail");
     }
 }

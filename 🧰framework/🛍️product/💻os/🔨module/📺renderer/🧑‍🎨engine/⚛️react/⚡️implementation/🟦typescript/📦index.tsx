@@ -503,6 +503,7 @@ import {
   computeWorldProjectionPose,
   frameWorldProjectionPose,
   worldSceneContentBounds,
+  worldSceneContentBoundsKey,
   type WorldProjectionSpec,
   type WorldProjectionTemplateDescriptor,
   type WorldSceneContentBounds,
@@ -3623,6 +3624,22 @@ export const worldRevealCutoffStore = createRevealCutoffStore();
 
 /** The only reveal group that exists today — puzzle3d's fill-plan slider. */
 export const PUZZLE3D_FILL_REVEAL_GROUP_ID = "puzzle3d-fill";
+
+/**
+ * @emoji 🪣 Writes committed reveal cutoffs into `store` only when the numeric value for a group changes.
+ * Ignores object-identity churn from `fillBuildTick` refreshes so a live slider drag is not reset mid-gesture.
+ */
+export function reconcileCommittedRevealCutoffs(
+  store: RevealCutoffStore,
+  committedRef: { current: Readonly<Record<string, number>> },
+  revealCutoffs: Readonly<Record<string, number>>,
+): void {
+  for (const [groupId, value] of Object.entries(revealCutoffs)) {
+    if (committedRef.current[groupId] === value) continue;
+    committedRef.current = { ...committedRef.current, [groupId]: value };
+    store.set(groupId, value);
+  }
+}
 
 /** @emoji 🙈 True for a reveal-tagged instance beyond the live cutoff — `WorldInstancesLayer` already
  * hides its root imperatively, but pure functions that read `instances` data directly (marquee hit
@@ -12251,6 +12268,14 @@ export function buildWorldCameraDispatchArgs(camera: WorldCameraState): Record<s
   return args;
 }
 
+/** 📷 Full `setCamera` action args for a world-3d viewport gesture/gizmo sync — nests {@link buildWorldCameraDispatchArgs}'s
+ * pose under `camera` (never spread flat alongside `windowId`) to match the wgpu renderer's own `setCamera` dispatch
+ * (`{surfaceId, camera: {...}}`) and every real plugin app's `setCamera` handler, which reads the pose from
+ * `args.get("camera")`, not from top-level `position`/`target`/`zoom` keys. */
+export function worldCameraSetCameraDispatchArgs(windowId: string, camera: WorldCameraState): Record<string, unknown> {
+  return { windowId, camera: buildWorldCameraDispatchArgs(camera) };
+}
+
 /** 📷 Default float-noise tolerance for {@link worldCameraPoseApproxEqual} — a scene camera echoed back
  * through JSON/f64 serialization never comes back bit-identical to what was sent. */
 const WORLD_CAMERA_ECHO_EPSILON = 1e-6;
@@ -12440,7 +12465,9 @@ function seedPendingWorldProjectionCamera(
   return { ...pose, fov: "fov" in pendingSpec ? pendingSpec.fov : sceneCamera.fov, explicitProjection: true };
 }
 
-/** @emoji 📷 One-shot viewport-aware reframe for a projection seed so orthographic panes fit content once size is known. */
+/** @emoji 📷 Viewport-aware reframe for a projection seed so orthographic panes fit content — re-runs whenever
+ * {@link worldSceneContentBoundsKey} changes (fill planning grows the scene) until the host stops enabling it
+ * (user-owned orbit/pan/zoom). */
 function WorldProjectionContentFrame(props: {
   readonly enabled: boolean;
   readonly spec: WorldProjectionSpec | undefined;
@@ -12451,17 +12478,19 @@ function WorldProjectionContentFrame(props: {
   const size = useThree((state) => state.size);
   const getThree = useThree((state) => state.get);
   const invalidate = useThree((state) => state.invalidate);
-  const appliedRef = useRef(false);
+  const framedBoundsKeyRef = useRef<string | null>(null);
   const onFramedRef = useRef(props.onFramed);
   onFramedRef.current = props.onFramed;
+  const boundsKey = worldSceneContentBoundsKey(props.bounds);
   useLayoutEffect(() => {
-    if (!props.enabled || !props.spec || !props.bounds || appliedRef.current) return;
+    if (!props.enabled || !props.spec || !props.bounds || !boundsKey) return;
     if (size.width < 1 || size.height < 1) return;
+    if (framedBoundsKeyRef.current === boundsKey) return;
+    framedBoundsKeyRef.current = boundsKey;
     // 📷 Read the live store camera — render-time `useThree(s => s.camera)` is still the Canvas default
     // PerspectiveCamera while sibling `OrthographicCamera makeDefault` runs in an earlier layout effect.
     const { camera, controls: rawControls } = getThree();
     const controls = rawControls as { target: Vector3; update?: () => void } | null;
-    appliedRef.current = true;
     const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
     const framed: WorldParsedCameraState = { ...pose, fov: "fov" in props.spec ? props.spec.fov : props.fov, explicitProjection: true };
     const ortho = camera as OrthographicCamera & { readonly isOrthographicCamera?: boolean };
@@ -12496,7 +12525,7 @@ function WorldProjectionContentFrame(props: {
     }
     invalidate();
     onFramedRef.current(framed);
-  }, [getThree, invalidate, props.bounds, props.enabled, props.fov, props.spec, size.height, size.width]);
+  }, [boundsKey, getThree, invalidate, props.bounds, props.enabled, props.fov, props.spec, size.height, size.width]);
   return null;
 }
 
@@ -13742,12 +13771,14 @@ function WorldInstancesLayer({
     return worldRevealCutoffStore.subscribe(PUZZLE3D_FILL_REVEAL_GROUP_ID, applyRevealCutoff);
   }, [applyRevealCutoff]);
 
-  /** 🪣 Reconciles the shared store from the plugin's committed cutoff — a no-operation while a local drag is
-   * live (the committed value only changes on gesture commit, at which point the drag already settled
-   * on the same value), and the authoritative sync path otherwise (reconnect, another client's commit). */
+  /** 🪣 Reconciles the shared store from the plugin's committed cutoff — only when the *committed*
+   * value itself changes. A live slider drag already wrote the store directly; fillBuildTick refreshes
+   * rewrite `interactionJson` (and a new `revealCutoffs` object identity) with the same committed count,
+   * and must not clobber the in-progress drag back to that stale value (which hid fill objects mid-gesture). */
+  const committedRevealCutoffsRef = useRef<Readonly<Record<string, number>>>({});
   useEffect(() => {
     if (!revealCutoffs) return;
-    for (const [groupId, value] of Object.entries(revealCutoffs)) worldRevealCutoffStore.set(groupId, value);
+    reconcileCommittedRevealCutoffs(worldRevealCutoffStore, committedRevealCutoffsRef, revealCutoffs);
   }, [revealCutoffs]);
 
   const writeGumballPreviewPoses = useCallback(
@@ -14987,6 +15018,8 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const [projectionFramePending, setProjectionFramePending] = useState(() => pendingProjectionSpecRef.current !== null);
   const [viewportOwned, setViewportOwned] = useState(false);
   const [detachEpoch, setDetachEpoch] = useState(0);
+  /** 📷 First content-frame remounts orbit controls; later fill-driven bound expansions only soft-update the camera. */
+  const projectionContentFrameSeededRef = useRef(false);
   const previousSceneCameraJsonRef = useRef(sceneCameraJson);
   /** 🧭 The last camera pose this component itself dispatched via debounced `setCamera` — lets the reattach
    * effect below recognize the plugin echoing it straight back (see `shouldReattachWorldViewportCamera`). */
@@ -15000,7 +15033,8 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     setViewportCamera(null);
     setViewportOwned(false);
     setDetachEpoch(0);
-    setProjectionFramePending(false);
+    setProjectionFramePending(Boolean(pendingProjectionSpecRef.current));
+    projectionContentFrameSeededRef.current = false;
     console.log("[DEBUG] world3d viewport reattached to scene camera", { surfaceId: node.surfaceId, sceneCameraJson });
   }, [node.surfaceId, sceneCameraJson]);
   const cameraState = viewportCamera ?? sceneCamera;
@@ -15178,7 +15212,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       cameraDispatchTimeoutRef.current = setTimeout(() => {
         cameraDispatchTimeoutRef.current = null;
         lastDispatchedWorldCameraRef.current = state;
-        dispatch("setCamera", { windowId: windowInstanceId ?? node.surfaceId, ...buildWorldCameraDispatchArgs(state) });
+        dispatch("setCamera", worldCameraSetCameraDispatchArgs(windowInstanceId ?? node.surfaceId, state));
       }, CAMERA_SYNC_DEBOUNCE_MS);
     },
     [dispatch, node.surfaceId, windowInstanceId],
@@ -15642,27 +15676,35 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
   const [pendingProjectionSpec, setPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
 
-  // 🧭 User-driven projection-kind switch (`WorldOrbitProjectionSwitchPane`) — dispatches `setProjection` so
-  // the plugin (and command-history panel) learns of it too. ⚠️ Best-effort arg shape: the only existing
-  // `setProjection` consumer found (`apply_world3d_projection_action` in the framework plugin's Rust) takes
-  // granular `{field, value}` pairs from window-measure Select controls, a different contract than this
-  // whole-template switch — falls back to the family string per the ticket's documented fallback.
+  // 🧭 User-driven projection-kind switch (`WorldOrbitProjectionSwitchPane`) — view-state only, never
+  // dispatched: the only existing `setProjection` consumer (`apply_world3d_projection_action` in the
+  // framework plugin's Rust) takes granular `{field, value}` pairs from window-measure Select/Slider
+  // controls (e.g. `perspectiveKind`/`orthographicView`/`axonometricVariant`), a fundamentally different
+  // contract than this pane's whole-`WorldProjectionSpec` (mode ⊗ orientation) template selection — there is
+  // no lossless mapping from one to the other, so dispatching here would silently no-op against every real
+  // handler instead of doing anything.
   const handleProjectionKindChange = useCallback(
     (spec: WorldProjectionSpec) => {
       setExternalPendingProjectionSpec(spec);
       syncProjectionWindowChrome(spec);
-      dispatch("setProjection", { windowId: windowInstanceId ?? node.surfaceId, projection: worldProjectionFamily(spec) === "parallel" ? "orthographic" : "perspective" });
     },
-    [syncProjectionWindowChrome, dispatch, windowInstanceId, node.surfaceId],
+    [syncProjectionWindowChrome],
   );
 
   const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
     setViewportCamera(state);
-    setDetachEpoch((epoch) => epoch + 1);
+    if (!projectionContentFrameSeededRef.current) {
+      projectionContentFrameSeededRef.current = true;
+      setDetachEpoch((epoch) => epoch + 1);
+    }
     setProjectionFramePending(false);
   }, []);
 
   const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? worldProjectionDefaults("orthographic") : worldProjectionDefaults("threePoint"));
+  /** 📷 Keep fitting the live content bounds into seeded projection panes (esp. orthographic Top) until the
+   * user takes ownership — otherwise fill-planned objects that expand the scene fall outside the one-shot
+   * initial frustum and only remain visible in the wider perspective pane. */
+  const fitProjectionContent = !viewportOwned && Boolean(pendingProjectionSpecRef.current ?? cameraState.projectionSpec);
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -16040,8 +16082,8 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       >
         <WorldOrbitViewSnapGateProvider>
           <WorldProjectionRig spec={worldProjectionSpec} state={cameraState} seedKey={cameraSeedKey} pendingSpec={pendingProjectionSpec} />
-          {projectionFramePending ? (
-            <WorldProjectionContentFrame enabled spec={pendingProjectionSpecRef.current ?? undefined} bounds={contentBounds} fov={cameraState.fov} onFramed={handleProjectionContentFrame} />
+          {fitProjectionContent || projectionFramePending ? (
+            <WorldProjectionContentFrame enabled spec={pendingProjectionSpecRef.current ?? worldProjectionSpec} bounds={contentBounds} fov={cameraState.fov} onFramed={handleProjectionContentFrame} />
           ) : null}
           <WorldOrbitGated
             controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null}

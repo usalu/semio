@@ -12,7 +12,7 @@ use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::{draw_text, draw_text_overlay, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
+use ui_wgpu::{draw_text, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
 
 //#region SceneRecords
 fn deserialize_optional_string_vec<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
@@ -2038,7 +2038,6 @@ struct WorldOrbitViewGizmoTip {
     screen_y: f32,
     depth: f32,
     pick_radius: f32,
-    label: &'static str,
     color: Rgba,
     is_corner: bool,
     prominent: bool,
@@ -2064,54 +2063,45 @@ fn world_orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<WorldOr
     let up = right.cross(forward).normalize();
     let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
     let axes = [
-        (Vec3::new(1.0, 0.0, 0.0), "X", spatial_axis_rgba(0, 1.0), false, true),
-        (Vec3::new(-1.0, 0.0, 0.0), "", spatial_axis_rgba(0, 0.75), false, false),
-        (Vec3::new(0.0, 1.0, 0.0), "Y", spatial_axis_rgba(1, 1.0), false, true),
-        (Vec3::new(0.0, -1.0, 0.0), "", spatial_axis_rgba(1, 0.75), false, false),
-        (Vec3::new(0.0, 0.0, 1.0), "Z", spatial_axis_rgba(2, 1.0), false, true),
-        (Vec3::new(0.0, 0.0, -1.0), "", spatial_axis_rgba(2, 0.75), false, false),
+        (Vec3::new(1.0, 0.0, 0.0), spatial_axis_rgba(0, 1.0), true),
+        (Vec3::new(-1.0, 0.0, 0.0), spatial_axis_rgba(0, 0.75), false),
+        (Vec3::new(0.0, 1.0, 0.0), spatial_axis_rgba(1, 1.0), true),
+        (Vec3::new(0.0, -1.0, 0.0), spatial_axis_rgba(1, 0.75), false),
+        (Vec3::new(0.0, 0.0, 1.0), spatial_axis_rgba(2, 1.0), true),
+        (Vec3::new(0.0, 0.0, -1.0), spatial_axis_rgba(2, 0.75), false),
     ];
     let corners = [
-        (Vec3::new(0.72, 0.72, 0.72), "NE", true),
-        (Vec3::new(-0.72, 0.72, 0.72), "NW", true),
-        (Vec3::new(0.72, -0.72, 0.72), "SE", true),
-        (Vec3::new(-0.72, -0.72, 0.72), "SW", true),
-        (Vec3::new(0.72, 0.72, -0.72), "", false),
-        (Vec3::new(-0.72, 0.72, -0.72), "", false),
-        (Vec3::new(0.72, -0.72, -0.72), "", false),
-        (Vec3::new(-0.72, -0.72, -0.72), "", false),
+        (Vec3::new(0.72, 0.72, 0.72), true),
+        (Vec3::new(-0.72, 0.72, 0.72), true),
+        (Vec3::new(0.72, -0.72, 0.72), true),
+        (Vec3::new(-0.72, -0.72, 0.72), true),
+        (Vec3::new(0.72, 0.72, -0.72), false),
+        (Vec3::new(-0.72, 0.72, -0.72), false),
+        (Vec3::new(0.72, -0.72, -0.72), false),
+        (Vec3::new(-0.72, -0.72, -0.72), false),
     ];
     let mut tips: Vec<WorldOrbitViewGizmoTip> = axes
         .into_iter()
-        .map(|(axis, label, color, is_corner, prominent)| {
+        .map(|(axis, color, prominent)| {
             let sx = axis.dot(right);
             let sy = -axis.dot(up);
             let depth = axis.dot(forward);
             let tip_x = origin_x + sx * axis_len;
             let tip_y = origin_y + sy * axis_len;
             let pick_radius = if prominent { 10.0 } else { 7.0 };
-            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, label, color, is_corner, prominent }
+            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color, is_corner: false, prominent }
         })
-        .chain(corners.into_iter().map(|(axis, label, prominent)| {
+        .chain(corners.into_iter().map(|(axis, prominent)| {
             let sx = axis.dot(right);
             let sy = -axis.dot(up);
             let depth = axis.dot(forward);
             let tip_x = origin_x + sx * axis_len;
             let tip_y = origin_y + sy * axis_len;
             let pick_radius = if prominent { 10.0 } else { 7.0 };
-            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, label, color: neutral, is_corner: true, prominent }
+            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, color: neutral, is_corner: true, prominent }
         }))
         .collect();
-    tips.push(WorldOrbitViewGizmoTip {
-        screen_x: origin_x,
-        screen_y: origin_y,
-        depth: 0.0,
-        pick_radius: 9.0,
-        label: "3D",
-        color: neutral,
-        is_corner: false,
-        prominent: true,
-    });
+    tips.push(WorldOrbitViewGizmoTip { screen_x: origin_x, screen_y: origin_y, depth: 0.0, pick_radius: 9.0, color: neutral, is_corner: false, prominent: true });
     tips
 }
 
@@ -2161,19 +2151,18 @@ fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Came
         let alpha = (tip.color.a * depth_fade * hover_fade).min(1.0);
         let stroke = Rgba::new(tip.color.r, tip.color.g, tip.color.b, if hovered { tip.color.a.min(1.0) } else { alpha });
         ctx.draw.push_line_overlay(origin_x, origin_y, tip.screen_x, tip.screen_y, stroke, if tip.is_corner { 1.5 } else { 2.0 });
-        if tip.is_corner || tip.label.is_empty() {
-            let r = if tip.prominent {
-                if hovered { 3.6 } else { 3.0 }
-            } else if hovered {
-                2.4
+        let r = if tip.prominent {
+            if hovered {
+                3.6
             } else {
-                2.0
-            };
-            ctx.draw.push_solid_overlay([tip.screen_x - r, tip.screen_y - r, tip.screen_x + r, tip.screen_y + r], stroke);
-        }
-        if !tip.label.is_empty() {
-            draw_text_overlay(ctx, tip.label, tip.screen_x + 3.0, tip.screen_y - 4.0, ctx.theme.font_size_small, stroke);
-        }
+                3.0
+            }
+        } else if hovered {
+            2.4
+        } else {
+            2.0
+        };
+        ctx.draw.push_solid_overlay([tip.screen_x - r, tip.screen_y - r, tip.screen_x + r, tip.screen_y + r], stroke);
     }
 }
 //#endregion 🧭WorldOrbitViewGizmo
@@ -3419,6 +3408,14 @@ mod tests {
         assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 32.0));
         assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (32.0, 32.0));
         assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (22.0, 22.0));
+    }
+
+    #[test]
+    fn world_orbit_view_gizmo_preserves_label_free_hit_targets() {
+        let tips = world_orbit_view_gizmo_tips(&Camera3d::default(), Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 });
+        assert_eq!(tips.len(), 15);
+        assert_eq!(tips.iter().filter(|tip| tip.prominent).count(), 8);
+        assert!(tips.iter().all(|tip| tip.pick_radius >= 7.0));
     }
 
     fn topology_mesh() -> Mesh3d {

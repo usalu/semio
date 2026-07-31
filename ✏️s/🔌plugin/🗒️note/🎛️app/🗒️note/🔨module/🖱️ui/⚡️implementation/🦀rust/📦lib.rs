@@ -41,7 +41,8 @@ const NOTE_PLAY_WINDOW_NAVIGATOR: &str = "note-navigator";
 
 //#region 🔖CanvasEvents
 /// 🖱️ Batched canvas-event wire shape the `ink-canvas-host` surface emits (`addBlock`/`updateBlock`/
-/// `removeBlock`/`putAsset`/`setCamera`); diffed into `NoteOperation`s by `note_ops_from_canvas_events`.
+/// `removeBlock`/`putAsset`/`setCamera`); content events diff into `NoteOperation`s via
+/// `note_ops_from_canvas_events`, `setCamera` writes straight into the app's runtime camera instead.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "operation")]
 enum NoteCanvasEvent {
@@ -77,15 +78,15 @@ fn apply_note_canvas_event(document: &mut NoteDocument, event: &NoteCanvasEvent)
         NoteCanvasEvent::PutAsset { key, asset } => {
             document.assets.insert(key.clone(), asset.clone());
         }
-        NoteCanvasEvent::SetCamera { camera } => {
-            document.camera = camera.clone();
-        }
+        // 📷 Camera never touches the document — `inkApplyEvents` pulls it into runtime state before
+        // this function ever sees the batch (see the `NoteCanvasEvent::SetCamera` filter there).
+        NoteCanvasEvent::SetCamera { .. } => {}
     }
 }
 
 /// 🔀 Applies a batch of canvas events to a cloned document and returns the minimal `NoteOperation`s
-/// describing what changed (block-tree snapshot, camera, and per-asset puts) — the empty vec means
-/// no content changed (e.g. a gesture that ended where it began).
+/// describing what changed (block-tree snapshot and per-asset puts) — the empty vec means no content
+/// changed (e.g. a gesture that ended where it began).
 fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEvent]) -> Vec<NoteOperation> {
     let mut next = document.clone();
     for event in events {
@@ -94,9 +95,6 @@ fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEven
     let mut operations = Vec::new();
     if next.blocks != document.blocks {
         operations.push(NoteOperation::SetBlocks { blocks: next.blocks.clone() });
-    }
-    if next.camera != document.camera {
-        operations.push(NoteOperation::SetCamera { camera: next.camera.clone() });
     }
     for (key, asset) in &next.assets {
         if document.assets.get(key) != Some(asset) {
@@ -499,13 +497,20 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
 //#region 🔖Scenes
 fn render_canvas_scene(
     document: &NoteDocument,
+    camera: &NoteCamera,
     selected_ids: &[String],
     hovered_id: Option<&str>,
     active_utility: &str,
     surface_id: &str,
     view_mode: &str,
 ) -> UiNode {
-    let document_json = serde_json::to_string(document).unwrap_or_else(|_| "{}".into());
+    // 📷 Camera is session-only runtime state, never part of `NoteDocument` — merged into the wire
+    // payload here so the ink-canvas host still gets a `camera` key to render/pan/zoom against.
+    let mut document_value = serde_json::to_value(document).unwrap_or_else(|_| json!({}));
+    if let Some(map) = document_value.as_object_mut() {
+        map.insert("camera".into(), serde_json::to_value(camera).unwrap_or_else(|_| json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 })));
+    }
+    let document_json = document_value.to_string();
     let selection_json = serde_json::to_string(selected_ids).unwrap_or_else(|_| "[]".into());
     build_ink_canvas_scene(
         surface_id,
@@ -527,7 +532,7 @@ fn note_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     play_action(NOTE_PLAY_CONTROLLER_ID, action, args)
 }
 
-fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
+fn note_canvas_measures(document: &NoteDocument, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
     vec![
         WindowMeasure::Group {
             id: "note-measures.camera".into(),
@@ -545,7 +550,7 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
             children: vec![WindowMeasure::Slider {
                 id: "note-measures.zoom".into(),
                 label: Some(labels.measure_zoom.into()),
-                value: document.camera.zoom,
+                value: camera.zoom,
                 min: 0.1,
                 max: 8.0,
                 step: Some(0.05),
@@ -729,12 +734,12 @@ fn note_eraser_utility_options(document: &NoteDocument, labels: &NotePlayLabels,
     }
 }
 
-fn note_navigator_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
+fn note_navigator_measures(document: &NoteDocument, camera: &NoteCamera, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
     vec![
         WindowMeasure::Slider {
             id: "note-navigator-measures.zoom".into(),
             label: Some(labels.measure_zoom.into()),
-            value: document.camera.zoom,
+            value: camera.zoom,
             min: 0.05,
             max: 2.0,
             step: Some(0.05),
@@ -756,10 +761,10 @@ fn note_navigator_measures(document: &NoteDocument, labels: &NotePlayLabels) -> 
     ]
 }
 
-fn note_canvas_engagement(document: &NoteDocument, selected_ids: &[String], engagement_input: &str) -> WindowEngagement {
+fn note_canvas_engagement(document: &NoteDocument, camera: &NoteCamera, selected_ids: &[String], engagement_input: &str) -> WindowEngagement {
     let block_count = flatten_blocks(&document.blocks).len();
     let selected_count = selected_ids.len();
-    let zoom = document.camera.zoom;
+    let zoom = camera.zoom;
     let snap_status = if document.snap_enabled.unwrap_or(false) {
         format!("snap {}px", document.snap_grid_spacing.unwrap_or(8.0))
     } else {
@@ -829,13 +834,15 @@ fn note_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefini
 
 //#region 🔖NotePlayApp
 /// 🎛️ Ephemeral view state living on the app struct (never in the document): the current multi-selection,
-/// the hovered block, and the pending engagement-rename input. Content lives in the store's `NoteDocument`
-/// projection; every content mutation returns a typed {@link NoteOperation} so the store records a true inverse.
+/// the hovered block, the pending engagement-rename input, and the canvas camera pose. Content lives in
+/// the store's `NoteDocument` projection; every content mutation returns a typed {@link NoteOperation} so
+/// the store records a true inverse.
 #[derive(Default)]
 pub struct NotePlayApp {
     selected_ids: Vec<String>,
     hovered_id: Option<String>,
     engagement_input: String,
+    camera: NoteCamera,
 }
 
 impl NotePlayApp {
@@ -870,20 +877,20 @@ impl DocumentApp for NotePlayApp {
         // "undo"/"redo" never reach here — `VcsDocumentApp` intercepts them into store commands.
         let document = doc.projection;
         match action {
+            // 📷 Camera — session-only runtime pose, never a document operation.
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value::<NoteCamera>(camera.clone()) {
-                        return ActionEmit::operations(vec![NoteOperation::SetCamera { camera: parsed }]);
+                        self.camera = parsed;
                     }
+                    return ActionEmit::default();
                 }
                 let zoom = args
                     .and_then(|value| value.get("zoom"))
                     .or_else(|| args.and_then(|value| value.get("value")))
                     .and_then(|value| value.as_f64());
                 if let Some(zoom) = zoom {
-                    let mut camera = document.camera.clone();
-                    camera.zoom = zoom;
-                    return ActionEmit::operations(vec![NoteOperation::SetCamera { camera }]);
+                    self.camera.zoom = zoom;
                 }
                 ActionEmit::default()
             }
@@ -1230,6 +1237,13 @@ impl DocumentApp for NotePlayApp {
                 if let Some(ids) = select_ids {
                     self.selected_ids = ids;
                 }
+                // 📷 Camera rides in the same batch as content edits but never becomes a document
+                // operation — pull it into runtime state before diffing the rest of the batch.
+                for event in &events {
+                    if let NoteCanvasEvent::SetCamera { camera } = event {
+                        self.camera = camera.clone();
+                    }
+                }
                 let operations = note_ops_from_canvas_events(document, &events);
                 if operations.is_empty() {
                     return ActionEmit::default();
@@ -1253,6 +1267,7 @@ impl DocumentApp for NotePlayApp {
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(
                 document,
+                &self.camera,
                 &self.selected_ids,
                 self.hovered_id.as_deref(),
                 &active_utility,
@@ -1261,6 +1276,7 @@ impl DocumentApp for NotePlayApp {
             ),
             NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(
                 document,
+                &self.camera,
                 &self.selected_ids,
                 self.hovered_id.as_deref(),
                 &active_utility,
@@ -1277,7 +1293,7 @@ impl DocumentApp for NotePlayApp {
     fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into());
         HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(doc.projection, &self.selected_ids, &self.engagement_input)),
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(doc.projection, &self.camera, &self.selected_ids, &self.engagement_input)),
             (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_engagement(&active_utility)),
         ])
     }
@@ -1285,8 +1301,8 @@ impl DocumentApp for NotePlayApp {
     fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<NotePlayLabels>(view_state);
         HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, labels)),
-            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, labels)),
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, &self.camera, labels)),
+            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, &self.camera, labels)),
         ])
     }
 
@@ -1322,7 +1338,7 @@ pub fn create_note_app() -> App {
             .icon_id("note")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::InkCanvas, note_canvas_engagement(&document, &[], ""), "pen-tool")
+            .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::InkCanvas, note_canvas_engagement(&document, &NoteCamera::default(), &[], ""), "pen-tool")
             .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::InkCanvas, note_navigator_engagement("selectDirect"), "focus")
             .default_layout(create_default_layout(
                 &[NOTE_PLAY_WINDOW_COMPOSITE.into(), NOTE_PLAY_WINDOW_NAVIGATOR.into()],
@@ -1360,8 +1376,6 @@ pub fn create_note_app() -> App {
             .shell_action("loadRequest", "Import")
             .shell_action("saveDownload", "Export")
             // 🔧 Internal content operations — inspector/tree/drag/import-bound, not palette commands.
-            .action_with(note_internal_action("setCamera", "Set Camera", ActionKind::Operation))
-            .action_with(note_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::Operation))
             .action_with(note_internal_action("setGridVisible", "Set Grid Visible", ActionKind::Operation))
             .action_with(note_internal_action("toggleGrid", "Toggle Grid", ActionKind::Operation))
             .action_with(note_internal_action("setGridSpacing", "Set Grid Spacing", ActionKind::Operation))
@@ -1389,11 +1403,13 @@ pub fn create_note_app() -> App {
             .action_with(note_internal_action("nudgeSelectionDownFast", "Nudge Selection Down Fast", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionLeftFast", "Nudge Selection Left Fast", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionRightFast", "Nudge Selection Right Fast", ActionKind::Operation))
-            // 👁️ Ephemeral view state — selection/hover/engagement scratch, never a document operation.
+            // 👁️ Ephemeral view state — selection/hover/engagement/camera scratch, never a document operation.
             .action_with(note_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(note_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(note_internal_action("engagementInput", "Engagement Input", ActionKind::View))
             .action_with(note_internal_action("navigatorEngagementInput", "Navigator Engagement Input", ActionKind::View))
+            .action_with(note_internal_action("setCamera", "Set Camera", ActionKind::View))
+            .action_with(note_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
             // 📝 Staged argument forms for the palette-eligible actions.
             .action_args("addBlock", vec![
                 ActionArgDef::select("kind", "Kind", vec![
@@ -1448,9 +1464,9 @@ pub fn create_note_app() -> App {
     );
     for window in app.definition.window_kinds.iter_mut() {
         if window.id == NOTE_PLAY_WINDOW_COMPOSITE {
-            window.options.measures = note_canvas_measures(&document, &NotePlayLabels::EN);
+            window.options.measures = note_canvas_measures(&document, &NoteCamera::default(), &NotePlayLabels::EN);
         } else if window.id == NOTE_PLAY_WINDOW_NAVIGATOR {
-            window.options.measures = note_navigator_measures(&document, &NotePlayLabels::EN);
+            window.options.measures = note_navigator_measures(&document, &NoteCamera::default(), &NotePlayLabels::EN);
         }
     }
     app.example("semio", "Semio", semio_example_json())
@@ -1687,14 +1703,34 @@ mod tests {
         assert!(undo.events.is_empty(), "no gesture edit should exist to undo");
     }
 
+    /// 🎥 `setCamera`/`setCameraZoom` are View actions — they must never emit a `NoteOperation` (no VCS
+    /// edit, no undo entry) and instead write straight into `self.camera`, which the composite scene's
+    /// `documentJson.camera` then reflects.
     #[test]
-    fn camera_action_emits_operation() {
+    fn set_camera_writes_runtime_and_emits_no_operations() {
         let mut app = new_app::<NotePlayApp>();
-        let zoom = app
-            .handle_action("setCameraZoom", Some(&json!({ "value": 2.0 })), &ViewState::default(), &meta("local"))
-            .expect("zoom");
-        assert_eq!(zoom.operations.len(), 1);
-        assert_eq!(app.projection().expect("projection").camera.zoom, 2.0);
+        let before = app.projection().expect("projection");
+        let result = app
+            .handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 2.0 } })), &ViewState::default(), &meta("local"))
+            .expect("set camera");
+        assert!(result.operations.is_empty(), "camera is a view action and emits no operations");
+        assert_eq!(app.projection().expect("projection"), before, "camera never mutates the document");
+        let json = serde_json::to_string(&app.render(NOTE_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        assert!(json.contains(r#"\"zoom\":2.0"#), "composite scene camera reflects runtime state: {json}");
+        assert!(json.contains(r#"\"x\":4.0"#), "composite scene camera reflects runtime state: {json}");
+    }
+
+    #[test]
+    fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
+        let mut app = new_app::<NotePlayApp>();
+        app.handle_action("setCamera", Some(&json!({ "camera": { "x": 4.0, "y": 5.0, "zoom": 1.0 } })), &ViewState::default(), &meta("local")).expect("set camera");
+        let result = app
+            .handle_action("setCameraZoom", Some(&json!({ "value": 3.0 })), &ViewState::default(), &meta("local"))
+            .expect("set camera zoom");
+        assert!(result.operations.is_empty(), "camera zoom is a view action and emits no operations");
+        let json = serde_json::to_string(&app.render(NOTE_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        assert!(json.contains(r#"\"zoom\":3.0"#), "zoom updated: {json}");
+        assert!(json.contains(r#"\"x\":4.0"#), "pan preserved across zoom-only update: {json}");
     }
 
     #[test]

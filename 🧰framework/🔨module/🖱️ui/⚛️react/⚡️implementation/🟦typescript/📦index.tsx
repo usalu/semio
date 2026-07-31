@@ -23143,6 +23143,8 @@ interface GizmoProps {
   onAxisClick?: (direction: THREE.Vector3) => void;
 }
 
+const SCENE_GIZMO_LABELS: [string, string, string] = ["", "", ""];
+
 type SceneProjectionKind = "camera" | "orthographic";
 
 type SceneSnapViewKind = "front" | "back" | "side" | "opposite-side" | "top" | "bottom";
@@ -24505,16 +24507,14 @@ const updateSceneCameraProjection = (camera: THREE.Camera): void => {
  **/
 const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const { size } = useThree();
-  // 🧭 drei GizmoViewport is Y-up; Scene is Z-up so labels remap Y↔Z while colors stay CAD-axis (X primary, Y secondary, Z tertiary).
+  // 🧭 drei GizmoViewport is Y-up; Scene is Z-up so colors remap Y↔Z while staying CAD-axis (X primary, Y secondary, Z tertiary).
   const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => {
     const axes = resolveSpatialAxisColors();
     return [axes.x, axes.z, axes.y];
   });
-  const labels = reactHostPort.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
   const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   // GizmoViewport axis box uses boxGeometry args [length, thickness, thickness]; uniform scale yields a chunky cube.
   const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
-  const labelColor = reactHostPort.useMemo(() => getComputedColor("--foreground"), []);
 
   reactHostPort.useEffect(() => {
     const updateColors = () => {
@@ -24534,13 +24534,11 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   return (
     <GizmoHelper alignment={placement.alignment} margin={placement.margin}>
       <GizmoViewport
-        labels={labels}
+        labels={SCENE_GIZMO_LABELS}
         axisColors={colors}
         axisScale={axisScale}
         axisHeadScale={0.92}
         hideNegativeAxes
-        labelColor={labelColor}
-        font="16px Inter var, Arial, sans-serif"
         onClick={
           onAxisClick
             ? (e: ThreeEvent<MouseEvent>) => {
@@ -36212,6 +36210,10 @@ if (treeVitest) {
   });
 
   describe("scene helpers", () => {
+    it("keeps the 3d gizmo label-free", () => {
+      expect(SCENE_GIZMO_LABELS).toEqual(["", "", ""]);
+    });
+
     it("maps dominant gizmo axes to blender-style orthographic snap targets", () => {
       expect(resolveSceneGizmoSnapTarget(new THREE.Vector3(1, 0.2, 0.1))).toEqual({
         axis: "x",

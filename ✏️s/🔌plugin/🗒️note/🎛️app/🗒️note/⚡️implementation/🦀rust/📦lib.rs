@@ -8,10 +8,8 @@ pub const NOTE_DOCUMENT_SCHEMA: &str = "note.document";
 //#endregion 🔖Constants
 
 //#region 🔖Types
-// No `#[dsl(keyword = ...)]` here: every field of this type (`NoteDocument::camera`,
-// `NoteOperation::SetCamera::camera`) is itself `#[dsl(block)]`, which already supplies the bare
-// leading keyword from the FIELD's own name — an inner keyword too would print `camera { camera
-// x=0 ... }`, doubled for no reason.
+/// 🎥 Camera pose — ephemeral view state that lives in the `note-ui` crate's app runtime, never in
+/// `NoteDocument`, so it stays out of undo history and off the operation channel.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct NoteCamera {
@@ -21,6 +19,12 @@ pub struct NoteCamera {
     pub y: f64,
     #[serde(default = "default_zoom")]
     pub zoom: f64,
+}
+
+impl Default for NoteCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
+    }
 }
 
 pub fn default_zoom() -> f64 {
@@ -189,9 +193,6 @@ pub struct NoteDocument {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    #[serde(default = "default_camera")]
-    #[dsl(block)]
-    pub camera: NoteCamera,
     #[serde(default)]
     #[dsl(statements, block)]
     pub blocks: Vec<NoteBlockNode>,
@@ -214,10 +215,6 @@ pub struct NoteDocument {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub assets: BTreeMap<String, NoteImageAsset>,
 }
-
-pub fn default_camera() -> NoteCamera {
-    NoteCamera { x: 0.0, y: 0.0, zoom: 1.0 }
-}
 //#endregion 🔖Types
 
 //#region 🧪Tests
@@ -231,7 +228,6 @@ mod tests {
             schema: NOTE_DOCUMENT_SCHEMA.into(),
             id: "empty".into(),
             title: None,
-            camera: default_camera(),
             blocks: Vec::new(),
             grid_visible: Some(true),
             grid_spacing: Some(32.0),

@@ -965,7 +965,7 @@ mod export_concrete_forest_mesh_tests {
         if std::env::var("EXPORT_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
             return;
         }
-        let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
+        let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
         let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();

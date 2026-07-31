@@ -1,6 +1,6 @@
 //! ⚡ Note app — operation enum + laws (constitutional: op).
 
-use note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset};
+use note::{NoteBlockNode, NoteDocument, NoteImageAsset};
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 
@@ -13,10 +13,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum NoteOperation {
-    SetCamera {
-        #[dsl(block)]
-        camera: NoteCamera,
-    },
     SetGridVisible { visible: Option<bool> },
     SetGridSpacing { spacing: Option<f64> },
     SetGridSubdivisions { value: Option<f64> },
@@ -34,6 +30,9 @@ pub enum NoteOperation {
         #[dsl(block)]
         asset: NoteImageAsset,
     },
+    /// 🗑️ True composed inverse of a `PutAsset` that introduced the key — the whole-document
+    /// `SetDocument` snapshot this used to invert to would have undone every other pending change too.
+    RemoveAsset { key: String },
     SetDocument {
         #[dsl(block)]
         document: NoteDocument,
@@ -66,7 +65,6 @@ impl OperationDiff<NoteDocument> for NoteDiff {
 fn apply_note_operation(projection: &NoteDocument, operation: &NoteOperation) -> NoteDocument {
     let mut next = projection.clone();
     match operation {
-        NoteOperation::SetCamera { camera } => next.camera = camera.clone(),
         NoteOperation::SetGridVisible { visible } => next.grid_visible = *visible,
         NoteOperation::SetGridSpacing { spacing } => next.grid_spacing = *spacing,
         NoteOperation::SetGridSubdivisions { value } => next.grid_subdivisions = *value,
@@ -78,6 +76,9 @@ fn apply_note_operation(projection: &NoteDocument, operation: &NoteOperation) ->
         NoteOperation::SetBlocks { blocks } => next.blocks = blocks.clone(),
         NoteOperation::PutAsset { key, asset } => {
             next.assets.insert(key.clone(), asset.clone());
+        }
+        NoteOperation::RemoveAsset { key } => {
+            next.assets.remove(key);
         }
         NoteOperation::SetDocument { document } => next = document.clone(),
     }
@@ -93,7 +94,6 @@ impl Operation<NoteDocument> for NoteOperation {
 
     fn backwards(&self, projection: &NoteDocument) -> Vec<Self> {
         match self {
-            NoteOperation::SetCamera { .. } => vec![NoteOperation::SetCamera { camera: projection.camera.clone() }],
             NoteOperation::SetGridVisible { .. } => vec![NoteOperation::SetGridVisible { visible: projection.grid_visible }],
             NoteOperation::SetGridSpacing { .. } => vec![NoteOperation::SetGridSpacing { spacing: projection.grid_spacing }],
             NoteOperation::SetGridSubdivisions { .. } => vec![NoteOperation::SetGridSubdivisions { value: projection.grid_subdivisions }],
@@ -103,7 +103,17 @@ impl Operation<NoteDocument> for NoteOperation {
             NoteOperation::SetPencilWidth { .. } => vec![NoteOperation::SetPencilWidth { width: projection.pencil_width }],
             NoteOperation::SetEraserRadius { .. } => vec![NoteOperation::SetEraserRadius { radius: projection.eraser_radius }],
             NoteOperation::SetBlocks { .. } => vec![NoteOperation::SetBlocks { blocks: projection.blocks.clone() }],
-            NoteOperation::PutAsset { .. } => vec![NoteOperation::SetDocument { document: projection.clone() }],
+            // 🗑️ Composed, not a snapshot: restores the prior value at `key` if one existed, else removes
+            // the key that didn't exist before this `PutAsset` — every other asset/field is untouched.
+            NoteOperation::PutAsset { key, .. } => match projection.assets.get(key) {
+                Some(prior) => vec![NoteOperation::PutAsset { key: key.clone(), asset: prior.clone() }],
+                None => vec![NoteOperation::RemoveAsset { key: key.clone() }],
+            },
+            NoteOperation::RemoveAsset { key } => match projection.assets.get(key) {
+                Some(prior) => vec![NoteOperation::PutAsset { key: key.clone(), asset: prior.clone() }],
+                // Removing a key that was already absent is a no-op — nothing to restore.
+                None => Vec::new(),
+            },
             NoteOperation::SetDocument { .. } => vec![NoteOperation::SetDocument { document: projection.clone() }],
         }
     }
@@ -117,9 +127,8 @@ mod tests {
 
     #[test]
     fn op_text_round_trips_every_variant() {
-        use note::{NoteBlockNode, NoteCamera, NoteImageAsset};
+        use note::{NoteBlockNode, NoteImageAsset};
 
-        store::test_support::assert_op_text_binary_equivalence(&NoteOperation::SetCamera { camera: NoteCamera { x: 1.0, y: -2.5, zoom: 2.0 } });
         store::test_support::assert_op_text_binary_equivalence(&NoteOperation::SetGridVisible { visible: Some(true) });
         store::test_support::assert_op_text_binary_equivalence(&NoteOperation::SetGridVisible { visible: None });
         store::test_support::assert_op_text_binary_equivalence(&NoteOperation::SetGridSpacing { spacing: Some(16.0) });
@@ -166,6 +175,7 @@ mod tests {
             key: "asset-2".into(),
             asset: NoteImageAsset { mime: "image/jpeg".into(), data: "data:image/jpeg;base64,xyz".into(), width: None, height: None },
         });
+        store::test_support::assert_op_text_binary_equivalence(&NoteOperation::RemoveAsset { key: "asset-2".into() });
 
         store::test_support::assert_op_text_binary_equivalence(&NoteOperation::SetDocument { document: note_engine::empty_note_document() });
     }
@@ -174,6 +184,50 @@ mod tests {
     fn operation_backwards_restores_pre_state() {
         let pre = note_engine::empty_note_document();
         store::test_support::assert_operation_round_trip(&pre, NoteOperation::SetGridSpacing { spacing: Some(48.0) });
+    }
+
+    /// 🗑️ `PutAsset`'s inverse must be composed (touch only the one key), not a whole-document
+    /// `SetDocument` snapshot that would also clobber every other pending change.
+    #[test]
+    fn put_asset_backwards_is_composed_not_a_whole_document_snapshot() {
+        use note::NoteImageAsset;
+
+        let mut pre = note_engine::empty_note_document();
+        pre.grid_spacing = Some(99.0); // an unrelated field that a snapshot inverse would wrongly revert too
+        let asset = NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: None, height: None };
+
+        // Introducing a brand-new key inverts to removing it.
+        let put_new = NoteOperation::PutAsset { key: "asset-1".into(), asset: asset.clone() };
+        let inverse = put_new.backwards(&pre);
+        assert_eq!(inverse, vec![NoteOperation::RemoveAsset { key: "asset-1".into() }]);
+        let mut after_put = apply_note_operation(&pre, &put_new);
+        assert_eq!(after_put.assets.get("asset-1"), Some(&asset));
+        for op in &inverse {
+            after_put = apply_note_operation(&after_put, op);
+        }
+        assert_eq!(after_put, pre, "undoing a fresh PutAsset must restore exactly the pre-state, unrelated fields included");
+
+        // Replacing an existing key inverts to restoring the prior asset at that key.
+        pre.assets.insert("asset-1".into(), asset.clone());
+        let replacement = NoteImageAsset { mime: "image/jpeg".into(), data: "data:image/jpeg;base64,def".into(), width: None, height: None };
+        let put_replace = NoteOperation::PutAsset { key: "asset-1".into(), asset: replacement.clone() };
+        let inverse = put_replace.backwards(&pre);
+        assert_eq!(inverse, vec![NoteOperation::PutAsset { key: "asset-1".into(), asset: asset.clone() }]);
+        let mut after_replace = apply_note_operation(&pre, &put_replace);
+        assert_eq!(after_replace.assets.get("asset-1"), Some(&replacement));
+        for op in &inverse {
+            after_replace = apply_note_operation(&after_replace, op);
+        }
+        assert_eq!(after_replace, pre);
+
+        // Removing a key inverts to restoring it.
+        let remove = NoteOperation::RemoveAsset { key: "asset-1".into() };
+        let inverse = remove.backwards(&pre);
+        assert_eq!(inverse, vec![NoteOperation::PutAsset { key: "asset-1".into(), asset }]);
+
+        // Removing an already-absent key is a no-op with a no-op (empty) inverse.
+        let remove_missing = NoteOperation::RemoveAsset { key: "never-existed".into() };
+        assert_eq!(remove_missing.backwards(&pre), Vec::new());
     }
 }
 //#endregion 🧪Tests

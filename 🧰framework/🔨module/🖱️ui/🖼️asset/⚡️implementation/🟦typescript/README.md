@@ -198,6 +198,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./📜script.
 - `save`
 - `scaling`
 - `scan`
+- `scan-line`
 - `scene-3d`
 - `scissors`
 - `search`

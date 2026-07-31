@@ -1,7 +1,4 @@
 schema=draw.document id=semio title="Semio Emblem"
-camera {
-  x=100 y=100 zoom=1.2
-}
 layers {
   group
   base {

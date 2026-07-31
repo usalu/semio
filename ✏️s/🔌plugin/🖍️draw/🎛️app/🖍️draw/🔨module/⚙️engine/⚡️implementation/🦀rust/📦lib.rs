@@ -2,7 +2,7 @@
 
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use draw::{
-    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCamera, DrawCircle, DrawDocument,
+    default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCircle, DrawDocument,
     DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine, DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody,
     DrawTextBody, DrawTraceBody, DrawTransform, FillStyle, PathSegment, StrokeStyle, DRAW_DOCUMENT_SCHEMA,
 };
@@ -171,7 +171,6 @@ pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawDocument {
         schema: DRAW_DOCUMENT_SCHEMA.into(),
         id: id.into(),
         title: title.map(str::to_string),
-        camera: DrawCamera { x: 512.0, y: 512.0, zoom: 0.75 },
         layers: vec![create_draw_path_layer("Layer 1", Vec::new())],
         assets: None,
         artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }),
