@@ -2974,23 +2974,21 @@
   \ifdim\semio@window@textfit@target@h>2pt
     \setbox\semio@window@textfit@box=\hbox{%
       \resizebox{\linewidth}{!}{%
-        \vbox{\hsize=\linewidth\centering#1}%
+        \vbox{\hsize=\linewidth\raggedright#1}%
       }%
     }%
     \dimen1=\dimexpr\ht\semio@window@textfit@box+\dp\semio@window@textfit@box\relax
     \ifdim\dimen1>\semio@window@textfit@target@h
       \leavevmode\hbox to \linewidth{%
-        \hfill
         \scalebox{\ratio{\semio@window@textfit@target@h}{\dimen1}}{\usebox\semio@window@textfit@box}%
         \hfill
       }%
     \else
-      \leavevmode\hbox to \linewidth{\hfill\box\semio@window@textfit@box\hfill}%
+      \leavevmode\hbox to \linewidth{\box\semio@window@textfit@box\hfill}%
     \fi
   \else
     \leavevmode\hbox to \linewidth{%
-      \hfill
-      \vbox{\hsize=\linewidth\centering#1}%
+      \vbox{\hsize=\linewidth\raggedright#1}%
       \hfill
     }%
   \fi
