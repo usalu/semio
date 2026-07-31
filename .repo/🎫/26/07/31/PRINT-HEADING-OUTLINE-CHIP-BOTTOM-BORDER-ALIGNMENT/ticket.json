@@ -1,8 +1,9 @@
 {
   "title": "Print Heading Outline Chip Bottom Border Alignment",
   "emoji": "🖨️",
-  "status": "open",
-  "description": "Outline paragraph/chapter/subsection heading chips show a bottom-border overshoot past the title chip right edge (or the right number chip looks inset). Root cause: outline pairs use both a per-chip bottom stroke and a full-linewidth baseline underlay, so the shared baseline continues past the title chip right vertical. Fix outline heading pairs to use a gap-only baseline connector between closed chips (like muted window headers), keeping standalone outline chips closed.",
+  "status": "closed",
+  "description": "Outline paragraph chips (e.g. Bauteilportal) still show verticals poking below the baseline and imperfect junctions with the connecting line. Solid/colored chips are fine. Follow-up: outline pair chips must open at the bottom onto a single shared baseline row instead of stacking chip-bottom + gap strokes.",
+  "summary": "Root cause was TeX digit-gluing: 2\\\\semio@stroke@hairline expanded to 20.75pt (not 1.5pt), so outline chip top/bottom strokes were ~19.25pt wider than the mid verticals. Shared \\\\linewidth baseline then overshot the visible right edge (Bauteilportal). Fixed via \\\\semio@window@cap@outer@w = cap@w+hairline+hairline for closed and open outline frames; Needspace keep uses the same sum pattern. Probe raster: leftDelta=rightDelta=0 for Bauteilportal and Bauteilbörsen; BR corner flush.",
   "goal": "🎯r2602",
   "sessions": []
 }

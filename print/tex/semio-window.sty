@@ -548,9 +548,9 @@
     \ExplSyntaxOff
     \Needspace{\dimexpr
       \semio@chrome@titlebar@height
-      + 2\semio@window@bodypad
-      + 2\semio@chrome@font@body
-      + 2\semio@stroke@hairline
+      + \semio@window@bodypad + \semio@window@bodypad
+      + \semio@chrome@font@body + \semio@chrome@font@body
+      + \semio@stroke@hairline + \semio@stroke@hairline
     \relax}
     \ExplSyntaxOn
     \group_end:
@@ -2263,18 +2263,24 @@
   }%
 }
 
-\newcommand{\semio@window@stroke@v}[1]{%
-  \color{#1}%
-  \rule{\semio@stroke@hairline}{\semio@window@cap@titleh}%
+\newcommand{\semio@window@stroke@h}[2]{%
+  \textcolor{#1}{\rule{\dimexpr#2\relax}{\semio@stroke@hairline}}%
 }
 
-\newcommand{\semio@window@stroke@h}[2]{%
-  \color{#1}%
-  \rule{\dimexpr#2\relax}{\semio@stroke@hairline}%
+\newcommand{\semio@window@stroke@v}[1]{%
+  \textcolor{#1}{\rule{\semio@stroke@hairline}{\semio@window@cap@titleh}}%
+}
+
+\newcommand{\semio@window@stroke@v@to}[2]{%
+  \textcolor{#1}{\rule{\semio@stroke@hairline}{\dimexpr#2\relax}}%
 }
 
 \newcommand{\semio@window@cap@raise}[1]{%
   \raisebox{0pt}[\semio@window@cap@titleh][0pt]{#1}%
+}
+
+\newcommand{\semio@window@cap@raise@to}[2]{%
+  \raisebox{0pt}[\dimexpr#1\relax][0pt]{#2}%
 }
 
 \newcommand{\semio@window@cap@left@overlay}[1]{%
@@ -2368,6 +2374,15 @@
   \SemioSans\fontsize{\semio@chrome@font@heading}{\semio@chrome@font@heading}\selectfont
 }
 
+% 📐 Outer outline-chip width = label slot + left hairline + right hairline.
+% Written as a sum (not 2\semio@stroke@hairline): hairline is a macro starting
+% with a digit (0.75pt), so 2\semio@stroke@hairline token-glues to 20.75pt and
+% the top/bottom strokes overshoot the verticals by ~19pt (Bauteilportal).
+% Returned as a dimexpr *term* so \semio@window@stroke@h's \dimexpr#2 wraps once.
+\newcommand{\semio@window@cap@outer@w}{%
+  \semio@window@cap@w+\semio@stroke@hairline+\semio@stroke@hairline
+}
+
 \newcommand{\semio@heading@cap@nofill@vbox}[1]{%
   \if\relax\detokenize{#1}\relax
     \vbox to \semio@window@cap@titleh{%
@@ -2377,49 +2392,76 @@
       \vfil
     }%
   \else
-    % 📐 Full-outer horizontal strokes (cap@w + 2·hairline) with body-height side
-    % strokes stacked between them — corners share the exact same outer x so the
-    % bottom rule cannot overshoot the right vertical (the old “sides outside a
-    % body-width rule” assembly left a sub-pixel tail at that junction).
     \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
       \hbox{%
-        \semio@window@stroke@h{#1}{\dimexpr\semio@window@cap@w+2\semio@stroke@hairline\relax}%
+        \semio@window@stroke@h{#1}{\semio@window@cap@outer@w}%
       }%
       \nointerlineskip
       \hbox{%
-        {\color{#1}\rule{\semio@stroke@hairline}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+        \semio@window@stroke@v@to{#1}{\semio@window@cap@body@h-\semio@stroke@hairline}%
         \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
-        {\color{#1}\rule{\semio@stroke@hairline}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+        \semio@window@stroke@v@to{#1}{\semio@window@cap@body@h-\semio@stroke@hairline}%
       }%
       \nointerlineskip
       \hbox{%
-        \semio@window@stroke@h{#1}{\dimexpr\semio@window@cap@w+2\semio@stroke@hairline\relax}%
+        \semio@window@stroke@h{#1}{\semio@window@cap@outer@w}%
       }%
     }%
   \fi
 }
 
-\newcommand{\semio@heading@cap@nofill@core}[3]{%
+\newcommand{\semio@heading@cap@nofill}[3]{%
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
     \begingroup
     \semio@heading@bar@font\color{#2}%
-    % LR-headbox-inset: full \semio@tab@inset, matching the window/table tabs.
     \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-  % LR-headbox-inset: same roomy vertical budget the muted cap core uses; scoped
-  % to the caller's \hbox (\semio@heading@cap@nofill), so other caps are untouched.
   \renewcommand{\semio@window@cap@vpad@budget}{%
     \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
-    \semio@window@cap@metrics@set
-  \semio@window@cap@raise{\semio@heading@cap@nofill@vbox{#3}}%
+  \semio@window@cap@metrics@set
+  \hbox{\semio@window@cap@raise{\semio@heading@cap@nofill@vbox{#3}}}%
 }
 
-\newcommand{\semio@heading@cap@nofill}[3]{%
-  \hbox{\semio@heading@cap@nofill@core{#1}{#2}{#3}}%
+% 📐 Open-bottom outline chip for pairs: top is full outer width; sides stop above
+% the shared pair baseline so verticals sit on that rule (no chip-local bottom).
+\newcommand{\semio@heading@cap@nofill@open}[3]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \begingroup
+    \semio@heading@bar@font\color{#2}%
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset@v+\semio@tab@inset@v+\semio@stroke@hairline}%
+  \semio@window@cap@metrics@set
+  \if\relax\detokenize{#3}\relax
+    \hbox{%
+      \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
+        \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax}%
+      }%
+    }%
+  \else
+    \semio@window@cap@raise@to{\semio@window@cap@titleh-\semio@stroke@hairline}{%
+      \vbox to \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax{%
+        \nointerlineskip
+        \hbox{%
+          \semio@window@stroke@h{#3}{\semio@window@cap@outer@w}%
+        }%
+        \nointerlineskip
+        \hbox{%
+          \semio@window@stroke@v@to{#3}{\semio@window@cap@body@h-\semio@stroke@hairline}%
+          \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
+          \semio@window@stroke@v@to{#3}{\semio@window@cap@body@h-\semio@stroke@hairline}%
+        }%
+      }%
+    }%
+  \fi
 }
 
 \newcommand{\semio@heading@cap@muted@core}[1]{%
@@ -2500,59 +2542,58 @@
 % then placed flush-left / flush-right with \hfil between them, so the line is
 % visible across the whole heading including the segments beneath the tabs.
 \newcommand{\semio@heading@baseline@full}[1]{%
-  \rlap{{\color{#1}\rule[\z@]{\linewidth}{\semio@stroke@hairline}}}%
+  \rlap{\textcolor{#1}{\rule[\z@]{\linewidth}{\semio@stroke@hairline}}}%
 }
 
+% 📐 Solid heading pairs: filled gap band (not a full-linewidth baseline underlay).
+% The underlay used to run past the right chip's outer edge by a hairline under
+% PDF rasterization; a width-exact gap between the measured chip boxes stays flush.
 \newcommand{\semio@heading@pair}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
-
   \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \setlength{\semio@window@gap@w}{%
+    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+  }%
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
-      \semio@heading@baseline@full{#1}%
       \usebox{\semio@window@tab@box}%
-      \hfil
+      \semio@window@header@gap@paint{#1}{#1}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
 }
 
-% 📐 Outline heading pairs keep each chip a closed rectangle (own bottom stroke)
-% and join them with a gap-only baseline — same pattern as muted window headers.
-% A full-linewidth underlay would continue past the title chip's right vertical and
-% read as a bottom-border overshoot (or as the right chip sitting inset from the rule).
+% 📐 Outline heading pairs: open-bottom chips sit on one shared baseline row.
+% Chip-local bottom + gap stroke stacked at the same y and made verticals poke
+% below the rule (Bauteilportal). Sides end on the shared baseline instead.
 \newcommand{\semio@heading@pair@outline@row}[1]{%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth
-      -\wd\semio@window@tab@box
-      -\wd\semio@window@ctrl@box
-      +\semio@stroke@hairline
-      +\semio@stroke@hairline
-    \relax
-  }%
   \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \hskip-\semio@stroke@hairline\relax
-      \semio@window@header@gap@open{#1}%
-      \hskip-\semio@stroke@hairline\relax
-      \usebox{\semio@window@ctrl@box}%
+    \vbox{%
+      \hbox to \linewidth{%
+        \usebox{\semio@window@tab@box}%
+        \hfil
+        \usebox{\semio@window@ctrl@box}%
+      }%
+      \nointerlineskip
+      \hbox to \linewidth{%
+        \semio@window@stroke@h{#1}{\linewidth}%
+      }%
     }%
   }%
 }
 
 \newcommand{\semio@heading@pair@outline}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#5}{#2}{#1}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
   \semio@heading@pair@outline@row{#1}%
 }
 
 \newcommand{\semio@heading@pair@nofill@num}[4]{%
   \semio@hierarchy@path@set{#1}%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#2}{#3}{#4}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@kind@number@bare{#1}}{#3}{#4}}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
   \semio@heading@pair@outline@row{#4}%
 }
 
@@ -2858,6 +2899,15 @@
 % pins every chip to [titleh][0pt]), so \ht+\dp gives exactly the band height and
 % the fill lines up with both chips, long titles and enlarged fonts included.
 \newcommand{\semio@window@header@gap@paint}[2]{%
+  % Height from the tab box (chip builders set titleh inside an \sbox, so it has
+  % reverted by the time the gap is painted in the surrounding row).
+  \begingroup
+  \setlength{\semio@window@cap@titleh}{%
+    \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax
+  }%
+  \setlength{\semio@window@cap@body@h}{%
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
+  }%
   \semio@window@cap@raise{%
     \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
@@ -2866,10 +2916,11 @@
       }%
       \nointerlineskip
       \hbox to \dimexpr\semio@window@gap@w\relax{%
-        {\color{#1}\rule{\dimexpr\semio@window@gap@w\relax}{\semio@window@cap@body@h}}%
+        \textcolor{#1}{\rule{\dimexpr\semio@window@gap@w\relax}{\semio@window@cap@body@h}}%
       }%
     }%
   }%
+  \endgroup
 }
 
 % Outline (nofill) headings keep the transparent middle closed only by the
