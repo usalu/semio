@@ -851,7 +851,19 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🛠️dev🎬manim",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/heating_vs_cooling/heating_vs_cooling.py HeatingVsCooling",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 200
+      }
+    },
     // #endregion
+
     // #region 📦 Build
     {
       "name": "📦build📖storybook",

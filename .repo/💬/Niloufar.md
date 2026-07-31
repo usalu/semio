@@ -171,5 +171,40 @@ Make a micro-commit for adding the cooling demand tutorial animation, introducti
 
 ---
 
-TODO: Start implementing missing pieces for the UI.
+Since now, add all my prompts in this direction .repo/💬/Niloufar.md, and set up the Manim side view to be able to change the Manim code in real time as you may need to update tutorial/pyproject.toml.
 
+---
+
+Manim Sideview: Manim is not found in PATH or at the specified location "manim". Please ensure manim is installed correctly or specify a valid path in settings.
+
+---
+
+I am not using VS Code, and I want to be able to change and run the Manim side view through the UI. Implement it correctly using this website: https://marketplace.visualstudio.com/items?itemName=Rickaym.manim-sideview
+
+---
+
+In tutorial/energy/demand/Cooling/heating_vs_cooling/heating_vs_cooling.py, instead of having an elevation of the house, I want a minimal cross-section of the house showing the window sections, the different levels, and the people on those levels with devices that are producing heat. On the other side, I want the sun's radiation to be animated with a cool effect as it radiates toward the house.
+
+---
+
+Manim Sideview: Error rendering file (exit code 1). Check the output for more details.
+
+---
+
+For the human and device animations, use the same graphics as those used in tutorial/energy/demand/Heating/internal_heat_gain . The heat rising from them should also match that file. The sun animation should be the same as in tutorial/energy/demand/Heating/solar_heat_gain . Do not use arrows to represent the sun's radiation.
+
+---
+
+The human should sit in front of the table and laptop, and the size of the human should be smaler relative to the scale of the house and the table. Also, add a low intensity of sun radiation, the termometer should hase same grafic like what we hade in this scene tutorial/energy/demand/Heating/introduction/merged_scenes.py
+
+---
+
+Put a human downstairs, standing and cooking in a simple kitchen. Also, add lights, and show heat being produced from every device.
+
+---
+
+The whole building needs to be shifted a little lower in order to prevent the text from colliding with the building at the end of the video
+
+---
+
+add all my prompting in this document .repo/💬/Niloufar.md

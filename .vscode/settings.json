@@ -118,5 +118,12 @@
   "inlineChat.showDiff": false,
   "inlineChat.accessibleDiffView": "off",
   "cursor.composer.shouldAutoAcceptDiffs": true,
-  "cursor.diffs.useCharacterLevelDiffs": false
+  "cursor.diffs.useCharacterLevelDiffs": false,
+  "manim-sideview.manimExecutable": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.venv/bin/manim",
+  "manim-sideview.autoLivePreview": true,
+  "manim-sideview.runOnSave": true,
+  "manim-sideview.defaultQuality": "low",
+  "manim-sideview.previewInEditor": true
 }
+
+
