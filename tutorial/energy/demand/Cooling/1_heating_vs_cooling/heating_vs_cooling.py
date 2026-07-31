@@ -57,28 +57,20 @@ class HeatingVsCooling(Scene):
         window_group = VGroup(win1, win2)
         door_group = VGroup()
 
-        # Sun & Radiation (from solar_heat_gain) - Low Intensity Winter
-        C_YELLOW = "#FFE66D"
-        C_GOLD = "#FFB347"
-        
+        # Sun
         sun_pos = house_center + LEFT * 4.2 + UP * 2.95
-        sun_core = Dot(sun_pos, radius=0.4, color=C_YELLOW)
-        sun_glow = Dot(sun_pos, radius=0.65, color=C_GOLD, fill_opacity=0.15)
-        
-        ring1 = Circle(radius=0.7, color=C_YELLOW, stroke_width=1).move_to(sun_pos).set_opacity(0.3)
-        ring2 = Circle(radius=0.9, color=C_GOLD, stroke_width=0.75).move_to(sun_pos).set_opacity(0.3)
-        ring3 = Circle(radius=1.1, color=C_YELLOW, stroke_width=0.5).move_to(sun_pos).set_opacity(0.3)
-        sun_rings = VGroup(ring1, ring2, ring3)
-        
-        sun_burst_rays = VGroup()
-        for angle in np.linspace(0, 2 * np.pi, 12, endpoint=False):
-            start_p = sun_pos + np.array([np.cos(angle) * 0.5, np.sin(angle) * 0.5, 0])
-            end_p = sun_pos + np.array([np.cos(angle) * 0.7, np.sin(angle) * 0.7, 0])
-            sun_burst_rays.add(Line(start_p, end_p, color=C_GOLD, stroke_width=1).set_opacity(0.4))
-            
-        sun_group = VGroup(sun_glow, sun_core, sun_rings, sun_burst_rays)
+        sun_core = Dot(sun_pos, radius=0.45, color=P_YELLOW)
+        sun_glow = Dot(sun_pos, radius=0.7, color=P_YELLOW, fill_opacity=0.35)
+        sun_ring1 = Circle(radius=0.85, color=P_YELLOW, stroke_width=2, stroke_opacity=0.6).move_to(sun_pos)
+        sun_ring2 = Circle(radius=1.1, color=P_YELLOW, stroke_width=1.2, stroke_opacity=0.3).move_to(sun_pos)
+        sun_burst = VGroup()
+        for angle in np.linspace(0, TAU, 12, endpoint=False):
+            s = sun_pos + np.array([np.cos(angle) * 0.55, np.sin(angle) * 0.55, 0])
+            e = sun_pos + np.array([np.cos(angle) * 0.9, np.sin(angle) * 0.9, 0])
+            sun_burst.add(Line(s, e, color=P_YELLOW, stroke_width=2))
+        sun_group = VGroup(sun_glow, sun_core, sun_ring1, sun_ring2, sun_burst)
 
-        solar_label = Text("Solare Gewinne", font_size=16, color=C_YELLOW)
+        solar_label = Text("Solare Gewinne", font_size=16, color=P_YELLOW)
         solar_label.next_to(sun_core, DOWN, buff=1.0)
 
         # People & Devices (from internal_heat_gain)
@@ -117,13 +109,13 @@ class HeatingVsCooling(Scene):
 
         # Ceiling Lights (1st Floor & Ground Floor)
         light1_cord = Line(bottom_left + UP * 2.4 + RIGHT * 1.2, bottom_left + UP * 2.15 + RIGHT * 1.2, color=P_WHITE, stroke_width=1.5)
-        light1_bulb = Dot(light1_cord.get_end(), radius=0.07, color=C_YELLOW)
-        light1_glow = Circle(radius=0.18, color=C_YELLOW, stroke_width=0, fill_opacity=0.1).move_to(light1_bulb.get_center())
+        light1_bulb = Dot(light1_cord.get_end(), radius=0.07, color=P_YELLOW)
+        light1_glow = Circle(radius=0.18, color=P_YELLOW, stroke_width=0, fill_opacity=0.1).move_to(light1_bulb.get_center())
         light1 = VGroup(light1_cord, light1_bulb, light1_glow)
 
         light2_cord = Line(bottom_left + UP * 1.2 + RIGHT * 2.7, bottom_left + UP * 0.95 + RIGHT * 2.7, color=P_WHITE, stroke_width=1.5)
-        light2_bulb = Dot(light2_cord.get_end(), radius=0.07, color=C_YELLOW)
-        light2_glow = Circle(radius=0.18, color=C_YELLOW, stroke_width=0, fill_opacity=0.1).move_to(light2_bulb.get_center())
+        light2_bulb = Dot(light2_cord.get_end(), radius=0.07, color=P_YELLOW)
+        light2_glow = Circle(radius=0.18, color=P_YELLOW, stroke_width=0, fill_opacity=0.1).move_to(light2_bulb.get_center())
         light2 = VGroup(light2_cord, light2_bulb, light2_glow)
 
         internal_dot = VGroup(device, person2, kitchen, light1, light2)
@@ -142,8 +134,8 @@ class HeatingVsCooling(Scene):
         d1_w1 = create_wave(-0.06, C_BLUE, laptop_screen.get_center())
         d1_w2 = create_wave(0.06, C_BLUE, laptop_screen.get_center())
 
-        l1_w1 = create_wave(-0.06, C_YELLOW, light1_bulb.get_center())
-        l1_w2 = create_wave(0.06, C_YELLOW, light1_bulb.get_center())
+        l1_w1 = create_wave(-0.06, P_YELLOW, light1_bulb.get_center())
+        l1_w2 = create_wave(0.06, P_YELLOW, light1_bulb.get_center())
 
         p2_w1 = create_wave(-0.06, C_PINK, p2_head.get_top())
         p2_w2 = create_wave(0.06, C_PINK, p2_head.get_top())
@@ -151,8 +143,8 @@ class HeatingVsCooling(Scene):
         k_w1 = create_wave(-0.06, C_BLUE, stove_pot.get_top())
         k_w2 = create_wave(0.06, C_BLUE, stove_pot.get_top())
 
-        l2_w1 = create_wave(-0.06, C_YELLOW, light2_bulb.get_center())
-        l2_w2 = create_wave(0.06, C_YELLOW, light2_bulb.get_center())
+        l2_w1 = create_wave(-0.06, P_YELLOW, light2_bulb.get_center())
+        l2_w2 = create_wave(0.06, P_YELLOW, light2_bulb.get_center())
 
         internal_waves = VGroup(d1_w1, d1_w2, l1_w1, l1_w2, p2_w1, p2_w2, k_w1, k_w2, l2_w1, l2_w2)
 
@@ -170,7 +162,7 @@ class HeatingVsCooling(Scene):
             run_time=2.0
         )
         self.play(
-            FadeIn(sun_glow), FadeIn(sun_core), Create(sun_rings), Create(sun_burst_rays),
+            FadeIn(sun_glow), FadeIn(sun_core), Create(sun_ring1), Create(sun_ring2), Create(sun_burst),
             FadeIn(solar_label),
             FadeIn(internal_dot),
             Create(internal_waves),
@@ -186,21 +178,16 @@ class HeatingVsCooling(Scene):
         new_subtitle.next_to(title, DOWN, buff=0.2)
 
         # High Intensity Summer Sun
-        sun_core_red = sun_core.copy().set_color(P_RED)
-        sun_glow_red = Dot(sun_pos, radius=0.75, color=P_RED, fill_opacity=0.45)
-        
-        ring1_red = Circle(radius=0.8, color=P_RED, stroke_width=2).move_to(sun_pos).set_opacity(0.8)
-        ring2_red = Circle(radius=1.1, color=P_RED, stroke_width=1.5).move_to(sun_pos).set_opacity(0.8)
-        ring3_red = Circle(radius=1.4, color=P_RED, stroke_width=1).move_to(sun_pos).set_opacity(0.8)
-        sun_rings_red = VGroup(ring1_red, ring2_red, ring3_red)
-        
-        sun_burst_rays_red = VGroup()
-        for angle in np.linspace(0, 2 * np.pi, 12, endpoint=False):
-            start_p = sun_pos + np.array([np.cos(angle) * 0.5, np.sin(angle) * 0.5, 0])
-            end_p = sun_pos + np.array([np.cos(angle) * 0.9, np.sin(angle) * 0.9, 0])
-            sun_burst_rays_red.add(Line(start_p, end_p, color=P_RED, stroke_width=3).set_opacity(0.8))
-            
-        sun_group_red = VGroup(sun_glow_red, sun_core_red, sun_rings_red, sun_burst_rays_red)
+        sun_core_red = Dot(sun_pos, radius=0.45, color=P_RED)
+        sun_glow_red = Dot(sun_pos, radius=0.7, color=P_RED, fill_opacity=0.45)
+        sun_ring1_red = Circle(radius=0.85, color=P_RED, stroke_width=2, stroke_opacity=0.8).move_to(sun_pos)
+        sun_ring2_red = Circle(radius=1.1, color=P_RED, stroke_width=1.5, stroke_opacity=0.7).move_to(sun_pos)
+        sun_burst_red = VGroup()
+        for angle in np.linspace(0, TAU, 12, endpoint=False):
+            s = sun_pos + np.array([np.cos(angle) * 0.55, np.sin(angle) * 0.55, 0])
+            e = sun_pos + np.array([np.cos(angle) * 0.9, np.sin(angle) * 0.9, 0])
+            sun_burst_red.add(Line(s, e, color=P_RED, stroke_width=3))
+        sun_group_red = VGroup(sun_glow_red, sun_core_red, sun_ring1_red, sun_ring2_red, sun_burst_red)
 
         solar_label_red = Text("Solare Gewinne (Exzessiv)", font_size=16, color=P_RED)
         solar_label_red.next_to(sun_core_red, DOWN, buff=1.5)
