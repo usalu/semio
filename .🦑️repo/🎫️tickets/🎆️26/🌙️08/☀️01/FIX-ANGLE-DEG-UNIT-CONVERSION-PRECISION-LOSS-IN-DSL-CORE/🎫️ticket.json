@@ -1,0 +1,11 @@
+{
+  "title": "Fix Angle Deg Unit Conversion Precision Loss In Dsl Core",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix angle=deg unit conversion precision loss in dsl_core",
+  "summary": "Fix angle=deg unit conversion precision loss by short-circuiting same-unit conversions in dsl_core::convert",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪7d69882f01b34b43b5fd340201b66bb0"
+  ]
+}

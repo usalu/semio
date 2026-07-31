@@ -92,7 +92,7 @@ pub enum ApplyOutcome {
     // 🔒️ Boxed: OperationEnvelope is far larger than the other variants, and clippy's
     // large_enum_variant lint (a real per-instance cost, not just style) applies at -D warnings.
     Transformed { envelope: Box<protocol_causal::OperationEnvelope> },
-    Rejected { reason: String },
+    Rejected { reason: String }
 }
 
 /// @emoji 🪜️ One stage of a submitted batch's lifecycle, from `Received` to `Applied`.
@@ -145,7 +145,7 @@ pub enum ServerFrame {
     Error {
         code: String,
         message: String,
-    },
+    }
 }
 //#endregion 🔖️ServerFrame
 

@@ -821,7 +821,8 @@ fn build_document_tree(state: &RewriteRuleState, runtime: &RewritePlayRuntime, l
 }
 
 fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNode {
-    tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind }))))
+    tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind })))),
+    menu: None,
 }
 
 fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
@@ -883,6 +884,7 @@ fn build_inspector_tree(state: &RewriteRuleState, runtime: &RewritePlayRuntime, 
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text("Select one or more pieces")],
+            menu: None,
         }]);
     }
     let nodes: Vec<&Node> = runtime
@@ -946,10 +948,12 @@ fn build_inspector_tree(state: &RewriteRuleState, runtime: &RewritePlayRuntime, 
                         max: None,
                         step: None,
                         accept: None,
+                        menu: None,
                     })),
                     description: None,
                     required: None,
                     error: None,
+                    menu: None,
                 }),
                 ui_inspector_readonly_field(
                     "trinity-inspector.kind",
@@ -1001,10 +1005,12 @@ fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabel
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }));
     }
     if children.is_empty() {
@@ -1016,6 +1022,7 @@ fn build_parameters_panel(state: &RewriteRuleState, labels: &TrinityRewriteLabel
         default_open: Some(true),
         presence: UiPresence::default(),
         children,
+        menu: None,
     }])
 }
 

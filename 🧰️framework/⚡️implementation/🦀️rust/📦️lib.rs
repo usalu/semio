@@ -1065,7 +1065,7 @@ pub struct MediaType {
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
     Binary { format: OsMediaFormat },
-    Document { schema: String },
+    Document { schema: String }
 }
 
 /// 📇️ An app-declared media kind — the manifest-level counterpart to `MediaType`, naming a concrete component/schema an app can produce or consume plus which `OsMediaFormat`s it can export/import. `ArtifactKindSpec` (see the `ArtifactKind` region above) now carries these same four fields directly, so this shape has no live producer — kept for now as the standalone media-kind vocabulary dependent tickets (edge contracts, WIT/SDK) may still key off of.
@@ -1155,7 +1155,7 @@ pub struct Media {
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaPayload {
     Structured { schema: String, json: String },
-    Binary { format: OsMediaFormat, blob_hash: String },
+    Binary { format: OsMediaFormat, blob_hash: String }
 }
 
 /// 🔑️ A cheap identity for one port's current output, independent of serializing the full payload — the unit the `SpaceRunner` compares to decide whether a downstream node actually needs to see a new value.
@@ -1339,7 +1339,7 @@ pub enum DwgGeometry {
     Text { at: [f64; 3], height: f64, rotation: f64, content: String },
     Face3d { corners: [[f64; 3]; 4] },
     Polyline3d { closed: bool, vertices: Vec<[f64; 3]> },
-    PolyfaceMesh { vertices: Vec<[f64; 3]>, faces: Vec<[i32; 4]> },
+    PolyfaceMesh { vertices: Vec<[f64; 3]>, faces: Vec<[i32; 4]> }
 }
 
 impl DwgDrawing {
@@ -3309,7 +3309,7 @@ pub enum ActionArgControl {
     Vec3,
     IconSelect {
         classifier_kind: String,
-    },
+    }
 }
 
 /// @emoji 📝️ Declares one argument of an action: its `id` (the JSON key sent in `ActionDescriptor.args`),
@@ -4301,7 +4301,7 @@ pub enum IntroductionGesture {
         button: IntroductionPointerButton,
         #[serde(default = "introduction_orbit_default_modifiers", skip_serializing_if = "introduction_orbit_modifiers_is_default")]
         modifiers: Vec<IntroductionKeyModifier>,
-    },
+    }
 }
 
 impl IntroductionPointerButton {
@@ -4634,7 +4634,7 @@ pub struct TutorialUiKeyframe {
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiSample {
     Snapshot { state: TutorialUiSnapshot },
-    Delta { changes: Vec<TutorialUiChange> },
+    Delta { changes: Vec<TutorialUiChange> }
 }
 
 /// @emoji 🧮️ Renderer-neutral restore point for chrome/UI state — a superset of `ViewState` plus the
@@ -4736,7 +4736,7 @@ pub enum TutorialUiChange {
     },
     CommandPanel {
         open: bool,
-    },
+    }
 }
 
 /// @emoji 🖋️ One document-track entry — mirrors `store::DocumentCommand` with `Operation =
@@ -4788,7 +4788,7 @@ pub enum TutorialDocumentEventKind {
     Load {
         document_json: String,
         previous_json: String,
-    },
+    }
 }
 
 fn tutorial_camera_up_z() -> [f64; 3] {
@@ -4828,7 +4828,7 @@ pub enum TutorialCameraState {
         x: f64,
         y: f64,
         zoom: f64,
-    },
+    }
 }
 
 /// @emoji 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
@@ -5707,7 +5707,7 @@ pub enum Contribution {
         typology_json: String,
         #[cfg_attr(feature = "typegen", ts(rename = "kindsJson"))]
         kinds_json: String,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -6239,7 +6239,7 @@ pub enum HostEffect {
         document_selected_ids: Vec<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         document_highlighted_ids: Option<Vec<String>>,
-    },
+    }
 }
 
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
@@ -6335,7 +6335,7 @@ pub enum UiDirtyScope {
         measures: bool,
         #[serde(default)]
         labels: bool,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

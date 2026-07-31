@@ -77,6 +77,14 @@ impl Puzzle5dPrecomputeSession {
     pub fn apply_fill_count(&mut self, count: u32) -> Result<String, wasm_bindgen::JsValue> {
         self.inner.apply_fill_count(count)
     }
+
+    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
+        Ok(self.inner.apply_brush_placement_rust(payload_json)?)
+    }
+
+    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle5dError> {
+        Ok(self.inner.apply_fill_count_rust(count)?)
+    }
 }
 //#endregion 🔖️BrushEngine
 

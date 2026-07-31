@@ -65,7 +65,7 @@ pub enum SequenceOperation {
     EdgesAdd { index: usize, item: SequenceEdge },
     EdgesRemove { id: String },
     EdgesMove { id: String, to_index: usize },
-    EdgesPatch { id: String, patch: SequenceEdgePatch },
+    EdgesPatch { id: String, patch: SequenceEdgePatch }
 }
 
 /// 🔁️ Converts a generic step `CollectionOperation` (as produced by `protocol::invert_collection_operation`)
@@ -239,7 +239,7 @@ enum SequenceOperationDsl {
         id: String,
         #[dsl(block)]
         patch: SequenceEdgePatch,
-    },
+    }
 }
 
 fn sequence_operation_to_dsl(operation: &SequenceOperation) -> SequenceOperationDsl {

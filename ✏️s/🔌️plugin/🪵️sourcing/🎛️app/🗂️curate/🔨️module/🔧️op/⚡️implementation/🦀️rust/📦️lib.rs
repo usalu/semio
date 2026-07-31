@@ -13,7 +13,7 @@ pub enum SourcingOperation {
     SetDocument {
         #[dsl(block)]
         document: CurateDocument,
-    },
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

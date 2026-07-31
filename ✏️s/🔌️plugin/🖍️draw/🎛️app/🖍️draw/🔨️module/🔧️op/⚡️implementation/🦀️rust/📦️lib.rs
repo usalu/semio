@@ -81,7 +81,7 @@ pub enum DrawOperation {
     SetDocument {
         #[dsl(block)]
         document: DrawDocument,
-    },
+    }
 }
 
 fn apply_draw_edit_operation(doc: &DrawDocument, edit: &DrawOperation) -> DrawDocument {

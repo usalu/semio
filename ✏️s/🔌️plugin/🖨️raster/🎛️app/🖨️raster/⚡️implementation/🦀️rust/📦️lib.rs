@@ -140,7 +140,7 @@ pub enum RasterLayerNode {
         adjustment_kind: String,
         #[serde(default)]
         params: serde_json::Map<String, serde_json::Value>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]

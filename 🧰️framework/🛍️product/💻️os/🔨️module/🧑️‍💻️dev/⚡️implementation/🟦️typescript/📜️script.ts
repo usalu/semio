@@ -620,6 +620,11 @@ self.addEventListener("message", async (event) => {
           value: await api.refreshUi(msg.instanceId, msg.requestJson),
         });
         break;
+      case "contextMenu":
+        reply(requestId, "contextMenu", {
+          value: await api.contextMenu(msg.instanceId, msg.requestJson),
+        });
+        break;
       case "consumeMedia":
         await api.consumeMedia(msg.instanceId, msg.portId, msg.descriptorJson, msg.data);
         reply(requestId, "consumeMedia", { ok: true });
@@ -726,6 +731,11 @@ async function createPluginApiInner() {
       const response = await plugin.refreshUi(instanceId, { json: requestJson });
       return response.json;
     },
+    async contextMenu(instanceId, requestJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const response = await plugin.contextMenu(instanceId, { json: requestJson });
+      return response.json;
+    },
     async consumeMedia(instanceId, portId, descriptorJson, data) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
       await plugin.consumeMedia(instanceId, portId, {
@@ -774,6 +784,7 @@ async function createPluginApiInner() {
     renderWithDocument: (instanceId, bodyKey, viewStateJson, documentJson) =>
       runSerialized(() => core.renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson)),
     refreshUi: (instanceId, requestJson) => runSerialized(() => core.refreshUi(instanceId, requestJson)),
+    contextMenu: (instanceId, requestJson) => runSerialized(() => core.contextMenu(instanceId, requestJson)),
     consumeMedia: (instanceId, portId, descriptorJson, data) =>
       runSerialized(() => core.consumeMedia(instanceId, portId, descriptorJson, data)),
     produceMedia: (instanceId, portId, requestJson) =>

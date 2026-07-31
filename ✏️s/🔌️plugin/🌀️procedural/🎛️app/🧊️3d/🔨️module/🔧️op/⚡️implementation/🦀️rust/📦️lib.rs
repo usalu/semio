@@ -271,7 +271,7 @@ enum Procedural3dOperationDsl {
         id: String,
         question_id: String,
         value: serde_json::Value,
-    },
+    }
 }
 
 fn procedural3d_operation_to_dsl(operation: &Procedural3dOperation) -> Procedural3dOperationDsl {

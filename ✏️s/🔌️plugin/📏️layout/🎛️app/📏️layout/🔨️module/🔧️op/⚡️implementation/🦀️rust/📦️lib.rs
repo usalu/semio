@@ -85,7 +85,7 @@ pub enum LayoutOperation {
     Links(CollectionOperation<String, ImageLink, ImageLinkPatch>),
     AddFrame { page_id: String, index: usize, frame: Frame, layer_id: Option<String> },
     RemoveFrame { page_id: String, frame_id: String },
-    PatchFrame { page_id: String, frame_id: String, patch: FramePatch },
+    PatchFrame { page_id: String, frame_id: String, patch: FramePatch }
 }
 
 fn apply_layout_operation(doc: &mut LayoutDocument, operation: &LayoutOperation) {
@@ -331,7 +331,7 @@ enum LayoutOperationDsl {
         frame_id: String,
         #[dsl(block)]
         patch: FramePatchDsl,
-    },
+    }
 }
 
 fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {

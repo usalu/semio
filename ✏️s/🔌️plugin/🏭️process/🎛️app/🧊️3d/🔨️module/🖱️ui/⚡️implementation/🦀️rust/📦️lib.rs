@@ -488,7 +488,8 @@ const PROCESS3D_UTILITY_LABEL_ENTRIES: &[(&str, &str, &str)] = &[("select", "Sel
 /// 🎨️ `tree_item_with_action` (SDK) carries no icon slot, so this app-specific wrapper layers
 /// `icon_id` on top via struct-update syntax — the only piece of the item skeleton this app adds.
 fn iconed_tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), ..tree_item_with_action(id, label, None, action) }
+    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
+    ..tree_item_with_action(id, label, None, action) }
 }
 
 fn number_field(id: impl Into<String>, label: impl Into<String>, value: f64, target: &str, field: &str) -> UiNode {
@@ -511,7 +512,9 @@ fn number_field(id: impl Into<String>, label: impl Into<String>, value: f64, tar
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
+        menu: None,
     })
 }
 
@@ -535,7 +538,9 @@ fn text_field(id: impl Into<String>, label: impl Into<String>, value: &str, targ
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
+        menu: None,
     })
 }
 
@@ -545,6 +550,7 @@ fn build_document_tree(fixture: &Process3dDocument, runtime: &Process3dRuntime, 
         icon_id: Some("box".into()),
         presence: UiPresence::selected(runtime.selected_id.as_deref() == Some(stock.id.as_str())),
         action: Some(process3d_action("setSelection", Some(json!({ "id": stock.id })))),
+        menu: None,
         ..UiTreeItemNode::base(stock.id.clone(), stock.label.clone())
     };
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len());
@@ -566,9 +572,11 @@ fn build_document_tree(fixture: &Process3dDocument, runtime: &Process3dRuntime, 
                     action: process3d_action("setStepEnabled", Some(json!({ "id": step.id, "enabled": !step.enabled }))),
                     reveal_on_hover: Some(true),
                 },
-                UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), reveal_on_hover: Some(true) },
+                UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), reveal_on_hover: Some(true),
+        },
             ]),
             dimmed: Some(!step.enabled),
+            menu: None,
             ..UiTreeItemNode::base(step.id.clone(), step.label.clone())
         })
         .collect();
@@ -592,7 +600,9 @@ fn build_catalogue_tree(fixture: &Process3dDocument, labels: &Process3dLabels) -
                     if failures.is_empty() {
                         iconed_tree_item_with_action(id, label, kind.icon_id, process3d_action("addStep", Some(json!({ "moduleId": module.id, "machineId": machine.id, "modificationKindId": kind.id }))))
                     } else {
-                        UiTreeItemNode { icon_id: Some(kind.icon_id.into()), ..tree_item_desc(id, label, Some(validation_reason(&failures))) }
+                        UiTreeItemNode { icon_id: Some(kind.icon_id.into()), menu: None,
+        ..tree_item_desc(id, label, Some(validation_reason(&failures)))
+    }
                     }
                 })
             })

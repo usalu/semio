@@ -370,7 +370,8 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
                         .collect()
                 })
                 .unwrap_or_default();
-            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items })
+            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items,
+        })
         })
         .collect();
     let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
@@ -402,9 +403,11 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLab
             tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))
         })
         .collect();
-    let mut sections = vec![UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed }];
+    let mut sections = vec![UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed,
+        }];
     if !actions.is_empty() {
-        sections.push(UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions });
+        sections.push(UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions,
+        });
     }
     sections
 }
@@ -426,7 +429,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                     tree_item_with_action_draggable(format!("flow-play-catalogue.source.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
-        },
+            },
         UiTreeSectionNode {
             presence: UiPresence::default(),
             id: "flow-play-catalogue.components".into(),
@@ -439,7 +442,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                     tree_item_with_action_draggable(format!("flow-play-catalogue.component.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
-        },
+            },
         UiTreeSectionNode {
             presence: UiPresence::default(),
             id: "flow-play-catalogue.sinks".into(),
@@ -452,7 +455,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                     tree_item_with_action_draggable(format!("flow-play-catalogue.sink.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
-        },
+            },
     ]
 }
 
@@ -580,6 +583,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.no_selection)],
+            menu: None,
         }]);
     }
     let widgets: Vec<&Widget> = selected.iter().filter_map(|id| fixture.widgets.iter().find(|widget| widget_id(widget) == id)).collect();
@@ -590,6 +594,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text("Widget not found")],
+            menu: None,
         }]);
     }
     let widget_ids: Vec<String> = widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
@@ -623,10 +628,12 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             })],
         });
     }
@@ -659,10 +666,12 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             })],
         });
     }
@@ -685,10 +694,12 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         );
     }

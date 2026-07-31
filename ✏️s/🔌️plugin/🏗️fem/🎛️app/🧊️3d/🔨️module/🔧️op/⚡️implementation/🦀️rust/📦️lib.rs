@@ -272,7 +272,7 @@ pub enum Fem3dOperation {
     SetDocument {
         #[dsl(block)]
         document: Fem3dDocument,
-    },
+    }
 }
 
 fn node_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {

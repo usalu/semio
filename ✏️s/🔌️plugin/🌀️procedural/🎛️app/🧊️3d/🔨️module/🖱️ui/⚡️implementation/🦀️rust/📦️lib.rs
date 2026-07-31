@@ -223,7 +223,8 @@ fn procedural3d_utility_labels(is_de: bool) -> std::collections::HashMap<String,
 /// 🌳️ SDK's `tree_item_with_action` plus an icon id — this crate's document/catalogue trees carry
 /// icons per item, which the shared helper doesn't model directly.
 fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: icon_id.map(Into::into), ..tree_item_with_action(id, label, None, action) }
+    UiTreeItemNode { icon_id: icon_id.map(Into::into), menu: None,
+    ..tree_item_with_action(id, label, None, action) }
 }
 
 fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
@@ -298,10 +299,12 @@ fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], lab
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }));
         fields.push(ui_inspector_readonly_field(
             "procedural-play-inspector.range",

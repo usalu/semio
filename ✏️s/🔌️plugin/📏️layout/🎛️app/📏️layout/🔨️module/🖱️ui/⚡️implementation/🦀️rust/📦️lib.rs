@@ -899,10 +899,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         ];
         for (field, label, value) in [
@@ -928,10 +930,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }));
         }
         fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
@@ -948,10 +952,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }));
         return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
             id: "layout-play-inspector.page".into(),
@@ -994,10 +1000,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                         max: None,
                         step: None,
                         accept: None,
+                        menu: None,
                     })),
                     description: None,
                     required: None,
                     error: None,
+                    menu: None,
                 }));
             }
             match frame {
@@ -1020,10 +1028,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                                 max: None,
                                 step: None,
                                 accept: None,
+                                menu: None,
                             })),
                             description: None,
                             required: None,
                             error: None,
+                            menu: None,
                         }));
                     }
                 }
@@ -1045,10 +1055,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                             max: None,
                             step: None,
                             accept: None,
+                            menu: None,
                         })),
                         description: None,
                         required: None,
                         error: None,
+                        menu: None,
                     }));
                     fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                         id: "layout-play-inspector.frame-wrapMode".into(),
@@ -1057,19 +1069,24 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                             id: "layout-play-inspector.frame-wrapMode.select".into(),
                             value: wrap_mode.clone(),
                             items: vec![
-                                UiSelectItem { value: "none".into(), label: labels.wrap_none.into() },
-                                UiSelectItem { value: "box".into(), label: labels.wrap_box.into() },
-                                UiSelectItem { value: "contour".into(), label: labels.wrap_contour.into() },
+                                UiSelectItem { value: "none".into(), label: labels.wrap_none.into(),
+        },
+                                UiSelectItem { value: "box".into(), label: labels.wrap_box.into(),
+        },
+                                UiSelectItem { value: "contour".into(), label: labels.wrap_contour.into(),
+        },
                             ],
                             placeholder: None,
                             on_change: layout_action(
                                 "patchFrame",
                                 Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "wrapMode" })),
                             ),
+                            menu: None,
                         })),
                         description: None,
                         required: None,
                         error: None,
+                        menu: None,
                     }));
                     fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                         id: "layout-play-inspector.frame-columns".into(),
@@ -1088,10 +1105,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                             max: None,
                             step: None,
                             accept: None,
+                            menu: None,
                         })),
                         description: None,
                         required: None,
                         error: None,
+                        menu: None,
                     }));
                 }
                 Frame::Image { link_id, .. } => {
@@ -1112,10 +1131,12 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                             max: None,
                             step: None,
                             accept: None,
+                            menu: None,
                         })),
                         description: None,
                         required: None,
                         error: None,
+                        menu: None,
                     }));
                 }
             }
@@ -1134,7 +1155,8 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
         default_open: Some(true),
         children: vec![ui_text(labels.selection_not_found)],
         presence: UiPresence::default(),
-}])
+        menu: None,
+    }])
 }
 
 fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {

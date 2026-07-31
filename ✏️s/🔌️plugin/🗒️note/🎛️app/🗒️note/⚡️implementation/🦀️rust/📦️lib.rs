@@ -139,7 +139,7 @@ pub enum NoteBlockNode {
         locked: bool,
         #[dsl(statements, block)]
         children: Vec<NoteBlockNode>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]

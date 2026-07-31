@@ -109,10 +109,12 @@ fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 

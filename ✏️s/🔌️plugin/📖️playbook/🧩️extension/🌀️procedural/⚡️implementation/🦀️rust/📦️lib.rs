@@ -126,7 +126,7 @@ enum ModulePayloadOperation {
     SetPayload {
         #[dsl(block)]
         payload: ModuleRenderPayload,
-    },
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -399,6 +399,7 @@ fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         action: module_action(payload, ACTION_EXPORT_SOLID, json!({ "format": format })),
         style: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -410,6 +411,7 @@ fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         action: module_action(payload, ACTION_IMPORT_SOLID, json!({ "format": format })),
         style: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -456,11 +458,13 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
                 step: None,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
             presence: UiPresence::default(),
+            menu: None,
         }),
         "number" => UiNode::Field(UiFieldNode {
             id: format!("playbook-module.{key}"),
@@ -477,11 +481,13 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
                 step: None,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
             presence: UiPresence::default(),
+            menu: None,
         }),
         "slider" => UiNode::Field(UiFieldNode {
             id: format!("playbook-module.{key}"),
@@ -495,20 +501,25 @@ fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &Mo
                 on_change: patch_cmd(key),
                 unit: None,
                 presence: UiPresence::default(),
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
             presence: UiPresence::default(),
+            menu: None,
         }),
         "boolean" => UiNode::Field(UiFieldNode {
             id: format!("playbook-module.{key}"),
             label: question.label.clone(),
-            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("playbook-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)) })),
+            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("playbook-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
+        menu: None,
+    })),
             description: None,
             required: None,
             error: None,
             presence: UiPresence::default(),
+            menu: None,
         }),
         _ => ui_text(format!("Unsupported param kind: {}", question.kind)),
     }

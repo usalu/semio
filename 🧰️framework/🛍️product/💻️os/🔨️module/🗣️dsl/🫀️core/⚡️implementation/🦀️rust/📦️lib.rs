@@ -503,6 +503,9 @@ pub fn convert(value: f64, from: &UnitSpec, to: &UnitSpec) -> Option<f64> {
     if from.dimension != to.dimension {
         return None;
     }
+    if from.symbol == to.symbol {
+        return Some(value);
+    }
     Some(value * from.factor / to.factor)
 }
 //#endregion 🔖️Units
@@ -1292,6 +1295,13 @@ mod tests {
         let forward = convert(1.5, kn, n).unwrap();
         let back = convert(forward, n, kn).unwrap();
         assert!((back - 1.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn unit_conversion_same_unit_short_circuits_bit_exactly() {
+        let deg = unit_by_symbol("deg").unwrap();
+        // 30.0 degrees previously round-tripped as 29.999999999999996 due to (30.0 * (PI/180)) / (PI/180).
+        assert_eq!(convert(30.0, deg, deg), Some(30.0));
     }
 
     #[test]

@@ -15,7 +15,7 @@ pub enum WriterOperation {
     SetDocument {
         #[dsl(block)]
         document: WriterProjection,
-    },
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]

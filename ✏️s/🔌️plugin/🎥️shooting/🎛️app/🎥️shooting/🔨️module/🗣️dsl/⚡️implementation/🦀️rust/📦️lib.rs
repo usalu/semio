@@ -70,5 +70,17 @@ mod tests {
         let fixture = parse_dsl(SHOOTING_EXAMPLE_TEXT).expect("base-icon example parses");
         store::test_support::assert_dsl_round_trip(&fixture);
     }
+
+    #[test]
+    fn shooting_dsl_angle_deg_field_round_trips_bit_exactly() {
+        let mut fixture = representative_fixture();
+        fixture.saved_cameras[0].camera.fov = 30.0;
+        fixture.scene.sun.azimuth = 30.0;
+        let text = print_dsl(&fixture);
+        let reparsed = parse_dsl(&text).expect("parse_dsl");
+        assert_eq!(reparsed.saved_cameras[0].camera.fov, 30.0);
+        assert_eq!(reparsed.scene.sun.azimuth, 30.0);
+        assert_eq!(fixture, reparsed);
+    }
 }
 //#endregion 🧪️Tests

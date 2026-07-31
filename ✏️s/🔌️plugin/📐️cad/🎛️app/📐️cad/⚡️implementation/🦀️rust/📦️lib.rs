@@ -428,7 +428,7 @@ pub enum ExprPathRoot {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ExprPathSegment {
     Field { name: String },
-    Index { index: usize },
+    Index { index: usize }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -505,7 +505,7 @@ pub enum Expr {
     Fold {
         operation: String,
         args: Vec<Expr>,
-    },
+    }
 }
 
 /// Evaluation environment for {@link Expr}: `context` is the engagement session's persistent
@@ -694,7 +694,7 @@ pub enum Effect {
         interaction: String,
         #[serde(default)]
         outputs: Vec<InteractionCallOutput>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -909,7 +909,7 @@ pub enum DisplayItemSpec {
         preview_kind: Option<String>,
         #[serde(default)]
         params: std::collections::HashMap<String, Expr>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

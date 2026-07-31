@@ -802,6 +802,7 @@ fn build_document_tree(view: LowpolyView, doc: &LowpolyDocument, labels: &Lowpol
                             hover_action: Some(lowpoly_action("setHover", Some(hover_args.clone()))),
                             unhover_action: Some(lowpoly_action("setHover", None)),
                             actions,
+                            menu: None,
                             ..UiTreeItemNode::base(row_id, format!("{label} {id}"))
                         }
                     })
@@ -810,6 +811,7 @@ fn build_document_tree(view: LowpolyView, doc: &LowpolyDocument, labels: &Lowpol
                     icon_id: IconName::from_str(icon),
                     items: Some(leaves),
                     description: Some(format!("{count}")),
+                    menu: None,
                     ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}.{mode}.group"), label.to_string())
                 }
             };
@@ -831,6 +833,7 @@ fn build_document_tree(view: LowpolyView, doc: &LowpolyDocument, labels: &Lowpol
                 ]),
                 default_open: Some(object.id == active_id),
                 description: Some(object.id.clone()),
+                menu: None,
                 ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}"), object.name.clone())
             }
         })
@@ -856,7 +859,8 @@ fn build_catalogue_tree(labels: &LowpolyLabels) -> UiNode {
                 primitive_catalog_label(kind, label, labels),
                 Some((*kind).to_string()),
                 lowpoly_action("addPrimitive", Some(json!({ "kind": kind }))),
-            )
+            ),
+            menu: None,
         })
         .collect();
     PanelTreeBuilder::new("lowpoly-play-catalogue")
@@ -878,7 +882,8 @@ fn build_layers_tree(view: LowpolyView, labels: &LowpolyLabels) -> UiNode {
                 layer.name.clone(),
                 Some(format!("{} · {}", layer.opacity, layer.blend_mode)),
                 lowpoly_action("setActivePaintLayer", Some(json!({ "layerIndex": index }))),
-            )
+            ),
+            menu: None,
         })
         .collect();
     PanelTreeBuilder::new("lowpoly-play-layers")
@@ -902,10 +907,12 @@ fn inspector_utility_param_field(id: &str, label: &str, key: &str, value: &Value
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 
@@ -938,10 +945,12 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
                         max: None,
                         step: None,
                         accept: None,
+                        menu: None,
                     })),
                     description: None,
                     required: None,
                     error: None,
+                    menu: None,
                 }),
                 UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                     id: "lowpoly-play-inspector.object.smooth".into(),
@@ -952,10 +961,12 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
                         presence: UiPresence::selected(object.smooth_shading),
                         text: None,
                         on_change: lowpoly_action("patchObject", Some(json!({ "objectId": object.id, "field": "smoothShading" }))),
+                        menu: None,
                     })),
                     description: None,
                     required: None,
                     error: None,
+                    menu: None,
                 }),
                 ui_inspector_readonly_field(
                     "lowpoly-play-inspector.object.selection",

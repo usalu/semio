@@ -45,6 +45,19 @@ interface types {
     json: string,
   }
 
+  /// 🖱️ On-demand context-menu request: `{ menu: UiMenuRef, surface?, windowInstanceId?, point?,
+  /// viewState }` (see framework core's `ContextMenuRequest`). Never cached, never batched into
+  /// `refresh-ui` — computed fresh at right-click time so menu rows can never go stale relative to
+  /// live selection/document state.
+  record context-menu-request-json {
+    json: string,
+  }
+
+  /// 🖱️ `{ items: ContextMenuItemSpec[] }` — see framework core's `ContextMenuResponse`.
+  record context-menu-response-json {
+    json: string,
+  }
+
   record migrate-document-input {
     from-version: string,
     to-version: string,
@@ -102,6 +115,8 @@ interface plugin {
     window-output-json,
     ui-refresh-request-json,
     ui-refresh-response-json,
+    context-menu-request-json,
+    context-menu-response-json,
     migrate-document-input,
     migrate-document-output,
     document-text-files,
@@ -138,6 +153,15 @@ interface plugin {
     instance-id: u32,
     request: ui-refresh-request-json,
   ) -> result<ui-refresh-response-json, plugin-error>;
+  /// 🖱️ Computes the context menu for one right-click, on demand. Never cached and never part of
+  /// `refresh-ui`'s hash-conditional sections — the call is in-process (sub-millisecond) and menu
+  /// rows are cheap to recompute per click, so freshness wins over the payload-bloat/staleness
+  /// tradeoff a render-time-attached item list would carry. `request` names the target via a
+  /// `UiMenuRef` the host resolved from `data-menu-id`/a scene surface, plus live `ViewState`.
+  context-menu: func(
+    instance-id: u32,
+    request: context-menu-request-json,
+  ) -> result<context-menu-response-json, plugin-error>;
   /// 📦️ `data` (both directions) is pack-container bytes going forward (see `document-pack-files`) —
   /// the WIT signature itself is unchanged (`list<u8>` both ways) so no other func needed updating.
   migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;

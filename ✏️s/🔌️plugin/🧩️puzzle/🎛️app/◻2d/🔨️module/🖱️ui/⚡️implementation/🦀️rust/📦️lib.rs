@@ -1451,6 +1451,7 @@ fn kind_catalog_section(section_id: &str, slice: &str, label: &str, entries: &[V
                 items: None,
                 control: None,
                 dimmed: None,
+                menu: None,
             }
         })
         .collect();
@@ -1481,6 +1482,7 @@ fn render_catalogue_panel(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        menu: None,
     })
 }
 //#endregion 🔖️CataloguePanel

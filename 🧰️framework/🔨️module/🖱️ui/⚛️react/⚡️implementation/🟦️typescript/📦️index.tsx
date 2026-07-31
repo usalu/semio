@@ -1593,7 +1593,7 @@ const hoverExcludingHandleBgFillClass = "hover:not-data-[handle-hovered=true]:bg
 const hoverExcludingHandleTextEmphasizedClass = "hover:not-data-[handle-hovered=true]:text-emphasized";
 const hoverExcludingHandleActiveBgClass = "hover:not-data-[handle-hovered=true]:bg-active-base/90";
 const hoverExcludingHandleActiveBorderClass = "hover:not-data-[handle-hovered=true]:border-active-base";
-const groupHoverExcludingHandleBgFillClass = "group-hover:not-group-data-[handle-hovered=true]:bg-hover-interactive-fill";
+const groupHoverExcludingHandleBgFillClass = "group-hover/tree-row:not-group-data-[handle-hovered=true]/tree-row:bg-hover-interactive-fill";
 
 /** @emoji 🎨️ Normal-border gray fill for interactive hover states. */
 export const interactiveHoverFillClass = "hover:bg-hover-interactive-fill";
@@ -8823,26 +8823,52 @@ export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
 /**
  * 🎛️ Hosts an anchor's root tab row inline in the navbar/footer chrome while the floating panel is
  * folded — the SAME {@link PanelTabBar} mechanism (progressive reveal, drill-down memory, drag-and-drop)
- * as a panel-hosted bar, just placed elsewhere. When the panel is open (`visible`), this renders nothing:
- * the floating {@link Panel}'s {@link WindowChrome} owns the tabs as its left chips (same row as fold,
- * U-cutout between), matching window stacks. Renders nothing at rest once `tabs` is empty; becomes a drop
- * target only while a dock drag is in flight, mirroring {@link PanelEmptyDockZone}'s empty-anchor behavior.
- * Pair with `Panel`'s `tabBarHost="chrome"` for the matching anchor, and pass the SAME controlled selection
- * props to both — chrome hosting requires controlled state so the two hosts never fork.
+ * as a panel-hosted bar, just placed elsewhere. When the panel is open (`visible`), the floating
+ * {@link Panel}'s {@link WindowChrome} owns the tab chips; this host keeps a width-matched placeholder so
+ * trailing navbar controls (fullscreen) do not reflow. Renders nothing at rest once `tabs` is empty; becomes
+ * a drop target only while a dock drag is in flight, mirroring {@link PanelEmptyDockZone}'s empty-anchor
+ * behavior. Pair with `Panel`'s `tabBarHost="chrome"` for the matching anchor, and pass the SAME controlled
+ * selection props to both — chrome hosting requires controlled state so the two hosts never fork.
  **/
 export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, className = "", ...selection }) => {
   const dock = usePanelDockContext();
   const { resolvedPath, handlePathChange } = usePanelTabSelection(selection);
   const { tabs, visible } = selection;
+  const shellRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [parkedWidth, setParkedWidth] = reactHostPort.useState(0);
 
-  // 🪟️ Open panel owns the window-chrome tab chips — keep navbar/footer clear of a duplicate root row.
-  if (visible) return null;
+  reactHostPort.useLayoutEffect(() => {
+    if (visible || tabs.length === 0) return;
+    const shell = shellRef.current;
+    if (!shell) return;
+    const width = shell.getBoundingClientRect().width;
+    if (width > 0) setParkedWidth(width);
+  }, [visible, tabs, resolvedPath]);
+
+  if (visible) {
+    if (tabs.length === 0) return null;
+    return (
+      <LevelProvider level="panel">
+        <GhostRegionShell
+          ref={shellRef}
+          sessionGhost={false}
+          data-level="panel"
+          data-slot="panel-chrome-tab-bar"
+          data-anchor={anchor}
+          data-panel-chrome-tab-bar-placeholder="true"
+          aria-hidden="true"
+          className={cn("pointer-events-none flex shrink-0 items-center", className)}
+          style={parkedWidth > 0 ? { width: parkedWidth, minWidth: parkedWidth } : undefined}
+        />
+      </LevelProvider>
+    );
+  }
 
   if (tabs.length === 0) {
     if (!dock?.dragTabId) return null;
     return (
       <LevelProvider level="panel">
-        <GhostRegionShell sessionGhost={false} data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+        <GhostRegionShell ref={shellRef} sessionGhost={false} data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
           <PanelEmptyDockZone anchor={anchor} />
         </GhostRegionShell>
       </LevelProvider>
@@ -8851,7 +8877,7 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
 
   return (
     <LevelProvider level="panel">
-      <GhostRegionShell sessionGhost={false} data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+      <GhostRegionShell ref={shellRef} sessionGhost={false} data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
         <WindowChrome
           chipOnly
           level="panel"
@@ -9401,6 +9427,8 @@ export interface WindowChromeProps {
   readonly stackDataAttrs?: Record<string, string | undefined>;
   /** @emoji 🧭️ Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
   readonly capDock?: "top" | "bottom";
+  /** @emoji ↔ Inline layout overrides for the cap row (e.g. chrome-hosted trailing navbar reserve). */
+  readonly capRowStyle?: React.CSSProperties;
 }
 
 /** @emoji 🪟️ SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
@@ -9501,6 +9529,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       stackBindProps,
       stackDataAttrs,
       capDock = "top",
+      capRowStyle,
     },
     ref,
   ) => {
@@ -9553,7 +9582,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         {...stackDataAttrs}
       >
         <WindowChromeSilhouetteBorder stack={stackEl} active={active} introduceTarget={introduceTarget} borderKind={borderKind} />
-        <div ref={capRef} data-slot="window-chrome-cap" data-ui-reveal-region="window-cap" data-dim className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
+        <div ref={capRef} data-slot="window-chrome-cap" data-ui-reveal-region="window-cap" data-dim className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent" style={capRowStyle}>
           <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
@@ -15101,6 +15130,9 @@ export function navbarFillItem(key = "navbarFill"): NavbarItem {
   return { key, className: navbarFillClassName, content: null };
 }
 
+/** @emoji ↔ Navbar trailing control footprint (fullscreen toggle slot + flex gap). */
+export const shellNavbarTrailingEndReserveCss = "calc(var(--size-medium) + var(--spacing-single))";
+
 /** @emoji ∅ Sentinel id for the navbar “No example” row (matches {@link PLAYGROUND_NO_EXAMPLE_ID}). */
 export const NAVBAR_NO_EXAMPLE_ID = "__none__";
 
@@ -15655,7 +15687,7 @@ const detailPanelIndentLen = (level: number, multiplier = 1): string => uiSpacin
 const detailPanelIndentPx = (level: number, multiplier = 1): number => domSizePx("treeIndentPerLevelUiSpacing") * level * multiplier;
 const treeRowHeightPx = domSizePx("treeRowUiSpacing");
 const detailPanelHeaderLineCenterPx = treeRowHeightPx / 2;
-const treeRowShellClassName = "relative h-workbench min-h-workbench max-h-workbench select-none overflow-hidden min-w-0";
+const treeRowShellClassName = "relative h-workbench min-h-workbench max-h-workbench w-full min-w-0 select-none overflow-hidden";
 const treeRowLayoutClassName = "grid min-w-0 h-full w-full";
 const treeRowContentClassName = "min-w-0 h-full flex items-center";
 const detailPanelPropertyLabelColumnWidthPx = domSizePx("propertyLabelColumnUiSpacing");
@@ -15687,7 +15719,7 @@ const treeCompactSiblingGapPx = 0;
 const treeSubtreeGapPx = 0;
 const treeGutterToContentGapPx = treeRowInlineGapPx;
 const treeItemLabelStyle: React.CSSProperties = {};
-const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover:bg-emphasized transition-[width,background-color] duration-150";
+const treeGuideLineStrokeClassName = "bg-muted-foreground/40 group-hover/tree-row:bg-emphasized transition-[width,background-color] duration-150";
 const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";
 const treeItemSecondaryTextClassName = "text-2xs leading-none text-muted-foreground";
 const treeSectionLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center truncate text-xs font-semibold uppercase leading-none tracking-wide text-element transition-colors select-text";
@@ -15831,7 +15863,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   return (
-    <div data-slot="tree-content" data-tree-row-kind="content" className="relative" style={{ paddingTop: `${treeRowVerticalPaddingPx}px`, paddingBottom: `${treeRowVerticalPaddingPx}px` }}>
+    <div data-slot="tree-content" data-tree-row-kind="content" className="relative w-full min-w-0" style={{ paddingTop: `${treeRowVerticalPaddingPx}px`, paddingBottom: `${treeRowVerticalPaddingPx}px` }}>
       <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} align="start" connectCurrentLevel={level > 0}>
         {children}
       </TreeAlignedRow>
@@ -15915,7 +15947,7 @@ const TreeBranchContent: React.FC<TreeBranchContentProps> = ({ slot, children, c
   }, [children, isTree]);
 
   return (
-    <div ref={branchRef} data-slot={slot} data-tree-owner-kind={ownerRowKind} data-tree-owner-expanded={ownerExpanded ? "true" : "false"} className={cn("relative flex min-w-0 flex-col", className)} style={treeBranchContentStyle(topPaddingPx)}>
+    <div ref={branchRef} data-slot={slot} data-tree-owner-kind={ownerRowKind} data-tree-owner-expanded={ownerExpanded ? "true" : "false"} className={cn("relative flex w-full min-w-0 flex-col", className)} style={treeBranchContentStyle(topPaddingPx)}>
       {isTree ? <IndentationLines level={level} showLines={showLines} /> : null}
       {children}
     </div>
@@ -15994,7 +16026,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
       action.kind === "checkbox" ? (
         <TreeCheckbox key={action.id ?? index} id={action.id} checked={action.checked} onCheckedChange={action.onCheckedChange} title={action.title} disabled={action.disabled} ariaLabel={action.ariaLabel} />
       ) : (
-        <span key={action.id ?? index} className={cn(action.revealOnHover ? "opacity-0 transition-opacity group-hover:opacity-100" : undefined)}>
+        <span key={action.id ?? index} className={cn(action.revealOnHover ? "opacity-0 transition-opacity group-hover/tree-row:opacity-100" : undefined)}>
           <Action
             onClick={(event) => {
               event.preventDefault();
@@ -16730,12 +16762,12 @@ const treeSemanticHoverStaySelector = `${treeSemanticHoverRowSelector}, [data-sl
 function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false): string {
   const hiddenClass = isHidden ? "opacity-50 text-muted-foreground" : "";
   if (isSelected) {
-    return cn("group", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
+    return cn("group/tree-row", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
   }
   if (isHighlighted) {
-    return cn("group", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
+    return cn("group/tree-row", "text-emphasized", interactiveControlTransitionClass, hiddenClass);
   }
-  return cn("group", "text-element", interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, hiddenClass);
+  return cn("group/tree-row", "text-element", interactiveControlTransitionClass, hoverExcludingHandleTextEmphasizedClass, hiddenClass);
 }
 
 /** @emoji 🎨️ Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
@@ -16954,7 +16986,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     </CollapsibleTrigger>
   );
   const sectionContent = (
-    <CollapsibleContent className="min-w-0">
+    <CollapsibleContent className="w-full min-w-0">
       <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastSection], showLines, isTree, indentMultiplier, direction }}>
         <TreeBranchContent slot="tree-section-content" ownerRowKind="section" ownerExpanded={open && hasChildren} topPaddingPx={treeSectionContentPaddingTopPx}>
           {children}
@@ -17024,7 +17056,6 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   const itemShellClasses = cn(
     treeRowShellClassName,
     treeRowChromeShellClasses(isSelected, isHighlighted),
-    "w-full",
     hasChildren ? "cursor-foldable" : "cursor-selectable",
     isDragHandle && driverSurfaceDrag ? "cursor-grab active:cursor-grabbing" : "",
     isDropReady && dropZoneReadyTextClass,
@@ -17413,7 +17444,6 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const itemShellClasses = cn(
     treeRowShellClassName,
     treeRowChromeShellClasses(isSelected, isHighlighted, isHidden),
-    "w-full",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
     draggable && effectiveDragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
     isDragging ? "opacity-40" : "",
@@ -17524,7 +17554,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           </TreeBranchContent>
         </TreeContext.Provider>
       ) : (
-        <div data-slot="tree-property-content" className="min-w-0" />
+        <div data-slot="tree-property-content" className="w-full min-w-0" />
       )
     ) : null;
     const propertyBlock =
@@ -17805,7 +17835,7 @@ export const TreeRow: React.FC<{
   if (!isTree) {
     return (
       <TreeRowAlignmentContext.Provider value={true}>
-        <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn(treeRowShellClassName, "w-full", className)}>
+        <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn(treeRowShellClassName, className)}>
           {children}
         </div>
       </TreeRowAlignmentContext.Provider>
@@ -17814,7 +17844,7 @@ export const TreeRow: React.FC<{
 
   return (
     <TreeRowAlignmentContext.Provider value={true}>
-      <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn(treeRowShellClassName, "w-full", className)}>
+      <div data-dim data-slot="tree-row" data-tree-row-kind={rowKind} className={cn(treeRowShellClassName, className)}>
         <TreeAlignedRow
           level={level}
           isLastAtLevel={isLastAtLevel}
@@ -18776,13 +18806,22 @@ export const Tree = (({
     <TreeStateProvider openStates={openStates} onOpenStateChange={onOpenStateChange}>
       <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines, isTree: true, indentMultiplier, direction }}>
         <TreeReorderDropPreview preview={dropPreview} />
-        <div ref={treeRootRef} className={`w-full min-w-0 overflow-hidden ${className}`} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
+        <div
+          ref={treeRootRef}
+          data-slot="tree"
+          role="tree"
+          aria-multiselectable={selectionMode === "multiple" ? true : undefined}
+          dir="auto"
+          className={`w-full min-w-0 overflow-hidden ${className}`}
+          onPointerOver={handleTreePointerOver}
+          onPointerLeave={handleTreePointerLeave}
+        >
           <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
             <TreeSelectionContext.Provider value={selectionStore}>
               <TreeHighlightContext.Provider value={highlightStore}>
                 <TreeDataRenderingContext.Provider value={treeDataRenderingValue}>
                   {orderedSections.map((section, sectionIndex) => (
-                    <div key={section.id} data-slot="tree-section-wrapper">
+                    <div key={section.id} data-slot="tree-section-wrapper" className="w-full min-w-0">
                       <TreeDataSectionView section={section} isLastSection={sectionIndex === orderedSections.length - 1} />
                     </div>
                   ))}
@@ -20379,6 +20418,8 @@ const Panel: React.FC<PanelProps> = ({
           onClick: () => onVisibleChange(false),
         }
       : undefined;
+  const chromeHostedTrailingEndReserveStyle =
+    isChromeHosted && visible && horizontal === "right" ? ({ paddingInlineStart: shellNavbarTrailingEndReserveCss } as React.CSSProperties) : undefined;
 
   // 🎯️ An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
   // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling
@@ -20432,6 +20473,7 @@ const Panel: React.FC<PanelProps> = ({
                 active={surfaceActive}
                 level="panel"
                 capDock={isBottom ? "bottom" : "top"}
+                capRowStyle={chromeHostedTrailingEndReserveStyle}
                 stackClassName="w-full flex-1 min-h-0 bg-transparent"
                 bodyClassName="flex min-h-0 flex-1 flex-col"
                 bodySlot="panel-content"
@@ -31601,6 +31643,34 @@ if (import.meta.vitest) {
       expect(side.left).toBe("var(--spacing-single)");
     });
 
+    it("PanelChromeTabBar renders a width placeholder without tab chips while the panel is open", async () => {
+      const { render } = await import("@testing-library/react");
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Inspector", tree: { sections: [] } })];
+      const rectSpy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+        if (this.getAttribute("data-slot") === "panel-chrome-tab-bar" && !this.getAttribute("data-panel-chrome-tab-bar-placeholder")) {
+          return { width: 128, height: 24, top: 0, left: 0, right: 128, bottom: 24, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+        }
+        return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+      });
+      const { container, rerender } = render(<PanelChromeTabBar anchor="top-right" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => undefined} />);
+      rerender(<PanelChromeTabBar anchor="top-right" tabs={tabs} visible={true} activeTabPath={["tab-a"]} onActiveTabPathChange={() => undefined} />);
+      const placeholder = container.querySelector('[data-slot="panel-chrome-tab-bar"][data-panel-chrome-tab-bar-placeholder="true"]') as HTMLElement;
+      expect(placeholder).toBeTruthy();
+      expect(placeholder.querySelector('[data-slot="panel-tabs"]')).toBeNull();
+      expect(placeholder.style.width).toBe("128px");
+      rectSpy.mockRestore();
+    });
+
+    it("open chrome-hosted top-right panel reserves trailing navbar end space on the cap row", async () => {
+      const { render } = await import("@testing-library/react");
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Inspector", tree: { sections: [] } })];
+      const { container } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
+      const cap = container.querySelector('[data-slot="panel"][data-anchor="top-right"] [data-slot="window-chrome-cap"]') as HTMLElement;
+      expect(cap.style.paddingInlineStart).toBe(shellNavbarTrailingEndReserveCss);
+    });
+
     it('Panel with tabBarHost="chrome" at top-middle and bottom-middle expands with glass panel level and root chips on the chrome cap', () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [{ kind: "branch", id: "root", icon: StubIcon, name: "Command", children: [singleTreeLeaf({ id: "leaf", icon: StubIcon, name: "Palette", tree: { sections: [] } })] }];
@@ -31904,6 +31974,39 @@ if (import.meta.vitest) {
       expect(mergeTreeSectionOrder(["c", "a"], sections).map((section) => section.id)).toEqual(["c", "a", "b"]);
     });
 
+    it("stretches every data-tree wrapper and nested row to the full host width", () => {
+      const { container } = render(
+        <Tree
+          sections={[
+            {
+              id: "section",
+              label: "Section",
+              defaultOpen: true,
+              items: [
+                {
+                  id: "group",
+                  label: "Group",
+                  defaultOpen: true,
+                  items: [{ id: "leaf", label: "Leaf" }],
+                },
+              ],
+            },
+          ]}
+        />,
+      );
+      const sectionWrapper = container.querySelector<HTMLElement>('[data-slot="tree-section-wrapper"]');
+      const sectionBranch = container.querySelector<HTMLElement>('[data-slot="tree-section-content"]');
+      const itemBranch = container.querySelector<HTMLElement>('[data-slot="tree-item-content"]');
+      const rows = container.querySelectorAll<HTMLElement>('[data-slot="tree-section-row"], [data-slot="tree-item-row"]');
+
+      expect(sectionWrapper?.classList.contains("w-full")).toBe(true);
+      expect(sectionBranch?.classList.contains("w-full")).toBe(true);
+      expect(sectionBranch?.parentElement?.classList.contains("w-full")).toBe(true);
+      expect(itemBranch?.classList.contains("w-full")).toBe(true);
+      expect(rows.length).toBe(3);
+      expect(Array.from(rows).every((row) => row.classList.contains("w-full"))).toBe(true);
+    });
+
     it("sortable TreeItem always renders a drag handle", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
@@ -31937,6 +32040,23 @@ if (import.meta.vitest) {
       const { container: bottomContainer } = render(<Panel anchor="bottom-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       const bottomMarkup = bottomContainer.querySelector('[data-slot="panel-content"]')!.innerHTML;
       expect(bottomMarkup.indexOf("Section B")).toBeLessThan(bottomMarkup.indexOf("Section A"));
+      const bottomTree = bottomContainer.querySelector('[data-slot="tree"]');
+      expect(bottomTree?.getAttribute("dir")).toBe("auto");
+      expect(bottomTree?.getAttribute("role")).toBe("tree");
+    });
+
+    it("keeps right-anchored panel tree rows left-to-right inside mirrored panel chrome", () => {
+      const StubIcon = (): null => null;
+      const tab = singleTreeLeaf({
+        id: "history",
+        icon: StubIcon,
+        name: "History",
+        tree: { sections: [{ id: "commands", label: "Commands", defaultOpen: true, items: [{ id: "command", label: "Toggle Panel" }] }] },
+      });
+      const { container } = render(<Panel anchor="bottom-right" visible tabs={[tab]} activeTabPath={[tab.id]} />);
+      expect(container.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBe("rtl");
+      expect(container.querySelector('[data-slot="tree"]')?.getAttribute("dir")).toBe("auto");
+      expect(container.querySelector('[data-slot="tree-item-row"]')?.closest('[data-slot="tree"]')?.getAttribute("dir")).toBe("auto");
     });
 
     it("FlowProvider defaults to ltr/down and lets nested providers override only what they pass", () => {
@@ -35234,7 +35354,8 @@ if (treeVitest) {
       const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
       const canvas = container.querySelector("#canvas") as HTMLElement;
       expect(foldedChromeBar).toBeTruthy();
-      expect(openChromeBar).toBeNull();
+      expect(openChromeBar).toBeTruthy();
+      expect(openChromeBar?.getAttribute("data-panel-chrome-tab-bar-placeholder")).toBe("true");
       expect(panel).toBeTruthy();
       expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
       expect(panel.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
@@ -35322,6 +35443,12 @@ if (treeVitest) {
     it("treeRowChromeContentFillClasses prefers the loading ring over waiting when both are set", () => {
       expect(treeRowChromeContentFillClasses(false, false, true, true)).toContain("border-loading");
       expect(treeRowChromeContentFillClasses(false, false, true, true)).not.toContain("border-waiting");
+    });
+
+    it("scopes tree hover chrome to the row that owns the content", () => {
+      expect(treeRowChromeShellClasses(false, false).split(" ")).toContain("group/tree-row");
+      expect(treeRowChromeShellClasses(false, false).split(" ")).not.toContain("group");
+      expect(treeRowChromeContentFillClasses(false, false)).toContain("group-hover/tree-row:");
     });
 
     it("applies tree row fill on tree-row-content so gutter guides stay visible", () => {
@@ -35625,12 +35752,12 @@ if (treeVitest) {
       const childA = document.getElementById("puzzle3d-fill-vortex-a");
       const childB = document.getElementById("puzzle3d-fill-vortex-b");
       expect(parentRow?.getAttribute("data-slot")).toBe("tree-property-item");
-      expect(parentRow?.className).toContain("group");
+      expect(parentRow?.className).toContain("group/tree-row");
       expect(branch).not.toBeNull();
       expect(parentRow?.contains(branch)).toBe(false);
       expect(branch?.contains(childA)).toBe(true);
       expect(branch?.contains(childB)).toBe(true);
-      expect(childA?.closest('[data-slot="tree-property-item"]')?.className).toContain("group");
+      expect(childA?.closest('[data-slot="tree-property-item"]')?.className).toContain("group/tree-row");
       expect(childA?.closest('[data-slot="tree-property-item"]')).not.toBe(parentRow);
       expect(childB?.closest('[data-slot="tree-property-item"]')).not.toBe(parentRow);
       expect(childA?.closest('[data-slot="tree-property-item"]')).not.toBe(childB?.closest('[data-slot="tree-property-item"]'));
@@ -36020,7 +36147,7 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="tree-item-content"');
       expect(markup).toContain('data-slot="property-row"');
-      expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col" style="row-gap:0px"');
+      expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex w-full min-w-0 flex-col"');
       expect(markup).not.toContain("padding-top:6px");
       expect(markup).not.toContain("padding-top:2px");
       expect(markup).not.toContain("margin-bottom:12px");
@@ -36044,7 +36171,7 @@ if (treeVitest) {
         </TreeContext.Provider>,
       );
 
-      expect(markup).toContain('data-slot="tree-content" data-tree-row-kind="content" class="relative"');
+      expect(markup).toContain('data-slot="tree-content" data-tree-row-kind="content" class="relative w-full min-w-0"');
       expect(markup).toContain('data-slot="tree-gutter"');
       expect(markup).toContain('data-slot="tree-branch-elbow"');
       expect(markup).toContain('data-slot="tree-gutter-slot"');
@@ -36059,10 +36186,10 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-branch-elbow"');
       expect(markup).not.toContain('style="top:50%;left:7px;width:3px"');
       expect(markup).toContain('data-slot="tree-branch-stem"');
-      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
+      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
       expect(markup).not.toContain('data-slot="tree-content" class="relative" style="padding-top:3px;padding-bottom:3px;padding-left:');
       expect(markup).not.toContain('data-slot="tree-property-label" class="relative min-w-0" style="padding-left:');
-      expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col"');
+      expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex w-full min-w-0 flex-col"');
     });
 
     it("keeps tree gutter/guide geometry identical under an rtl FlowProvider — logical insets, not a direction-conditional physical side", () => {
@@ -36124,7 +36251,7 @@ if (treeVitest) {
         />,
       );
 
-      expect(markup).toContain('data-slot="control-tree-folder-content" data-tree-owner-expanded="false" class="relative flex min-w-0 flex-col"');
+      expect(markup).toContain('data-slot="control-tree-folder-content" data-tree-owner-expanded="false" class="relative flex w-full min-w-0 flex-col"');
       expect(markup).toContain('data-slot="control-tree-folder-label"');
       expect(markup).toContain('data-slot="control-tree-control-label"');
       expect(markup).toContain('data-slot="tree-row-layout"');
@@ -36949,7 +37076,7 @@ if (treeVitest) {
       expect(markup).toContain("border-loading");
       expect(markup).not.toMatch(/data-slot="window-measure-tree-row"[^>]*border-loading/);
       expect(markup).toContain('data-tree-guide-line=""');
-      expect(markup).toMatch(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/);
+      expect(markup).toMatch(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/);
     });
 
     it("puts a waiting ring on a window measure tree leaf's own row", () => {
@@ -36978,7 +37105,7 @@ if (treeVitest) {
       );
       expect(markup).toContain('data-slot="window-measure-tree-content"');
       expect(markup).toContain('data-slot="tree-guide"');
-      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
+      expect(markup.match(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover\/tree-row:bg-emphasized/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
       expect(markup).toContain('data-slot="tree-branch-elbow"');
     });
 
@@ -37070,7 +37197,9 @@ if (treeVitest) {
       expect(visible).toBe(true);
       expect(path).toEqual(["framework.category.workbench", "framework.panel.document"]);
       rerender(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
-      expect(container.querySelector('[data-slot="panel-chrome-tab-bar"]')).toBeNull();
+      const placeholder = container.querySelector('[data-slot="panel-chrome-tab-bar"]');
+      expect(placeholder?.getAttribute("data-panel-chrome-tab-bar-placeholder")).toBe("true");
+      expect(placeholder?.querySelector('[data-slot="panel-tabs"]')).toBeNull();
     });
 
     it("PanelChromeTabBar at middle anchors uses panel level and window-chrome chip cap glass", () => {

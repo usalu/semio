@@ -271,7 +271,7 @@ enum Procedural2dOperationDsl {
         id: String,
         question_id: String,
         value: serde_json::Value,
-    },
+    }
 }
 
 fn procedural2d_operation_to_dsl(operation: &Procedural2dOperation) -> Procedural2dOperationDsl {

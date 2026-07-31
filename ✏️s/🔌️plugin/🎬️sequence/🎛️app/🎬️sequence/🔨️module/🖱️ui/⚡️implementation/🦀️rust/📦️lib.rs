@@ -138,6 +138,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
             presence: UiPresence::selected(!step.collapsed),
             text: None,
             on_change: sequence_action("setStepCollapsed", Some(json!({ "id": step.id }))),
+            menu: None,
         }));
         let slot_items: Vec<UiTreeItemNode> = control_slots(&step.kind)
             .iter()
@@ -159,6 +160,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
                     items: if nested.is_empty() { None } else { Some(nested) },
                     control: None,
                     dimmed: if step.collapsed { Some(true) } else { None },
+                    menu: None,
                 }
             })
             .collect();
@@ -289,6 +291,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.select_prompt)],
+            menu: None,
         }]);
     }
     let steps: Vec<&SequenceStep> = selected.iter().filter_map(|id| fixture.steps.iter().find(|step| &step.id == id)).collect();
@@ -299,6 +302,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.step_not_found)],
+            menu: None,
         }]);
     }
     let step_ids: Vec<String> = steps.iter().map(|step| step.id.clone()).collect();

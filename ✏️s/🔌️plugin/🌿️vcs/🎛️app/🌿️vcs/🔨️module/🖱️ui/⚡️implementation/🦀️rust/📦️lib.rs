@@ -328,7 +328,8 @@ fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsL
                 column.description.clone().unwrap_or_else(|| column.checkpoint_id.clone()),
                 Some(column.timestamp.clone()),
                 vcs_action("checkoutCheckpoint", Some(json!({ "checkpointId": column.checkpoint_id }))),
-            )
+            ),
+            menu: None,
         })
         .collect();
     let mut alternative_ids: Vec<String> = Vec::new();
@@ -350,7 +351,8 @@ fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsL
                     alternative_id.clone(),
                     Some(format!("{count} {}", labels.checkpoints)),
                     vcs_action("switchAlternative", Some(json!({ "alternativeId": alternative_id }))),
-                )
+                ),
+                menu: None,
             }
         })
         .collect();
@@ -385,10 +387,12 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }),
         UiNode::Field(UiFieldNode {presence: UiPresence::default(),
             id: "vcs-play-inspector.counter".into(),
@@ -404,10 +408,12 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }),
         UiNode::Field(UiFieldNode {presence: UiPresence::default(),
             id: "vcs-play-inspector.status".into(),
@@ -423,10 +429,12 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }),
         UiNode::Field(UiFieldNode {presence: UiPresence::default(),
             id: "vcs-play-inspector.notes".into(),
@@ -442,10 +450,12 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }),
         ui_inspector_readonly_field("vcs-play-inspector.tags", labels.tags, projection.tags.join(", ")),
     ])
@@ -464,6 +474,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         drop_action: None,
         drop_overlay: None,
         children,
+        menu: None,
     })
 }
 
@@ -475,6 +486,7 @@ fn editor_button(id: &str, icon_id: &str, label: &str, action: &str) -> UiNode {
         action: vcs_action(action, None),
         style: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 

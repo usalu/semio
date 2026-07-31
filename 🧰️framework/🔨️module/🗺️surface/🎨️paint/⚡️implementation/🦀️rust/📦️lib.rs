@@ -62,7 +62,7 @@ enum LayerNodeJson {
         adjustment_kind: String,
         #[serde(default)]
         params: AdjustmentParamsJson,
-    },
+    }
 }
 
 fn default_true() -> bool {
@@ -151,7 +151,7 @@ struct DocumentJson {
 enum LayerNode {
     Pixel { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, width: u32, height: u32, image_key: Option<String>, mask: Option<MaskState> },
     Group { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, children: Vec<LayerNode>, mask: Option<MaskState> },
-    Adjustment { id: String, visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson },
+    Adjustment { id: String, visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson }
 }
 
 #[derive(Clone)]
@@ -759,7 +759,7 @@ struct ViewportJsonIn {
 /// 🎯️ Flattened pick candidate — mirrors premigration `flattenRasterLayers` (document order, parent pushed before children, no visibility cascade).
 enum PickEntry {
     Pixel { id: String, visible: bool, parent: Affine, transform: Affine, width: u32, height: u32, ancestors: Vec<(String, bool)> },
-    Group { id: String, visible: bool, parent: Affine, children: Vec<LayerNode> },
+    Group { id: String, visible: bool, parent: Affine, children: Vec<LayerNode> }
 }
 
 impl RasterHost {

@@ -1,0 +1,50 @@
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-framework-os-kernel-pack-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-framework-os-kernel-protocol-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-framework-os-kernel-db-cli` (manifest) generated 1 warning
+warning: profile package spec `semio-s-kernel-store` in profile `release` did not match any packages
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+   Compiling typst v0.14.2
+   Compiling semio-s-app-puzzle-2d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+error: expected one of `.`, `;`, `?`, `}`, or an operator, found `,`
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:5960:10
+     |
+5960 |         },
+     |          ^ expected one of `.`, `;`, `?`, `}`, or an operator
+
+error: cannot use a comma after the base struct
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6014:87
+     |
+6014 |         let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), ..tree_item("parent", "Parent"),
+     |                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: the base struct must always be the last field
+help: remove this comma
+     |
+6014 -         let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), ..tree_item("parent", "Parent"),
+6014 +         let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), ..tree_item("parent", "Parent")
+     |
+
+error: cannot use a comma after the base struct
+    --> 🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust/../../../🧊️wgpu/⚡️implementation/🦀️rust/📦️lib.rs:6048:13
+     |
+6048 |             ..tree_item("leaf", "Leaf"),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: the base struct must always be the last field
+help: remove this comma
+     |
+6048 -             ..tree_item("leaf", "Leaf"),
+6048 +             ..tree_item("leaf", "Leaf")
+     |
+
+error: could not compile `semio-framework-ui-wgpu` (lib) due to 3 previous errors
+warning: build failed, waiting for other jobs to finish...

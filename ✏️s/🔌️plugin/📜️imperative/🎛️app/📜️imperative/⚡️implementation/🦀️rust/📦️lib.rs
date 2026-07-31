@@ -128,7 +128,7 @@ pub enum StepNodeDsl {
         kind: String,
         params: Option<BTreeMap<String, ValueDsl>>,
         bodies: BTreeMap<String, PathDsl>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]

@@ -3514,7 +3514,9 @@ mod tests {
             block_list: None,
             diff_view: None,
             event_feed: None,
-        }
+            menu: None,
+        },
+        menu: None,
     }
 
     #[test]

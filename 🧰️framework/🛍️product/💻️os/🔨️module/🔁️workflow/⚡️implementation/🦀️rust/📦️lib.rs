@@ -122,7 +122,7 @@ pub enum PlaybookExpr {
     Truthy {
         #[dsl(statements, block)]
         expr: Box<PlaybookExpr>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -303,7 +303,7 @@ pub enum PlaybookOperation {
     UpdatePlaybook {
         #[serde(skip_serializing_if = "Option::is_none")]
         title: Option<String>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -349,7 +349,7 @@ pub enum PlaybookDiff {
     UpdatePlaybook {
         #[serde(skip_serializing_if = "Option::is_none")]
         title: Option<String>,
-    },
+    }
 }
 
 impl OperationDiff<PlaybookSpec> for PlaybookDiff {
@@ -729,7 +729,8 @@ pub mod generation_forms {
         let items: Vec<UiTreeItemNode> = generations
             .iter()
             .map(|generation| {
-                let mut actions = vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some("Remove".into()), action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))), reveal_on_hover: Some(true) }];
+                let mut actions = vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some("Remove".into()), action: generation_action(controller_id, "removeGeneration", Some(json!({ "id": generation.id }))), reveal_on_hover: Some(true),
+        }];
                 actions.insert(
                     0,
                     UiTreeItemAction {
@@ -755,6 +756,7 @@ pub mod generation_forms {
                     items: None,
                     control: None,
                     dimmed: None,
+                    menu: None,
                 }
             })
             .collect();
@@ -779,6 +781,7 @@ pub mod generation_forms {
                     items: None,
                     control: None,
                     dimmed: None,
+                    menu: None,
                 }]
             } else {
                 items
@@ -805,6 +808,7 @@ pub mod generation_forms {
                 items: None,
                 control: None,
                 dimmed: None,
+                menu: None,
             }],
             presence: UiPresence::default(),
         });
@@ -815,6 +819,7 @@ pub mod generation_forms {
             highlighted_ids: None,
             selection_change: Some(generation_action(controller_id, "selectGeneration", None)),
             drop_action: None,
+            menu: None,
         })
     }
 
@@ -847,6 +852,7 @@ pub mod generation_forms {
                 step: None,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             "number" => UiControlNode::Input(UiInputNode {
                 id: format!("{field_id}.input"),
@@ -860,6 +866,7 @@ pub mod generation_forms {
                 step: None,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             "slider" => UiControlNode::Slider(UiSliderNode {
                 id: format!("{field_id}.slider"),
@@ -870,11 +877,17 @@ pub mod generation_forms {
                 on_change: on_change(),
                 unit: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
-            "boolean" => UiControlNode::Toggle(UiToggleNode { id: format!("{field_id}.toggle"), icon_id: "toggle-left".into(), text: Some(question.label.clone()), on_change: on_change(), presence: UiPresence::selected(value.as_bool().unwrap_or(false)) }),
+            "boolean" => UiControlNode::Toggle(UiToggleNode { id: format!("{field_id}.toggle"), icon_id: "toggle-left".into(), text: Some(question.label.clone()), on_change: on_change(), presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
+        menu: None,
+    }),
             "single" => {
-                let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: option.label.clone() }).collect()).unwrap_or_default();
-                UiControlNode::Select(UiSelectNode { id: format!("{field_id}.select"), value: value.as_str().unwrap_or_default().to_string(), items, placeholder: question.placeholder.clone(), on_change: on_change(), presence: UiPresence::default() })
+                let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: option.label.clone(),
+        }).collect()).unwrap_or_default();
+                UiControlNode::Select(UiSelectNode { id: format!("{field_id}.select"), value: value.as_str().unwrap_or_default().to_string(), items, placeholder: question.placeholder.clone(), on_change: on_change(), presence: UiPresence::default(),
+        menu: None,
+    })
             }
             "vector" => {
                 let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| json!(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
@@ -911,11 +924,13 @@ pub mod generation_forms {
                                 step: None,
                                 accept: None,
                                 presence: UiPresence::default(),
+                                menu: None,
                             })),
                             description: None,
                             required: None,
                             error: None,
                             presence: UiPresence::default(),
+                            menu: None,
                         })
                     })
                     .collect();
@@ -935,9 +950,12 @@ pub mod generation_forms {
                 step: None,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
         };
-        Some(UiNode::Field(UiFieldNode { id: field_id, label: question.label.clone(), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default() }))
+        Some(UiNode::Field(UiFieldNode { id: field_id, label: question.label.clone(), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default(),
+        menu: None,
+    }))
     }
 
     pub fn render_generation_form_body(form_spec: &PlaybookSpec, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
@@ -1131,6 +1149,7 @@ pub mod builder_kit {
             diff_view: None,
             event_feed: None,
             block_list: Some(build_playbook_list_scene(spec, palette, selected_id)),
+            menu: None,
         })
     }
     //#endregion 🔖Render

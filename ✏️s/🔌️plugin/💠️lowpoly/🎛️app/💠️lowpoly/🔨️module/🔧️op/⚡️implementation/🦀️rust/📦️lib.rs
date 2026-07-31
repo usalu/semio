@@ -88,7 +88,7 @@ pub enum LowpolyOperation {
     SetProjection {
         #[dsl(block)]
         projection: LowpolyProjection,
-    },
+    }
 }
 
 /// 🔁️ Converts a generic objects `CollectionOperation` (as produced by `protocol::invert_collection_operation`)

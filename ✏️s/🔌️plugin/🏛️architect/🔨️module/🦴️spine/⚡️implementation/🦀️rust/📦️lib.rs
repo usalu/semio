@@ -2427,7 +2427,7 @@ mod operations {
         #[test]
         fn dispatches_organizational_add_and_invert() {
             let mut program = empty_plugin();
-            let item = OrganizationalRequirement { header: EntityHeader::new(EntityId::new_serial("organizationalrequirement34"), "OrganizationalRequirement 34"), department: String::new(), reporting_line: None, headcount: QuantitySpec::default(), growth_plan_id: None, work_patterns: Vec::new(), collaboration_model: None, hierarchy_levels: Vec::new(), decision_making: Vec::new(), culture_notes: Vec::new(), change_readiness: None, union_considerations: Vec::new(), training_needs: Vec::new(), element_ids: Vec::new(), stakeholder_ids: Vec::new(), service_requirement_ids: Vec::new(), branding_requirements: Vec::new(), wellness_workflows: Vec::new(), diversity_goals: Vec::new(), owner_id: None, };
+            let item = OrganizationalRequirement { header: EntityHeader::new(EntityId::new_serial("organizationalrequirement34"), "OrganizationalRequirement 34"), department: String::new(), reporting_line: None, headcount: QuantitySpec::default(), growth_plan_id: None, work_patterns: Vec::new(), collaboration_model: None, hierarchy_levels: Vec::new(), decision_making: Vec::new(), culture_notes: Vec::new(), change_readiness: None, union_considerations: Vec::new(), training_needs: Vec::new(), element_ids: Vec::new(), stakeholder_ids: Vec::new(), service_requirement_ids: Vec::new(), branding_requirements: Vec::new(), wellness_plugins: Vec::new(), diversity_goals: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Organizational(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
             apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.organizational.len(), 1);
@@ -12428,7 +12428,7 @@ mod registers {
                 stakeholder_ids: Vec::new(),
                 service_requirement_ids: Vec::new(),
                 branding_requirements: Vec::new(),
-                wellness_workflows: Vec::new(),
+                wellness_plugins: Vec::new(),
                 diversity_goals: Vec::new(),
                 owner_id: Some(EntityId::new_serial("base23")),
             };

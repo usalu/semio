@@ -6646,11 +6646,16 @@ export function FrameworkOsShell({
         },
         dispatchWindowId,
       );
+      const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
+      if (interactiveAction) beginInteractivePluginAction();
       return plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
+        })
+        .finally(() => {
+          if (interactiveAction) endInteractivePluginAction();
         });
     },
     [
@@ -13371,7 +13376,7 @@ function SceneGumball({
   );
 }
 
-function WorldInstanceNode({
+const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   instance,
   index,
   meshRecord,
@@ -13454,10 +13459,14 @@ function WorldInstanceNode({
     },
     [instance.id, onRootRef],
   );
+  const chrome = useWorldInstanceChrome(instance.id, instance.objectKind);
   const isActiveObject = instance.id === activeObjectId;
   const colors = semanticColorsFromPalette(palette);
   const celebratingIds = useCelebratingWorldInstanceIds();
-  const styleKind = resolveMeshSelectionPreviewStyle({ ...instance, celebrating: celebratingIds.has(instance.id) }, previewInstanceSelected);
+  const styleKind = resolveMeshSelectionPreviewStyle(
+    { ...instance, selected: chrome.selected, hovered: chrome.hovered, highlighted: chrome.highlighted, celebrating: celebratingIds.has(instance.id) },
+    chrome.previewSelected ?? previewInstanceSelected,
+  );
   const style = palette[styleKind];
   const glbUsesEnvironmentColor = styleKind === "neutral" && environmentMaterial?.color != null;
   const glbColor = glbUsesEnvironmentColor ? environmentMaterial!.color! : style.meshColor;
@@ -13733,7 +13742,7 @@ function WorldInstanceNode({
       )}
     </group>
   );
-}
+});
 //#endregion WorldSceneParsing
 
 //#region WorldInstancesLayer
@@ -13800,15 +13809,43 @@ function WorldInstancesLayer({
     for (const [meshId, geometry] of geometries) map.set(meshId, new EdgesGeometry(geometry));
     return map;
   }, [geometries]);
-  const targets = selection.targets ?? { mesh: true, vertex: false, edge: false, face: false };
+  const vertexPickByMeshId = useMemo(() => {
+    const map = new Map<string, VertexPickData | null>();
+    for (const mesh of meshes) {
+      if (mesh.data) map.set(mesh.id, buildVertexPickData(mesh.data));
+    }
+    return map;
+  }, [meshes]);
+  const edgeGeometryByMeshId = useMemo(() => {
+    const map = new Map<string, BufferGeometry | null>();
+    for (const mesh of meshes) {
+      if (mesh.data) map.set(mesh.id, buildEdgeGeometry(mesh.data));
+    }
+    return map;
+  }, [meshes]);
+  const targets = useMemo(() => selection.targets ?? { mesh: true, vertex: false, edge: false, face: false }, [selection.targets]);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const currentComponentIds = new Set(selection.componentIds ?? []);
   const mergedComponentIdsSet = mergedComponentIds ? new Set(mergedComponentIds) : null;
   // Still-selected (solid) = current ∩ merged when dragging; newly-added (preview tint) = merged − current.
-  const selectedComponentIds = mergedComponentIdsSet ? new Set([...currentComponentIds].filter((id) => mergedComponentIdsSet.has(id))) : currentComponentIds;
-  const previewComponentIds = mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>();
+  const selectedComponentIds = useMemo(
+    () => (mergedComponentIdsSet ? new Set([...currentComponentIds].filter((id) => mergedComponentIdsSet.has(id))) : currentComponentIds),
+    [currentComponentIds, mergedComponentIdsSet],
+  );
+  const previewComponentIds = useMemo(
+    () => (mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>()),
+    [currentComponentIds, mergedComponentIdsSet],
+  );
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
-  const selectedIds = useMemo(() => new Set(selection.ids ?? []), [selection.ids]);
+  const instanceChromeStore = useMemo(() => createWorldInstanceChromeStore(), []);
+  reactHostPort.useLayoutEffect(() => {
+    instanceChromeStore.setSnapshot({
+      selectedIds: new Set(selection.ids ?? []),
+      hoveredId: selection.hoveredId ?? null,
+      hoveredKindId: selection.hoveredKindId ?? null,
+      previewInstanceIds: mergedInstanceIdsSet,
+    });
+  }, [instanceChromeStore, mergedInstanceIdsSet, selection.hoveredId, selection.hoveredKindId, selection.ids]);
   const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
   const transformMode = selection.transformMode;
   const transformGumballMode = isWorldTransformGumballMode(transformMode);
@@ -14007,6 +14044,7 @@ function WorldInstancesLayer({
   };
 
   return (
+    <WorldInstanceChromeContext.Provider value={instanceChromeStore}>
     <WorldLayerStack>
       <group>
         {instances.map((instance, index) => {
@@ -14018,26 +14056,19 @@ function WorldInstancesLayer({
           const scale = instance.scale ?? [1, 1, 1];
           const rotation = instance.rotation;
           const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
-          const previewInstanceSelected = mergedInstanceIdsSet ? mergedInstanceIdsSet.has(instance.id) : undefined;
-          const paintInstance: WorldInstanceRecord = {
-            ...instance,
-            selected: selectedIds.has(instance.id),
-            hovered: selection.hoveredId === instance.id,
-            highlighted: selection.hoveredKindId != null && instance.objectKind === selection.hoveredKindId,
-          };
           return (
             <WorldInstanceNode
               key={instance.id}
-              instance={paintInstance}
-              previewInstanceSelected={previewInstanceSelected}
+              instance={instance}
+              previewInstanceSelected={undefined}
               index={index}
               meshRecord={meshRecord}
               meshData={meshData}
               geometry={geometry}
               borderGeometry={borderGeometries.get(meshId)}
               palette={palette}
-              vertexPick={meshData ? buildVertexPickData(meshData) : null}
-              edgeGeometry={meshData ? buildEdgeGeometry(meshData) : null}
+              vertexPick={vertexPickByMeshId.get(meshId) ?? null}
+              edgeGeometry={edgeGeometryByMeshId.get(meshId) ?? null}
               paintTextureBase64={meshData?.paintTextureBase64}
               position={position as [number, number, number]}
               scale={scale as [number, number, number]}
@@ -14077,6 +14108,7 @@ function WorldInstancesLayer({
         onDragEnd={handleGumballDragEnd}
       />
     </WorldLayerStack>
+    </WorldInstanceChromeContext.Provider>
   );
 }
 //#endregion WorldInstancesLayer
@@ -15064,6 +15096,123 @@ export function clearWorldSelectionPreview(controllerId: string, sourceId?: stri
 }
 //#endregion WorldSelectionPreviewStore
 
+//#region WorldInstanceChromeStore
+type WorldInstanceChromeSnapshot = {
+  readonly selectedIds: ReadonlySet<string>;
+  readonly hoveredId: string | null;
+  readonly hoveredKindId: string | null;
+  readonly previewInstanceIds: ReadonlySet<string> | null;
+};
+
+interface WorldInstanceChromeStore {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => WorldInstanceChromeSnapshot;
+  setSnapshot: (next: WorldInstanceChromeSnapshot) => void;
+  isSelected: (instanceId: string) => boolean;
+  isHovered: (instanceId: string) => boolean;
+  isHighlighted: (objectKind: string | undefined) => boolean;
+  previewSelected: (instanceId: string) => boolean | undefined;
+}
+
+function chromeSnapshotsEqual(a: WorldInstanceChromeSnapshot, b: WorldInstanceChromeSnapshot): boolean {
+  if (a.hoveredId !== b.hoveredId || a.hoveredKindId !== b.hoveredKindId) return false;
+  if (a.previewInstanceIds !== b.previewInstanceIds) {
+    if (!a.previewInstanceIds || !b.previewInstanceIds || a.previewInstanceIds.size !== b.previewInstanceIds.size) return false;
+    for (const id of a.previewInstanceIds) {
+      if (!b.previewInstanceIds.has(id)) return false;
+    }
+  }
+  if (a.selectedIds.size !== b.selectedIds.size) return false;
+  for (const id of a.selectedIds) {
+    if (!b.selectedIds.has(id)) return false;
+  }
+  return true;
+}
+
+function createWorldInstanceChromeStore(): WorldInstanceChromeStore {
+  let snapshot: WorldInstanceChromeSnapshot = {
+    selectedIds: new Set(),
+    hoveredId: null,
+    hoveredKindId: null,
+    previewInstanceIds: null,
+  };
+  const listeners = new Set<() => void>();
+  const notify = (): void => {
+    for (const listener of listeners) listener();
+  };
+  return {
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSnapshot() {
+      return snapshot;
+    },
+    setSnapshot(next) {
+      if (chromeSnapshotsEqual(snapshot, next)) return;
+      snapshot = next;
+      notify();
+    },
+    isSelected(instanceId) {
+      return snapshot.selectedIds.has(instanceId);
+    },
+    isHovered(instanceId) {
+      return snapshot.hoveredId === instanceId;
+    },
+    isHighlighted(objectKind) {
+      return objectKind != null && snapshot.hoveredKindId != null && objectKind === snapshot.hoveredKindId;
+    },
+    previewSelected(instanceId) {
+      if (!snapshot.previewInstanceIds) return undefined;
+      return snapshot.previewInstanceIds.has(instanceId);
+    },
+  };
+}
+
+const WorldInstanceChromeContext = reactHostPort.createContext<WorldInstanceChromeStore | null>(null);
+
+function useWorldInstanceChromeStore(): WorldInstanceChromeStore {
+  const store = reactHostPort.useContext(WorldInstanceChromeContext);
+  if (!store) throw new Error("World instance chrome hooks must render inside WorldInstancesLayer");
+  return store;
+}
+
+function useWorldInstanceChrome(
+  instanceId: string,
+  objectKind: string | undefined,
+): {
+  readonly selected: boolean;
+  readonly hovered: boolean;
+  readonly highlighted: boolean;
+  readonly previewSelected: boolean | undefined;
+} {
+  const store = useWorldInstanceChromeStore();
+  const selected = reactHostPort.useSyncExternalStore(store.subscribe, () => store.isSelected(instanceId), () => false);
+  const hovered = reactHostPort.useSyncExternalStore(store.subscribe, () => store.isHovered(instanceId), () => false);
+  const highlighted = reactHostPort.useSyncExternalStore(store.subscribe, () => store.isHighlighted(objectKind), () => false);
+  const previewSelected = reactHostPort.useSyncExternalStore(store.subscribe, () => store.previewSelected(instanceId), () => undefined);
+  return { selected, hovered, highlighted, previewSelected };
+}
+
+let interactivePluginActionsInFlight = 0;
+
+/** @emoji 🖱️ Marks the start of a user-driven plugin action so background ticks can yield the WASM queue. */
+export function beginInteractivePluginAction(): void {
+  interactivePluginActionsInFlight += 1;
+}
+
+/** @emoji 🖱️ Marks the end of a user-driven plugin action so background ticks can resume. */
+export function endInteractivePluginAction(): void {
+  interactivePluginActionsInFlight = Math.max(0, interactivePluginActionsInFlight - 1);
+}
+
+function interactivePluginActionInFlight(): boolean {
+  return interactivePluginActionsInFlight > 0;
+}
+//#endregion WorldInstanceChromeStore
+
 /** @emoji 🖱️➡️ Signed distance along `axis` (unit vector) from `origin` to the point on that line closest to the
  * camera ray through the current pointer position — the standard closest-point-between-two-lines
  * construction, used so a face-normal drag tracks naturally instead of needing a ground/tangent-plane
@@ -15585,13 +15734,19 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   // unbounded backlog that starves every other utility action (the fill utility appears to "die").
   useEffect(() => {
     if (!(interaction.suggestionMenu?.open && interaction.suggestionMenu.pending)) return;
-    return createInFlightSkippingInterval(() => dispatch("suggestionsTick"), 120);
+    return createInFlightSkippingInterval(() => {
+      if (interactivePluginActionInFlight()) return;
+      dispatch("suggestionsTick");
+    }, 120);
   }, [dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
   const fillBuildPending = Boolean(interaction.fillBuild && !interaction.fillBuild.done);
   useEffect(() => {
     if (!(activeUtility === "fill" && fillBuildPending)) return;
-    return createInFlightSkippingInterval(() => dispatch("fillBuildTick"), 120);
+    return createInFlightSkippingInterval(() => {
+      if (interactivePluginActionInFlight()) return;
+      dispatch("fillBuildTick");
+    }, 120);
   }, [activeUtility, dispatch, fillBuildPending]);
 
   const selectionArgs = useCallback(

@@ -46,7 +46,7 @@ pub enum PersistenceBinding {
         space_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         token: Option<String>,
-    },
+    }
 }
 
 /// @emoji 🧾️ Everything {@link DocumentHost::open} needs to spawn one document's actor.
@@ -89,7 +89,7 @@ pub enum RemoteState {
     Detached,
     Connecting,
     Live { peer_count: usize },
-    Backoff { retry_in_ms: u64 },
+    Backoff { retry_in_ms: u64 }
 }
 
 /// @emoji 🚦️ Snapshot of a document's sync health for status badges.
@@ -1529,7 +1529,7 @@ pub enum FixtureInbound {
 enum RawFixtureInbound {
     HubFrame { frame_bytes: Vec<u8> },
     ExternalEdits { ops_file: String },
-    ReplaceDocument { dsl_file: String, ops_file: String },
+    ReplaceDocument { dsl_file: String, ops_file: String }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

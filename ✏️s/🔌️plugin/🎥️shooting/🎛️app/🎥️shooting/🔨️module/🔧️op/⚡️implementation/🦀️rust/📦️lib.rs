@@ -62,7 +62,7 @@ pub enum ShootingOperation {
     TranslateAssets { asset_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
     RotateAssets { asset_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
     ScaleAssets { asset_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
-    SetFixture { fixture: ShootingFixture },
+    SetFixture { fixture: ShootingFixture }
 }
 
 fn apply_scene_patch(scene: &mut shooting::ShootingSceneLighting, patch: &ShootingScenePatch) {
@@ -421,7 +421,7 @@ enum ShootingOperationDsl {
     SetFixture {
         #[dsl(block)]
         fixture: ShootingFixtureDsl,
-    },
+    }
 }
 
 fn shooting_operation_to_dsl(operation: &ShootingOperation) -> ShootingOperationDsl {

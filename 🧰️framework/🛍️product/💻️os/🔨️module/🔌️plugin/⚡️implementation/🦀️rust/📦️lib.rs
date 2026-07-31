@@ -5,10 +5,10 @@ pub mod component {
     //! 🧩️ WASI P2 component exports for the plugin world contract.
 
     use crate::plugin_runtime::{
-        ensure_plugin_initialized, plugin_attach_backbone, plugin_clear_instance_guard, plugin_consume_media, plugin_create_app,
-        plugin_detach_backbone, plugin_document_pack, plugin_document_text, plugin_handle_action, plugin_handle_command,
-        plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document_pack, plugin_load_document_text,
-        plugin_manifest, plugin_produce_media, plugin_refresh_ui, plugin_render_with_document,
+        ensure_plugin_initialized, plugin_attach_backbone, plugin_clear_instance_guard, plugin_consume_media, plugin_context_menu,
+        plugin_create_app, plugin_detach_backbone, plugin_document_pack, plugin_document_text, plugin_handle_action,
+        plugin_handle_command, plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document_pack,
+        plugin_load_document_text, plugin_manifest, plugin_produce_media, plugin_refresh_ui, plugin_render_with_document,
     };
     use wit_bindgen::generate;
 
@@ -19,9 +19,9 @@ pub mod component {
 
     use exports::semio::framework::plugin::Guest;
     use semio::framework::types::{
-        ActionInvocationJson, CommandInvocationJson, DocumentPackFiles, DocumentTextFiles, InvocationContextJson, InvocationResponseJson,
-        MediaArtifact, MigrateDocumentInput, MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson,
-        UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
+        ActionInvocationJson, CommandInvocationJson, ContextMenuRequestJson, ContextMenuResponseJson, DocumentPackFiles,
+        DocumentTextFiles, InvocationContextJson, InvocationResponseJson, MediaArtifact, MigrateDocumentInput, MigrateDocumentOutput,
+        PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
     };
 
     pub struct ComponentGuest;
@@ -84,6 +84,15 @@ pub mod component {
             ensure_plugin_initialized();
             let json = plugin_refresh_ui(instance_id, &request.json).map_err(PluginError::Message)?;
             Ok(UiRefreshResponseJson { json })
+        }
+
+        fn context_menu(
+            instance_id: u32,
+            request: ContextMenuRequestJson,
+        ) -> Result<ContextMenuResponseJson, PluginError> {
+            ensure_plugin_initialized();
+            let json = plugin_context_menu(instance_id, &request.json).map_err(PluginError::Message)?;
+            Ok(ContextMenuResponseJson { json })
         }
 
         fn migrate_document(_input: MigrateDocumentInput) -> Result<MigrateDocumentOutput, PluginError> {
@@ -201,6 +210,7 @@ use ui_wgpu::{
     NamedLayout, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence,
     UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind, FRAMEWORK_HISTORY_BODY_KEY,
+    ContextMenuItemSpec, ContextMenuRequest,
 };
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
@@ -1350,7 +1360,8 @@ pub fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemN
 
 /// 🌳️ A tree item with a description line.
 pub fn tree_item_desc(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> UiTreeItemNode {
-    UiTreeItemNode { description, ..UiTreeItemNode::base(id, label) }
+    UiTreeItemNode { description, menu: None,
+    ..UiTreeItemNode::base(id, label) }
 }
 
 /// 🌳️ A tree item that dispatches `action` on click.
@@ -1360,7 +1371,8 @@ pub fn tree_item_with_action(
     description: Option<String>,
     action: ActionDescriptor,
 ) -> UiTreeItemNode {
-    UiTreeItemNode { description, action: Some(action), ..UiTreeItemNode::base(id, label) }
+    UiTreeItemNode { description, action: Some(action), menu: None,
+    ..UiTreeItemNode::base(id, label) }
 }
 
 /// 🌳️ A draggable tree item: `drag_data` is a JSON object whose entries become the item's
@@ -1492,6 +1504,7 @@ impl PanelTreeBuilder {
             highlighted_ids: self.highlighted_ids.clone(),
             selection_change: self.selection_change,
             drop_action: self.drop_action,
+            menu: None,
         })
     }
 }
@@ -1588,6 +1601,7 @@ impl FormPanelBuilder {
             error: None,
             child: Box::new(ui_control_to_node(control)),
             presence: UiPresence::default(),
+            menu: None,
         }));
         self
     }
@@ -1618,6 +1632,7 @@ impl FormPanelBuilder {
                 accept: None,
                 on_change: on_change.clone(),
                 presence: UiPresence::default(),
+                menu: None,
             });
             self = self.field(id, &label, description, control);
         }
@@ -1633,6 +1648,7 @@ impl FormPanelBuilder {
             action,
             style: None,
             presence: UiPresence::default(),
+            menu: None,
         });
         self
     }
@@ -1649,6 +1665,7 @@ impl FormPanelBuilder {
             default_open: Some(true),
             presence: UiPresence::default(),
             children,
+            menu: None,
         })
     }
 }
@@ -1664,6 +1681,7 @@ pub fn entity_detail(title: &str, subtitle: Option<&str>, entries: Vec<UiKeyValu
     children.push(UiNode::KeyValue(UiKeyValueNode {
         entries,
         presence: UiPresence::default(),
+        menu: None,
     }));
     children.extend(actions.into_iter().map(UiNode::Button));
     ui_stack_vertical(children)
@@ -1694,6 +1712,7 @@ mod form_kit_tests {
                     accept: None,
                     on_change,
                     presence: UiPresence::default(),
+                    menu: None,
                 }),
             )
             .submit("Submit", submit_action)
@@ -1731,7 +1750,8 @@ mod form_kit_tests {
         let node = entity_detail(
             "Widget",
             Some("A widget"),
-            vec![UiKeyValueEntry { label: "Kind".into(), value: "gizmo".into() }],
+            vec![UiKeyValueEntry { label: "Kind".into(), value: "gizmo".into(),
+        }],
             vec![UiButtonNode {
                 id: None,
                 icon_id: "edit".into(),
@@ -1739,6 +1759,7 @@ mod form_kit_tests {
                 action,
                 style: None,
                 presence: UiPresence::default(),
+                menu: None,
             }],
         );
         let UiNode::Stack(stack) = node else { panic!("expected a Stack node") };
@@ -3219,6 +3240,7 @@ fn ui_stack_horizontal_tight(children: Vec<UiNode>) -> UiNode {
         children,
         drop_action: None,
         drop_overlay: None,
+        menu: None,
     })
 }
 
@@ -3249,6 +3271,7 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
             action: act(action, None),
             style: None,
             presence: if enabled { UiPresence::default() } else { UiPresence::state(UiState::Disabled) },
+            menu: None,
         })
     };
     let header = ui_stack_horizontal_tight(vec![
@@ -3267,13 +3290,17 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
         id: "framework.history.filter".into(),
         value: filter_value.into(),
         items: vec![
-            UiSelectItem { value: "all".into(), label: if is_de { "Alle" } else { "All" }.into() },
-            UiSelectItem { value: "withoutOperations".into(), label: if is_de { "Ohne Operationen" } else { "Without Operations" }.into() },
-            UiSelectItem { value: "onlyOperations".into(), label: if is_de { "Nur Operationen" } else { "Only Operations" }.into() },
+            UiSelectItem { value: "all".into(), label: if is_de { "Alle" } else { "All" }.into(),
+        },
+            UiSelectItem { value: "withoutOperations".into(), label: if is_de { "Ohne Operationen" } else { "Without Operations" }.into(),
+        },
+            UiSelectItem { value: "onlyOperations".into(), label: if is_de { "Nur Operationen" } else { "Only Operations" }.into(),
+        },
         ],
         placeholder: None,
         on_change: act(SET_HISTORY_COMMAND_FILTER_ACTION_ID, None),
         presence: UiPresence::default(),
+        menu: None,
     });
 
     let items: Vec<UiTreeItemNode> = history
@@ -3307,7 +3334,7 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
     let tree = UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "framework.history.commands".into(),
-            label: None,
+            label: Some(if is_de { "Befehle" } else { "Commands" }.into()),
             default_open: Some(true),
             presence: UiPresence::default(),
             items,
@@ -3317,6 +3344,7 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        menu: None,
     });
 
     ui_stack_vertical(vec![header, filter, tree])
@@ -3569,6 +3597,24 @@ pub trait DocumentApp: Send + 'static {
     fn app_labels(&self, _view_state: &ViewState) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
     }
+    /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
+    /// counterpart. Called fresh at right-click time (never cached, never part of `refreshUi`);
+    /// `request.menu.id` names the target the host resolved (a `UiMenuRef` a plugin attached to a
+    /// `UiNode`, or a scene-surface convention id like `"world3d"`/`"nodeGraph"`/`"window"`).
+    /// Default: empty — the host falls through to the next outer menu layer (window/OS chrome),
+    /// so apps that never attach a `menu` never need to override this. `registry` is this app's
+    /// `AppActionRegistry` (the same one `VcsDocumentApp` enforces the actions contract with) —
+    /// pass it to `Menu::of(registry)` to resolve labels/icons from declared `ActionDefinition`s
+    /// instead of hand-building rows.
+    fn context_menu(
+        &self,
+        _request: &ContextMenuRequest,
+        _doc: &DocumentView<'_, Self::Projection>,
+        _view_state: &ViewState,
+        _registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        Vec::new()
+    }
     /// 🌱️ One-time hook for seeding the store's history (checkpoints/alternatives) beyond the bare
     /// `initial_projection` — called once from `VcsDocumentApp::new`, right after the store is
     /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
@@ -3729,6 +3775,11 @@ pub trait PluginApp: Send {
     fn app_labels(&mut self, _view_state: &ViewState) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
     }
+    /// 🖱️ Object-safe counterpart to `DocumentApp::context_menu` — the WIT `context-menu` export's
+    /// dispatch target.
+    fn context_menu(&mut self, _request: &ContextMenuRequest, _view_state: &ViewState) -> Vec<ContextMenuItemSpec> {
+        Vec::new()
+    }
     /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless workflow
     /// runner calls without knowing the app's concrete `Projection`/`Operation` types.
     fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
@@ -3818,6 +3869,147 @@ impl AppActionRegistry {
         self.commands.get(id)
     }
 }
+
+//#region 🖱️MenuBuilder
+/// 🖱️ Ergonomic `ContextMenuItemSpec` builder for `DocumentApp::context_menu` — resolves
+/// label/icon from this app's declared `ActionDefinition`/`CommandDefinition`s (via the same
+/// `AppActionRegistry` `VcsDocumentApp` already enforces the actions contract with) so plugins stop
+/// restating them in hand-rolled `serde_json::json!` blobs. Shortcuts are deliberately left unset —
+/// the host enriches them from the keybinding registry at menu-open time (`mapContextMenuSpecs`),
+/// exactly as it already does for every existing emitter.
+///
+/// ```ignore
+/// Menu::of(&registry)
+///     .action("deleteSelection")
+///     .separator()
+///     .checked("toggleGrid", grid_on)
+///     .when(has_selection, |m| m.destructive("clearSelection"))
+///     .submenu("align", "Align", |m| m.action("alignLeft").action("alignRight"))
+///     .build()
+/// ```
+pub struct Menu<'a> {
+    registry: &'a AppActionRegistry,
+    items: Vec<ContextMenuItemSpec>,
+}
+
+impl<'a> Menu<'a> {
+    pub fn of(registry: &'a AppActionRegistry) -> Self {
+        Self { registry, items: Vec::new() }
+    }
+
+    /// 🎯️ Appends a row for a declared action id, resolving `label`/`icon` from the app's
+    /// `ActionDefinition`. An unresolvable id is dropped with a debug-mode panic (a construction-time
+    /// typo, the same enforcement style as `AppBuilder::build_definition`'s ref validation) — in
+    /// release builds it is silently skipped so a stale reference never hard-crashes production.
+    pub fn action(self, action_id: impl Into<String>) -> Self {
+        self.action_with_args(action_id, None)
+    }
+
+    pub fn action_args(self, action_id: impl Into<String>, args: Value) -> Self {
+        self.action_with_args(action_id, Some(args))
+    }
+
+    fn action_with_args(mut self, action_id: impl Into<String>, args: Option<Value>) -> Self {
+        let action_id = action_id.into();
+        match self.registry.get(&action_id) {
+            Some(definition) => {
+                self.items.push(ContextMenuItemSpec {
+                    id: action_id.clone(),
+                    label: Some(definition.label.clone()),
+                    icon: definition.icon_id.map(|icon| icon.as_str().to_string()),
+                    action: Some(action_id),
+                    args,
+                    ..Default::default()
+                });
+            }
+            None => debug_assert!(false, "Menu::action: unknown action id {action_id:?}"),
+        }
+        self
+    }
+
+    /// 🎛️ Appends a row for a declared command id (os/plugin/app/mode-scoped) — same resolution
+    /// discipline as `action`, against `AppActionRegistry::get_command`.
+    pub fn command(mut self, command_id: impl Into<String>) -> Self {
+        let command_id = command_id.into();
+        match self.registry.get_command(&command_id) {
+            Some(definition) => {
+                self.items.push(ContextMenuItemSpec {
+                    id: command_id.clone(),
+                    label: Some(definition.label.clone()),
+                    icon: definition.icon_id.map(|icon| icon.as_str().to_string()),
+                    action: Some(command_id),
+                    ..Default::default()
+                });
+            }
+            None => debug_assert!(false, "Menu::command: unknown command id {command_id:?}"),
+        }
+        self
+    }
+
+    /// 🎯️ Same as `action`, with `checked` set — for a toggleable verb (e.g. "Show grid").
+    pub fn checked(mut self, action_id: impl Into<String>, checked: bool) -> Self {
+        self = self.action(action_id);
+        if let Some(last) = self.items.last_mut() {
+            last.checked = Some(checked);
+        }
+        self
+    }
+
+    /// 🎯️ Same as `action`, with `destructive` set — sorts visually distinct and last in
+    /// `ContextMenuController`'s rendering.
+    pub fn destructive(mut self, action_id: impl Into<String>) -> Self {
+        self = self.action(action_id);
+        if let Some(last) = self.items.last_mut() {
+            last.destructive = Some(true);
+        }
+        self
+    }
+
+    /// 🎯️ Same as `action`, with `disabled` set — keeps a verb visible-but-inert (discoverability)
+    /// rather than omitting it outright.
+    pub fn disabled(mut self, action_id: impl Into<String>, disabled: bool) -> Self {
+        self = self.action(action_id);
+        if let Some(last) = self.items.last_mut() {
+            last.disabled = Some(disabled);
+        }
+        self
+    }
+
+    /// 🧩️ Appends a fully custom row (dynamic label/hover actions/data-driven lists — the escape
+    /// hatch for rows that don't map onto one declared action, e.g. a per-candidate suggestion row).
+    pub fn item(mut self, item: ContextMenuItemSpec) -> Self {
+        self.items.push(item);
+        self
+    }
+
+    pub fn separator(mut self) -> Self {
+        self.items.push(ContextMenuItemSpec { id: format!("separator-{}", self.items.len()), separator: Some(true), ..Default::default() });
+        self
+    }
+
+    /// 🌿️ Appends a nested submenu, its rows built by a fresh `Menu` sharing this app's registry.
+    pub fn submenu(mut self, id: impl Into<String>, label: impl Into<String>, build: impl FnOnce(Menu<'a>) -> Menu<'a>) -> Self {
+        let children = build(Menu::of(self.registry)).build();
+        self.items.push(ContextMenuItemSpec {
+            id: id.into(),
+            label: Some(label.into()),
+            children: (!children.is_empty()).then_some(children),
+            ..Default::default()
+        });
+        self
+    }
+
+    /// 🔀️ Conditionally applies `build` to the menu so far — the idiomatic way to gate a section on
+    /// a guard (selection kind, hover target, ...) without breaking the fluent chain.
+    pub fn when(self, condition: bool, build: impl FnOnce(Self) -> Self) -> Self {
+        if condition { build(self) } else { self }
+    }
+
+    pub fn build(self) -> Vec<ContextMenuItemSpec> {
+        self.items
+    }
+}
+//#endregion 🖱️MenuBuilder
 
 /// @emoji 🧬️ Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
 /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Operation>` — the single source of
@@ -4502,9 +4694,12 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// @emoji 🕰️ Upgrades `result.ui_scope` to also refresh the framework history panel body whenever
     /// `dispatch_action`/`dispatch_command`/`dispatch_import_media` actually logged something
     /// (`log_generation` advanced) — the seam that makes the panel live without every action opting in.
-    fn finish_recorded(&self, log_generation_before: u64, mut result: InvocationResult) -> InvocationResult {
+    fn finish_recorded(&self, log_generation_before: u64, verb: &str, mut result: InvocationResult) -> InvocationResult {
         if self.log_generation != log_generation_before {
-            result.ui_scope = with_history_panel_scope(result.ui_scope);
+            let skip_history_panel = self.registry.get(verb).is_some_and(|def| matches!(def.kind, ActionKind::View));
+            if !skip_history_panel {
+                result.ui_scope = with_history_panel_scope(result.ui_scope);
+            }
         }
         result
     }
@@ -4563,7 +4758,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     ) -> Result<InvocationResult, String> {
         let log_generation_before = self.log_generation;
         let result = self.dispatch_action(action, args, view_state, meta)?;
-        Ok(self.finish_recorded(log_generation_before, result))
+        Ok(self.finish_recorded(log_generation_before, action, result))
     }
 
     fn handle_command(
@@ -4575,7 +4770,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     ) -> Result<InvocationResult, String> {
         let log_generation_before = self.log_generation;
         let result = self.dispatch_command(command, args, view_state, meta)?;
-        Ok(self.finish_recorded(log_generation_before, result))
+        Ok(self.finish_recorded(log_generation_before, command, result))
     }
 
     fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String> {
@@ -4712,6 +4907,16 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         app.pending_effects(&doc, view_state)
     }
 
+    fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewState) -> Vec<ContextMenuItemSpec> {
+        if self.refresh_cache().is_err() {
+            return Vec::new();
+        }
+        let VcsDocumentApp { app, cache, registry, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.context_menu(request, &doc, view_state, registry)
+    }
+
     fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
         self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
         let VcsDocumentApp { app, cache, .. } = self;
@@ -4723,7 +4928,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     fn import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
         let log_generation_before = self.log_generation;
         let result = self.dispatch_import_media(port, media, meta)?;
-        Ok(self.finish_recorded(log_generation_before, result))
+        Ok(self.finish_recorded(log_generation_before, &format!("import-media:{port}"), result))
     }
 
     fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
@@ -4875,7 +5080,9 @@ pub mod plugin_runtime {
 use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginBundle};
 use crate::DocumentApp;
 use semio_framework_core::{kernel::{HostEffect, InvocationResult}, PluginManifest, ViewState};
-use ui_wgpu::{framework_panel_tab_label, UiNode};
+use ui_wgpu::{
+    framework_panel_tab_label, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef, UiNode,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::{Cell, RefCell};
@@ -5229,11 +5436,12 @@ fn ui_refresh_fnv1a_hash(bytes: &[u8]) -> String {
 /// from `known_hash`, or `(hash, None)` when unchanged — the response omits the payload either way the
 /// caller doesn't need it, keeping the wire payload proportional to what actually changed.
 fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (String, Option<Value>) {
-    let payload = serde_json::to_value(value).unwrap_or(Value::Null);
-    let hash = ui_refresh_fnv1a_hash(serde_json::to_string(&payload).unwrap_or_default().as_bytes());
+    let wire = serde_json::to_string(value).unwrap_or_default();
+    let hash = ui_refresh_fnv1a_hash(wire.as_bytes());
     if known_hash == Some(hash.as_str()) {
         (hash, None)
     } else {
+        let payload = serde_json::from_str(&wire).unwrap_or(Value::Null);
         (hash, Some(payload))
     }
 }
@@ -5388,6 +5596,41 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
 }
 //#endregion 🔖️RefreshUi
 
+//#region 🔖️ContextMenu
+/// 🖱️ On-demand context-menu computation (WIT `context-menu` export's SDK entry point) — never
+/// cached, never part of `refresh_ui`. `request_json` is the combined wire shape (`{ menu, surface,
+/// windowInstanceId, point, viewState }`, matching TS `PluginContextMenuRequest`); this splits it
+/// into a typed `ViewState` (framework-core, not available inside `ui_wgpu`) plus the smaller
+/// `ContextMenuRequest` passed to `DocumentApp::context_menu`/`PluginApp::context_menu`.
+pub fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<String, String> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct ContextMenuWireRequest {
+        view_state: ViewState,
+        menu: UiMenuRef,
+        #[serde(default)]
+        surface: Option<ContextMenuSurfaceTarget>,
+        #[serde(default)]
+        window_instance_id: Option<String>,
+        #[serde(default)]
+        point: Option<ContextMenuPoint>,
+    }
+
+    let wire: ContextMenuWireRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
+    let request = ContextMenuRequest {
+        menu: wire.menu,
+        surface: wire.surface,
+        window_instance_id: wire.window_instance_id,
+        point: wire.point,
+    };
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        let items = instance.app.context_menu(&request, &wire.view_state);
+        Ok(serde_json::to_string(&ContextMenuResponse { items }).unwrap_or_else(|_| r#"{"items":[]}"#.into()))
+    })
+}
+//#endregion 🔖️ContextMenu
+
 #[macro_export]
 macro_rules! plugin_exports {
     ($bundle_fn:expr) => {
@@ -5463,9 +5706,10 @@ mod semio_plugin_macro_tests {
 
     use crate::app::{
         ActionEmit, ActionMeta, App, AppActionRegistry, CommandView, DocumentApp, DocumentView, HistoryCommandFilter, HistoryView,
-        InverseAction, PluginApp, VcsDocumentApp, ui_history_panel,
+        InverseAction, Menu, PluginApp, VcsDocumentApp, ui_history_panel,
     };
     use crate::{ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
+    use ui_wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
     use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
     use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
     use ui_wgpu::FRAMEWORK_HISTORY_BODY_KEY;
@@ -5691,6 +5935,21 @@ mod semio_plugin_macro_tests {
                 _ => format!("{}-{:?}", fragment.dsl_text, placement.anchor),
             };
             Ok(vec![TestOperation::SetLabel { value }])
+        }
+
+        /// 🧪️ Menu = always "setLabelRequired"; "incrementViaCommand" gated on a non-empty label
+        /// (a selection-guard stand-in) — exercises `Menu::action`/`Menu::command`/`Menu::when`.
+        fn context_menu(
+            &self,
+            _request: &ContextMenuRequest,
+            doc: &DocumentView<'_, TestProjection>,
+            _view_state: &ViewState,
+            registry: &AppActionRegistry,
+        ) -> Vec<ContextMenuItemSpec> {
+            Menu::of(registry)
+                .action("setLabelRequired")
+                .when(!doc.projection.label.is_empty(), |m| m.command("incrementViaCommand"))
+                .build()
         }
     }
 
@@ -6110,6 +6369,7 @@ mod semio_plugin_macro_tests {
         };
         let UiNode::Stack(all_stack) = ui_history_panel(&history, "ctrl", false) else { panic!("expected a Stack root") };
         let UiNode::Tree(all_tree) = &all_stack.children[2] else { panic!("expected the tree as the third child") };
+        assert_eq!(all_tree.sections[0].label.as_deref(), Some("Commands"));
         assert_eq!(all_tree.sections[0].items.len(), 2);
         assert!(all_tree.sections[0].items[0].actions.is_some(), "the revertible entry must offer backwards");
         assert!(all_tree.sections[0].items[1].actions.is_none(), "the non-revertible entry must not offer backwards");
@@ -6339,6 +6599,24 @@ mod semio_plugin_macro_tests {
         app.handle_action("setLabelRequired", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta())
             .expect("required arg provided");
         assert_eq!(app.test_projection().label, "hi");
+    }
+
+    /// 🖱️ `PluginApp::context_menu` end-to-end through `VcsDocumentApp`: with an empty label the
+    /// "selection guard" (`Menu::when`) drops the gated command; once a label is set (a stand-in for
+    /// "something is selected"), both rows resolve label/icon from the declared registry entries.
+    #[test]
+    fn context_menu_resolves_labels_from_the_registry_and_respects_guards() {
+        let mut app = contract_app_under_test();
+        let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
+
+        let empty_label = app.context_menu(&request, &ViewState::default());
+        assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
+        assert_eq!(empty_label[0], ContextMenuItemSpec { id: "setLabelRequired".into(), label: Some("Set Label".into()), action: Some("setLabelRequired".into()), ..Default::default() });
+
+        app.handle_action("setLabelRequired", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta()).expect("set label");
+        let with_label = app.context_menu(&request, &ViewState::default());
+        assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
+        assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), action: Some("incrementViaCommand".into()), ..Default::default() });
     }
 
     #[test]
@@ -7116,36 +7394,144 @@ pub fn export_mesh_glb_bytes(mesh: &MeshData) -> (Vec<u8>, String) {
     (mesh_to_glb(mesh), "model/gltf-binary".into())
 }
 
-pub fn merge_world_selection_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<String> {
+/** @emoji ✅️ Ordered selection ids with O(1) membership — serializes as a plain JSON string array. */
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SelectionSet {
+    ids: Vec<String>,
+    index: std::collections::HashSet<String>,
+}
+
+impl SelectionSet {
+    pub fn from_ids(ids: Vec<String>) -> Self {
+        let index: std::collections::HashSet<String> = ids.iter().cloned().collect();
+        Self { ids, index }
+    }
+
+    pub fn contains(&self, id: &str) -> bool {
+        self.index.contains(id)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.ids.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.ids.len()
+    }
+
+    pub fn clear(&mut self) {
+        self.ids.clear();
+        self.index.clear();
+    }
+
+    pub fn first(&self) -> Option<&str> {
+        self.ids.first().map(String::as_str)
+    }
+
+    pub fn as_slice(&self) -> &[String] {
+        &self.ids
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &String> {
+        self.ids.iter()
+    }
+
+    pub fn push_unique(&mut self, id: String) {
+        if self.index.insert(id.clone()) {
+            self.ids.push(id);
+        }
+    }
+
+    pub fn remove_id(&mut self, id: &str) {
+        if self.index.remove(id) {
+            self.ids.retain(|entry| entry != id);
+        }
+    }
+
+    pub fn to_vec(&self) -> Vec<String> {
+        self.ids.clone()
+    }
+}
+
+impl IntoIterator for SelectionSet {
+    type Item = String;
+    type IntoIter = std::vec::IntoIter<String>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.ids.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a SelectionSet {
+    type Item = &'a String;
+    type IntoIter = std::slice::Iter<'a, String>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.ids.iter()
+    }
+}
+
+impl Serialize for SelectionSet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        self.ids.serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for SelectionSet {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let ids = Vec::<String>::deserialize(deserializer)?;
+        Ok(Self::from_ids(ids))
+    }
+}
+
+impl From<Vec<String>> for SelectionSet {
+    fn from(ids: Vec<String>) -> Self {
+        Self::from_ids(ids)
+    }
+}
+
+impl FromIterator<String> for SelectionSet {
+    fn from_iter<I: IntoIterator<Item = String>>(iter: I) -> Self {
+        Self::from_ids(iter.into_iter().collect())
+    }
+}
+
+pub fn merge_world_selection_ids(existing: &SelectionSet, incoming: &[String], merge: &str) -> SelectionSet {
     match merge {
         "add" => {
-            let mut merged = existing.to_vec();
+            let mut merged = existing.clone();
             for id in incoming {
-                if !merged.contains(id) {
-                    merged.push(id.clone());
-                }
+                merged.push_unique(id.clone());
             }
             merged
         }
         "toggle" | "invertive" => {
-            let mut merged = existing.to_vec();
+            let mut merged = existing.clone();
             for id in incoming {
-                if let Some(index) = merged.iter().position(|entry| entry == id) {
-                    merged.remove(index);
+                if merged.index.remove(id) {
+                    merged.ids.retain(|entry| entry != id);
                 } else {
-                    merged.push(id.clone());
+                    merged.push_unique(id.clone());
                 }
             }
             merged
         }
         "remove" | "subtractive" => {
-            let mut merged = existing.to_vec();
+            let mut merged = existing.clone();
             for id in incoming {
-                merged.retain(|entry| entry != id);
+                if merged.index.remove(id) {
+                    merged.ids.retain(|entry| entry != id);
+                }
             }
             merged
         }
-        _ => incoming.to_vec(),
+        _ => SelectionSet::from_ids(incoming.to_vec()),
     }
 }
 
@@ -7159,30 +7545,40 @@ mod tests {
 
     #[test]
     fn merge_world_selection_ids_supports_add_toggle_invertive_and_remove() {
+        let a = || SelectionSet::from_ids(vec!["a".into()]);
+        let ab = || SelectionSet::from_ids(vec!["a".into(), "b".into()]);
+        let abc = || SelectionSet::from_ids(vec!["a".into(), "b".into(), "c".into()]);
         assert_eq!(
-            merge_world_selection_ids(&["a".into()], &["b".into()], "add"),
-            vec!["a".to_string(), "b".to_string()]
+            merge_world_selection_ids(&a(), &["b".into()], "add").as_slice(),
+            &["a".to_string(), "b".to_string()]
         );
         assert_eq!(
-            merge_world_selection_ids(&["a".into(), "b".into()], &["b".into(), "c".into()], "toggle"),
-            vec!["a".to_string(), "c".to_string()]
+            merge_world_selection_ids(&ab(), &["b".into(), "c".into()], "toggle").as_slice(),
+            &["a".to_string(), "c".to_string()]
         );
         assert_eq!(
-            merge_world_selection_ids(&["a".into(), "b".into()], &["b".into()], "invertive"),
-            vec!["a".to_string()]
+            merge_world_selection_ids(&ab(), &["b".into()], "invertive").as_slice(),
+            &["a".to_string()]
         );
         assert_eq!(
-            merge_world_selection_ids(&["a".into()], &["b".into()], "replace"),
-            vec!["b".to_string()]
+            merge_world_selection_ids(&a(), &["b".into()], "replace").as_slice(),
+            &["b".to_string()]
         );
         assert_eq!(
-            merge_world_selection_ids(&["a".into(), "b".into(), "c".into()], &["b".into()], "remove"),
-            vec!["a".to_string(), "c".to_string()]
+            merge_world_selection_ids(&abc(), &["b".into()], "remove").as_slice(),
+            &["a".to_string(), "c".to_string()]
         );
         assert_eq!(
-            merge_world_selection_ids(&["a".into(), "b".into(), "c".into()], &["b".into()], "subtractive"),
-            vec!["a".to_string(), "c".to_string()]
+            merge_world_selection_ids(&abc(), &["b".into()], "subtractive").as_slice(),
+            &["a".to_string(), "c".to_string()]
         );
+    }
+
+    #[test]
+    fn selection_set_membership_is_constant_time() {
+        let set = SelectionSet::from_ids((0..100).map(|index| format!("id-{index}")).collect());
+        assert!(set.contains("id-50"));
+        assert!(!set.contains("missing"));
     }
 
     #[test]
@@ -7413,7 +7809,7 @@ pub use plugin_runtime::{
 };
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection,
-    export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_kind_from_json,
+    export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_kind_from_json, SelectionSet,
     world3d_camera_projection_json, world3d_default_camera, world3d_environment_json,
     world3d_mesh_id_from_url, world3d_meshes_json_from_kinds,
     world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls,

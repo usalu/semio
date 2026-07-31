@@ -1064,6 +1064,199 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
   if (signal || code !== 0) process.exit(code ?? 1);
 }
 
+//#region 🦀️CargoPackageResolver
+interface CrateIndexRecord {
+  dir: string;
+  pkgName: string;
+  libName: string;
+}
+
+let cachedCrateIndex: {
+  exactPkgNames: Set<string>;
+  libNameToCrates: Map<string, CrateIndexRecord[]>;
+  aliasToCrates: Map<string, CrateIndexRecord[]>;
+} | null = null;
+
+const CARGO_PREFIX_WORDS = new Set(["semio", "s", "framework", "os", "kernel", "plugin", "module", "tech", "app"]);
+
+function generateCargoVariants(name: string): string[] {
+  const variants = new Set<string>([name]);
+  const parts = name.split("-");
+
+  let firstNonPrefix = parts.length - 1;
+  for (let i = 0; i < parts.length; i++) {
+    if (!CARGO_PREFIX_WORDS.has(parts[i])) {
+      firstNonPrefix = i;
+      break;
+    }
+  }
+
+  const coreSuffix = parts.slice(firstNonPrefix).join("-");
+  variants.add(coreSuffix);
+
+  const prefixParts = parts.slice(0, firstNonPrefix);
+  for (let i = 0; i < prefixParts.length; i++) {
+    variants.add(parts.slice(i).join("-"));
+    variants.add([prefixParts[i], ...parts.slice(firstNonPrefix)].join("-"));
+  }
+
+  return Array.from(variants);
+}
+
+function getCargoWorkspaceIndex(repoRoot = getWorkspaceRoot()) {
+  if (cachedCrateIndex) return cachedCrateIndex;
+  const exactPkgNames = new Set<string>();
+  const libNameToCrates = new Map<string, CrateIndexRecord[]>();
+  const aliasToCrates = new Map<string, CrateIndexRecord[]>();
+
+  const addAlias = (alias: string, record: CrateIndexRecord) => {
+    if (!alias) return;
+    const normalized = alias.replaceAll("-", "_").toLowerCase();
+    const list = aliasToCrates.get(normalized) ?? [];
+    if (!list.includes(record)) list.push(record);
+    aliasToCrates.set(normalized, list);
+  };
+
+  const walk = (dir: string): void => {
+    if (dir.includes("node_modules") || dir.includes("target") || dir.includes(".git") || dir.includes(".🦑️repo")) return;
+    for (const ent of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, ent.name);
+      if (ent.isDirectory()) {
+        walk(full);
+      } else if (ent.name === "Cargo.toml" && full !== join(repoRoot, "Cargo.toml")) {
+        try {
+          const content = readFileSync(full, "utf8");
+          const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
+          const libMatch = content.match(/\[lib\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
+          if (pkgMatch) {
+            const pkgName = pkgMatch[1];
+            const libName = libMatch ? libMatch[1] : pkgName.replaceAll("-", "_");
+            const record: CrateIndexRecord = { dir: dirname(full), pkgName, libName };
+            exactPkgNames.add(pkgName);
+            const libList = libNameToCrates.get(libName) ?? [];
+            if (!libList.includes(record)) libList.push(record);
+            libNameToCrates.set(libName, libList);
+
+            addAlias(libName, record);
+            addAlias(pkgName, record);
+
+            for (const v of generateCargoVariants(pkgName)) addAlias(v, record);
+            if (libName) {
+              for (const v of generateCargoVariants(libName.replaceAll("_", "-"))) addAlias(v, record);
+            }
+          }
+        } catch {
+          /* ignore unreadable Cargo.toml */
+        }
+      }
+    }
+  };
+
+  walk(repoRoot);
+  cachedCrateIndex = { exactPkgNames, libNameToCrates, aliasToCrates };
+  return cachedCrateIndex;
+}
+
+export function resolveCargoPackageName(pkg: string, cwd: string): string {
+  const index = getCargoWorkspaceIndex();
+  if (index.exactPkgNames.has(pkg)) return pkg;
+
+  // 1. Check local Cargo.toml in cwd, cwd/rs, dirname(cwd)
+  for (const candidateDir of [cwd, join(cwd, "rs"), dirname(cwd)]) {
+    const cargoPath = join(candidateDir, "Cargo.toml");
+    if (existsSync(cargoPath)) {
+      try {
+        const content = readFileSync(cargoPath, "utf8");
+        const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
+        const libMatch = content.match(/\[lib\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
+        const localPkg = pkgMatch ? pkgMatch[1] : null;
+        const localLib = libMatch ? libMatch[1] : (localPkg ? localPkg.replaceAll("-", "_") : null);
+        if (localPkg) {
+          if (
+            pkg === localLib ||
+            pkg === localPkg ||
+            pkg.replaceAll("-", "_") === localLib ||
+            pkg.replaceAll("_", "-") === localPkg
+          ) {
+            return localPkg;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  // 2. Direct libName lookup
+  const byLib = index.libNameToCrates.get(pkg);
+  if (byLib && byLib.length > 0) {
+    if (byLib.length === 1) return byLib[0].pkgName;
+    let best = byLib[0];
+    let bestDist = Infinity;
+    for (const item of byLib) {
+      const dist = relative(cwd, item.dir).length;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = item;
+      }
+    }
+    return best.pkgName;
+  }
+
+  // 3. Alias / prefix-variant lookup
+  const normPkg = pkg.replaceAll("-", "_").toLowerCase();
+  const byAlias = index.aliasToCrates.get(normPkg);
+  if (byAlias && byAlias.length > 0) {
+    if (byAlias.length === 1) return byAlias[0].pkgName;
+    let best = byAlias[0];
+    let bestDist = Infinity;
+    for (const item of byAlias) {
+      const dist = relative(cwd, item.dir).length;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = item;
+      }
+    }
+    return best.pkgName;
+  }
+
+  // 4. Fallback if cwd has Cargo.toml
+  for (const candidateDir of [cwd, join(cwd, "rs")]) {
+    const cargoPath = join(candidateDir, "Cargo.toml");
+    if (existsSync(cargoPath)) {
+      try {
+        const content = readFileSync(cargoPath, "utf8");
+        const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
+        if (pkgMatch) return pkgMatch[1];
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
+  return pkg;
+}
+
+export function resolveCargoPackageNames(packages: string[], cwd: string): string[] {
+  if (packages.length === 0) {
+    for (const candidateDir of [cwd, join(cwd, "rs")]) {
+      const cargoPath = join(candidateDir, "Cargo.toml");
+      if (existsSync(cargoPath)) {
+        try {
+          const content = readFileSync(cargoPath, "utf8");
+          const pkgMatch = content.match(/\[package\][\s\S]*?\bname\s*=\s*"([^"]+)"/);
+          if (pkgMatch) return [pkgMatch[1]];
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+    return [];
+  }
+  return packages.map((pkg) => resolveCargoPackageName(pkg, cwd));
+}
+//#endregion 🦀️CargoPackageResolver
+
 /**
  * 🦀️Warm-builds test binaries — bounded by [[buildBudgetMs]], NOT the test-level budget, but never unbounded —
  * then runs `cargo nextest run` under the active level's budget and [[nextest.toml]] profile (per-test
@@ -1073,7 +1266,8 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
  * compose correctly.
  */
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
-  const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
+  const resolvedPackages = resolveCargoPackageNames(packages, cwd);
+  const packageArgs = resolvedPackages.flatMap((pkg) => ["-p", pkg]);
   const dashIdx = extraArgs.indexOf("--");
   const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
   const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
@@ -1095,7 +1289,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
       budgetMs: buildBudgetMs() + testBudgetMs,
       onTimeoutHint: budgetTimeoutHint("cargo"),
     });
-    const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(packages.join("_"))}.lcov`);
+    const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(resolvedPackages.join("_"))}.lcov`);
     await runTestBudgeted("cargo", ["llvm-cov", "report", "--release", "--lcov", ...packageArgs, "--output-path", lcovPath], {
       cwd,
       env,
@@ -1465,7 +1659,8 @@ export function enforceCoverageThreshold(summary: CoverageSummary, thresholdPct:
  * `[workspace.lints]` in the root `Cargo.toml` for the shared lint baseline this checks.
  */
 export function runCargoLint(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
-  const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
+  const resolvedPackages = resolveCargoPackageNames(packages, cwd);
+  const packageArgs = resolvedPackages.flatMap((pkg) => ["-p", pkg]);
   runCmd("cargo", ["clippy", ...packageArgs, "--all-targets", ...extraArgs, "--", "-D", "warnings"], { cwd, env, budgetMs: buildBudgetMs() });
 }
 //#endregion 🧹️CargoLint

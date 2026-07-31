@@ -80,7 +80,7 @@ pub enum DockSide {
 pub enum DockDropZone {
     Tab { stack_path: DockPath, index: usize },
     Split { stack_path: DockPath, side: DockSide },
-    RootSplit { side: DockSide },
+    RootSplit { side: DockSide }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -6133,6 +6133,7 @@ mod ui_command_wiring_tests {
             drop_action,
             drop_overlay: None,
             children,
+            menu: None,
         })
     }
 
@@ -6259,6 +6260,7 @@ mod ui_command_wiring_tests {
             accept: None,
             on_change: action("onChange", None),
             presence: ui_wgpu::UiPresence::default(),
+            menu: None,
         });
         UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![input_node])));
         let focus_commands = UI_ENGINE.with(|cell| {
@@ -6341,6 +6343,7 @@ mod ui_command_wiring_tests {
             block_list: None,
             diff_view: None,
             event_feed: None,
+            menu: None,
         })
     }
 
@@ -6865,7 +6868,8 @@ mod render_plan_validator_tests {
             drop_action: None,
             drop_overlay: None,
             children,
-})
+            menu: None,
+        })
     }
 
     #[test]
@@ -7396,7 +7400,9 @@ mod introspection_tests {
     use ui_wgpu::{LayoutBucket, Node, NodeFlags, NodeKey, Theme, UiPresence, UiStackNode, UiTextNode, WidgetSpec};
 
     fn text_node(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn stack_node(id: Option<&str>, children: Vec<UiNode>) -> UiNode {
@@ -7410,6 +7416,7 @@ mod introspection_tests {
             drop_action: None,
             drop_overlay: None,
             children,
+            menu: None,
         })
     }
 
@@ -8040,7 +8047,7 @@ enum SceneDragMode {
     InkResize { handle: String, from: InkBoundsF, start_x: f32, start_y: f32, selected_ids: Vec<String> },
     InkStroke { block_id: String },
     InkEraser { mode: String },
-    InkMarqueeDrag { start_x: f32, start_y: f32 },
+    InkMarqueeDrag { start_x: f32, start_y: f32 }
 }
 
 #[derive(Clone, Debug)]
@@ -9351,7 +9358,7 @@ enum TableCellPayload {
     Text { value: String },
     Number { value: f64 },
     Stepper { value: f64, min: f64, max: f64, step: f64, action: ActionDescriptor },
-    Buttons { buttons: Vec<TableCellButtonPayload> },
+    Buttons { buttons: Vec<TableCellButtonPayload> }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -9627,7 +9634,9 @@ mod table_tests {
             diff_view: None,
             event_feed: None,
             block_list: None,
-        }
+            menu: None,
+        },
+        menu: None,
     }
 
     /// 🧪️ Renders `node` and returns the `InputState` so tests can inspect registered hit targets.
@@ -10023,7 +10032,9 @@ mod block_list_tests {
             diff_view: None,
             event_feed: None,
             block_list: Some(block_list),
-        }
+            menu: None,
+        },
+        menu: None,
     }
 
     fn step_json(id: &str, blocks: &[(&str, &str, &str)]) -> Value {
@@ -10089,6 +10100,7 @@ mod block_list_tests {
             diff_view: None,
             event_feed: None,
             block_list: None,
+            menu: None,
         };
         render(&node);
     }
@@ -10442,6 +10454,7 @@ mod diff_view_tests {
             }),
             event_feed: None,
             block_list: None,
+            menu: None,
         };
         let mut draw = ui_wgpu::DrawList::default();
         let mut atlas = ui_wgpu::FontAtlas::builtin();
@@ -10758,6 +10771,7 @@ mod event_feed_tests {
                 activate_action: None,
             }),
             block_list: None,
+            menu: None,
         };
         let mut draw = ui_wgpu::DrawList::default();
         let mut atlas = ui_wgpu::FontAtlas::builtin();
@@ -11135,6 +11149,7 @@ mod graph_timeline_tests {
             diff_view: None,
             event_feed: None,
             block_list: None,
+            menu: None,
         };
         {
             let mut ctx = crate::interpreter::framework_widget_context(
@@ -11992,7 +12007,9 @@ mod canvas2d_tests {
             diff_view: None,
             event_feed: None,
             block_list: None,
-        }
+            menu: None,
+        },
+        menu: None,
     }
 
     /// 🖊️ A shape-selection ring should be tinted amber (matching `drawBoundsLayer`'s hardcoded
@@ -13526,6 +13543,7 @@ mod ink_canvas_tests {
             diff_view: None,
             event_feed: None,
             block_list: None,
+            menu: None,
         };
         let mut draw = ui_wgpu::DrawList::default();
         let mut atlas = ui_wgpu::FontAtlas::builtin();
@@ -14424,6 +14442,7 @@ fn render_icon_render(
         diff_view: None,
         event_feed: None,
         block_list: None,
+        menu: None,
     };
 
     let state = icon_render_states
@@ -15754,7 +15773,9 @@ mod text_editor_tests {
             diff_view: None,
             event_feed: None,
             block_list: None,
-        }
+            menu: None,
+        },
+        menu: None,
     }
 
     fn text_editor_scene_payload(
@@ -15790,7 +15811,8 @@ mod text_editor_tests {
     ) -> UiComponentSceneNode {
         let mut scene = test_scene(surface_id, SurfaceKind::TextEditor);
         scene.text_editor = Some(text_editor_scene_payload(buffer, completions_json, rename_json));
-        scene
+        scene,
+        menu: None,
     }
 
     /// 🧰️ GPU-free `FrameworkWidgetContext` fixture, same construction as `render_entry_tests::Fixture`
@@ -17167,6 +17189,7 @@ impl ShellState {
                         value: format!("Framework rejected render plan: {message}"),
                         emphasize: Some(true),
                         data_attributes: None,
+                        menu: None,
                     }),
                 };
                 self.window_ui.insert(kind.id.clone(), ui);
@@ -17280,6 +17303,7 @@ impl ShellState {
                     },
                     style: None,
                     presence: UiPresence::default(),
+                    menu: None,
                 })
             })
             .collect();
@@ -17288,6 +17312,7 @@ impl ShellState {
                 value: "—".into(),
                 emphasize: None,
                 data_attributes: None,
+                menu: None,
             });
         }
         UiNode::Stack(UiStackNode {
@@ -17300,7 +17325,8 @@ impl ShellState {
             activate: None,
             drop_action: None,
             drop_overlay: None,
-})
+            menu: None,
+        })
     }
 
     fn build_display_layout_ui(&self, session: &ActiveSession) -> UiNode {
@@ -17320,7 +17346,8 @@ impl ShellState {
                     },
                     style: None,
                     presence: UiPresence::default(),
-})
+                    menu: None,
+                })
             })
             .collect();
         if items.is_empty() {
@@ -17328,6 +17355,7 @@ impl ShellState {
                 value: "No saved layouts".into(),
                 emphasize: None,
                 data_attributes: None,
+                menu: None,
             });
         }
         UiNode::Stack(UiStackNode {
@@ -17340,7 +17368,8 @@ impl ShellState {
             activate: None,
             drop_action: None,
             drop_overlay: None,
-})
+            menu: None,
+        })
     }
 
     fn build_settings_general_ui(&self) -> UiNode {
@@ -17354,6 +17383,7 @@ impl ShellState {
                     value: "General".into(),
                     emphasize: Some(true),
                     data_attributes: None,
+                    menu: None,
                 }),
                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.appearance".into(),
@@ -17378,6 +17408,7 @@ impl ShellState {
                         action: "setAppearance".into(),
                         args: None,
                     },
+                    menu: None,
                 }),
                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.driver".into(),
@@ -17398,6 +17429,7 @@ impl ShellState {
                         action: "setDriver".into(),
                         args: None,
                     },
+                    menu: None,
                 }),
                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.language".into(),
@@ -17418,6 +17450,7 @@ impl ShellState {
                         action: "setLocale".into(),
                         args: None,
                     },
+                    menu: None,
                 }),
                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.terminology".into(),
@@ -17436,13 +17469,15 @@ impl ShellState {
                         action: "setTerminology".into(),
                         args: None,
                     },
+                    menu: None,
                 }),
             ],
             presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
-})
+            menu: None,
+        })
     }
 
     /// 🎨️ The wgpu mirror of React's `buildSettingsThemeTree`'s theme-selector section (`ui/js/react/
@@ -17458,18 +17493,22 @@ impl ShellState {
         let is_de = self.locale_id == "de";
         let active_id = active_theme_id();
         let mut items = vec![
-            UiSelectItem { value: "semio".into(), label: "Semio".into() },
-            UiSelectItem { value: "mono".into(), label: "Mono".into() },
+            UiSelectItem { value: "semio".into(), label: "Semio".into(),
+        },
+            UiSelectItem { value: "mono".into(), label: "Mono".into(),
+        },
         ];
         for id in custom_theme_ids() {
             let label = custom_theme_definition(&id).map(|theme| theme.label).unwrap_or_else(|| id.clone());
-            items.push(UiSelectItem { value: id, label });
+            items.push(UiSelectItem { value: id, label,
+        });
         }
         let mut children = vec![
             UiNode::Text(UiTextNode { presence: UiPresence::default(),
                 value: shell_chrome_string("settings.tab.theme", is_de).to_string(),
                 emphasize: Some(true),
                 data_attributes: None,
+                menu: None,
             }),
             UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                 id: "framework.settings.theme.select".into(),
@@ -17481,6 +17520,7 @@ impl ShellState {
                     action: "setThemeId".into(),
                     args: None,
                 },
+                menu: None,
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("framework.settings.theme.reset".into()),
@@ -17493,6 +17533,7 @@ impl ShellState {
                 },
                 style: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
         ];
         if active_id.starts_with("custom.") {
@@ -17507,6 +17548,7 @@ impl ShellState {
                 },
                 style: None,
                 presence: UiPresence::default(),
+                menu: None,
             }));
         }
         UiNode::Stack(UiStackNode {
@@ -17519,6 +17561,7 @@ impl ShellState {
             activate: None,
             drop_action: None,
             drop_overlay: None,
+            menu: None,
         })
     }
 
@@ -22351,6 +22394,7 @@ impl ShellState {
                 value: category_label,
                 emphasize: Some(true),
                 data_attributes: None,
+                menu: None,
             })];
             rows.extend(
                 resolved
@@ -22368,7 +22412,8 @@ impl ShellState {
                 drop_action: None,
                 drop_overlay: None,
                 presence: UiPresence::default(),
-}));
+                menu: None,
+            }));
         }
         UiNode::Stack(UiStackNode {
             direction: "column".into(),
@@ -22380,7 +22425,8 @@ impl ShellState {
             drop_action: None,
             drop_overlay: None,
             presence: UiPresence::default(),
-})
+            menu: None,
+        })
     }
 
     /// 🎛️ One `build_command_panel_ui` row: a `Select` for the four os commands whose single arg already
@@ -22410,7 +22456,8 @@ impl ShellState {
                     value,
                     items: options
                         .iter()
-                        .map(|option| UiSelectItem { value: option.value.clone(), label: option.label.clone() })
+                        .map(|option| UiSelectItem { value: option.value.clone(), label: option.label.clone(),
+        })
                         .collect(),
                     placeholder: None,
                     on_change: ActionDescriptor {
@@ -22418,6 +22465,7 @@ impl ShellState {
                         action: action.into(),
                         args: None,
                     },
+                    menu: None,
                 });
             }
         }
@@ -22429,6 +22477,7 @@ impl ShellState {
             },
             emphasize: Some(false),
             data_attributes: None,
+            menu: None,
         })
     }
     // #endregion
@@ -31142,7 +31191,7 @@ enum HostUserEvent {
     RuntimeReady {
         runtime: Rc<RefCell<AppRuntime>>,
         callbacks: PointerCallbacks,
-    },
+    }
 }
 
 struct SemioApp {

@@ -103,7 +103,7 @@ pub enum RemodelOperation {
         #[serde(default)]
         #[dsl(block)]
         qc: Option<QcReportSnapshot>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -177,7 +177,7 @@ pub enum RemodelDiff {
     SetQc {
         #[serde(default)]
         qc: Option<QcReportSnapshot>,
-    },
+    }
 }
 
 pub fn apply_remodel_operation(scene: &RemodelScene, operation: &RemodelOperation) -> RemodelScene {

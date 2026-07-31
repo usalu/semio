@@ -74,7 +74,9 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         block_list: None,
         diff_view: None,
         event_feed: None,
-    }
+        menu: None,
+    },
+    menu: None,
 }
 
 fn render_graph_window(graph: &MathGraph, camera: &MathCamera) -> UiNode {

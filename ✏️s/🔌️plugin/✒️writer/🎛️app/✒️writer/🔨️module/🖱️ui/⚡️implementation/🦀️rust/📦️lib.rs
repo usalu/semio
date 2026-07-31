@@ -139,8 +139,10 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         items: if children.is_empty() { None } else { Some(children) },
         control: None,
         dimmed: None,
-}
-}
+        menu: None,
+    },
+        menu: None,
+    }
 
 /// 🐁️ Resolves tree/editor hover cross-highlighting: (highlighted AST id, tree-hover span, hover occurrences).
 fn editor_hover_context(document: &WriterProjection, runtime: &WriterPlayRuntime) -> (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>) {
@@ -242,7 +244,8 @@ fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntim
             default_open: Some(true),
             children: vec![ui_text(document.id.clone()), ui_text(document.language_id.clone())],
             presence: UiPresence::default(),
-}]);
+            menu: None,
+        }]);
     }
     let root = parse_jack_ast(&document.text);
     let items = if root.kind == "error" {
@@ -270,7 +273,8 @@ fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
         default_open: Some(true),
         children: vec![ui_text(labels.jack_description)],
         presence: UiPresence::default(),
-}])
+        menu: None,
+    }])
 }
 
 fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRuntime, labels: &WriterPlayLabels) -> UiNode {
@@ -287,7 +291,8 @@ fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRunt
                 ui_text(format!("Lines: {}", document.text.lines().count())),
             ],
             presence: UiPresence::default(),
-},
+            menu: None,
+        },
         UiSectionNode {
             id: "writer-inspector.camera".into(),
             label: Some(labels.camera.into()),
@@ -298,7 +303,8 @@ fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRunt
                 ui_text(format!("zoom: {}", runtime.camera.zoom)),
             ],
             presence: UiPresence::default(),
-},
+            menu: None,
+        },
     ];
     if document.language_id == "jack" {
         let graph = example_graph();
@@ -310,7 +316,8 @@ fn render_inspection_panel(document: &WriterProjection, runtime: &WriterPlayRunt
                 default_open: Some(true),
                 children: messages.into_iter().map(ui_text).collect(),
                 presence: UiPresence::default(),
-});
+                menu: None,
+            });
         }
     }
     ui_declarative_sections_to_tree(&sections)

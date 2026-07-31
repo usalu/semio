@@ -36,7 +36,7 @@ pub enum NoteOperation {
     SetDocument {
         #[dsl(block)]
         document: NoteDocument,
-    },
+    }
 }
 
 /// 🧩️ Snapshot diff wrapping the forward `NoteOperation` — `apply` replays it, `absorb` keeps the latest

@@ -377,7 +377,7 @@ pub enum DagPreviewContent {
     },
     Tree {
         json: serde_json::Value,
-    },
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -678,7 +678,7 @@ pub enum DagNodeKind {
         icon: String,
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
-    },
+    }
 }
 
 /// 🏷️ Serialized `kind` tag for a {@link DagNodeKind} variant.
@@ -7064,7 +7064,7 @@ pub enum DagOperation {
     Edges(CollectionOperation<String, DagFixtureEdge, DagEdgePatch>),
     SetNodes { nodes: Vec<DagNodeSpec> },
     SetEdges { edges: Vec<DagFixtureEdge> },
-    SetDocument { document: DagDocument },
+    SetDocument { document: DagDocument }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -7201,7 +7201,7 @@ enum DagNodeKindDsl {
         inputs: Vec<IoPortSpec>,
         #[dsl(table)]
         outputs: Vec<IoPortSpec>,
-    },
+    }
 }
 
 fn dag_node_kind_to_dsl(kind: &DagNodeKind) -> DagNodeKindDsl {

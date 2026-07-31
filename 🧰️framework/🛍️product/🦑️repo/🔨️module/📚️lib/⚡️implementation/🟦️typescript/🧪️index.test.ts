@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv } from "../../../../../../../📜️script.ts";
-import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
+import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import {
@@ -1107,5 +1107,20 @@ describe("command budgets", () => {
 
   test("budgetTimeoutHint gives non-cargo commands a generic hint", () => {
     expect(budgetTimeoutHint("git")).not.toContain("target-dir lock contention");
+  });
+});
+
+describe("resolveCargoPackageName", () => {
+  test("resolves short lib names to full package names", () => {
+    const root = process.cwd();
+    expect(resolveCargoPackageName("db_actor", join(root, "🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/🎭️actor/⚡️implementation/🦀️rust"))).toBe("semio-framework-os-kernel-db-actor");
+    expect(resolveCargoPackageName("architect_spine", join(root, "✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust"))).toBe("semio-s-plugin-architect-spine");
+    expect(resolveCargoPackageName("energy_engine", join(root, "✏️s/🔌️plugin/🔋️energy/🔨️module/⚙️engine/⚡️implementation/🦀️rust"))).toBe("semio-s-plugin-energy-engine");
+  });
+
+  test("resolves empty package list to local Cargo.toml package name", () => {
+    const root = process.cwd();
+    const dbActorDir = join(root, "🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/🎭️actor/⚡️implementation/🦀️rust");
+    expect(resolveCargoPackageNames([], dbActorDir)).toEqual(["semio-framework-os-kernel-db-actor"]);
   });
 });

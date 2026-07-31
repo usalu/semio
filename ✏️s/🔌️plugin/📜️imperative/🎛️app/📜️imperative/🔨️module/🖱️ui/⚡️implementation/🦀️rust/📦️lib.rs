@@ -161,7 +161,8 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labe
             default_open: Some(true),
             children: vec![ui_text(labels.inspector_empty_hint)],
             presence: UiPresence::default(),
-}]);
+            menu: None,
+        }]);
     }
     let steps: Vec<&Step> = selected.iter().filter_map(|id| document.path.steps.iter().find(|step| &step.id == id)).collect();
     if steps.is_empty() {

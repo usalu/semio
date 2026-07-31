@@ -174,7 +174,7 @@ pub enum Frame {
         #[serde(rename = "linkId")]
         #[dsl(refs = "link")]
         link_id: String,
-    },
+    }
 }
 
 impl Frame {

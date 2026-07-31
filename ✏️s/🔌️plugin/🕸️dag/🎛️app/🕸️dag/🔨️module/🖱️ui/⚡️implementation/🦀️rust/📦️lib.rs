@@ -86,6 +86,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         items: None,
         control: None,
         dimmed: None,
+        menu: None,
     }
 }
 
@@ -106,6 +107,7 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
         items: None,
         control: None,
         dimmed: None,
+        menu: None,
     }
 }
 
@@ -126,8 +128,8 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
         items: None,
         control: None,
         dimmed: None,
+        menu: None,
     }
-}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
@@ -288,6 +290,7 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        menu: None,
     })
 }
 
@@ -317,12 +320,13 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
                     )
                 })
                 .collect(),
-        }],
+            }],
         presence: UiPresence::default(),
         selected_ids: None,
         highlighted_ids: None,
         selection_change: None,
         drop_action: None,
+        menu: None,
     })
 }
 
@@ -342,10 +346,12 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 
@@ -365,10 +371,12 @@ fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 
@@ -380,6 +388,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.select_a_node)],
+            menu: None,
         }]);
     }
     let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| document.nodes.iter().find(|node| &node.id == id)).collect();
@@ -390,6 +399,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text(labels.node_not_found)],
+            menu: None,
         }]);
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
@@ -467,10 +477,12 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         );
     } else {

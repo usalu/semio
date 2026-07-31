@@ -281,10 +281,12 @@ fn layer_weight_slider_fields(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabe
                         Some(json!({ "layerId": layer_id })),
                     ),
                     unit: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             })
         })
         .collect()
@@ -531,7 +533,8 @@ fn gis2d_action_labels(is_de: bool) -> HashMap<String, String> {
 /// 🌳️ A layer tree item — `tree_item_with_action` plus the icon that identifies each map layer, since
 /// the SDK's `PanelKit` family has no icon-carrying constructor.
 fn gis2d_layer_tree_item(id: String, label: &str, description: Option<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), ..tree_item_with_action(id, label, description, action) }
+    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
+    ..tree_item_with_action(id, label, description, action) }
 }
 
 fn build_document_tree(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) -> UiNode {
@@ -576,7 +579,8 @@ fn build_catalogue_tree(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) ->
 fn map_view_field_group(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) -> UiInspectorFieldGroup {
     let lod_items: Vec<UiSelectItem> = lod_select_entries(labels)
         .into_iter()
-        .map(|(value, label)| UiSelectItem { value, label })
+        .map(|(value, label)| UiSelectItem { value, label,
+        })
         .collect();
     let selection: Value = serde_json::from_str(&runtime.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
     let selected_count = selection.get("positions").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
@@ -589,16 +593,21 @@ fn map_view_field_group(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) ->
                     id: "gis2d-play-inspector.render-mode.select".into(),
                     value: runtime.render_mode.clone(),
                     items: vec![
-                        UiSelectItem { value: "image".into(), label: labels.render_mode_image.into() },
-                        UiSelectItem { value: "vector".into(), label: labels.render_mode_vector.into() },
-                        UiSelectItem { value: "combined".into(), label: labels.render_mode_combined.into() },
+                        UiSelectItem { value: "image".into(), label: labels.render_mode_image.into(),
+        },
+                        UiSelectItem { value: "vector".into(), label: labels.render_mode_vector.into(),
+        },
+                        UiSelectItem { value: "combined".into(), label: labels.render_mode_combined.into(),
+        },
                     ],
                     placeholder: None,
                     on_change: gis2d_action("setRenderMode", None),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "gis2d-play-inspector.vector-style".into(),
@@ -607,16 +616,21 @@ fn map_view_field_group(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) ->
                     id: "gis2d-play-inspector.vector-style.select".into(),
                     value: runtime.vector_style.clone(),
                     items: vec![
-                        UiSelectItem { value: "colored".into(), label: labels.vector_style_colored.into() },
-                        UiSelectItem { value: "figureGround".into(), label: labels.vector_style_figure_ground.into() },
-                        UiSelectItem { value: "invertedFigure".into(), label: labels.vector_style_inverted_figure.into() },
+                        UiSelectItem { value: "colored".into(), label: labels.vector_style_colored.into(),
+        },
+                        UiSelectItem { value: "figureGround".into(), label: labels.vector_style_figure_ground.into(),
+        },
+                        UiSelectItem { value: "invertedFigure".into(), label: labels.vector_style_inverted_figure.into(),
+        },
                     ],
                     placeholder: None,
                     on_change: gis2d_action("setVectorStyle", None),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "gis2d-play-inspector.lod-mode".into(),
@@ -627,10 +641,12 @@ fn map_view_field_group(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) ->
                     items: lod_items,
                     placeholder: None,
                     on_change: gis2d_action("setLodMode", None),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "gis2d-play-inspector.selection-method".into(),
@@ -639,15 +655,19 @@ fn map_view_field_group(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) ->
                     id: "gis2d-play-inspector.selection-method.select".into(),
                     value: runtime.selection_method.clone(),
                     items: vec![
-                        UiSelectItem { value: "rectangle".into(), label: labels.selection_method_rectangle.into() },
-                        UiSelectItem { value: "lasso".into(), label: labels.selection_method_lasso.into() },
+                        UiSelectItem { value: "rectangle".into(), label: labels.selection_method_rectangle.into(),
+        },
+                        UiSelectItem { value: "lasso".into(), label: labels.selection_method_lasso.into(),
+        },
                     ],
                     placeholder: None,
                     on_change: gis2d_action("setSelectionMethod", None),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             ui_inspector_readonly_field("gis2d-play-inspector.feature-selection", labels.selected_features, selected_count.to_string()),
     ];
@@ -708,10 +728,12 @@ fn build_inspector_tree(runtime: &Gis2dPlayRuntime, labels: &Gis2dPlayLabels) ->
                         presence: UiPresence::selected(mixed.uniform && mixed.pressed),
                         text: None,
                         on_change: gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
+                        menu: None,
                     })),
                     description: None,
                     required: None,
                     error: None,
+                    menu: None,
                 }),
             ],
         },

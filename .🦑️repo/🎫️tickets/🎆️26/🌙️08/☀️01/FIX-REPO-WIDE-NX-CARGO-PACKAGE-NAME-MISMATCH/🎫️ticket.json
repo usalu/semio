@@ -1,0 +1,15 @@
+{
+  "title": "Fix Repo Wide Nx Cargo Package Name Mismatch",
+  "emoji": "🦀",
+  "status": "closed",
+  "description": "Fix repo-wide nx↔Cargo package-name mismatch breaking `test` for ~150 Rust projects",
+  "goal": "🎯aioptimizedrepo",
+  "summary": "Implemented centralized Cargo package name resolution in `resolveCargoPackageNames` inside `repo/lib/js/index.ts` (`🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts`). `runCargoTestBudgeted` and `runCargoLint` now map short crate library names, directory slugs, and legacy package names (such as `db_actor`, `architect_spine`, `energy_engine`, `ui_wgpu`, `framework_editor`, `framework_surface_node_graph`, etc.) directly to their real `[package]` names in `Cargo.toml` (e.g. `semio-framework-os-kernel-db-actor`, `semio-s-plugin-architect-spine-module`, `semio-s-plugin-energy-engine`). Verified end-to-end with unit tests in `index.test.ts` and test runs across affected projects and `verify gate`.",
+  "files": [
+    "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts",
+    "🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/🧪️index.test.ts"
+  ],
+  "sessions": [
+    "38c8b147-4720-47f4-bc2b-f6396d8c30ba"
+  ]
+}

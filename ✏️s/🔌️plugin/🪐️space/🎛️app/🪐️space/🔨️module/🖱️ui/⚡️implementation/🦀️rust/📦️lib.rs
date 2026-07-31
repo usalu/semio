@@ -350,6 +350,7 @@ fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> U
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
+            menu: None,
         }),
         OsParameter::Categorical { id, value, options, .. } => UiNode::Select(UiSelectNode {presence: UiPresence::default(),
             id: format!("s-play-parameters.{id}.value"),
@@ -366,6 +367,7 @@ fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> U
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
+            menu: None,
         }),
         OsParameter::Toggle { id, value, .. } => UiNode::Toggle(UiToggleNode {
             id: format!("s-play-parameters.{id}.value"),
@@ -376,6 +378,7 @@ fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> U
                 "patchParameter",
                 Some(json!({ "parameterId": id, "field": "value" })),
             ),
+            menu: None,
         }),
         OsParameter::Text { id, value, .. } => UiNode::Input(UiInputNode {presence: UiPresence::default(),
             id: format!("s-play-parameters.{id}.value"),
@@ -391,6 +394,7 @@ fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> U
             max: None,
             step: None,
             accept: None,
+            menu: None,
         }),
     }
 }
@@ -420,10 +424,12 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "min" })),
                     ),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: format!("s-play-parameters.{id}.max"),
@@ -441,10 +447,12 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "max" })),
                     ),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: format!("s-play-parameters.{id}.step"),
@@ -462,10 +470,12 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                         "patchParameter",
                         Some(json!({ "parameterId": id, "field": "step" })),
                     ),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         ],
         OsParameter::Categorical { id, options, .. } => {
@@ -486,10 +496,12 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                             ),
                             style: None,
                             presence: UiPresence::default(),
+                            menu: None,
                         })),
                         description: None,
                         required: None,
                         error: None,
+                        menu: None,
                     })
                 })
                 .collect();
@@ -510,10 +522,12 @@ fn parameter_constraint_fields(parameter: &OsParameter, labels: &SStudioLabels) 
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }));
             fields
         }
@@ -535,9 +549,11 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
                 action: s_play_action("addParameter", Some(json!({ "type": "numeric" }))),
                 style: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             ui_text(format!("{} {}", projection.parameters.len(), labels.parameter_count_suffix)),
         ],
+        menu: None,
     }];
     for parameter in &projection.parameters {
         let parameter_id = parameter_entity_id(parameter).to_string();
@@ -564,10 +580,12 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: format!("s-play-parameters.{parameter_id}.value-field"),
@@ -576,6 +594,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         ];
         parameter_children.extend(parameter_constraint_fields(parameter, labels));
@@ -589,6 +608,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
             ),
             style: None,
             presence: UiPresence::default(),
+            menu: None,
         }));
         children.push(UiSectionNode {
             id: format!("s-play-parameters.{parameter_id}"),
@@ -601,6 +621,7 @@ fn build_parameters_tree(projection: &OsProjection, labels: &SStudioLabels) -> U
             default_open: Some(true),
             presence: UiPresence::default(),
             children: parameter_children,
+            menu: None,
         });
     }
     ui_declarative_sections_to_tree(&children)
@@ -621,6 +642,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
             instance_ids.len(),
             term_labels.app_instance_count_label
         ))],
+        menu: None,
     }];
     if !media_node_ids.is_empty() {
         let nodes: Vec<_> = media_node_ids
@@ -647,10 +669,12 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }));
         }
         node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
@@ -674,10 +698,12 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }));
         node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(),
             id: "s-play-inspector.media-node.y".into(),
@@ -700,10 +726,12 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                 max: None,
                 step: None,
                 accept: None,
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
+            menu: None,
         }));
         children.push(UiSectionNode {
             id: "s-play-inspector.media-nodes".into(),
@@ -715,6 +743,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
             default_open: Some(true),
             presence: UiPresence::default(),
             children: node_fields,
+            menu: None,
         });
     }
     if !instance_ids.is_empty() {
@@ -768,10 +797,12 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         ];
         if instance_ids.len() == 1 {
@@ -834,10 +865,12 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
                                         "fieldPath": field_spec.field_path,
                                     })),
                                 ),
+                                menu: None,
                             })),
                             description: None,
                             required: None,
                             error: None,
+                            menu: None,
                         }));
                         if let Some(binding) = binding {
                             if let Some(parameter) = projection
@@ -866,6 +899,7 @@ fn build_inspector_tree(projection: &OsProjection, runtime: &StudioRuntimeState,
             default_open: Some(true),
             presence: UiPresence::default(),
             children: instance_fields,
+            menu: None,
         });
     }
     if media_node_ids.is_empty() && instance_ids.is_empty() {

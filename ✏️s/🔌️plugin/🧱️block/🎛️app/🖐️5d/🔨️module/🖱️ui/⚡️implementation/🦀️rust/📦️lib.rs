@@ -60,12 +60,16 @@ fn build_document_tree(definition: &Block5dDefinition, selected: &[String], labe
     let grip_kind_items: Vec<UiTreeItemNode> = definition
         .grip_kinds
         .iter()
-        .map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), ..tree_item_with_action(builder.item_id("grip-kind", &kind.id), kind.label.clone(), Some(kind.color.clone()), block5d_action("setSelection", None)) })
+        .map(|kind| UiTreeItemNode { icon_id: Some("circle".into()), menu: None,
+            ..tree_item_with_action(builder.item_id("grip-kind", &kind.id), kind.label.clone(), Some(kind.color.clone()), block5d_action("setSelection", None))
+        })
         .collect();
     let grip_items: Vec<UiTreeItemNode> = definition
         .grips
         .iter()
-        .map(|grip| UiTreeItemNode { icon_id: Some("circle-dot".into()), ..tree_item_with_action(builder.item_id("grip", &grip.id), grip.grip_kind.clone(), Some(format!("{:.2}", grip.angle)), block5d_action("setSelection", None)) })
+        .map(|grip| UiTreeItemNode { icon_id: Some("circle-dot".into()), menu: None,
+            ..tree_item_with_action(builder.item_id("grip", &grip.id), grip.grip_kind.clone(), Some(format!("{:.2}", grip.angle)), block5d_action("setSelection", None))
+        })
         .collect();
     builder
         .section_or_placeholder("block5d-play-document.grip-kinds", Some(labels.grip_kinds.into()), true, grip_kind_items, labels.no_grip_kinds)
@@ -92,10 +96,12 @@ fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 

@@ -123,7 +123,7 @@ pub enum NodeChrome {
     Variable {
         name: String,
         schema: String,
-    },
+    }
 }
 
 /// 👁️ GUI-only preview binding.
@@ -245,7 +245,7 @@ pub enum Widget {
         tree: Tree,
         #[serde(default)]
         flow: FlowGui,
-    },
+    }
 }
 
 /// 🧩️ Legacy fixture format still used by {@link FlowHost} retained state.
@@ -989,7 +989,7 @@ enum WidgetDescriptor {
         name: Option<String>,
         #[serde(default)]
         schema: Option<String>,
-    },
+    }
 }
 
 fn descriptor_explicit_id(descriptor: &WidgetDescriptor) -> Option<String> {
@@ -4267,7 +4267,7 @@ pub enum FlowOperation {
     Widgets(CollectionOperation<String, Widget, Widget>),
     Synapses(CollectionOperation<String, SynapseSpec, SynapseSpec>),
     SetLayout { entries: Vec<FlowLayoutEntry> },
-    SetFixture { fixture: FlowFixture },
+    SetFixture { fixture: FlowFixture }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -4502,7 +4502,7 @@ enum NeuronNodeDsl {
         params: Option<BTreeMap<String, ValueDsl>>,
         #[dsl(block)]
         tree: Option<TreeDsl>,
-    },
+    }
 }
 
 /// 🔌️ DSL-only mirror of `SynapseSpec` (and of `neural::Synapse`, its foreign twin embedded in
@@ -4595,7 +4595,7 @@ enum WidgetDsl {
         #[dsl(block)]
         tree: TreeDsl,
         flow: serde_json::Value,
-    },
+    }
 }
 
 /// 🌉️ `#[derive(dsl::DslEnum)]` only gives `WidgetDsl` a `dsl::DslVariants` binding, not
@@ -4763,7 +4763,7 @@ enum FlowOperationDsl {
     SetFixture {
         #[dsl(block)]
         fixture: FlowFixtureDsl,
-    },
+    }
 }
 
 fn flow_operation_to_dsl(operation: &FlowOperation) -> FlowOperationDsl {

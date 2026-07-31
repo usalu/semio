@@ -1,0 +1,13 @@
+{
+  "title": "Fix Aggregator Inactive Fill Ticks",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Aggregator must advance fill background planning only while the mode-level fill tool is active. Ignore stale or queued fillBuildTick actions after the tool is deactivated.",
+  "goal": "🎯️r2602/🎯️runningsketchpad",
+  "summary": "Stopped Aggregator fill planning after the mode-level Fill tool is deactivated. fillBuildTick now checks the authoritative ViewState.active_tool_id before advancing PrecomputeLane::Fill; stale or queued ticks return UiDirtyScope::None and leave fill progress unchanged. Added a regression exercising 64 stale ticks after deactivation. Verified all 136 Puzzle 3D engine and UI tests, runtime progress remaining unchanged, and the workspace verify gate.",
+  "files": [
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/FIX-AGGREGATOR-INACTIVE-FILL-TICKS/🎫️ticket.json",
+    "✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs"
+  ],
+  "sessions": []
+}

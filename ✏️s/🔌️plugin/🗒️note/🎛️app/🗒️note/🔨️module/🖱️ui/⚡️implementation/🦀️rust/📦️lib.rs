@@ -278,6 +278,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
             Some(block_kind(block).into()),
             play_action(NOTE_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [block_id(block)] }))),
         )
+        menu: None,
     }
 }
 
@@ -301,7 +302,8 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
             label,
             None,
             play_action(NOTE_PLAY_CONTROLLER_ID, "addBlock", Some(json!({ "kind": kind }))),
-        )
+        ),
+        menu: None,
     })
     .collect();
     let block_items: Vec<UiTreeItemNode> = if document.blocks.is_empty() {
@@ -337,6 +339,7 @@ fn render_catalogue_panel(labels: &NotePlayLabels) -> UiNode {
             ui_text(labels.catalogue_ink),
             ui_text(labels.catalogue_group),
         ],
+        menu: None,
     }])
 }
 
@@ -368,8 +371,10 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
             accept: None,
             on_change: inspector_patch(block_ids, field),
             presence: UiPresence::default(),
+            menu: None,
         })),
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -401,8 +406,10 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
             accept: None,
             on_change: inspector_patch(block_ids, field),
             presence: UiPresence::default(),
+            menu: None,
         })),
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -470,8 +477,10 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
                     text: None,
                     on_change: inspector_patch(&block_ids, "visible"),
                     presence: UiPresence::selected(visible_mixed.uniform && visible_mixed.pressed),
+                    menu: None,
                 })),
                 presence: UiPresence::default(),
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "note-properties.locked".into(),
@@ -485,8 +494,10 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
                     text: None,
                     on_change: inspector_patch(&block_ids, "locked"),
                     presence: UiPresence::selected(locked_mixed.uniform && locked_mixed.pressed),
+                    menu: None,
                 })),
                 presence: UiPresence::default(),
+                menu: None,
             }),
         ],
     }])

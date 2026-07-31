@@ -409,7 +409,8 @@ fn shooting_utility_labels(is_de: bool) -> HashMap<String, String> {
 /// 🌳️ Layers an `icon_id` onto the SDK's `tree_item_with_action` skeleton — the SDK primitive's third
 /// parameter is `description`, not an icon, so the shooting-specific icon assignment stays local.
 fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon_id.into()), ..tree_item_with_action(id, label, None, action) }
+    UiTreeItemNode { icon_id: Some(icon_id.into()), menu: None,
+    ..tree_item_with_action(id, label, None, action) }
 }
 
 fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> UiNode {
@@ -468,7 +469,8 @@ fn catalog_shot_item(id: &str, label: &str, format: &str, shape: &str) -> UiTree
         label,
         "camera",
         shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))),
-    )
+    ),
+    menu: None,
 }
 
 fn build_inspector_tree(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, labels: &ShootingLabels) -> UiNode {
@@ -520,10 +522,12 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             ui_inspector_readonly_field("shooting-play-inspector.shot.format", labels.field_format, &shot.format),
             ui_inspector_readonly_field("shooting-play-inspector.shot.shape", labels.field_shape, &shot.shape),
@@ -544,10 +548,12 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "shooting-play-inspector.shot.height".into(),
@@ -566,10 +572,12 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         ],
     }
@@ -599,10 +607,12 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {presence: UiPresence::default(),
                 id: "shooting-play-inspector.asset.url".into(),
@@ -621,10 +631,12 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
                     max: None,
                     step: None,
                     accept: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             ui_inspector_readonly_field("shooting-play-inspector.asset.format", labels.field_format, &asset.format),
         ],

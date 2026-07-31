@@ -61,7 +61,7 @@ pub enum SolidSpec {
     /// session by handle id (mirrors `cad`'s `solidHandle` pattern); ephemeral to that session.
     ImportedSolid {
         solid_handle: String,
-    },
+    }
 }
 
 /// 🌉️ `#[derive(dsl::DslEnum)]` only gives `SolidSpec` a `dsl::DslVariants` binding (a tagged-record

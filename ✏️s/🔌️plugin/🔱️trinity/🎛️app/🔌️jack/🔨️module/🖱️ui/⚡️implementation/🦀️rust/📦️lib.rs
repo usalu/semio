@@ -541,6 +541,7 @@ fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, te
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text("Select one or more pieces")],
+            menu: None,
         }]);
     }
     let nodes: Vec<&Node> = runtime
@@ -555,6 +556,7 @@ fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, te
             default_open: Some(true),
             presence: UiPresence::default(),
             children: vec![ui_text("Piece not found")],
+            menu: None,
         }]);
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
@@ -632,10 +634,12 @@ fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, te
                         max: None,
                         step: None,
                         accept: None,
+                        menu: None,
                     })),
                     description: None,
                     required: None,
                     error: None,
+                    menu: None,
                 }),
                 ui_inspector_readonly_field(
                     "trinity-inspector.kind",

@@ -852,7 +852,9 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
         tree_button("draw-play-layers.add.boolean", labels.add_boolean, "combine", "addLayer", json!({ "kind": "boolean" })),
     ];
     let layer_items = if document.layers.is_empty() {
-        vec![UiTreeItemNode { icon_id: Some("pen-tool".into()), ..tree_item("draw-play-layers.empty", labels.empty_state) }]
+        vec![UiTreeItemNode { icon_id: Some("pen-tool".into()), menu: None,
+        ..tree_item("draw-play-layers.empty", labels.empty_state)
+    }]
     } else {
         document.layers.iter().map(|layer| layer_tree_item(document, layer)).collect()
     };
@@ -875,7 +877,8 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
 }
 
 fn tree_button(id: &str, label: &str, icon: &str, action: &str, args: Value) -> UiTreeItemNode {
-    UiTreeItemNode { icon_id: Some(icon.into()), ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
+    UiTreeItemNode { icon_id: Some(icon.into()), menu: None,
+    ..tree_item_with_action(id, label, None, draw_play_action(action, Some(args))) }
 }
 
 fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawPlayLabels) -> UiNode {
@@ -912,7 +915,8 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
                 format!("{} {operation}", labels.kind_boolean),
                 None,
                 draw_play_action("combineBoolean", Some(json!({ "operation": operation, "ids": interaction.selected_ids }))),
-            )
+            ),
+            menu: None,
         });
     }
     PanelTreeBuilder::new("draw-play-catalogue")
@@ -941,10 +945,12 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, val
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 
@@ -965,10 +971,12 @@ fn inspector_text_field(layer_ids: &[String], field_id: &str, label: &str, value
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 
@@ -1007,12 +1015,15 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                     id: "draw-play-inspector.boolean-operation.select".into(),
                     value: op_mixed.value,
                     placeholder: op_mixed.placeholder,
-                    items: DRAW_BOOLEAN_OPERATIONS.iter().map(|operation| UiSelectItem { value: (*operation).into(), label: (*operation).into() }).collect(),
+                    items: DRAW_BOOLEAN_OPERATIONS.iter().map(|operation| UiSelectItem { value: (*operation).into(), label: (*operation).into(),
+        }).collect(),
                     on_change: inspector_patch(&layer_ids, "booleanOperation"),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }));
             let child_labels = boolean
                 .children
@@ -1061,10 +1072,12 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                     step: 0.01,
                     on_change: inspector_patch(&layer_ids, "traceThreshold"),
                     unit: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }));
             fields.push(UiNode::Field(UiFieldNode {
                 presence: UiPresence::default(),
@@ -1078,10 +1091,12 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                     step: 0.1,
                     on_change: inspector_patch(&layer_ids, "traceSimplify"),
                     unit: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }));
             fields.push(ui_inspector_readonly_field(
                 "draw-play-inspector.trace-source",
@@ -1242,10 +1257,12 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlay
                     step: 0.01,
                     on_change: inspector_patch(&layer_ids, "fillAlpha"),
                     unit: None,
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             inspector_number_field(&layer_ids, "draw-play-inspector.stroke-width", labels.stroke_width, &stroke_widths, "strokeWidth"),
         ],
@@ -1280,13 +1297,16 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                     placeholder: blend_mixed.placeholder,
                     items: DRAW_BLEND_MODES
                         .iter()
-                        .map(|mode| UiSelectItem { value: (*mode).into(), label: (*mode).into() })
+                        .map(|mode| UiSelectItem { value: (*mode).into(), label: (*mode).into(),
+        })
                         .collect(),
                     on_change: inspector_patch(&layer_ids, "blendMode"),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode { presence: UiPresence::default(),
                 id: "draw-play-inspector.visible".into(),
@@ -1297,10 +1317,12 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                     text: None,
                     on_change: inspector_patch(&layer_ids, "visible"),
                     presence: UiPresence::selected(visible_mixed.uniform && visible_mixed.pressed),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
             UiNode::Field(UiFieldNode { presence: UiPresence::default(),
                 id: "draw-play-inspector.locked".into(),
@@ -1311,10 +1333,12 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                     text: None,
                     on_change: inspector_patch(&layer_ids, "locked"),
                     presence: UiPresence::selected(locked_mixed.uniform && locked_mixed.pressed),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
+                menu: None,
             }),
         ],
     }

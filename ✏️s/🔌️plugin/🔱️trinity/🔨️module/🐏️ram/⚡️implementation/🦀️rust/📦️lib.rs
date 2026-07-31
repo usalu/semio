@@ -63,7 +63,7 @@ pub enum TrinityRamError {
     #[error("{path}/{name}: property type mismatch for {value_type}")]
     PropertyTypeMismatch { path: String, name: String, value_type: String },
     #[error("{path}/{key}: unknown property {key:?}")]
-    UnknownPropertyInBag { path: String, key: String },
+    UnknownPropertyInBag { path: String, key: String }
 }
 
 /// 🔀️ [`ManifestValidationError`] carries no `std::error::Error` impl of its own (plain path/message struct), so this is a manual conversion rather than `#[from]`.
@@ -587,7 +587,7 @@ pub enum TrinityGraphOperation {
     /// 📦️ Replace the whole fixture (preset load, node-graph drag import); the inverse restores the prior fixture.
     SetFixture {
         fixture: GraphFixture,
-    },
+    }
 }
 
 pub type TrinityGraphEnvelope = DocumentEnvelope<GraphFixture, TrinityGraphOperation>;
@@ -1097,7 +1097,7 @@ enum TrinityGraphOperationDsl {
     Reposition { id: String, x: f64, y: f64 },
     SetDataProperty { entity: EntityRefDsl, key: String, value: PropertyValue },
     ClearDataProperty { entity: EntityRefDsl, key: String },
-    SetFixture { fixture: GraphFixture },
+    SetFixture { fixture: GraphFixture }
 }
 
 fn trinity_graph_operation_to_dsl(operation: &TrinityGraphOperation) -> TrinityGraphOperationDsl {

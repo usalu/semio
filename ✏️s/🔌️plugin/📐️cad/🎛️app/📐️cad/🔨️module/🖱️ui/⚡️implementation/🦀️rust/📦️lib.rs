@@ -1502,11 +1502,13 @@ fn inspector_number_field(
             step: None,
             accept: None,
             presence: UiPresence::default(),
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -1525,6 +1527,7 @@ fn inspector_quat_group(id: &str, label: &str, values: &[[f64; 4]], step: f64, a
         default_open: Some(true),
         presence: UiPresence::default(),
         children: vec![component(0, "x", "X"), component(1, "y", "Y"), component(2, "z", "Z"), component(3, "w", "W")],
+        menu: None,
     })
 }
 
@@ -1575,11 +1578,13 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                     step: None,
                     accept: None,
                     presence: UiPresence::default(),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.typology".into(),
@@ -1600,11 +1605,13 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                         Some(json!({ "objectIds": object_ids, "field": "typology" })),
                     ),
                     presence: UiPresence::default(),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.hidden".into(),
@@ -1618,11 +1625,13 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                         Some(json!({ "objectIds": object_ids, "field": "hidden" })),
                     ),
                     presence: UiPresence::selected(hidden_mixed.pressed),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.locked".into(),
@@ -1636,11 +1645,13 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                         Some(json!({ "objectIds": object_ids, "field": "locked" })),
                     ),
                     presence: UiPresence::selected(locked_mixed.pressed),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             {
                 let object_ids = object_ids.clone();
@@ -1742,11 +1753,13 @@ fn node_inspector_group(node: &CadNode, labels: &CadLabels) -> UiInspectorFieldG
                     step: None,
                     accept: None,
                     presence: UiPresence::default(),
+                    menu: None,
                 })),
                 description: None,
                 required: None,
                 error: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
             ui_inspector_readonly_field("cad-play-inspector.node.kind", labels.kind, &node.kind),
         ],

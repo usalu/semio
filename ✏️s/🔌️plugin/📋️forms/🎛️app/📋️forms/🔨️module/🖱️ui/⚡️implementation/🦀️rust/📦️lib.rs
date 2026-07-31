@@ -657,7 +657,8 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
                         question.label.clone(),
                         Some(question.kind.clone()),
                         forms_action("setSelection", Some(json!({ "ids": [question.id.clone()] }))),
-                    )
+                    ),
+                    menu: None,
                 })
                 .collect();
             UiTreeItemNode {
@@ -670,7 +671,8 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
                     step.title.clone(),
                     Some(format!("{} questions", step.blocks.len())),
                     forms_action("setSelection", Some(json!({ "ids": [] }))),
-                )
+                ),
+                menu: None,
             }
         })
         .collect();
@@ -703,7 +705,8 @@ fn build_catalogue_tree(contributions: &[ProgramContributionEntry], labels: &For
                     label,
                     Some(kind.clone()),
                     forms_action("addQuestion", Some(json!({ "kind": kind }))),
-                )
+                ),
+                menu: None,
             }
         })
         .collect();
@@ -719,7 +722,8 @@ fn build_catalogue_tree(contributions: &[ProgramContributionEntry], labels: &For
                 labels.add_text_question,
                 None,
                 forms_action("addQuestion", Some(json!({ "kind": "text" }))),
-            )
+            ),
+            menu: None,
         },
     ];
     PanelTreeBuilder::new("forms-play-catalogue")
@@ -749,11 +753,13 @@ fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, va
             step: None,
             accept: None,
             presence: UiPresence::default(),
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -770,11 +776,13 @@ fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, 
             on_absolute: inspector_patch(question_ids, field),
             on_delta: inspector_patch(question_ids, field),
             presence: UiPresence::default(),
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -847,7 +855,9 @@ fn question_kind_editor_fields(
                     text: Some(if pressed { labels.yes.into() } else { labels.no.into() }),
                     on_change: inspector_patch(question_ids, "default"),
                     presence: UiPresence::selected(pressed),
+                    menu: None,
                 })),
+                menu: None,
             }));
         }
         "single" | "multi" => {
@@ -875,7 +885,9 @@ fn question_kind_editor_fields(
                             step: None,
                             accept: None,
                             presence: UiPresence::default(),
+                            menu: None,
                         })),
+                        menu: None,
                     }));
                     fields.push(UiNode::Button(UiButtonNode {
                         id: Some(fid(&format!("option.{}.remove", option.value))),
@@ -887,6 +899,7 @@ fn question_kind_editor_fields(
                         ),
                         style: None,
                         presence: UiPresence::default(),
+                        menu: None,
                     }));
                 }
             }
@@ -897,6 +910,7 @@ fn question_kind_editor_fields(
                 action: forms_action("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
                 style: None,
                 presence: UiPresence::default(),
+                menu: None,
             }));
         }
         "date" | "color" => {
@@ -941,7 +955,9 @@ fn question_kind_editor_fields(
                             step: None,
                             accept: None,
                             presence: UiPresence::default(),
+                            menu: None,
                         })),
+                        menu: None,
                     }));
                     fields.push(UiNode::Field(UiFieldNode {
                         id: fid(&format!("vector.{}.value", field.key)),
@@ -964,7 +980,9 @@ fn question_kind_editor_fields(
                                 Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
                             ),
                             presence: UiPresence::default(),
+                            menu: None,
                         })),
+                        menu: None,
                     }));
                     fields.push(UiNode::Button(UiButtonNode {
                         id: Some(fid(&format!("vector.{}.remove", field.key))),
@@ -976,6 +994,7 @@ fn question_kind_editor_fields(
                         ),
                         style: None,
                         presence: UiPresence::default(),
+                        menu: None,
                     }));
                 }
             }
@@ -989,6 +1008,7 @@ fn question_kind_editor_fields(
                 ),
                 style: None,
                 presence: UiPresence::default(),
+                menu: None,
             }));
         }
         "note" => {
@@ -1073,11 +1093,13 @@ fn build_inspector_tree(
                 items: kind_items,
                 on_change: inspector_patch(&question_ids, "kind"),
                 presence: UiPresence::default(),
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
             presence: UiPresence::default(),
+            menu: None,
         }),
         ui_inspector_readonly_field(
             "forms-play-inspector.id",
@@ -1101,11 +1123,13 @@ fn build_inspector_tree(
                 },
                 on_change: inspector_patch(&question_ids, "required"),
                 presence: UiPresence::selected(required_mixed.uniform && required_mixed.pressed),
+                menu: None,
             })),
             description: None,
             required: None,
             error: None,
             presence: UiPresence::default(),
+            menu: None,
         }),
     ];
     if questions.len() == 1 {
@@ -1181,6 +1205,7 @@ fn ui_text_emphasized(value: impl Into<String>) -> UiNode {
         emphasize: Some(true),
         data_attributes: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -1195,6 +1220,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         drop_action: None,
         drop_overlay: None,
         children,
+        menu: None,
     })
 }
 
@@ -1207,6 +1233,7 @@ fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiN
         error: error.map(str::to_string),
         child: Box::new(child),
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -1235,6 +1262,7 @@ fn render_try_question(
                 step: None,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
         ),
         "number" => try_field(
@@ -1252,6 +1280,7 @@ fn render_try_question(
                 step: question.step,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
         ),
         "slider" => try_field(
@@ -1266,6 +1295,7 @@ fn render_try_question(
                 unit: question.unit.clone(),
                 on_change: try_value_action(&key),
                 presence: UiPresence::default(),
+                menu: None,
             }),
         ),
         "boolean" => try_field(
@@ -1277,6 +1307,7 @@ fn render_try_question(
                 text: Some(if value.as_bool().unwrap_or(false) { labels.yes.into() } else { labels.no.into() }),
                 on_change: try_value_action(&key),
                 presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
+                menu: None,
             }),
         ),
         "single" => {
@@ -1303,6 +1334,7 @@ fn render_try_question(
                     items,
                     on_change: try_value_action(&key),
                     presence: UiPresence::default(),
+                    menu: None,
                 }),
             )
         }
@@ -1327,6 +1359,7 @@ fn render_try_question(
                                     Some(json!({ "key": key, "optionValue": option.value })),
                                 ),
                                 presence: UiPresence::selected(selected.contains(&option.value)),
+                                menu: None,
                             })
                         })
                         .collect()
@@ -1349,6 +1382,7 @@ fn render_try_question(
                 step: None,
                 accept: None,
                 presence: UiPresence::default(),
+                menu: None,
             }),
         ),
         "vector" => {
@@ -1380,7 +1414,9 @@ fn render_try_question(
                                 Some(json!({ "key": key, "vectorIndex": index })),
                             ),
                             presence: UiPresence::default(),
+                            menu: None,
                         })),
+                        menu: None,
                     })
                 })
                 .collect();
@@ -1403,6 +1439,7 @@ fn render_try_question(
                 step: None,
                 accept: question.accept.clone(),
                 presence: UiPresence::default(),
+                menu: None,
             }),
         ),
         kind if is_extension_question_kind(kind) => {
@@ -1451,6 +1488,7 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
             action: forms_action("previousStep", None),
             style: None,
             presence: UiPresence::disabled_if(step_index == 0),
+            menu: None,
         }),
         if step_index + 1 < spec.steps.len() {
             UiNode::Button(UiButtonNode {
@@ -1460,6 +1498,7 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
                 action: forms_action("nextStep", None),
                 style: None,
                 presence: UiPresence::disabled_if(!advance),
+                menu: None,
             })
         } else {
             UiNode::Button(UiButtonNode {
@@ -1469,6 +1508,7 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
                 action: forms_action("submit", None),
                 style: None,
                 presence: UiPresence::disabled_if(!advance),
+                menu: None,
             })
         },
     ];

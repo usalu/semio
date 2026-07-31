@@ -264,6 +264,7 @@ export type UiSectionNode = {
   readonly defaultOpen?: boolean;
   readonly loading?: boolean;
   readonly waiting?: boolean;
+  readonly menu?: UiMenuRef;
   readonly children: readonly UiNode[];
 };
 
@@ -294,6 +295,9 @@ export type UiTreeItemNode = {
   readonly items?: readonly UiTreeItemNode[];
   readonly control?: UiControlNode;
   readonly isHidden?: boolean;
+  /** 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
+   * id carried in `args` (e.g. `{ id: row.id }`), rather than minting a unique menu id per row. */
+  readonly menu?: UiMenuRef;
 };
 
 export type UiTreeSectionNode = {
@@ -314,6 +318,7 @@ export type UiTreeNode = {
   readonly highlightedIds?: readonly string[];
   readonly selectionChange?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
@@ -330,6 +335,7 @@ export type UiInputNode = {
   readonly step?: number;
   readonly accept?: string;
   readonly onChange: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiSelectItem = {
@@ -344,6 +350,7 @@ export type UiSelectNode = {
   readonly items: readonly UiSelectItem[];
   readonly placeholder?: string;
   readonly onChange: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiToggleNode = {
@@ -353,6 +360,7 @@ export type UiToggleNode = {
   readonly pressed: boolean;
   readonly text?: string;
   readonly onChange: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 /** @emoji 🌿️ A nestable labeled container of {@link UiNode} children — the declarative-tree mechanism
@@ -366,6 +374,7 @@ export type UiGroupNode = {
   readonly id: string;
   readonly label: string;
   readonly defaultOpen?: boolean;
+  readonly menu?: UiMenuRef;
   readonly children: readonly UiNode[];
 };
 
@@ -377,6 +386,7 @@ export type UiKeyValueEntry = {
 export type UiKeyValueNode = {
   readonly type: "keyValue";
   readonly entries: readonly UiKeyValueEntry[];
+  readonly menu?: UiMenuRef;
 };
 
 export type UiSliderNode = {
@@ -388,6 +398,7 @@ export type UiSliderNode = {
   readonly step: number;
   readonly unit?: string;
   readonly onChange: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiNumberStepperNode = {
@@ -398,6 +409,7 @@ export type UiNumberStepperNode = {
   readonly uniform: boolean;
   readonly onAbsolute: ActionDescriptor;
   readonly onDelta: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiRingNode = {
@@ -407,6 +419,7 @@ export type UiRingNode = {
   readonly t: number;
   readonly disabled?: boolean;
   readonly onChange: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiIconSelectNode = {
@@ -416,6 +429,7 @@ export type UiIconSelectNode = {
   readonly uniform: boolean;
   readonly classifierKind: string;
   readonly onChange: ActionDescriptor;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiFieldNode = {
@@ -426,6 +440,7 @@ export type UiFieldNode = {
   readonly required?: boolean;
   readonly error?: string;
   readonly child: UiNode;
+  readonly menu?: UiMenuRef;
 };
 
 /** 🎨️ Renderer-side visual variant/size/density hints on a {@link UiButtonNode} — no wasm/plugin equivalent, purely a display hint. */
@@ -445,6 +460,7 @@ export type UiButtonNode = {
   readonly disabled?: boolean;
   readonly loading?: boolean;
   readonly waiting?: boolean;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiTextNode = {
@@ -452,6 +468,7 @@ export type UiTextNode = {
   readonly value: string;
   readonly emphasize?: boolean;
   readonly dataAttributes?: Readonly<Record<string, string>>;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiStackNode = {
@@ -466,6 +483,7 @@ export type UiStackNode = {
   readonly activate?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
   readonly dropOverlay?: UiDropOverlaySpec;
+  readonly menu?: UiMenuRef;
   readonly children: readonly UiNode[];
 };
 
@@ -476,13 +494,14 @@ export type UiDropOverlaySpec = {
   readonly accept?: string;
 };
 
-export type UiSeparatorNode = { readonly type: "separator" };
+export type UiSeparatorNode = { readonly type: "separator"; readonly menu?: UiMenuRef };
 
 export type UiImageNode = {
   readonly type: "image";
   readonly id: string;
   readonly src: string;
   readonly alt?: string;
+  readonly menu?: UiMenuRef;
 };
 
 export type UiNode =
@@ -520,6 +539,15 @@ export type Canvas2dScene = {
   readonly cameraY: number;
   readonly zoom: number;
   readonly layersJson: string;
+};
+
+/** 🖱️ A render-time address for an on-demand context menu — bytes only, never items. At right-click
+ * time the host resolves the nearest `menu` up the tree (or a scene's implicit surface-kind
+ * convention id) and asks the owning plugin's `contextMenu` export to compute rows fresh; nothing
+ * here is cached across clicks. */
+export type UiMenuRef = {
+  readonly id: string;
+  readonly args?: Record<string, unknown>;
 };
 
 /** 🌐️ A 3D world surface scene payload — mirrors the wasm `componentScene` node's `world3d` field. */
@@ -786,6 +814,7 @@ export type UiExternalSlotNode = {
   readonly appId: string;
   readonly bodyKey: string;
   readonly paramsJson: string;
+  readonly menu?: UiMenuRef;
 };
 
 /** 🧭️ The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/os/renderer/js/react/index.tsx`. */
@@ -799,6 +828,10 @@ export type UiComponentSceneNode = {
   readonly componentKind: string;
   readonly paneId?: string;
   readonly bindingId?: string;
+  /** 🖱️ Optional override of the implicit per-`componentKind` convention id (`"world3d"`,
+   * `"nodeGraph"`, `"tiledMap"`, ...) the host uses when resolving which surface answers a
+   * right-click — set only when a plugin needs a menu id other than the surface-kind default. */
+  readonly menu?: UiMenuRef;
   readonly canvas2d?: Canvas2dScene;
   readonly world3d?: World3dScene;
   readonly nodeGraph?: NodeGraphScene;
@@ -1873,6 +1906,33 @@ export type PluginUiRefreshResponse = {
 };
 //#endregion UiRefresh
 
+//#region 🖱️ContextMenu
+/** @emoji 🖱️ Scene-target info for an on-demand context-menu request — hit-test results from the
+ * surface's own picking (hover/selection), not cached across clicks. */
+export type PluginContextMenuSurfaceTarget = {
+  readonly surfaceId: string;
+  readonly kind: string;
+  readonly targetJson?: string;
+};
+
+export type PluginContextMenuPoint = { readonly x: number; readonly y: number };
+
+/** @emoji 🖱️ On-demand context-menu request — never cached, never batched into {@link PluginUiRefreshRequest}.
+ * `menu` is the {@link UiMenuRef} the host resolved from `data-menu-id`/a scene surface convention id
+ * (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...). */
+export type PluginContextMenuRequest = {
+  readonly viewState: PluginViewState;
+  readonly menu: UiMenuRef;
+  readonly surface?: PluginContextMenuSurfaceTarget;
+  readonly windowInstanceId?: string;
+  readonly point?: PluginContextMenuPoint;
+};
+
+export type PluginContextMenuResponse = {
+  readonly items: readonly ContextMenuItemSpec[];
+};
+//#endregion 🖱️ContextMenu
+
 export type PluginWasmHandle = {
   readonly pluginId: string;
   readonly manifest: PluginManifest;
@@ -1888,6 +1948,10 @@ export type PluginWasmHandle = {
   readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: PluginViewState, documentJson: string) => Promise<PluginUiNode>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
+  /** 🖱️ Computes the context menu for one right-click, on demand — see `context-menu` in `world.wit`.
+   * Never cached; safe to omit on handles that predate the feature, in which case the host falls
+   * through to the next outer menu layer. */
+  readonly contextMenu?: (instanceId: number, request: PluginContextMenuRequest) => Promise<PluginContextMenuResponse>;
   readonly dispose: () => void;
 };
 
@@ -2371,6 +2435,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     render: (instanceId, bodyKey, viewState) => runSerialized(() => handle.render(instanceId, bodyKey, viewState)),
     renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewState, documentJson) => runSerialized(() => handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) : undefined,
     refreshUi: (instanceId, request) => runSerialized(() => handle.refreshUi(instanceId, request)),
+    contextMenu: handle.contextMenu ? (instanceId, request) => runSerialized(() => handle.contextMenu!(instanceId, request)) : undefined,
     applyOperations: handle.applyOperations ? (instanceId, operationsJson) => runSerialized(() => handle.applyOperations!(instanceId, operationsJson)) : undefined,
     readAppDocument: handle.readAppDocument ? (instanceId) => runSerialized(() => handle.readAppDocument!(instanceId)) : undefined,
     loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => runSerialized(() => handle.loadAppDocument!(instanceId, documentJson)) : undefined,
@@ -2383,7 +2448,17 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
 
 //#region PluginWorkerClient
 /** @emoji 🧵️ Message types the generated `🟨️plugin-worker.js` dispatches (framework/os/dev/script.ts `pluginWorkerSource`). */
-type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "handleCommand" | "render" | "destroy" | "refreshUi" | "error";
+type PluginWorkerMessageType =
+  | "init"
+  | "manifest"
+  | "createApp"
+  | "handleAction"
+  | "handleCommand"
+  | "render"
+  | "destroy"
+  | "refreshUi"
+  | "contextMenu"
+  | "error";
 
 /** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
  * state, so abandoning it mid-call (the wgpu renderer's timeout+restart policy) would corrupt it. */
@@ -2497,6 +2572,10 @@ class PluginWorkerClient {
     return String((await this.request("refreshUi", { instanceId, requestJson })).value ?? "{}");
   }
 
+  async contextMenu(instanceId: number, requestJson: string): Promise<string> {
+    return String((await this.request("contextMenu", { instanceId, requestJson })).value ?? "{}");
+  }
+
   dispose(): void {
     this.clearPending(new Error(`program worker ${this.pluginId} disposed`));
     this.worker?.terminate();
@@ -2531,6 +2610,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
     render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode,
     refreshUi: async (instanceId, request) => JSON.parse(await client.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
+    contextMenu: async (instanceId, request) => JSON.parse(await client.contextMenu(instanceId, JSON.stringify(request))) as PluginContextMenuResponse,
     dispose: () => {
       pluginWorkerClients.delete(pluginId);
       client.dispose();
@@ -2611,6 +2691,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
       renderWithDocument?: (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => Promise<string>;
       refreshUi: (instanceId: number, requestJson: string) => Promise<string>;
+      contextMenu?: (instanceId: number, requestJson: string) => Promise<string>;
       applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
       readAppDocument?: (instanceId: number) => Promise<string>;
       loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
@@ -2654,6 +2735,7 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
       render: async (instanceId, bodyKey, viewState) => JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
       renderWithDocument: api.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await api.renderWithDocument!(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode : undefined,
       refreshUi: async (instanceId, request) => JSON.parse(await api.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
+      contextMenu: api.contextMenu ? async (instanceId, request) => JSON.parse(await api.contextMenu!(instanceId, JSON.stringify(request))) as PluginContextMenuResponse : undefined,
       applyOperations: api.applyOperations ? (instanceId, operationsJson) => api.applyOperations!(instanceId, operationsJson) : undefined,
       readAppDocument: api.readAppDocument ? (instanceId) => api.readAppDocument!(instanceId) : undefined,
       loadAppDocument: api.loadAppDocument ? (instanceId, documentJson) => api.loadAppDocument!(instanceId, documentJson) : undefined,
@@ -2740,6 +2822,9 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
       ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState, documentJson).then((node) => JSON.stringify(node))
       : undefined,
     refreshUi: (instanceId: number, requestJson: string) => handle.refreshUi(instanceId, JSON.parse(requestJson) as PluginUiRefreshRequest).then((response) => JSON.stringify(response)),
+    contextMenu: handle.contextMenu
+      ? (instanceId: number, requestJson: string) => handle.contextMenu!(instanceId, JSON.parse(requestJson) as PluginContextMenuRequest).then((response) => JSON.stringify(response))
+      : undefined,
   };
 }
 //#endregion PluginRuntime

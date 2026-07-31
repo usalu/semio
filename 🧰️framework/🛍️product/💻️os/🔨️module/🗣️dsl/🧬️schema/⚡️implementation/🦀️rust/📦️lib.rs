@@ -2110,7 +2110,8 @@ mod tests {
     fn quantity_and_angle_round_trip_in_their_declared_unit() {
         let spec = material_spec();
         assert_round_trip("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec);
-        assert_document_inline_agree("material e=210GPa rho=7850kg/m3 rotation=45deg", &spec);
+        assert_round_trip("material e=210GPa rho=7850kg/m3 rotation=30deg", &spec);
+        assert_document_inline_agree("material e=210GPa rho=7850kg/m3 rotation=30deg", &spec);
     }
 
     #[test]

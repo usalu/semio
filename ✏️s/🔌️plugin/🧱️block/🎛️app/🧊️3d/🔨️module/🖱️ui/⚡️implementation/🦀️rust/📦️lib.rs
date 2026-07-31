@@ -107,10 +107,12 @@ fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
             max: None,
             step: None,
             accept: None,
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
+        menu: None,
     })
 }
 
@@ -118,15 +120,19 @@ fn build_inspection_tree(definition: &Block3dDefinition, active_representation_i
     let representation_select = UiNode::Select(UiSelectNode {
         id: "block3d-play-inspector.representation".into(),
         value: active_representation_id.unwrap_or_default().into(),
-        items: definition.representations.iter().map(|representation| UiSelectItem { value: representation.id.clone(), label: representation.name.clone() }).collect(),
+        items: definition.representations.iter().map(|representation| UiSelectItem { value: representation.id.clone(), label: representation.name.clone(),
+        }).collect(),
         placeholder: None,
         on_change: block3d_action("setActiveRepresentation", None),
         presence: UiPresence::default(),
+        menu: None,
     });
     ui_stack_vertical(vec![
         text_field("block3d-play-inspector.name", labels.name, &definition.object_kind.name, "name"),
         text_field("block3d-play-inspector.label", labels.label, &definition.object_kind.label, "label"),
-        UiNode::Field(UiFieldNode { presence: UiPresence::default(), id: "block3d-play-inspector.representation-field".into(), label: labels.representation.into(), child: Box::new(representation_select), description: None, required: None, error: None }),
+        UiNode::Field(UiFieldNode { presence: UiPresence::default(), id: "block3d-play-inspector.representation-field".into(), label: labels.representation.into(), child: Box::new(representation_select), description: None, required: None, error: None,
+            menu: None,
+        }),
         ui_inspector_readonly_field("block3d-play-inspector.vortex-count", labels.vortices, definition.vortices.len().to_string()),
     ])
 }

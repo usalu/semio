@@ -372,10 +372,11 @@ struct BrushCollisionFreeResult {
 }
 
 /// 🚦️ Which background precompute lane a tick should advance — fill and brush never share one FIFO queue.
+#[cfg_attr(all(target_arch = "wasm32", not(target_env = "p2")), wasm_bindgen)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PrecomputeLane {
-    Brush,
-    Fill,
+    Brush = 0,
+    Fill = 1,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1988,6 +1989,29 @@ impl Puzzle3dPrecomputeSession {
         let vortex_weights: HashMap<String, f64> = serde_json::from_str(vortex_weights).map_err(|e| JsValue::from_str(&e.to_string()))?;
         self.engine.update_kind_weights(object_weights, vortex_weights);
         Ok(())
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+impl Puzzle3dPrecomputeSession {
+    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle3dError> {
+        let payload: BrushPlacePayload = serde_json::from_str(payload_json)?;
+        let fixture = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
+        Ok(serde_json::to_string(&fixture)?)
+    }
+
+    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle3dError> {
+        let fixture = self.engine.apply_fill_count(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
+        Ok(serde_json::to_string(&fixture)?)
+    }
+
+    pub fn compose_fill_display_rust(&self, count: u32) -> Result<String, Puzzle3dError> {
+        let fixture = self.engine.compose_fill_display(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
+        Ok(serde_json::to_string(&fixture)?)
+    }
+
+    pub fn update_kind_weights_rust(&mut self, object_weights: HashMap<String, f64>, vortex_weights: HashMap<String, f64>) {
+        self.engine.update_kind_weights(object_weights, vortex_weights);
     }
 }
 

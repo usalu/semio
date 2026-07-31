@@ -109,7 +109,7 @@ pub enum DocumentCommand<Operation> {
         operations: Vec<Operation>,
         /// @emoji 🪢️ Matches the last uncommitted edit's `coalesce_key` to absorb into it instead of creating a new edit.
         coalesce_key: Option<String>,
-    },
+    }
 }
 //#endregion 🔖️Schemas
 
@@ -750,7 +750,7 @@ enum OpsHeaderLine {
         applied: Vec<String>,
         redo: Vec<String>,
         checkpoint: Option<String>,
-    },
+    }
 }
 //#endregion 🔖️OpsHeaderGrammar
 
@@ -1360,7 +1360,7 @@ enum CommandHeaderLine {
     },
     Amend {
         key: Option<String>,
-    },
+    }
 }
 
 fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {

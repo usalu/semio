@@ -134,6 +134,7 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labe
         step: None,
         accept: None,
         on_change: sourcing_action("setFilterQuery", None),
+        menu: None,
     })];
     for module in modules {
         let pressed = document.filters.module_ids.iter().any(|id| id == &module.module_id);
@@ -143,15 +144,20 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labe
             text: Some(module.label.clone()),
             on_change: sourcing_action("setFilterModule", Some(json!({ "moduleId": module.module_id, "enabled": !pressed }))),
             presence: UiPresence::selected(pressed),
+            menu: None,
         }));
     }
-    let mut typology_items = vec![UiSelectItem { value: String::new(), label: labels.all_typologies.into() }];
+    let mut typology_items = vec![UiSelectItem { value: String::new(), label: labels.all_typologies.into(),
+        }];
     for module in modules {
         for (path, label) in typology_flatten(&module.typology) {
-            typology_items.push(UiSelectItem { value: path.join("/"), label });
+            typology_items.push(UiSelectItem { value: path.join("/"), label,
+        });
         }
     }
-    children.push(UiNode::Select(UiSelectNode { presence: UiPresence::default(), id: "sourcing-filter-typology".into(), value: document.filters.typology_path.join("/"), items: typology_items, placeholder: None, on_change: sourcing_action("setFilterTypology", None) }));
+    children.push(UiNode::Select(UiSelectNode { presence: UiPresence::default(), id: "sourcing-filter-typology".into(), value: document.filters.typology_path.join("/"), items: typology_items, placeholder: None, on_change: sourcing_action("setFilterTypology", None),
+        menu: None,
+    }));
     children.push(UiNode::NumberStepper(UiNumberStepperNode { presence: UiPresence::default(),
         id: "sourcing-filter-min-availability".into(),
         value: document.filters.min_availability as f64,
@@ -159,6 +165,7 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labe
         uniform: true,
         on_absolute: sourcing_action("setFilterMinAvailability", None),
         on_delta: sourcing_action("setFilterMinAvailability", None),
+        menu: None,
     }));
     ui_stack_vertical(children)
 }
@@ -236,7 +243,8 @@ fn build_curated_table(document: &CurateDocument, labels: &SourcingLabels) -> Ui
                     ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))) }),
                     (
                         "actions",
-                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), reveal_on_hover: None }] },
+                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), reveal_on_hover: None,
+        }] },
                     ),
                 ],
             ))

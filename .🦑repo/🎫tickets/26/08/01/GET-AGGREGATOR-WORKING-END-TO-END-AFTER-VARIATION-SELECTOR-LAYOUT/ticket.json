@@ -1,0 +1,8 @@
+{
+  "title": "Get Aggregator Working End To End After Variation Selector Layout",
+  "emoji": "\ud83d\udc1b",
+  "status": "open",
+  "description": "Another layout pass (emoji + VS16 / compound paths). Aggregator fails building puzzle: semio-framework-plugin errors E0046/E0063 (missing trait items / missing fields). Goal: \ud83c\udfafr2602/\ud83c\udfafrunningsketchpad. MCP unavailable.",
+  "goal": "\ud83c\udfafr2602/\ud83c\udfafrunningsketchpad",
+  "sessions": []
+}

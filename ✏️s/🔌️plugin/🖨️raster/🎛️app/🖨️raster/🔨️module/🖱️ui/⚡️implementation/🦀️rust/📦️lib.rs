@@ -226,6 +226,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
             Some(description.into()),
             play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [layer_node_id(layer)] }))),
         )
+        menu: None,
     }
 }
 
@@ -238,7 +239,8 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
                 labels.add_pixel,
                 None,
                 play_action(RASTER_PLAY_CONTROLLER_ID, "addLayer", Some(json!({ "kind": "pixel" }))),
-            )
+            ),
+            menu: None,
         },
         UiTreeItemNode {
             icon_id: Some("folder-plus".into()),
@@ -247,7 +249,8 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
                 labels.add_group,
                 None,
                 play_action(RASTER_PLAY_CONTROLLER_ID, "addLayer", Some(json!({ "kind": "group" }))),
-            )
+            ),
+            menu: None,
         },
     ];
     let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect();
@@ -283,7 +286,8 @@ fn render_masks_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, vi
                         format!("{name} {}", labels.mask_suffix),
                         Some("mask".into()),
                         play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [id] }))),
-                    )
+                    ),
+                    menu: None,
                 });
             }
         }
@@ -318,6 +322,7 @@ fn render_catalogue_panel(labels: &RasterPlayLabels) -> UiNode {
             ui_text(labels.catalogue_group),
             ui_text(labels.catalogue_adjustment),
         ],
+        menu: None,
     }])
 }
 

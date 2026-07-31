@@ -162,18 +162,21 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
 }
 
 fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode { description, action: Some(action), ..UiTreeItemNode::base(id, label) }
+    UiTreeItemNode { description, action: Some(action), menu: None,
+    ..UiTreeItemNode::base(id, label) }
 }
 
 fn tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
-    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), presence: UiPresence::default(), items }
+    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), presence: UiPresence::default(), items },
 }
 
 fn tree_node(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
     if let Some(ids) = selected_ids {
         ui_tree_stamp_presence(&mut sections, &ids.into_iter().collect::<HashSet<_>>(), &HashSet::new());
     }
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
+    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None,
+        menu: None,
+    })
 }
 
 fn element_label(program: &Program, id: &EntityId) -> String {
@@ -846,11 +849,13 @@ fn inspector_text_field(register_id: &str, entity_id: &str, field_id: &str, labe
             step: None,
             accept: None,
             presence: UiPresence::default(),
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -868,11 +873,13 @@ fn inspector_number_field(register_id: &str, entity_id: &str, field_id: &str, la
             on_absolute: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
             on_delta: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
             presence: UiPresence::default(),
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -888,11 +895,13 @@ fn inspector_toggle_field(register_id: &str, entity_id: &str, field_id: &str, la
             text: Some(if mixed.pressed { "Yes".into() } else { "No".into() }),
             on_change: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
             presence: UiPresence::selected(mixed.pressed),
+            menu: None,
         })),
         description: None,
         required: None,
         error: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -919,7 +928,9 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         block_list: None,
         diff_view: None,
         event_feed: None,
-    }
+        menu: None,
+    },
+    menu: None,
 }
 
 fn parse_entity_id(value: Option<&Value>, key: &str) -> Option<EntityId> {
@@ -1125,6 +1136,7 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
         drop_action: None,
         drop_overlay: None,
         children: vec![ui_stack_vertical(glyph_rows), tree_node(pair_sections, None)],
+        menu: None,
     })
 }
 //#endregion 🔖️AdjacencyRender

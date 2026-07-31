@@ -356,6 +356,14 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Every single app must have a headless engine with bidirectional streaming of binary commands according protocol.
+Every ui interaction is just forwarded as command.
+This architecture is crucial because workflows that use apps must be executable in a headless environment without and ui mock api.
+Every app has a configuration (all options, etc) and input and output.
+This is heart of the workflow, wired apps with configuration.
+
+---
+
 Add Variation Selector-16 (U+FE0F) to all text style emojis in the codebase. For all folders, files, etc.
 
 ---

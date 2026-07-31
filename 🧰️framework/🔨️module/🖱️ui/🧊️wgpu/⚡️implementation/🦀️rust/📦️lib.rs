@@ -155,6 +155,128 @@ impl UiStatus {
 }
 //#endregion 🔖️Presence
 
+//#region 🔖️ContextMenu
+/// 🖱️ A render-time address for an on-demand context menu, carried by any `UiNode`/scene surface —
+/// bytes only, never items. At right-click time the host resolves the nearest `menu` up the tree and
+/// asks the owning plugin's `context-menu` WIT export to compute rows fresh (see
+/// `ContextMenuRequest`/`ContextMenuResponse`); nothing here is cached across clicks.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct UiMenuRef {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub args: Option<serde_json::Value>,
+}
+
+/// 🖱️ One row of a resolved context menu — serde camelCase twin of TS `ContextMenuItemSpec`
+/// (`framework/core/js/index.ts`). Plugins build these with `MenuBuilder`; the host maps them
+/// through `ContextMenuController` (React) / `render_context_menu` (wgpu) unchanged.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextMenuItemSpec {
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub icon: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub shortcut: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub disabled: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub separator: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub checked: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub destructive: Option<bool>,
+    /// 🎯️ An action id, dispatched via the surface's already-scoped `dispatch(action, args)` — NOT
+    /// an `ActionDescriptor` (no separate `controllerId`); matches the pre-existing TS
+    /// `ContextMenuItemSpec.action` shape (`framework/core/js/index.ts`), which every emitting
+    /// plugin already produces this way.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub action: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub args: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub hover_action: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub hover_args: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub children: Option<Vec<ContextMenuItemSpec>>,
+}
+
+/// 🖱️ Payload of the WIT `context-menu` export's request — mirrors `context-menu-request-json`'s
+/// `json` string. `surface` carries scene-target info (`World3D`/`nodeGraph`/`tiledMap`/... hit-test
+/// results); `menu` is the `UiMenuRef` the host resolved from `data-menu-id`/a scene surface
+/// convention id (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextMenuSurfaceTarget {
+    pub surface_id: String,
+    pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub target_json: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextMenuPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+/// 🖱️ The plugin-facing on-demand menu request — deliberately does NOT carry view state (this crate
+/// must never reference `semio_framework_core`'s `ViewState`, same boundary as every other type
+/// here). Mirrors `handle_action`/`render`/`tool_measures`, which all take `view_state: &ViewState`
+/// as a separate `DocumentApp` method parameter rather than embedding it in the request payload; the
+/// plugin SDK's `plugin_context_menu` free function parses the WIT-level combined JSON (which DOES
+/// carry `viewState`, matching the TS `PluginContextMenuRequest` wire shape) and splits it into this
+/// smaller struct plus a typed `ViewState` before calling `DocumentApp::context_menu`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextMenuRequest {
+    pub menu: UiMenuRef,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub surface: Option<ContextMenuSurfaceTarget>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub window_instance_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub point: Option<ContextMenuPoint>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextMenuResponse {
+    pub items: Vec<ContextMenuItemSpec>,
+}
+//#endregion 🔖️ContextMenu
+
 //#region 🔖️PanelTabConstants
 pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ID: &str = "framework.panel.document";
 pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ID: &str = "framework.panel.catalogue";
@@ -573,7 +695,7 @@ pub enum WindowMeasure {
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
         children: Vec<WindowMeasure>,
-    },
+    }
 }
 //#endregion 🔖️WindowMeasure
 
@@ -817,7 +939,7 @@ pub enum WindowEngagementControl {
         disabled: Option<bool>,
         #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
         on_change: Option<ActionDescriptor>,
-    },
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1231,7 +1353,7 @@ pub enum UtilityNode {
         #[serde(skip_serializing_if = "Option::is_none")]
         category: Option<UtilityCategory>,
         children: Vec<UtilityNode>,
-    },
+    }
 }
 
 impl UtilityNode {
@@ -1522,6 +1644,9 @@ use std::collections::HashMap;
 
 //#region 🔖Action
 pub use super::layout::{ActionDescriptor, StyleSpec, UiPresence, UiState, UiStatus};
+pub use super::layout::{
+    ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef,
+};
 //#endregion 🔖Action
 
 //#region 🔖Primitives
@@ -1546,6 +1671,8 @@ pub struct UiStackNode {
     pub drop_action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub drop_overlay: Option<UiDropOverlaySpec>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<UiMenuRef>,
     pub children: Vec<UiNode>,
 }
 
@@ -1575,6 +1702,9 @@ pub struct UiTextNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1593,6 +1723,9 @@ pub struct UiButtonNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1602,6 +1735,9 @@ pub struct UiSeparatorNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1616,6 +1752,9 @@ pub struct UiImageNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1647,6 +1786,9 @@ pub struct UiInputNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1671,6 +1813,9 @@ pub struct UiSelectNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1686,6 +1831,9 @@ pub struct UiToggleNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 /** @emoji 🌿️ A nestable labeled container of `UiNode` children — the declarative-tree mechanism for
@@ -1705,6 +1853,8 @@ pub struct UiGroupNode {
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<UiMenuRef>,
     pub children: Vec<UiNode>,
 }
 
@@ -1724,6 +1874,9 @@ pub struct UiKeyValueNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1742,6 +1895,9 @@ pub struct UiSliderNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1757,6 +1913,9 @@ pub struct UiNumberStepperNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1770,6 +1929,9 @@ pub struct UiRingNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1784,6 +1946,9 @@ pub struct UiIconSelectNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1847,6 +2012,8 @@ pub struct UiFieldNode {
     pub child: Box<UiNode>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<UiMenuRef>,
 }
 
 // 🚧️ NOT typegen-derived: `children: Vec<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
@@ -1861,6 +2028,8 @@ pub struct UiSectionNode {
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<UiMenuRef>,
     pub children: Vec<UiNode>,
 }
 
@@ -1925,6 +2094,11 @@ pub struct UiTreeItemNode {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub dimmed: Option<bool>,
+    /// 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
+    /// id carried in `args` (e.g. `{"id": row.id}`), rather than minting a unique menu id per row.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 impl UiTreeItemNode {
@@ -1946,6 +2120,7 @@ impl UiTreeItemNode {
             items: None,
             control: None,
             dimmed: None,
+            menu: None,
         }
     }
 }
@@ -1987,6 +2162,9 @@ pub struct UiTreeNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub drop_action: Option<ActionDescriptor>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 /// 🖌️ Stamps `selected`/`previewed` per-item presence across every item in every section of a
@@ -2105,9 +2283,11 @@ pub fn ui_inspector_readonly_field(
 ) -> UiNode {
     let id = id.into();
     UiNode::Field(UiFieldNode {
+            menu: None,
         id: id.clone(),
         label: label.into(),
         child: Box::new(UiNode::Input(UiInputNode {
+            menu: None,
             id,
             input_kind: "text".into(),
             value: value.into(),
@@ -2145,9 +2325,11 @@ pub fn ui_inspector_stepper_field(
     let id = id.into();
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
+            menu: None,
         id: id.clone(),
         label: label.into(),
         child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+            menu: None,
             id,
             value: mixed.value,
             step,
@@ -2175,9 +2357,11 @@ pub fn ui_inspector_toggle_field(
     let id = id.into();
     let mixed = ui_inspector_mixed_toggle(values);
     UiNode::Field(UiFieldNode {
+            menu: None,
         id: id.clone(),
         label: label.into(),
         child: Box::new(UiNode::Toggle(UiToggleNode {
+            menu: None,
             id,
             icon_id: icon_id.into(),
             text: None,
@@ -2209,6 +2393,7 @@ pub fn ui_inspector_vec3_group(
     let ys: Vec<f64> = values.iter().map(|v| v[1]).collect();
     let zs: Vec<f64> = values.iter().map(|v| v[2]).collect();
     UiNode::Group(UiGroupNode {
+            menu: None,
         id: id.clone(),
         label: label.into(),
         default_open: Some(true),
@@ -2226,6 +2411,7 @@ pub fn ui_inspector_groups_to_tree(groups: &[UiInspectorFieldGroup]) -> UiNode {
         .iter()
         .filter(|group| !group.fields.is_empty())
         .map(|group| UiSectionNode {
+            menu: None,
             id: group.id.clone(),
             label: Some(group.label.clone()),
             default_open: Some(group.default_open.unwrap_or(true)),
@@ -2252,10 +2438,11 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     ui_declarative_child_to_tree_item(child, format!("{}.{}", section.id, index))
                 })
                 .collect(),
-        })
+            })
         .collect();
     UiNode::Tree(if tree_sections.is_empty() {
         UiTreeNode {
+            menu: None,
             sections: vec![UiTreeSectionNode {
                 id: "empty".into(),
                 label: None,
@@ -2277,6 +2464,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     items: None,
                     control: None,
                     dimmed: None,
+                    menu: None,
                 }],
             }],
             presence: UiPresence::default(),
@@ -2287,6 +2475,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
         }
     } else {
         UiTreeNode {
+            menu: None,
             sections: tree_sections,
             presence: UiPresence::default(),
             selected_ids: None,
@@ -2300,6 +2489,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
 fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTreeItemNode {
     match node {
         UiNode::Text(text) => UiTreeItemNode {
+            menu: None,
             id: format!("{}.text", fallback_id),
             label: text.value.clone(),
             description: None,
@@ -2326,6 +2516,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 None
             };
             UiTreeItemNode {
+            menu: None,
                 id: field.id.clone(),
                 label: field.label.clone(),
                 description,
@@ -2344,6 +2535,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             }
         }
         UiNode::Button(button) => UiTreeItemNode {
+            menu: None,
             id: button.id.clone().unwrap_or(fallback_id),
             label: button.label.clone(),
             description: None,
@@ -2364,6 +2556,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
         UiNode::Select(select) => tree_control_item(select.id.clone(), UiControlNode::Select(select.clone())),
         UiNode::Toggle(toggle) => tree_control_item(toggle.id.clone(), UiControlNode::Toggle(toggle.clone())),
         UiNode::Group(group) => UiTreeItemNode {
+            menu: None,
             id: group.id.clone(),
             label: group.label.clone(),
             description: None,
@@ -2397,6 +2590,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             tree_control_item(icon_select.id.clone(), UiControlNode::IconSelect(icon_select.clone()))
         }
         UiNode::Separator(_) => UiTreeItemNode {
+            menu: None,
             id: format!("{}.sep", fallback_id),
             label: "—".into(),
             description: None,
@@ -2414,6 +2608,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             dimmed: None,
         },
         other => UiTreeItemNode {
+            menu: None,
             id: fallback_id,
             label: format!("{other:?}"),
             description: None,
@@ -2435,6 +2630,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
 
 fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
     UiTreeItemNode {
+            menu: None,
         id,
         label: String::new(),
         description: None,
@@ -2826,7 +3022,7 @@ pub enum TableCell {
     },
     Buttons {
         buttons: Vec<UiTreeItemAction>,
-    },
+    }
 }
 
 /// 🧾️ Builds one `rows_json` record: an id, an optional drag payload, and typed/plain cells keyed by column id.
@@ -3174,6 +3370,9 @@ pub struct UiExternalSlotNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub menu: Option<UiMenuRef>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3188,6 +3387,11 @@ pub struct UiComponentSceneNode {
     pub binding_id: Option<String>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     pub presence: UiPresence,
+    /// 🖱️ Optional override of the implicit per-`component_kind` convention id (`"world3d"`,
+    /// `"nodeGraph"`, `"tiledMap"`, ...) the host uses when resolving which surface answers a
+    /// right-click — set only when a plugin needs a menu id other than the surface-kind default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<UiMenuRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub canvas_2d: Option<Canvas2dScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3297,6 +3501,55 @@ impl UiNode {
             UiNode::Image(n) => &mut n.presence,
             UiNode::ComponentScene(n) => &mut n.presence,
             UiNode::ExternalSlot(n) => &mut n.presence,
+        }
+    }
+    /// 🖱️ Exhaustive context-menu-ref accessor — adding a `UiNode` variant fails to compile here
+    /// (and in `menu_mut`) until the new element's `menu` field is wired up. `None` means the
+    /// element bubbles right-clicks to its nearest menu-bearing ancestor.
+    pub fn menu(&self) -> Option<&UiMenuRef> {
+        match self {
+            UiNode::Stack(n) => n.menu.as_ref(),
+            UiNode::Text(n) => n.menu.as_ref(),
+            UiNode::Button(n) => n.menu.as_ref(),
+            UiNode::Separator(n) => n.menu.as_ref(),
+            UiNode::Input(n) => n.menu.as_ref(),
+            UiNode::Select(n) => n.menu.as_ref(),
+            UiNode::Toggle(n) => n.menu.as_ref(),
+            UiNode::KeyValue(n) => n.menu.as_ref(),
+            UiNode::Slider(n) => n.menu.as_ref(),
+            UiNode::NumberStepper(n) => n.menu.as_ref(),
+            UiNode::Ring(n) => n.menu.as_ref(),
+            UiNode::IconSelect(n) => n.menu.as_ref(),
+            UiNode::Field(n) => n.menu.as_ref(),
+            UiNode::Section(n) => n.menu.as_ref(),
+            UiNode::Group(n) => n.menu.as_ref(),
+            UiNode::Tree(n) => n.menu.as_ref(),
+            UiNode::Image(n) => n.menu.as_ref(),
+            UiNode::ComponentScene(n) => n.menu.as_ref(),
+            UiNode::ExternalSlot(n) => n.menu.as_ref(),
+        }
+    }
+    pub fn menu_mut(&mut self) -> &mut Option<UiMenuRef> {
+        match self {
+            UiNode::Stack(n) => &mut n.menu,
+            UiNode::Text(n) => &mut n.menu,
+            UiNode::Button(n) => &mut n.menu,
+            UiNode::Separator(n) => &mut n.menu,
+            UiNode::Input(n) => &mut n.menu,
+            UiNode::Select(n) => &mut n.menu,
+            UiNode::Toggle(n) => &mut n.menu,
+            UiNode::KeyValue(n) => &mut n.menu,
+            UiNode::Slider(n) => &mut n.menu,
+            UiNode::NumberStepper(n) => &mut n.menu,
+            UiNode::Ring(n) => &mut n.menu,
+            UiNode::IconSelect(n) => &mut n.menu,
+            UiNode::Field(n) => &mut n.menu,
+            UiNode::Section(n) => &mut n.menu,
+            UiNode::Group(n) => &mut n.menu,
+            UiNode::Tree(n) => &mut n.menu,
+            UiNode::Image(n) => &mut n.menu,
+            UiNode::ComponentScene(n) => &mut n.menu,
+            UiNode::ExternalSlot(n) => &mut n.menu,
         }
     }
 }
@@ -3418,6 +3671,7 @@ pub mod tiled_map_actions {
 
 pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
+            menu: None,
         direction: "vertical".into(),
         gap: Some("standard".into()),
         padding: None,
@@ -3433,6 +3687,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
 /** @emoji 🖼️ Builds an image node rendering a source URL or path. */
 pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<String>) -> UiNode {
     UiNode::Image(UiImageNode {
+            menu: None,
         id: id.into(),
         src: src.into(),
         alt,
@@ -3479,6 +3734,7 @@ impl Default for UiNode {
 
 pub fn ui_text(value: impl Into<String>) -> UiNode {
     UiNode::Text(UiTextNode {
+            menu: None,
         value: value.into(),
         emphasize: None,
         data_attributes: None,
@@ -3494,6 +3750,7 @@ pub fn ui_external_slot(
     params_json: impl Into<String>,
 ) -> UiNode {
     UiNode::ExternalSlot(UiExternalSlotNode {
+            menu: None,
         plugin_id: plugin_id.into(),
         app_id: app_id.into(),
         body_key: body_key.into(),
@@ -3520,6 +3777,7 @@ fn component_scene(
     board2d: Option<Board2dScene>,
 ) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
+            menu: None,
         surface_id: surface_id.into(),
         controller_id: controller_id.into(),
         component_kind,
@@ -3945,6 +4203,7 @@ pub fn build_event_feed_scene(
  * optional call-to-action button. */
 pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: Option<UiButtonNode>) -> UiNode {
     let mut children = vec![UiNode::Text(UiTextNode {
+            menu: None,
         value: title.into(),
         emphasize: Some(true),
         data_attributes: None,
@@ -3957,6 +4216,7 @@ pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: 
         children.push(UiNode::Button(action));
     }
     UiNode::Stack(UiStackNode {
+            menu: None,
         direction: "vertical".into(),
         gap: Some("standard".into()),
         padding: Some("standard".into()),
@@ -3972,6 +4232,7 @@ pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: 
 /** @emoji ⚠️ Builds an error-state placeholder: an emphasized message and an optional retry button. */
 pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) -> UiNode {
     let mut children = vec![UiNode::Text(UiTextNode {
+            menu: None,
         value: message.into(),
         emphasize: Some(true),
         data_attributes: None,
@@ -3979,6 +4240,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
     })];
     if let Some(retry) = retry {
         children.push(UiNode::Button(UiButtonNode {
+            menu: None,
             id: Some(format!("{id}.retry")),
             icon_id: IconName::RotateCw,
             label: "Retry".into(),
@@ -3988,6 +4250,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
         }));
     }
     UiNode::Stack(UiStackNode {
+            menu: None,
         direction: "vertical".into(),
         gap: Some("standard".into()),
         padding: Some("standard".into()),
@@ -4016,6 +4279,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
     let diagnostics_label = if is_de { "Diagnose anzeigen" } else { "Show Diagnostics" };
     let args = Some(serde_json::json!({ "pluginId": plugin_id }));
     UiNode::Stack(UiStackNode {
+            menu: None,
         direction: "vertical".into(),
         gap: Some("standard".into()),
         padding: Some("standard".into()),
@@ -4026,6 +4290,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
         drop_overlay: None,
         children: vec![
             UiNode::Text(UiTextNode {
+            menu: None,
                 value: title.into(),
                 emphasize: Some(true),
                 data_attributes: None,
@@ -4033,6 +4298,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
             }),
             ui_text(message),
             UiNode::Button(UiButtonNode {
+            menu: None,
                 id: Some("recovery.restartApp".into()),
                 icon_id: IconName::RotateCcw,
                 label: restart_label.into(),
@@ -4041,6 +4307,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 presence: UiPresence::default(),
             }),
             UiNode::Button(UiButtonNode {
+            menu: None,
                 id: Some("recovery.disablePlugin".into()),
                 icon_id: IconName::Link2Off,
                 label: disable_label.into(),
@@ -4049,6 +4316,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 presence: UiPresence::default(),
             }),
             UiNode::Button(UiButtonNode {
+            menu: None,
                 id: Some("recovery.showDiagnostics".into()),
                 icon_id: IconName::Info,
                 label: diagnostics_label.into(),
@@ -4064,6 +4332,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
  * title/hint/accept copy, `drop_action` fires once the drop completes. */
 pub fn ui_import_drop_zone(id: &str, title: &str, hint: &str, accept: Option<&str>, drop_action: ActionDescriptor) -> UiNode {
     UiNode::Stack(UiStackNode {
+            menu: None,
         direction: "vertical".into(),
         gap: Some("standard".into()),
         padding: Some("standard".into()),
@@ -4071,7 +4340,8 @@ pub fn ui_import_drop_zone(id: &str, title: &str, hint: &str, accept: Option<&st
         presence: UiPresence::default(),
         activate: None,
         drop_action: Some(drop_action),
-        drop_overlay: Some(UiDropOverlaySpec { title: title.into(), hint: hint.into(), accept: accept.map(Into::into) }),
+        drop_overlay: Some(UiDropOverlaySpec { title: title.into(), hint: hint.into(), accept: accept.map(Into::into),
+        }),
         children: vec![ui_text(title), ui_text(hint)],
     })
 }
@@ -4095,6 +4365,7 @@ mod ui_node_wire_format_tests {
 
     fn sample_tree() -> UiNode {
         UiNode::Stack(UiStackNode {
+            menu: None,
             direction: "vertical".into(),
             gap: Some("md".into()),
             padding: None,
@@ -4105,12 +4376,14 @@ mod ui_node_wire_format_tests {
             drop_overlay: None,
             children: vec![
                 UiNode::Text(UiTextNode {
+            menu: None,
                     value: "Hello".into(),
                     emphasize: Some(true),
                     data_attributes: None,
                     presence: UiPresence::default(),
                 }),
                 UiNode::Button(UiButtonNode {
+            menu: None,
                     id: Some("btn1".into()),
                     icon_id: IconName::Save,
                     label: "Save".into(),
@@ -4119,9 +4392,11 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::Separator(UiSeparatorNode {
+            menu: None,
                     presence: UiPresence::default(),
                 }),
                 UiNode::Input(UiInputNode {
+            menu: None,
                     id: "inp1".into(),
                     input_kind: "text".into(),
                     value: "abc".into(),
@@ -4135,17 +4410,21 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::Select(UiSelectNode {
+            menu: None,
                     id: "sel1".into(),
                     value: "a".into(),
                     items: vec![
-                        UiSelectItem { value: "a".into(), label: "A".into() },
-                        UiSelectItem { value: "b".into(), label: "B".into() },
+                        UiSelectItem { value: "a".into(), label: "A".into(),
+        },
+                        UiSelectItem { value: "b".into(), label: "B".into(),
+        },
                     ],
                     placeholder: None,
                     on_change: act("selectChange"),
                     presence: UiPresence::default(),
                 }),
                 UiNode::Toggle(UiToggleNode {
+            menu: None,
                     id: "tog1".into(),
                     icon_id: IconName::AlignLeft,
                     text: None,
@@ -4153,11 +4432,13 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::selected(true),
                 }),
                 UiNode::Group(UiGroupNode {
+            menu: None,
                     id: "grp1".into(),
                     label: "Group".into(),
                     default_open: Some(true),
                     presence: UiPresence::default(),
                     children: vec![UiNode::Text(UiTextNode {
+            menu: None,
                         value: "child".into(),
                         emphasize: None,
                         data_attributes: None,
@@ -4165,10 +4446,13 @@ mod ui_node_wire_format_tests {
                     })],
                 }),
                 UiNode::KeyValue(UiKeyValueNode {
-                    entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into() }],
+            menu: None,
+                    entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into(),
+        }],
                     presence: UiPresence::default(),
                 }),
                 UiNode::Slider(UiSliderNode {
+            menu: None,
                     id: "sl1".into(),
                     value: 0.5,
                     min: 0.0,
@@ -4179,6 +4463,7 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::NumberStepper(UiNumberStepperNode {
+            menu: None,
                     id: "num1".into(),
                     value: 2.0,
                     step: 1.0,
@@ -4188,6 +4473,7 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::Ring(UiRingNode {
+            menu: None,
                     id: "ring1".into(),
                     orb_id: "orb1".into(),
                     t: 0.25,
@@ -4195,6 +4481,7 @@ mod ui_node_wire_format_tests {
                     on_change: act("ringChange"),
                 }),
                 UiNode::IconSelect(UiIconSelectNode {
+            menu: None,
                     id: "icn1".into(),
                     value: "star".into(),
                     uniform: true,
@@ -4203,12 +4490,14 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::Field(UiFieldNode {
+            menu: None,
                     id: "field1".into(),
                     label: "Field".into(),
                     description: Some("desc".into()),
                     required: Some(true),
                     error: None,
                     child: Box::new(UiNode::Text(UiTextNode {
+            menu: None,
                         value: "child".into(),
                         emphasize: None,
                         data_attributes: None,
@@ -4217,6 +4506,7 @@ mod ui_node_wire_format_tests {
                     presence: UiPresence::default(),
                 }),
                 UiNode::Section(UiSectionNode {
+            menu: None,
                     id: "sec1".into(),
                     label: Some("Section".into()),
                     default_open: Some(true),
@@ -4224,6 +4514,7 @@ mod ui_node_wire_format_tests {
                     children: vec![],
                 }),
                 UiNode::Tree(UiTreeNode {
+            menu: None,
                     sections: vec![UiTreeSectionNode {
                         id: "treesec1".into(),
                         label: Some("Items".into()),
@@ -4242,12 +4533,14 @@ mod ui_node_wire_format_tests {
                     drop_action: None,
                 }),
                 UiNode::Image(UiImageNode {
+            menu: None,
                     id: "img1".into(),
                     src: "icon.png".into(),
                     alt: Some("alt text".into()),
                     presence: UiPresence::default(),
                 }),
                 UiNode::ComponentScene(UiComponentSceneNode {
+            menu: None,
                     surface_id: "surf1".into(),
                     controller_id: "ctrl".into(),
                     component_kind: SurfaceKind::World3d,
@@ -4292,6 +4585,7 @@ mod ui_node_wire_format_tests {
                     event_feed: None,
                 }),
                 UiNode::ExternalSlot(UiExternalSlotNode {
+            menu: None,
                     plugin_id: "plugin1".into(),
                     app_id: "app1".into(),
                     body_key: "body1".into(),
@@ -4378,29 +4672,49 @@ mod ui_node_wire_format_tests {
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("\"presence\""), "{label} did not serialize a non-default presence: {json}");
         }
-        assert_presence_serializes(UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }), "Stack");
-        assert_presence_serializes(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
-        assert_presence_serializes(UiNode::Button(UiButtonNode { id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
-        assert_presence_serializes(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() }), "Separator");
-        assert_presence_serializes(UiNode::Input(UiInputNode { id: "i".into(), input_kind: "text".into(), value: "v".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: act("a"), presence: UiPresence::default() }), "Input");
-        assert_presence_serializes(UiNode::Select(UiSelectNode { id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a"), presence: UiPresence::default() }), "Select");
-        assert_presence_serializes(UiNode::Toggle(UiToggleNode { id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
-        assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { entries: vec![], presence: UiPresence::default() }), "KeyValue");
-        assert_presence_serializes(UiNode::Slider(UiSliderNode { id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
-        assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
-        assert_presence_serializes(UiNode::Ring(UiRingNode { id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");
-        assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode { id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
-        assert_presence_serializes(UiNode::Field(UiFieldNode { id: "i".into(), label: "l".into(), description: None, required: None, error: None, child: Box::new(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })), presence: UiPresence::default() }), "Field");
-        assert_presence_serializes(UiNode::Section(UiSectionNode { id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
-        assert_presence_serializes(UiNode::Group(UiGroupNode { id: "i".into(), label: "l".into(), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
-        assert_presence_serializes(UiNode::Tree(UiTreeNode { sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
-        assert_presence_serializes(UiNode::Image(UiImageNode { id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
+        assert_presence_serializes(UiNode::Stack(UiStackNode {
+            menu: None, direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }), "Stack");
+        assert_presence_serializes(UiNode::Text(UiTextNode {
+            menu: None, value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
+        assert_presence_serializes(UiNode::Button(UiButtonNode {
+            menu: None, id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
+        assert_presence_serializes(UiNode::Separator(UiSeparatorNode {
+            menu: None, presence: UiPresence::default() }), "Separator");
+        assert_presence_serializes(UiNode::Input(UiInputNode {
+            menu: None, id: "i".into(), input_kind: "text".into(), value: "v".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: act("a"), presence: UiPresence::default() }), "Input");
+        assert_presence_serializes(UiNode::Select(UiSelectNode {
+            menu: None, id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a"), presence: UiPresence::default() }), "Select");
+        assert_presence_serializes(UiNode::Toggle(UiToggleNode {
+            menu: None, id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
+        assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode {
+            menu: None, entries: vec![], presence: UiPresence::default() }), "KeyValue");
+        assert_presence_serializes(UiNode::Slider(UiSliderNode {
+            menu: None, id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
+        assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode {
+            menu: None, id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
+        assert_presence_serializes(UiNode::Ring(UiRingNode {
+            menu: None, id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");
+        assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode {
+            menu: None, id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
+        assert_presence_serializes(UiNode::Field(UiFieldNode {
+            menu: None, id: "i".into(), label: "l".into(), description: None, required: None, error: None, child: Box::new(UiNode::Text(UiTextNode {
+            menu: None, value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })), presence: UiPresence::default() }), "Field");
+        assert_presence_serializes(UiNode::Section(UiSectionNode {
+            menu: None, id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
+        assert_presence_serializes(UiNode::Group(UiGroupNode {
+            menu: None, id: "i".into(), label: "l".into(), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
+        assert_presence_serializes(UiNode::Tree(UiTreeNode {
+            menu: None, sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
+        assert_presence_serializes(UiNode::Image(UiImageNode {
+            menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
         assert_presence_serializes(
-            UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }),
+            UiNode::ExternalSlot(UiExternalSlotNode {
+            menu: None, plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }),
             "ExternalSlot",
         );
         assert_presence_serializes(
             UiNode::ComponentScene(UiComponentSceneNode {
+            menu: None,
                 surface_id: "s".into(),
                 controller_id: "c".into(),
                 component_kind: SurfaceKind::Canvas2d,
@@ -4542,6 +4856,64 @@ mod ui_node_wire_format_tests {
         let roundtripped: (DiffViewScene, EventFeedScene) = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, scenes);
     }
+
+    /// 🖱️ `UiMenuRef`/`ContextMenuItemSpec` camelCase wire shape — in particular `hover_args` must
+    /// serialize as `hoverArgs` (the exact field-rename pitfall documented on `UiDirtyScope`).
+    #[test]
+    fn ui_menu_ref_and_context_menu_item_spec_roundtrip_camel_case() {
+        let menu_ref = UiMenuRef { id: "row".into(), args: Some(serde_json::json!({"id": "row-1"})) };
+        let json = serde_json::to_string(&menu_ref).unwrap();
+        assert_eq!(json, r#"{"id":"row","args":{"id":"row-1"}}"#);
+        assert_eq!(serde_json::from_str::<UiMenuRef>(&json).unwrap(), menu_ref);
+
+        let item = ContextMenuItemSpec {
+            id: "delete".into(),
+            label: Some("Delete".into()),
+            icon: Some("trash".into()),
+            color: None,
+            shortcut: Some("Del".into()),
+            disabled: Some(false),
+            separator: None,
+            checked: None,
+            destructive: Some(true),
+            action: Some("deleteSelection".into()),
+            args: None,
+            hover_action: Some("previewDelete".into()),
+            hover_args: Some(serde_json::json!({"x": 1.0, "y": 2.0})),
+            children: None,
+        };
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(json.contains("\"hoverAction\""), "hover_action must serialize as hoverAction: {json}");
+        assert!(json.contains("\"hoverArgs\":{\"x\":1.0,\"y\":2.0}"), "hover_args must serialize as hoverArgs: {json}");
+        assert!(!json.contains("\"color\""), "None fields must be omitted: {json}");
+        let roundtripped: ContextMenuItemSpec = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, item);
+    }
+
+    /// 🖱️ Every `UiNode` variant's `menu` ref actually serializes when set, and is omitted by default
+    /// — the same exhaustiveness belt-and-braces check as `every_ui_node_variant_serializes_a_non_default_presence`.
+    #[test]
+    fn every_ui_node_variant_serializes_a_set_menu_ref() {
+        fn assert_menu_serializes(mut node: UiNode, label: &str) {
+            assert!(!serde_json::to_string(&node).unwrap().contains("\"menu\""), "{label} must omit a default menu ref");
+            *node.menu_mut() = Some(UiMenuRef { id: "m".into(), args: None });
+            let json = serde_json::to_string(&node).unwrap();
+            assert!(json.contains("\"menu\":{\"id\":\"m\"}"), "{label} did not serialize a set menu ref: {json}");
+            assert_eq!(node.menu(), Some(&UiMenuRef { id: "m".into(), args: None }));
+        }
+        assert_menu_serializes(UiNode::Stack(UiStackNode {
+            menu: None, direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }), "Stack");
+        assert_menu_serializes(UiNode::Text(UiTextNode {
+            menu: None, value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
+        assert_menu_serializes(UiNode::Button(UiButtonNode {
+            menu: None, id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
+        assert_menu_serializes(UiNode::Separator(UiSeparatorNode {
+            menu: None, presence: UiPresence::default() }), "Separator");
+        assert_menu_serializes(UiNode::Image(UiImageNode {
+            menu: None, id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
+        assert_menu_serializes(UiNode::Tree(UiTreeNode {
+            menu: None, sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
+    }
 }
 //#endregion 🔖️WireFormatGoldenTests
 // #endregion ui
@@ -4566,7 +4938,7 @@ pub struct NodeId {
 
 enum Slot<T> {
     Occupied { generation: u32, value: T },
-    Free { generation: u32, next_free: Option<u32> },
+    Free { generation: u32, next_free: Option<u32> }
 }
 
 /// 🌳️ Generational-index arena: O(1) insert/remove/get, freed slots recycled via an intrusive free
@@ -5008,7 +5380,9 @@ mod tests {
     use crate::component::ui::{UiNode, UiPresence, UiTextNode};
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn leaf(discriminant: u32, ordinal: u32, value: &str) -> Node {
@@ -5200,6 +5574,7 @@ fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
         action: with_item_value_arg(&select.on_change, &item.value),
         style: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 
@@ -5231,6 +5606,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
         drop_action: tree_node.drop_action.clone(),
         drop_overlay: None,
         children: section.items.iter().map(|item| tree_item_row(tree_node, item)).collect(),
+        menu: None,
     })
 }
 
@@ -5264,6 +5640,7 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
         drop_action: None,
         drop_overlay: None,
         children,
+        menu: None,
     })
 }
 
@@ -5280,6 +5657,7 @@ fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
         action: action.action.clone(),
         style: None,
         presence: UiPresence::default(),
+        menu: None,
     })
 }
 //#endregion 🔖️CompositeExpansion
@@ -5440,7 +5818,9 @@ mod tests {
     }
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn button(id: &str, label: &str) -> UiNode {
@@ -5451,6 +5831,7 @@ mod tests {
             action: action(),
             style: None,
             presence: UiPresence::default(),
+            menu: None,
         })
     }
 
@@ -5465,6 +5846,7 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children,
+            menu: None,
         })
     }
 
@@ -5558,10 +5940,12 @@ mod tests {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
-            items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: label.into() }).collect(),
+            items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: label.into(),
+        }).collect(),
             placeholder: None,
             on_change: action(),
             presence: UiPresence::default(),
+            menu: None,
         })
     }
 
@@ -5582,6 +5966,7 @@ mod tests {
             items: None,
             control: None,
             dimmed: None,
+            menu: None,
         }
     }
 
@@ -5590,7 +5975,7 @@ mod tests {
             let selected: HashSet<String> = ids.into_iter().collect();
             ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new());
         }
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None, menu: None })
     }
 
     #[test]
@@ -5633,9 +6018,10 @@ mod tests {
     #[test]
     fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
         let mut tree = UiTree::new();
-        let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), ..tree_item("parent", "Parent") };
+        let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), menu: None, ..tree_item("parent", "Parent") };
         let ui = tree_ui(
-            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested],
+        }],
             Some(vec!["parent".into()]),
         );
         tree.apply_tree(&ui);
@@ -5663,11 +6049,15 @@ mod tests {
     fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         let mut tree = UiTree::new();
         let item = UiTreeItemNode {
-            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true) })),
-            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true) }]),
+            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true),
+        menu: None,
+    })),
+            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true),
+        }]),
             ..tree_item("leaf", "Leaf")
         };
-        let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
+        let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item],
+        }], None);
         tree.apply_tree(&ui);
         let root = tree.root.unwrap();
         let section = tree.children(root).next().unwrap();
@@ -5691,7 +6081,8 @@ mod tests {
 
         let mut tree = UiTree::new();
         let tree_ui_value = tree_ui(
-            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![tree_item("a", "A")] }],
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![tree_item("a", "A")],
+        }],
             None,
         );
         tree.apply_tree(&tree_ui_value);
@@ -6176,6 +6567,7 @@ mod tests {
             accept: None,
             on_change: ActionDescriptor { controller_id: "c".into(), action: "a".into(), args: None },
             presence: UiPresence::default(),
+            menu: None,
         }));
         assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Text);
     }
@@ -6192,6 +6584,7 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children: Vec::new(),
+            menu: None,
         }));
         tree.node_mut(id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
         assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Grab);
@@ -6199,14 +6592,18 @@ mod tests {
 
     #[test]
     fn an_active_drag_capture_overrides_whatever_is_merely_hovered() {
-        let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }));
+        let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((dragged, CaptureKind::Drag)));
         assert_eq!(cursor, SemioCursor::Grabbing);
     }
 
     #[test]
     fn a_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor() {
-        let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }));
+        let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((scrollable, CaptureKind::ScrollThumb(ScrollAxis::Vertical))));
         assert_eq!(cursor, SemioCursor::NsResize);
     }
@@ -10979,7 +11376,9 @@ mod tests {
     use crate::component::ui::{UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn stack(direction: &str, children: Vec<UiNode>) -> UiNode {
@@ -10993,6 +11392,7 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children,
+            menu: None,
         })
     }
 
@@ -11020,9 +11420,15 @@ mod tests {
     fn horizontal_stack_distributes_equal_leftover_width_across_children() {
         let mut tree = UiTree::new();
         let children = vec![
-            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default() }),
-            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default() }),
-            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default() }),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default(),
+        menu: None,
+    }),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default(),
+        menu: None,
+    }),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default(),
+        menu: None,
+    }),
         ];
         tree.apply_tree(&stack("horizontal", children));
         let root = tree.root.unwrap();
@@ -11080,7 +11486,9 @@ mod tests {
     #[test]
     fn field_child_grows_to_fill_the_label_adjusted_remainder() {
         let mut tree = UiTree::new();
-        let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: None, child: Box::new(text("child")), presence: UiPresence::default() });
+        let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: None, child: Box::new(text("child")), presence: UiPresence::default(),
+        menu: None,
+    });
         tree.apply_tree(&field);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();
@@ -11101,7 +11509,9 @@ mod tests {
     #[test]
     fn section_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap() {
         let mut tree = UiTree::new();
-        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), presence: UiPresence::default(), children: vec![text("a"), text("a longer line of text")] });
+        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), presence: UiPresence::default(), children: vec![text("a"), text("a longer line of text")],
+        menu: None,
+    });
         tree.apply_tree(&section);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();
@@ -13464,7 +13874,9 @@ mod tests {
     }
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn stack(children: Vec<UiNode>) -> UiNode {
@@ -13478,6 +13890,7 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children,
+            menu: None,
         })
     }
 
@@ -13489,6 +13902,7 @@ mod tests {
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
             presence: UiPresence::status(UiStatus::Loading),
+            menu: None,
         })
     }
 
@@ -13500,6 +13914,7 @@ mod tests {
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
             presence: UiPresence::status(UiStatus::Waiting),
+            menu: None,
         })
     }
 
@@ -13527,7 +13942,9 @@ mod tests {
 
     #[test]
     fn painting_a_stack_recurses_into_every_child() {
-        let ui = stack(vec![text("a"), UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() }), text("b")]);
+        let ui = stack(vec![text("a"), UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(),
+        menu: None,
+    }), text("b")]);
         let (mut tree, root, theme, mut atlas) = setup(&ui);
         let mut draw = DrawList::default();
 
@@ -13597,7 +14014,9 @@ mod tests {
     // additive to the pre-existing tests above.
 
     fn button(id: &str, disabled: bool) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::disabled_if(disabled) })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::disabled_if(disabled),
+        menu: None,
+    })
     }
 
     #[test]
@@ -13616,7 +14035,9 @@ mod tests {
     }
 
     fn loading_section(id: &str) -> UiNode {
-        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Loading), children: vec![text("child")] })
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Loading), children: vec![text("child")],
+        menu: None,
+    })
     }
 
     #[test]
@@ -13631,7 +14052,9 @@ mod tests {
     }
 
     fn waiting_section(id: &str) -> UiNode {
-        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Waiting), children: vec![text("child")] })
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Waiting), children: vec![text("child")],
+        menu: None,
+    })
     }
 
     #[test]
@@ -13646,7 +14069,9 @@ mod tests {
     }
 
     fn loading_stack(children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::status(UiStatus::Loading), activate: None, drop_action: None, drop_overlay: None, children })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::status(UiStatus::Loading), activate: None, drop_action: None, drop_overlay: None, children,
+        menu: None,
+    })
     }
 
     #[test]
@@ -13661,7 +14086,9 @@ mod tests {
     }
 
     fn waiting_stack(children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::status(UiStatus::Waiting), activate: None, drop_action: None, drop_overlay: None, children })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::status(UiStatus::Waiting), activate: None, drop_action: None, drop_overlay: None, children,
+        menu: None,
+    })
     }
 
     #[test]
@@ -13677,23 +14104,27 @@ mod tests {
 
     fn loading_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")],
+        }],
             presence: UiPresence::status(UiStatus::Loading),
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
             drop_action: None,
+            menu: None,
         })
     }
 
     fn waiting_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")],
+        }],
             presence: UiPresence::status(UiStatus::Waiting),
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
             drop_action: None,
+            menu: None,
         })
     }
 
@@ -13720,7 +14151,9 @@ mod tests {
     }
 
     fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
-        UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, on_absolute: action(), on_delta: action(), presence: UiPresence::default() })
+        UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, on_absolute: action(), on_delta: action(), presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     #[test]
@@ -13755,7 +14188,9 @@ mod tests {
     }
 
     fn slider(id: &str, unit: Option<&str>) -> UiNode {
-        UiNode::Slider(UiSliderNode { id: id.into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: unit.map(String::from), on_change: action(), presence: UiPresence::default() })
+        UiNode::Slider(UiSliderNode { id: id.into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: unit.map(String::from), on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     #[test]
@@ -13774,7 +14209,9 @@ mod tests {
     }
 
     fn field(description: Option<&str>, required: bool, error: Option<&str>) -> UiNode {
-        UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: description.map(String::from), required: Some(required), error: error.map(String::from), child: Box::new(text("child")), presence: UiPresence::default() })
+        UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: description.map(String::from), required: Some(required), error: error.map(String::from), child: Box::new(text("child")), presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     #[test]
@@ -13795,25 +14232,30 @@ mod tests {
     fn tree_with_item_description() -> UiNode {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.description = Some("desc".into());
-        item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), reveal_on_hover: Some(false) }]);
+        item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), reveal_on_hover: Some(false),
+        }]);
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item],
+        }],
             presence: UiPresence::default(),
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
             drop_action: None,
+            menu: None,
         })
     }
 
     fn tree_with_bare_item() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")],
+        }],
             presence: UiPresence::default(),
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
             drop_action: None,
+            menu: None,
         })
     }
 
@@ -13843,10 +14285,13 @@ mod tests {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
-            items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
+            items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into(),
+        }, UiSelectItem { value: "b".into(), label: "Beta".into(),
+        }],
             placeholder: None,
             on_change: action(),
             presence: UiPresence::default(),
+            menu: None,
         })
     }
 
@@ -13890,7 +14335,9 @@ mod tests {
     }
 
     fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children: vec![text("child")],
+        menu: None,
+    })
     }
 
     #[test]
@@ -13907,7 +14354,9 @@ mod tests {
     }
 
     fn activatable_stack(selected: bool) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), presence: UiPresence::selected(selected), activate: Some(action()), drop_action: None, drop_overlay: None, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), presence: UiPresence::selected(selected), activate: Some(action()), drop_action: None, drop_overlay: None, children: vec![text("child")],
+        menu: None,
+    })
     }
 
     #[test]
@@ -13934,12 +14383,14 @@ mod tests {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.draggable = Some(true);
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item],
+        }],
             presence: UiPresence::default(),
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
             drop_action: None,
+            menu: None,
         })
     }
 
@@ -13965,7 +14416,9 @@ mod tests {
     // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a
     // `NumberStepper` hover tint) that only `paint_input` had before this pass.
     fn input(id: &str, value: &str) -> UiNode {
-        UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default() })
+        UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn focus(tree: &mut UiTree, id: NodeId) {
@@ -14039,11 +14492,15 @@ mod tests {
     }
 
     fn toggle(id: &str) -> UiNode {
-        UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: Some("Toggle".into()), on_change: action(), presence: UiPresence::default() })
+        UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: Some("Toggle".into()), on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn icon_select(id: &str) -> UiNode {
-        UiNode::IconSelect(UiIconSelectNode { id: id.into(), value: "star".into(), uniform: true, classifier_kind: "generic".into(), on_change: action(), presence: UiPresence::default() })
+        UiNode::IconSelect(UiIconSelectNode { id: id.into(), value: "star".into(), uniform: true, classifier_kind: "generic".into(), on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     /// 🎯️ Shared assertion for the border-swap-on-focus fix: an otherwise-identical pair of trees,
@@ -15480,15 +15937,20 @@ mod tests {
         UiNode::Select(UiSelectNode {
             id: id.into(),
             value: value.into(),
-            items: vec![UiSelectItem { value: "a".into(), label: "A".into() }, UiSelectItem { value: "b".into(), label: "B".into() }],
+            items: vec![UiSelectItem { value: "a".into(), label: "A".into(),
+        }, UiSelectItem { value: "b".into(), label: "B".into(),
+        }],
             placeholder: None,
             on_change: action(),
             presence: UiPresence::default(),
+            menu: None,
         })
     }
 
     fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None,
+        menu: None,
+    })
     }
 
     /// 🌳️ Manually inserts a `Tree` row `Stack` (mirroring `reconcile::tree_item_row`'s synthesized
@@ -15507,6 +15969,7 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children: Vec::new(),
+            menu: None,
         });
         let id = tree.insert_child(Some(tree_id), Node::new(NodeKey::Explicit(item_id.into()), WidgetSpec(spec)));
         let bucket = tree.node_mut(id).unwrap();
@@ -15530,6 +15993,7 @@ mod tests {
             accept: None,
             on_change: action(),
             presence: UiPresence::default(),
+            menu: None,
         })
     }
 
@@ -15544,19 +16008,26 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children: Vec::new(),
+            menu: None,
         })
     }
 
     fn text_ui(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn separator_ui() -> UiNode {
-        UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() })
+        UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn button_ui(id: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::default() })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
@@ -16082,7 +16553,9 @@ mod tests {
     }
 
     fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), presence: UiPresence::default(), activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new() })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), presence: UiPresence::default(), activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new(),
+        menu: None,
+    })
     }
 
     #[test]
@@ -16115,7 +16588,8 @@ mod tests {
         let mut leave_action = action();
         leave_action.action = "leave".into();
         item.unhover_action = Some(leave_action.clone());
-        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item],
+        };
 
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -16137,7 +16611,8 @@ mod tests {
         item.draggable = Some(true);
         let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
         item.drag_data = Some(payload.clone());
-        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item],
+        };
 
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -16185,6 +16660,7 @@ mod tests {
             block_list: None,
             diff_view: None,
             event_feed: None,
+            menu: None,
         })
     }
 
@@ -16389,7 +16865,9 @@ mod tests {
     use crate::theme::Theme;
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn scene(surface_id: &str) -> UiNode {
@@ -16415,11 +16893,14 @@ mod tests {
             block_list: None,
             diff_view: None,
             event_feed: None,
+            menu: None,
         })
     }
 
     fn image(id: &str) -> UiNode {
-        UiNode::Image(UiImageNode { id: id.into(), src: "https://example.test/x.png".into(), alt: None, presence: UiPresence::default() })
+        UiNode::Image(UiImageNode { id: id.into(), src: "https://example.test/x.png".into(), alt: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     fn stack(children: Vec<UiNode>) -> UiNode {
@@ -16433,11 +16914,14 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children,
+            menu: None,
         })
     }
 
     fn group(children: Vec<UiNode>) -> UiNode {
-        UiNode::Group(UiGroupNode { id: "group".into(), label: "Group".into(), default_open: None, presence: UiPresence::default(), children })
+        UiNode::Group(UiGroupNode { id: "group".into(), label: "Group".into(), default_open: None, presence: UiPresence::default(), children,
+        menu: None,
+    })
     }
 
     fn layout(node: &UiNode) -> UiTree {
@@ -16662,6 +17146,7 @@ fn root_stack() -> UiNode {
         drop_action: None,
         drop_overlay: None,
         children: Vec::new(),
+        menu: None,
     })
 }
 
@@ -16683,6 +17168,7 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
         drop_action: None,
         drop_overlay: None,
         children: Vec::new(),
+        menu: None,
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_AXIS, ordinal), WidgetSpec(spec)));
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
@@ -16707,6 +17193,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
         drop_action: None,
         drop_overlay: None,
         children: Vec::new(),
+        menu: None,
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_STACK, ordinal), WidgetSpec(spec)));
     if let Some(node) = tree.node_mut(id) {
@@ -16737,6 +17224,7 @@ fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNo
         action: ActionDescriptor { controller_id: "shell.window".into(), action: "activate".into(), args: None },
         style: None,
         presence: UiPresence::default(),
+        menu: None,
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Explicit(window_id), WidgetSpec(spec)));
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
@@ -17114,6 +17602,7 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children,
+            menu: None,
         })
     }
 
@@ -17122,14 +17611,18 @@ mod tests {
     }
 
     fn button_ui(id: &str, label: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: label.into(), action: action(), style: None, presence: UiPresence::default() })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: label.into(), action: action(), style: None, presence: UiPresence::default(),
+        menu: None,
+    })
     }
 
     #[test]
     fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })]));
+        ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })]));
 
         assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
         let draw = ui.frame("main", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list once a tree was applied");
@@ -17148,7 +17641,9 @@ mod tests {
     fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })]);
+        let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })]);
         ui.apply_tree("main", &ui_node);
         ui.frame("main", 400.0, 400.0, &mut atlas, None, None);
         assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
@@ -17205,6 +17700,7 @@ mod tests {
             block_list: None,
             diff_view: None,
             event_feed: None,
+            menu: None,
         })
     }
 
@@ -17264,7 +17760,10 @@ mod tests {
             label: "Group".into(),
             default_open: None,
             presence: UiPresence::default(),
-            children: vec![UiNode::Text(UiTextNode { value: "label".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), component_scene_ui("surface.nested")],
+            children: vec![UiNode::Text(UiTextNode { value: "label".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    }), component_scene_ui("surface.nested")],
+            menu: None,
         });
         ui.apply_tree("w", &group_node);
 
@@ -17476,7 +17975,9 @@ mod tests {
     /// identical bounds, which is what makes an exact instance/vector-count comparison meaningful
     /// instead of an artifact of divergent layout math.
     fn leaf(child: UiNode) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![child] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![child],
+        menu: None,
+    })
     }
 
     fn assert_equivalent(kind: &str, node: &UiNode) {
@@ -17499,33 +18000,46 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children: vec![
-                UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }),
-                UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() }),
+                UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    }),
+                UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(),
+        menu: None,
+    }),
             ],
+            menu: None,
         });
         assert_equivalent("Stack", &node);
     }
 
     #[test]
     fn golden_text() {
-        assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default() })));
+        assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     #[test]
     fn golden_button() {
-        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: IconName::CircleDot, label: "Go".into(), action: action(), style: None, presence: UiPresence::default() })));
+        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: IconName::CircleDot, label: "Go".into(), action: action(), style: None, presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     #[test]
     fn golden_separator() {
-        assert_equivalent("Separator", &leaf(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() })));
+        assert_equivalent("Separator", &leaf(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     #[test]
     fn golden_input() {
         assert_equivalent(
             "Input",
-            &leaf(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default() })),
+            &leaf(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })),
         );
     }
 
@@ -17536,10 +18050,13 @@ mod tests {
             &leaf(UiNode::Select(UiSelectNode {
                 id: "sel".into(),
                 value: "a".into(),
-                items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
+                items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into(),
+        }, UiSelectItem { value: "b".into(), label: "Beta".into(),
+        }],
                 placeholder: None,
                 on_change: action(),
                 presence: UiPresence::default(),
+                menu: None,
             })),
         );
     }
@@ -17552,7 +18069,9 @@ mod tests {
         // capability `widgets::render_toggle` (the immediate-mode reference this harness compares
         // against) never had, so a selected fixture would fail this equivalence check for the wrong
         // reason. This test stays scoped to the base (unselected) toggle's fill/label parity.
-        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default() })));
+        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     /// ✨️ `presence.selected` draws its outset accent ring universally — proven here on `Toggle`, a
@@ -17561,8 +18080,12 @@ mod tests {
     /// is now a shared channel every element gets for free from `presence_overlay`.
     #[test]
     fn selected_presence_draws_an_outset_ring_on_any_element() {
-        let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default() });
-        let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true) });
+        let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    });
+        let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true),
+        menu: None,
+    });
         let (unselected_instances, _, _) = retained_stats(&leaf(unselected));
         let (selected_instances, _, _) = retained_stats(&leaf(selected));
         assert!(selected_instances > unselected_instances, "a selected element should paint more instances than an unselected one (the outset accent ring)");
@@ -17570,12 +18093,17 @@ mod tests {
 
     #[test]
     fn golden_key_value() {
-        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: "Name".into(), value: "Semio".into() }], presence: UiPresence::default() })));
+        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: "Name".into(), value: "Semio".into(),
+        }], presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     #[test]
     fn golden_slider() {
-        assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action(), presence: UiPresence::default() })));
+        assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     /// KNOWN GAP: `widgets::render_number_stepper` renders its center value segment via a full
@@ -17591,7 +18119,9 @@ mod tests {
     /// façade's scope), not something to paper over here.
     #[test]
     fn golden_number_stepper_known_gap() {
-        let (instances, _, _) = retained_stats(&leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, on_absolute: action(), on_delta: action(), presence: UiPresence::default() })));
+        let (instances, _, _) = retained_stats(&leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, on_absolute: action(), on_delta: action(), presence: UiPresence::default(),
+        menu: None,
+    })));
         assert!(instances > 0, "NumberStepper should paint its minus/value/plus segments");
     }
 
@@ -17604,17 +18134,23 @@ mod tests {
     /// instead, per this workstream's "don't modify existing tests" rule.
     #[test]
     fn golden_number_stepper() {
-        assert_equivalent("NumberStepper", &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: action(), on_delta: action(), presence: UiPresence::default() })));
+        assert_equivalent("NumberStepper", &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: action(), on_delta: action(), presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     #[test]
     fn golden_ring() {
-        assert_equivalent("Ring", &leaf(UiNode::Ring(UiRingNode { id: "ring".into(), orb_id: "orb".into(), t: 0.25, on_change: action(), presence: UiPresence::default() })));
+        assert_equivalent("Ring", &leaf(UiNode::Ring(UiRingNode { id: "ring".into(), orb_id: "orb".into(), t: 0.25, on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     #[test]
     fn golden_icon_select() {
-        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: IconName::Sparkles.to_string(), uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default() })));
+        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: IconName::Sparkles.to_string(), uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })));
     }
 
     #[test]
@@ -17635,14 +18171,17 @@ mod tests {
             items: None,
             control: None,
             dimmed: None,
+            menu: None,
         };
         let node = UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")],
+        }],
             presence: UiPresence::default(),
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
             drop_action: None,
+            menu: None,
         });
         assert_equivalent("Tree", &node);
     }
@@ -17667,8 +18206,11 @@ mod tests {
             description: None,
             required: None,
             error: None,
-            child: Box::new(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default() })),
+            child: Box::new(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default(),
+        menu: None,
+    })),
             presence: UiPresence::default(),
+            menu: None,
         });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "Field should paint its label plus its child control");
@@ -17681,7 +18223,10 @@ mod tests {
             label: Some("Section".into()),
             default_open: Some(true),
             presence: UiPresence::default(),
-            children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })],
+            children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    })],
+            menu: None,
         });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "Section should paint its header label plus its children");
@@ -17696,7 +18241,9 @@ mod tests {
     /// promise, not equivalence with anything immediate-mode.
     #[test]
     fn golden_image_known_gap() {
-        let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some("alt text".into()), presence: UiPresence::default() });
+        let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some("alt text".into()), presence: UiPresence::default(),
+        menu: None,
+    });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "an empty-src Image should still paint its alt text");
     }
@@ -17725,6 +18272,7 @@ mod tests {
             block_list: None,
             diff_view: None,
             event_feed: None,
+            menu: None,
         });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "ComponentScene should paint its placeholder border chrome");
@@ -17732,7 +18280,9 @@ mod tests {
 
     #[test]
     fn golden_external_slot_known_gap() {
-        let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default() });
+        let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default(),
+        menu: None,
+    });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
     }
@@ -17746,7 +18296,9 @@ mod tests {
         assert_eq!(ui.viewport("win"), None);
         assert!(ui.tree("win").is_none());
 
-        let node = UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() });
+        let node = UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default(),
+        menu: None,
+    });
         ui.apply_tree("win", &node);
         ui.set_viewport("win", 800.0, 600.0);
 
@@ -18334,7 +18886,7 @@ pub enum ControlNode<E> {
         on_delta: Option<E>,
     },
     Ring { id: String, t: f64, disabled: bool, on_change: Option<E> },
-    IconSelect { id: String, value: String, uniform: bool, classifier_kind: String, on_change: Option<E> },
+    IconSelect { id: String, value: String, uniform: bool, classifier_kind: String, on_change: Option<E> }
 }
 
 #[derive(Clone, Debug)]
@@ -18383,7 +18935,7 @@ pub enum WidgetNode<E> {
         selected_ids: Vec<String>,
         highlighted_ids: Vec<String>,
         selection_change: Option<E>,
-    },
+    }
 }
 
 const PANEL_HEADER: f32 = 24.0;

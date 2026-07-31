@@ -22,7 +22,7 @@ pub enum Process3dOperation {
     /// exact prior document, mirroring `ShootingOperation::SetFixture`.
     SetDocument {
         document: Process3dDocument,
-    },
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -116,7 +116,7 @@ enum StepOriginPatch {
     Set {
         #[dsl(block)]
         origin: StepOrigin,
-    },
+    }
 }
 
 /// 🩹️ Local DSL-only mirror of `ProcessStepPatch` — the real type's `origin: Option<Option<StepOrigin>>`
@@ -196,7 +196,7 @@ enum Process3dOperationDsl {
     SetDocument {
         #[dsl(block)]
         document: Process3dDocument,
-    },
+    }
 }
 
 fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperationDsl {

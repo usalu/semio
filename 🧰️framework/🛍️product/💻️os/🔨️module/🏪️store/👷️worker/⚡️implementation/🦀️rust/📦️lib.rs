@@ -22,7 +22,7 @@ enum WorkerRequest {
     Send {
         document_id: String,
         message: DocumentActorMsg,
-    },
+    }
 }
 
 #[derive(Debug, serde::Serialize)]
