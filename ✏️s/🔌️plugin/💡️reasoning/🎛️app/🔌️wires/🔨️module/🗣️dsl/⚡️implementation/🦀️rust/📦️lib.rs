@@ -1,20 +1,23 @@
 //! 📜️ Reasoning wires app — textual document grammar surface + laws (constitutional: dsl).
 //!
 //! The `.wires` textual DSL and op-text grammar are declared, not hand-rolled — see the
-//! `#[derive(dsl::DslDocument)]` on `MindmapWiresDocument` (in `reasoning_wires`) and
-//! `#[derive(dsl::DslOps)]` on `MindmapWiresOperation` (in `reasoning_wires_op`). Both
-//! `wires_fixture`/`board_fixture` (and the `Value`/`serde_json::Map<String, Value>` operation
-//! payload fields) bind directly through `dsl`'s built-in `Shape::Value` escape hatch for
-//! opaque/freeform JSON — no local mirror type or hand-rolled tokenizer needed.
+//! `impl store::DocumentDsl for MindmapWiresDocument` (in `reasoning_wires`, `🔖️Dsl` region) and
+//! `#[derive(dsl::DslOps)]` on `MindmapWiresOperation` (in `reasoning_wires_op`).
+//! `MindmapWiresDocument` itself keeps `wires_fixture`/`board_fixture` as opaque `serde_json::Value`
+//! (the `op`/`ui`/`engine` crates address board nodes/edges and wires relationships generically by id
+//! for mergeable, granular JSON-patch edits), but the TEXTUAL `.wires` surface is fully typed via the
+//! `WiresFixtureDsl`/`BoardFixtureDsl`/... local DSL-mirror twins declared in `reasoning_wires`'s
+//! `🔖️DslMirror` region — converted Value<->typed right at the `parse_dsl`/`print_dsl`/pack boundary,
+//! same "local twin" pattern as `procedural_3d`'s `CameraJsonDsl`/`WidgetDsl`/`SynapseSpecDsl`.
 //!
 //! 🕸️ The unified `a:Kind@port->b@port` wire syntax (`dsl::Wire`/`Shape::Wire`) does NOT apply here:
-//! edges live inside the opaque `board_fixture`/`wires_fixture` `Value` trees (plain JSON objects with
-//! `source`/`target` string fields), not as typed Rust fields a `#[dsl(...)]` attribute could target —
-//! that's the whole point of keeping this crate free of board-engine schema types. Introducing a
-//! wire-literal encoding for those JSON edges would mean hand-rolling a bespoke sub-printer for one
-//! field shape inside the generic `Shape::Value` escape hatch, and the same `source`/`target` JSON
+//! `EdgeDsl::source`/`target` are plain `#[dsl(refs = "node")]` strings against `NodeDsl`'s
+//! `#[dsl(defines = "node")]` id — not `dsl::Wire` — because the same bare `source`/`target` string-id
 //! shape is shared by every other generic board/map fixture in the repo (`reasoning.mindmap.fixture`,
-//! tiled-map, puzzle boards, ...) — a structural, cross-crate schema change out of scope here.
+//! tiled-map, puzzle boards, ...); adopting `dsl::Wire` here alone, ahead of those siblings, would just
+//! fork one shared shape into two incompatible encodings for no present benefit — a structural,
+//! cross-crate schema change out of scope here. This sub-argument survives the `Value`->typed
+//! conversion above unchanged; only the escape-hatch rationale for the OUTER blobs did not.
 
 use reasoning_wires::MindmapWiresDocument;
 

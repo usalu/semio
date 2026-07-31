@@ -14,7 +14,14 @@ pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
 /// for the orphan rule). Wrapping it as one opaque JSON-text field reuses the exact `serde_json`
 /// round trip {@link SequenceHost::to_json}/{@link SequenceHost::load_json} already depend on for
 /// fidelity — unlike a schema-less `dsl::Shape::Value`, this never collapses `Atom::Integer` and
-/// `Atom::Decimal` into the same wire number.
+/// `Atom::Decimal` into the same wire number. Deliberately `dsl::Shape::Text` (escaped quoted
+/// string), NOT `dsl::Shape::Embed("json")` (fenced block): this field is only ever reached as a
+/// `#[dsl(table)]` column (`SequenceStep` is `SequenceFixtureDsl.steps`'s row type), and an
+/// `Embed`'s Document-mode fence needs its closing ` ``` ` on its own line — the table row printer
+/// glues the remaining row cells (`x y slot collapsed`) onto that same line right after it,
+/// producing a fence the lexer can't close and a confirmed parse failure ("unterminated fenced
+/// block"). Genuine ENGINE GAP (`Shape::Embed` inside a `Shape::Table` column), out of scope here —
+/// verified empirically, not worked around.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct StepParams(pub Dictionary);
@@ -75,6 +82,7 @@ impl Default for SequenceCamera {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SlotRef {
+    #[dsl(refs = "step")]
     pub owner: String,
     pub name: String,
 }
@@ -82,6 +90,7 @@ pub struct SlotRef {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SequenceStep {
+    #[dsl(defines = "step")]
     pub id: String,
     pub kind: String,
     #[serde(default)]

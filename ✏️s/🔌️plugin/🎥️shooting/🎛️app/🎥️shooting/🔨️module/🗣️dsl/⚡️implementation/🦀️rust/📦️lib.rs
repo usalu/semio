@@ -33,7 +33,7 @@ mod tests {
                     format: "glb".into(),
                     origin: [1.0, 2.0, 3.0],
                     orientation: Some([0.0, 0.0, 0.7071, 0.7071]),
-                    scale: Some(serde_json::json!([2.0, 2.0, 2.0])),
+                    scale: Some([2.0, 2.0, 2.0]),
                 },
                 ShootingAsset { id: "a2".into(), name: "Plain".into(), url: "/mesh/a2.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None },
             ],

@@ -2,6 +2,11 @@
 
 use present::PresentDeck;
 
+/// 📄️ The handcrafted `.present` DSL-text fixture — a multi-tile deck exercising every field
+/// (including the optional `source-aspect`), embedded at compile time as the permanent proof that
+/// the checked-in fixture still parses and round trips.
+pub const PRESENT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🎞️animate/📚️example/🎞️default.present");
+
 /// 📖️ Parses `.present` DSL text into a `PresentDeck`.
 pub fn parse_dsl(text: &str) -> Result<PresentDeck, store::TextError> {
     <PresentDeck as store::DocumentDsl>::parse_dsl(text)
@@ -31,6 +36,13 @@ mod tests {
         let deck = default_present_deck();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
         let deck = PresentDeck { tiles, ..deck };
+        test_support::assert_dsl_round_trip(&deck);
+        test_support::assert_dsl_pack_equivalence(&deck);
+    }
+
+    #[test]
+    fn present_dsl_round_trips_bundled_default_example() {
+        let deck = parse_dsl(PRESENT_EXAMPLE_TEXT).expect("🎞️default.present must parse");
         test_support::assert_dsl_round_trip(&deck);
         test_support::assert_dsl_pack_equivalence(&deck);
     }

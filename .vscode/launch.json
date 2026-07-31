@@ -3383,6 +3383,17 @@
       }
     },
     {
+      "name": "🧪️test🗣️dsl-fixture-sweep",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/dsl-fixture-sweep-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.9125
+      }
+    },
+    {
       "name": "🧪️test🗄️db-core",
       "type": "node-terminal",
       "request": "launch",

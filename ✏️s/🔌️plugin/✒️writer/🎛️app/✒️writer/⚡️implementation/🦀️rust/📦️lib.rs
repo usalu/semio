@@ -51,6 +51,7 @@ pub struct WriterProjection {
     #[serde(default = "default_uri")]
     pub uri: String,
     #[serde(default)]
+    #[dsl(lang = "jack")]
     pub text: String,
 }
 //#endregion 🔖️Types

@@ -92,6 +92,11 @@ fn module_labels(view_state: &ViewState) -> &'static ModuleLabels {
 struct ModuleRenderPayload {
     #[serde(default)]
     fixture_slug: String,
+    /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch because the key
+    /// set is driven entirely by whichever `Widget::InputSlider`/`Widget::Neuron` ids the referenced
+    /// `fixture_slug`'s flow graph happens to define (see `apply_flow_params`, which walks `params` as
+    /// an arbitrary `key -> f64` map and forwards every entry to `FlowHost::set_slider_value`) — no
+    /// fixed schema spans all fixtures, so a typed `dsl::DslDocument` derive doesn't apply here.
     #[serde(default)]
     params: Value,
     #[serde(default)]

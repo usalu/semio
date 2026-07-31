@@ -2,60 +2,60 @@ schema=raster.document id=semio title="Semio Brand Showcase"
 layers {
   pixel id=backdrop name=Backdrop visible=true opacity=1 blend=normal width=1024 height=1024
   transform {
-    x=0 y=0 scale-x=1 scale-y=1 rotation=0
+    x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
   }
   group id=logo-group name="Logo Stack" visible=true opacity=1 blend=normal
   transform {
-    x=0 y=0 scale-x=1 scale-y=1 rotation=0
+    x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
   }
   children {
     pixel id=emblem name="Semio Emblem" visible=true opacity=1 blend=normal width=512 height=512 image=semio-emblem
     transform {
-      x=0 y=0 scale-x=1 scale-y=1 rotation=0
+      x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
     }
     mask {
       enabled=true linked=true invert=false width=512 height=512
     }
     pixel id=glow name=Glow visible=true opacity=0.44999998807907104 blend=screen width=512 height=512 image=semio-emblem
     transform {
-      x=0 y=12 scale-x=1.08 scale-y=1.08 rotation=0
+      x=0 y=12 scale-x=1.08 scale-y=1.08 rotation=0deg
     }
   }
   pixel id=accent name="Accent Overlay" visible=true opacity=0.3499999940395355 blend=overlay width=640 height=360
   transform {
-    x=120 y=-80 scale-x=1 scale-y=1 rotation=0.15
+    x=120 y=-80 scale-x=1 scale-y=1 rotation=0.15deg
   }
   adjustment id=brighten name="Brightness / Contrast" visible=true opacity=1 blend=normal kind=brightnessContrast
   transform {
-    x=0 y=0 scale-x=1 scale-y=1 rotation=0
+    x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
   }
   params={
     brightness=0.06 contrast=0.1
   }
   adjustment id=levels name=Levels visible=true opacity=1 blend=normal kind=levels
   transform {
-    x=0 y=0 scale-x=1 scale-y=1 rotation=0
+    x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
   }
   params={
     levelsBlack=0.04 levelsWhite=0.96
   }
   adjustment id=hue name="Hue / Saturation" visible=true opacity=1 blend=normal kind=hueSaturation
   transform {
-    x=0 y=0 scale-x=1 scale-y=1 rotation=0
+    x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
   }
   params={
     hue=0.02 saturation=0.12
   }
   adjustment id=curves name=Curves visible=true opacity=1 blend=normal kind=curves
   transform {
-    x=0 y=0 scale-x=1 scale-y=1 rotation=0
+    x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
   }
   params={
     curves=[ [ 0 0 ] [ 0.25 0.2 ] [ 0.75 0.8 ] [ 1 1 ] ]
   }
   pixel id=vignette name=Vignette visible=true opacity=0.30000001192092896 blend=multiply width=1100 height=1100
   transform {
-    x=0 y=0 scale-x=1 scale-y=1 rotation=0
+    x=0 y=0 scale-x=1 scale-y=1 rotation=0deg
   }
   mask {
     enabled=true linked=false invert=true width=1100 height=1100

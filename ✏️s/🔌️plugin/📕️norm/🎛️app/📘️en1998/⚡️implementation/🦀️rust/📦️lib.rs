@@ -11,10 +11,15 @@ pub struct Document {
     pub ground_type: String,
     pub importance_class: String,
     pub structural_system: String,
+    #[dsl(unit = "s")]
     pub t1_s: f64,
+    #[dsl(unit = "t")]
     pub mass_t: f64,
+    #[dsl(unit = "kN")]
     pub v_rd_kn: f64,
+    #[dsl(unit = "mm")]
     pub drift_mm: f64,
+    #[dsl(unit = "m")]
     pub height_m: f64,
     pub multiple_resisting_systems: bool,
     pub annex: String,
@@ -22,39 +27,60 @@ pub struct Document {
     pub en_ground_type: String,
     pub en_spectrum_type: String,
     pub period_ratio: f64,
+    #[dsl(unit = "kN")]
     pub bridge_v_rd_kn: f64,
+    #[dsl(unit = "mm")]
     pub bearing_d_ed_mm: f64,
+    #[dsl(unit = "mm")]
     pub bearing_d_rd_mm: f64,
     pub retrofit_knowledge_level: String,
     pub retrofit_limit_state: String,
+    #[dsl(unit = "kN")]
     pub retrofit_e_d_kn: f64,
+    #[dsl(unit = "kN")]
     pub retrofit_r_k_kn: f64,
     pub retrofit_gamma_el: f64,
+    #[dsl(unit = "m")]
     pub silo_height_m: f64,
+    #[dsl(unit = "m")]
     pub silo_radius_m: f64,
+    #[dsl(unit = "kN")]
     pub silo_n_rd_kn: f64,
+    #[dsl(unit = "kN")]
     pub silo_v_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub silo_v_rd_kn: f64,
     pub silo_q_nominal: f64,
+    #[dsl(unit = "m")]
     pub tank_height_m: f64,
+    #[dsl(unit = "m")]
     pub tank_radius_m: f64,
+    #[dsl(unit = "t")]
     pub tank_mass_t: f64,
+    #[dsl(unit = "kN")]
     pub tank_v_rd_kn: f64,
     pub tower_m_ed_knm: f64,
     pub tower_m_rd_knm: f64,
     pub tower_is_chimney: bool,
     pub tower_q_nominal: f64,
+    #[dsl(unit = "t")]
     pub tower_mass_t: f64,
+    #[dsl(unit = "m2")]
     pub foundation_area_m2: f64,
+    #[dsl(unit = "kPa")]
     pub foundation_p_rd_kpa: f64,
+    #[dsl(unit = "kN")]
     pub foundation_h_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub foundation_h_rd_kn: f64,
     pub k_foundation: f64,
     pub k_soil: f64,
+    #[dsl(unit = "m")]
     pub wall_height_m: f64,
     pub wall_phi_deg: f64,
     pub wall_soil_gamma_kn_m3: f64,
     pub wall_r: f64,
+    #[dsl(unit = "kN")]
     pub wall_h_rd_kn: f64,
 }
 

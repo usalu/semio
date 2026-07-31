@@ -2,6 +2,11 @@
 
 use en1997::Document;
 
+/// 📄️ The `default` example document, handcrafted in the `.en1997` DSL — a shallow footing +
+/// pile worked example (bearing, sliding, settlement, pile axial, ground investigation depth)
+/// under the DE national annex, DA1-C1 design approach.
+pub const EN1997_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/📕️norm/📚️example/📘️en1997/📕️default.en1997");
+
 /// 📖️ Parses `.en1997` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
     <Document as store::DocumentDsl>::parse_dsl(text)
@@ -20,6 +25,12 @@ mod tests {
     #[test]
     fn document_dsl_round_trips() {
         store::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn default_example_dsl_round_trips() {
+        let document = parse_dsl(EN1997_DEFAULT_EXAMPLE_TEXT).expect("parse default .en1997 example");
+        store::test_support::assert_dsl_round_trip(&document);
     }
 }
 //#endregion 🧪️Tests

@@ -44,6 +44,7 @@ mod pixels_base64 {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct LowpolyTransform {
+    #[dsl(coord)]
     pub position: [f32; 3],
     pub rotation: [f32; 3],
     pub scale: [f32; 3],
@@ -82,6 +83,18 @@ pub struct LowpolyObject {
     #[dsl(block)]
     pub transform: LowpolyTransform,
     pub smooth_shading: bool,
+    // ⚠️ Deliberately plain `Shape::Text` (bare `String`, no `#[dsl(lang = "json")]`), NOT an
+    // oversight: `LowpolyObject` is the element type of `LowpolyProjection.objects: Vec<LowpolyObject>`,
+    // a `Shape::List(Shape::Record(..))` field printed in `JoinMode::Document`. The engine's `Writer`
+    // only forces a line break after a `Shape::Embed` field's closing fence when the NEXT chunk is
+    // pushed via `new_record()` (as `Shape::Block`/`Shape::Table` fields do) — plain list-item
+    // iteration and the list's own closing `]` atom do not, so annotating this field glues the fence's
+    // closing "```" to the following `]` on the same text line and breaks the fence lexer's "closing
+    // ``` must be alone on its line" rule. Confirmed empirically (fails even with a single object):
+    // reparsing the printed output errors with "unterminated fenced block". This is a genuine ENGINE
+    // GAP distinct from the already-documented multi-`Shape::Embed`-field Lines-layout bug (see
+    // `trinity::rewrite::RewriteRuleState`) — out of scope here, do not annotate until the engine's
+    // `Writer` forces a boundary after every `Shape::Embed` chunk regardless of what follows it.
     pub mesh_json: String,
     #[serde(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
@@ -93,9 +106,11 @@ impl Identified<String> for LowpolyObject {
     }
 }
 
-/// @emoji 🎞️ Persisted lowpoly document: a list of mesh objects each carrying geometry (`mesh_json`),
-/// transform, shading and paint layers. Ephemeral editing context (active object, selection, utilities,
-/// camera, brush) lives in the plugin's app struct, never here.
+/// @emoji 🎞️ Persisted lowpoly document: a list of mesh objects each carrying geometry (`mesh_json`,
+/// deliberately plain `String` — see the field's own doc comment for the confirmed engine-gap reason
+/// it cannot be `#[dsl(lang = "json")]`), transform, shading and paint layers. Ephemeral editing
+/// context (active object, selection, utilities, camera, brush) lives in the plugin's app struct,
+/// never here.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "lowpoly", layout = "lines")]
@@ -153,6 +168,14 @@ pub struct LowpolyObjectPatch {
     pub name: Option<String>,
     pub smooth_shading: Option<bool>,
     pub transform: Option<LowpolyTransform>,
+    // 🧬️ Unlike `LowpolyObject::mesh_json` (see its doc comment for the confirmed engine-gap reason
+    // it stays plain), `#[dsl(lang = "json")]` IS safe here: `LowpolyObjectPatch` only derives
+    // `dsl::DslRecord` (never `DslDocument`) and is only ever printed through `DslOps::print_op`,
+    // which always uses `JoinMode::Inline` — `Shape::Embed` renders as an ordinary escaped quoted
+    // string in Inline mode (never a fence), so the Document-mode list-nesting fence-glue bug this
+    // record never reaches simply doesn't apply. Confirmed via the existing `op_text_round_trip_*`
+    // tests in the `op` crate.
+    #[dsl(lang = "json")]
     pub mesh_json: Option<String>,
 }
 

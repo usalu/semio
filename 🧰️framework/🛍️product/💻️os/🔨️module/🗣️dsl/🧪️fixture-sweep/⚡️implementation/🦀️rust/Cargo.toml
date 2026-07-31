@@ -1,0 +1,69 @@
+[package]
+name = "semio-framework-os-kernel-dsl-fixture-sweep"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Repo-wide fixture-law sweep (parse-print-reparse fixpoint + canonicalize idempotence) over every real shipped .example DSL fixture, across every app that derives store::DocumentDsl — test-only, never a real dependency of anything."
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧪️fixture-sweep/⚡️implementation/🦀️rust/📦️lib.rs"
+
+[dependencies]
+
+[dev-dependencies]
+dsl = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+writer = { path = "../../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/⚡️implementation/🦀️rust", package = "semio-s-app-writer" }
+mathematical = { path = "../../../../../../../../✏️s/🔌️plugin/➗️mathematical/🎛️app/➗️mathematical/⚡️implementation/🦀️rust", package = "semio-s-app-mathematical" }
+procedural_2d = { path = "../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-2d" }
+procedural_3d = { path = "../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-procedural-3d" }
+flow_app = { path = "../../../../../../../../✏️s/🔌️plugin/🌊️flow/🎛️app/🌊️flow/⚡️implementation/🦀️rust", package = "semio-s-app-flow" }
+gis2d = { path = "../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-gis-2d" }
+gis3d = { path = "../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-gis-3d" }
+vcs_app = { path = "../../../../../../../../✏️s/🔌️plugin/🌿️vcs/🎛️app/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-s-app-vcs" }
+present = { path = "../../../../../../../../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/⚡️implementation/🦀️rust", package = "semio-s-app-animate-present" }
+shooting = { path = "../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/⚡️implementation/🦀️rust", package = "semio-s-app-shooting" }
+sequence = { path = "../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/⚡️implementation/🦀️rust", package = "semio-s-app-sequence" }
+fem2d = { path = "../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-fem-2d" }
+fem3d = { path = "../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d" }
+process_3d = { path = "../../../../../../../../✏️s/🔌️plugin/🏭️process/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-process-3d" }
+lowpoly = { path = "../../../../../../../../✏️s/🔌️plugin/💠️lowpoly/🎛️app/💠️lowpoly/⚡️implementation/🦀️rust", package = "semio-s-app-lowpoly" }
+reasoning_wires = { path = "../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires" }
+forms = { path = "../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/⚡️implementation/🦀️rust", package = "semio-s-app-forms" }
+layout = { path = "../../../../../../../../✏️s/🔌️plugin/📏️layout/🎛️app/📏️layout/⚡️implementation/🦀️rust", package = "semio-s-app-layout" }
+cad_document = { path = "../../../../../../../../✏️s/🔌️plugin/📐️cad/🎛️app/📐️cad/⚡️implementation/🦀️rust", package = "semio-s-app-cad" }
+iso16757 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📓️iso16757/⚡️implementation/🦀️rust", package = "semio-s-app-norm-iso16757" }
+vdi3805 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📔️vdi3805/⚡️implementation/🦀️rust", package = "semio-s-app-norm-vdi3805" }
+din4108 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📕️din4108/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din4108" }
+din16798 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📗️din16798/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din16798" }
+en1990 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990" }
+en1991 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1991/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1991" }
+en1992 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1992/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1992" }
+en1993 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1993/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1993" }
+en1994 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1994/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1994" }
+en1995 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1995/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1995" }
+en1996 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1996/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1996" }
+en1997 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1997/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1997" }
+en1998 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1998/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1998" }
+en1999 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1999/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1999" }
+din18599 = { path = "../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📙️din18599/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din18599" }
+playbook = { path = "../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/⚡️implementation/🦀️rust", package = "semio-s-app-playbook" }
+imperative = { path = "../../../../../../../../✏️s/🔌️plugin/📜️imperative/🎛️app/📜️imperative/⚡️implementation/🦀️rust", package = "semio-s-app-imperative" }
+remodel = { path = "../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust", package = "semio-s-app-remodel" }
+rewrite = { path = "../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite" }
+trinity_ram = { path = "../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+dag_app = { path = "../../../../../../../../✏️s/🔌️plugin/🕸️dag/🎛️app/🕸️dag/⚡️implementation/🦀️rust", package = "semio-s-app-dag" }
+draw = { path = "../../../../../../../../✏️s/🔌️plugin/🖍️draw/🎛️app/🖍️draw/⚡️implementation/🦀️rust", package = "semio-s-app-draw" }
+raster = { path = "../../../../../../../../✏️s/🔌️plugin/🖨️raster/🎛️app/🖨️raster/⚡️implementation/🦀️rust", package = "semio-s-app-raster" }
+note_app = { path = "../../../../../../../../✏️s/🔌️plugin/🗒️note/🎛️app/🗒️note/⚡️implementation/🦀️rust", package = "semio-s-app-note" }
+puzzle_2d = { path = "../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-2d" }
+puzzle_5d = { path = "../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-5d" }
+puzzle_3d = { path = "../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-3d" }
+block_2d = { path = "../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-block-2d" }
+block_5d = { path = "../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/⚡️implementation/🦀️rust", package = "semio-s-app-block-5d" }
+block_3d = { path = "../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-block-3d" }
+home = { path = "../../../../../../../../✏️s/🔌️plugin/🪐️space/🎛️app/🏠️home/⚡️implementation/🦀️rust", package = "semio-s-app-space-home" }
+semio_framework_os = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
+sourcing = { path = "../../../../../../../../✏️s/🔌️plugin/🪵️sourcing/🎛️app/🗂️curate/⚡️implementation/🦀️rust", package = "semio-s-app-sourcing-curate" }

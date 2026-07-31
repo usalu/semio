@@ -30,6 +30,7 @@ pub struct Block2dPresentation {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Block2dHandleKind {
+    #[dsl(defines = "handle_kind")]
     pub id: String,
     pub name: String,
     pub label: String,
@@ -42,7 +43,9 @@ pub struct Block2dHandleKind {
 #[serde(rename_all = "camelCase")]
 pub struct Block2dHandleTemplate {
     pub id: String,
+    #[dsl(refs = "handle_kind")]
     pub handle_kind: String,
+    #[dsl(angle = "rad")]
     pub angle: f64,
     pub radius: f64,
 }

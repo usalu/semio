@@ -56,7 +56,7 @@ mod tests {
             media_kind: "image".into(),
             origin: [0.0, 0.0, 0.0],
             orientation: None,
-            scale: Some(json!(1.5)),
+            scale: Some(1.5),
             width_world: 8.0,
             hidden: false,
             locked: true,

@@ -4,6 +4,7 @@ members = [
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/✨️derive/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust",
+    "🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧪️fixture-sweep/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🫀️core/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/📐️format/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️value/⚡️implementation/🦀️rust",
@@ -578,6 +579,7 @@ members = [
     "✏️s/🔌️plugin/📕️norm/🎛️app/📔️vdi3805/🔨️module/🖱️ui/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/📕️norm/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/🔋️energy/🔨️module/⚙️engine/⚡️implementation/🦀️rust",
+    "✏️s/🔌️plugin/🏛️architect/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust",
     "✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust",
 ]
 

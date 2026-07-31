@@ -21,7 +21,7 @@ pub fn print_dsl(document: &Puzzle5dProjection) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use puzzle_5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
+    use puzzle_5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dScale};
 
     #[test]
     fn puzzle5d_projection_dsl_round_trips() {
@@ -35,12 +35,27 @@ mod tests {
             id: "seed-left-001".into(),
             part_kind: Some("Hexagonal Cut Concrete Forest Left".into()),
             part_2d: Puzzle5dPart2d { x: 230.7, y: 93.5, shape: Some("circle".into()), radius: Some(20.0), width: None, height: None, text: Some("Hexagonal Cut Concrete Forest Left".into()), icon_kind: None, hidden: None, locked: None },
-            part_3d: Puzzle5dPart3d { origin: [0.0, 0.0, 0.0], mesh_url: Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb".into()), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: Some("Hexagonal Cut Concrete Forest Left".into()) },
+            // 📏️ Vec3 (per-axis) case of `Puzzle5dScale`, exercised alongside the Uniform case
+            // below so both `Shape::Tuple(_, None)` arities round-trip through this test.
+            part_3d: Puzzle5dPart3d { origin: [0.0, 0.0, 0.0], mesh_url: Some("/mesh/🧊️hexagonal-cut-concrete-forest-left.glb".into()), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(Puzzle5dScale::Vec3([1.0, 1.0, 1.5])), label: Some("Hexagonal Cut Concrete Forest Left".into()) },
             grips: vec![Puzzle5dGrip {
                 id: "v0".into(),
                 grip_kind: Some("b-l".into()),
                 grip_2d: Puzzle5dGrip2d { angle: -0.1, grip_kind: Some("b-l".into()), radius: Some(3.0) },
                 grip_3d: Puzzle5dGrip3d { position: [4.05, 4.68, 3.0], direction: Some([0.0, 1.0, 0.0]), radius: Some(0.36), label: Some("b-l".into()) },
+            }],
+        });
+        projection.parts.push(Puzzle5dPart {
+            id: "seed-right-001".into(),
+            part_kind: Some("Hexagonal Cut Concrete Forest Right".into()),
+            part_2d: Puzzle5dPart2d::default(),
+            // 📏️ Uniform case of `Puzzle5dScale` — a bare number scaling all three axes alike.
+            part_3d: Puzzle5dPart3d { origin: [6.0, 0.0, 0.0], mesh_url: None, orientation: None, scale: Some(Puzzle5dScale::Uniform(1.25)), label: None },
+            grips: vec![Puzzle5dGrip {
+                id: "v0".into(),
+                grip_kind: Some("b-l".into()),
+                grip_2d: Puzzle5dGrip2d { angle: 0.0, grip_kind: None, radius: None },
+                grip_3d: Puzzle5dGrip3d { position: [0.0, 0.0, 0.0], direction: None, radius: None, label: None },
             }],
         });
         projection.fasteners.push(Puzzle5dFastener { id: "f1".into(), source: "seed-left-001:v0".into(), target: "seed-right-001:v0".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });

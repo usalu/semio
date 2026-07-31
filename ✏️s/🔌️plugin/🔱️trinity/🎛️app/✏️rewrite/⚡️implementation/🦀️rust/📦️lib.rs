@@ -56,19 +56,25 @@ impl From<LayoutPoint> for (f64, f64) {
 }
 
 /// 📐️ The full rewrite-rule document: before fixture, LHS/RHS patterns, parameter bindings, and
-/// rule-graph layout overrides. Every field binds directly through the `dsl::` engine: the `_json`
-/// fields are plain opaque `String`s (the engine's own `Shape::Text` already escapes embedded quotes/
-/// newlines — see `dsl_core::escape_text`/`unescape_text` — so a pretty-printed JSON blob round-trips
-/// with no hand-rolled quoting), `parameter_bindings` is `BTreeMap<String, PropertyValue>` (bare
-/// `HashMap` has no blanket `DslField` impl, only `BTreeMap` does, and nothing here relies on
-/// `HashMap`'s unordered iteration), and `rule_layout` uses the `LayoutPoint` twin above in place of a
-/// bare tuple.
+/// rule-graph layout overrides. Every field binds directly through the `dsl::` engine: `rhs_json` is
+/// `#[dsl(lang = "json")]` (`Shape::Embed("json")`) so its pretty-printed JSON blob prints as a fenced
+/// verbatim block instead of an escaped quoted string — `before_fixture_json`/`lhs_json` deliberately
+/// stay plain `Shape::Text` (bare `String`, no attribute): the engine's `Lines`-layout printer defers
+/// EVERY `Shape::Embed` field to print after all non-embed fields, in declaration order among
+/// themselves, with no separator forced between consecutive embed fields, so annotating more than one
+/// `_json` field here glues one field's closing fence to the next field's key on the same text line
+/// and breaks the fence lexer's "closing ``` must be alone on its line" rule — confirmed by a failing
+/// round-trip test, reverted to only the last field. `parameter_bindings` is `BTreeMap<String,
+/// PropertyValue>` (bare `HashMap` has no blanket `DslField` impl, only `BTreeMap` does, and nothing
+/// here relies on `HashMap`'s unordered iteration), and `rule_layout` uses the `LayoutPoint` twin
+/// above in place of a bare tuple.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "rewrite", layout = "lines")]
 pub struct RewriteRuleState {
     pub before_fixture_json: String,
     pub lhs_json: String,
+    #[dsl(lang = "json")]
     pub rhs_json: String,
     #[serde(default)]
     pub parameter_bindings: BTreeMap<String, PropertyValue>,

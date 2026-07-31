@@ -107,8 +107,10 @@ impl Default for BlockCamera2d {
 #[serde(rename_all = "camelCase")]
 pub struct BlockCamera3d {
     #[serde(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default)]
+    #[dsl(coord)]
     pub target: [f64; 3],
     #[serde(default = "block_one_f64")]
     pub zoom: f64,

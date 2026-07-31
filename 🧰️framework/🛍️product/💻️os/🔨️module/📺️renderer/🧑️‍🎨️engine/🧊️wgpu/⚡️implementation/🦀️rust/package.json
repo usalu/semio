@@ -29,5 +29,8 @@
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/product/os/module/renderer/wgpu"
+  },
+  "nx": {
+    "includedScripts": []
   }
 }

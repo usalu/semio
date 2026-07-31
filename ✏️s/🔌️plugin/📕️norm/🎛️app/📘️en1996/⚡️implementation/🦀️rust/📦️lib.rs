@@ -76,26 +76,37 @@ pub mod part_2 {
 #[dsl(extension = "en1996", layout = "lines")]
 pub struct Document {
     pub m_ed_knm: f64,
+    #[dsl(unit = "kN")]
     pub n_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub v_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub h_ed_kn: f64,
     pub z_mm3: f64,
+    #[dsl(unit = "mm2")]
     pub area_mm2: f64,
+    #[dsl(unit = "mm2")]
     pub shear_area_mm2: f64,
+    #[dsl(unit = "MPa")]
     pub f_k_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub f_vk_mpa: f64,
     pub annex: AnnexChoice,
     pub masonry_class: MasonryClass,
     pub design_situation: DesignSituation,
     pub mu: f64,
+    #[dsl(unit = "mm")]
     pub wall_thickness_mm: f64,
     pub fire_resistance_min: u32,
     pub unit: String,
     pub exposure: part_2::ExposureClass,
     pub mortar: part_2::MortarClass,
+    #[dsl(unit = "mm")]
     pub bed_joint_thickness_mm: f64,
     pub storeys: u32,
+    #[dsl(unit = "mm")]
     pub h_ef_mm: f64,
+    #[dsl(unit = "mm")]
     pub t_ef_mm: f64,
 }
 

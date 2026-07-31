@@ -9,78 +9,124 @@ use serde::{Deserialize, Serialize};
 #[dsl(extension = "en1993", layout = "lines")]
 pub struct Document {
     pub annex: AnnexChoice,
+    #[dsl(unit = "kN")]
     pub n_ed_kn: f64,
     pub m_ed_knm: f64,
+    #[dsl(unit = "kN")]
     pub v_ed_kn: f64,
+    #[dsl(unit = "mm2")]
     pub a_mm2: f64,
+    #[dsl(unit = "mm2")]
     pub a_v_mm2: f64,
     pub w_pl_mm3: f64,
+    #[dsl(unit = "MPa")]
     pub f_y_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub f_u_mpa: f64,
     pub chi: f64,
+    #[dsl(unit = "mm2")]
     pub a_net_mm2: f64,
+    #[dsl(unit = "kN")]
     pub tension_n_ed_kn: f64,
+    #[dsl(unit = "mm")]
     pub fire_thickness_mm: f64,
     pub fire_rating: String,
     pub fire_massivity: f64,
     pub fire_mu_0: f64,
     pub fire_design_temperature_c: f64,
+    #[dsl(unit = "mm")]
     pub cf_b_bar_mm: f64,
+    #[dsl(unit = "mm")]
     pub cf_t_mm: f64,
     pub cf_k_sigma: f64,
     pub cf_psi: f64,
+    #[dsl(unit = "kN")]
     pub cf_n_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub cf_gross_resistance_kn: f64,
     pub stainless_m_ed_knm: f64,
     pub stainless_w_pl_mm3: f64,
+    #[dsl(unit = "MPa")]
     pub stainless_f_y_mpa: f64,
     pub plated_lambda_p: f64,
+    #[dsl(unit = "MPa")]
     pub plated_sigma_ed_mpa: f64,
+    #[dsl(unit = "mm")]
     pub silo_t_mm: f64,
+    #[dsl(unit = "mm")]
     pub silo_r_mm: f64,
+    #[dsl(unit = "MPa")]
     pub shell_sigma_x_ed_mpa: f64,
     pub silo_k: f64,
     pub silo_gamma_kn_m3: f64,
+    #[dsl(unit = "m")]
     pub silo_depth_m: f64,
+    #[dsl(unit = "kN")]
     pub bolt_f_ed_kn: f64,
     pub bolt_n_bolts: u32,
+    #[dsl(unit = "mm2")]
     pub bolt_a_s_mm2: f64,
+    #[dsl(unit = "mm")]
     pub bolt_e1_mm: f64,
+    #[dsl(unit = "mm")]
     pub bolt_e2_mm: f64,
+    #[dsl(unit = "mm")]
     pub bolt_d0_mm: f64,
+    #[dsl(unit = "mm")]
     pub bolt_d_mm: f64,
+    #[dsl(unit = "mm")]
     pub bolt_t_mm: f64,
+    #[dsl(unit = "MPa")]
     pub bolt_f_u_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub bolt_f_ub_mpa: f64,
+    #[dsl(unit = "mm")]
     pub weld_a_mm: f64,
+    #[dsl(unit = "mm")]
     pub weld_l_mm: f64,
+    #[dsl(unit = "MPa")]
     pub weld_f_u_mpa: f64,
     pub weld_steel_grade: String,
+    #[dsl(unit = "kN")]
     pub weld_f_ed_kn: f64,
+    #[dsl(unit = "MPa")]
     pub delta_sigma_mpa: f64,
     pub fatigue_category: u8,
     pub fatigue_method: String,
     pub t10_steel_subgrade: String,
+    #[dsl(unit = "mm")]
     pub t10_actual_thickness_mm: f64,
     pub t10_t_ed_c: f64,
+    #[dsl(unit = "kN")]
     pub tension_component_f_uk_kn: f64,
+    #[dsl(unit = "kN")]
     pub tension_component_f_k_kn: f64,
+    #[dsl(unit = "kN")]
     pub tension_component_n_ed_kn: f64,
     pub hss_w_el_mm3: f64,
+    #[dsl(unit = "MPa")]
     pub hss_f_y_mpa: f64,
     pub hss_section_class: u8,
     pub hss_m_ed_knm: f64,
     pub bridge_lambda: f64,
     pub bridge_phi_2: f64,
+    #[dsl(unit = "MPa")]
     pub bridge_delta_sigma_p_mpa: f64,
     pub tower_wind_factor: f64,
+    #[dsl(unit = "kN")]
     pub tower_n_ed_kn: f64,
+    #[dsl(unit = "MPa")]
     pub pile_sigma_mpa: f64,
     pub pile_k_red: f64,
+    #[dsl(unit = "kN")]
     pub pile_n_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub crane_f_z_ed_kn: f64,
+    #[dsl(unit = "mm")]
     pub crane_wheel_contact_length_mm: f64,
+    #[dsl(unit = "mm")]
     pub crane_dispersion_mm: f64,
+    #[dsl(unit = "mm")]
     pub crane_t_w_mm: f64,
 }
 

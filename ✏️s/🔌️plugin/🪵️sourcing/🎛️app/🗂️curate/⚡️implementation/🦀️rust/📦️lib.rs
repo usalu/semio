@@ -9,9 +9,32 @@ pub const SOURCING_CURATE_SCHEMA: &str = "sourcing.curate/v1";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum GeometryRecipe {
-    Box { width: f64, height: f64, depth: f64 },
-    Frame { width: f64, height: f64, depth: f64, profile: f64 },
-    Slab { width: f64, depth: f64, thickness: f64 },
+    Box {
+        #[dsl(unit = "m")]
+        width: f64,
+        #[dsl(unit = "m")]
+        height: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+    },
+    Frame {
+        #[dsl(unit = "m")]
+        width: f64,
+        #[dsl(unit = "m")]
+        height: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        #[dsl(unit = "m")]
+        profile: f64,
+    },
+    Slab {
+        #[dsl(unit = "m")]
+        width: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        #[dsl(unit = "m")]
+        thickness: f64,
+    },
     Mesh { positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32> },
 }
 //#endregion 🔖️Geometry
@@ -25,6 +48,7 @@ pub enum GeometryRecipe {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct ObjectKind {
+    #[dsl(defines = "object")]
     pub id: String,
     pub name: String,
     pub module_id: String,
@@ -71,6 +95,7 @@ pub struct Filters {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CuratedItem {
+    #[dsl(refs = "object")]
     pub object_id: String,
     pub count: u32,
 }
@@ -80,6 +105,7 @@ pub struct CuratedItem {
 #[serde(rename_all = "camelCase")]
 pub struct CurateRuntime {
     #[serde(default)]
+    #[dsl(refs = "object")]
     pub selected_object_id: Option<String>,
 }
 

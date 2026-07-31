@@ -41,6 +41,9 @@ pub struct DrawTransform {
     pub y: f64,
     pub scale_x: f64,
     pub scale_y: f64,
+    /// 📐️ Radians — `draw_engine`'s compose/decompose matrix helpers call `.cos()`/`.sin()`
+    /// directly on this field with no `to_radians()` conversion.
+    #[dsl(angle = "rad")]
     pub rotation: f64,
 }
 
@@ -322,7 +325,10 @@ pub enum PathSegment {
         rx: f64,
         #[dsl(positional)]
         ry: f64,
+        /// 📐️ Degrees — `arc_segment_to_cubics`'s `rotation_deg` parameter calls `.to_radians()`
+        /// on this value, matching SVG path data's `A rx ry x-axis-rotation ...` convention.
         #[dsl(positional)]
+        #[dsl(angle = "deg")]
         rotation: f64,
         #[dsl(positional)]
         large_arc: bool,

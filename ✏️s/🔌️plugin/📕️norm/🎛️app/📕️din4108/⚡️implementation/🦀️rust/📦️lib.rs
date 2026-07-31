@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerDocument {
-    #[dsl(positional)]
+    #[dsl(positional, unit = "m")]
     pub thickness_m: f64,
     #[dsl(positional)]
     pub lambda_w_mk: f64,
@@ -34,6 +34,7 @@ pub struct Document {
     pub irradiance_w_m2: f64,
     pub moisture_mu_exterior: f64,
     pub moisture_mu_interior: f64,
+    #[dsl(unit = "m2")]
     pub envelope_area_m2: f64,
     pub bb2_details_conform: bool,
     pub application_type: String,

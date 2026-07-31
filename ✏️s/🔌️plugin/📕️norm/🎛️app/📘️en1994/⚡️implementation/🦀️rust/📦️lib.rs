@@ -10,25 +10,37 @@ use serde::{Deserialize, Serialize};
 pub struct Document {
     pub annex: AnnexChoice,
     pub m_ed_knm: f64,
+    #[dsl(unit = "kN")]
     pub v_ed_kn: f64,
     pub m_pla: f64,
     pub m_pl_rd: f64,
     pub eta: f64,
     pub v_l_rd: f64,
+    #[dsl(unit = "mm")]
     pub insulation_thickness_mm: f64,
     pub fire_rating: String,
     pub deck_type: String,
+    #[dsl(unit = "MPa")]
     pub delta_sigma_mpa: f64,
     pub fatigue_detail: String,
+    #[dsl(unit = "mm")]
     pub d_mm: f64,
+    #[dsl(unit = "mm")]
     pub h_sc_mm: f64,
+    #[dsl(unit = "MPa")]
     pub f_ck_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub f_u_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub e_cm_mpa: f64,
+    #[dsl(unit = "kN")]
     pub v_ed_per_stud_kn: f64,
+    #[dsl(unit = "m")]
     pub span_m: f64,
+    #[dsl(unit = "MPa")]
     pub f_y_mpa: f64,
     pub n_cycles_stud: f64,
+    #[dsl(unit = "MPa")]
     pub delta_tau_stud_mpa: f64,
 }
 

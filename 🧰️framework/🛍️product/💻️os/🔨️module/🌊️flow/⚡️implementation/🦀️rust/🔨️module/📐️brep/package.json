@@ -19,5 +19,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/product/os/module/flow/module/brep"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
 }

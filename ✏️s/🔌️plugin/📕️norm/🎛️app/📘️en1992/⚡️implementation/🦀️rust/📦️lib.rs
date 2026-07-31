@@ -35,38 +35,61 @@ pub mod part_3 {
 pub struct Document {
     pub annex: AnnexChoice,
     pub m_ed_knm: f64,
+    #[dsl(unit = "kN")]
     pub v_ed_kn: f64,
     pub f_ck: f64,
+    #[dsl(unit = "mm")]
     pub b_mm: f64,
+    #[dsl(unit = "mm")]
     pub d_mm: f64,
+    #[dsl(unit = "mm2")]
     pub a_s_mm2: f64,
     pub f_yk: f64,
     pub rho_l: f64,
+    #[dsl(unit = "kN")]
     pub n_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub p_kn: f64,
+    #[dsl(unit = "mm2")]
     pub a_c_mm2: f64,
     pub use_fem: bool,
+    #[dsl(unit = "m")]
     pub span_m: f64,
     pub udl_kn_m: f64,
     pub fire_rating: part_1_2::FireRating,
+    #[dsl(unit = "mm")]
     pub provided_axis_distance_mm: f64,
+    #[dsl(unit = "MPa")]
     pub bridge_sigma_c_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub bridge_delta_sigma_s_mpa: f64,
     pub tightness_class: part_3::TightnessClass,
     pub hd_over_h: f64,
+    #[dsl(unit = "MPa")]
     pub liquid_sigma_s_mpa: f64,
     pub liquid_rho_p_eff: f64,
+    #[dsl(unit = "MPa")]
     pub liquid_f_ct_eff_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub liquid_e_s_mpa: f64,
+    #[dsl(unit = "mm")]
     pub liquid_s_r_max_mm: f64,
+    #[dsl(unit = "mm")]
     pub anchor_h_ef_mm: f64,
     pub anchor_cracked: bool,
+    #[dsl(unit = "MPa")]
     pub anchor_f_uk_mpa: f64,
+    #[dsl(unit = "MPa")]
     pub anchor_f_yk_mpa: f64,
+    #[dsl(unit = "mm2")]
     pub anchor_a_s_mm2: f64,
+    #[dsl(unit = "mm")]
     pub anchor_d_mm: f64,
+    #[dsl(unit = "mm")]
     pub anchor_c1_mm: f64,
+    #[dsl(unit = "kN")]
     pub anchor_n_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub anchor_v_ed_kn: f64,
 }
 

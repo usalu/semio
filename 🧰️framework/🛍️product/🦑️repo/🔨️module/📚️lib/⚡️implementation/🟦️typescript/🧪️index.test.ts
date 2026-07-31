@@ -207,12 +207,14 @@ describe("micro-commit", () => {
     expect(branchValidationError("micro-commit", { ok: true, name: "" })).toContain("detached HEAD");
     expect(branchValidationError("micro-commit", { ok: true, name: "🐙️ueli/feature" })).toContain('current branch "🐙️ueli/feature"');
     expect(branchValidationError("micro-commit", { ok: true, name: "🐙️ueli/⛳️wip" })).toBeNull();
-    expect(branchValidationError("micro-commit", { ok: true, name: "🐙️ueli/⛳️wip" })).toBeNull();
+    expect(branchValidationError("micro-commit", { ok: true, name: "🐙ueli/⛳wip" })).toBeNull();
   });
 
   test("extractCounterFromSubject reads formatted subject lines", async () => {
     const { extractCounterFromSubject } = await import("../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts");
     expect(extractCounterFromSubject("🧑️ueli🎆️26🌙️06☀️02🚩️009")).toEqual({ nnn: 9, line1Base: "🧑️ueli🎆️26🌙️06☀️02" });
+    expect(extractCounterFromSubject("🐙ueli🎆26🌙06☀04🚩397")).toEqual({ nnn: 397, line1Base: "🐙ueli🎆26🌙06☀04" });
+    expect(extractCounterFromSubject("🐙ueli🎆26🌙06☀04🚩︎396")).toEqual({ nnn: 396, line1Base: "🐙ueli🎆26🌙06☀04" });
     expect(extractCounterFromSubject("33")).toBeNull();
     expect(extractCounterFromSubject("Merge branch foo")).toBeNull();
   });
@@ -227,6 +229,7 @@ describe("micro-commit", () => {
   test("line1BaseFromBundleTag reads WIP epoch from squash tag", async () => {
     const { line1BaseFromBundleTag } = await import("../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts");
     expect(line1BaseFromBundleTag("🐙️ueli🎆️26🌙️06☀️04🚩️")).toBe("🐙️ueli🎆️26🌙️06☀️04");
+    expect(line1BaseFromBundleTag("🐙ueli🎆26🌙06☀04🚩")).toBe("🐙ueli🎆26🌙06☀04");
     expect(line1BaseFromBundleTag("🐙️ueli🎆️26🌙️06☀️04🚩️151")).toBeNull();
   });
 
@@ -239,6 +242,14 @@ describe("micro-commit", () => {
     expect(bumped.nnn).toBe("034");
     const fresh = bumpCounterFromHistory(["unrelated"], contributor, new Date("2026-06-02T12:00:00"));
     expect(fresh.nnn).toBe("001");
+  });
+
+  test("bumpCounterFromHistory preserves selector-free history with canonical output", async () => {
+    const { bumpCounterFromHistory } = await import("../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts");
+    const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
+    const bumped = bumpCounterFromHistory(["🦢other🎆26🌙07☀31🚩999", "🐙ueli🎆26🌙06☀04🚩397", "🐙ueli🎆26🌙06☀04🚩︎396"], contributor, new Date("2026-07-31T12:00:00"));
+    expect(bumped).toEqual({ line1Base: "🐙️ueli🎆️26🌙️06☀️04", nnn: "398" });
+    expect(() => bumpCounterFromHistory(["🐙ueli🎆26🌙6☀04🚩397"], contributor, new Date("2026-07-31T12:00:00"))).toThrow("refusing to reset counter to 001");
   });
 
   test("bumpCounterFromHistory continues numeric GitKraken subjects with WIP epoch", async () => {
@@ -502,7 +513,7 @@ describe("micro-commit", () => {
       spawnSync("git", ["config", "user.email", "u@example.com"], { cwd: root });
       spawnSync("git", ["config", "user.name", "U"], { cwd: root });
       const contributor = { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" };
-      const msg = buildMicroCommitMessage(root, contributor, ["🎆️test reset"]);
+      const msg = buildMicroCommitMessage(root, contributor, ["🎆️test reset"], { countRepoByLanguage: () => ({ TypeScript: 1 }) });
       writeMicroCommitTemplates(root, msg);
       writeFileSync(join(root, ".git/gkcommittemplate-099.txt"), "stale numbered", "utf8");
       wipeAfterCommit(root);
@@ -528,7 +539,9 @@ describe("micro-commit", () => {
     const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-tpl-"));
     try {
       expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
-      const msg = buildMicroCommitMessage(root, { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" }, ["🎆️bullet"]);
+      const msg = buildMicroCommitMessage(root, { alias: "ueli", emoji: "🐙️", name: "Ueli", email: "u@example.com" }, ["🎆️bullet"], {
+        countRepoByLanguage: () => ({ TypeScript: 1 }),
+      });
       writeMicroCommitTemplates(root, msg);
       const gk = readdirSync(join(root, ".git")).filter((n) => n.startsWith("gkcommittemplate"));
       expect(gk).toEqual(["gkcommittemplate.txt"]);

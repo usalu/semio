@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../framework/module/ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -127,11 +127,11 @@ const config: StorybookConfig = {
     };
 
     config.plugins = config.plugins || [];
-    const hasTailwindPlugin = config.plugins.some((plugin) => program && typeof program === "object" && "name" in program && program.name === "@tailwindcss/vite");
+    const hasTailwindPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite");
     if (!hasTailwindPlugin) {
       config.plugins.push(...tailwindcss());
     }
-    const hasUiAssetsPlugin = config.plugins.some((plugin) => program && typeof program === "object" && "name" in program && program.name === "ui-assets-serve");
+    const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve");
     if (!hasUiAssetsPlugin) {
       config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
     }
@@ -151,7 +151,7 @@ const config: StorybookConfig = {
     const indicesToRemove: number[] = [];
     for (let i = 0; i < config.plugins.length; i++) {
       const plugin: any = config.plugins[i];
-      if (program === "@mdx-js/rollup" || (program && typeof program === "object" && program.name === "@mdx-js/rollup")) {
+      if (plugin === "@mdx-js/rollup" || (plugin && typeof plugin === "object" && plugin.name === "@mdx-js/rollup")) {
         indicesToRemove.push(i);
         continue;
       }

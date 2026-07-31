@@ -18,18 +18,18 @@ handle-kinds [id:TEXT name:TEXT label:TEXT color:TEXT default-wire-kind:TEXT] {
   c-b c-b c-b "hsl(37 52% 48%)" cable.link
   c-t c-t c-t "hsl(169 52% 48%)" cable.link
 }
-handles [id:TEXT handle-kind:TEXT angle:NUM radius:NUM] {
-  h0 b-l -1.5707963267948966 0.36
-  h1 b-l-m -0.9995976625058433 0.36
-  h2 b-l -0.42839899821678995 0.36
-  h3 b-s-m 0.14279966607226324 0.36
-  h4 b-s-m 0.7139983303613167 0.36
-  h5 b-s 1.28519699465037 0.36
-  h6 b-s-m 1.856395658939423 0.36
-  h7 c-b 2.4275943232284765 0.36
-  h8 c-t 2.99879298751753 0.36
-  h9 c-b 3.569991651806583 0.36
-  h10 c-t 4.141190316095637 0.36
+handles [id:TEXT handle-kind:REF angle:ANG radius:NUM] {
+  h0 b-l -1.5707963267948966rad 0.36
+  h1 b-l-m -0.9995976625058433rad 0.36
+  h2 b-l -0.42839899821678995rad 0.36
+  h3 b-s-m 0.14279966607226324rad 0.36
+  h4 b-s-m 0.7139983303613167rad 0.36
+  h5 b-s 1.28519699465037rad 0.36
+  h6 b-s-m 1.856395658939423rad 0.36
+  h7 c-b 2.4275943232284765rad 0.36
+  h8 c-t 2.99879298751753rad 0.36
+  h9 c-b 3.569991651806583rad 0.36
+  h10 c-t 4.141190316095637rad 0.36
 }
 compatibility [id:TEXT source:TEXT target:TEXT bidirectional:BOOL] {
 }

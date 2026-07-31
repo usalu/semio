@@ -8,27 +8,42 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "en1997", layout = "lines")]
 pub struct Document {
+    #[dsl(unit = "kN")]
     pub v_ed_kn: f64,
+    #[dsl(unit = "kN")]
     pub h_ed_kn: f64,
+    #[dsl(unit = "m2")]
     pub footing_area_m2: f64,
     pub phi_deg: f64,
+    #[dsl(unit = "kPa")]
     pub c_kpa: f64,
     pub gamma_kn_m3: f64,
+    #[dsl(unit = "m")]
     pub b_m: f64,
+    #[dsl(unit = "m")]
     pub d_f_m: f64,
+    #[dsl(unit = "MPa")]
     pub e_s_mpa: f64,
     pub nu: f64,
     pub design_approach: String,
     pub annex: AnnexChoice,
+    #[dsl(unit = "mm")]
     pub settlement_limit_mm: f64,
+    #[dsl(unit = "kN")]
     pub n_pile_ed_kn: f64,
     pub alpha_s: f64,
+    #[dsl(unit = "m")]
     pub pile_d_m: f64,
+    #[dsl(unit = "kPa")]
     pub q_s_kpa: f64,
+    #[dsl(unit = "m")]
     pub pile_l_m: f64,
+    #[dsl(unit = "kPa")]
     pub q_b_kpa: f64,
+    #[dsl(unit = "m2")]
     pub pile_base_area_m2: f64,
     pub pile_n_profiles: u32,
+    #[dsl(unit = "m")]
     pub z_investigated_m: f64,
 }
 

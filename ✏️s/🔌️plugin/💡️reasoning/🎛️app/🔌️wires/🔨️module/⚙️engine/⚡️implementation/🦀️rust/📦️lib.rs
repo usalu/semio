@@ -169,11 +169,13 @@ impl mindmap::MindmapExtension for DefaultWiresExtension {
 }
 
 /// 🔢️ `identityId`/`relationshipId` read as a whole `u64` regardless of whether the source JSON
-/// number is an integer or a float literal — the `.wires` fixture's `wires_fixture`/`board_fixture`
-/// are opaque `dsl::Shape::Value` literals (see `reasoning_wires::MindmapWiresDocument`), whose
-/// `DslValue::Number` is a single `f64` (no JSON int/float distinction), so every id round-tripped
-/// through the `.wires` DSL text now arrives here as e.g. `Number(1.0)`, not `Number(1)`; bare
-/// `.as_u64()` would return `None` for that representation.
+/// number is an integer or a float literal. `MindmapWiresDocument`'s `wires_fixture`/`board_fixture`
+/// are opaque `serde_json::Value` at rest (see `reasoning_wires::MindmapWiresDocument`'s doc), but
+/// the `.wires` DSL's own `IdentityDsl::identity_id`/`RelationshipDsl::relationship_id` type these as
+/// plain `u64` (see `reasoning_wires`'s `🔖️DslMirror` region), so ids round-tripped through the
+/// `.wires` DSL text now arrive here as exact JSON integers (`Number(1)`); this fallback stays for
+/// documents built or patched outside that DSL path (e.g. hand-constructed `Value` fixtures), where
+/// nothing enforces the integer representation.
 fn json_id(value: Option<&Value>) -> Option<mindmap::TopicId> {
     value.and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|float| float as u64)))
 }

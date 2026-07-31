@@ -7199,6 +7199,66 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-kernel-dsl-fixture-sweep"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os",
+ "semio-framework-os-kernel-dsl",
+ "semio-framework-os-kernel-store",
+ "semio-s-app-animate-present",
+ "semio-s-app-block-2d",
+ "semio-s-app-block-3d",
+ "semio-s-app-block-5d",
+ "semio-s-app-cad",
+ "semio-s-app-dag",
+ "semio-s-app-draw",
+ "semio-s-app-fem-2d",
+ "semio-s-app-fem-3d",
+ "semio-s-app-flow",
+ "semio-s-app-forms",
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-3d",
+ "semio-s-app-imperative",
+ "semio-s-app-layout",
+ "semio-s-app-lowpoly",
+ "semio-s-app-mathematical",
+ "semio-s-app-norm-din16798",
+ "semio-s-app-norm-din18599",
+ "semio-s-app-norm-din4108",
+ "semio-s-app-norm-en1990",
+ "semio-s-app-norm-en1991",
+ "semio-s-app-norm-en1992",
+ "semio-s-app-norm-en1993",
+ "semio-s-app-norm-en1994",
+ "semio-s-app-norm-en1995",
+ "semio-s-app-norm-en1996",
+ "semio-s-app-norm-en1997",
+ "semio-s-app-norm-en1998",
+ "semio-s-app-norm-en1999",
+ "semio-s-app-norm-iso16757",
+ "semio-s-app-norm-vdi3805",
+ "semio-s-app-note",
+ "semio-s-app-playbook",
+ "semio-s-app-procedural-2d",
+ "semio-s-app-procedural-3d",
+ "semio-s-app-process-3d",
+ "semio-s-app-puzzle-2d",
+ "semio-s-app-puzzle-3d",
+ "semio-s-app-puzzle-5d",
+ "semio-s-app-raster",
+ "semio-s-app-reasoning-wires",
+ "semio-s-app-remodel",
+ "semio-s-app-sequence",
+ "semio-s-app-shooting",
+ "semio-s-app-sourcing-curate",
+ "semio-s-app-space-home",
+ "semio-s-app-trinity-rewrite",
+ "semio-s-app-vcs",
+ "semio-s-app-writer",
+ "semio-s-plugin-trinity-ram",
+]
+
+[[package]]
 name = "semio-framework-os-kernel-dsl-schema"
 version = "0.1.0"
 dependencies = [
@@ -10084,6 +10144,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1990",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10144,6 +10205,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1991",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10205,6 +10267,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1992",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10266,6 +10329,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1993",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10327,6 +10391,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1994",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10386,6 +10451,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1995",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10451,6 +10517,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1996",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10646,6 +10713,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-norm-en1999",
+ "semio-s-plugin-norm-core",
 ]
 
 [[package]]
@@ -10923,6 +10991,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-playbook",
+ "serde_json",
 ]
 
 [[package]]
@@ -10945,6 +11014,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-store",
  "semio-s-app-playbook",
+ "serde_json",
 ]
 
 [[package]]
@@ -12669,6 +12739,20 @@ dependencies = [
  "vello",
  "wgpu",
  "winit",
+]
+
+[[package]]
+name = "semio-s-plugin-architect-spine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
+ "semio-framework-os-kernel-vcs",
+ "semio-framework-plugin",
+ "semio-s-plugin-architect-spine-module",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

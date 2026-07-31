@@ -3,6 +3,12 @@
 use rewrite::{LayoutPoint, RewriteRuleState};
 use store::DocumentDsl;
 
+/// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewrite` DSL — mirrors the
+/// `trinity-rewrite` app's own real default rule (`default_rule_state`/`DEFAULT_LHS_JSON`/
+/// `DEFAULT_RHS_JSON` in its `ui` crate) over a trimmed two-node/one-edge slice of the bundled
+/// `🔱️nakagin-capsule-tower.trinity` before-fixture.
+pub const NAKAGIN_LABEL_CORE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/📚️example/🔱️nakagin-label-core.rewrite");
+
 /// 📖️ Parses `.rewrite` DSL text into a `RewriteRuleState`.
 pub fn parse_dsl(text: &str) -> Result<RewriteRuleState, store::TextError> {
     <RewriteRuleState as store::DocumentDsl>::parse_dsl(text)
@@ -39,6 +45,13 @@ mod tests {
     #[test]
     fn dsl_round_trip_rewrite_rule_state() {
         assert_dsl_round_trip(&sample_rule_state());
+    }
+
+    #[test]
+    fn nakagin_label_core_example_dsl_round_trips() {
+        let document = parse_dsl(NAKAGIN_LABEL_CORE_EXAMPLE_TEXT).expect("parse nakagin label-core example");
+        assert_dsl_round_trip(&document);
+        assert_dsl_pack_equivalence(&document);
     }
 
     //#region 🔖️DslErrorTests

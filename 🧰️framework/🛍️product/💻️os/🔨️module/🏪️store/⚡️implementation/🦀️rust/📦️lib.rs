@@ -3895,6 +3895,44 @@ pub mod test_support {
         assert_eq!(&parsed, projection, "dsl round trip diverged;\nprinted:\n{printed}");
     }
 
+    /// @emoji 🧭️ Non-panicking twin of [`assert_dsl_round_trip`] for a repo-wide fixture-law SWEEP
+    /// (W6: `.🦑️repo/🎫️tickets/.../DSL-FIXTURE-LAW-SWEEP`): checks BOTH laws directly against real
+    /// shipped `📚️example/**` fixture TEXT (not a hand-built in-memory value), which is exactly what
+    /// a single per-app round-trip test built on its own simpler hardcoded example can miss — a
+    /// printer/parser asymmetry only a real fixture's actual formatting (comment placement, field
+    /// order, quoting) would trip.
+    ///
+    /// **Law 1 — parse→print→reparse fixpoint**: `text` parses to `first`; printing then reparsing
+    /// `first` must recover an equal value (`second`) — the generic form of [`assert_dsl_round_trip`],
+    /// but starting from arbitrary fixture text instead of an already-canonical in-memory value.
+    ///
+    /// **Law 2 — canonicalize idempotence**: `canonicalize(x) := print_dsl(parse_dsl(x))`. For every
+    /// derive-generated `DocumentDsl` impl this IS `dsl_schema::canonicalize(x, spec, opts)`
+    /// (`__rt::print_document_record`/`parse_document_record` route straight through
+    /// `dsl_schema::parse`/`print` in `JoinMode::Document`, the exact pair `canonicalize` composes)
+    /// — and it is the correct generalization for hand-rolled (Route A idiom) `DocumentDsl` impls
+    /// that have no `RecordSpec` at all. `canonicalize(text) == printed_once`;
+    /// `canonicalize(printed_once) == printed_twice`; idempotence is `printed_once == printed_twice`.
+    ///
+    /// Returns `Ok(())` on success, `Err(description)` on the first law violated — never panics, so
+    /// a caller sweeping many fixture files can collect every failure before reporting.
+    pub fn check_dsl_fixture_text_laws<P>(text: &str) -> Result<(), String>
+    where
+        P: DocumentDsl + PartialEq,
+    {
+        let first = P::parse_dsl(text).map_err(|error| format!("parse failed: {error}"))?;
+        let printed_once = first.print_dsl();
+        let second = P::parse_dsl(&printed_once).map_err(|error| format!("reparse failed: {error}\nprinted:\n{printed_once}"))?;
+        if first != second {
+            return Err(format!("parse->print->reparse fixpoint diverged;\nprinted:\n{printed_once}"));
+        }
+        let printed_twice = second.print_dsl();
+        if printed_once != printed_twice {
+            return Err(format!("canonicalize is not idempotent;\nonce:\n{printed_once}\ntwice:\n{printed_twice}"));
+        }
+        Ok(())
+    }
+
     /// @emoji 📦️ Asserts a pack round trip: `P::decode_pack(&projection.encode_pack())` recovers an
     /// equal projection — the pack sibling of `assert_dsl_round_trip`.
     pub fn assert_pack_round_trip<P>(projection: &P)

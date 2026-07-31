@@ -24,9 +24,11 @@ impl Default for Puzzle2dCamera {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle2dHandle {
+    #[dsl(defines = "handle")]
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub handle_kind: Option<String>,
+    #[dsl(angle = "rad")]
     pub angle: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
@@ -82,7 +84,9 @@ pub struct Puzzle2dNode {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle2dEdge {
     pub id: String,
+    #[dsl(refs = "handle")]
     pub source: String,
+    #[dsl(refs = "handle")]
     pub target: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edge_kind: Option<String>,

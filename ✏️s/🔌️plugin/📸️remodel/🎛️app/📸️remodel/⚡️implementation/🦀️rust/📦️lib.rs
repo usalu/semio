@@ -219,6 +219,7 @@ pub struct CameraCalibration {
 pub struct RigExtrinsic {
     pub camera_id: String,
     pub rotation_wxyz: [f32; 4],
+    #[dsl(coord)]
     pub translation_m: [f32; 3],
 }
 
@@ -252,6 +253,7 @@ pub struct GcpObservation {
 pub struct GroundControlPoint {
     pub id: String,
     pub name: String,
+    #[dsl(coord)]
     pub world_position: [f64; 3],
     #[dsl(table)]
     pub observations: Vec<GcpObservation>,
@@ -404,7 +406,9 @@ impl Default for DenseParams {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MeshParams {
+    #[dsl(unit = "mm")]
     pub tsdf_voxel_size_mm: f32,
+    #[dsl(unit = "mm")]
     pub tsdf_truncation_mm: f32,
     pub decimate_target_triangles: u32,
     pub smoothing_iterations: u32,
@@ -454,8 +458,11 @@ pub struct GeoParams {
     pub origin_lon: Option<f64>,
     pub origin_lat: Option<f64>,
     pub origin_alt: Option<f64>,
+    #[dsl(unit = "m")]
     pub gsd_m: f32,
+    #[dsl(unit = "m")]
     pub dsm_cell_m: f32,
+    #[dsl(unit = "m")]
     pub dtm_filter_radius_m: f32,
     pub ortho_max_px: u32,
 }
@@ -534,6 +541,7 @@ pub enum ReconstructionStage {
 pub struct CameraPosePreview {
     pub camera_id: String,
     pub rotation_wxyz: [f32; 4],
+    #[dsl(coord)]
     pub translation: [f32; 3],
 }
 
@@ -866,6 +874,7 @@ pub struct MotionTrackSummary {
     pub id: String,
     pub length: u32,
     pub class: TrackClass,
+    #[dsl(unit = "m/s")]
     pub mean_speed_m_s: f32,
 }
 

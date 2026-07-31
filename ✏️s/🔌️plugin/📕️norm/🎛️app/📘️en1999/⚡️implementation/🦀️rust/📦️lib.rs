@@ -8,30 +8,42 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "en1999", layout = "lines")]
 pub struct Document {
+    #[dsl(unit = "kN")]
     pub n_ed_kn: f64,
     pub m_ed_knm: f64,
+    #[dsl(unit = "mm2")]
     pub a_mm2: f64,
     pub w_el_mm3: f64,
     pub alloy: String,
     pub chi: f64,
+    #[dsl(unit = "mm4")]
     pub i_t_mm4: f64,
+    #[dsl(unit = "mm")]
     pub l_cr_mm: f64,
     pub theta_c: f64,
     pub delta_sigma_ed: f64,
     pub delta_sigma_c: f64,
     pub fatigue_m: f64,
     pub n_cycles: f64,
+    #[dsl(unit = "kN")]
     pub v_weld_ed_kn: f64,
+    #[dsl(unit = "mm")]
     pub weld_throat_mm: f64,
+    #[dsl(unit = "mm")]
     pub weld_length_mm: f64,
     pub beta_w: f64,
+    #[dsl(unit = "mm")]
     pub sheet_b_mm: f64,
+    #[dsl(unit = "mm")]
     pub sheet_t_mm: f64,
     pub sheet_k_sigma: f64,
     pub sheet_w_el_mm3: f64,
     pub sheet_m_ed_knm: f64,
+    #[dsl(unit = "mm")]
     pub shell_t_mm: f64,
+    #[dsl(unit = "mm")]
     pub shell_r_mm: f64,
+    #[dsl(unit = "MPa")]
     pub sigma_ed_shell_mpa: f64,
     pub annex: AnnexChoice,
 }

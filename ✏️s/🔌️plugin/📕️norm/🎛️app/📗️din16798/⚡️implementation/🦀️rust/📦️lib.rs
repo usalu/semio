@@ -12,10 +12,13 @@ pub struct Document {
     pub occupancy: String,
     pub comfort_category: String,
     pub t_op_c: f64,
+    #[dsl(unit = "pct")]
     pub rh_percent: f64,
+    #[dsl(unit = "m/s")]
     pub air_speed_m_s: f64,
     pub theta_rm_c: f64,
     pub co2_ppm: f64,
+    #[dsl(unit = "pct")]
     pub df_percent: f64,
     pub l_aeq_db: f64,
 
@@ -25,6 +28,7 @@ pub struct Document {
     // ambiguity.
     pub ida_class: String,
     pub ventilation_m3_h: f64,
+    #[dsl(unit = "m2")]
     pub floor_area_m2: f64,
     pub bedrooms: u32,
     pub dwelling_ventilation_m3_h: f64,
@@ -40,19 +44,24 @@ pub struct Document {
     pub humidification_provided_kg_h: f64,
 
     pub fan_q_v_m3_s: f64,
+    #[dsl(unit = "h")]
     pub fan_t_run_h: f64,
     pub fan_energy_reference_kwh: f64,
+    #[dsl(unit = "K")]
     pub night_setback_k: f64,
 
     pub hr_m_dot_kg_s: f64,
     pub hr_cp_j_kgk: f64,
     pub hr_delta_t_c: f64,
+    #[dsl(unit = "h")]
     pub hr_t_h: f64,
     pub hr_savings_reference_kwh: f64,
 
     pub n50_h_inv: f64,
+    #[dsl(unit = "m3")]
     pub volume_m3: f64,
     pub infiltration_allowance_m3_h: f64,
+    #[dsl(unit = "m2")]
     pub cellar_area_m2: f64,
     pub cellar_ventilation_m3_h: f64,
 
@@ -74,11 +83,13 @@ pub struct Document {
     pub h_st_w_k: f64,
     pub theta_st_c: f64,
     pub theta_amb_c: f64,
+    #[dsl(unit = "h")]
     pub storage_t_h: f64,
     pub storage_allowance_kwh: f64,
     pub dhw_delivery_c: f64,
 
     pub duct_class: String,
+    #[dsl(unit = "Pa")]
     pub duct_test_pressure_pa: f64,
     pub duct_leakage_m3_s_m2: f64,
 }

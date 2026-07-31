@@ -49,19 +49,91 @@ pub struct Puzzle5dPart2d {
     pub locked: Option<bool>,
 }
 
+//#region 📐️Scale
+/// 📏️ A part's freeform 3D scale — a bare number scales all three axes uniformly, an `[x, y, z]`
+/// array scales each axis independently. Same `Uniform`-or-`Vec3` shape as
+/// `puzzle_3d::Puzzle3dObject.scale`/`Puzzle3dTargetVolume.scale` (see that type's own `Scale`
+/// region), applied here to the identical `part_scale_json` decode `puzzle_5d_ui` already used to
+/// read the old raw `serde_json::Value` two ways.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Puzzle5dScale {
+    Uniform(f64),
+    Vec3([f64; 3]),
+}
+
+/// 🔗️ Wire shape stays identical to the former `serde_json::Value` passthrough (a bare number or
+/// an `[x, y, z]` array) so every JSON-boundary consumer (the `puzzle_5d_ui` wasm crate's own
+/// mirror struct, which binds `scale` as `Option<serde_json::Value>` and is out of this derive's
+/// scope) keeps parsing it exactly as before.
+impl Serialize for Puzzle5dScale {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Puzzle5dScale::Uniform(scale) => serializer.serialize_f64(*scale),
+            Puzzle5dScale::Vec3(vec3) => vec3.serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Puzzle5dScale {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        match serde_json::Value::deserialize(deserializer)? {
+            serde_json::Value::Number(n) => Ok(Puzzle5dScale::Uniform(n.as_f64().unwrap_or(1.0))),
+            serde_json::Value::Array(items) if items.len() >= 3 => {
+                let axis = |i: usize| items[i].as_f64().unwrap_or(1.0);
+                Ok(Puzzle5dScale::Vec3([axis(0), axis(1), axis(2)]))
+            }
+            other => Err(serde::de::Error::custom(format!("expected scale to be a number or an [x, y, z] array, found {other}"))),
+        }
+    }
+}
+
+/// 🔗️ Hand `DslField` bridge for `Puzzle5dScale`: binds through the existing unbounded
+/// `Shape::Tuple(Float, None)` primitive (the same one `#[dsl(tuple)] Vec<f64>` fields already use
+/// elsewhere) rather than `Shape::Value` — `scale=2` (uniform) and `scale=2,3,4` (per-axis) print/
+/// parse as plain packed literals, no bespoke Shape variant needed.
+impl dsl::DslField for Puzzle5dScale {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Tuple(Box::new(dsl::Shape::Float), None)
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        match self {
+            Puzzle5dScale::Uniform(scale) => dsl::FieldValue::Tuple(vec![dsl::FieldValue::Float(*scale)]),
+            Puzzle5dScale::Vec3(vec3) => dsl::FieldValue::Tuple(vec3.iter().map(|axis| dsl::FieldValue::Float(*axis)).collect()),
+        }
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Tuple(items) if items.len() == 1 => match &items[0] {
+                dsl::FieldValue::Float(scale) => Ok(Puzzle5dScale::Uniform(*scale)),
+                other => Err(format!("expected Float, found {other:?}")),
+            },
+            dsl::FieldValue::Tuple(items) if items.len() >= 3 => {
+                let axis = |i: usize| match &items[i] {
+                    dsl::FieldValue::Float(v) => Ok(*v),
+                    other => Err(format!("expected Float, found {other:?}")),
+                };
+                Ok(Puzzle5dScale::Vec3([axis(0)?, axis(1)?, axis(2)?]))
+            }
+            other => Err(format!("expected a 1- or 3-item Tuple, found {other:?}")),
+        }
+    }
+}
+//#endregion 📐️Scale
+
 /// 🧱️ A part's 3D-projection presentation (world object): `origin`/`orientation` pose it, `mesh_url`
-/// resolves its geometry.
+/// resolves its geometry, `scale` is `Puzzle5dScale` (bare number = uniform, `x,y,z` = per-axis).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dPart3d {
     #[serde(default)]
+    #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mesh_url: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<serde_json::Value>,
+    pub scale: Option<Puzzle5dScale>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
 }
@@ -72,8 +144,10 @@ pub struct Puzzle5dPart3d {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dGrip2d {
     #[serde(default)]
+    #[dsl(angle = "rad")]
     pub angle: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
@@ -84,8 +158,10 @@ pub struct Puzzle5dGrip2d {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dGrip3d {
     #[serde(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(dir)]
     pub direction: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
@@ -99,6 +175,7 @@ pub struct Puzzle5dGrip3d {
 pub struct Puzzle5dGrip {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(refs = "grip_kind")]
     pub grip_kind: Option<String>,
     #[serde(default, rename = "2d")]
     pub grip_2d: Puzzle5dGrip2d,
@@ -112,6 +189,7 @@ pub struct Puzzle5dGrip {
 pub struct Puzzle5dPart {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(refs = "part_kind")]
     pub part_kind: Option<String>,
     #[serde(default, rename = "2d")]
     pub part_2d: Puzzle5dPart2d,
@@ -129,6 +207,7 @@ pub struct Puzzle5dFastener {
     pub source: String,
     pub target: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(refs = "fastener_kind")]
     pub fastener_kind: Option<String>,
     /// 🔧️ The six pose-solver offsets `compute_brush_placement_pose` resolves into a world pose —
     /// mirrors `puzzle_3d::Puzzle3dAttraction`'s gap/shift/rise/rotation/turn/tilt fields verbatim
@@ -151,7 +230,9 @@ pub struct Puzzle5dFastener {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dKindCompatibility {
+    #[dsl(refs = "grip_kind")]
     pub source: String,
+    #[dsl(refs = "grip_kind")]
     pub target: String,
     #[serde(default)]
     pub bidirectional: bool,
@@ -162,6 +243,7 @@ pub struct Puzzle5dKindCompatibility {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogGripTemplate {
+    #[dsl(refs = "grip_kind")]
     pub grip_kind: String,
     #[serde(default, rename = "2d", skip_serializing_if = "Option::is_none")]
     pub grip_2d: Option<Puzzle5dCatalogGripTemplate2d>,
@@ -172,7 +254,9 @@ pub struct Puzzle5dCatalogGripTemplate {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogGripTemplate2d {
+    #[dsl(angle = "rad")]
     pub angle: f64,
+    #[dsl(refs = "grip_kind")]
     pub grip_kind: String,
     pub radius: f64,
 }
@@ -180,7 +264,9 @@ pub struct Puzzle5dCatalogGripTemplate2d {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogGripTemplate3d {
+    #[dsl(coord)]
     pub position: [f64; 3],
+    #[dsl(dir)]
     pub direction: [f64; 3],
     pub radius: f64,
 }
@@ -189,6 +275,7 @@ pub struct Puzzle5dCatalogGripTemplate3d {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogPart {
+    #[dsl(defines = "part_kind")]
     pub id: String,
     pub name: String,
     pub label: String,
@@ -202,10 +289,12 @@ pub struct Puzzle5dCatalogPart {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogGrip {
+    #[dsl(defines = "grip_kind")]
     pub id: String,
     pub name: String,
     pub label: String,
     pub color: String,
+    #[dsl(refs = "rope_kind")]
     pub default_rope_kind: String,
 }
 
@@ -213,6 +302,7 @@ pub struct Puzzle5dCatalogGrip {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogFastener {
+    #[dsl(defines = "fastener_kind")]
     pub id: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -223,9 +313,11 @@ pub struct Puzzle5dCatalogFastener {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dCatalogRope {
+    #[dsl(defines = "rope_kind")]
     pub id: String,
     pub name: String,
     pub label: String,
+    #[dsl(refs = "fastener_kind")]
     pub default_fastener_kind: String,
 }
 

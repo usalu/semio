@@ -1,1 +1,5 @@
-schema="writer.document" id="jack" language-id="jack" uri="writer://jack" text="MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name"
+schema=writer.document id=jack language-id=jack uri="writer://jack" text=```jack
+MATCH (a:Piece)-[r:Connection]->(b:Piece)
+WHERE a.name = "core"
+RETURN a.name, b.name
+```

@@ -22,10 +22,12 @@ pub struct Document {
     pub g_k: f64,
     #[dsl(table)]
     pub q_k: Vec<QkEntry>,
+    #[dsl(unit = "kN")]
     pub resistance_kn: f64,
     pub consequence_class: u8,
     pub annex: AnnexChoice,
     /// 🌍️ Seismic accidental action A_Ed [kN] combined per Eq. 6.12b; 0.0 disables the seismic situation.
+    #[dsl(unit = "kN")]
     pub seismic_a_ed_kn: f64,
 }
 

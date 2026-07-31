@@ -1,4 +1,9 @@
 //! 📜️ VDI 3805 app — textual document grammar surface + laws (constitutional: dsl).
+//!
+//! 📌️ No `include_str!` fixture exists for this app (the original monolith exercised the DSL
+//! grammar purely against `vdi3805::reference_fixture()` — the same curated manufacturer-catalogue
+//! builder that backs `Document::default()` and every other module's tests/fixtures in this app),
+//! so these wrappers are the whole surface.
 
 use vdi3805::Document;
 

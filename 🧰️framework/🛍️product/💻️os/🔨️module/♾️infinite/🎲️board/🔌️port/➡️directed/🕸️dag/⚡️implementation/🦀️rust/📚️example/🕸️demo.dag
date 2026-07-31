@@ -5,20 +5,20 @@ slider min=0 max=10 step=0.5 value=5 output=id=out label=value code="" abbreviat
 select selected=0 options=[ Add Multiply Max ] output=id=out label=mode code="" abbreviation="" full-name="" cardinality="!" shape=semicircle visible=true id=scale name=Scale abbreviation=Scale icon="emoji:📐️" x=-120 y=-40 width=104 height=14 properties={
 }
 computation variadic-inputs=false variadic-outputs=false
-inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL resource-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
+inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
   in value "" "" "" _ _ _ _ _ "!" semicircle true
 }
-outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL resource-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
+outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
   out scaled "" "" "" _ _ _ _ _ "!" semicircle true
 }
 id=combine name=Combine abbreviation=Combine icon="emoji:🔀️" x=120 y=0 width=104 height=28 properties={
 }
 computation variadic-inputs=false variadic-outputs=false
-inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL resource-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
+inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
   a a "" "" "" _ _ _ _ _ "!" semicircle true
   b b "" "" "" _ _ _ _ _ "!" semicircle true
 }
-outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL resource-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
+outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL] {
   out merged "" "" "" _ _ _ _ _ "!" semicircle true
 }
 id=screen name=Preview abbreviation=Preview icon="emoji:🖥️" x=400 y=0 width=200 height=140 properties={

@@ -40,6 +40,7 @@ impl MonthlyClimate {
 #[dsl(extension = "din18599", layout = "lines")]
 pub struct BalancingInputs {
     pub use_class: UseClass,
+    #[dsl(unit = "m2")]
     pub heated_area_m2: f64,
     pub occupants: u32,
     pub h_t: f64,

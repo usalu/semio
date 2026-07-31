@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 import type { Plugin } from "vite";
-import type { PlaygroundAssetSpec } from "../framework/product/os/module/plugin/registry/generated/playgrounds.ts";
+import type { PlaygroundAssetSpec } from "../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
 
 export type { PlaygroundAssetSpec };
 
@@ -133,7 +133,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       { kind: "static-dir", route: "/renderer-modules", root: "framework/product/os/module/dev/js/renderer-modules" },
     ],
     vitePlugins: async () => {
-      const { playgroundIframeEmbedHeadersPlugin } = await import("../framework/module/ui/styling/vite-elements-assets.ts");
+      const { playgroundIframeEmbedHeadersPlugin } = await import("../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust/🟦️vite-elements-assets.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
   },

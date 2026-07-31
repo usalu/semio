@@ -16,5 +16,8 @@
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
     "directory": "s/module/2d/js"
+  },
+  "nx": {
+    "includedScripts": []
   }
 }

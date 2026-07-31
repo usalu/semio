@@ -2,6 +2,12 @@
 
 use iso16757::Document;
 
+/// 📄️ The `default` example document, handcrafted in the `.iso16757` DSL — a demo HVAC catalogue
+/// worked example (control valve product group/class/series/product/variant, ISO 16757-4 dictionary
+/// subject/property/controlled list, a box-primitive geometry with an inlet port, a selection
+/// request, and a scripted part-number rule), mirroring `Document::reference_fixture()`.
+pub const ISO16757_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/📕️norm/📚️example/📓️iso16757/📕️default.iso16757");
+
 /// 📖️ Parses `.iso16757` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
     <Document as store::DocumentDsl>::parse_dsl(text)
@@ -20,6 +26,12 @@ mod tests {
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
         store::test_support::assert_dsl_round_trip(&Document::reference_fixture());
+    }
+
+    #[test]
+    fn default_example_dsl_round_trips() {
+        let document = parse_dsl(ISO16757_DEFAULT_EXAMPLE_TEXT).expect("parse default .iso16757 example");
+        store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]

@@ -17,7 +17,7 @@ pub fn decode(bytes: &[u8]) -> Result<LayoutDocument, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use layout::{Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
+    use layout::{CharacterStyle, Frame, GridSettings, Layer, LayoutBounds, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
 
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {
@@ -34,7 +34,7 @@ mod tests {
             name: "Empty".into(),
             grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
             paragraph_styles: Vec::new(),
-            character_styles: vec![serde_json::json!({"id": "char.emph", "italic": true})],
+            character_styles: vec![CharacterStyle { id: "char.emph".into(), name: None, font_family: None, font_size: None, font_weight: None, italic: Some(true), color: None, tracking: None }],
             stories: Vec::new(),
             links: Vec::new(),
             parent_pages: Vec::new(),

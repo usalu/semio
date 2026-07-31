@@ -3091,6 +3091,14 @@ mod program {
     /// @emoji 📜️ Persisted architect program document schema identifier.
     pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
+    /// @emoji 📦️ The "Sample Clinic" default example, embedded at compile time as handcrafted
+    /// `.architect` DSL text — a static transcription of `sample_plugin()`, kept in sync with it by
+    /// `architect_example_text_parses_to_sample_plugin_and_round_trips`. The `🛂️manifest`'s
+    /// `.example("sample", ...)` still registers `sample_plugin()` serialized to JSON at runtime
+    /// (a separate, pre-existing concern) — this constant exists so a static `.architect` fixture
+    /// is available on disk for DSL-notation round-trip testing.
+    pub const ARCHITECT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../✏️s/🔌️plugin/🏛️architect/📚️example/🏛️sample-clinic.architect");
+
     // #region 🔖️Program
     /// @emoji 🗂️ Full architectural program document with every typed register collection.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -3556,6 +3564,31 @@ mod program {
             let printed = sample_plugin().print_dsl();
             assert!(printed.contains("Sample Clinic"), "printed dsl text must contain program title: {printed}");
             assert!(printed.contains("REC"), "printed dsl text must contain the reception element code: {printed}");
+        }
+
+        /// @emoji 🧪️ The bundled `.architect` fixture (a static transcription of `sample_plugin()`)
+        /// parses and round-trips — the compile-time validation ground truth for
+        /// `ARCHITECT_EXAMPLE_TEXT`. Compared field-by-field rather than via `PartialEq` against a
+        /// freshly called `sample_plugin()`, because `EntityId::new_serial` draws from a
+        /// process-wide counter shared with every other test in this binary, so the serial ids a
+        /// fresh call mints depend on test execution order and never match the fixture's baked-in ids.
+        #[test]
+        fn architect_example_text_parses_to_sample_plugin_and_round_trips() {
+            let parsed = Program::parse_dsl(ARCHITECT_EXAMPLE_TEXT).expect("parse bundled .architect example");
+            let expected = sample_plugin();
+            assert_eq!(parsed.meta.title, expected.meta.title);
+            assert_eq!(parsed.meta.industry_sector, expected.meta.industry_sector);
+            assert_eq!(parsed.project.code, expected.project.code);
+            assert_eq!(parsed.project.client_name, expected.project.client_name);
+            assert_eq!(parsed.stakeholders.len(), expected.stakeholders.len());
+            assert_eq!(parsed.stakeholders[0].header.name, expected.stakeholders[0].header.name);
+            assert_eq!(parsed.elements.len(), expected.elements.len());
+            assert_eq!(parsed.elements[0].code, expected.elements[0].code);
+            assert_eq!(parsed.elements[1].code, expected.elements[1].code);
+            assert_eq!(parsed.adjacencies.len(), expected.adjacencies.len());
+            assert_eq!(parsed.adjacencies[0].kind, expected.adjacencies[0].kind);
+            store::test_support::assert_dsl_round_trip(&parsed);
+            store::test_support::assert_dsl_pack_equivalence(&parsed);
         }
         // #endregion 🔖️DslDocument
     }
@@ -4798,6 +4831,7 @@ mod registers {
         pub calculation_method: Option<String>,
         pub source: Option<String>,
         pub benchmark_ref: Option<EntityId>,
+        #[dsl(unit = "pct")]
         pub tolerance_percent: Option<f64>,
         pub peak_factor: Option<f64>,
         pub growth_factor: Option<f64>,
@@ -4905,6 +4939,7 @@ mod registers {
         pub conflict_ids: Vec<EntityId>,
         pub trace_links: Vec<TraceLink>,
         pub bidirectional: bool,
+        #[dsl(unit = "m")]
         pub distance_constraint_m: Option<f64>,
         pub capacity_constraint: Option<String>,
         pub regulatory_basis: Vec<String>,
@@ -5008,7 +5043,9 @@ mod registers {
         pub separations: Vec<SeparationKind>,
         pub weight: f64,
         pub rationale: Option<TextField>,
+        #[dsl(unit = "m")]
         pub distance_max_m: Option<f64>,
+        #[dsl(unit = "m")]
         pub distance_min_m: Option<f64>,
         pub level_constraint: Option<String>,
         pub access_path: Option<String>,
@@ -5215,7 +5252,9 @@ mod registers {
         pub direction: FlowDirection,
         pub volume: QuantitySpec,
         pub peak_rate: Option<f64>,
+        #[dsl(unit = "m")]
         pub clear_width_m: Option<f64>,
+        #[dsl(unit = "m")]
         pub clear_height_m: Option<f64>,
         pub separation_requirements: Vec<SeparationKind>,
         pub access_level: AccessLevel,
@@ -5526,7 +5565,9 @@ mod registers {
         pub model: Option<String>,
         pub quantity: QuantitySpec,
         pub dimensions: Option<String>,
+        #[dsl(unit = "kg")]
         pub weight_kg: Option<f64>,
+        #[dsl(unit = "kW")]
         pub power_kw: Option<f64>,
         pub utility_connections: Vec<String>,
         pub ventilation: Option<String>,
@@ -5742,7 +5783,9 @@ mod registers {
         pub stored_item: String,
         pub storage_class: StorageClass,
         pub quantity: QuantitySpec,
+        #[dsl(unit = "m3")]
         pub volume_m3: Option<f64>,
+        #[dsl(unit = "kg")]
         pub weight_kg: Option<f64>,
         pub temperature_range: Option<String>,
         pub humidity_range: Option<String>,
@@ -6047,8 +6090,11 @@ mod registers {
         pub user_profile_ids: Vec<EntityId>,
         pub element_ids: Vec<EntityId>,
         pub route_ids: Vec<EntityId>,
+        #[dsl(unit = "m")]
         pub clear_width_m: Option<f64>,
+        #[dsl(unit = "m")]
         pub clear_height_m: Option<f64>,
+        #[dsl(unit = "m")]
         pub turning_circle_m: Option<f64>,
         pub ramp_slope: Option<f64>,
         pub lift_required: bool,
@@ -6544,6 +6590,7 @@ mod registers {
         pub address: Option<String>,
         pub latitude: Option<f64>,
         pub longitude: Option<f64>,
+        #[dsl(unit = "m")]
         pub elevation_m: Option<f64>,
         pub climate_zone: Option<String>,
         pub seismic_zone: Option<String>,
@@ -6558,6 +6605,7 @@ mod registers {
         pub environmental_constraints: Vec<String>,
         pub heritage_constraints: Vec<String>,
         pub zoning: Option<String>,
+        #[dsl(unit = "m")]
         pub max_height_m: Option<f64>,
         pub max_coverage: Option<f64>,
     }
@@ -7131,6 +7179,7 @@ mod registers {
         pub color_coding: Vec<String>,
         pub symbol_standards: Vec<String>,
         pub decision_points: Vec<String>,
+        #[dsl(unit = "m")]
         pub maximum_signage_distance_m: Option<f64>,
         pub lighting_requirements: Vec<String>,
         pub maintenance_plan: Option<String>,
@@ -7704,6 +7753,7 @@ mod registers {
         pub currency: String,
         pub quantity_basis: Option<String>,
         pub unit_cost: Option<f64>,
+        #[dsl(unit = "pct")]
         pub contingency_percent: Option<f64>,
         pub escalation_rate: Option<f64>,
         pub funding_source: Option<String>,
@@ -9433,6 +9483,7 @@ mod registers {
         pub blockers: Vec<String>,
         pub next_actions: Vec<String>,
         pub due_date: Option<String>,
+        #[dsl(unit = "pct")]
         pub progress_percent: Option<f64>,
         pub health: Option<String>,
         pub escalation_level: Option<String>,

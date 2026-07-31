@@ -1,0 +1,11 @@
+{
+  "title": "Fix Framework Hash Crate Alias Mismatch in OS Run",
+  "emoji": "🦀️",
+  "status": "closed",
+  "description": "Fix framework_hash crate alias mismatch in semio-framework-os-run Cargo.toml",
+  "summary": "Updating semio-framework-os-run Cargo.toml dependency key from semio-framework-hash to framework_hash to match crate alias usage in lib.rs.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "3d60ff25-c09e-4b2e-80a5-0bfa233c4ed4"
+  ]
+}

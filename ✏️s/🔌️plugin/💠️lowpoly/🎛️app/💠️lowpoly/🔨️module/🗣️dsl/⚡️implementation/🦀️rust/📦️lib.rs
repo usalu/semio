@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn dsl_parse_rejects_invalid_bool_value() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=notabool mesh-json=\"{}\" paint-layers=[] ]";
+        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=@0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=notabool mesh-json=\"{}\" paint-layers=[] ]";
         let result = parse_dsl(text);
         assert!(result.is_err());
     }
@@ -65,7 +65,7 @@ mod tests {
 
     #[test]
     fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=notanumber,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
+        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=@notanumber,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
         let result = parse_dsl(text);
         assert!(result.is_err());
     }
@@ -80,7 +80,7 @@ mod tests {
 
     #[test]
     fn dsl_parse_handles_escaped_characters_in_quoted_strings() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o1\" name=\"Quote \\\" and \\\\ and newline\\ndone\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
+        let text = "schema=\"lowpoly.document\" objects=[ id=\"o1\" name=\"Quote \\\" and \\\\ and newline\\ndone\" transform { position=@0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
         let projection = parse_dsl(text).expect("escapes must decode");
         assert_eq!(projection.objects[0].name, "Quote \" and \\ and newline\ndone");
     }

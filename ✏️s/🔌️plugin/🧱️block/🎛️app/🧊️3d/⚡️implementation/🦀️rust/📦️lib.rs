@@ -12,6 +12,7 @@ pub const BLOCK_3D_SCHEMA: &str = "block.3d";
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Block3dVortexKind {
+    #[dsl(defines = "vortex_kind")]
     pub id: String,
     pub name: String,
     pub label: String,
@@ -24,10 +25,13 @@ pub struct Block3dVortexKind {
 #[serde(rename_all = "camelCase")]
 pub struct Block3dVortexTemplate {
     pub id: String,
+    #[dsl(refs = "vortex_kind")]
     pub vortex_kind: String,
     #[serde(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default)]
+    #[dsl(dir)]
     pub direction: [f64; 3],
     #[serde(default)]
     pub radius: f64,

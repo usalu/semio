@@ -166,8 +166,11 @@ pub struct CadReference {
     pub origin: [f64; 3],
     #[serde(default)]
     pub orientation: Option<[f64; 4]>,
+    /// 📐️ Uniform scale factor applied to the image plane (unlike `CadObject.scale`, references
+    /// are flat and never scaled non-uniformly per axis — every call site only ever reads/writes
+    /// a single number, see `apply_reference_patch`/`sample_reference` in `cad/op/rs`).
     #[serde(default)]
-    pub scale: Option<Value>,
+    pub scale: Option<f64>,
     #[serde(default = "default_width_world")]
     pub width_world: f64,
     #[serde(default)]
@@ -186,6 +189,55 @@ fn default_width_world() -> f64 {
     10.0
 }
 
+/// 📐️ Local twin of `semio_framework_plugin::WorldProjectionConfig`'s flat 15-field classical
+/// taxonomy (Parallel: Orthographic/Axonometric/Oblique, Perspective: 1/2/3-Point/Curvilinear) —
+/// mirrored here rather than imported because `cad/rs` has no dependency on the plugin layer;
+/// `cad/engine/rs`'s `cad_camera_projection_config`/`cad_camera_set_projection_config` convert
+/// field-for-field between this and the real `WorldProjectionConfig` around the shared projection
+/// helpers. See https://en.wikipedia.org/wiki/Axonometric_projection and
+/// https://en.wikipedia.org/wiki/Oblique_projection.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase", default)]
+pub struct CadProjectionDsl {
+    pub kind: String,
+    pub orthographic_view: String,
+    pub axonometric_variant: String,
+    pub axonometric_angle_a: f64,
+    pub axonometric_angle_b: f64,
+    pub axonometric_quadrant: String,
+    pub oblique_variant: String,
+    pub oblique_angle: f64,
+    pub oblique_depth: f64,
+    pub one_point_axis: String,
+    pub fov: f64,
+    pub two_point_shift: f64,
+    pub curvilinear_fov: f64,
+    pub curvilinear_strength: f64,
+    pub curvilinear_mapping: String,
+}
+
+impl Default for CadProjectionDsl {
+    fn default() -> Self {
+        Self {
+            kind: "threePoint".into(),
+            orthographic_view: "top".into(),
+            axonometric_variant: "isometric".into(),
+            axonometric_angle_a: 15.0,
+            axonometric_angle_b: 12.0,
+            axonometric_quadrant: "ne".into(),
+            oblique_variant: "cavalier".into(),
+            oblique_angle: 45.0,
+            oblique_depth: 1.0,
+            one_point_axis: "y".into(),
+            fov: 50.0,
+            two_point_shift: 0.0,
+            curvilinear_fov: 120.0,
+            curvilinear_strength: 1.0,
+            curvilinear_mapping: "fisheye".into(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CadCamera {
@@ -199,15 +251,14 @@ pub struct CadCamera {
     pub zoom: f64,
     #[serde(default = "default_fov")]
     pub fov: f64,
-    /// 📐️ Serialized `semio_framework_plugin::WorldProjectionConfig` — kept as raw json here (cad/rs has no
-    /// dependency on the plugin layer); `cad/plugin/rs` parses/writes it around the shared projection helpers.
     #[serde(default)]
-    pub projection: Value,
+    #[dsl(block)]
+    pub projection: CadProjectionDsl,
 }
 
 impl Default for CadCamera {
     fn default() -> Self {
-        Self { position: default_camera_position(), target: default_camera_target(), zoom: one_f64(), fov: default_fov(), projection: Value::Null }
+        Self { position: default_camera_position(), target: default_camera_target(), zoom: one_f64(), fov: default_fov(), projection: CadProjectionDsl::default() }
     }
 }
 

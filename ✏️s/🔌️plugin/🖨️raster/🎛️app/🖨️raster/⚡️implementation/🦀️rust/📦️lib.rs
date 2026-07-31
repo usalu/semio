@@ -55,6 +55,7 @@ pub struct RasterTransform {
     pub scale_x: f64,
     #[serde(default = "default_one")]
     pub scale_y: f64,
+    #[dsl(angle = "deg")]
     #[serde(default)]
     pub rotation: f64,
 }

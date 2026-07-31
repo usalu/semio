@@ -19,10 +19,10 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🏛️architect/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-architect_spine = { path = "../../../../../../../✏️s/🔌️plugin/🏛️architect/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust" }
-vcs = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust" }
-store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust" }
-protocol = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust" }
+semio_s_plugin_architect_spine = { path = "../../../../../../../✏️s/🔌️plugin/🏛️architect/🔨️module/🦴️spine/⚡️implementation/🦀️rust", package = "semio-s-plugin-architect-spine-module" }
+vcs = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"]}
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementation/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

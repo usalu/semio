@@ -1,1 +1,4 @@
-schema="writer.document" id="dag-jack" language-id="jack" uri="writer://dag-jack" text="MATCH (n:computation) RETURN n.name, n.kind\nMATCH (n:slider) RETURN n.name"
+schema=writer.document id=dag-jack language-id=jack uri="writer://dag-jack" text=```jack
+MATCH (n:computation) RETURN n.name, n.kind
+MATCH (n:slider) RETURN n.name
+```

@@ -63,10 +63,12 @@ mod tests {
         assert!(printed.contains("id=jack"));
         assert!(printed.contains("language-id=jack"));
         assert!(printed.contains("uri=\"writer://jack\""));
-        // The multiline query text is a single escaped-quoted field (`\n`, not raw newlines); the
-        // embedded Jack string literal uses the unified double-quoting too, so its own `"` is
-        // backslash-escaped one level deeper inside the outer DSL string.
-        assert!(printed.contains("MATCH (a:Piece)-[r:Connection]->(b:Piece)\\nWHERE a.name = \\\"core\\\"\\nRETURN a.name, b.name"));
+        // `#[dsl(lang = "jack")]` prints `text` as a fenced ```jack verbatim block (`Shape::Embed`)
+        // instead of an escaped-quoted string, so the embedded query keeps its raw newlines and its
+        // own `"` needs no backslash-escaping.
+        assert!(printed.contains(
+            "text=```jack\nMATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name\n```"
+        ));
     }
 }
 //#endregion 🧪️Tests

@@ -1827,6 +1827,7 @@ pub struct ConnectionPoint {
     pub medium: String,
     pub position: [f64; 3],
     pub direction: [f64; 3],
+    #[dsl(unit = "mm")]
     pub diameter_mm: Option<f64>,
 }
 

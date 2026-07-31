@@ -23,4 +23,27 @@ pub fn empty_forms_projection() -> FormSpec {
 pub fn building_component_spec() -> FormSpec {
     <FormSpec as store::DocumentDsl>::parse_dsl(forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
 }
+
+/// 📄️ The `default` (Contact) example, parsed once from {@link forms_dsl::DEFAULT_EXAMPLE_TEXT} — the
+/// source of truth for every "default" example call site (`setActiveExample`, `App::example`).
+pub fn default_example_spec() -> FormSpec {
+    <FormSpec as store::DocumentDsl>::parse_dsl(forms_dsl::DEFAULT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+}
+
+/// 📄️ JSON re-serialization of {@link default_example_spec}, for the framework-generic call sites that
+/// contractually require JSON text (`App::example`'s manifest `document_json`).
+pub fn default_example_json() -> String {
+    serde_json::to_string(&default_example_spec()).expect("serialize default example document")
+}
+
+/// 📄️ The `onboarding` example, parsed once from {@link forms_dsl::ONBOARDING_EXAMPLE_TEXT}.
+pub fn onboarding_example_spec() -> FormSpec {
+    <FormSpec as store::DocumentDsl>::parse_dsl(forms_dsl::ONBOARDING_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+}
+
+/// 📄️ JSON re-serialization of {@link onboarding_example_spec}, for the framework-generic call sites
+/// that contractually require JSON text (`App::example`'s manifest `document_json`).
+pub fn onboarding_example_json() -> String {
+    serde_json::to_string(&onboarding_example_spec()).expect("serialize onboarding example document")
+}
 //#endregion 🔖️DocumentHelpers

@@ -3,7 +3,7 @@ object-kind {
   id="Capsule J" name="Capsule J" label="Capsule J" description=""
 }
 camera3d {
-  position=10,-10,6 target=0,0,1 zoom=1
+  position=@10,-10,6 target=@0,0,1 zoom=1
 }
 meta {
   description=""
@@ -15,8 +15,8 @@ representations [id:TEXT name:TEXT mesh-url:TEXT tags:LIST lod:TEXT description:
 vortex-kinds [id:TEXT name:TEXT label:TEXT color:TEXT default-cable-kind:TEXT] {
   door door Door "hsl(206 52% 48%)" cable.link
 }
-vortices [id:TEXT vortex-kind:TEXT position:TUPLE direction:TUPLE radius:NUM label:TEXT] {
-  v0 door 0,-1.6,1.2 0,-1,0 0.3 door
+vortices [id:TEXT vortex-kind:REF position:CRD direction:DIR radius:NUM label:TEXT] {
+  v0 door @0,-1.6,1.2 ^0,-1,0 0.3 door
 }
 compatibility [id:TEXT source:TEXT target:TEXT bidirectional:BOOL] {
 }

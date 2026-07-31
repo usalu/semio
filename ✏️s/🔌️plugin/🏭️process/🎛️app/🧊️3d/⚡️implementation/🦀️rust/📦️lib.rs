@@ -19,10 +19,13 @@ fn default_true() -> bool {
 #[serde(rename_all = "camelCase")]
 pub struct Pose {
     #[serde(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default = "default_axis_z")]
+    #[dsl(dir)]
     pub axis: [f64; 3],
     #[serde(default)]
+    #[dsl(angle = "rad")]
     pub angle: f64,
 }
 
@@ -32,15 +35,21 @@ pub struct Pose {
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SolidSpec {
     Box {
+        #[dsl(unit = "m")]
         width: f64,
+        #[dsl(unit = "m")]
         depth: f64,
+        #[dsl(unit = "m")]
         height: f64,
     },
     Cylinder {
+        #[dsl(unit = "m")]
         radius: f64,
+        #[dsl(unit = "m")]
         height: f64,
     },
     Sphere {
+        #[dsl(unit = "m")]
         radius: f64,
     },
     /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology
@@ -104,7 +113,7 @@ pub enum ProcessMeasure {
     /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
     Cut { tool: SolidSpec, #[dsl(block)] pose: Pose },
     /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
-    Drill { radius: f64, depth: f64, #[dsl(block)] pose: Pose },
+    Drill { #[dsl(unit = "m")] radius: f64, #[dsl(unit = "m")] depth: f64, #[dsl(block)] pose: Pose },
     /// 🔩️ Additive: fuses another component solid at `pose`.
     Attach { component: SolidSpec, #[dsl(block)] pose: Pose },
 }

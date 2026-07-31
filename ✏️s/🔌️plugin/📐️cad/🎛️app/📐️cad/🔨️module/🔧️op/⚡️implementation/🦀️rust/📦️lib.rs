@@ -3,7 +3,6 @@
 use cad_document::{cad_pane_objects, CadNode, CadObject, CadPaneId, CadReference, CadScene};
 use protocol::{CollectionDiff, ItemPatch, Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::BTreeMap;
 
 //#region 🔖️Operations
@@ -37,7 +36,7 @@ pub struct CadReferencePatch {
     pub media_kind: Option<String>,
     pub origin: Option<[f64; 3]>,
     pub orientation: Option<[f64; 4]>,
-    pub scale: Option<Value>,
+    pub scale: Option<f64>,
     pub width_world: Option<f64>,
     pub hidden: Option<bool>,
     pub locked: Option<bool>,
@@ -139,8 +138,8 @@ fn apply_reference_patch(reference: &mut CadReference, patch: &CadReferencePatch
     if let Some(orientation) = patch.orientation {
         reference.orientation = Some(orientation);
     }
-    if let Some(scale) = &patch.scale {
-        reference.scale = Some(scale.clone());
+    if let Some(scale) = patch.scale {
+        reference.scale = Some(scale);
     }
     if let Some(width_world) = patch.width_world {
         reference.width_world = width_world;
@@ -385,7 +384,7 @@ fn reverse_reference_patch(before: &CadReference, patch: &CadReferencePatch) -> 
         media_kind: patch.media_kind.as_ref().map(|_| before.media_kind.clone()),
         origin: patch.origin.map(|_| before.origin),
         orientation: patch.orientation.map(|_| before.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
-        scale: patch.scale.as_ref().map(|_| before.scale.clone().unwrap_or(Value::Null)),
+        scale: patch.scale.map(|_| before.scale.unwrap_or(1.0)),
         width_world: patch.width_world.map(|_| before.width_world),
         hidden: patch.hidden.map(|_| before.hidden),
         locked: patch.locked.map(|_| before.locked),
@@ -491,7 +490,7 @@ mod tests {
             media_kind: "image".into(),
             origin: [0.0, 0.0, 0.0],
             orientation: None,
-            scale: Some(json!(1.5)),
+            scale: Some(1.5),
             width_world: 8.0,
             hidden: false,
             locked: true,

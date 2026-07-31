@@ -17,6 +17,81 @@ pub enum Puzzle3dError {
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
+//#region 📐️Scale
+/// 📐️ A placed object's / target volume's freeform pose scale: either a single scalar broadcast
+/// to all three axes, or an explicit per-axis `[x, y, z]` triple — the ONLY two shapes the engine
+/// crate's `vec3_scale`/`volume_scale_vec` ever interpret (see that crate's implementation and its
+/// `vec3_scale_variants` test), so this is a small closed union rather than genuinely heterogeneous
+/// JSON. Replaces the former `serde_json::Value` passthrough with the actual shape.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Puzzle3dScale {
+    Uniform(f64),
+    Vec3([f64; 3]),
+}
+
+/// 🔗️ Wire shape stays identical to the former `serde_json::Value` passthrough (a bare number or
+/// an `[x, y, z]` array) so every JSON-boundary consumer (the engine/ui wasm crates' own mirror
+/// structs, which bind `scale` as `Option<serde_json::Value>` and are out of this derive's scope)
+/// keeps parsing it exactly as before.
+impl Serialize for Puzzle3dScale {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        match self {
+            Puzzle3dScale::Uniform(scale) => serializer.serialize_f64(*scale),
+            Puzzle3dScale::Vec3(vec3) => vec3.serialize(serializer),
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Puzzle3dScale {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        match serde_json::Value::deserialize(deserializer)? {
+            serde_json::Value::Number(n) => Ok(Puzzle3dScale::Uniform(n.as_f64().unwrap_or(1.0))),
+            serde_json::Value::Array(items) if items.len() >= 3 => {
+                let axis = |i: usize| items[i].as_f64().unwrap_or(1.0);
+                Ok(Puzzle3dScale::Vec3([axis(0), axis(1), axis(2)]))
+            }
+            other => Err(serde::de::Error::custom(format!("expected scale to be a number or an [x, y, z] array, found {other}"))),
+        }
+    }
+}
+
+/// 🔗️ Hand `DslField` bridge for `Puzzle3dScale`: `objects`/`targetVolumes` are `#[dsl(table)]`
+/// collections, so this field prints as a BARE positional table column — the unbounded
+/// `Shape::Tuple(Float, None)` the sibling `puzzle_5d::Puzzle5dScale` uses (its `scale` is reached
+/// through a nested keyed record field, not a bare column) is rejected there at parse time
+/// (`table column 'scale' has a non-self-delimiting shape (TUPLE) and cannot be a table column`,
+/// per the engine's own `validate_table_columns`), so this binds through the bracketed
+/// `Shape::List(Float)` instead: `scale=[2]` (uniform) / `scale=[2 3 4]` (per-axis) — the brackets
+/// make it self-delimiting regardless of item count.
+impl dsl::DslField for Puzzle3dScale {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::List(Box::new(dsl::Shape::Float))
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        match self {
+            Puzzle3dScale::Uniform(scale) => dsl::FieldValue::List(vec![dsl::FieldValue::Float(*scale)]),
+            Puzzle3dScale::Vec3(vec3) => dsl::FieldValue::List(vec3.iter().map(|axis| dsl::FieldValue::Float(*axis)).collect()),
+        }
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::List(items) if items.len() == 1 => match &items[0] {
+                dsl::FieldValue::Float(scale) => Ok(Puzzle3dScale::Uniform(*scale)),
+                other => Err(format!("expected Float, found {other:?}")),
+            },
+            dsl::FieldValue::List(items) if items.len() >= 3 => {
+                let axis = |i: usize| match &items[i] {
+                    dsl::FieldValue::Float(v) => Ok(*v),
+                    other => Err(format!("expected Float, found {other:?}")),
+                };
+                Ok(Puzzle3dScale::Vec3([axis(0)?, axis(1)?, axis(2)?]))
+            }
+            other => Err(format!("expected a 1- or 3-item List, found {other:?}")),
+        }
+    }
+}
+//#endregion 📐️Scale
+
 // #region 🔖️Document
 /// 🔘️ One vortex on an object's rim — `vortex_kind` gates attraction compatibility, `position`/
 /// `direction` place and orient it, `radius` sizes its brush-fill collision.
@@ -25,12 +100,15 @@ pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 pub struct Puzzle3dVortex {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(refs = "vortex_kind")]
     pub vortex_kind: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(dir)]
     pub direction: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub radius: Option<f64>,
@@ -40,8 +118,8 @@ pub struct Puzzle3dVortex {
     pub locked: bool,
 }
 
-/// 🧱️ One placed object — `origin`/`orientation`/`scale` (a freeform Vec3-or-scalar, see
-/// `vec3_scale`) pose it, `vortices` are its rim attraction ports.
+/// 🧱️ One placed object — `origin`/`orientation`/`scale` (a scalar-or-`[x,y,z]` `Puzzle3dScale`,
+/// see that type and `vec3_scale`) pose it, `vortices` are its rim attraction ports.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dObject {
@@ -49,13 +127,15 @@ pub struct Puzzle3dObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(refs = "object_kind")]
     pub object_kind: Option<String>,
     #[serde(default)]
+    #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<serde_json::Value>,
+    pub scale: Option<Puzzle3dScale>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mesh_url: Option<String>,
     #[serde(default)]
@@ -90,17 +170,19 @@ pub struct Puzzle3dAttraction {
 }
 
 /// 🧊️ A persisted oriented box constraining fill placement (Volume Brush voxels or Transform-gumball
-/// edited volumes).
+/// edited volumes). `scale` is a scalar-or-`[x,y,z]` `Puzzle3dScale` — see that type and
+/// `volume_scale_vec`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dTargetVolume {
     pub id: String,
     #[serde(default)]
+    #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub orientation: Option<[f64; 4]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub scale: Option<serde_json::Value>,
+    pub scale: Option<Puzzle3dScale>,
     #[serde(default)]
     pub hidden: bool,
     #[serde(default)]
@@ -125,8 +207,10 @@ pub struct Puzzle3dReference {
     #[serde(default)]
     pub source: Puzzle3dReferenceSource,
     #[serde(default)]
+    #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default)]
+    #[dsl(unit = "m")]
     pub width_world: f64,
     #[serde(default)]
     pub locked: bool,
@@ -138,7 +222,9 @@ pub struct Puzzle3dReference {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dKindCompatibility {
+    #[dsl(refs = "vortex_kind")]
     pub source: String,
+    #[dsl(refs = "vortex_kind")]
     pub target: String,
     #[serde(default)]
     pub bidirectional: bool,
@@ -153,8 +239,11 @@ pub struct Puzzle3dKindCompatibility {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogVortexTemplate {
+    #[dsl(refs = "vortex_kind")]
     pub vortex_kind: String,
+    #[dsl(coord)]
     pub position: [f64; 3],
+    #[dsl(dir)]
     pub direction: [f64; 3],
     pub radius: f64,
 }
@@ -164,6 +253,7 @@ pub struct Puzzle3dCatalogVortexTemplate {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogObjectKind {
+    #[dsl(defines = "object_kind")]
     pub id: String,
     pub label: String,
     pub name: String,
@@ -177,10 +267,12 @@ pub struct Puzzle3dCatalogObjectKind {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogVortexKind {
+    #[dsl(defines = "vortex_kind")]
     pub id: String,
     pub label: String,
     pub name: String,
     pub color: String,
+    #[dsl(refs = "cable_kind")]
     pub default_cable_kind: String,
 }
 
@@ -188,9 +280,11 @@ pub struct Puzzle3dCatalogVortexKind {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogCableKind {
+    #[dsl(defines = "cable_kind")]
     pub id: String,
     pub label: String,
     pub name: String,
+    #[dsl(refs = "attraction_kind")]
     pub default_attraction_kind: String,
 }
 
@@ -198,6 +292,7 @@ pub struct Puzzle3dCatalogCableKind {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dCatalogAttractionKind {
+    #[dsl(defines = "attraction_kind")]
     pub id: String,
     pub label: String,
     pub name: String,

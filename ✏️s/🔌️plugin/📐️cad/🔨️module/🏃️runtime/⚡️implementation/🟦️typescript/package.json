@@ -22,5 +22,8 @@
   "bundleKind": "library",
   "exports": {
     ".": "./📦️index.ts"
+  },
+  "nx": {
+    "includedScripts": []
   }
 }

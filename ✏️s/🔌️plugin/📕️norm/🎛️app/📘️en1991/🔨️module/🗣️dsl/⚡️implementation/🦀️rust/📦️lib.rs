@@ -1,9 +1,14 @@
 //! 📜️ EN 1991 actions on structures — textual document grammar surface + laws (constitutional: dsl).
-//!
-//! 📄️ No handcrafted `.en1991` DSL fixture exists for this app — the original monolith's own DSL law
-//! test exercised only `Document::default()`, so that is the representative document here too.
 
 use en1991::Document;
+
+/// 🏬️ The retail-hydrocarbon-fire example fixture, handcrafted in `en1991`'s DSL
+/// (`store::DocumentDsl`): a retail unit (imposed category D) evaluated under the EN annex with a
+/// hydrocarbon fire curve and a full set of the other action sub-scenarios (snow, wind, thermal,
+/// construction, accidental impact, bridge, crane, silo) at plausible non-zero values — distinct
+/// from `Document::default()`'s category-B/DE-annex/standard-fire-curve values so the grammar's
+/// non-default branches (category, annex, fire curve) are exercised too.
+pub const EN1991_RETAIL_HYDROCARBON_FIRE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/📕️norm/📚️example/📘️en1991/📕️retail-hydrocarbon-fire.en1991");
 
 /// 📖️ Parses `.en1991` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
@@ -18,6 +23,8 @@ pub fn print_dsl(document: &Document) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use en1991::part_1_2::FireCurve;
+    use norm_core::{AnnexChoice, ImposedCategory};
 
     #[test]
     fn document_dsl_round_trips() {
@@ -29,5 +36,14 @@ mod tests {
         let document = Document::default();
         let printed = print_dsl(&document);
         assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
+    }
+
+    #[test]
+    fn retail_hydrocarbon_fire_example_fixture_parses_and_round_trips() {
+        let document = parse_dsl(EN1991_RETAIL_HYDROCARBON_FIRE_EXAMPLE_TEXT).expect("parse retail hydrocarbon fire example");
+        assert_eq!(document.category, ImposedCategory::D);
+        assert_eq!(document.annex, AnnexChoice::En);
+        assert_eq!(document.fire_curve, FireCurve::Hydrocarbon);
+        store::test_support::assert_dsl_round_trip(&document);
     }
 }

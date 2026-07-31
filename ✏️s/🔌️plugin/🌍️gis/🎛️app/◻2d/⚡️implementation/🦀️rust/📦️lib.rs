@@ -15,6 +15,10 @@ pub const GIS_MAP_SCHEMA: &str = "gis.map";
 pub struct MapFeature {
     #[dsl(positional)]
     pub id: String,
+    /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch because the key
+    /// set genuinely varies by collection — positions carry `{lon, lat, icon, kind, label, name,
+    /// sourceUrl?}`, routes carry `{points: [[f64; 2]]}`, regions carry `{ring: [[f64; 2]]}` — no single
+    /// fixed schema fits all three, so a typed `dsl::DslDocument` derive doesn't apply here.
     pub data: serde_json::Value,
 }
 

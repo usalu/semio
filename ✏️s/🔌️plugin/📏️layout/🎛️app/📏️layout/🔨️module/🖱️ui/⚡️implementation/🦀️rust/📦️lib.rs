@@ -392,11 +392,11 @@ fn resolve_run_style(doc: &LayoutDocument, paragraph_style_id: Option<&str>, cha
         .or_else(|| doc.paragraph_styles.first());
     let (mut family, mut size) = paragraph.map(|style| (style.font_family.clone(), style.font_size)).unwrap_or_else(|| ("Layout Sans".into(), 12.0));
     if let Some(character_id) = character_style_id {
-        if let Some(character) = doc.character_styles.iter().find(|value| value.get("id").and_then(Value::as_str) == Some(character_id)) {
-            if let Some(font_family) = character.get("fontFamily").and_then(Value::as_str) {
-                family = font_family.into();
+        if let Some(character) = doc.character_styles.iter().find(|style| style.id == character_id) {
+            if let Some(font_family) = &character.font_family {
+                family = font_family.clone();
             }
-            if let Some(font_size) = character.get("fontSize").and_then(Value::as_f64) {
+            if let Some(font_size) = character.font_size {
                 size = font_size;
             }
         }
@@ -815,15 +815,14 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
             )
         })
         .collect();
-    style_items.extend(doc.character_styles.iter().enumerate().map(|(index, style)| {
-        let id = style.get("id").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| format!("character-{index}"));
-        let name = style.get("name").and_then(Value::as_str).map(str::to_string).unwrap_or_else(|| id.clone());
-        let font_family = style.get("fontFamily").and_then(Value::as_str).unwrap_or("—");
-        let description = match style.get("fontSize").and_then(Value::as_f64) {
+    style_items.extend(doc.character_styles.iter().map(|style| {
+        let name = style.name.clone().unwrap_or_else(|| style.id.clone());
+        let font_family = style.font_family.as_deref().unwrap_or("—");
+        let description = match style.font_size {
             Some(size) => format!("{font_family} · {}pt", size as i64),
             None => font_family.to_string(),
         };
-        layout_tree_item(style_row_id(&id), name, Some(description), Some("type".into()), None)
+        layout_tree_item(style_row_id(&style.id), name, Some(description), Some("type".into()), None)
     }));
 
     let highlighted_ids: Vec<String> = runtime

@@ -1084,7 +1084,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
   if (coverageEnabled()) {
     const testBudgetMs = testLevelBudgetMs(level);
     const covArgs = cargoNextestAvailable()
-      ? (["llvm-cov", "nextest", "--release", "--no-report", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const)
+      ? (["llvm-cov", "nextest", "--release", "--no-report", "--no-tests", "warn", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const)
       : (["llvm-cov", "test", "--release", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const);
     if (!cargoNextestAvailable()) {
       console.error("[budget] cargo-nextest not installed — coverage uses cargo llvm-cov test fallback");
@@ -1112,7 +1112,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
     onTimeoutHint: budgetTimeoutHint("cargo"),
   });
   if (cargoNextestAvailable()) {
-    await runTestBudgeted("cargo", ["nextest", "run", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
+    await runTestBudgeted("cargo", ["nextest", "run", "--no-tests", "warn", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
     return;
   }
   console.error("[budget] cargo-nextest not installed — falling back to cargo test (run setup or: cargo install cargo-nextest --locked)");
@@ -2972,8 +2972,9 @@ export type MicroCommitLevel = "prepare-only" | "prepare-and-commit" | "prepare-
 
 type Contributor = { alias: string; emoji: string; name: string; email: string; emails?: string[] };
 
-const COUNTER_RE = /^(.+🎆️\d{2}🌙️\d{2}☀️\d{2})🚩️(\d+)$/;
-const BUNDLE_TAG_RE = /^(.+🎆️\d{2}🌙️\d{2}☀️\d{2})🚩️$/;
+const EMOJI_PRESENTATION_SELECTOR_RE = /[\uFE0E\uFE0F]/g;
+const COUNTER_RE = /^(.+🎆[\uFE0E\uFE0F]?\d{2}🌙[\uFE0E\uFE0F]?\d{2}☀[\uFE0E\uFE0F]?\d{2})🚩[\uFE0E\uFE0F]?(\d+)$/u;
+const BUNDLE_TAG_RE = /^(.+🎆[\uFE0E\uFE0F]?\d{2}🌙[\uFE0E\uFE0F]?\d{2}☀[\uFE0E\uFE0F]?\d{2})🚩[\uFE0E\uFE0F]?$/u;
 const NUMERIC_COUNTER_RE = /^(\d+)$/;
 const TICKET_JSON_RE = /^\.🦑️repo\/🎫️tickets\/.+\/🎫️ticket\.json$/;
 export function digestMicroCommitMessage(message: string): string {
@@ -3043,9 +3044,9 @@ export function currentBranch(root: string): CurrentBranch {
 export function branchValidationError(command: "micro-commit" | "commit", branch: CurrentBranch): string | null {
   if (!branch.ok) return `${command}: cannot read current branch: ${branch.error}`;
   if (!branch.name) return `${command}: detached HEAD; switch to a branch containing ⛳️wip or 🏗️dev`;
-  const normalizedBranch = branch.name.replace(/\uFE0E|\uFE0F/g, "");
-  const wipMarker = "⛳️wip".replace(/\uFE0E|\uFE0F/g, "");
-  const devMarker = "🏗️dev".replace(/\uFE0E|\uFE0F/g, "");
+  const normalizedBranch = normalizeEmojiPresentation(branch.name);
+  const wipMarker = normalizeEmojiPresentation("⛳️wip");
+  const devMarker = normalizeEmojiPresentation("🏗️dev");
   if (!normalizedBranch.includes(wipMarker) && !normalizedBranch.includes(devMarker)) {
     return `${command}: current branch "${branch.name}" must contain ⛳️wip or 🏗️dev`;
   }
@@ -3118,6 +3119,18 @@ function pad3(n: number): string {
 
 const COUNTER_LOG_DEPTH = 40;
 
+/** 🎨️Normalizes emoji text and emoji presentation variants for stable identity comparisons. */
+export function normalizeEmojiPresentation(value: string): string {
+  return value.replace(EMOJI_PRESENTATION_SELECTOR_RE, "");
+}
+
+/** 🧭️Renders a historical WIP epoch with the contributor's current canonical emoji presentation. */
+export function canonicalWipLine1Base(line1Base: string, contributor: Contributor): string {
+  const match = /🎆(\d{2})🌙(\d{2})☀(\d{2})$/u.exec(normalizeEmojiPresentation(line1Base));
+  if (!match) return line1Base;
+  return `${contributor.emoji}${contributor.alias}🎆️${match[1]}🌙️${match[2]}☀️${match[3]}`;
+}
+
 /** 🔢️Reads micro-commit counter from subject line `…🚩️NNN`. */
 export function extractCounterFromSubject(subject: string): { nnn: number; line1Base: string } | null {
   const s = subject.trim();
@@ -3143,15 +3156,16 @@ export function line1BaseFromBundleTag(tag: string): string | null {
 /** 🎆️Resolves the persisted WIP epoch for line 1 from formatted history or the latest bundle tag. */
 export function contributorWipLine1Base(root: string, contributor: Contributor): string | null {
   const prefix = `${contributor.emoji}${contributor.alias}`;
+  const normalizedPrefix = normalizeEmojiPresentation(prefix);
   const log = git(root, ["log", "--format=%s", "-1000"]).out;
   for (const subject of log ? log.split("\n") : []) {
     const hit = extractCounterFromSubject(subject);
-    if (hit?.line1Base.startsWith(prefix)) return hit.line1Base;
+    if (hit && normalizeEmojiPresentation(hit.line1Base).startsWith(normalizedPrefix)) return hit.line1Base;
   }
-  const tags = git(root, ["tag", "-l", `${prefix}*`, "--sort=-creatordate"]).out;
+  const tags = git(root, ["tag", "-l", "--sort=-creatordate"]).out;
   for (const tag of tags ? tags.split("\n") : []) {
     const base = line1BaseFromBundleTag(tag);
-    if (base?.startsWith(prefix)) return base;
+    if (base && normalizeEmojiPresentation(base).startsWith(normalizedPrefix)) return base;
   }
   return null;
 }
@@ -3167,11 +3181,13 @@ export function bumpCounterFromHistory(
   const mm = pad2(now.getMonth() + 1);
   const dd = pad2(now.getDate());
   const fresh = `${contributor.emoji}${contributor.alias}🎆️${yy}🌙️${mm}☀️${dd}`;
+  const contributorPrefix = normalizeEmojiPresentation(`${contributor.emoji}${contributor.alias}`);
   let max = 0;
   let line1Base: string | null = null;
   for (const subject of subjectsNewestFirst) {
     const hit = extractCounterFromSubject(subject);
     if (hit) {
+      if (!normalizeEmojiPresentation(hit.line1Base).startsWith(contributorPrefix)) continue;
       max = Math.max(max, hit.nnn);
       if (!line1Base) line1Base = hit.line1Base;
       continue;
@@ -3179,8 +3195,13 @@ export function bumpCounterFromHistory(
     const numeric = extractNumericCounterFromSubject(subject);
     if (numeric !== null) max = Math.max(max, numeric);
   }
-  const epoch = line1Base ?? wipLine1Base ?? fresh;
+  const epoch = canonicalWipLine1Base(line1Base ?? wipLine1Base ?? fresh, contributor);
   if (max > 0) return { line1Base: epoch, nnn: pad3(max + 1) };
+  const unparsedPrior = subjectsNewestFirst.find((subject) => {
+    const normalized = normalizeEmojiPresentation(subject.trim());
+    return normalized.startsWith(`${contributorPrefix}🎆`) && /🚩\d+$/u.test(normalized);
+  });
+  if (unparsedPrior) throw new Error(`micro-commit: refusing to reset counter to 001 because prior subject could not be parsed: ${unparsedPrior}`);
   return { line1Base: epoch, nnn: "001" };
 }
 

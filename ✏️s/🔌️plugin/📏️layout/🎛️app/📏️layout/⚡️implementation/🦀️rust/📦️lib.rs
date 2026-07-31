@@ -60,6 +60,7 @@ pub struct PageColumns {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Layer {
+    #[dsl(defines = "layer")]
     pub id: String,
     pub name: String,
     pub visible: bool,
@@ -124,8 +125,10 @@ pub struct ImageFrame {
 pub enum Frame {
     #[serde(rename = "rect")]
     Rect {
+        #[dsl(defines = "frame")]
         id: String,
         #[serde(rename = "layerId")]
+        #[dsl(refs = "layer")]
         layer_id: String,
         #[dsl(block)]
         bounds: LayoutBounds,
@@ -136,16 +139,20 @@ pub enum Frame {
     },
     #[serde(rename = "text")]
     Text {
+        #[dsl(defines = "frame")]
         id: String,
         #[serde(rename = "layerId")]
+        #[dsl(refs = "layer")]
         layer_id: String,
         #[dsl(block)]
         bounds: LayoutBounds,
         locked: Option<bool>,
         visible: Option<bool>,
         #[serde(rename = "storyId")]
+        #[dsl(refs = "story")]
         story_id: String,
         #[serde(rename = "threadNext")]
+        #[dsl(refs = "frame")]
         thread_next: Option<String>,
         columns: u32,
         #[dsl(block)]
@@ -155,14 +162,17 @@ pub enum Frame {
     },
     #[serde(rename = "image")]
     Image {
+        #[dsl(defines = "frame")]
         id: String,
         #[serde(rename = "layerId")]
+        #[dsl(refs = "layer")]
         layer_id: String,
         #[dsl(block)]
         bounds: LayoutBounds,
         locked: Option<bool>,
         visible: Option<bool>,
         #[serde(rename = "linkId")]
+        #[dsl(refs = "link")]
         link_id: String,
     },
 }
@@ -200,13 +210,16 @@ pub struct TextStyleRun {
     pub start: usize,
     pub end: usize,
     #[serde(rename = "paragraphStyleId")]
+    #[dsl(refs = "paragraph-style")]
     pub paragraph_style_id: Option<String>,
     #[serde(rename = "characterStyleId")]
+    #[dsl(refs = "character-style")]
     pub character_style_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct TextStory {
+    #[dsl(defines = "story")]
     pub id: String,
     pub content: String,
     #[serde(rename = "styleRuns")]
@@ -216,6 +229,7 @@ pub struct TextStory {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ParagraphStyle {
+    #[dsl(defines = "paragraph-style")]
     pub id: String,
     pub name: String,
     #[serde(rename = "fontFamily")]
@@ -229,8 +243,29 @@ pub struct ParagraphStyle {
     pub alignment: String,
 }
 
+/// 🔤️ A named run-level style override (bold/italic/color emphasis) applied on top of a
+/// {@link ParagraphStyle} via {@link TextStyleRun.character_style_id}. Unlike `ParagraphStyle`,
+/// every field besides `id` is optional: a character style typically overrides only one or two
+/// attributes and inherits the rest from the paragraph it's layered onto.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct CharacterStyle {
+    #[dsl(defines = "character-style")]
+    pub id: String,
+    pub name: Option<String>,
+    #[serde(rename = "fontFamily")]
+    pub font_family: Option<String>,
+    #[serde(rename = "fontSize")]
+    pub font_size: Option<f64>,
+    #[serde(rename = "fontWeight")]
+    pub font_weight: Option<u32>,
+    pub italic: Option<bool>,
+    pub color: Option<[f32; 4]>,
+    pub tracking: Option<f64>,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ImageLink {
+    #[dsl(defines = "link")]
     pub id: String,
     pub path: String,
     pub hash: String,
@@ -247,6 +282,7 @@ pub struct ImageLink {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct PageOverride {
     #[serde(rename = "objectId")]
+    #[dsl(refs = "frame")]
     pub object_id: String,
     #[dsl(block)]
     pub bounds: Option<LayoutBounds>,
@@ -256,6 +292,7 @@ pub struct PageOverride {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ParentPage {
+    #[dsl(defines = "parent-page")]
     pub id: String,
     pub name: String,
     pub width: f64,
@@ -273,8 +310,10 @@ pub struct Page {
     pub id: String,
     pub name: String,
     #[serde(rename = "spreadId")]
+    #[dsl(refs = "spread")]
     pub spread_id: String,
     #[serde(rename = "parentPageId")]
+    #[dsl(refs = "parent-page")]
     pub parent_page_id: Option<String>,
     pub width: f64,
     pub height: f64,
@@ -296,6 +335,7 @@ pub struct Page {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Spread {
+    #[dsl(defines = "spread")]
     pub id: String,
     pub name: String,
     #[serde(rename = "pageIds")]
@@ -323,7 +363,8 @@ pub struct LayoutDocument {
     #[dsl(table)]
     pub paragraph_styles: Vec<ParagraphStyle>,
     #[serde(rename = "characterStyles")]
-    pub character_styles: Vec<serde_json::Value>,
+    #[dsl(table)]
+    pub character_styles: Vec<CharacterStyle>,
     #[dsl(table)]
     pub stories: Vec<TextStory>,
     #[dsl(table)]

@@ -42,6 +42,7 @@ pub struct Block5dPart3d {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Block5dGripKind {
+    #[dsl(defines = "grip_kind")]
     pub id: String,
     pub name: String,
     pub label: String,
@@ -55,14 +56,18 @@ pub struct Block5dGripKind {
 #[serde(rename_all = "camelCase")]
 pub struct Block5dGripTemplate {
     pub id: String,
+    #[dsl(refs = "grip_kind")]
     pub grip_kind: String,
     #[serde(default)]
+    #[dsl(angle = "rad")]
     pub angle: f64,
     #[serde(default)]
     pub radius_2d: f64,
     #[serde(default)]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default)]
+    #[dsl(dir)]
     pub direction: [f64; 3],
     #[serde(default)]
     pub radius_3d: f64,

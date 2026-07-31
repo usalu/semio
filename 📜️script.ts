@@ -647,8 +647,9 @@ export class VerifyScript extends Script {
     console.log("[verify] leveled test target coverage…");
     this.checkLeveledTestTargets();
     console.log("[verify] dsl fixture laws…");
-    // Quick level here: the full sweep (parse∘print = id, canonicalize idempotence over every 📚️example fixture)
-    // runs at `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
+    // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
+    // idempotence over every real 📚️example fixture — @semio-tech/dsl-fixture-sweep-rs) runs at
+    // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
     runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/dsl-core-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs"], {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
@@ -727,11 +728,27 @@ export class TestScript extends Script {
       return;
     }
     if (rest[0] === "dsl") {
-      // 🗣️ DSL engine crates + the fixture-law sweep (parse∘print = id, canonicalize idempotence) once it lands in dsl_rs test_support.
-      runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "-p", "@semio-tech/dsl-core-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs"], {
-        cwd: this.root,
-        ...orchestratorBudgetOpts(),
-      });
+      // 🗣️ DSL engine crates + the repo-wide fixture-law sweep (parse→print→reparse fixpoint,
+      // canonicalize idempotence — dsl-fixture-sweep-rs) over every real shipped 📚️example fixture.
+      runCmd(
+        "bun",
+        [
+          "nx",
+          "run-many",
+          "-t",
+          testTargetForLevel(level),
+          "-p",
+          "@semio-tech/dsl-core-rs",
+          "@semio-tech/dsl-schema-rs",
+          "@semio-tech/dsl-derive-rs",
+          "@semio-tech/dsl-rs",
+          "@semio-tech/dsl-fixture-sweep-rs",
+        ],
+        {
+          cwd: this.root,
+          ...orchestratorBudgetOpts(),
+        },
+      );
       return;
     }
     const collectingCoverage = level === "exhaustive" && coverageEnabled();

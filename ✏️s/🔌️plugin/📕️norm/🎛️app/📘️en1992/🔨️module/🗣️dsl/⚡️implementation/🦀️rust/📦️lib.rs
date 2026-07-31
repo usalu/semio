@@ -1,9 +1,14 @@
 //! 📜️ EN 1992 design of concrete structures — textual document grammar surface + laws (constitutional: dsl).
-//!
-//! 📄️ No handcrafted `.en1992` DSL fixture exists for this app — the original monolith's own DSL law
-//! test exercised only `Document::default()`, so that is the representative document here too.
 
 use en1992::Document;
+
+/// 💧️ The liquid-retaining-fem-anchor example fixture, handcrafted in `en1992`'s DSL
+/// (`store::DocumentDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
+/// checked with a FEM-based analysis, an R90 fire rating, and a post-installed anchor in cracked
+/// concrete, under the EN annex — distinct from `Document::default()`'s DE-annex/TC1/R60/uncracked
+/// values so the grammar's non-default branches (annex, fire rating, tightness class, `use_fem`,
+/// `anchor_cracked`) are exercised too.
+pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/📕️norm/📚️example/📘️en1992/📕️liquid-retaining-fem-anchor.en1992");
 
 /// 📖️ Parses `.en1992` DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Document, store::TextError> {
@@ -43,5 +48,19 @@ mod tests {
         let bad_line = bad.lines().position(|l| l.contains("not-a-rating")).expect("bad line present") as u32 + 1;
         let error = parse_dsl(&bad).expect_err("an unknown fire_rating tag must fail to parse");
         assert_eq!(error.span.line, bad_line, "error span must point at the actual malformed line, not (1, 1)");
+    }
+
+    #[test]
+    fn liquid_retaining_fem_anchor_example_fixture_parses_and_round_trips() {
+        use en1992::part_1_2::FireRating;
+        use en1992::part_3::TightnessClass;
+        use norm_core::AnnexChoice;
+        let document = parse_dsl(EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT).expect("parse liquid retaining fem anchor example");
+        assert_eq!(document.annex, AnnexChoice::En);
+        assert_eq!(document.fire_rating, FireRating::R90);
+        assert_eq!(document.tightness_class, TightnessClass::Tc2);
+        assert!(document.use_fem);
+        assert!(document.anchor_cracked);
+        store::test_support::assert_dsl_round_trip(&document);
     }
 }

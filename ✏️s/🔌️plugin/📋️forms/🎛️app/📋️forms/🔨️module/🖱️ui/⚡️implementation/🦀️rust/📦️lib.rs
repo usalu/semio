@@ -33,118 +33,6 @@ const FORMS_PLAY_WINDOW_BLUEPRINT: &str = "forms-blueprint";
 const FORMS_PLAY_WINDOW_TRY: &str = "forms-try";
 const FORMS_QUESTION_DRAG_MIME: &str = "application/x-semio-forms-question-kind";
 const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = forms_dsl::BUILDING_COMPONENT_EXAMPLE_TEXT;
-const DEFAULT_EXAMPLE_JSON: &str = r##"{
-  "schema": "forms.form",
-  "id": "default",
-  "version": "1",
-  "title": "Contact",
-  "steps": [
-    {
-      "id": "contact",
-      "title": "Contact",
-      "blocks": [
-        { "id": "name", "kind": "text", "label": "Name", "required": true, "placeholder": "Your name" },
-        { "id": "email", "kind": "text", "label": "Email", "required": true, "placeholder": "you@example.com" },
-        { "id": "message", "kind": "longText", "label": "Message", "placeholder": "How can we help?" }
-      ]
-    }
-  ]
-}"##;
-const ONBOARDING_EXAMPLE_JSON: &str = r##"{
-  "schema": "forms.form",
-  "id": "onboarding",
-  "version": "1",
-  "title": "Product Onboarding",
-  "steps": [
-    {
-      "id": "profile",
-      "title": "Profile",
-      "description": "Tell us about yourself.",
-      "blocks": [
-        { "id": "full-name", "kind": "text", "label": "Full name", "required": true, "default": "Alex Example" },
-        { "id": "bio", "kind": "longText", "label": "Bio", "placeholder": "Short introduction" },
-        { "id": "age", "kind": "number", "label": "Age", "min": 13, "max": 120, "default": 28 },
-        { "id": "avatar", "kind": "image", "label": "Avatar", "src": "" },
-        { "id": "resume", "kind": "file", "label": "Resume", "accept": ".pdf,.doc,.docx" }
-      ]
-    },
-    {
-      "id": "preferences",
-      "title": "Preferences",
-      "description": "Customize your experience.",
-      "blocks": [
-        { "id": "theme-color", "kind": "color", "label": "Accent color", "default": "#336699" },
-        { "id": "start-date", "kind": "date", "label": "Start date", "default": "2026-07-01" },
-        { "id": "notifications", "kind": "boolean", "label": "Enable notifications", "default": true },
-        { "id": "volume", "kind": "slider", "label": "Notification volume", "min": 0, "max": 100, "step": 5, "default": 60, "unit": "%" },
-        {
-          "id": "plan",
-          "kind": "single",
-          "label": "Plan",
-          "required": true,
-          "default": "pro",
-          "options": [
-            { "value": "free", "label": "Free" },
-            { "value": "pro", "label": "Pro" },
-            { "value": "team", "label": "Team" }
-          ]
-        },
-        {
-          "id": "features",
-          "kind": "multi",
-          "label": "Features",
-          "default": ["analytics"],
-          "options": [
-            { "value": "analytics", "label": "Analytics" },
-            { "value": "automation", "label": "Automation" },
-            { "value": "collab", "label": "Collaboration" }
-          ]
-        },
-        {
-          "id": "offset",
-          "kind": "vector",
-          "label": "Workspace offset",
-          "schema": "vec3",
-          "step": 0.5,
-          "fields": [
-            { "key": "x", "label": "X", "value": 0 },
-            { "key": "y", "label": "Y", "value": 0 },
-            { "key": "z", "label": "Z", "value": 0 }
-          ]
-        },
-        { "id": "welcome-note", "kind": "note", "label": "Welcome", "text": "Thanks for trying every question kind in one fixture." }
-      ]
-    },
-    {
-      "id": "advanced",
-      "title": "Advanced",
-      "blocks": [
-        { "id": "show-team-size", "kind": "boolean", "label": "Specify team size", "default": false },
-        {
-          "id": "team-size",
-          "kind": "slider",
-          "label": "Team size",
-          "min": 1,
-          "max": 50,
-          "step": 1,
-          "default": 5,
-          "condition": { "kind": "truthy", "expr": { "kind": "var", "name": "show-team-size" } }
-        },
-        {
-          "id": "team-role",
-          "kind": "single",
-          "label": "Primary role",
-          "options": [
-            { "value": "design", "label": "Design" },
-            { "value": "engineering", "label": "Engineering" },
-            { "value": "product", "label": "Product" }
-          ],
-          "condition": { "kind": "truthy", "expr": { "kind": "var", "name": "show-team-size" } }
-        }
-      ]
-    }
-  ]
-}"##;
 const AVATAR_PLACEHOLDER_PNG_BASE64: &str =
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
@@ -1961,8 +1849,8 @@ impl DocumentApp for FormsPlayApp {
                 let Some(next) = (match example_id {
                     "" => return ActionEmit::operations(replace_spec_operations(spec, &empty_forms_projection())),
                     "building-component" => forms_dsl::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
-                    "default" => serde_json::from_str::<FormSpec>(DEFAULT_EXAMPLE_JSON).ok(),
-                    "onboarding" => serde_json::from_str::<FormSpec>(ONBOARDING_EXAMPLE_JSON).ok(),
+                    "default" => Some(forms_engine::default_example_spec()),
+                    "onboarding" => Some(forms_engine::onboarding_example_spec()),
                     _ => return ActionEmit::default(),
                 }) else {
                     return ActionEmit::default();
@@ -2100,8 +1988,8 @@ pub fn create_forms_app() -> App {
                 Some(&["Blueprint".into(), "Try".into()]),
             )),
     )
-    .example("default", "Contact", DEFAULT_EXAMPLE_JSON)
-    .example("onboarding", "Onboarding", ONBOARDING_EXAMPLE_JSON)
+    .example("default", "Contact", forms_engine::default_example_json())
+    .example("onboarding", "Onboarding", forms_engine::onboarding_example_json())
     .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_TEXT)
     .workflow("forms", "Forms", "data")
 }

@@ -1,0 +1,57 @@
+schema=forms.form id=onboarding version="1" title="Product Onboarding" steps=[ id=profile title=Profile description="Tell us about yourself." blocks=[ id=full-name label="Full name" kind=text required=true default="Alex Example"
+condition {
+}
+id=bio label=Bio kind=longText placeholder="Short introduction"
+condition {
+}
+id=age label=Age kind=number min=13 max=120 default=28
+condition {
+}
+id=avatar label=Avatar kind=image src=""
+condition {
+}
+id=resume label=Resume kind=file accept=".pdf,.doc,.docx"
+condition {
+}
+] id=preferences title=Preferences description="Customize your experience." blocks=[ id=theme-color label="Accent color" kind=color default="#336699"
+condition {
+}
+id=start-date label="Start date" kind=date default="2026-07-01"
+condition {
+}
+id=notifications label="Enable notifications" kind=boolean default=true
+condition {
+}
+id=volume label="Notification volume" kind=slider min=0 max=100 step=5 unit="%" default=60
+condition {
+}
+id=plan label=Plan kind=single required=true default="pro" options=[ value=free label=Free value=pro label=Pro value=team label=Team ]
+condition {
+}
+id=features label=Features kind=multi default=[ "analytics" ] options=[ value=analytics label=Analytics value=automation label=Automation value=collab label=Collaboration ]
+condition {
+}
+id=offset label="Workspace offset" kind=vector step=0.5 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]
+condition {
+}
+id=welcome-note label=Welcome kind=note text="Thanks for trying every question kind in one fixture."
+condition {
+}
+] id=advanced title=Advanced blocks=[ id=show-team-size label="Specify team size" kind=boolean default=false
+condition {
+}
+id=team-size label="Team size" kind=slider min=1 max=50 step=1 default=5
+condition {
+  truthy
+  expr {
+    var name=show-team-size
+  }
+}
+id=team-role label="Primary role" kind=single options=[ value=design label=Design value=engineering label=Engineering value=product label=Product ]
+condition {
+  truthy
+  expr {
+    var name=show-team-size
+  }
+}
+] ]

@@ -3,7 +3,6 @@
 //! crate.
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use protocol::{Identified, Patchable};
 
 pub const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
@@ -13,14 +12,18 @@ pub const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 #[serde(rename_all = "camelCase")]
 pub struct ShootingCamera {
     #[serde(default = "default_camera_position")]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default = "default_camera_target")]
+    #[dsl(coord)]
     pub target: [f64; 3],
     #[serde(default = "one_f64")]
     pub zoom: f64,
     #[serde(default = "default_fov")]
+    #[dsl(angle = "deg")]
     pub fov: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(dir)]
     pub up: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub projection: Option<String>,
@@ -52,6 +55,7 @@ fn one_f64() -> f64 {
 #[dsl(keyword = "saved-camera")]
 #[serde(rename_all = "camelCase")]
 pub struct ShootingSavedCamera {
+    #[dsl(defines = "saved-camera")]
     pub id: String,
     pub label: String,
     #[dsl(block)]
@@ -68,11 +72,15 @@ pub struct ShootingAsset {
     #[serde(default = "default_glb_format")]
     pub format: String,
     #[serde(default)]
+    #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default)]
     pub orientation: Option<[f64; 4]>,
+    /// 🪄️ Uniform-vs-per-axis is a JSON-authoring shorthand only, not a persisted distinction —
+    /// callers wanting a uniform scale write `[s, s, s]` (see `shooting_asset_scale`, the sole
+    /// reader, which never distinguished the two shapes anyway).
     #[serde(default)]
-    pub scale: Option<Value>,
+    pub scale: Option<[f64; 3]>,
 }
 
 pub fn default_glb_format() -> String {
@@ -92,6 +100,7 @@ pub struct ShootingShot {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub background: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[dsl(refs = "saved-camera")]
     pub camera_id: Option<String>,
 }
 
@@ -99,7 +108,9 @@ pub struct ShootingShot {
 #[serde(rename_all = "camelCase", default)]
 pub struct ShootingSun {
     pub enabled: bool,
+    #[dsl(angle = "deg")]
     pub azimuth: f64,
+    #[dsl(angle = "deg")]
     pub elevation: f64,
     pub intensity: f64,
     pub color: String,
@@ -205,16 +216,9 @@ pub fn empty_shooting_fixture() -> ShootingFixture {
     }
 }
 
-/// 🧮️ Resolves an asset's uniform-or-per-axis scale (`scale` is `null`/number/`[x,y,z]`) to `[x, y, z]`.
+/// 🧮️ Resolves an asset's scale, defaulting an absent `scale` to identity `[1, 1, 1]`.
 pub fn shooting_asset_scale(asset: &ShootingAsset) -> [f64; 3] {
-    match &asset.scale {
-        Some(Value::Array(values)) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
-        Some(Value::Number(value)) => {
-            let scale = value.as_f64().unwrap_or(1.0);
-            [scale, scale, scale]
-        }
-        _ => [1.0, 1.0, 1.0],
-    }
+    asset.scale.unwrap_or([1.0, 1.0, 1.0])
 }
 
 /// 🧭️ Quaternion (Hamilton product) multiply — `a * b`, both `[x, y, z, w]`. Shared by `op`'s
@@ -265,9 +269,10 @@ impl Identified<String> for ShootingSavedCamera {
 pub struct ShootingAssetPatch {
     pub name: Option<String>,
     pub url: Option<String>,
+    #[dsl(coord)]
     pub origin: Option<[f64; 3]>,
     pub orientation: Option<[f64; 4]>,
-    pub scale: Option<Value>,
+    pub scale: Option<[f64; 3]>,
 }
 
 impl Patchable<ShootingAssetPatch> for ShootingAsset {
@@ -284,8 +289,8 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
         if let Some(orientation) = patch.orientation {
             self.orientation = Some(orientation);
         }
-        if let Some(scale) = &patch.scale {
-            self.scale = Some(scale.clone());
+        if let Some(scale) = patch.scale {
+            self.scale = Some(scale);
         }
     }
 
@@ -295,7 +300,7 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
             url: (self.url != other.url).then(|| other.url.clone()),
             origin: (self.origin != other.origin).then_some(other.origin),
             orientation: (self.orientation != other.orientation).then(|| other.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
-            scale: (self.scale != other.scale).then(|| other.scale.clone().unwrap_or(Value::Null)),
+            scale: (self.scale != other.scale).then(|| other.scale.unwrap_or([1.0, 1.0, 1.0])),
         };
         (patch != ShootingAssetPatch::default()).then_some(patch)
     }
@@ -373,7 +378,9 @@ impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
 #[serde(rename_all = "camelCase")]
 pub struct ShootingScenePatch {
     pub sun_enabled: Option<bool>,
+    #[dsl(angle = "deg")]
     pub sun_azimuth: Option<f64>,
+    #[dsl(angle = "deg")]
     pub sun_elevation: Option<f64>,
     pub sun_intensity: Option<f64>,
     pub ambient_intensity: Option<f64>,

@@ -1837,6 +1837,19 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             }
         }
 
+        /// 📜️ `📚️example/🎬️demo.os` is the handcrafted `.os` DSL-text fixture for `OsProjection` (the
+        /// `s.space` studio document) — a two-app workflow (a `cad` scene feeding an `en1995` timber
+        /// norm check over a direct `cad.scene` wire) with one of each `OsParameter` variant and two
+        /// parameter bindings, so this covers the full grammar `sample_os_projection` exercises, from a
+        /// static file instead of only from inline Rust construction.
+        #[test]
+        fn dsl_round_trips_demo_os_example() {
+            let text = include_str!("../../📚️example/🎬️demo.os");
+            let projection = <OsProjection as store::DocumentDsl>::parse_dsl(text).expect("🎬️demo.os must parse as OsProjection");
+            store::test_support::assert_dsl_round_trip(&projection);
+            store::test_support::assert_dsl_pack_equivalence(&projection);
+        }
+
         #[test]
         fn dsl_round_trips_default_projection() {
             store::test_support::assert_dsl_round_trip(&default_os_projection());

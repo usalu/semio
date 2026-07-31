@@ -17,7 +17,7 @@ path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️mo
 [dependencies]
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 semio-framework-os = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
-semio-framework-hash = { path = "../../../../../../../🧰️framework/🔨️module/#⃣hash/⚡️implementation/🦀️rust", package = "semio-framework-hash" }
+framework_hash = { path = "../../../../../../../🧰️framework/🔨️module/#⃣hash/⚡️implementation/🦀️rust", package = "semio-framework-hash" }
 store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

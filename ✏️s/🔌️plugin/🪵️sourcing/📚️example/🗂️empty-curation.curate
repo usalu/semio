@@ -4,5 +4,5 @@ filters {
 }
 runtime {
 }
-curated [object-id:TEXT count:UINT] {
+curated [object-id:REF count:UINT] {
 }

@@ -20,33 +20,46 @@ pub mod part_1_2 {
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "en1991", layout = "lines")]
 pub struct Document {
+    #[dsl(unit = "m2")]
     pub area_m2: f64,
     pub category: ImposedCategory,
     pub annex: AnnexChoice,
     pub self_weight_material: String,
+    #[dsl(unit = "m")]
     pub self_weight_thickness_m: f64,
+    #[dsl(unit = "kN/m2")]
     pub assumed_g_k_kn_m2: f64,
     pub fire_curve: part_1_2::FireCurve,
     pub fire_resistance_min: f64,
     pub fire_member_capacity_c: f64,
     pub snow_zone: u8,
+    #[dsl(unit = "m")]
     pub snow_altitude_m: f64,
+    #[dsl(unit = "kN/m2")]
     pub en_s_k_kn_m2: f64,
     pub wind_zone: u8,
+    #[dsl(unit = "m/s")]
     pub en_v_b_m_s: f64,
+    #[dsl(unit = "K")]
     pub delta_t_k: f64,
     pub construction_activity: String,
+    #[dsl(unit = "t")]
     pub accidental_mass_t: f64,
     pub accidental_speed_km_h: f64,
     pub bridge_lane: u8,
+    #[dsl(unit = "m")]
     pub bridge_span_m: f64,
+    #[dsl(unit = "m")]
     pub bridge_lane_width_m: f64,
     pub bridge_moment_resistance_knm: f64,
     pub crane_class: String,
     pub hoist_class: String,
+    #[dsl(unit = "m/s")]
     pub hoisting_speed_m_s: f64,
     pub silo_bulk_density_kn_m3: f64,
+    #[dsl(unit = "m")]
     pub silo_height_m: f64,
+    #[dsl(unit = "m")]
     pub silo_hydraulic_radius_m: f64,
     pub silo_mu: f64,
     pub silo_k: f64,

@@ -237,7 +237,7 @@ impl Operation<ShootingFixture> for ShootingOperation {
             }
             ShootingOperation::ScaleAssets { asset_ids, sx, sy, sz } => transform_assets_diff(projection, asset_ids, |asset| {
                 let current = shooting::shooting_asset_scale(asset);
-                ShootingAssetPatch { scale: Some(serde_json::json!([current[0] * sx, current[1] * sy, current[2] * sz])), ..Default::default() }
+                ShootingAssetPatch { scale: Some([current[0] * sx, current[1] * sy, current[2] * sz]), ..Default::default() }
             }),
             ShootingOperation::SetFixture { fixture } => ShootingDiff { fixture: Some(fixture.clone()), ..Default::default() },
         }
@@ -551,7 +551,7 @@ mod tests {
                     format: "glb".into(),
                     origin: [1.0, 2.0, 3.0],
                     orientation: Some([0.0, 0.0, 0.7071, 0.7071]),
-                    scale: Some(serde_json::json!([2.0, 2.0, 2.0])),
+                    scale: Some([2.0, 2.0, 2.0]),
                 },
                 ShootingAsset { id: "a2".into(), name: "Plain".into(), url: "/mesh/a2.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None },
             ],
@@ -663,7 +663,7 @@ mod tests {
         // originally-`None` scale lands on `Some([1,1,1])` — the same effective scale (see
         // `shooting_asset_scale`) but not byte-identical. Start from an explicit identity scale so
         // the round-trip assertion checks real equality instead of that representation quirk.
-        asset.scale = Some(serde_json::json!([1.0, 1.0, 1.0]));
+        asset.scale = Some([1.0, 1.0, 1.0]);
         fixture.assets.push(asset);
         let translate = ShootingOperation::TranslateAssets { asset_ids: vec!["a1".into()], dx: 1.0, dy: 2.0, dz: 3.0 };
         let translated = round_trip(&fixture, &translate);
@@ -697,7 +697,7 @@ mod tests {
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to: 2 }));
         store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Patch {
             id: "a1".into(),
-            patch: ShootingAssetPatch { name: Some("Renamed".into()), url: None, origin: Some([1.0, 2.0, 3.0]), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(serde_json::json!(2.5)) },
+            patch: ShootingAssetPatch { name: Some("Renamed".into()), url: None, origin: Some([1.0, 2.0, 3.0]), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some([2.5, 2.5, 2.5]) },
         }));
 
         let shot = sample_shot("s1");

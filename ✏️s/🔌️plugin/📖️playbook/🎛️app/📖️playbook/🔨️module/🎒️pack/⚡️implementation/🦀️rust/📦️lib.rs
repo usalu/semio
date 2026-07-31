@@ -21,12 +21,182 @@ pub fn decode(bytes: &[u8]) -> Result<PlaybookSpec, PackError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookStep, PlaybookVectorField, PLAYBOOK_DOCUMENT_SCHEMA};
+    use serde_json::json;
 
     #[test]
     fn pack_round_trips_the_empty_projection() {
         let document = playbook::empty_playbook_projection();
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
+    }
+
+    /// 🏗️ A representative subset of the `facade-generator` example from
+    /// `📚️example/📖️facade-generator.playbook` (see the `dsl` constitutional slot's own, fuller
+    /// `sample_facade_generator_spec` for the complete block-kind roster) — kept as an independent
+    /// struct literal per app crates never depending on their sibling constitutional slots, and
+    /// trimmed here to the fields load-bearing for the pack ≡ dsl equivalence law.
+    fn sample_facade_generator_spec() -> PlaybookSpec {
+        PlaybookSpec {
+            schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
+            id: "facade-generator".into(),
+            version: "1".into(),
+            title: Some("Facade Panel Generator".into()),
+            steps: vec![
+                PlaybookStep {
+                    id: "basics".into(),
+                    title: "Project Basics".into(),
+                    description: None,
+                    blocks: vec![
+                        PlaybookBlock {
+                            id: "project-name".into(),
+                            label: "Project Name".into(),
+                            kind: "text".into(),
+                            description: None,
+                            required: Some(true),
+                            placeholder: Some("e.g. Riverside Tower".into()),
+                            default: None,
+                            min: None,
+                            max: None,
+                            step: None,
+                            unit: None,
+                            text: None,
+                            options: None,
+                            fields: None,
+                            schema: None,
+                            src: None,
+                            accept: None,
+                            fixture_slug: None,
+                            params: None,
+                            condition: None,
+                        },
+                        PlaybookBlock {
+                            id: "material".into(),
+                            label: "Material".into(),
+                            kind: "single".into(),
+                            description: None,
+                            required: Some(true),
+                            placeholder: None,
+                            default: Some(json!("aluminum")),
+                            min: None,
+                            max: None,
+                            step: None,
+                            unit: None,
+                            text: None,
+                            options: Some(vec![
+                                PlaybookBlockOption { value: "aluminum".into(), label: "Aluminum".into() },
+                                PlaybookBlockOption { value: "timber".into(), label: "Timber".into() },
+                                PlaybookBlockOption { value: "terracotta".into(), label: "Terracotta".into() },
+                            ]),
+                            fields: None,
+                            schema: None,
+                            src: None,
+                            accept: None,
+                            fixture_slug: None,
+                            params: None,
+                            condition: None,
+                        },
+                        PlaybookBlock {
+                            id: "mirror-layout".into(),
+                            label: "Mirror Layout".into(),
+                            kind: "boolean".into(),
+                            description: None,
+                            required: None,
+                            placeholder: None,
+                            default: Some(json!(false)),
+                            min: None,
+                            max: None,
+                            step: None,
+                            unit: None,
+                            text: None,
+                            options: None,
+                            fields: None,
+                            schema: None,
+                            src: None,
+                            accept: None,
+                            fixture_slug: None,
+                            params: None,
+                            condition: None,
+                        },
+                    ],
+                },
+                PlaybookStep {
+                    id: "schedule".into(),
+                    title: "Schedule & Look".into(),
+                    description: Some("Timing and finish details reviewers check before sign-off.".into()),
+                    blocks: vec![PlaybookBlock {
+                        id: "panel-offset".into(),
+                        label: "Panel Offset".into(),
+                        kind: "vector".into(),
+                        description: None,
+                        required: None,
+                        placeholder: None,
+                        default: None,
+                        min: None,
+                        max: None,
+                        step: None,
+                        unit: Some("m".into()),
+                        text: None,
+                        options: None,
+                        fields: Some(vec![
+                            PlaybookVectorField { key: "x".into(), label: Some("X".into()), value: Some(0.0) },
+                            PlaybookVectorField { key: "y".into(), label: Some("Y".into()), value: Some(0.15) },
+                            PlaybookVectorField { key: "z".into(), label: Some("Z".into()), value: Some(0.0) },
+                        ]),
+                        schema: None,
+                        src: None,
+                        accept: None,
+                        fixture_slug: None,
+                        params: None,
+                        condition: None,
+                    }],
+                },
+                PlaybookStep {
+                    id: "pattern".into(),
+                    title: "Pattern Logic".into(),
+                    description: None,
+                    blocks: vec![PlaybookBlock {
+                        id: "pattern-rule".into(),
+                        label: "Pattern Rule".into(),
+                        kind: "generative.pattern".into(),
+                        description: Some("Contributed by the procedural extension module.".into()),
+                        required: None,
+                        placeholder: None,
+                        default: None,
+                        min: None,
+                        max: None,
+                        step: None,
+                        unit: None,
+                        text: None,
+                        options: None,
+                        fields: None,
+                        schema: None,
+                        src: None,
+                        accept: None,
+                        fixture_slug: Some("voronoi-facade".into()),
+                        params: Some(json!({ "algorithm": "voronoi", "seed": 7.0, "density": 0.6 })),
+                        condition: Some(PlaybookExpr::And {
+                            items: vec![
+                                PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "material".into() }), right: Box::new(PlaybookExpr::Const { value: json!("aluminum") }) },
+                                PlaybookExpr::Truthy { expr: Box::new(PlaybookExpr::Var { name: "mirror-layout".into() }) },
+                            ],
+                        }),
+                    }],
+                },
+            ],
+        }
+    }
+
+    #[test]
+    fn facade_generator_example_pack_round_trips() {
+        let document = sample_facade_generator_spec();
+        let bytes = encode(&document);
+        assert_eq!(decode(&bytes).expect("decode"), document);
+    }
+
+    #[test]
+    fn facade_generator_example_pack_agrees_with_dsl() {
+        store::test_support::assert_dsl_pack_equivalence(&sample_facade_generator_spec());
     }
 }
 //#endregion 🧪️Tests

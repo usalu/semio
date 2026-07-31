@@ -4,7 +4,7 @@ layers {
   base {
     id=emblem-group name="Semio Emblem" visible=true locked=false opacity=1 blend-mode=normal
     transform {
-      x=0 y=0 scale-x=1 scale-y=1 rotation=0
+      x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
     }
     attributes {
       fill {
@@ -16,7 +16,7 @@ layers {
     base {
       id=emblem-orange name="Orange Wedge" visible=true locked=false opacity=1 blend-mode=normal
       transform {
-        x=0 y=0 scale-x=1 scale-y=1 rotation=0
+        x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
       }
       attributes {
         fill {
@@ -38,7 +38,7 @@ layers {
     base {
       id=emblem-red name="Red Frame" visible=true locked=false opacity=1 blend-mode=normal
       transform {
-        x=0 y=0 scale-x=1 scale-y=1 rotation=0
+        x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
       }
       attributes {
         fill {
@@ -65,7 +65,7 @@ layers {
     base {
       id=emblem-teal name="Teal Bars" visible=true locked=false opacity=1 blend-mode=normal
       transform {
-        x=0 y=0 scale-x=1 scale-y=1 rotation=0
+        x=0 y=0 scale-x=1 scale-y=1 rotation=0rad
       }
       attributes {
         fill {

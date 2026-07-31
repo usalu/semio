@@ -2329,7 +2329,7 @@ pub mod interaction {
     }
 }
 
-use cad_document::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadReference, CadScene, CAD_PLAY_DOCUMENT_SCHEMA};
+use cad_document::{cad_all_objects, cad_pane_from_model_definition_id, cad_pane_geometry, CadCamera, CadGeometry, CadNode, CadObject, CadPaneId, CadPrimitiveSlot, CadProjectionDsl, CadReference, CadScene, CAD_PLAY_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use geometry_import::{
     cad_object_from_mesh, cad_object_from_solid_handle, centroid_from_fixture_primitives, objects_from_fixture_model,
@@ -2666,18 +2666,52 @@ pub fn forest_play_camera() -> CadCamera {
         target: [5.4, 2.34, 1.5],
         zoom: 1.0,
         fov: 50.0,
-        projection: Value::Null,
+        projection: CadProjectionDsl::default(),
     }
 }
 
-/// 📐️ Reads `camera.projection`'s raw json into the shared taxonomy config, defaulting when absent/stale.
+/// 📐️ Converts `camera.projection`'s local DSL twin into the shared taxonomy config — field-for-field,
+/// since `CadProjectionDsl` mirrors `WorldProjectionConfig` exactly (see its doc comment in `cad/rs`).
 pub fn cad_camera_projection_config(camera: &CadCamera) -> WorldProjectionConfig {
-    serde_json::from_value(camera.projection.clone()).unwrap_or_default()
+    let p = &camera.projection;
+    WorldProjectionConfig {
+        kind: p.kind.clone(),
+        orthographic_view: p.orthographic_view.clone(),
+        axonometric_variant: p.axonometric_variant.clone(),
+        axonometric_angle_a: p.axonometric_angle_a,
+        axonometric_angle_b: p.axonometric_angle_b,
+        axonometric_quadrant: p.axonometric_quadrant.clone(),
+        oblique_variant: p.oblique_variant.clone(),
+        oblique_angle: p.oblique_angle,
+        oblique_depth: p.oblique_depth,
+        one_point_axis: p.one_point_axis.clone(),
+        fov: p.fov,
+        two_point_shift: p.two_point_shift,
+        curvilinear_fov: p.curvilinear_fov,
+        curvilinear_strength: p.curvilinear_strength,
+        curvilinear_mapping: p.curvilinear_mapping.clone(),
+    }
 }
 
-/// 📐️ Writes a taxonomy config back into `camera.projection`'s raw json slot.
+/// 📐️ Writes a taxonomy config back into `camera.projection`'s local DSL twin slot.
 pub fn cad_camera_set_projection_config(camera: &mut CadCamera, config: &WorldProjectionConfig) {
-    camera.projection = serde_json::to_value(config).unwrap_or(Value::Null);
+    camera.projection = CadProjectionDsl {
+        kind: config.kind.clone(),
+        orthographic_view: config.orthographic_view.clone(),
+        axonometric_variant: config.axonometric_variant.clone(),
+        axonometric_angle_a: config.axonometric_angle_a,
+        axonometric_angle_b: config.axonometric_angle_b,
+        axonometric_quadrant: config.axonometric_quadrant.clone(),
+        oblique_variant: config.oblique_variant.clone(),
+        oblique_angle: config.oblique_angle,
+        oblique_depth: config.oblique_depth,
+        one_point_axis: config.one_point_axis.clone(),
+        fov: config.fov,
+        two_point_shift: config.two_point_shift,
+        curvilinear_fov: config.curvilinear_fov,
+        curvilinear_strength: config.curvilinear_strength,
+        curvilinear_mapping: config.curvilinear_mapping.clone(),
+    };
 }
 
 /// 📐️ Distance from `camera.position` to `camera.target`, defaulting to the historic orbit radius when degenerate.
@@ -3171,6 +3205,102 @@ pub mod construct {
     pub fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, mathematical_graph_dsl::GraphDslError> {
         let graph = CadTopologyGraph::new(geometry);
         mathematical_graph_dsl::run_query_json(&graph, source)
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use cad_document::{CadEdge, CadEdgeCurve, CadFace, CadPlaneSurface, CadShell, CadSolid, CadVertex, CadWire};
+
+        /// 📦️ A closed box: 8 vertices, 12 edges, 6 wires, 6 faces, 1 shell, 1 solid — enough
+        /// topology to exercise BOUNDED_BY/CONTAINS traversal across every dimension.
+        fn box_geometry() -> CadGeometry {
+            let corners: [[f64; 3]; 8] = [
+                [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0],
+                [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0],
+            ];
+            let vertices: Vec<CadVertex> = corners.iter().enumerate().map(|(i, p)| CadVertex { id: format!("v{i}"), position: *p }).collect();
+            let edge_pairs: [(usize, usize); 12] = [
+                (0, 1), (1, 2), (2, 3), (3, 0), // bottom
+                (4, 5), (5, 6), (6, 7), (7, 4), // top
+                (0, 4), (1, 5), (2, 6), (3, 7), // verticals
+            ];
+            let edges: Vec<CadEdge> = edge_pairs
+                .iter()
+                .enumerate()
+                .map(|(i, (a, b))| CadEdge { id: format!("e{i}"), vertex_ids: vec![format!("v{a}"), format!("v{b}")], curve: CadEdgeCurve { kind: "line".into() } })
+                .collect();
+            let face_wire_edges: [[usize; 4]; 6] = [
+                [0, 1, 2, 3],   // bottom
+                [4, 5, 6, 7],   // top
+                [0, 9, 4, 8],   // front
+                [2, 11, 6, 10], // back
+                [3, 8, 7, 11],  // left
+                [1, 10, 5, 9],  // right
+            ];
+            let wires: Vec<CadWire> = face_wire_edges.iter().enumerate().map(|(i, es)| CadWire { id: format!("w{i}"), edge_ids: es.iter().map(|e| format!("e{e}")).collect() }).collect();
+            let faces: Vec<CadFace> = (0..6)
+                .map(|i| CadFace { id: format!("f{i}"), wire_ids: vec![format!("w{i}")], surface: CadPlaneSurface { kind: "plane".into(), origin: [0.0, 0.0, 0.0], normal: [0.0, 0.0, 1.0] } })
+                .collect();
+            let shell = CadShell { id: "s0".into(), face_ids: (0..6).map(|i| format!("f{i}")).collect() };
+            let solid = CadSolid { id: "sol0".into(), shell_ids: vec!["s0".into()] };
+            CadGeometry { anchors: Vec::new(), vertices, edges, wires, faces, shells: vec![shell], solids: vec![solid] }
+        }
+
+        #[test]
+        fn topology_graph_exposes_every_entity_as_a_labeled_node() {
+            let geometry = box_geometry();
+            let graph = CadTopologyGraph::new(&geometry);
+            assert_eq!(graph.node_kind("v0").as_deref(), Some(KIND_VERTEX));
+            assert_eq!(graph.node_kind("e0").as_deref(), Some(KIND_EDGE));
+            assert_eq!(graph.node_kind("w0").as_deref(), Some(KIND_WIRE));
+            assert_eq!(graph.node_kind("f0").as_deref(), Some(KIND_FACE));
+            assert_eq!(graph.node_kind("s0").as_deref(), Some(KIND_SHELL));
+            assert_eq!(graph.node_kind("sol0").as_deref(), Some(KIND_SOLID));
+            assert_eq!(graph.node_kind("nonexistent"), None);
+            assert_eq!(graph.node_ids().len(), 8 + 12 + 6 + 6 + 1 + 1);
+        }
+
+        #[test]
+        fn topology_graph_bounded_by_and_contains_edges_traverse_every_dimension() {
+            let geometry = box_geometry();
+            let graph = CadTopologyGraph::new(&geometry);
+            let rel_edges = graph.edges();
+            // Solid -[:BOUNDED_BY]-> Shell -[:BOUNDED_BY]-> Face -[:BOUNDED_BY]-> Wire -[:CONTAINS]-> Edge -[:CONTAINS]-> Vertex
+            assert!(rel_edges.iter().any(|e| e.kind == REL_BOUNDED_BY && e.source_node_id == "sol0" && e.target_node_id == "s0"));
+            assert!(rel_edges.iter().any(|e| e.kind == REL_BOUNDED_BY && e.source_node_id == "s0" && e.target_node_id == "f0"));
+            assert!(rel_edges.iter().any(|e| e.kind == REL_BOUNDED_BY && e.source_node_id == "f0" && e.target_node_id == "w0"));
+            assert!(rel_edges.iter().any(|e| e.kind == REL_CONTAINS && e.source_node_id == "w0" && e.target_node_id == "e0"));
+            assert!(rel_edges.iter().any(|e| e.kind == REL_CONTAINS && e.source_node_id == "e0" && e.target_node_id == "v0"));
+        }
+
+        /// 🕸️ Runs a REAL Jack query — `MATCH (f:Face)-[:BOUNDED_BY]->(w:Wire) RETURN f.name, w.name`
+        /// — against `CadTopologyGraph`, proving Jack's existing parser/executor answers a genuine
+        /// TopoCypher-shaped question with zero new grammar, exactly as `construct.md` envisioned.
+        #[test]
+        fn construct_query_finds_every_face_bounded_by_its_wire() {
+            let geometry = box_geometry();
+            let json = run_construct_query(&geometry, "MATCH (f:Face)--[:BOUNDED_BY]->(w:Wire) RETURN f.name, w.name").expect("construct query must run");
+            let value: serde_json::Value = serde_json::from_str(&json).expect("valid JSON result");
+            let rows = value["rows"].as_array().expect("rows array");
+            assert_eq!(rows.len(), 6, "every one of the 6 faces must match exactly its own wire: {json}");
+        }
+
+        #[test]
+        fn construct_query_filters_edges_by_curve_kind_property() {
+            let geometry = box_geometry();
+            let json = run_construct_query(&geometry, "MATCH (e:Edge) WHERE e.curveKind = 'line' RETURN e.name").expect("construct query must run");
+            let value: serde_json::Value = serde_json::from_str(&json).expect("valid JSON result");
+            let rows = value["rows"].as_array().expect("rows array");
+            assert_eq!(rows.len(), 12, "all 12 box edges are line curves: {json}");
+        }
+
+        #[test]
+        fn construct_query_rejects_malformed_syntax_with_a_real_parse_error() {
+            let geometry = box_geometry();
+            let error = run_construct_query(&geometry, "NOT A QUERY (((").unwrap_err();
+            let _ = error; // exists and is Err — the exact message is Jack's own concern, not this adapter's.
+        }
     }
 }
 //#endregion 🔖️Construct

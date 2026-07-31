@@ -8,4 +8,6 @@
 //! `pack`/`protocol`/`ui` can depend on `rs` per the standard layout instead of each reaching into
 //! the kernel individually.
 
-pub use playbook::{empty_playbook_projection, PlaybookBlock, PlaybookSpec, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA};
+pub use playbook::{
+    empty_playbook_projection, PlaybookBlock, PlaybookBlockOption, PlaybookExpr, PlaybookSpec, PlaybookStep, PlaybookVectorField, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA,
+};

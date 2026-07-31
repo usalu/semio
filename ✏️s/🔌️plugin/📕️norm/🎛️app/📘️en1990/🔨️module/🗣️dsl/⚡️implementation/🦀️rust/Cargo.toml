@@ -13,3 +13,6 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/
 [dependencies]
 en1990 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-norm-core" }
