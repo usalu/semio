@@ -838,14 +838,14 @@ fn note_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: 
 //#endregion NoteCanvasState
 
 //#region NoteCanvasRender
-fn note_draw_rect_outline(draw: &mut ui_wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
+fn note_draw_rect_outline(draw: &mut semio_framework_ui_wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
     draw.push_line(x, y, x + w, y, color, width);
     draw.push_line(x + w, y, x + w, y + h, color, width);
     draw.push_line(x + w, y + h, x, y + h, color, width);
     draw.push_line(x, y + h, x, y, color, width);
 }
 
-fn note_draw_grid(draw: &mut ui_wgpu::DrawList, camera: NoteCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
+fn note_draw_grid(draw: &mut semio_framework_ui_wgpu::DrawList, camera: NoteCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
     let major_px = (spacing * camera.zoom) as f32;
     if major_px < 2.0 {
         return;
@@ -1016,7 +1016,7 @@ fn note_draw_block(
     note_draw_rect_outline(ctx.draw, sx, sy, w.max(4.0), h.max(4.0), border, border_w);
 }
 
-fn note_draw_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camera: NoteCameraF, inner: Rect, bounds: NoteBoundsF, show_handles: bool) {
+fn note_draw_selection_chrome(draw: &mut semio_framework_ui_wgpu::DrawList, theme: &Theme, camera: NoteCameraF, inner: Rect, bounds: NoteBoundsF, show_handles: bool) {
     let (sx, sy) = note_world_to_screen(camera, inner, bounds.x, bounds.y);
     let w = (bounds.w * camera.zoom) as f32;
     let h = (bounds.h * camera.zoom) as f32;
@@ -1032,7 +1032,7 @@ fn note_draw_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camer
     }
 }
 
-fn render_note_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext) {
+fn render_note_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut semio_framework_ui_wgpu::GpuContext) {
     let _ = gpu;
     let theme = ctx.theme;
     let Some(note) = &scene.note_canvas else {
@@ -1077,7 +1077,7 @@ fn render_note_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
 
     if state.note_marquee_points.len() >= 2 {
         let points: Vec<[f32; 2]> = state.note_marquee_points.iter().map(|p| [p.0, p.1]).collect();
-        ui_wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
+        semio_framework_ui_wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
     }
 
     ctx.draw.pop_scissor();

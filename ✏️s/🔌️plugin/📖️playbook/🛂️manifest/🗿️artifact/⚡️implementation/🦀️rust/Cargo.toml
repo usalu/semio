@@ -1,5 +1,5 @@
 [package]
-name = "playbook-plugin"
+name = "semio-s-plugin-playbook"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

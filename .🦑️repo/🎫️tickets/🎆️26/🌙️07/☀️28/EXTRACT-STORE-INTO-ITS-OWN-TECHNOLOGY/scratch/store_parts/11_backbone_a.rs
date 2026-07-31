@@ -43,12 +43,12 @@ pub enum BackboneMessage {
 /// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
 /// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
-/// hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
+/// semio_hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
 /// which owns the other end; the store's `pump()`/`flush_outbound()` run synchronously on the
 /// caller's thread and must never be blocked by transport work.
 ///
 /// URI schemes are resolved by the host actor (`framework/sync`): `temp://` (in-memory),
-/// `file://` (single JSON blob), `folder://` (sqlite `.semio/document.db`), `remote://` (OS hub).
+/// `file://` (single JSON blob), `folder://` (sqlite `.semio/document.db`), `remote://` (OS semio_hub).
 pub trait Backbone: Send + Sync {
     fn descriptor(&self) -> DocumentBackboneRef;
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;

@@ -149,7 +149,7 @@ impl<C: Ring> PolyU<C> {
     }
 
     /// 🔗️ Substitutes `inner` for `x`: `self(inner(t))`.
-    pub fn compose(&self, inner: &Self) -> Self {
+    pub fn semio_compose_rs(&self, inner: &Self) -> Self {
         let mut result = Self::zero();
         for c in self.coeffs.iter().rev() {
             result = result.mul(inner).add(&Self::constant(c.clone()));
@@ -1641,7 +1641,7 @@ fn factor_nonmonic_via_substitution(f: &PolyU<Integer>, lc: &Integer) -> Vec<Pol
     let f_hat = PolyU::from_coeffs(hat_coeffs);
     let monic_factors = factor_monic_integer_poly(&f_hat);
     let scale = PolyU::monomial(lc.clone(), 1);
-    let candidates: Vec<PolyU<Integer>> = monic_factors.iter().map(|h| h.compose(&scale).primitive_part()).collect();
+    let candidates: Vec<PolyU<Integer>> = monic_factors.iter().map(|h| h.semio_compose_rs(&scale).primitive_part()).collect();
     let mut product = PolyU::<Integer>::one();
     for c in &candidates {
         product = product.mul(c);
@@ -2231,7 +2231,7 @@ impl AlgebraicReal {
         let transformed: PolyU<PolyU<Integer>> = match operation {
             Combine::Add => {
                 let shift: PolyU<PolyU<Integer>> = PolyU::from_coeffs(vec![PolyU::x(), PolyU::constant(Integer::from_i64(-1))]);
-                f_lifted.compose(&shift)
+                f_lifted.semio_compose_rs(&shift)
             }
             Combine::Mul => {
                 let mut coeffs = vec![PolyU::<Integer>::zero(); n + 1];
@@ -2300,7 +2300,7 @@ impl PolyU<Integer> {
         let den_i = Integer::from_natural(r.denom().clone());
         let scaled_self = PolyU::from_coeffs(self.coeffs().iter().enumerate().map(|(i, coeff)| coeff.mul(&den_i.pow((n - i) as u64))).collect());
         let shift_int = PolyU::from_coeffs(vec![r.numer().neg(), den_i]);
-        scaled_self.compose(&shift_int).primitive_part()
+        scaled_self.semio_compose_rs(&shift_int).primitive_part()
     }
 }
 

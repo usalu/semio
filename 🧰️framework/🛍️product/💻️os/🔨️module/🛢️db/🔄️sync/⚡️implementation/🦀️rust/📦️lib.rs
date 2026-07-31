@@ -1,5 +1,5 @@
 //! 🗄️ `db_sync` — server side of `protocol_wire`: frontier exchange, missing-command transfer,
-//! snapshot bootstrap, and resume tokens for a document replica ((re)connecting to the hub over
+//! snapshot bootstrap, and resume tokens for a document replica ((re)connecting to the semio_hub over
 //! `protocol::{ClientFrame, ServerFrame}`). Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`); wire types frozen in `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/
@@ -205,7 +205,7 @@ pub fn missing_commands(state: &DocumentSyncState, replica: &db_core::Frontier) 
 
 /// @emoji 📨️ Wraps `envelopes` (typically `missing_commands`' result) as a `ServerFrame::Commands`
 /// stamped with `state`'s current frontier — `origin` is the relaying actor identity the caller
-/// (the hub session layer, which owns its own actor identity) supplies; this crate has no opinion
+/// (the semio_hub session layer, which owns its own actor identity) supplies; this crate has no opinion
 /// on it beyond passing it through.
 pub fn commands_server_frame(state: &DocumentSyncState, envelopes: Vec<protocol::OperationEnvelope>, origin: protocol::ActorId) -> protocol::ServerFrame {
     protocol::ServerFrame::Commands { envelopes, origin, frontier: state_frontier_summary(state) }
@@ -337,7 +337,7 @@ pub fn handle_hello(
 
 /// @emoji 📡️ Mid-session catch-up: a connected replica sends `ClientFrame::FrontierAdvertise`
 /// (e.g. after a period of being caught up passively via broadcast, to confirm its position) and
-/// the hub replies with whatever commands it's still missing, or `None` if it's already current.
+/// the semio_hub replies with whatever commands it's still missing, or `None` if it's already current.
 pub fn handle_frontier_advertise(
     storage: &dyn db_storage::WalStorage,
     document: db_core::DocumentId,
@@ -625,7 +625,7 @@ mod tests {
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 3);
 
-        let response = handle_hello(&storage, document, None, "session-1".to_string(), &protocol::ActorId("hub".to_string()), 64 * 1024).unwrap();
+        let response = handle_hello(&storage, document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, server_frontier, resume_token, .. } = &response.welcome else {
             panic!("expected a Welcome frame");
         };
@@ -647,7 +647,7 @@ mod tests {
         let state = replay_sync_state(&storage, document.clone()).unwrap();
         let hello_frontier = state_frontier_summary(&state);
 
-        let response = handle_hello(&storage, document, Some(&hello_frontier), "session-2".to_string(), &protocol::ActorId("hub".to_string()), 64 * 1024).unwrap();
+        let response = handle_hello(&storage, document, Some(&hello_frontier), "session-2".to_string(), &protocol::ActorId("semio_hub".to_string()), 64 * 1024).unwrap();
         let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
             panic!("expected a Welcome frame");
         };
@@ -666,7 +666,7 @@ mod tests {
         db_storage::SnapshotStorage::write_generation(&storage, &document, 9, &big_snapshot).unwrap();
 
         let stale_hello_frontier = protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId(document.0.clone()), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] };
-        let response = handle_hello(&storage, document, Some(&stale_hello_frontier), "session-3".to_string(), &protocol::ActorId("hub".to_string()), 4).unwrap();
+        let response = handle_hello(&storage, document, Some(&stale_hello_frontier), "session-3".to_string(), &protocol::ActorId("semio_hub".to_string()), 4).unwrap();
 
         let protocol::ServerFrame::Welcome { bootstrap, .. } = &response.welcome else {
             panic!("expected a Welcome frame");
@@ -682,7 +682,7 @@ mod tests {
         let storage = MemoryStorage::new();
         let document: DocumentId = "doc-1".into();
         seed_wal(&storage, &document, 1);
-        assert!(matches!(handle_hello(&storage, document, None, "s".to_string(), &protocol::ActorId("hub".to_string()), 0), Err(db_core::DbError::InvalidArgument(_))));
+        assert!(matches!(handle_hello(&storage, document, None, "s".to_string(), &protocol::ActorId("semio_hub".to_string()), 0), Err(db_core::DbError::InvalidArgument(_))));
     }
 
     #[test]
@@ -699,7 +699,7 @@ mod tests {
             wal.submit(&storage, &[WalRecord::Command(encode_command_envelope(&envelope))], db_core::DurabilityClass::Fsync, 100).unwrap();
         }
 
-        let frame = handle_frontier_advertise(&storage, document.clone(), &replica_summary, protocol::ActorId("hub".to_string())).unwrap();
+        let frame = handle_frontier_advertise(&storage, document.clone(), &replica_summary, protocol::ActorId("semio_hub".to_string())).unwrap();
         match frame {
             Some(protocol::ServerFrame::Commands { envelopes, .. }) => {
                 assert_eq!(envelopes.len(), 1);
@@ -710,7 +710,7 @@ mod tests {
 
         let up_to_date_state = replay_sync_state(&storage, document.clone()).unwrap();
         let up_to_date_summary = state_frontier_summary(&up_to_date_state);
-        assert!(handle_frontier_advertise(&storage, document, &up_to_date_summary, protocol::ActorId("hub".to_string())).unwrap().is_none());
+        assert!(handle_frontier_advertise(&storage, document, &up_to_date_summary, protocol::ActorId("semio_hub".to_string())).unwrap().is_none());
     }
     //#endregion 🔖️Hello
 }

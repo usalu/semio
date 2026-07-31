@@ -5887,11 +5887,11 @@ pub struct ArtifactId(pub String);
 // `protocol_core` (frozen contract `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
 // re-exported here under their original names — shapes are unchanged (plain serde-transparent
 // String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
-// crates like `framework/sync`/`framework/product/os/hub` that import them straight from
+// crates like `framework/sync`/`framework/product/os/semio_hub` that import them straight from
 // `semio_framework_core`) keeps resolving without edits. `SchemaVersion` below is NOT re-exported
 // from `protocol_core` — that crate's own `SchemaVersion` is `u32`-shaped (a distinct, unrelated
 // protocol-format concept), incompatible with this kernel's `String`-shaped version below, which
-// several external crates (`framework/sync`, hub storage crates) still construct from plain
+// several external crates (`framework/sync`, semio_hub storage crates) still construct from plain
 // strings; moving it would be a breaking shape change out of this wave's scope.
 pub use protocol_core::{ActorId, DocumentId, DocumentVersion, OperationId, SchemaId};
 
@@ -6039,7 +6039,7 @@ pub struct Diagnostic {
 
 //#region 🔖️Clipboard
 /// 📋️ How a paste anchors the copied fragment relative to the paste point — the seven placement
-/// modes compose's `copyDesign`/`pasteDesign` supported, now an OS-owned concept.
+/// modes semio_compose_rs's `copyDesign`/`pasteDesign` supported, now an OS-owned concept.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -6230,6 +6230,16 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<Value>,
     },
+    /// @emoji 🎯️ Patches live world-3d selection chrome and document-tree highlights without
+    /// re-rendering the composite window body or rebuilding instance geometry JSON.
+    PatchWorld3dChrome {
+        selection_json: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        vortices_json: Option<String>,
+        document_selected_ids: Vec<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        document_highlighted_ids: Option<Vec<String>>,
+    },
 }
 
 /// @emoji 🖼️ One icon-render export request: the destination filename plus the opaque icon-scene
@@ -6367,7 +6377,7 @@ pub struct CommandContext {
 
 //#region 🔖️Presence
 // 🎯️ W6 kernel unification: `PayloadHash`/`OperationEnvelope`/`OpDagError`/`OpDag`/`InsertResult`
-// (the local causal-sync types) and `HubClientFrame`/`HubServerFrame` (the local hub wire frames)
+// (the local causal-sync types) and `HubClientFrame`/`HubServerFrame` (the local semio_hub wire frames)
 // are DELETED — `store`/`store_sync` (their only consumers outside this crate) now speak
 // `protocol::{OperationEnvelope, OpDag, OpDagError, InsertResult}`/`protocol::{ClientFrame,
 // ServerFrame}` directly (W5 already made these real binary types; this wave just stops
@@ -6403,7 +6413,7 @@ pub struct PresencePeer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selection_json: Option<String>,
     pub connected_at_ms: i64,
-    /// @emoji 🪪️ Authenticated hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
+    /// @emoji 🪪️ Authenticated semio_hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
     /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.

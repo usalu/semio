@@ -1,5 +1,5 @@
 [package]
-name = "fsm"
+name = "semio-s-plugin-draw-fsm"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -21,7 +21,7 @@ serde = ["dep:serde", "dep:serde_json"]
 testing = []
 
 [dependencies]
-fsm_macros = { path = "../../✨️macros/⚡️implementation/🦀️rust", optional = true, package = "fsm_macros" }
+fsm_macros = { path = "../../✨️macros/⚡️implementation/🦀️rust", optional = true, package = "semio-s-plugin-draw-fsm-macros" }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 thiserror = "2.0.12"

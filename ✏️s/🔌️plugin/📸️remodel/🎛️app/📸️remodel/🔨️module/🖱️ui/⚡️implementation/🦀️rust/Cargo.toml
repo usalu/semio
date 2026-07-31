@@ -14,9 +14,9 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️a
 remodel = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/⚡️implementation/🦀️rust", package = "semio-s-app-remodel" }
 remodel_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-op" }
 remodel_app_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🎛️app/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-remodel-engine" }
-remodel_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "remodel_engine" }
-remodel_image = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }
-remodel_video = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "remodel_video" }
+remodel_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-engine" }
+remodel_image = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-image" }
+remodel_video = { path = "../../../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-video" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde_json = "1.0.140"

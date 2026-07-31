@@ -16,6 +16,8 @@ semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/�
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 kernel_3d_brepkit = { path = "../../../../../../../../🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-3d-brep" }
 kernel_3d_engine = { path = "../../../../../../../../🔨️module/🧊️3d/📐️brep/⚙️engine/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-3d-brep-engine" }
+mathematical_graph_dsl = { path = "../../../../../../../../../🧰️framework/🔨️module/🧮️math/🕸️graph/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-dsl" }
+mathematical_graph_manifest = { path = "../../../../../../../../../🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"

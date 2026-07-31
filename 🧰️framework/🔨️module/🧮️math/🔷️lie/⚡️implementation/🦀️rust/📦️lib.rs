@@ -294,7 +294,7 @@ impl So3 {
     }
 
     /// 🔗️ Group composition `self · other`.
-    pub fn compose(&self, other: &Self) -> Self {
+    pub fn semio_compose_rs(&self, other: &Self) -> Self {
         Self(self.0.mul(other.0))
     }
 
@@ -372,8 +372,8 @@ impl Se3 {
     }
 
     /// 🔗️ Group composition `self · other`.
-    pub fn compose(&self, other: &Self) -> Self {
-        Self { r: self.r.compose(&other.r), t: vec3_add(self.r.act(other.t), self.t) }
+    pub fn semio_compose_rs(&self, other: &Self) -> Self {
+        Self { r: self.r.semio_compose_rs(&other.r), t: vec3_add(self.r.act(other.t), self.t) }
     }
 
     /// ↩️ Inverse transform.
@@ -470,8 +470,8 @@ impl Sim3 {
     }
 
     /// 🔗️ Group composition `self · other`.
-    pub fn compose(&self, other: &Self) -> Self {
-        Self { s: self.s * other.s, r: self.r.compose(&other.r), t: vec3_add(vec3_scale(self.r.act(other.t), self.s), self.t) }
+    pub fn semio_compose_rs(&self, other: &Self) -> Self {
+        Self { s: self.s * other.s, r: self.r.semio_compose_rs(&other.r), t: vec3_add(vec3_scale(self.r.act(other.t), self.s), self.t) }
     }
 
     /// ↩️ Inverse similarity.
@@ -553,8 +553,8 @@ pub fn umeyama(src: &[[f64; 3]], dst: &[[f64; 3]], with_scale: bool) -> Option<S
 // #region 🔖️Interpolate
 /// 🎚️ Geodesic interpolation between rigid poses via the relative twist: `a · exp(t · log(a⁻¹ · b))`.
 pub fn se3_lerp(a: &Se3, b: &Se3, t: f64) -> Se3 {
-    let xi = a.inverse().compose(b).log();
-    a.compose(&Se3::exp(xi6_scale(xi, t)))
+    let xi = a.inverse().semio_compose_rs(b).log();
+    a.semio_compose_rs(&Se3::exp(xi6_scale(xi, t)))
 }
 
 /// 🎢️ Cumulative cubic B-spline over timestamped control poses (De Boor form with uniform-knot cumulative basis on tangent increments), clamped to the valid span `[t₁, tₙ₋₂]`; `None` for fewer than four poses.
@@ -575,8 +575,8 @@ pub fn se3_spline(poses: &[(f64, Se3)], t: f64) -> Option<Se3> {
     let basis = [(5.0 + 3.0 * u - 3.0 * u2 + u3) / 6.0, (1.0 + 3.0 * u + 3.0 * u2 - 2.0 * u3) / 6.0, u3 / 6.0];
     let mut out = poses[i - 1].1;
     for (step, weight) in basis.iter().enumerate() {
-        let increment = poses[i + step - 1].1.inverse().compose(&poses[i + step].1).log();
-        out = out.compose(&Se3::exp(xi6_scale(increment, *weight)));
+        let increment = poses[i + step - 1].1.inverse().semio_compose_rs(&poses[i + step].1).log();
+        out = out.semio_compose_rs(&Se3::exp(xi6_scale(increment, *weight)));
     }
     Some(out)
 }
@@ -626,7 +626,7 @@ mod tests {
     #[test]
     fn so3_compose_inverse_and_hat_vee_round_trip() {
         let r = So3::exp([0.4, -0.9, 0.2]);
-        assert!(mat_close(&r.compose(&r.inverse()).0, &Mat3d::IDENTITY, 1e-12));
+        assert!(mat_close(&r.semio_compose_rs(&r.inverse()).0, &Mat3d::IDENTITY, 1e-12));
         let w = [0.7, -0.2, 1.4];
         assert!(vec3_close(So3::vee(&So3::hat(w)), w, 0.0_f64.max(1e-15)));
         let v = [0.5, -1.0, 2.0];
@@ -692,7 +692,7 @@ mod tests {
             assert!(vecn_close(&Se3::exp(xi).log(), &xi, 1e-9), "failed for {xi:?}");
         }
         let g = Se3::exp(cases[1]);
-        let round = g.compose(&g.inverse());
+        let round = g.semio_compose_rs(&g.inverse());
         assert!(mat_close(&round.r.0, &Mat3d::IDENTITY, 1e-12) && vec3_close(round.t, [0.0; 3], 1e-12));
     }
 
@@ -711,7 +711,7 @@ mod tests {
             assert!(vecn_close(&Sim3::exp(xi).log(), &xi, 1e-9), "failed for {xi:?}");
         }
         let g = Sim3::exp(cases[2]);
-        let round = g.compose(&g.inverse());
+        let round = g.semio_compose_rs(&g.inverse());
         assert!((round.s - 1.0).abs() < 1e-12 && mat_close(&round.r.0, &Mat3d::IDENTITY, 1e-12) && vec3_close(round.t, [0.0; 3], 1e-12));
     }
 
@@ -725,7 +725,7 @@ mod tests {
             *slot = adj_xi.get(k);
         }
         let lhs = Se3::exp(mapped);
-        let rhs = g.compose(&Se3::exp(xi)).compose(&g.inverse());
+        let rhs = g.semio_compose_rs(&Se3::exp(xi)).semio_compose_rs(&g.inverse());
         assert!(mat_close(&lhs.r.0, &rhs.r.0, 1e-8));
         assert!(vec3_close(lhs.t, rhs.t, 1e-8));
     }
@@ -788,8 +788,8 @@ mod tests {
         assert!(mat_close(&at0.r.0, &a.r.0, 1e-9) && vec3_close(at0.t, a.t, 1e-9));
         assert!(mat_close(&at1.r.0, &b.r.0, 1e-9) && vec3_close(at1.t, b.t, 1e-9));
         let mid = se3_lerp(&a, &b, 0.5);
-        let rel_full = a.inverse().compose(&b).log();
-        let rel_half = a.inverse().compose(&mid).log();
+        let rel_full = a.inverse().semio_compose_rs(&b).log();
+        let rel_half = a.inverse().semio_compose_rs(&mid).log();
         assert!(vecn_close(&rel_half, &xi6_scale(rel_full, 0.5), 1e-9));
     }
 

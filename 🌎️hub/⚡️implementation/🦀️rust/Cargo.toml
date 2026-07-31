@@ -7,7 +7,7 @@
 # #endregion 🔖️Header
 
 [package]
-name = "hub"
+name = "semio-hub"
 version = "0.1.0"
 edition = "2021"
 
@@ -31,10 +31,10 @@ futures = "0.3"
 dashmap = "6"
 protocol = { path = "../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 db = { path = "../../../🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⚡️implementation/🦀️rust", features = ["sqlite", "postgres", "neo4j"], package = "semio-framework-os-kernel-db" }
-os-hub-directory = { path = "../../../🌎️hub/🔨️module/📇️directory/⚡️implementation/🦀️rust", package = "hub-directory" }
-os-hub-directory-sqlite = { path = "../../🔨️module/📇️directory/🪶️sqlite/⚡️implementation/🦀️rust", package = "hub-directory-sqlite" }
-os-hub-directory-postgres = { path = "../../🔨️module/📇️directory/🐘️postgres/⚡️implementation/🦀️rust", package = "hub-directory-postgres" }
-os-hub-directory-neo4j = { path = "../../🔨️module/📇️directory/🌐️neo4j/⚡️implementation/🦀️rust", package = "hub-directory-neo4j" }
+os-hub-directory = { path = "../../../🌎️hub/🔨️module/📇️directory/⚡️implementation/🦀️rust", package = "semio-hub-directory" }
+os-hub-directory-sqlite = { path = "../../🔨️module/📇️directory/🪶️sqlite/⚡️implementation/🦀️rust", package = "semio-hub-directory-sqlite" }
+os-hub-directory-postgres = { path = "../../🔨️module/📇️directory/🐘️postgres/⚡️implementation/🦀️rust", package = "semio-hub-directory-postgres" }
+os-hub-directory-neo4j = { path = "../../🔨️module/📇️directory/🌐️neo4j/⚡️implementation/🦀️rust", package = "semio-hub-directory-neo4j" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

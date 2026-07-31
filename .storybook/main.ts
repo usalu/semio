@@ -59,7 +59,7 @@ function buildStorybookAliases(): Record<string, string> {
     "@semio-tech/puzzle-asset": toVitePath(puzzleAssetsDir),
     "@semio-tech/compose-js": toVitePath(composeJsDir),
     "@semio-tech/compose-react": toVitePath(composeJsDir),
-    "@semio-tech/semio-asset": toVitePath(composeAssetsDir),
+    "@semio-tech/asset": toVitePath(composeAssetsDir),
     "@semio-tech/compose-fixture": toVitePath(composeFixturesDir),
   };
   const scopeAliases = buildScopeAliases(activeScopes, {});
@@ -178,7 +178,7 @@ const config: StorybookConfig = {
 
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
-    const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), "@semio-tech/ui-react", "@semio-tech/infinite-cavas-react-renderer", ...findWorkspacePackages(repoRootPath), ...activeScopes.flatMap((s) => s.optimizeDepsExclude ?? [])]);
+    const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), "@semio-tech/ui-react", "@semio-tech/infinite-canvas-react-renderer", ...findWorkspacePackages(repoRootPath), ...activeScopes.flatMap((s) => s.optimizeDepsExclude ?? [])]);
     config.optimizeDeps.exclude = Array.from(optimizeExclude);
     config.optimizeDeps.esbuildOptions = {
       ...(config.optimizeDeps.esbuildOptions || {}),

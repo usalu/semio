@@ -9,7 +9,7 @@
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/compose-js": "*",
     "@semio-tech/compose-react": "*",
-    "@semio-tech/semio-asset": "*",
+    "@semio-tech/asset": "*",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "zod": "^4.3.5"

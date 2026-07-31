@@ -6,7 +6,7 @@ mod header {
     // Uses synchronous `rusqlite` behind `Arc<Mutex<Connection>>`, not an async SQLite driver:
     // a Cargo workspace may link only one native `sqlite3` (`links = "sqlite3"`), and `rusqlite`
     // is already the sqlite binding used elsewhere in this workspace (`vcs`, `db_storage_sqlite`,
-    // compose's unrelated `compose/client/lib/rs`) — adding `sqlx-sqlite`'s `libsqlite3-sys`
+    // semio_compose_rs's unrelated `semio_compose_rs/client/lib/rs`) — adding `sqlx-sqlite`'s `libsqlite3-sys`
     // alongside it is a hard `cargo` resolution conflict, not a style choice. Trait methods stay
     // `async fn` (satisfying the shared `HubDirectory` interface) but their bodies are synchronous
     // rusqlite calls: queries are short, the mutex guard is never held across an `.await`, so
@@ -110,7 +110,7 @@ impl SqliteDirectory {
     /// @emoji 🌱️ Seeds a placeholder `seed` system user, a default space it owns, and a
     /// `Documents/default` node. The system user satisfies `hub_space.owner_user_id`'s foreign
     /// key until a real bootstrap admin claims ownership through `/admin` (HP-6). Document
-    /// existence itself is `db::Database`'s concern (see `os-hub`'s `bin.rs`), not seeded here.
+    /// existence itself is `db::Database`'s concern (see `os-semio_hub`'s `bin.rs`), not seeded here.
     pub async fn seed(&self) -> DirectoryResult<()> {
         let user_exists: i64 =
             self.lock()?.query_row("SELECT COUNT(*) FROM hub_user WHERE id = 'seed'", [], |row| row.get(0)).map_err(backend)?;

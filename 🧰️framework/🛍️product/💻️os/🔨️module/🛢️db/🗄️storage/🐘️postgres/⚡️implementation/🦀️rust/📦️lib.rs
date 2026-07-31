@@ -1,6 +1,6 @@
 //! 🗄️ `db_storage_postgres` — a `db_storage::DbStorage` backend over PostgreSQL (via `sqlx`),
-//! informed by the deleted `os-hub-storage-postgres` crate's connection/schema-bootstrap shape but
-//! implementing the generic, hub-agnostic `db_storage` trait family rather than hub-specific
+//! informed by the deleted `os-semio_hub-storage-postgres` crate's connection/schema-bootstrap shape but
+//! implementing the generic, semio_hub-agnostic `db_storage` trait family rather than semio_hub-specific
 //! tables. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
@@ -93,7 +93,7 @@ pub struct PostgresStorage {
 
 impl PostgresStorage {
     /// @emoji 🔌️ Connects to `database_url`, bootstraps the schema (idempotent, no migration
-    /// framework — matches the deleted `os-hub-storage-postgres` precedent), and returns a ready
+    /// framework — matches the deleted `os-semio_hub-storage-postgres` precedent), and returns a ready
     /// `PostgresStorage`. Builds its own dedicated multi-thread runtime to drive the pool and every
     /// subsequent synchronous trait call.
     pub fn connect(database_url: &str) -> Result<Self, DbError> {

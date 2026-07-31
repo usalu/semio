@@ -16,7 +16,7 @@ fem3d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗�
 fem3d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d-op" }
 fem3d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d-dsl" }
 fem_shared = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🤝️shared/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-shared" }
-fem_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "fem_core" }
+fem_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-core" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 serde_json = "1.0.140"

@@ -5,10 +5,10 @@ const ROOT = path.resolve(import.meta.dirname, "../../../..");
 const EXCLUDE_DIRS = new Set([".git", "node_modules", "target", ".nx", "dist", "storybook-static", "pkg"]);
 
 const REPLACEMENTS: [string, string][] = [
-  ["@semio-tech/semio-asset", "@semio-tech/semio-asset"],
-  ["@semio-tech/semio-icon", "@semio-tech/semio-icon"],
-  ["@semio-tech/semio-logo", "@semio-tech/semio-logo"],
-  ["@semio-tech/semio-image", "@semio-tech/semio-image"],
+  ["@semio-tech/asset", "@semio-tech/asset"],
+  ["@semio-tech/icon", "@semio-tech/icon"],
+  ["@semio-tech/logo", "@semio-tech/logo"],
+  ["@semio-tech/image", "@semio-tech/image"],
   ["asset/", "asset/"],
   ["asset", "asset"],
   ["repo-semio", "repo-semio"],

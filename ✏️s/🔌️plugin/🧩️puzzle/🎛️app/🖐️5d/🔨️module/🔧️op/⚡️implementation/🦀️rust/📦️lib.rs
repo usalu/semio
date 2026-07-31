@@ -382,7 +382,7 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// bridge's removal (final DSL-syntax convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/
 /// `decode_pack_with` all round-trip straight through the still-standing `serde_json::Value` impls
 /// (JSON text / JSON-bridge pack encoding respectively), same local-bridge shape as `puzzle_2d`'s
-/// `Puzzle2dPlayProjection`, `puzzle_3d`'s `Puzzle3dPlayProjection` and `compose`'s `KitSnapshot`.
+/// `Puzzle2dPlayProjection`, `puzzle_3d`'s `Puzzle3dPlayProjection` and `semio_compose_rs`'s `KitSnapshot`.
 /// `Operation`/`OperationDiff` delegate straight through to the `Value` impls above too.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Puzzle5dPlayProjection(pub Value);

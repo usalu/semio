@@ -3,7 +3,7 @@
   "emoji": "🖼️",
   "status": "closed",
   "description": "Replace direct lucide-react usage with vendored SVGs in @semio-tech/ui-assets, library-agnostic Icon primitive in @semio-tech/ui-react, framework-owned chrome icons, and js/net/py codegen.",
-  "summary": "Added @semio-tech/ui-assets package with 121 vendored Lucide ISC SVGs, script.ts codegen (icons.ts, Icons.cs, icons.py), and README attribution. Added Icon/IconSource/IconName/createIconComponent to @semio-tech/ui-react; migrated framework platform/playground renderers to unified registerIcon + PANEL_KIND_ICON; presentation uses Icon for reset/maximize. Migrated @semio-tech/semio-assets to createIconComponent wrappers. Updated storybook stories and cad play off lucide. Vitest: platform icon tests use data-icon; ui/react vfs tests updated (135/136 pass; one pre-existing tree guide test still fails).",
+  "summary": "Added @semio-tech/ui-assets package with 121 vendored Lucide ISC SVGs, script.ts codegen (icons.ts, Icons.cs, icons.py), and README attribution. Added Icon/IconSource/IconName/createIconComponent to @semio-tech/ui-react; migrated framework platform/playground renderers to unified registerIcon + PANEL_KIND_ICON; presentation uses Icon for reset/maximize. Migrated @semio-tech/assets to createIconComponent wrappers. Updated storybook stories and cad play off lucide. Vitest: platform icon tests use data-icon; ui/react vfs tests updated (135/136 pass; one pre-existing tree guide test still fails).",
   "goal": "🎯️ui",
   "plan": {
     "client": "cursor",

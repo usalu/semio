@@ -1,5 +1,5 @@
 //#region 🔖️CollectionDiff
-/// @emoji 🧩️ Sparse collection patch entry (mirrors compose `XModified`).
+/// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemPatch<TId, TPatch> {
@@ -7,7 +7,7 @@ pub struct ItemPatch<TId, TPatch> {
     pub patch: TPatch,
 }
 
-/// @emoji 🧩️ Sparse collection diff (mirrors compose `XCollectionDiff`).
+/// @emoji 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionDiff<TId, TPatch, TAdded> {

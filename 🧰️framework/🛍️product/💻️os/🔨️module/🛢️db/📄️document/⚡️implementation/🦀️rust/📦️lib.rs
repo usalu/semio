@@ -402,7 +402,7 @@ pub struct DocumentEngineConfig {
     /// `db_projection::ProjectionEngine` from this on every call it needs one (see `🔖️Engine`'s doc
     /// for why a factory rather than a stored, already-built engine — `db_projection::
     /// ProjectionEngine::new`'s borrowed-`IndexStorage` + owned-`Vec<Box<dyn ErasedProjection>>`
-    /// shape does not compose with `DocumentEngine` owning its storage as `Arc<dyn DbStorage>`
+    /// shape does not semio_compose_rs with `DocumentEngine` owning its storage as `Arc<dyn DbStorage>`
     /// without becoming self-referential). Defaults to no projections registered.
     pub projections: Arc<dyn Fn() -> Vec<Box<dyn db_projection::ErasedProjection>> + Send + Sync>,
 }
@@ -663,7 +663,7 @@ impl DocumentEngine {
             // 🎯️ W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
             // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
             // these same WAL records via `decode_command_envelope` (the same binary codec) to serve
-            // hub bootstrap/catch-up, so this crate's own write-and-read-back convention below must
+            // semio_hub bootstrap/catch-up, so this crate's own write-and-read-back convention below must
             // agree with it byte-for-byte.
             let mut envelope_bytes = Vec::new();
             protocol::encode_envelope(envelope, &mut envelope_bytes);

@@ -850,7 +850,7 @@ export class BuildScript extends Script {
     const slice = segments[0];
     const single: Record<string, string> = {
       "3dm": "@semio-tech/compose-3dm-ui:build",
-      assets: "@semio-tech/semio-asset:build",
+      assets: "@semio-tech/asset:build",
       desktop: "@semio-tech/compose-desktop:build",
       engine: "@semio-tech/compose-engine:build",
       storybook: "workspace:build-storybook",

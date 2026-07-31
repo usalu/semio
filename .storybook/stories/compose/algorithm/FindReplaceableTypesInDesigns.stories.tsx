@@ -25,7 +25,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/asset";
 
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 const { pieceIds: selectionPieceIds, connectionIds: selectionConnectionIds } = nakaginStoryCopySelection();

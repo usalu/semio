@@ -135,8 +135,8 @@ fn rewrite_grip_ref(grip_ref: &str, id_map: &std::collections::HashMap<String, S
 
 /// 🧮️ Closure-selects a copy fragment from `projection`: expands the part set to include every
 /// selected fastener's endpoint parts, then expands the fastener set to include every fastener whose
-/// BOTH endpoints are now in the part set — mirrors compose's `copyDesign` closure rule
-/// (`compose/dev/algorithm/js/index.ts:483`).
+/// BOTH endpoints are now in the part set — mirrors semio_compose_rs's `copyDesign` closure rule
+/// (`semio_compose_rs/dev/algorithm/js/index.ts:483`).
 pub fn copy_selection(projection: &Puzzle5dProjection, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut part_set: HashSet<String> = part_ids.iter().cloned().collect();
     for fastener in &projection.fasteners {
@@ -177,7 +177,7 @@ pub fn centroid_2d(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
 /// 🧮️ Materializes a copied fragment against `projection` at 2D delta `delta_2d` (applied verbatim to
 /// the 3D origin's x/y too; z unchanged) — fresh ids are minted for every part to dodge collisions
 /// with the target document, and fastener endpoints are remapped to the fresh part ids. Mirrors
-/// compose's `pasteDesign` (`compose/dev/algorithm/js/index.ts:515`). Returns the ready-to-insert
+/// semio_compose_rs's `pasteDesign` (`semio_compose_rs/dev/algorithm/js/index.ts:515`). Returns the ready-to-insert
 /// parts/fasteners; the caller turns each into one `SetPart`/`SetFastener` operation appended past the
 /// document's current `parts`/`fasteners` length.
 pub fn paste_selection(projection: &Puzzle5dProjection, fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta_2d: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
@@ -211,9 +211,9 @@ pub fn paste_selection(projection: &Puzzle5dProjection, fragment_parts: &[Puzzle
 }
 
 /// 🧮️ Shifts `part_ids`' 2D board positions and 3D world origins by the given deltas — the puzzle-5d
-/// analog of compose's `dragPieces`/`movePieces` (no flatten/re-layout solver here; positions are
+/// analog of semio_compose_rs's `dragPieces`/`movePieces` (no flatten/re-layout solver here; positions are
 /// explicit, so a translate is a direct position write). Mirrors
-/// `compose/dev/algorithm/js/index.ts:424,451`. Returns `(index, updated part)` pairs ready for
+/// `semio_compose_rs/dev/algorithm/js/index.ts:424,451`. Returns `(index, updated part)` pairs ready for
 /// `SetPart` operations.
 pub fn translate_parts(projection: &Puzzle5dProjection, part_ids: &[String], delta_2d: (f64, f64), delta_3d: [f64; 3]) -> Vec<(usize, Puzzle5dPart)> {
     projection
@@ -235,7 +235,7 @@ pub fn translate_parts(projection: &Puzzle5dProjection, part_ids: &[String], del
 
 /// 🔍️ Every part-kind id in `kind_catalogs` whose grip kinds are `kind_compatibility`-compatible with
 /// `part_id`'s own grip kinds (excluding `part_id`'s current kind) — candidates a "replace kind"
-/// picker offers. Mirrors compose's `findReplaceableTypesForSelection` (`compose/dev/algorithm/js/
+/// picker offers. Mirrors semio_compose_rs's `findReplaceableTypesForSelection` (`semio_compose_rs/dev/algorithm/js/
 /// index.ts:84`), computed for real against `kind_catalogs`/`kind_compatibility` instead of a fixture stub.
 pub fn find_replaceable_kinds(projection: &Puzzle5dProjection, part_id: &str) -> Vec<String> {
     let Some(part) = projection.parts.iter().find(|part| part.id == part_id) else {
@@ -268,8 +268,8 @@ pub fn find_replaceable_kinds(projection: &Puzzle5dProjection, part_id: &str) ->
 //#endregion 🔖️CopyPasteTranslate
 
 //#region 🔖️ComposeImport
-/// 🧩️ Reads a compose "hashed collection" (`{ hash, items: [...] }`) or a bare array (test-friendly)
-/// — mirrors compose's own `__itemsOf`/`fixtureItemsOf` duality (`compose/dev/algorithm/js/
+/// 🧩️ Reads a semio_compose_rs "hashed collection" (`{ hash, items: [...] }`) or a bare array (test-friendly)
+/// — mirrors semio_compose_rs's own `__itemsOf`/`fixtureItemsOf` duality (`semio_compose_rs/dev/algorithm/js/
 /// index.ts:94`).
 fn compose_collection_items(value: &Value) -> &[Value] {
     if let Some(array) = value.as_array() {
@@ -351,14 +351,14 @@ fn compose_connection_to_fastener(connection: &Value) -> Option<Puzzle5dFastener
     Some(Puzzle5dFastener { id, source, target, fastener_kind: None, gap: number("gap"), shift: number("shift"), rise: number("rise"), rotation: number("rotation"), turn: number("turn"), tilt: number("tilt") })
 }
 
-/// 🌉️ Imports a compose Design document (the `*.design.compose.json` shape: top-level `pieces`/
+/// 🌉️ Imports a semio_compose_rs Design document (the `*.design.semio_compose_rs.json` shape: top-level `pieces`/
 /// `connections` hashed collections) into a `Puzzle5dProjection`'s `parts`/`fasteners` — pieces map to
 /// parts (2D position from `pose.center`, 3D pose from `pose.plane`, kind from `piece.type.id` as a
 /// free-form string key), connections map to fasteners (`gap`/`shift`/`rise`/`rotation`/`turn`/`tilt`
 /// copy verbatim onto the fields `Puzzle5dFastener` gained to unify with `puzzle_3d::Puzzle3dAttraction`).
 /// Scope: this converts ONE already-exported design document, not a full multi-file kit bundle —
 /// resolving a piece's type name/representations/grip catalog (which live in separate,
-/// content-addressed `type/*.type.compose.json` files in a real kit) is out of scope here; parts
+/// content-addressed `type/*.type.semio_compose_rs.json` files in a real kit) is out of scope here; parts
 /// import with an empty `grips` list and `kind_catalogs`/`kind_compatibility` untouched, left for the
 /// caller to merge in separately (e.g. via a block 3d document's `puzzle3d_catalog_fragment`).
 pub fn import_compose_design_json(design_json: &Value) -> Puzzle5dProjection {
@@ -505,8 +505,8 @@ mod tests {
         assert_eq!(replaceable, vec!["kind-b".to_string()]);
     }
 
-    /// 📄️ A minimal compose Design document matching the real `*.design.compose.json` shape (see
-    /// `compose/fixture/kit/dev/metabolism/wip/initialKit/design/nakagin-capsule-tower.design.compose.json`):
+    /// 📄️ A minimal semio_compose_rs Design document matching the real `*.design.semio_compose_rs.json` shape (see
+    /// `semio_compose_rs/fixture/kit/dev/metabolism/wip/initialKit/design/nakagin-capsule-tower.design.semio_compose_rs.json`):
     /// hashed `{ hash, items }` collections, `pose.center`/`pose.plane`, and a `parent`/`child`
     /// connection with `gap`/`shift`/`rise`/`rotation`/`turn`/`tilt` fields.
     fn compose_design_fixture() -> Value {

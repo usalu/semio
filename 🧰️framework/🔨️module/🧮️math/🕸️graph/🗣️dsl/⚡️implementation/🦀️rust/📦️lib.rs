@@ -33,7 +33,7 @@ pub enum GraphDslError {
     #[error("mutating jack clauses are not supported on this graph domain")]
     UnsupportedMutation,
     /// 🚧️ WITH/UNWIND/CALL parse into the AST but aren't wired into the executor yet — prep work
-    /// for unifying compose's Architect query language onto Jack (see the repo-wide unified-DSL
+    /// for unifying semio_compose_rs's Architect query language onto Jack (see the repo-wide unified-DSL
     /// plan, Wave 2 / P9).
     #[error("WITH/UNWIND/CALL clauses are not yet executable")]
     UnsupportedClause,
@@ -626,13 +626,13 @@ pub enum Clause {
     Match(Vec<Pattern>),
     Where(Expr),
     /// 🚧 Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
-    /// compose's Architect query language onto Jack.
+    /// semio_compose_rs's Architect query language onto Jack.
     With(Vec<ReturnItem>),
     /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
-    /// compose's Architect query language onto Jack.
+    /// semio_compose_rs's Architect query language onto Jack.
     Unwind(UnwindClause),
     /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
-    /// compose's Architect query language onto Jack.
+    /// semio_compose_rs's Architect query language onto Jack.
     Call(CallClause),
     Return(Vec<ReturnItem>),
     Create(Pattern),
@@ -1986,7 +1986,7 @@ pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult,
             Clause::Create(_) | Clause::Delete(_) | Clause::Set(_) | Clause::Merge(_) => {
                 return Err(GraphDslError::UnsupportedMutation);
             }
-            // TODO(unify-architect): wire up WITH/UNWIND/CALL execution once compose's Architect
+            // TODO(unify-architect): wire up WITH/UNWIND/CALL execution once semio_compose_rs's Architect
             // query language unifies onto Jack (see plans/every-dsl-must-be-crispy-shell.md,
             // Wave 2 / P9). They already parse into the AST — this is prep work only.
             Clause::With(_) | Clause::Unwind(_) | Clause::Call(_) => {
@@ -2805,7 +2805,7 @@ mod tests {
     }
 
     // #region 🔖️WithUnwindCallTests
-    // 🚧️ prep work for unifying compose's Architect query language onto Jack — these clauses
+    // 🚧️ prep work for unifying semio_compose_rs's Architect query language onto Jack — these clauses
     // parse into the AST (this region) but aren't wired into `execute()` yet, see
     // `GraphDslError::UnsupportedClause`.
     #[test]

@@ -193,12 +193,12 @@ impl PortDirectedGraph {
         self.add_edge(*ids.last().expect("checked len >= 2 above"), ids[0]);
     }
 
-    /// ⭐️ Adds directed edges from `nodes[0]` (the hub) to every other node in `nodes`.
+    /// ⭐️ Adds directed edges from `nodes[0]` (the semio_hub) to every other node in `nodes`.
     pub fn add_star(&mut self, nodes: impl IntoIterator<Item = NodeId>) {
         let ids: Vec<NodeId> = nodes.into_iter().collect();
-        let Some(&hub) = ids.first() else { return };
+        let Some(&semio_hub) = ids.first() else { return };
         for &leaf in &ids[1..] {
-            self.add_edge(hub, leaf);
+            self.add_edge(semio_hub, leaf);
         }
     }
     // #endsubregion

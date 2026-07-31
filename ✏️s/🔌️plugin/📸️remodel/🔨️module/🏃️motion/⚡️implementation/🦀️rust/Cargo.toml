@@ -1,5 +1,5 @@
 [package]
-name = "remodel_motion"
+name = "semio-s-plugin-remodel-motion"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -12,10 +12,10 @@ crate-type = ["rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🏃️motion/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }
-remodel_feature = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌟️feature/⚡️implementation/🦀️rust", package = "remodel_feature" }
-remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "remodel_camera" }
-remodel_sfm = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📸️sfm/⚡️implementation/🦀️rust", package = "remodel_sfm" }
+remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-image" }
+remodel_feature = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌟️feature/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-feature" }
+remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-camera" }
+remodel_sfm = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📸️sfm/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-sfm" }
 mathematical_algebra = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/➕️algebra/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
 mathematical_signal = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/📶️signal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-signal" }
 mathematical_lie = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/🔷️lie/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-lie" }

@@ -12,8 +12,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🎛️a
 
 [dependencies]
 present = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🎛️app/🎬️present/⚡️implementation/🦀️rust", package = "semio-s-app-animate-present" }
-animate_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "animate_core" }
-animate_video = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "animate_video" }
+animate_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-animate-core" }
+animate_video = { path = "../../../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "semio-s-plugin-animate-video" }
 vcs = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }

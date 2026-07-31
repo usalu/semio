@@ -73,7 +73,7 @@ const KEEP_PLURAL_PATHS = [
 const TEXT_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".json", ".md", ".mdx", ".go", ".py", ".cs", ".rs", ".toml", ".yaml", ".yml", ".html", ".css", ".scss", ".svg", ".launch"]);
 
 const TEXT_REPLACEMENTS: [string, string][] = [
-  ["@semio-tech/semio-assets", "@semio-tech/semio-asset"],
+  ["@semio-tech/assets", "@semio-tech/asset"],
   ["@semio-tech/compose-fixtures", "@semio-tech/compose-fixture"],
   ["@semio-tech/puzzle-assets", "@semio-tech/puzzle-asset"],
   ["@semio-tech/ui-assets", "@semio-tech/ui-asset"],

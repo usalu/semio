@@ -11,8 +11,8 @@ workspace = true
 path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/🔌️jack/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "trinity_ram" }
-trinity_jack = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust", package = "trinity_jack" }
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+trinity_jack = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-jack" }
 trinity_rewrite = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite-engine" }
 mathematical_graph_drawing = { path = "../../../../../../../../../🧰️framework/🔨️module/🧮️math/🕸️graph/🖊️drawing/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-drawing" }
 mathematical_geometry = { path = "../../../../../../../../../🧰️framework/🔨️module/🧮️math/📐️geometry/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }

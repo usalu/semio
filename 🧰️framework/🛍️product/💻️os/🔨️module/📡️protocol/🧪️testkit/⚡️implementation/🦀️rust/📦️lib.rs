@@ -558,7 +558,7 @@ where
     assert_eq!(&merged, a, "merge_concurrent_diffs must be idempotent for {strategy:?}");
 }
 
-/// 🎞️ Which side of the hub wire protocol an `assert_wire_frame_round_trip` sample represents —
+/// 🎞️ Which side of the semio_hub wire protocol an `assert_wire_frame_round_trip` sample represents —
 /// `ClientFrame`/`ServerFrame` are distinct enums with distinct encode/decode fn pairs, so this
 /// crate's own choice (the contract names one law fn, not two) is a single sum type covering both.
 pub enum WireFrameSample {
@@ -841,7 +841,7 @@ mod tests {
     }
 
     // `RegisterDiff`: two independently-overwritable fields, used to demonstrate LwwRegister's
-    // "discard the loser whole" behavior versus the compose strategies' "merge per field" behavior.
+    // "discard the loser whole" behavior versus the semio_compose_rs strategies' "merge per field" behavior.
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
     struct RegisterDiff {
         field_a: Option<i64>,

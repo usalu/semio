@@ -29,7 +29,7 @@ pub mod pack_rt {
     /// @emoji 🌱️ Field id the JSON bridge's synthetic single-field record wraps a whole
     /// `serde_json::Value` payload in — mirrors `dsl::DslField for serde_json::Value`'s
     /// `Shape::Value` escape hatch (`dsl/rs/lib.rs`), lifted one level from "one field" to "one
-    /// whole document" so schema-less apps (puzzle plugins, compose kit) get a pack encoding too.
+    /// whole document" so schema-less apps (puzzle plugins, semio_compose_rs kit) get a pack encoding too.
     const JSON_BRIDGE_FIELD_ID: u16 = 1;
 
     fn json_bridge_spec() -> RecordSpec {
@@ -91,7 +91,7 @@ pub struct DocumentPackFiles {
 }
 
 /// @emoji 🌱️ Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-plugin/
-/// compose-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
+/// semio_compose_rs-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
 impl DocumentPack for serde_json::Value {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         Ok(pack_rt::encode_json_value(self))

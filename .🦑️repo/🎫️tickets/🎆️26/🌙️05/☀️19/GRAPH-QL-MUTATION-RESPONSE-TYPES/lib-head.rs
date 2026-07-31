@@ -1,4 +1,4 @@
-//! ­ƒªÇ compose rust control plane ÔÇö in-memory Arc-reference architecture (code-first GraphQL).
+//! ­ƒªÇ semio_compose_rs rust control plane ÔÇö in-memory Arc-reference architecture (code-first GraphQL).
 
 #![allow(clippy::new_without_default)]
 #![allow(clippy::too_many_arguments)]
@@ -474,7 +474,7 @@ pub mod id {
         }
     }
 
-    /// @emoji ­ƒåö Wire name `ID` matches relay + [`compose/client/schema/graphql/schema.golden.graphql`](../../../schema/graphql/schema.golden.graphql) `scalar`/Node ids.
+    /// @emoji ­ƒåö Wire name `ID` matches relay + [`semio_compose_rs/client/schema/graphql/schema.golden.graphql`](../../../schema/graphql/schema.golden.graphql) `scalar`/Node ids.
     #[Scalar(name = "ID")]
     impl ScalarType for Id {
         fn parse(value: Value) -> InputValueResult<Self> {
@@ -3756,7 +3756,7 @@ pub mod kit {
         pub quality_by_id: RwLock<HashMap<Id, Arc<Quality>>>,
         /// @emoji ­ƒöó Monotonic counter bumped by every GraphQL graph mutation (test / backbone observability).
         pub touch_epoch: RwLock<u64>,
-        /// ­ƒº¡ Optional client-facing kit id from WASM/JSON hydration (`@compose/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
+        /// ­ƒº¡ Optional client-facing kit id from WASM/JSON hydration (`@semio_compose_rs/js` DTO `id`); when None, fall back to internally minted [`Kit::id`].
         pub snapshot_external_kit_id: RwLock<Option<Id>>,
     }
 
@@ -6491,7 +6491,7 @@ pub mod operation {
         pub id: Id,
     }
 
-    /// @emoji ­ƒôª Sparse `tags` triple (`metabolism.kit.diff.compose.json`).
+    /// @emoji ­ƒôª Sparse `tags` triple (`metabolism.kit.diff.semio_compose_rs.json`).
     #[derive(Clone, Debug, Default, PartialEq)]
     pub struct TagsCollectionDiff {
         pub removed: Vec<IdRef>,
@@ -7800,7 +7800,7 @@ pub mod operation {
 
     //#endregion ­ƒº¥ inputs
 
-    /// @emoji ­ƒùä´©Å Backbone materialization: dev JSON file, local `.compose/` SQLite+blobs, or remote hub (reserved).
+    /// @emoji ­ƒùä´©Å Backbone materialization: dev JSON file, local `.semio_compose_rs/` SQLite+blobs, or remote semio_hub (reserved).
     #[derive(Clone, Copy, Debug, Eq, PartialEq, async_graphql::Enum)]
     #[graphql(name = "BackboneKind")]
     pub enum BackboneKind {
@@ -7848,7 +7848,7 @@ pub mod operation {
     //#endregion ­ƒô£  operation record (kit bundle / operation log contract)
 
     //#region ­ƒôª diff
-    /// ­ƒô£ Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings ÔÇö **not** the geometric `interface Diff` from `compose/client/schema/graphql/schema.golden.graphql` (`VectorDiff`, `PositionDiff`, ÔÇª).
+    /// ­ƒô£ Ephemeral operation-side payload (id + summary) for [`CreatedFixedPiece`] / siblings ÔÇö **not** the geometric `interface Diff` from `semio_compose_rs/client/schema/graphql/schema.golden.graphql` (`VectorDiff`, `PositionDiff`, ÔÇª).
     #[derive(Clone, Debug, Default)]
     pub struct Diff {
         pub id: Id,
@@ -8494,7 +8494,7 @@ pub mod kit_graph_engine {
 //#region ­ƒùä´©Å kit backbone persistence (native)
 
 pub mod kit_backbone {
-    //! @emoji ­ƒùä´©Å Dev JSON + local `.compose/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_kit_operation`].
+    //! @emoji ­ƒùä´©Å Dev JSON + local `.semio_compose_rs/` kit backbones: atomic single-file writes, multi-db SQLite + blobs dir, replay via [`kit_graph_engine::apply_kit_operation`].
     //! ­ƒîÉ The bundle wire format (`DevBackboneBundleDoc` + DTOs + `from_graph` / `hydrate_into_graph`) is wasm-compatible ÔÇö
     //! sketchpad's WASM runtime serializes / hydrates the metabolism-shaped JSON directly. The SQLite + filesystem-IO parts
     //! (atomic writes, `DevJsonAttached`, `LocalAttached`) are native-only and gated below.
@@ -8513,7 +8513,7 @@ pub mod kit_backbone {
 
     //#region ­ƒº¥ wire format
 
-    /// @emoji ­ƒ¬¬ On-disk schema marker stamped at the bundle root; matches `assets/compose/metabolism.new.kit.compose.json`.
+    /// @emoji ­ƒ¬¬ On-disk schema marker stamped at the bundle root; matches `assets/semio_compose_rs/metabolism.new.kit.semio_compose_rs.json`.
     pub const KIT_STORE_BUNDLE_SCHEMA: &str = "­ƒÄå26­ƒîÖ06Ô¼å´©Å1";
 
     /// @emoji ­ƒº¥ Blake3 hex (empty-input digest) used on the wire until per-entity merkle is filled.
@@ -8521,7 +8521,7 @@ pub mod kit_backbone {
     /// @emoji ­ƒº¥ ISO timestamp used when a checkpoint has no persisted time yet.
     pub const KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB: &str = "2020-01-01T00:00:00.000Z";
 
-    /// @emoji ­ƒôÄ Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.compose.json`).
+    /// @emoji ­ƒôÄ Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.semio_compose_rs.json`).
     pub(crate) fn json_array_or_block_items_ref(v: &serde_json::Value) -> Option<&Vec<serde_json::Value>> {
         match v {
             serde_json::Value::Array(a) => Some(a),
@@ -8552,7 +8552,7 @@ pub mod kit_backbone {
     }
 
     //#region ­ƒöû dev_backbone_canonical_kit_diff_wire_json
-    /// @emoji ­ƒôª Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.compose.json` collection keys).
+    /// @emoji ­ƒôª Serializes [`crate::operation::CanonicalKitDiff`] for `kitDiff` on persisted operation steps (sparse object; aligns with `metabolism.kit.diff.semio_compose_rs.json` collection keys).
     pub(crate) fn canonical_kit_diff_to_wire_json(d: &crate::operation::CanonicalKitDiff) -> serde_json::Value {
         use serde_json::{Map, Value};
         let mut root = Map::new();
@@ -9514,7 +9514,7 @@ pub mod kit_backbone {
         pub hash: String,
     }
 
-    /// @emoji ­ƒôª Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.compose.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
+    /// @emoji ­ƒôª Top-level on-disk kit store bundle (mirrors `metabolism.new.kit.semio_compose_rs.json`: `schema / wip / authoritative / stage / conflicts / blobs`; each graph snapshot holds kit seed JSON under `initialKit`).
     #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
     pub struct DevBackboneBundleDoc {
         pub schema: String,
@@ -10013,7 +10013,7 @@ pub mod kit_backbone {
         }
     }
 
-    /// @emoji ­ƒô£ Internal value type used by replay + the SQLite local-`.compose/` path; not part of the on-disk dev-json wire format.
+    /// @emoji ­ƒô£ Internal value type used by replay + the SQLite local-`.semio_compose_rs/` path; not part of the on-disk dev-json wire format.
     #[derive(Clone, Debug)]
     pub struct StoredOperation {
         pub workspace_id: String,
@@ -10042,16 +10042,16 @@ pub mod kit_backbone {
 
     #[cfg(not(target_arch = "wasm32"))]
     fn resolve_local_compose_root(project_or_dot_compose: &Path) -> PathBuf {
-        if project_or_dot_compose.file_name().and_then(|s| s.to_str()) == Some(".compose") {
+        if project_or_dot_compose.file_name().and_then(|s| s.to_str()) == Some(".semio_compose_rs") {
             project_or_dot_compose.to_path_buf()
         } else {
-            project_or_dot_compose.join(".compose")
+            project_or_dot_compose.join(".semio_compose_rs")
         }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     fn init_local_dot_compose_layout(compose_root: &Path) -> Result<(), ComposeError> {
-        std::fs::create_dir_all(compose_root).map_err(|e| ComposeError::invalid(format!("create .compose root: {e}")))?;
+        std::fs::create_dir_all(compose_root).map_err(|e| ComposeError::invalid(format!("create .semio_compose_rs root: {e}")))?;
         std::fs::create_dir_all(compose_root.join("blobs")).map_err(|e| ComposeError::invalid(format!("create blobs dir: {e}")))?;
         let ddl = r#"
 CREATE TABLE IF NOT EXISTS _operation_log (
@@ -10109,7 +10109,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
     fn atomic_write_bundle(path: &Path, doc: &DevBackboneBundleDoc) -> Result<(), ComposeError> {
         let parent = path.parent().ok_or_else(|| ComposeError::invalid("kit-store bundle path has no parent directory"))?;
         std::fs::create_dir_all(parent).map_err(|e| ComposeError::invalid(format!("create kit-store bundle parent: {e}")))?;
-        let tmp = path.with_extension("tmp.compose-write");
+        let tmp = path.with_extension("tmp.semio_compose_rs-write");
         let body = serde_json::to_string_pretty(doc).map_err(|e| ComposeError::invalid(e.to_string()))?;
         std::fs::write(&tmp, body).map_err(|e| ComposeError::invalid(format!("write temp kit-store bundle: {e}")))?;
         std::fs::rename(&tmp, path).map_err(|e| ComposeError::invalid(format!("rename kit-store bundle: {e}")))?;
@@ -10258,12 +10258,12 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
     }
     //#endregion ­ƒº® attached variants
 
-    /// @emoji ­ƒôæ US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.compose.json`).
+    /// @emoji ­ƒôæ US-001 golden JSON: top-level `operations` array, or legacy key `ops` (see `kit-store.golden.ops.semio_compose_rs.json`).
     pub fn golden_operation_records_ref(src: &serde_json::Value) -> Result<&Vec<serde_json::Value>, ComposeError> {
         src.get("operations").and_then(|v| v.as_array()).or_else(|| src.get("ops").and_then(|v| v.as_array())).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` or `ops` array"))
     }
 
-    /// @emoji ­ƒº¬ Build [`StoredOperation`] entities from `kit-store.golden.ops.compose.json` (US-001 fixture) for persistence tests.
+    /// @emoji ­ƒº¬ Build [`StoredOperation`] entities from `kit-store.golden.ops.semio_compose_rs.json` (US-001 fixture) for persistence tests.
     pub fn stored_operations_from_golden_operations_json(src: &serde_json::Value) -> Result<Vec<StoredOperation>, ComposeError> {
         let workspace_id = src["draftId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing transactionId"))?.to_string();
@@ -10533,7 +10533,7 @@ pub mod worker {
             })
         }
 
-        /// ­ƒø░️´©Å WASM/host bootstrap: hydrate WIP [`Graph`] from `@compose/js` kit JSON snapshot; authoritative line stays mint-empty.
+        /// ­ƒø░️´©Å WASM/host bootstrap: hydrate WIP [`Graph`] from `@semio_compose_rs/js` kit JSON snapshot; authoritative line stays mint-empty.
         pub async fn spawn_wip_overlay_from_initial_kit_projection_json(json: serde_json::Value) -> Result<Arc<Self>, crate::error::ComposeError> {
             let bus = EventBus::new(1024);
 
@@ -12766,7 +12766,7 @@ pub mod gql {
         }
     }
 
-    /// @emoji ­ƒø░️´©Å Golden `RemoteProvider` ÔÇö hub-linked provider (`uri` + `url` + backbone catalog).
+    /// @emoji ­ƒø░️´©Å Golden `RemoteProvider` ÔÇö semio_hub-linked provider (`uri` + `url` + backbone catalog).
     #[derive(Clone)]
     pub struct RemoteProvider {
         pub id: Id,
@@ -14365,7 +14365,7 @@ pub mod wasm_bridge {
         })
     }
 
-    /// ­ƒîÉ Stateful GraphQL fa├️ºade for `@compose/js` embedded worker + inline WASM.
+    /// ­ƒîÉ Stateful GraphQL fa├️ºade for `@semio_compose_rs/js` embedded worker + inline WASM.
     #[wasm_bindgen]
     pub struct KitStoreHandle {
         rt: Arc<ParentStore>,
@@ -14491,11 +14491,11 @@ mod tests {
         out
     }
 
-    /// @emoji ­ƒôÄ US-001 replay fixtures (`kit-store.golden.*`) live under `assets/compose/` when present in the checkout.
+    /// @emoji ­ƒôÄ US-001 replay fixtures (`kit-store.golden.*`) live under `assets/semio_compose_rs/` when present in the checkout.
     fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
-        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose");
-        let ops = base.join("kit-store.golden.ops.compose.json");
-        let exp = base.join("kit-store.golden.expected.compose.json");
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio_compose_rs");
+        let ops = base.join("kit-store.golden.ops.semio_compose_rs.json");
+        let exp = base.join("kit-store.golden.expected.semio_compose_rs.json");
         if ops.is_file() && exp.is_file() {
             Some((ops, exp))
         } else {
@@ -14615,7 +14615,7 @@ mod tests {
         "{ store { authoritative { theKit { kit { designs { edges { node { pieces { edges { node { id } } } } } } } } } } }"
     }
 
-    /// ­ƒôñ Writes the executable schema's SDL to `COMPOSE_GRAPHQL_SCHEMA_OUT`; run via `npx nx build compose/graphql`.
+    /// ­ƒôñ Writes the executable schema's SDL to `COMPOSE_GRAPHQL_SCHEMA_OUT`; run via `npx nx build semio_compose_rs/graphql`.
     #[test]
     #[ignore = "writes the generated SDL to COMPOSE_GRAPHQL_SCHEMA_OUT"]
     fn export_compose_graphql_schema_file() {
@@ -15114,7 +15114,7 @@ mod tests {
     fn kit_store_golden_operations_replay_matches_expected_invariants() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing assets/semio_compose_rs/kit-store.golden.*.json");
                 return;
             };
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -15165,7 +15165,7 @@ mod tests {
             }
 
             let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
-            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.compose.json");
+            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.semio_compose_rs.json");
             assert_eq!(fp, exp_fp, "projectionFingerprint");
         });
     }
@@ -15175,7 +15175,7 @@ mod tests {
     fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing assets/semio_compose_rs/kit-store.golden.*.json");
                 return;
             };
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
@@ -15205,7 +15205,7 @@ mod tests {
     fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing assets/semio_compose_rs/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");
@@ -15242,7 +15242,7 @@ mod tests {
     fn local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
         block_on(async {
             let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing assets/compose/kit-store.golden.*.json");
+                eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing assets/semio_compose_rs/kit-store.golden.*.json");
                 return;
             };
             let dir = tempfile::tempdir().expect("temp dir");
@@ -15256,7 +15256,7 @@ mod tests {
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
             let g_bootstrap = crate::store::Graph::new().await;
-            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
+            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio_compose_rs layout");
 
             let g2 = crate::store::Graph::new().await;
             let legacy_workspace = golden_ops["draftId"].as_str().expect("draftId");
@@ -15268,7 +15268,7 @@ mod tests {
                 }
             }
 
-            let db_path = proj_canon.join(".compose").join("wip.db");
+            let db_path = proj_canon.join(".semio_compose_rs").join("wip.db");
             let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
             for operation in &stored {
                 let input_json = serde_json::to_string(&operation.input).expect("input json");
@@ -15285,24 +15285,24 @@ mod tests {
             let workspace_id = g2.id.clone();
             let fp = stable_projection_fingerprint(&g2.materialized_kit_for_workspace(&workspace_id).await).await;
             let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
-            assert_eq!(fp, exp_fp, "local .compose backbone replay must match US-001 golden fingerprint");
+            assert_eq!(fp, exp_fp, "local .semio_compose_rs backbone replay must match US-001 golden fingerprint");
         });
     }
 
     #[test]
     fn kit_store_bundle_metabolism_new_has_contract_shape() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.new.kit.compose.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.new.kit.semio_compose_rs.json");
         let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read metabolism.new bundle")).expect("parse");
         for k in ["schema", "wip", "authoritative", "stage", "conflicts", "blobs"] {
-            assert!(v.get(k).is_some(), "metabolism.new.kit.compose.json missing `{k}`");
+            assert!(v.get(k).is_some(), "metabolism.new.kit.semio_compose_rs.json missing `{k}`");
         }
-        assert_eq!(v.get("schema").and_then(|s| s.as_str()), Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA), "metabolism.new.kit.compose.json schema marker drift");
+        assert_eq!(v.get("schema").and_then(|s| s.as_str()), Some(crate::kit_backbone::KIT_STORE_BUNDLE_SCHEMA), "metabolism.new.kit.semio_compose_rs.json schema marker drift");
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn metabolism_light_fixture_kinds_for_types_and_ports() {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.kit.light.compose.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/fixtures/metabolism.kit.light.semio_compose_rs.json");
         let v: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
@@ -15311,8 +15311,8 @@ mod tests {
         for t in types_arr {
             let id = t["id"].as_str().expect("type id");
             let nk = t["nodeKind"].as_str().expect("type.nodeKind");
-            let exp = format!("compose.metabolism.light.node.{id}");
-            assert_eq!(nk, exp.as_str(), "nodeKind must follow compose.metabolism.light.node.<typeId>");
+            let exp = format!("semio_compose_rs.metabolism.light.node.{id}");
+            assert_eq!(nk, exp.as_str(), "nodeKind must follow semio_compose_rs.metabolism.light.node.<typeId>");
         }
         let fam_arr =
             crate::kit_backbone::json_array_or_block_items_ref(kit.get("families").expect("families")).expect("families list");
@@ -15326,7 +15326,7 @@ mod tests {
                 port_rows += 1;
                 let id = p["id"].as_str().expect("port id");
                 let hk = p["handleKind"].as_str().expect("port.handleKind");
-                let exp = format!("compose.metabolism.light.handle.{id}");
+                let exp = format!("semio_compose_rs.metabolism.light.handle.{id}");
                 assert_eq!(hk, exp.as_str());
             }
         }
@@ -15340,7 +15340,7 @@ mod tests {
                     let Some(port) = c.get("port") else { continue };
                     let Some(pid) = port["id"].as_str() else { continue };
                     let hk = port["handleKind"].as_str().expect("connector.port.handleKind");
-                    let exp = format!("compose.metabolism.light.handle.{pid}");
+                    let exp = format!("semio_compose_rs.metabolism.light.handle.{pid}");
                     assert_eq!(hk, exp.as_str());
                 }
             }
@@ -15587,10 +15587,10 @@ mod tests {
         });
     }
 
-    /// @emoji ­ƒôª `metabolism.kit.diff.compose.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
+    /// @emoji ­ƒôª `metabolism.kit.diff.semio_compose_rs.json` parses as JSON and exposes expected top-level contract keys (typed [`crate::operation::CanonicalKitDiff`] lives on the GraphQL control plane only).
     #[test]
     fn canonical_kit_diff_metabolism_fixture_has_contract_keys() {
-        const FIXTURE: &str = include_str!("../../../assets/fixtures/metabolism.kit.diff.compose.json");
+        const FIXTURE: &str = include_str!("../../../assets/fixtures/metabolism.kit.diff.semio_compose_rs.json");
         let raw: serde_json::Value = serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("types").is_some(), "fixture must include types collection");

@@ -683,8 +683,8 @@ fn rewrite_grip_ref_local(grip_ref: &str, id_map: &HashMap<String, String>) -> S
 
 /// 🧮️ Closure-selects a copy fragment: expands the part set to include every selected fastener's
 /// endpoint parts, then expands the fastener set to include every fastener whose BOTH endpoints are
-/// now in the part set — mirrors compose's `copyDesign` closure rule
-/// (`compose/dev/algorithm/js/index.ts:483`) and `puzzle_5d_engine::copy_selection`'s typed twin.
+/// now in the part set — mirrors semio_compose_rs's `copyDesign` closure rule
+/// (`semio_compose_rs/dev/algorithm/js/index.ts:483`) and `puzzle_5d_engine::copy_selection`'s typed twin.
 fn copy_selection_local(document: &Puzzle5dDocument, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut part_set: HashSet<String> = part_ids.iter().cloned().collect();
     for fastener in &document.fasteners {
@@ -723,8 +723,8 @@ fn centroid_2d_local(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
 
 /// 🧮️ Resolves the 2D paste offset from `placement`: `Original` uses the (optional) position
 /// override verbatim; every other anchor uses the target-minus-source centroid delta plus the
-/// (optional) position override — mirrors compose's `__pasteCoordinateOffset`
-/// (`compose/dev/algorithm/js/index.ts:358`; compose itself only differentiates `original` vs
+/// (optional) position override — mirrors semio_compose_rs's `__pasteCoordinateOffset`
+/// (`semio_compose_rs/dev/algorithm/js/index.ts:358`; semio_compose_rs itself only differentiates `original` vs
 /// every other anchor, all of which resolve to the centroid offset).
 fn paste_delta_2d(fragment_parts: &[Puzzle5dPart], target_parts: &[Puzzle5dPart], placement: &PastePlacement) -> (f64, f64) {
     let (offset_x, offset_y) = placement.position.map(|position| (position[0], position[1])).unwrap_or((0.0, 0.0));
@@ -739,8 +739,8 @@ fn paste_delta_2d(fragment_parts: &[Puzzle5dPart], target_parts: &[Puzzle5dPart]
 
 /// 🧮️ Materializes a copied fragment at 2D delta `delta` (applied verbatim to the 3D origin's x/y
 /// too) — fresh ids (via `next_part_id`/`next_fastener_id`) dodge collisions with the live document,
-/// and fastener endpoints are remapped onto the fresh part ids. Mirrors compose's `pasteDesign`
-/// (`compose/dev/algorithm/js/index.ts:515`).
+/// and fastener endpoints are remapped onto the fresh part ids. Mirrors semio_compose_rs's `pasteDesign`
+/// (`semio_compose_rs/dev/algorithm/js/index.ts:515`).
 fn paste_selection_local(fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
     let mut id_map: HashMap<String, String> = HashMap::new();
     let mut fresh_parts = Vec::with_capacity(fragment_parts.len());
@@ -1918,6 +1918,8 @@ fn build_document_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiN
     UiNode::Tree(UiTreeNode {
         presence: UiPresence::default(),
         sections,
+        selected_ids: None,
+        highlighted_ids: None,
         selection_change: Some(puzzle5d_action("setSelection", None)),
         drop_action: None,
     })
@@ -1994,6 +1996,8 @@ fn build_kinds_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode
             kind_catalog_section("puzzle5d-play-kinds.fasteners", labels.fasteners, &slice("fasteners"), None, labels.none),
             kind_catalog_section("puzzle5d-play-kinds.ropes", labels.ropes, &slice("ropes"), None, labels.none),
         ],
+        selected_ids: None,
+        highlighted_ids: None,
         selection_change: None,
         drop_action: None,
     })
@@ -2362,7 +2366,7 @@ impl DocumentApp for Puzzle5dPlayApp {
                 }
             }
             "importComposeKit" => {
-                // 🌉️ Merges a compose Design document's pieces/connections into the live document
+                // 🌉️ Merges a semio_compose_rs Design document's pieces/connections into the live document
                 // (replacing `parts`/`fasteners`; camera/catalogs untouched) — see
                 // `puzzle_5d_engine::import_compose_design_json`'s doc comment for scope (one already-
                 // exported design, not a full multi-file kit bundle).
@@ -3174,8 +3178,8 @@ pub fn create_puzzle5d_app() -> App {
             .default_mode_id("edit")
             .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels), "layout-grid")
             .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "puzzle5d-3d")
-            // 🏗️ 3D-first 60/40 split — mirrors compose's design app (scene 60% / diagram 40%,
-            // `compose/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
+            // 🏗️ 3D-first 60/40 split — mirrors semio_compose_rs's design app (scene 60% / diagram 40%,
+            // `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
             // this app replaces.
             .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_3D.into(), PUZZLE5D_PLAY_WINDOW_2D.into()], "row", Some(&[60.0, 40.0]), Some(&["Puzzle 3D".into(), "Puzzle 2D".into()])))
             .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)

@@ -3,7 +3,7 @@
 use block_3d::Block3dDefinition;
 
 /// 📄️ The `nakagin-capsule` example fixture, handcrafted in the `.block3d` DSL — the `ObjectKind` half
-/// of compose's metabolism-kit `Capsule` type.
+/// of semio_compose_rs's metabolism-kit `Capsule` type.
 pub const BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🧱️nakagin-capsule.block3d");
 /// 📄️ The `hexagonal-cut-concrete-forest-left` example fixture, handcrafted in the `.block3d` DSL.
 pub const BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🧱️hexagonal-cut-concrete-forest-left.block3d");

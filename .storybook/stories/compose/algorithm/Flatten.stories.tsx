@@ -12,7 +12,7 @@ import * as React from "react";
 
 import { AlgorithmApp, NAKAGIN_CAPSULE_TOWER_DESIGN_ID, WindowKind, designFromKit, useFlattenPreview, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio-tech/compose-algorithm";
 
-import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/asset";
 
 const rawDesign = designFromKit(metabolismKit, NAKAGIN_CAPSULE_TOWER_DESIGN_ID)!;
 

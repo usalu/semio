@@ -3203,7 +3203,7 @@ mod tests {
             reference.origin[2]
         );
         assert!(
-            (reference.origin[0] - (-13.0)).abs() < 1e-9,
+            (reference.origin[0] - (-12.0)).abs() < 1e-9,
             "reference x {} should be base + 50% width (right)",
             reference.origin[0]
         );
@@ -3214,7 +3214,7 @@ mod tests {
             reference.origin[1]
         );
         assert!(reference.locked, "example references default locked like puzzle 3d");
-        assert_eq!(reference.width_world, CAD_FOREST_REFERENCE_WIDTH_WORLD);
+        assert_eq!(reference.width_world, 24.0);
     }
 
     #[test]

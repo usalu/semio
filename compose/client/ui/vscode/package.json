@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/technology-schema.json",
   "projectType": "application",
-  "name": "compose-vscode",
+  "name": "@semio-tech/compose-vscode",
   "displayName": "compose",
   "description": "compose sketchpad for VS Code ✏️",
   "icon": "🖼️compose.png",

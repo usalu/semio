@@ -16,6 +16,7 @@ use semio_framework_plugin::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{LazyLock, Mutex};
 
@@ -783,15 +784,12 @@ fn object_scale_json(object: &Puzzle3dObject) -> [f64; 3] {
 
 /// 🙈️ Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
 /// `revealIndex` is omitted entirely for untagged objects rather than emitted as `null`: the host's reveal cutoff (`framework/renderer/react`'s `applyRevealCutoff`) only skips instances with no reveal index, and a JSON `null` would coerce to `0` and hide every ordinary object behind the boot cutoff.
-fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
-    let selection = &runtime.selection;
+/// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
+fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
     let instances: Vec<Value> = fixture
         .objects
         .iter()
         .map(|object| {
-            let selected = selection.object_ids.contains(&object.id);
-            let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
-            let kind_highlighted = runtime.hovered_kind_id.is_some() && runtime.hovered_kind_id.as_deref() == object.object_kind.as_deref();
             let mesh_id = resolve_object_mesh_url(object, &fixture.meta).map(|url| world3d_mesh_id_from_url(&url)).unwrap_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into());
             let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
             let mut instance = json!({
@@ -805,11 +803,11 @@ fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) ->
                 "rotation": object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
                 "scale": scale,
                 "label": object.label.clone().or_else(|| object.object_kind.clone()).unwrap_or_else(|| object.id.clone()),
-                "selected": selected,
-                "hovered": hovered,
-                "highlighted": kind_highlighted,
                 "disabled": object.locked,
             });
+            if let Some(kind) = &object.object_kind {
+                instance["objectKind"] = json!(kind);
+            }
             if let Some(reveal_index) = object.reveal_index {
                 instance["revealIndex"] = json!(reveal_index);
             }
@@ -817,6 +815,13 @@ fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) ->
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
+    let payload = serde_json::to_string(&( &fixture.objects, &fixture.references, &fixture.target_volumes, &fixture.meta)).unwrap_or_default();
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    payload.hash(&mut hasher);
+    hasher.finish()
 }
 
 fn world_meshes_json(fixture: &Puzzle3dFixture) -> String {
@@ -979,8 +984,6 @@ fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> 
             let position = world_vortex_position(object, vortex);
             let direction = world_vortex_direction(object, vortex);
             let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-            let selected = runtime.selection.vortex_ids.contains(&full_id);
-            let hovered = runtime.hovered_vortex_full_id.as_deref() == Some(full_id.as_str());
             records.push(json!({
                 "fullId": full_id,
                 "objectId": object.id,
@@ -990,8 +993,6 @@ fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> 
                 "radius": vortex.radius.unwrap_or(0.36),
                 "color": vortex_color(&fixture.meta, vortex.vortex_kind.as_deref()),
                 "displayDirection": runtime.vortex_direction,
-                "selected": selected,
-                "hovered": hovered,
             }));
         }
     }
@@ -1023,7 +1024,7 @@ fn target_volume_scale_json(volume: &Puzzle3dTargetVolume) -> [f64; 3] {
     }
 }
 
-fn world_target_volumes_json(fixture: &Puzzle3dFixture, selected_ids: &[String]) -> String {
+fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
     let records: Vec<Value> = fixture
         .target_volumes
         .iter()
@@ -1036,7 +1037,6 @@ fn world_target_volumes_json(fixture: &Puzzle3dFixture, selected_ids: &[String])
                 "color": "#f472b6",
                 "hidden": volume.hidden,
                 "locked": volume.locked,
-                "selected": selected_ids.contains(&volume.id),
             })
         })
         .collect();
@@ -1174,10 +1174,22 @@ fn puzzle3d_viewport_scope() -> semio_framework_core::kernel::UiDirtyScope {
     }
 }
 
+fn puzzle3d_chrome_scope() -> semio_framework_core::kernel::UiDirtyScope {
+    semio_framework_core::kernel::UiDirtyScope::Partial {
+        window_bodies: Vec::new(),
+        panel_bodies: Vec::new(),
+        utilities: false,
+        tools: false,
+        engagements: false,
+        measures: false,
+        labels: false,
+    }
+}
+
 fn puzzle3d_selection_scope() -> semio_framework_core::kernel::UiDirtyScope {
     semio_framework_core::kernel::UiDirtyScope::Partial {
-        window_bodies: vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()],
-        panel_bodies: vec![PUZZLE3D_PLAY_BODY_DOCUMENT.to_string(), PUZZLE3D_PLAY_BODY_INSPECTOR.to_string()],
+        window_bodies: Vec::new(),
+        panel_bodies: vec![PUZZLE3D_PLAY_BODY_INSPECTOR.to_string()],
         utilities: false,
         tools: false,
         engagements: false,
@@ -1347,6 +1359,10 @@ fn world_selection_json(envelope: &Puzzle3dScene) -> String {
             }),
         );
         object.insert("targetVolumeIds".into(), json!(runtime.selection.target_volume_ids));
+        object.insert("vortexIds".into(), json!(runtime.selection.vortex_ids));
+        if let Some(vortex_hover) = runtime.hovered_vortex_full_id.as_deref() {
+            object.insert("hoveredVortexFullId".into(), json!(vortex_hover));
+        }
         if let Some(transform_mode) = puzzle3d_transform_handle(&envelope.active_utility) {
             object.insert("transformMode".into(), json!(transform_mode));
             object.insert(
@@ -1363,6 +1379,9 @@ fn world_selection_json(envelope: &Puzzle3dScene) -> String {
         }
         if let Some(active_id) = runtime.selection.object_ids.first() {
             object.insert("activeObjectId".into(), json!(active_id));
+        }
+        if let Some(kind_id) = runtime.hovered_kind_id.as_deref() {
+            object.insert("hoveredKindId".into(), json!(kind_id));
         }
         let gumball_active = puzzle3d_gumball_active(runtime, &envelope.active_utility);
         object.insert("gumballActive".into(), json!(gumball_active));
@@ -1818,11 +1837,11 @@ fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entity: &str, i
 //#endregion 🔖️Document
 
 //#region 🔖️AttractionResolve
-/// 📐️ Attraction placement math — a quaternion-only port of compose's `compute_child_plane`
-/// (compose/client/lib/rs/lib.rs:1328) so it composes directly with `Puzzle3dObject.orientation`. Every attraction
+/// 📐️ Attraction placement math — a quaternion-only port of semio_compose_rs's `compute_child_plane`
+/// (semio_compose_rs/client/lib/rs/lib.rs:1328) so it composes directly with `Puzzle3dObject.orientation`. Every attraction
 /// is directed (`attracting` → `attracted`); an attracted object's world pose is derived from the attracting
 /// vortex's world pose plus the 6 connection-style parameters (gap/shift/rise/rotation/turn/tilt, angles in
-/// degrees, same semantics as compose connections).
+/// degrees, same semantics as semio_compose_rs connections).
 const PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE: f64 = 0.01;
 
 fn vec3_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
@@ -1879,7 +1898,7 @@ fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
     }
 }
 
-/// 🧭️ Ports compose's `quaternion_from_unit_vectors` (compose/client/lib/rs/lib.rs:1276) — the quaternion rotating
+/// 🧭️ Ports semio_compose_rs's `quaternion_from_unit_vectors` (semio_compose_rs/client/lib/rs/lib.rs:1276) — the quaternion rotating
 /// unit vector `from` onto unit vector `to`.
 fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
     let r = vec3_dot(from, to) + 1.0;
@@ -1896,9 +1915,9 @@ fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 
     quat_normalize(quat)
 }
 
-/// 🧲️ Ports compose's align-quaternion special-case branch (compose/client/lib/rs/lib.rs:1345-1356) for when the
+/// 🧲️ Ports semio_compose_rs's align-quaternion special-case branch (semio_compose_rs/client/lib/rs/lib.rs:1345-1356) for when the
 /// attracted vortex is already (anti)parallel to the attracting vortex. Falls back to an alternate cross axis when
-/// the attracting direction is exactly ±Z — a double-degenerate corner compose's own branch doesn't otherwise guard.
+/// the attracting direction is exactly ±Z — a double-degenerate corner semio_compose_rs's own branch doesn't otherwise guard.
 fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3]) -> [f64; 4] {
     let reverse_child = vec3_scale(child_dir, -1.0);
     let cross_vec = vec3_cross(parent_dir, reverse_child);
@@ -1920,7 +1939,7 @@ fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3]) -> 
 }
 
 /// 📌️ Resolves an attraction endpoint (`objectId:vortexId`) to its owning object id and its vortex's LOCAL
-/// (object-frame) position/direction — the frame compose's connector math expects, before the object's own world
+/// (object-frame) position/direction — the frame semio_compose_rs's connector math expects, before the object's own world
 /// transform is applied.
 fn puzzle3d_local_vortex_geom(fixture: &Puzzle3dFixture, full_id: &str) -> Option<(String, [f64; 3], [f64; 3])> {
     for object in &fixture.objects {
@@ -1946,7 +1965,7 @@ fn puzzle3d_attraction_object_ids(fixture: &Puzzle3dFixture, attraction: &Puzzle
 
 /// 📐️ Forward attraction placement — given the attracting object's world pose (`t_a`/`q_a`), both vortices' LOCAL
 /// position/direction, and the 6 connection-style parameters (angles in degrees), returns the attracted object's
-/// world pose. Exact quaternion port of compose's `compute_child_plane`.
+/// world pose. Exact quaternion port of semio_compose_rs's `compute_child_plane`.
 #[allow(clippy::too_many_arguments)]
 fn puzzle3d_attraction_child_pose(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> ([f64; 3], [f64; 4]) {
     let parent_dir = vec3_normalize(d_a);
@@ -2017,7 +2036,7 @@ fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f
 /// 🌲️ Resolves every attracted object's world pose from its attracting root, over a directed BFS per
 /// weakly-connected component. Roots are in-degree-zero objects; a component that is a pure cycle (the "donut"
 /// case) picks the lexicographically smallest object id in that component as a deterministic root. Multiple
-/// incoming attractions to the same object are resolved first-visit-wins (mirrors compose's
+/// incoming attractions to the same object are resolved first-visit-wins (mirrors semio_compose_rs's
 /// `flatten_design_positions` cycle handling). Idempotent: re-running against already-resolved poses reproduces
 /// them exactly. Returns, for every non-root object touched, the attraction index that positioned it — callers
 /// (e.g. `translateSelection`) use this to rederive params before a direct move so resolving never snaps it back.
@@ -2507,9 +2526,44 @@ fn puzzle3d_hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabel
     ]
 }
 
-fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
-    let object_items: Vec<UiTreeItemNode> = envelope
-        .fixture
+fn puzzle3d_document_selected_ids(selection: &Puzzle3dSelection) -> Vec<String> {
+    let mut ids = Vec::new();
+    for id in &selection.object_ids {
+        ids.push(format!("puzzle3d-object:{id}"));
+    }
+    for id in &selection.reference_ids {
+        ids.push(format!("puzzle3d-reference:{id}"));
+    }
+    for id in &selection.target_volume_ids {
+        ids.push(format!("puzzle3d-target-volume:{id}"));
+    }
+    for id in &selection.vortex_ids {
+        ids.push(format!("puzzle3d-vortex:{id}"));
+    }
+    for id in &selection.attraction_ids {
+        ids.push(format!("puzzle3d-attraction:{id}"));
+    }
+    ids
+}
+
+fn puzzle3d_chrome_action(action: &str) -> bool {
+    matches!(
+        action,
+        "setHover" | "worldHover" | "worldPick" | "worldSelect" | "setSelection" | "clearSelection" | "selectAll" | "worldVortexHover" | "worldVortexSelect"
+    )
+}
+
+fn puzzle3d_patch_chrome_effect(envelope: &Puzzle3dScene) -> HostEffect {
+    HostEffect::PatchWorld3dChrome {
+        selection_json: world_selection_json(envelope),
+        vortices_json: Some(world_vortices_json(&envelope.fixture, &envelope.runtime)),
+        document_selected_ids: puzzle3d_document_selected_ids(&envelope.runtime.selection),
+        document_highlighted_ids: None,
+    }
+}
+
+fn document_tree_sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTreeSectionNode> {
+    let object_items: Vec<UiTreeItemNode> = fixture
         .objects
         .iter()
         .map(|object| {
@@ -2531,7 +2585,7 @@ fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
                 move |flag: &str| json!({ "flag": flag, "value": true, "entity": "object", "ids": [id.clone()] })
             };
             UiTreeItemNode {
-                presence: UiPresence::selected(envelope.runtime.selection.object_ids.contains(&object.id)),
+                presence: UiPresence::default(),
                 id: format!("puzzle3d-object:{}", object.id),
                 label: object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
                 description: None,
@@ -2549,8 +2603,7 @@ fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
             }
         })
         .collect();
-    let reference_items: Vec<UiTreeItemNode> = envelope
-        .fixture
+    let reference_items: Vec<UiTreeItemNode> = fixture
         .references
         .iter()
         .map(|reference| {
@@ -2559,7 +2612,7 @@ fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
                 move |flag: &str| json!({ "flag": flag, "value": true, "entity": "reference", "ids": [id.clone()] })
             };
             UiTreeItemNode {
-                presence: UiPresence::selected(envelope.runtime.selection.reference_ids.contains(&reference.id)),
+                presence: UiPresence::default(),
                 id: format!("puzzle3d-reference:{}", reference.id),
                 label: reference.id.clone(),
                 description: Some(reference.source.url.clone()),
@@ -2577,8 +2630,7 @@ fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
             }
         })
         .collect();
-    let target_volume_items: Vec<UiTreeItemNode> = envelope
-        .fixture
+    let target_volume_items: Vec<UiTreeItemNode> = fixture
         .target_volumes
         .iter()
         .map(|volume| {
@@ -2587,7 +2639,7 @@ fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
                 move |flag: &str| json!({ "flag": flag, "value": true, "entity": "targetVolume", "ids": [id.clone()] })
             };
             UiTreeItemNode {
-                presence: UiPresence::selected(envelope.runtime.selection.target_volume_ids.contains(&volume.id)),
+                presence: UiPresence::default(),
                 id: format!("puzzle3d-target-volume:{}", volume.id),
                 label: volume.id.clone(),
                 description: None,
@@ -2605,8 +2657,7 @@ fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
             }
         })
         .collect();
-    let attraction_items: Vec<UiTreeItemNode> = envelope
-        .fixture
+    let attraction_items: Vec<UiTreeItemNode> = fixture
         .attractions
         .iter()
         .map(|attraction| {
@@ -2618,15 +2669,21 @@ fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
             )
         })
         .collect();
+    vec![
+        UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), presence: UiPresence::default(), items: object_items },
+        UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some(labels.references.into()), default_open: Some(false), presence: UiPresence::default(), items: reference_items },
+        UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some(labels.target_volumes.into()), default_open: Some(false), presence: UiPresence::default(), items: target_volume_items },
+        UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some(labels.attractions.into()), default_open: Some(false), presence: UiPresence::default(), items: attraction_items },
+    ]
+}
+
+fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
     UiNode::Tree(UiTreeNode {
+        sections: document_tree_sections(&envelope.fixture, labels),
         presence: UiPresence::default(),
-        sections: vec![
-            UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), presence: UiPresence::default(), items: object_items },
-            UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some(labels.references.into()), default_open: Some(false), presence: UiPresence::default(), items: reference_items },
-            UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some(labels.target_volumes.into()), default_open: Some(false), presence: UiPresence::default(), items: target_volume_items },
-            UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some(labels.attractions.into()), default_open: Some(false), presence: UiPresence::default(), items: attraction_items },
-        ],
-        selection_change: None,
+        selected_ids: Some(puzzle3d_document_selected_ids(&envelope.runtime.selection)),
+        highlighted_ids: None,
+        selection_change: Some(puzzle3d_action("setSelection", None)),
         drop_action: None,
     })
 }
@@ -2733,6 +2790,8 @@ fn build_kinds_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode
     let attraction_entries = puzzle3d_catalog_entries(&envelope.fixture, "attractions");
     UiNode::Tree(UiTreeNode {
         presence: UiPresence::default(),
+        selected_ids: None,
+        highlighted_ids: None,
         sections: vec![
             UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(false), presence: UiPresence::default(), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
             UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), presence: UiPresence::default(), items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
@@ -3568,7 +3627,7 @@ fn puzzle3d_brush_utility_options(envelope: &Puzzle3dScene, precompute: &Puzzle3
     }
 }
 
-/// 🎛️ Utility Options for the Transform utility — Move and Rotate flags that compose the gumball.
+/// 🎛️ Utility Options for the Transform utility — Move and Rotate flags that semio_compose_rs the gumball.
 /// Tagged `Some("transform")` as a routing envelope only; children render flat under the Transform toggle.
 fn puzzle3d_transform_utility_options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
@@ -3640,6 +3699,8 @@ pub struct Puzzle3dPlayApp {
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
     preview_seq: u64,
     fill_display_memo: Mutex<Option<FillDisplayMemo>>,
+    geometry_cache: Mutex<Option<(u64, String, String)>>,
+    document_sections_cache: Mutex<Option<(u64, Vec<UiTreeSectionNode>)>>,
 }
 
 impl Default for Puzzle3dPlayApp {
@@ -3652,7 +3713,31 @@ impl Default for Puzzle3dPlayApp {
             transform_scratch: None,
             preview_seq: 0,
             fill_display_memo: Mutex::new(None),
+            geometry_cache: Mutex::new(None),
+            document_sections_cache: Mutex::new(None),
         }
+    }
+}
+
+impl Puzzle3dPlayApp {
+    fn geometry_jsons(&self, fixture: &Puzzle3dFixture) -> (String, String) {
+        let fingerprint = fixture_geometry_fingerprint(fixture);
+        let mut cache = self.geometry_cache.lock().expect("geometry cache");
+        if cache.as_ref().is_none_or(|(fp, _, _)| *fp != fingerprint) {
+            *cache = Some((fingerprint, world_instances_geometry_json(fixture), world_meshes_json(fixture)));
+            *self.document_sections_cache.lock().expect("document cache") = None;
+        }
+        let (_, instances, meshes) = cache.as_ref().expect("geometry cache populated");
+        (instances.clone(), meshes.clone())
+    }
+
+    fn document_sections_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTreeSectionNode> {
+        let fingerprint = fixture_geometry_fingerprint(fixture);
+        let mut cache = self.document_sections_cache.lock().expect("document cache");
+        if cache.as_ref().is_none_or(|(fp, _)| *fp != fingerprint) {
+            *cache = Some((fingerprint, document_tree_sections(fixture, labels)));
+        }
+        cache.as_ref().expect("document cache populated").1.clone()
     }
 }
 
@@ -3814,7 +3899,8 @@ impl DocumentApp for Puzzle3dPlayApp {
         let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
         let mut effects = Vec::new();
         let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick");
-        if !preserve_fill_plan {
+        let skip_precompute_sync = matches!(action, "worldPick" | "worldSelect" | "setSelection" | "clearSelection" | "selectAll");
+        if !preserve_fill_plan && !skip_precompute_sync {
             sync_precompute_session(&mut self.precompute, &envelope);
         }
         match action {
@@ -4570,10 +4656,14 @@ impl DocumentApp for Puzzle3dPlayApp {
             _ => {}
         }
         ui_scope = match action {
-            "setHover" | "worldHover" | "setCamera" | "setProjection" | "setProjectionParam" | "focusSelection" => puzzle3d_viewport_scope(),
+            "setHover" | "worldHover" => puzzle3d_chrome_scope(),
+            "setCamera" | "setProjection" | "setProjectionParam" | "focusSelection" => puzzle3d_viewport_scope(),
             "worldPick" | "worldSelect" | "setSelection" | "clearSelection" | "selectAll" | "worldVortexHover" | "worldVortexSelect" => puzzle3d_selection_scope(),
             _ => ui_scope,
         };
+        if puzzle3d_chrome_action(action) {
+            effects.push(puzzle3d_patch_chrome_effect(&envelope));
+        }
         let next_active_utility = envelope.active_utility.clone();
         envelope.runtime.save_window(&wid);
         self.runtime = envelope.runtime;
@@ -4620,6 +4710,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         );
         let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility: active_utility.clone() };
         let labels = puzzle3d_labels(view_state);
+        let (instances_json, meshes_json) = self.geometry_jsons(&envelope.fixture);
         match body_key {
             PUZZLE3D_PLAY_BODY_COMPOSITE => {
                 let brush_preview = world_brush_preview_json(&self.precompute, &envelope);
@@ -4628,12 +4719,12 @@ impl DocumentApp for Puzzle3dPlayApp {
                     PUZZLE3D_PLAY_APP_ID,
                     world3d_scene_extended(
                         camera_json(&envelope.runtime.camera),
-                        world_meshes_json(&envelope.fixture),
-                        world_instances_json(&envelope.fixture, &envelope.runtime),
+                        meshes_json,
+                        instances_json,
                         world_selection_json(&envelope),
                         Some(world_vortices_json(&envelope.fixture, &envelope.runtime)),
                         Some(world_attractions_json(&envelope.fixture)),
-                        Some(world_target_volumes_json(&envelope.fixture, &envelope.runtime.selection.target_volume_ids)),
+                        Some(world_target_volumes_json(&envelope.fixture)),
                         Some(world_references_json(&envelope.fixture)),
                         brush_preview,
                         Some(world_interaction_json(&envelope, &self.precompute)),
@@ -4645,7 +4736,14 @@ impl DocumentApp for Puzzle3dPlayApp {
                     ),
                 )
             }
-            PUZZLE3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope, labels),
+            PUZZLE3D_PLAY_BODY_DOCUMENT => UiNode::Tree(UiTreeNode {
+                sections: self.document_sections_cached(&envelope.fixture, &labels),
+                presence: UiPresence::default(),
+                selected_ids: Some(puzzle3d_document_selected_ids(&envelope.runtime.selection)),
+                highlighted_ids: None,
+                selection_change: Some(puzzle3d_action("setSelection", None)),
+                drop_action: None,
+            }),
             PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(&envelope, labels),
             PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope, labels),
             PUZZLE3D_PLAY_BODY_SETTINGS => build_settings_body(&envelope, labels),
@@ -6743,15 +6841,16 @@ mod tests {
         let result = app.handle_action("setHover", Some(&json!({ "objectId": object_id })), &ViewState::default(), &testkit::meta("local")).expect("setHover");
         assert!(result.operations.is_empty(), "setHover must not emit document operations");
         assert_eq!(app.projection().expect("projection").0, before, "setHover must not mutate the document");
-        use semio_framework_core::kernel::UiDirtyScope;
+        use semio_framework_core::kernel::{HostEffect, UiDirtyScope};
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, measures, utilities, tools, engagements, labels } => {
-                assert_eq!(window_bodies, vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()]);
+                assert!(window_bodies.is_empty());
                 assert_eq!(panel_bodies, vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()]);
                 assert!(!measures && !utilities && !tools && !engagements && !labels);
             }
-            other => panic!("setHover must narrow dirty scope to the viewport composite, got {other:?}"),
+            other => panic!("setHover must use chrome-only dirty scope, got {other:?}"),
         }
+        assert!(result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::PatchWorld3dChrome { .. })));
         let clear = app.handle_action("setHover", None, &ViewState::default(), &testkit::meta("local")).expect("clear hover");
         assert!(clear.operations.is_empty(), "clearing hover must not emit document operations");
     }
@@ -6793,18 +6892,32 @@ mod tests {
 
     #[test]
     fn world_pick_declares_selection_ui_scope() {
-        use semio_framework_core::kernel::UiDirtyScope;
+        use semio_framework_core::kernel::{HostEffect, UiDirtyScope};
         let mut app = testkit::new_app::<Puzzle3dPlayApp>();
         let result = app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("worldPick");
+        assert!(result.requested_effects.iter().any(|effect| matches!(effect, HostEffect::PatchWorld3dChrome { .. })));
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, measures, utilities, tools, engagements, labels } => {
-                assert_eq!(window_bodies, vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()]);
-                assert!(panel_bodies.contains(&PUZZLE3D_PLAY_BODY_DOCUMENT.to_string()));
+                assert!(window_bodies.is_empty());
                 assert!(panel_bodies.contains(&PUZZLE3D_PLAY_BODY_INSPECTOR.to_string()));
+                assert!(!panel_bodies.contains(&PUZZLE3D_PLAY_BODY_DOCUMENT.to_string()));
                 assert!(!measures && !utilities && !tools && !engagements && !labels);
             }
             other => panic!("worldPick must narrow dirty scope to selection surfaces, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn world_pick_keeps_instances_geometry_json_stable() {
+        let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+        let before = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        let instances_before = before.pointer("/world3d/instancesJson").and_then(Value::as_str).expect("instances").to_string();
+        app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("worldPick");
+        let after = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
+        let instances_after = after.pointer("/world3d/instancesJson").and_then(Value::as_str).expect("instances");
+        assert_eq!(instances_before, instances_after);
+        let selection_after = after.pointer("/world3d/selectionJson").and_then(Value::as_str).expect("selection");
+        assert!(selection_after.contains("\"ids\""));
     }
 
     #[test]
@@ -6897,8 +7010,7 @@ mod tests {
         app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortex, "merge": "default" })), &ViewState::default(), &testkit::meta("local")).expect("select vortex");
         let selection = selection_of(&render_composite(&mut app));
         assert_eq!(selection.get("ids").and_then(Value::as_array).map(Vec::len), Some(0));
-        let vortices = render_composite(&mut app).pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
-        assert!(vortices.iter().any(|entry| entry.get("fullId").and_then(Value::as_str) == Some(vortex.as_str()) && entry.get("selected").and_then(Value::as_bool) == Some(true)));
+        assert!(selection.get("vortexIds").and_then(Value::as_array).is_some_and(|ids| ids.iter().any(|id| id.as_str() == Some(vortex.as_str()))));
     }
 
     #[test]
@@ -6909,29 +7021,22 @@ mod tests {
         app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortices[0] })), &ViewState::default(), &testkit::meta("local")).expect("select first vortex");
         app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortices[1] })), &ViewState::default(), &testkit::meta("local")).expect("replace with second vortex");
         let selective = render_composite(&mut app);
-        let selected: Vec<String> = selective
-            .pointer("/world3d/vorticesJson")
-            .and_then(Value::as_str)
-            .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
-            .unwrap_or_default()
-            .iter()
-            .filter(|entry| entry.get("selected").and_then(Value::as_bool) == Some(true))
-            .filter_map(|entry| entry.get("fullId").and_then(Value::as_str).map(str::to_string))
-            .collect();
+        let selected: Vec<String> = selection_of(&selective)
+            .get("vortexIds")
+            .and_then(Value::as_array)
+            .map(|ids| ids.iter().filter_map(Value::as_str).map(str::to_string).collect())
+            .unwrap_or_default();
         assert_eq!(selected, vec![vortices[1].clone()]);
         assert_eq!(selection_of(&selective).get("selectionMergeMode").and_then(Value::as_str), Some("default"));
 
         app.handle_action("setSelectionModeDefault", Some(&json!({ "mode": "invertive" })), &ViewState::default(), &testkit::meta("local")).expect("enable invertive mode");
         app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortices[0] })), &ViewState::default(), &testkit::meta("local")).expect("toggle first vortex into selection");
         let invertive = render_composite(&mut app);
-        let selected_count = invertive
-            .pointer("/world3d/vorticesJson")
-            .and_then(Value::as_str)
-            .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
-            .unwrap_or_default()
-            .iter()
-            .filter(|entry| entry.get("selected").and_then(Value::as_bool) == Some(true))
-            .count();
+        let selected_count = selection_of(&invertive)
+            .get("vortexIds")
+            .and_then(Value::as_array)
+            .map(|ids| ids.len())
+            .unwrap_or(0);
         assert_eq!(selected_count, 2);
         assert_eq!(selection_of(&invertive).get("selectionMergeMode").and_then(Value::as_str), Some("invertive"));
     }

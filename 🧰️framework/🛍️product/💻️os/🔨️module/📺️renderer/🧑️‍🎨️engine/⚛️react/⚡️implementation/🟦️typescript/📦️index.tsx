@@ -439,7 +439,7 @@ import {
   type TutorialAssetSrc,
 } from "@semio-tech/framework-core";
 import { createRoot } from "react-dom/client";
-import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-cavas-react-renderer";
+import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-canvas-react-renderer";
 import {
   FRAMEWORK_SYNC_CONTROLLER_ID,
   buildFileBackboneUri,
@@ -852,8 +852,27 @@ export function declarativeTreeDragController(treeNode: UiTreeNode, onAction: Ui
 }
 
 function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTreeNode; readonly onAction: UiInterpreterContext["onAction"] }) {
-  const config = uiTreeNodeToTreePanelConfig(treeNode, onAction);
-  const dragController = declarativeTreeDragController(treeNode, onAction);
+  const sectionConfig = useMemo(() => {
+    const sections: TreeDataSection[] = treeNode.sections.map((section: UiTreeSectionNode) => ({
+      id: section.id,
+      label: section.label ?? "",
+      defaultOpen: section.defaultOpen,
+      loading: section.loading,
+      waiting: section.waiting,
+      items: uiTreeItemsToTreeData(section.items, onAction),
+    }));
+    return { sections, sortableSections: sections.length > 1 };
+  }, [onAction, treeNode.sections]);
+  const config = useMemo(
+    (): TreePanelConfig => ({
+      ...sectionConfig,
+      selectedIds: treeNode.selectedIds as string[] | undefined,
+      highlightedIds: treeNode.highlightedIds,
+      onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchUiAction(onAction, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
+    }),
+    [sectionConfig, treeNode.highlightedIds, treeNode.selectedIds, treeNode.selectionChange, onAction],
+  );
+  const dragController = useMemo(() => declarativeTreeDragController(treeNode, onAction), [onAction, treeNode.dropAction, treeNode.sections]);
   return (
     <Tree
       className="min-h-0 min-w-0 flex-1 overflow-auto"
@@ -4903,6 +4922,31 @@ export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V
   return changed ? next : prev;
 }
 
+/** @emoji 🎯️ Merges selection chrome into an existing world-3d component scene without touching instance geometry. */
+function patchWorld3dChromeOntoNode(node: UiNode, patch: { readonly selectionJson: string; readonly vorticesJson?: string }): UiNode {
+  if (node.type !== "component" || !node.world3d) return node;
+  const next: UiNode = {
+    ...node,
+    world3d: {
+      ...node.world3d,
+      selectionJson: patch.selectionJson,
+      ...(patch.vorticesJson !== undefined ? { vorticesJson: patch.vorticesJson } : {}),
+    },
+  };
+  return preserveJsonIdentity(node, next);
+}
+
+/** @emoji 🌲️ Updates tree-level selection highlights without rebuilding structural sections. */
+function patchDocumentTreeSelectedIds(node: UiNode, selectedIds: readonly string[], highlightedIds?: readonly string[]): UiNode {
+  if (node.type !== "tree") return node;
+  const next: UiNode = {
+    ...node,
+    selectedIds: [...selectedIds],
+    ...(highlightedIds ? { highlightedIds: [...highlightedIds] } : {}),
+  };
+  return preserveJsonIdentity(node, next);
+}
+
 //#region UiRefresh
 /** @emoji 🐢️ One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the plugin next time so it can skip re-serializing unchanged content. */
 export type UiRefreshCache = Map<string, { readonly hash: string; readonly value: unknown }>;
@@ -6012,6 +6056,46 @@ export function FrameworkOsShell({
           dispatch({ type: "SET_ACTIVE_TOOL", toolId: toolId || null });
           if (toolId) clearAllWindowUtilities();
           nextViewState = { ...nextViewState, activeToolId: toolId || undefined, activeUtilityId: toolId ? undefined : nextViewState.activeUtilityId };
+          continue;
+        }
+        if ("patchWorld3dChrome" in effect) {
+          const { selectionJson, vorticesJson, documentSelectedIds, documentHighlightedIds } = effect.patchWorld3dChrome;
+          const patch = { selectionJson, vorticesJson };
+          const windowInstances = sessionWindowInstances(baseSession.app, extraWindowInstancesRef.current);
+          const documentPanelKey = panelTabKindId(FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+          dispatch({
+            type: "SET_WINDOW_UI_BY_WINDOW_ID",
+            value: (current) =>
+              mergeRecordPreservingIdentity(
+                current,
+                windowInstances.map((instance) => {
+                  const node = current[instance.id];
+                  return [instance.id, node ? patchWorld3dChromeOntoNode(node, patch) : node] as const;
+                }),
+              ),
+          });
+          dispatch({
+            type: "SET_PANEL_UI_BY_KEY",
+            value: (current) => {
+              const documentNode = current[documentPanelKey];
+              if (!documentNode) return current;
+              return mergeRecordPreservingIdentity(current, [[documentPanelKey, patchDocumentTreeSelectedIds(documentNode, documentSelectedIds, documentHighlightedIds)]]);
+            },
+          });
+          const cache = uiRefreshCacheRef.current;
+          for (const instance of windowInstances) {
+            const cached = cache.get(`window:${instance.id}`);
+            if (cached?.value) {
+              cache.set(`window:${instance.id}`, { hash: cached.hash, value: patchWorld3dChromeOntoNode(cached.value as UiNode, patch) });
+            }
+          }
+          const documentCached = cache.get(`panel:${documentPanelKey}`);
+          if (documentCached?.value) {
+            cache.set(`panel:${documentPanelKey}`, {
+              hash: documentCached.hash,
+              value: patchDocumentTreeSelectedIds(documentCached.value as UiNode, documentSelectedIds, documentHighlightedIds),
+            });
+          }
           continue;
         }
         if ("openDialog" in effect) {
@@ -11724,6 +11808,7 @@ type WorldInstanceRecord = {
   readonly smoothShading?: boolean;
   /** 🪣️ 0-based position in a background-planned sequence (e.g. puzzle3d's fill plan) — see `RevealCutoffStore`. Absent for ordinary (non-planned) instances. */
   readonly revealIndex?: number;
+  readonly objectKind?: string;
 };
 
 type WorldSelectionTargets = {
@@ -11764,6 +11849,7 @@ type WorldSelectionRecord = {
   readonly engagementSessionActive?: boolean;
   /** 🖱️➡️ When true and `targets.face` is set, dragging an already-selected face starts a push/pull gesture (`worldFaceDragEnd` on release) instead of the default marquee/orbit. */
   readonly faceDragActive?: boolean;
+  readonly hoveredKindId?: string;
 };
 
 type WorldSuggestionCandidateRecord = {
@@ -13937,6 +14023,7 @@ function WorldInstancesLayer({
             ...instance,
             selected: selectedIds.has(instance.id),
             hovered: selection.hoveredId === instance.id,
+            highlighted: selection.hoveredKindId != null && instance.objectKind === selection.hoveredKindId,
           };
           return (
             <WorldInstanceNode

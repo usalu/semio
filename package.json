@@ -1,5 +1,5 @@
 {
-  "name": "compose",
+  "name": "workspace",
   "version": "1.0.0",
   "type": "module",
   "description": "🧩️ Design-Information-Modeling for Kit-of-Parts 🏘️",
@@ -243,7 +243,7 @@
   "overrides": {
     "@radix-ui/react-slot": "^1.2.5",
     "@radix-ui/react-slider": "^1.4.5",
-    "@semio-tech/semio-asset": "workspace:*",
+    "@semio-tech/asset": "workspace:*",
     "@semio-tech/compose-js": "workspace:*",
     "diff": "^8.0.3",
     "tmp": "^0.2.5"

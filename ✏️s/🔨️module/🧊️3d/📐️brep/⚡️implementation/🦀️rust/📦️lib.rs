@@ -776,7 +776,7 @@ impl Trsf {
     pub fn apply_normal(&self, n: Vec3) -> Vec3 {
         self.rotation.rotate(n)
     }
-    pub fn compose(&self, inner: &Trsf) -> Trsf {
+    pub fn semio_compose_rs(&self, inner: &Trsf) -> Trsf {
         Trsf { rotation: self.rotation.mul(inner.rotation), translation: self.apply_vector(inner.translation) + self.translation, scale: self.scale * inner.scale }
     }
     pub fn inverse(&self) -> Trsf {
@@ -889,7 +889,7 @@ mod tests {
         let a = Trsf { rotation: Quat::from_axis_angle(Vec3::Z, 0.4), translation: Vec3::new(1.0, 0.0, 0.0), scale: 1.0 };
         let b = Trsf { rotation: Quat::from_axis_angle(Vec3::X, 0.9), translation: Vec3::new(0.0, 2.0, 0.0), scale: 1.5 };
         let p = Pnt3::new(3.0, -1.0, 2.0);
-        let composed = a.compose(&b).apply_point(p);
+        let composed = a.semio_compose_rs(&b).apply_point(p);
         let sequential = a.apply_point(b.apply_point(p));
         assert!(composed.distance(sequential) < 1e-9);
     }

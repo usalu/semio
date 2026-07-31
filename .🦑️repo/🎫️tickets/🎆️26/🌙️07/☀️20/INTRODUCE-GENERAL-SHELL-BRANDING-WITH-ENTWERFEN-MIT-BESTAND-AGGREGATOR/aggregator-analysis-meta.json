@@ -90,7 +90,7 @@
         {
           "path": "/Users/ueli/Documents/semio/infinite/cavas/react-renderer/index.tsx",
           "kind": "import-statement",
-          "original": "@semio-tech/infinite-cavas-react-renderer"
+          "original": "@semio-tech/infinite-canvas-react-renderer"
         },
         {
           "path": "/Users/ueli/Documents/semio/framework/product/os/core/js/index.ts",

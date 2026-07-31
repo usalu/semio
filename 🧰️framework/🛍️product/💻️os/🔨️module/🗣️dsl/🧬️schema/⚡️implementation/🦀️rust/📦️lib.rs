@@ -650,7 +650,7 @@ fn parse_quantity(cursor: &mut Cursor, declared: &'static dsl_core::UnitSpec) ->
 }
 
 /// @emoji 🔢️ Reads one `Float|Int` token as `f64` — the plain-number leaf `Shape::Coord`/`Dir`/
-/// `Dim`/`Range` compose from (unlike `parse_quantity`, no unit-suffix consumption: these shapes'
+/// `Dim`/`Range` semio_compose_rs from (unlike `parse_quantity`, no unit-suffix consumption: these shapes'
 /// components are always dimensionless numbers or already-declared-unit numbers).
 fn parse_plain_number(cursor: &mut Cursor) -> Result<f64, TextError> {
     if !matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int) {

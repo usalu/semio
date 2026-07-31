@@ -1,4 +1,4 @@
-//! @emoji 🏛️ `architect` — compose query language: Jack (mathematical_graph_dsl) is the parsing
+//! @emoji 🏛️ `architect` — semio_compose_rs query language: Jack (mathematical_graph_dsl) is the parsing
 //! front end, this crate owns only the GraphQL planner/executor that lowers Jack's AST into
 //! `Transport` calls. See `plans/every-dsl-must-be-crispy-shell.md` (Wave 2 / P9) for the
 //! repo-wide unified-DSL-syntax rationale: Architect used to carry its own hand-rolled `nom`
@@ -384,14 +384,14 @@ mod transport {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    /// @emoji 🏗️ Executes planned GraphQL against a live compose [`compose::gql::AppSchema`].
+    /// @emoji 🏗️ Executes planned GraphQL against a live semio_compose_rs [`semio_compose_rs::gql::AppSchema`].
     pub struct ComposeTransport {
-        schema: compose::gql::AppSchema,
+        schema: semio_compose_rs::gql::AppSchema,
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     impl ComposeTransport {
-        pub fn new(schema: compose::gql::AppSchema) -> Self {
+        pub fn new(schema: semio_compose_rs::gql::AppSchema) -> Self {
             Self { schema }
         }
 
@@ -1120,13 +1120,13 @@ mod tests {
     }
 
     fn architect_cases_doc() -> serde_json::Value {
-        let path = fixtures_dir().join("architect.cases.compose.json");
-        serde_json::from_str(&std::fs::read_to_string(&path).expect("read architect.cases.compose.json")).expect("parse cases")
+        let path = fixtures_dir().join("architect.cases.semio_compose_rs.json");
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("read architect.cases.semio_compose_rs.json")).expect("parse cases")
     }
 
     fn architect_harness_kit() -> serde_json::Value {
-        let path = fixtures_dir().join("architect.harness.kit.compose.json");
-        serde_json::from_str(&std::fs::read_to_string(&path).expect("read architect.harness.kit.compose.json")).expect("parse harness kit")
+        let path = fixtures_dir().join("architect.harness.kit.semio_compose_rs.json");
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("read architect.harness.kit.semio_compose_rs.json")).expect("parse harness kit")
     }
 
     fn case_rows(doc: &serde_json::Value) -> &[serde_json::Value] {
@@ -1228,7 +1228,7 @@ mod tests {
     #[test]
     fn architect_cases_fixture_contract() {
         let doc = architect_cases_doc();
-        assert_eq!(doc["kit"].as_str(), Some("architect.harness.kit.compose.json"));
+        assert_eq!(doc["kit"].as_str(), Some("architect.harness.kit.semio_compose_rs.json"));
         let cases = case_rows(&doc);
         assert_eq!(cases.len(), 13);
         for tier in ["e2e", "memory", "plan", "parse"] {
@@ -1283,13 +1283,13 @@ mod tests {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    async fn compose_schema_for_case(case: &serde_json::Value) -> compose::gql::AppSchema {
+    async fn compose_schema_for_case(case: &serde_json::Value) -> semio_compose_rs::gql::AppSchema {
         if case.get("runtime").and_then(|v| v.as_str()) == Some("empty") {
-            return compose::gql::build_schema_for(compose::worker::ParentStore::spawn().await);
+            return semio_compose_rs::gql::build_schema_for(semio_compose_rs::worker::ParentStore::spawn().await);
         }
         let kit = architect_harness_kit();
-        let rt = compose::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit).await.expect("hydrate architect harness");
-        compose::gql::build_schema_for(rt)
+        let rt = semio_compose_rs::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(kit).await.expect("hydrate architect harness");
+        semio_compose_rs::gql::build_schema_for(rt)
     }
 
     #[cfg(not(target_arch = "wasm32"))]

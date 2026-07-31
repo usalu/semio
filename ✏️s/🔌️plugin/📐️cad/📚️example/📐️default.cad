@@ -1,0 +1,46 @@
+schema=cad.document id=cad active-model-definition-id=spatial.shape references-by-model-definition-id={
+  spatial.shape=[ id=ref-1 source-url="https://example.test/plan.png" media-kind=image origin=0,0,0 width-world=8 hidden=false locked=true opacity=0.8 scale=1.5 ]
+}
+shape-geometry {
+  anchors=[ {
+    id="anchor-1" position=[ 0 0 0 ]
+  }
+  ] vertices=[ id=v1 position=@0,0,0 id=v2 position=@1,0,0 ] edges=[ id=e1 vertex-ids=[ v1 v2 ]
+  curve {
+    kind=line
+  }
+  ] wires=[ id=w1 edge-ids=[ e1 ] ] faces=[ id=f1 wire-ids=[ w1 ]
+  surface {
+    kind=plane origin=@0,0,0 normal=^0,0,1
+  }
+  ] shells=[ id=s1 face-ids=[ f1 ] ] solids=[ id=sol1 shell-ids=[ s1 ] ]
+}
+building-geometry {
+  anchors=[ {
+    id="anchor-1" position=[ 0 0 0 ]
+  }
+  ] vertices=[ id=v1 position=@0,0,0 id=v2 position=@1,0,0 ] edges=[ id=e1 vertex-ids=[ v1 v2 ]
+  curve {
+    kind=line
+  }
+  ] wires=[ id=w1 edge-ids=[ e1 ] ] faces=[ id=f1 wire-ids=[ w1 ]
+  surface {
+    kind=plane origin=@0,0,0 normal=^0,0,1
+  }
+  ] shells=[ id=s1 face-ids=[ f1 ] ] solids=[ id=sol1 shell-ids=[ s1 ] ]
+}
+objects [id:TEXT label:TEXT typology:TEXT visible:BOOL locked:BOOL origin:CRD orientation:TUPLE scale:TUPLE mesh-url:TEXT extent:TUPLE solid-handle:TEXT primitives:LIST] {
+  object-1 Box spatial.shape.box true false @1,2,3 0,0,0,1 1,1,1 "https://example.test/mesh.glb" 2,2,2 solid-1 [ slot=solid primitive-id=solid-1 kind=solid ]
+}
+building-objects [id:TEXT label:TEXT typology:TEXT visible:BOOL locked:BOOL origin:CRD orientation:TUPLE scale:TUPLE mesh-url:TEXT extent:TUPLE solid-handle:TEXT primitives:LIST] {
+  object-2 Box spatial.shape.box true false @1,2,3 0,0,0,1 1,1,1 "https://example.test/mesh.glb" 2,2,2 solid-1 [ slot=solid primitive-id=solid-1 kind=solid ]
+}
+energy-objects [id:TEXT label:TEXT typology:TEXT visible:BOOL locked:BOOL origin:CRD orientation:TUPLE scale:TUPLE mesh-url:TEXT extent:TUPLE solid-handle:TEXT primitives:LIST] {
+}
+structure-classic-objects [id:TEXT label:TEXT typology:TEXT visible:BOOL locked:BOOL origin:CRD orientation:TUPLE scale:TUPLE mesh-url:TEXT extent:TUPLE solid-handle:TEXT primitives:LIST] {
+  col-a Box spatial.shape.box true false @1,2,3 0,0,0,1 1,1,1 "https://example.test/mesh.glb" 2,2,2 solid-1 [ slot=solid primitive-id=solid-1 kind=solid ]
+}
+nodes [id:TEXT label:TEXT kind:TEXT] {
+  node-1 Root group
+}
+

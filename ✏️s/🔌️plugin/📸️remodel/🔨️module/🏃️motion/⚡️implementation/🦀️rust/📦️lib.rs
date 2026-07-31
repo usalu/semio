@@ -666,7 +666,7 @@ const STABILIZE_SG_ORDER: usize = 2;
 
 /// 🧘️ Savitzky-Golay smoothing of a camera pose sequence in the SE(3) Lie algebra: consecutive relative
 /// motions are logged to twists, each of the 6 twist channels is smoothed independently (`deriv = 0`), and
-/// the smoothed twists are reintegrated via [`Se3::exp`]/[`Se3::compose`] — so the result stays exactly on
+/// the smoothed twists are reintegrated via [`Se3::exp`]/[`Se3::semio_compose_rs`] — so the result stays exactly on
 /// the SE(3) manifold instead of naively averaging matrix or quaternion components. `window` is clamped to
 /// the largest valid odd value `>= 3` for however many pose-to-pose twists are available.
 pub fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
@@ -674,7 +674,7 @@ pub fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
     if n < 2 {
         return poses.to_vec();
     }
-    let twists: Vec<[f64; 6]> = poses.windows(2).map(|w| w[1].compose(&w[0].inverse()).log()).collect();
+    let twists: Vec<[f64; 6]> = poses.windows(2).map(|w| w[1].semio_compose_rs(&w[0].inverse()).log()).collect();
     let smoothed_twists = if twists.len() >= 3 {
         let win = odd_window(window, twists.len());
         let order = STABILIZE_SG_ORDER.min(win - 1);
@@ -687,7 +687,7 @@ pub fn smooth_camera_path(poses: &[Se3], window: usize) -> Vec<Se3> {
     out.push(poses[0]);
     for xi in &smoothed_twists {
         let prev = *out.last().expect("out seeded with poses[0]");
-        out.push(Se3::exp(*xi).compose(&prev));
+        out.push(Se3::exp(*xi).semio_compose_rs(&prev));
     }
     out
 }
@@ -885,7 +885,7 @@ impl LeastSquaresProblem for DeformationNodeFitProblem<'_> {
     fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let cur: [f64; 6] = std::array::from_fn(|k| x.get(k));
         let d: [f64; 6] = std::array::from_fn(|k| dx.get(k));
-        VecD::from_vec(Se3::exp(d).compose(&Se3::exp(cur)).log().to_vec())
+        VecD::from_vec(Se3::exp(d).semio_compose_rs(&Se3::exp(cur)).log().to_vec())
     }
 }
 
@@ -1037,7 +1037,7 @@ mod tests {
     }
 
     fn se3_error_norm(a: &Se3, b: &Se3) -> f64 {
-        let xi = a.inverse().compose(b).log();
+        let xi = a.inverse().semio_compose_rs(b).log();
         xi.iter().map(|v| v * v).sum::<f64>().sqrt()
     }
     // #endregion 🔖️Fixtures
@@ -1271,14 +1271,14 @@ mod tests {
         let mut true_poses = Vec::with_capacity(n);
         true_poses.push(Se3::identity());
         for i in 1..n {
-            true_poses.push(Se3::exp(true_xi).compose(&true_poses[i - 1]));
+            true_poses.push(Se3::exp(true_xi).semio_compose_rs(&true_poses[i - 1]));
         }
         let mut state = 7u64;
         let jittered: Vec<Se3> = true_poses
             .iter()
             .map(|p| {
                 let jitter: [f64; 6] = std::array::from_fn(|_| (lcg_next(&mut state) - 0.5) * 0.01);
-                Se3::exp(jitter).compose(p)
+                Se3::exp(jitter).semio_compose_rs(p)
             })
             .collect();
         let smoothed = smooth_camera_path(&jittered, 15);

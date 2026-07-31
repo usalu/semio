@@ -2427,7 +2427,7 @@ mod electrical {
     }
 
     impl WindTurbine {
-        /// 💨️ Electrical output from hub-height wind speed.
+        /// 💨️ Electrical output from semio_hub-height wind speed.
         pub fn simulate(&self, wind_speed_m_s: f64, air_density: f64) -> f64 {
             let v = wind_speed_m_s;
             if v < self.cut_in_m_s || v > self.cut_out_m_s {

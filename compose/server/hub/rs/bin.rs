@@ -1,8 +1,8 @@
 mod header { // 🧲️Header
-             // 2026 Ueli Saluz <ueli@compose-tech.de>
+             // 2026 Ueli Saluz <ueli@semio_compose_rs-tech.de>
              // AGPL-3.0
              // Specs: Single-binary session-backend consolidating domain, command, event, state, error, store, actor, directory, API, WS, and admin modules.
-             // Summary: Consolidated session-backend service for compose. `db`-backed (db::Database owns WAL/conflict/durability), single-writer actor per session, HTTP+WS (protocol_wire v2) API with axum, in-memory state with typed entity structs.
+             // Summary: Consolidated session-backend service for semio_compose_rs. `db`-backed (db::Database owns WAL/conflict/durability), single-writer actor per session, HTTP+WS (protocol_wire v2) API with axum, in-memory state with typed entity structs.
 } // 🧲️Header
 
 pub use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -267,7 +267,7 @@ pub use lookback::*;
 mod command {
     // 🪆️Command
     // Specs: CommandEnvelope carries per-command metadata. DomainCommand enumerates all CRUD variants. ComposeCommand handles presence mutations. CommandResult reports outcome.
-    // Summary: Explicit command types for domain and compose mutations.
+    // Summary: Explicit command types for domain and semio_compose_rs mutations.
 
     use super::*;
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -425,8 +425,8 @@ pub use command::*;
 
 mod event {
     // 🏗️Event
-    // Specs: SessionEvent enumerates all broadcastable events. EntityChange describes domain mutations. ComposeUpdate describes compose state changes.
-    // Summary: Broadcast event types for domain and compose state changes.
+    // Specs: SessionEvent enumerates all broadcastable events. EntityChange describes domain mutations. ComposeUpdate describes semio_compose_rs state changes.
+    // Summary: Broadcast event types for domain and semio_compose_rs state changes.
 
     use super::*;
     #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -814,11 +814,11 @@ mod store {
     // Specs: `db::Database` (WAL/conflict/durability/frontier authority, generic path-value document
     // documents per `db_document`'s schema-erased convention) replaces the bespoke Postgres schema +
     // persistence layer. `ComposeDirectoryStore` holds identity/tenancy-shaped bookkeeping db does not
-    // own (session ownership, share tokens, compaction config) — the compose-hub analog of the plan's
+    // own (session ownership, share tokens, compaction config) — the semio_compose_rs-semio_hub analog of the plan's
     // `HubDirectory` split, file-backed (zero-touch, no external service) instead of sqlite/postgres/
-    // neo4j since compose-hub's own storage-swappability surface was never itemized in the campaign
-    // contract (only `db`'s and os-hub-directory's were) — a swappable `ComposeHubDirectory` trait is
-    // future work, flagged in this ticket's report. `HistoryStore` holds compose's own bespoke kit
+    // neo4j since semio_compose_rs-semio_hub's own storage-swappability surface was never itemized in the campaign
+    // contract (only `db`'s and os-semio_hub-directory's were) — a swappable `ComposeHubDirectory` trait is
+    // future work, flagged in this ticket's report. `HistoryStore` holds semio_compose_rs's own bespoke kit
     // history/lookback/compaction feature: `db_query`'s `Query::Get`/`GetMany` are point lookups only
     // (no historical/range read yet — see `db_engine::Consistency::Historical`'s doc), so time-travel
     // reconstruction keeps its own lightweight, file-backed snapshot + change-log store, now JSON files
@@ -829,7 +829,7 @@ mod store {
     use super::*;
 
     //#region 🔖️Database
-    /// 🗄️ Opens (or creates) the `db::Database` backing every compose session document, rooted at
+    /// 🗄️ Opens (or creates) the `db::Database` backing every semio_compose_rs session document, rooted at
     /// `<data_dir>/db`. Zero-touch: `FsStorage`, the family's default profile is overridable via
     /// `COMPOSE_HUB_DB_PROFILE` (`dev` default, `prod`, or `test`).
     pub fn open_database(data_dir: &std::path::Path) -> Result<db::Database, SessionError> {
@@ -843,7 +843,7 @@ mod store {
         Ok(db::Database::open_at(&root, profile)?)
     }
 
-    /// 🗄️#⃣ The document id a compose session's `db::Database` document lives under.
+    /// 🗄️#⃣ The document id a semio_compose_rs session's `db::Database` document lives under.
     pub fn document_id(session_id: Uuid) -> protocol::DocumentId {
         protocol::DocumentId(session_id.to_string())
     }
@@ -922,8 +922,8 @@ mod store {
         compaction_configs: BTreeMap<Uuid, Vec<String>>,
     }
 
-    /// 🗄️🧭️ File-backed identity/tenancy bookkeeping compose-hub owns directly (not `db`'s concern,
-    /// mirroring the plan's `os-hub`/`HubDirectory` split): session ownership + status, share tokens,
+    /// 🗄️🧭️ File-backed identity/tenancy bookkeeping semio_compose_rs-semio_hub owns directly (not `db`'s concern,
+    /// mirroring the plan's `os-semio_hub`/`HubDirectory` split): session ownership + status, share tokens,
     /// per-session compaction (lookback) configuration.
     pub struct ComposeDirectoryStore {
         path: std::path::PathBuf,
@@ -1120,7 +1120,7 @@ mod store {
     //#endregion 🔖️Kit Identity
 
     //#region 🔖️Kit Serialization
-    /// 🗄️📤️ Serializes a `SessionState` into the same kit JSON shape the compose GraphQL schema
+    /// 🗄️📤️ Serializes a `SessionState` into the same kit JSON shape the semio_compose_rs GraphQL schema
     /// expects — unchanged from the pre-CW6b implementation (pure function, no storage dependency).
     pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
         let types: Vec<serde_json::Value> = state
@@ -1622,7 +1622,7 @@ mod actor {
     /// encodes these into real `ServerFrame::Commands`/`ServerFrame::Preview` binary frames. Kept
     /// separate from the legacy JSON `SessionEvent` broadcast (still emitted, still exercised by
     /// existing tests/admin introspection) rather than replacing it, since the two serve different
-    /// consumers: `SessionEvent` is compose's own typed domain event, `WireEvent` is the wire-v2
+    /// consumers: `SessionEvent` is semio_compose_rs's own typed domain event, `WireEvent` is the wire-v2
     /// envelope/frontier pair `protocol_wire` clients (framework/sync-style actors) expect.
     #[derive(Clone)]
     pub enum WireEvent {
@@ -1687,7 +1687,7 @@ mod actor {
                 actor: protocol::ActorId(envelope.actor_person_id.0.to_string()),
                 dependencies: Vec::new(),
                 diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
-                // 🎯️ No real inverse yet — compose-hub has no undo/redo feature today (the original
+                // 🎯️ No real inverse yet — semio_compose_rs-semio_hub has no undo/redo feature today (the original
                 // Postgres implementation didn't have one either); a per-command-kind inverse is
                 // future work, flagged in this ticket's report.
                 inverse: protocol::InverseOperation {
@@ -1723,7 +1723,7 @@ mod actor {
         /// 🌫️ Compose presence (cursor/look/selection) is ephemeral by design — never submitted to
         /// `db` (matches `db_preview`'s "never durable" law and `protocol_wire`'s loss-tolerant
         /// Preview lane), broadcast-only. The pre-CW6b Postgres implementation persisted these to
-        /// `compose.cursor`/`compose.look`/`compose.selection_*` tables but never actually wrote them
+        /// `semio_compose_rs.cursor`/`semio_compose_rs.look`/`semio_compose_rs.selection_*` tables but never actually wrote them
         /// into `SessionState.compose_people` (a latent dead field) — fixed here: presence now
         /// genuinely updates the in-memory replica admin/introspection reads.
         fn handle_compose_command(&mut self, envelope: &ComposeEnvelope, command: &ComposeCommand) {
@@ -1756,7 +1756,7 @@ mod actor {
             self.state.compose_version = new_version;
             let _ = self.event_tx.send(SessionEvent::ComposeUpdated { compose_version: new_version, person_id: envelope.person_id, frontend_id: envelope.frontend_id.clone(), update: update.clone() });
             if let Ok(payload) = serde_json::to_vec(&update) {
-                let _ = self.wire_tx.send(WireEvent::Preview { actor: protocol::ActorId(pid.to_string()), key: format!("compose:{}:{}", pid, envelope.frontend_id), seq: new_version as u64, payload });
+                let _ = self.wire_tx.send(WireEvent::Preview { actor: protocol::ActorId(pid.to_string()), key: format!("semio_compose_rs:{}:{}", pid, envelope.frontend_id), seq: new_version as u64, payload });
             }
         }
 
@@ -2425,7 +2425,7 @@ mod api {
             .route("/sessions", post(handler_create_session))
             .route("/sessions/{session_id}/snapshot", get(handler_get_snapshot).put(handler_put_snapshot))
             .route("/sessions/{session_id}/commands/domain", post(handler_post_domain_command))
-            .route("/sessions/{session_id}/commands/compose", post(handler_post_compose_command))
+            .route("/sessions/{session_id}/commands/semio_compose_rs", post(handler_post_compose_command))
             .route("/sessions/{session_id}/kit/at/{lookback}", get(handler_get_kit_at_lookback))
             .route("/sessions/{session_id}/kit/at-version/{version}", get(handler_get_kit_at_version))
             .route("/sessions/{session_id}/history/compact", post(handler_compact_history))
@@ -2641,7 +2641,7 @@ pub use api::*;
 mod ws {
     // 🤖️Ws
     // Specs: WebSocket handler upgrades HTTP to WS and speaks `protocol_wire`'s binary lane-tagged
-    // `ClientFrame`/`ServerFrame` frames — CW6b's "compose client sync moves to wire v2" (the pre-
+    // `ClientFrame`/`ServerFrame` frames — CW6b's "semio_compose_rs client sync moves to wire v2" (the pre-
     // CW6b handler sent ad hoc JSON text and never actually parsed anything a client sent back).
     // Summary: WebSocket handler: binary `protocol_wire` frames for real-time session command/preview
     // streaming.
@@ -2731,9 +2731,9 @@ mod ws {
 
     /// 🎞️ Handles one decoded `ClientFrame`. `Commands` submits its envelopes straight through
     /// `db::DocumentHandle::submit` (this is the wire-native path — raw `db_document` path-value
-    /// diffs, not compose's typed `DomainCommand`s, so unlike the HTTP `/commands/domain` route it
+    /// diffs, not semio_compose_rs's typed `DomainCommand`s, so unlike the HTTP `/commands/domain` route it
     /// does not update `SessionActor`'s typed `SessionState`/`EntityChange` history; reconciling wire-
-    /// native diffs back into compose's typed replica is future work for the client-side rewrite this
+    /// native diffs back into semio_compose_rs's typed replica is future work for the client-side rewrite this
     /// wave scoped out — see this ticket's report). `Hello`/`FrontierAdvertise`/`CreditGrant` are
     /// acknowledged but otherwise inert (no credit-based flow control or resume-token validation
     /// implemented yet, matching `db_sync`'s own current scope).
@@ -2776,7 +2776,7 @@ mod admin {
     // revoke a share token, update compaction config). When COMPOSE_ADMIN_TOKEN is unset the /admin/* endpoints return 503 so
     // an unconfigured deployment never silently exposes itself. A single embedded HTML dashboard aggregates all views for
     // human operators; it calls the same JSON endpoints over fetch() with the bearer token supplied at sign-in.
-    // Summary: Server-admin dashboard, introspection endpoints, and configuration API for compose-hub.
+    // Summary: Server-admin dashboard, introspection endpoints, and configuration API for semio_compose_rs-semio_hub.
 
     use super::*;
     use axum::http::HeaderMap;
@@ -3222,7 +3222,7 @@ code { color: var(--accent-2); }
   </div>
 </div>
 <script>
-const LS_KEY = 'compose.admin.token';
+const LS_KEY = 'semio_compose_rs.admin.token';
 let token = sessionStorage.getItem(LS_KEY) || '';
 let current = 'overview';
 
@@ -3386,11 +3386,11 @@ pub use admin::*;
 
 #[tokio::main]
 async fn main() -> std::process::ExitCode {
-    tracing_subscriber::fmt().with_env_filter(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "compose_hub=debug,tower_http=debug".into())).init();
+    tracing_subscriber::fmt().with_env_filter(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "semio_compose_hub=debug,tower_http=debug".into())).init();
     // 🗄️ Zero-touch data root: `db/` (FsStorage-backed `db::Database`), `directory.json` + `history/`
-    // (compose-hub's own file-backed session/share-token/kit-history bookkeeping) — replaces
+    // (semio_compose_rs-semio_hub's own file-backed session/share-token/kit-history bookkeeping) — replaces
     // `DATABASE_URL`/Postgres entirely.
-    let data_dir = std::env::var("COMPOSE_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.semio/compose-hub"), std::path::PathBuf::from);
+    let data_dir = std::env::var("COMPOSE_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.semio/semio_compose_rs-semio_hub"), std::path::PathBuf::from);
     let database = match open_database(&data_dir) {
         Ok(database) => database,
         Err(e) => {
@@ -3401,7 +3401,7 @@ async fn main() -> std::process::ExitCode {
     let directory_store = match ComposeDirectoryStore::open(&data_dir) {
         Ok(store) => store,
         Err(e) => {
-            tracing::error!("failed to open compose-hub directory store: {e}");
+            tracing::error!("failed to open semio_compose_rs-semio_hub directory store: {e}");
             return std::process::ExitCode::FAILURE;
         }
     };
@@ -3425,7 +3425,7 @@ async fn main() -> std::process::ExitCode {
             return std::process::ExitCode::FAILURE;
         }
     };
-    tracing::info!("compose-hub listening on {}", addr);
+    tracing::info!("semio_compose_rs-semio_hub listening on {}", addr);
     let listener = match tokio::net::TcpListener::bind(addr).await {
         Ok(l) => l,
         Err(e) => {
@@ -3908,7 +3908,7 @@ mod tests {
 
         use super::*;
         pub fn load_metabolism_kit_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/metabolism.shallow.kit.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/metabolism.shallow.kit.semio_compose_rs.json");
             let data = std::fs::read_to_string(&path).expect("metabolism kit JSON");
             serde_json::from_str(&data).expect("parse metabolism kit JSON")
         }
@@ -4024,13 +4024,13 @@ mod tests {
 
         use super::*;
         pub fn load_nakagin_design_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/nakagin-capsule-tower.shallow.design.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/nakagin-capsule-tower.shallow.design.semio_compose_rs.json");
             let data = std::fs::read_to_string(&path).expect("nakagin design JSON");
             serde_json::from_str(&data).expect("parse nakagin design JSON")
         }
 
         pub fn load_nakagin_diff_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/nakagin-capsule-tower.with-diff.design.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/nakagin-capsule-tower.with-diff.design.semio_compose_rs.json");
             let data = std::fs::read_to_string(&path).expect("nakagin diff JSON");
             serde_json::from_str(&data).expect("parse nakagin diff JSON")
         }
@@ -4144,8 +4144,8 @@ mod tests {
             let diff_json = load_nakagin_diff_json();
             let pieces = diff_json["pieces"].as_array().unwrap();
             assert!(!pieces.is_empty());
-            let has_diff = pieces.iter().any(|p| p.get("attributes").and_then(|a| a.as_array()).is_some_and(|attrs| attrs.iter().any(|attr| attr.get("key").and_then(|k| k.as_str()) == Some("compose.diffStatus"))));
-            assert!(has_diff, "at least one piece should have compose.diffStatus attribute");
+            let has_diff = pieces.iter().any(|p| p.get("attributes").and_then(|a| a.as_array()).is_some_and(|attrs| attrs.iter().any(|attr| attr.get("key").and_then(|k| k.as_str()) == Some("semio_compose_rs.diffStatus"))));
+            assert!(has_diff, "at least one piece should have semio_compose_rs.diffStatus attribute");
         }
 
         #[test]
@@ -4457,7 +4457,7 @@ mod tests {
 
         use super::*;
         pub fn load_metabolism_diff_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/metabolism.kit.diff.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/metabolism.kit.diff.semio_compose_rs.json");
             let data = std::fs::read_to_string(&path).expect("metabolism diff JSON");
             serde_json::from_str(&data).expect("parse metabolism diff JSON")
         }
@@ -4757,7 +4757,7 @@ mod tests {
 
         fn test_data_dir(name: &str) -> std::path::PathBuf {
             let mut dir = std::env::temp_dir();
-            dir.push(format!("compose-hub-test-{name}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+            dir.push(format!("semio_compose_rs-semio_hub-test-{name}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
             dir
         }
 
@@ -5127,7 +5127,7 @@ mod tests {
             assert_eq!(resp.status(), 200);
 
             let resp = client
-                .post(format!("{}/sessions/{}/commands/compose", base, session_id))
+                .post(format!("{}/sessions/{}/commands/semio_compose_rs", base, session_id))
                 .json(&serde_json::json!({"client_id": Uuid::now_v7(), "person_id": Uuid::now_v7(), "frontend_id": "test", "base_compose_version": 0, "kind": "UpsertCursor", "payload": {"u": 0.5, "v": 0.5}}))
                 .send()
                 .await
@@ -5398,7 +5398,7 @@ mod tests {
             let ctype = resp.headers().get("content-type").unwrap().to_str().unwrap().to_string();
             assert!(ctype.starts_with("text/html"));
             let html = resp.text().await.unwrap();
-            assert!(html.contains("compose"));
+            assert!(html.contains("semio_compose_rs"));
             assert!(html.contains("overview"));
         }
     } // 🌊️Exhaustive: full db-backed integration suite (no external services)

@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/technology-schema.json",
   "projectType": "application",
-  "name": "repo-vscode",
+  "name": "@semio-tech/repo-vscode",
   "displayName": "repo",
   "description": "compose devtools for VS Code 🧑️‍💻️",
   "icon": "🖼️compose.png",

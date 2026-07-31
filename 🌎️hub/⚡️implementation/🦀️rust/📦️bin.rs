@@ -1,13 +1,13 @@
 mod header {
     // 🧲️Header
-    // OS hub v2 — a thin axum shell over two independently swappable backends: `db::Database`
+    // OS semio_hub v2 — a thin axum shell over two independently swappable backends: `db::Database`
     // (the document authority: submit/query/frontier/history over a WAL-backed document actor,
     // plus content-addressed blob storage) and `Arc<dyn HubDirectory>` (identity/tenancy: users,
     // studios, memberships, auth sessions, share tokens, VFS nodes, sync sessions). Every
-    // OpDag/DocumentActor/DocMsg/JSON-snapshot-CAS internal the pre-CW6 hub owned directly is gone
+    // OpDag/DocumentActor/DocMsg/JSON-snapshot-CAS internal the pre-CW6 semio_hub owned directly is gone
     // — that is now `db`'s job end to end (see `db/engine/rs/lib.rs`, `db/document/rs/lib.rs`).
     // "Space" is a namespacing convention this crate applies on top of `db`'s flat document
-    // catalog (`{space_id}:{document_id}`), not hub-internal state.
+    // catalog (`{space_id}:{document_id}`), not semio_hub-internal state.
     //
     // The WebSocket endpoint speaks `protocol_wire`'s binary lane-tagged `ClientFrame`/
     // `ServerFrame` frames directly (see `protocol/wire/rs/lib.rs`) — the server-side counterpart
@@ -91,7 +91,7 @@ struct HubState {
     /// or what a preview/presence frame carries verbatim.
     fanout: Arc<DashMap<String, broadcast::Sender<ServerFrame>>>,
     /// @emoji 👥️ `(scope_key, actor)` -> that actor's last-published presence peer JSON — ephemeral,
-    /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart.
+    /// never durable (mirrors the preview lane's own law), rebuilt from nothing on semio_hub restart.
     presence: Arc<DashMap<(String, String), Vec<u8>>>,
     /// @emoji 🧬️ W5.7: `scope_key` -> the first non-zero `store::DocumentCodec::pack_schema_hash`
     /// a client's `Hello` declared for that document — pinned in-memory, never durable (durable
@@ -372,7 +372,7 @@ fn engine_frontier_to_wire(frontier: &db::Frontier, head_edit_id: String) -> Run
 
 /// @emoji ✍️ Submits `envelopes` as one `db_document::CommandBatch` through `handle`, returning the
 /// `Ack` to send the submitter plus (on acceptance) the `Commands` frame to fan out to every other
-/// session on the same document. `Fsync` durability: a hub session's `submit` genuinely committing
+/// session on the same document. `Fsync` durability: a semio_hub session's `submit` genuinely committing
 /// is the promise `AckStage::Persisted` makes to the client.
 async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<OperationEnvelope>) -> (ServerFrame, Option<ServerFrame>) {
     let batch = match db::document::CommandBatch::new(envelopes.clone()) {
@@ -646,14 +646,14 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<dyn HubDire
 async fn main() -> Result<(), HubError> {
     tracing_subscriber::fmt::init();
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(6070);
-    let data_dir = std::env::var("OS_HUB_DATA").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from("./.semio/hub/"));
+    let data_dir = std::env::var("OS_HUB_DATA").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from("./.semio/semio_hub/"));
     std::fs::create_dir_all(&data_dir)?;
     let db = connect_db(&data_dir)?;
     let directory = connect_directory(&data_dir).await?;
     let admin_token = std::env::var("OS_HUB_ADMIN_TOKEN").ok().filter(|value| !value.is_empty());
     let state = HubState { db: Arc::new(db), directory, admin_token, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()) };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    tracing::info!("os-hub listening on http://{addr}");
+    tracing::info!("os-semio_hub listening on http://{addr}");
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, router(state)).await?;
     Ok(())
@@ -674,11 +674,11 @@ mod tests {
     /// @emoji 📁️ A fresh, never-reused temp directory per call — `uuid::Uuid::now_v7` rather than
     /// `now_ms()` alone, since `cargo test` runs this whole module's `#[tokio::test]`s
     /// concurrently within one process: two tests calling `test_state()` in the same millisecond
-    /// would otherwise collide on the identical `os-hub-test-db-<pid>-<ms>` path and open the SAME
+    /// would otherwise collide on the identical `os-semio_hub-test-db-<pid>-<ms>` path and open the SAME
     /// `db::Database` storage root, corrupting each other's catalog/WAL state.
     fn tempdir(name: &str) -> std::path::PathBuf {
         let mut dir = std::env::temp_dir();
-        dir.push(format!("os-hub-test-{name}-{}", uuid::Uuid::now_v7()));
+        dir.push(format!("os-semio_hub-test-{name}-{}", uuid::Uuid::now_v7()));
         dir
     }
 
@@ -854,7 +854,7 @@ mod tests {
     #[tokio::test]
     async fn blob_put_get_head_round_trip() {
         let state = test_state().await;
-        let bytes = Bytes::from_static(b"hello hub blob bytes");
+        let bytes = Bytes::from_static(b"hello semio_hub blob bytes");
         let expected_hash = state.db.storage().payload().put(&bytes).unwrap().to_string();
         // A re-put through the route with the correct address must be idempotent and agree.
         let mut headers = HeaderMap::new();

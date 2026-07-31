@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🔺️ `@semio-tech/trinity-ram-rs` router: `bun ./📜️script.ts <wasm|test>`. */
+/** 🔺️ `@semio-tech/trinity-ram` router: `bun ./📜️script.ts <wasm|test>`. */
 import { BundleScript, ScriptRouter, playPollingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 import { join } from "node:path";
 
@@ -11,7 +11,7 @@ class WasmScript extends BundleScript {
       logPrefix: "trinity/ram",
       wasmBaseName: "trinity_ram",
       pkg: {
-        name: "@semio-tech/trinity-ram-rs",
+        name: "@semio-tech/trinity-ram",
         files: ["trinity_ram_bg.wasm", "trinity_ram.js", "trinity_ram.d.ts", "trinity_ram_bg.wasm.d.ts"],
         main: "trinity_ram.js",
         module: "trinity_ram.js",

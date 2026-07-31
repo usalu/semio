@@ -2234,7 +2234,7 @@ mod tests {
 }
 
 /// 🎫️ End-to-end proof that `statechart!` DSL → kernel → runtime → [`TestHost`] timers/invoke
-/// → persist/restore → inspection trace → model coverage all compose over one real machine.
+/// → persist/restore → inspection trace → model coverage all semio_compose_rs over one real machine.
 #[cfg(feature = "macros")]
 #[cfg(test)]
 mod checkout_integration {

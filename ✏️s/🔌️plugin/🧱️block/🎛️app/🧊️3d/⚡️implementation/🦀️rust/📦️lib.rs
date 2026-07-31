@@ -1,5 +1,5 @@
 //! 🏙️ Block 3D app — document entities (constitutional: general). Edits exactly one `ObjectKind`: its
-//! identity, representations (meshes at LOD/tags — the compose `type` app's successor), and the
+//! identity, representations (meshes at LOD/tags — the semio_compose_rs `type` app's successor), and the
 //! `VortexKind` templates placed on its rim.
 
 use block_shared::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};

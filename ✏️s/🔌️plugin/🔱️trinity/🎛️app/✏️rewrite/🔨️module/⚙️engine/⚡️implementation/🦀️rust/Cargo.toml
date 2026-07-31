@@ -16,8 +16,8 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️a
 
 [dependencies]
 rewrite = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/✏️rewrite/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-rewrite" }
-trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "trinity_ram" }
-trinity_jack = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust", package = "trinity_jack" }
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
+trinity_jack = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🔌️jack/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-jack" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 infinite_board_port_directed = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed" }
 infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }

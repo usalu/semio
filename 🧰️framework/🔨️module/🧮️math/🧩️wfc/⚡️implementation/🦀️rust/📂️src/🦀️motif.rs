@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn structurally_different_neighborhoods_get_different_signatures() {
-        // A 4-node "star" (node0 connects to 1,2,3; they don't connect to each other): the hub
+        // A 4-node "star" (node0 connects to 1,2,3; they don't connect to each other): the semio_hub
         // has 3 neighbors, the leaves have 1 each — must not collide after refinement.
         let mut b = GraphTopologyBuilder::new(4);
         let r = RelationId(0);
@@ -114,7 +114,7 @@ mod tests {
         let topo = b.build().unwrap();
         let labels = vec![1u64; 4];
         let colors = refine_colors(&topo, &labels, 1);
-        assert_ne!(colors[0], colors[1], "hub (degree 3) must differ from a leaf (degree 1)");
+        assert_ne!(colors[0], colors[1], "semio_hub (degree 3) must differ from a leaf (degree 1)");
         assert_eq!(colors[1], colors[2]);
         assert_eq!(colors[2], colors[3], "the three leaves are structurally identical");
     }

@@ -14,11 +14,11 @@
 //!   `ContentAddressedBlob`'s non-equal-hash fallback) — arbitrated by
 //!   `HybridLogicalTimestamp::Ord` (`protocol_core::HybridLogicalTimestamp`), which is
 //!   actor-tiebroken so a strict winner always exists.
-//! - **chronological compose**: order the two sides by `OperationMeta.timestamp` and call
+//! - **chronological semio_compose_rs**: order the two sides by `OperationMeta.timestamp` and call
 //!   `earlier.absorb(later)` — every real `absorb` impl in this codebase (see
 //!   `store::DocumentVcsEnvelopeDiff::absorb` and friends) is "per-field overwrite iff the other
 //!   side set that field", i.e. later-in-time already wins per-field when absorbed in order. This
-//!   single combinator implements `OrderedSequence`/`TextSequence`'s compose behavior *and*
+//!   single combinator implements `OrderedSequence`/`TextSequence`'s semio_compose_rs behavior *and*
 //!   `TombstonedGraphSet`'s "tombstone outranks add only if its timestamp is greater, else the add
 //!   resurrects it" law for free: feed the earlier diff first, `absorb` the later one — whichever
 //!   side is later always ends up as the surviving field value.
@@ -88,7 +88,7 @@ fn ordered_sequence_merge<P, D: protocol_command::OperationDiff<P>>(existing: D,
 
 //#region 🔖️TextSequence
 /// @emoji ✂️ Character/grapheme-range merge over two concurrent text diffs: non-overlapping ranges
-/// compose (delegated to `D::absorb`, which a text technology implements as per-range overwrite);
+/// semio_compose_rs (delegated to `D::absorb`, which a text technology implements as per-range overwrite);
 /// overlapping ranges fall back to Lww on the overlapping span only, which is exactly what
 /// `chronological_compose`'s later-overwrites-earlier absorb order already gives for whichever
 /// sub-range both sides touched.
@@ -132,7 +132,7 @@ mod tests {
     //#region 🧸️Fixtures
     // `RegisterDiff`: single-value-register shaped diff (P = (i64, i64), two overwrite-able
     // fields) used to demonstrate the LwwRegister/ContentAddressedBlob "discard the loser whole"
-    // behavior versus the compose strategies' "merge per field" behavior on the exact same inputs.
+    // behavior versus the semio_compose_rs strategies' "merge per field" behavior on the exact same inputs.
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
     struct RegisterDiff {
         field_a: Option<i64>,

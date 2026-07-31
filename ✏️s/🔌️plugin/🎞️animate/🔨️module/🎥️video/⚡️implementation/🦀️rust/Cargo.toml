@@ -1,5 +1,5 @@
 [package]
-name = "animate_video"
+name = "semio-s-plugin-animate-video"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -12,7 +12,7 @@ crate-type = ["rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🎥️video/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-animate_core = { path = "../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "animate_core" }
+animate_core = { path = "../../../../../../../✏️s/🔌️plugin/🎞️animate/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-animate-core" }
 mathematical_geometry = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/📐️geometry/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../../../🧰️framework/🔨️module/#⃣hash/⚡️implementation/🦀️rust" }
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }

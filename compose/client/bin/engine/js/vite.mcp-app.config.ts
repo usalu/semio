@@ -58,7 +58,7 @@ function zodJitlessPlugin(): Plugin {
 // We only stub semio assets and unrelated heavy deps.
 // flattenDesign uses native adjacency BFS (no cytoscape) for 2D layout (diagram centers + planes).
 // 🔧️Stubbing it breaks the diagram entirely because cy.elements() returns undefined → TypeError.
-const STUBBED_PREFIXES = ["@semio-tech/semio-asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
+const STUBBED_PREFIXES = ["@semio-tech/asset", "sql.js", "jszip", "dagre", "fuse.js", "golden-layout"];
 
 // #region 🧱️MeshoptNoopPlugin
 // Specs: three-stdlib/libs/MeshoptDecoder calls WebAssembly.instantiate() in an IIFE at module

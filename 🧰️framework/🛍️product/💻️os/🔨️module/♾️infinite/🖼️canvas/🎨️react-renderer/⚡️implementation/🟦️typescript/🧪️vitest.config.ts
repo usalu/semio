@@ -6,14 +6,14 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪️ Vitest for `@semio-tech/infinite-cavas-react-renderer`. */
+/** @emoji 🧪️ Vitest for `@semio-tech/infinite-canvas-react-renderer`. */
 export default defineConfig({
   root,
   resolve: {
     alias: [{ find: "@semio-tech/ui-react", replacement: resolve(root, "../../../../../ui/js/react/index.tsx") }],
   },
   test: {
-    name: "@semio-tech/infinite-cavas-react-renderer",
+    name: "@semio-tech/infinite-canvas-react-renderer",
     mode: "test",
     environment: "jsdom",
     include: ["index.tsx"],

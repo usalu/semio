@@ -1967,7 +1967,7 @@ pub struct UiTreeSectionNode {
     pub items: Vec<UiTreeItemNode>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeNode {
@@ -1975,6 +1975,12 @@ pub struct UiTreeNode {
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub selected_ids: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub highlighted_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub selection_change: Option<ActionDescriptor>,
@@ -2274,6 +2280,8 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                 }],
             }],
             presence: UiPresence::default(),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         }
@@ -2281,6 +2289,8 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
         UiTreeNode {
             sections: tree_sections,
             presence: UiPresence::default(),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         }
@@ -4226,6 +4236,8 @@ mod ui_node_wire_format_tests {
                         }],
                     }],
                     presence: UiPresence::default(),
+                    selected_ids: None,
+                    highlighted_ids: None,
                     selection_change: None,
                     drop_action: None,
                 }),
@@ -4381,7 +4393,7 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::Field(UiFieldNode { id: "i".into(), label: "l".into(), description: None, required: None, error: None, child: Box::new(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })), presence: UiPresence::default() }), "Field");
         assert_presence_serializes(UiNode::Section(UiSectionNode { id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
         assert_presence_serializes(UiNode::Group(UiGroupNode { id: "i".into(), label: "l".into(), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
-        assert_presence_serializes(UiNode::Tree(UiTreeNode { sections: vec![], presence: UiPresence::default(), selection_change: None, drop_action: None }), "Tree");
+        assert_presence_serializes(UiNode::Tree(UiTreeNode { sections: vec![], presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None }), "Tree");
         assert_presence_serializes(UiNode::Image(UiImageNode { id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
         assert_presence_serializes(
             UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }),
@@ -5578,7 +5590,7 @@ mod tests {
             let selected: HashSet<String> = ids.into_iter().collect();
             ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new());
         }
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selection_change: None, drop_action: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
     }
 
     #[test]
@@ -13667,6 +13679,8 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
             presence: UiPresence::status(UiStatus::Loading),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -13676,6 +13690,8 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
             presence: UiPresence::status(UiStatus::Waiting),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -13783,6 +13799,8 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
             presence: UiPresence::default(),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -13792,6 +13810,8 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")] }],
             presence: UiPresence::default(),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -13916,6 +13936,8 @@ mod tests {
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
             presence: UiPresence::default(),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -15466,7 +15488,7 @@ mod tests {
     }
 
     fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
-        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selection_change: None, drop_action: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
     }
 
     /// 🌳️ Manually inserts a `Tree` row `Stack` (mirroring `reconcile::tree_item_row`'s synthesized
@@ -17617,6 +17639,8 @@ mod tests {
         let node = UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
             presence: UiPresence::default(),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         });

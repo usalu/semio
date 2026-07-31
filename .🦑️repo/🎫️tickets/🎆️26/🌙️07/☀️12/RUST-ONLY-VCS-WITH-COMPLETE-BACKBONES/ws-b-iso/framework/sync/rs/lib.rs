@@ -1,13 +1,13 @@
 //! 🔁️ Local-first sync actor layer: a schema-agnostic per-document backbone actor that runs all IO
-//! (persist, hub WebSocket sync, file watching) off the UI thread, plus the causal {@link SyncSession}
+//! (persist, semio_hub WebSocket sync, file watching) off the UI thread, plus the causal {@link SyncSession}
 //! that feeds remote {@link OpEnvelope}s into a document's vcs edit timeline.
 //!
 //! # Threading model
 //! - **Native** (wgpu native host, tests): {@link DocumentHost::open} spawns a dedicated `std::thread`
 //!   running a current-thread tokio runtime; the actor `select!`s over the store's outbound queue, a
-//!   hub WebSocket, a `notify` file watcher, and reconnect/debounce timers.
+//!   semio_hub WebSocket, a `notify` file watcher, and reconnect/debounce timers.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on `wasm_bindgen_futures::
-//!   spawn_local` with a `web_sys::WebSocket` hub transport (no threads, no filesystem). The
+//!   spawn_local` with a `web_sys::WebSocket` semio_hub transport (no threads, no filesystem). The
 //!   production browser shell instead uses a TS twin (`backbone-worker.ts`, WS-E); this wasm actor
 //!   keeps the crate coherent for a future in-wasm host.
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
@@ -31,14 +31,14 @@ pub enum SyncError {
 
 //#region 🔖️Protocol
 /// @emoji 🗃️ A durable place a document synchronizes with. A document may bind to several at once
-/// (folder-only, hub-only, or both); the actor treats each as an independent peer.
+/// (folder-only, semio_hub-only, or both); the actor treats each as an independent peer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PersistenceBinding {
     /// @emoji 📁️ Local canonical store. A directory uses the multi-document `folder://` sqlite store;
     /// a `*.json` path uses the single-blob `file://` export format.
     Folder { path: std::path::PathBuf },
-    /// @emoji ☁️ A hub node reachable over WebSocket (`remote://host:port` → `ws://host:port/documents/{id}/ws`).
+    /// @emoji ☁️ A semio_hub node reachable over WebSocket (`remote://host:port` → `ws://host:port/documents/{id}/ws`).
     Hub {
         base_url: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -56,7 +56,7 @@ pub struct DocumentActorConfig {
     /// @emoji 👁️ Watch the folder binding for external edits (other processes writing the file).
     #[serde(default)]
     pub watch_external: bool,
-    /// @emoji 🖋️ The authoring actor id used for hub `Hello`/presence and op origin filtering.
+    /// @emoji 🖋️ The authoring actor id used for semio_hub `Hello`/presence and op origin filtering.
     pub actor: String,
 }
 
@@ -69,7 +69,7 @@ pub enum DocumentActorMsg {
     LocalOps { envelopes: Vec<OpEnvelope> },
     /// @emoji 📸️ Same as {@link LocalOps} for a full-envelope snapshot (structural commands / seeding).
     LocalSnapshot { envelope_json: String },
-    /// @emoji 📡️ Broadcasts this peer's presence/selection to the hub.
+    /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
     PresenceHeartbeat { peer: PresencePeer },
     /// @emoji 🔄️ Forces an immediate re-read + diff of the folder binding (test/manual poke hook).
     ExternalChanged,
@@ -77,7 +77,7 @@ pub enum DocumentActorMsg {
     Detach,
 }
 
-/// @emoji 📶️ Connection state of a document's remote (hub) transport.
+/// @emoji 📶️ Connection state of a document's remote (semio_hub) transport.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum RemoteState {
@@ -110,16 +110,16 @@ impl Default for DocumentSyncStatus {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum DocumentEvent {
-    /// @emoji 🕸️ Remote ops (hub fan-out or appended external edits) — also pushed into the store's
+    /// @emoji 🕸️ Remote ops (semio_hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
     RemoteOps { envelopes: Vec<OpEnvelope> },
-    /// @emoji 📸️ The whole envelope was replaced (divergent external history / hub snapshot swap).
+    /// @emoji 📸️ The whole envelope was replaced (divergent external history / semio_hub snapshot swap).
     SnapshotReplaced { envelope_json: String },
     /// @emoji 🚦️ Sync status changed.
     Status(DocumentSyncStatus),
     /// @emoji 📡️ The presence roster changed.
     Presence { peers: Vec<PresencePeer> },
-    /// @emoji ⚠️ A structural conflict (external divergence with local pending ops / hub CAS reject).
+    /// @emoji ⚠️ A structural conflict (external divergence with local pending ops / semio_hub CAS reject).
     Conflict(StudioConflict),
 }
 //#endregion 🔖️Protocol
@@ -194,7 +194,7 @@ fn op_envelope_from_stored_edit(schema: &str, document_id: &str, edit: Value) ->
     }
 }
 
-/// @emoji 🔗️ Derives a hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
+/// @emoji 🔗️ Derives a semio_hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
 /// `ws(s)://host:port/documents/{document_id}/ws`.
 fn hub_ws_url(base_url: &str, document_id: &str) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
@@ -471,7 +471,7 @@ mod native_actor {
     }
 
     /// @emoji 🎭️ One document's backbone actor: drains the store's outbound queue to persist + relay,
-    /// ingests hub/file changes back into the store, and keeps subscribers current with status/events.
+    /// ingests semio_hub/file changes back into the store, and keeps subscribers current with status/events.
     pub(super) struct DocumentActor {
         document_id: String,
         schema: String,
@@ -484,7 +484,7 @@ mod native_actor {
         watch_external: bool,
         hub_base_url: Option<String>,
         hub_token: Option<String>,
-        hub: Option<HubConn>,
+        semio_hub: Option<HubConn>,
         hub_version: i64,
         backoff_ms: u64,
         reconnect_at: Option<Instant>,
@@ -538,7 +538,7 @@ mod native_actor {
                 watch_external: config.watch_external,
                 hub_base_url,
                 hub_token,
-                hub: None,
+                semio_hub: None,
                 hub_version: 0,
                 backoff_ms: 500,
                 reconnect_at: None,
@@ -574,7 +574,7 @@ mod native_actor {
                             }
                         }
                     }
-                    message = hub_next(&mut self.hub), if self.hub.is_some() => {
+                    message = hub_next(&mut self.semio_hub), if self.semio_hub.is_some() => {
                         self.on_hub_message(message).await;
                     }
                     changed = fs_next(&mut self.fs_rx), if self.fs_rx.is_some() => {
@@ -771,7 +771,7 @@ mod native_actor {
             match tokio_tungstenite::connect_async(url).await {
                 Ok((stream, _response)) => {
                     let (write, read) = stream.split();
-                    self.hub = Some(HubConn { write, read });
+                    self.semio_hub = Some(HubConn { write, read });
                     self.backoff_ms = 500;
                     let hello = HubClientFrame::Hello {
                         actor: self.actor.clone(),
@@ -805,7 +805,7 @@ mod native_actor {
                 }
                 Some(Ok(_)) => {}
                 Some(Err(_)) | None => {
-                    self.hub = None;
+                    self.semio_hub = None;
                     self.schedule_reconnect();
                 }
             }
@@ -857,7 +857,7 @@ mod native_actor {
         }
 
         async fn relay_ops_to_hub(&mut self, envelopes: &[OpEnvelope]) {
-            if self.hub.is_none() || envelopes.is_empty() {
+            if self.semio_hub.is_none() || envelopes.is_empty() {
                 return;
             }
             for envelope in envelopes {
@@ -868,7 +868,7 @@ mod native_actor {
         }
 
         async fn relay_snapshot_to_hub(&mut self, envelope_json: &str) {
-            if self.hub.is_none() {
+            if self.semio_hub.is_none() {
                 return;
             }
             if let Ok(envelope) = serde_json::from_str::<Value>(envelope_json) {
@@ -884,13 +884,13 @@ mod native_actor {
 
         async fn send_raw(&mut self, message: Message) {
             let mut failed = false;
-            if let Some(conn) = self.hub.as_mut() {
+            if let Some(conn) = self.semio_hub.as_mut() {
                 if conn.write.send(message).await.is_err() {
                     failed = true;
                 }
             }
             if failed {
-                self.hub = None;
+                self.semio_hub = None;
                 self.schedule_reconnect();
             }
         }
@@ -1033,7 +1033,7 @@ use native_actor::spawn_actor;
 //#endregion 🔖️NativeActor
 
 //#region 🔖️WasmActor
-/// @emoji 🌐️ Browser wgpu build: the actor runs on `spawn_local` with a `web_sys::WebSocket` hub
+/// @emoji 🌐️ Browser wgpu build: the actor runs on `spawn_local` with a `web_sys::WebSocket` semio_hub
 /// transport. No filesystem, so folder bindings are ignored (the browser uses the dev-middleware
 /// SSE watch instead, wired by WS-E's TS twin). Kept coherent so a future in-wasm host can link it.
 #[cfg(target_arch = "wasm32")]
@@ -1280,11 +1280,11 @@ pub struct ActorFixture {
     pub expected_edit_ids: Vec<String>,
 }
 
-/// @emoji 📥️ One scripted inbound stimulus: either a hub server frame or an external folder edit.
+/// @emoji 📥️ One scripted inbound stimulus: either a semio_hub server frame or an external folder edit.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FixtureInbound {
-    /// @emoji 📬️ A raw `HubServerFrame` delivered as if received over the hub WebSocket. Driven by
+    /// @emoji 📬️ A raw `HubServerFrame` delivered as if received over the semio_hub WebSocket. Driven by
     /// WS-E's TS twin; the folder-only Rust harness skips these.
     HubFrame { frame: HubServerFrame },
     /// @emoji 📁️ An external folder edit: append these edit JSON objects to `vcs.edits` out-of-band.
@@ -1418,8 +1418,8 @@ mod tests {
             "ws://host:6070/documents/doc-1/ws"
         );
         assert_eq!(
-            hub_ws_url("https://hub.example.com", "doc-2"),
-            "wss://hub.example.com/documents/doc-2/ws"
+            hub_ws_url("https://semio_hub.example.com", "doc-2"),
+            "wss://semio_hub.example.com/documents/doc-2/ws"
         );
         assert_eq!(
             hub_ws_url("ws://127.0.0.1:5000/prefix", "d"),
@@ -1549,8 +1549,8 @@ mod tests {
         }
 
         //#region 🔖️MockHub
-        /// @emoji 🧪️ A minimal in-process hub speaking the real `HubClientFrame`/`HubServerFrame`
-        /// protocol, so the hub endpoint is exercised end-to-end without linking WS-C's `os-hub` bin.
+        /// @emoji 🧪️ A minimal in-process semio_hub speaking the real `HubClientFrame`/`HubServerFrame`
+        /// protocol, so the semio_hub endpoint is exercised end-to-end without linking WS-C's `os-semio_hub` bin.
         struct MockHub {
             log: Arc<Mutex<Vec<(i64, OpEnvelope)>>>,
             broadcast: tokio_broadcast::Sender<HubServerFrame>,
@@ -1560,11 +1560,11 @@ mod tests {
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind");
             let addr = listener.local_addr().expect("addr");
             let (broadcast, _rx) = tokio_broadcast::channel(256);
-            let hub = Arc::new(MockHub {
+            let semio_hub = Arc::new(MockHub {
                 log: Arc::new(Mutex::new(Vec::new())),
                 broadcast,
             });
-            let accept_hub = hub.clone();
+            let accept_hub = semio_hub.clone();
             tokio::spawn(async move {
                 loop {
                     let Ok((stream, _)) = listener.accept().await else { break };
@@ -1576,12 +1576,12 @@ mod tests {
                     });
                 }
             });
-            (addr, hub)
+            (addr, semio_hub)
         }
 
         async fn mock_hub_connection(
             ws: tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>,
-            hub: Arc<MockHub>,
+            semio_hub: Arc<MockHub>,
         ) {
             let (mut write, mut read) = ws.split();
             // Expect Hello first.
@@ -1593,7 +1593,7 @@ mod tests {
                 _ => return,
             };
             let (version, backlog) = {
-                let log = hub.log.lock().await;
+                let log = semio_hub.log.lock().await;
                 let version = log.last().map(|(v, _)| *v).unwrap_or(0);
                 let backlog: Vec<OpEnvelope> = log
                     .iter()
@@ -1606,7 +1606,7 @@ mod tests {
             if write.send(WsMessage::Text(serde_json::to_string(&welcome).unwrap().into())).await.is_err() {
                 return;
             }
-            let mut broadcast_rx = hub.broadcast.subscribe();
+            let mut broadcast_rx = semio_hub.broadcast.subscribe();
             loop {
                 tokio::select! {
                     incoming = read.next() => {
@@ -1616,14 +1616,14 @@ mod tests {
                                     Ok(HubClientFrame::Ops { envelopes }) => {
                                         for envelope in envelopes {
                                             let (assigned, origin) = {
-                                                let mut log = hub.log.lock().await;
+                                                let mut log = semio_hub.log.lock().await;
                                                 let next = log.last().map(|(v, _)| *v).unwrap_or(0) + 1;
                                                 log.push((next, envelope.clone()));
                                                 (next, envelope.actor.0.clone())
                                             };
                                             let ack = HubServerFrame::Ack { op_id: envelope_id(&envelope), version: assigned };
                                             let _ = write.send(WsMessage::Text(serde_json::to_string(&ack).unwrap().into())).await;
-                                            let _ = hub.broadcast.send(HubServerFrame::Ops {
+                                            let _ = semio_hub.broadcast.send(HubServerFrame::Ops {
                                                 version: assigned,
                                                 envelopes: vec![envelope],
                                                 origin,
@@ -1658,7 +1658,7 @@ mod tests {
         }
         //#endregion 🔖️MockHub
 
-        // 🔬️ Two DocumentHosts converge through a hub: A's op fans out to B, whose store materializes it.
+        // 🔬️ Two DocumentHosts converge through a semio_hub: A's op fans out to B, whose store materializes it.
         #[tokio::test]
         async fn two_hosts_converge_through_hub() {
             let (addr, _hub) = spawn_mock_hub().await;
@@ -1766,7 +1766,7 @@ mod tests {
             host_b.close("catchup");
         }
 
-        // 🔬️ Detach drains the outbox: an op applied right before close still reaches the hub (and B).
+        // 🔬️ Detach drains the outbox: an op applied right before close still reaches the semio_hub (and B).
         #[tokio::test]
         async fn detach_drains_pending_outbound_ops() {
             let (addr, _hub) = spawn_mock_hub().await;

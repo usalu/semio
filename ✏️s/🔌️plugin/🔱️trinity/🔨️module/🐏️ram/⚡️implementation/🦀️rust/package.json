@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/trinity-ram-rs",
+  "name": "@semio-tech/trinity-ram",
   "private": true,
   "type": "module",
   "exports": {

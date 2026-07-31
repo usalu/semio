@@ -1477,6 +1477,8 @@ fn render_catalogue_panel(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
             kind_catalog_section("puzzle2d-play-kinds.handles", "handles", labels.handles, &handle_entries, labels),
             kind_catalog_section("puzzle2d-play-kinds.edges", "edges", labels.edges, &edge_entries, labels),
         ],
+        selected_ids: None,
+        highlighted_ids: None,
         selection_change: None,
         drop_action: None,
     })

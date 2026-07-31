@@ -1,5 +1,5 @@
 [package]
-name = "remodel_engine"
+name = "semio-s-plugin-remodel-engine"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -12,15 +12,15 @@ crate-type = ["rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }
-remodel_video = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "remodel_video" }
-remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "remodel_camera" }
-remodel_feature = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌟️feature/⚡️implementation/🦀️rust", package = "remodel_feature" }
-remodel_sfm = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📸️sfm/⚡️implementation/🦀️rust", package = "remodel_sfm" }
-remodel_dense = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌫️dense/⚡️implementation/🦀️rust", package = "remodel_dense" }
-remodel_mesh = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🥽️mesh/⚡️implementation/🦀️rust", package = "remodel_mesh" }
-remodel_motion = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🏃️motion/⚡️implementation/🦀️rust", package = "remodel_motion" }
-remodel_geo = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🗺️geo/⚡️implementation/🦀️rust", package = "remodel_geo" }
+remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-image" }
+remodel_video = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🎥️video/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-video" }
+remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-camera" }
+remodel_feature = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌟️feature/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-feature" }
+remodel_sfm = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📸️sfm/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-sfm" }
+remodel_dense = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌫️dense/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-dense" }
+remodel_mesh = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🥽️mesh/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-mesh" }
+remodel_motion = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🏃️motion/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-motion" }
+remodel_geo = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🗺️geo/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-geo" }
 semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 mathematical_random = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/🎲️random/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-random" }
 

@@ -195,7 +195,7 @@ fn se3_at(x: &VecD, offset: usize) -> Se3 {
 fn retract_se3_block(x: &VecD, dx: &VecD, offset: usize) -> [f64; 6] {
     let pose = se3_at(x, offset);
     let dxi: [f64; 6] = std::array::from_fn(|k| dx.get(offset + k));
-    Se3::exp(dxi).compose(&pose).log()
+    Se3::exp(dxi).semio_compose_rs(&pose).log()
 }
 
 /// 🎯️ Transforms a world point by a camera pose and projects it through the camera's intrinsics.
@@ -216,7 +216,7 @@ pub fn reprojection_residual(intrinsics: &Intrinsics, pose: &CameraPose, point_w
 /// 🔬️ Analytic Jacobians of [`reprojection_residual`], returned as `(d/d(pose tangent) 2x6, d/d(point) 2x3,
 /// d/d(intrinsics) 2xK)`. The pose block is w.r.t. the camera's SE(3) *left*-perturbation tangent
 /// `(rho, phi)` (matching how [`CameraPose`]-carrying least-squares problems in this crate retract via
-/// `Se3::exp(dxi).compose(pose)`): since `p_cam ↦ p_cam + rho + phi × p_cam` to first order, `d(p_cam)/d(xi)
+/// `Se3::exp(dxi).semio_compose_rs(pose)`): since `p_cam ↦ p_cam + rho + phi × p_cam` to first order, `d(p_cam)/d(xi)
 /// = [I₃ | -hat(p_cam)]`. The intrinsics block is ordered `[fx, fy, cx, cy, skew, <distortion params>]`
 /// (`K = 5 + distortion.param_count()`), chaining the linear intrinsic map through
 /// [`Distortion::distort_with_jacobian`]. Points behind the camera return all-zero Jacobians, matching
@@ -382,7 +382,7 @@ pub fn pose_at_row(model: &RollingShutterModel, row: u32, image_height: u32, pos
         ReadoutDirection::BottomToTop => last_row - clamped_row,
     };
     let t = effective_row as f64 * model.line_delay_s;
-    CameraPose(Se3::exp(scale6(velocity_se3, t)).compose(&pose0.0))
+    CameraPose(Se3::exp(scale6(velocity_se3, t)).semio_compose_rs(&pose0.0))
 }
 
 /// 🗺️ Per-pixel rolling-shutter rectification field: for every output pixel `(col, row)`, interpreted
@@ -442,7 +442,7 @@ pub struct CameraRig {
 /// 🔗️ Composes a camera's fixed rig-relative pose with the rig's world pose (`rig_pose`: world-to-rig)
 /// into that camera's world-to-camera transform.
 pub fn rig_pose_of_camera(rig_pose: &Se3, camera_in_rig: &Se3) -> Se3 {
-    camera_in_rig.compose(rig_pose)
+    camera_in_rig.semio_compose_rs(rig_pose)
 }
 
 /// 📡️ Projects a world point through one rig camera via [`rig_pose_of_camera`], then reprojects. `None`
@@ -1231,7 +1231,7 @@ mod tests {
         let mut last_translation_norm = 0.0;
         for row in [0_u32, 100, 250, 400, 479] {
             let pose = pose_at_row(&model, row, 480, &pose0, velocity);
-            let delta = pose.0.compose(&pose0.0.inverse());
+            let delta = pose.0.semio_compose_rs(&pose0.0.inverse());
             let norm = vec3d_length(delta.t);
             assert!(norm >= last_translation_norm - 1e-12, "translation magnitude should grow monotonically with row");
             last_translation_norm = norm;
@@ -1276,7 +1276,7 @@ mod tests {
         let rig = CameraRig { cameras: vec![RigExtrinsic { camera_id: "cam7".to_string(), pose_in_rig: camera_from_rig }] };
         let rig_pose = CameraPose(Se3::exp([0.0, 0.3, 0.0, 0.1, 0.0, 0.0]));
         let point_world = [0.3, -0.1, 3.0];
-        let expected = reproject(&intr, &CameraPose(camera_from_rig.compose(&rig_pose.0)), point_world);
+        let expected = reproject(&intr, &CameraPose(camera_from_rig.semio_compose_rs(&rig_pose.0)), point_world);
         let actual = rig_project(&rig, &[intr], "cam7", &rig_pose, point_world);
         assert_eq!(actual, expected);
         assert!(rig_project(&rig, &[intr], "unknown", &rig_pose, point_world).is_none());
@@ -1471,9 +1471,9 @@ mod tests {
                 for k in 0..6 {
                     let mut dxi = [0.0; 6];
                     dxi[k] = eps;
-                    let pose_plus = CameraPose(Se3::exp(dxi).compose(&pose.0));
+                    let pose_plus = CameraPose(Se3::exp(dxi).semio_compose_rs(&pose.0));
                     dxi[k] = -eps;
-                    let pose_minus = CameraPose(Se3::exp(dxi).compose(&pose.0));
+                    let pose_minus = CameraPose(Se3::exp(dxi).semio_compose_rs(&pose.0));
                     let r_plus = reprojection_residual(&intr, &pose_plus, point, obs);
                     let r_minus = reprojection_residual(&intr, &pose_minus, point, obs);
                     for row in 0..2 {

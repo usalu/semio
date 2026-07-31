@@ -1,6 +1,6 @@
 //! 🏛️ Architect plugin — architectural program DocumentApp bundled as a hot-swappable WASM plugin.
 
-use architect_spine::{
+use semio_s_plugin_architect_spine::{
     adjacency_matrix, apply_template, audit_trail, build_report, detect_adjacency_conflicts, empty_plugin, export_json, export_registers_csv, import_json, import_registers_csv, normalize_pair, run_analysis, sample_plugin, search_plugin,
     status_summary, trace_chain, trace_impact, undirected_edges, validate_plugin, Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, AnalysisResult, ConnectionKind, EngagementLevel, EntityHeader, EntityId, Function,
     FunctionKind, InfluenceLevel, Issue, IssueSeverity, MergeStrategy, Program, ProgramElement, ProgramElementKind, ProgramElementPatch, ProgramOperation, ProgramReport, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, SearchQuery,
@@ -173,7 +173,7 @@ fn tree_node(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<Stri
     if let Some(ids) = selected_ids {
         ui_tree_stamp_presence(&mut sections, &ids.into_iter().collect::<HashSet<_>>(), &HashSet::new());
     }
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selection_change: None, drop_action: None })
+    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
 }
 
 fn element_label(program: &Program, id: &EntityId) -> String {
@@ -211,10 +211,10 @@ fn default_element(name: impl Into<String>) -> ProgramElement {
         kind: ProgramElementKind::Room,
         parent_id: None,
         level: None,
-        area: architect_spine::QuantitySpec::default(),
-        volume: architect_spine::QuantitySpec::default(),
-        height: architect_spine::QuantitySpec::default(),
-        occupancy: architect_spine::QuantitySpec::default(),
+        area: semio_s_plugin_architect_spine::QuantitySpec::default(),
+        volume: semio_s_plugin_architect_spine::QuantitySpec::default(),
+        height: semio_s_plugin_architect_spine::QuantitySpec::default(),
+        occupancy: semio_s_plugin_architect_spine::QuantitySpec::default(),
         function_ids: Vec::new(),
         activity_ids: Vec::new(),
         user_profile_ids: Vec::new(),
@@ -533,7 +533,7 @@ fn default_issue(label: &str) -> Issue {
         summary: TextField::plain(""),
         issue_description: TextField::plain(""),
         severity: IssueSeverity::Minor,
-        issue_priority: architect_spine::Priority::Preferred,
+        issue_priority: semio_s_plugin_architect_spine::Priority::Preferred,
         reporter_id: None,
         assignee_id: None,
         affected_entity_ids: Vec::new(),
@@ -557,11 +557,11 @@ fn default_function(label: &str) -> Function {
         code: String::new(),
         kind: FunctionKind::Primary,
         purpose: TextField::plain(""),
-        criticality: architect_spine::Priority::Preferred,
+        criticality: semio_s_plugin_architect_spine::Priority::Preferred,
         performance_targets: Vec::new(),
         service_level: None,
         operating_hours: None,
-        staffing: architect_spine::QuantitySpec::default(),
+        staffing: semio_s_plugin_architect_spine::QuantitySpec::default(),
         equipment_ids: Vec::new(),
         resource_ids: Vec::new(),
         activity_ids: Vec::new(),
@@ -642,20 +642,20 @@ fn add_register_item_operation(program: &Program, register: &str, label: &str) -
         "functions" => add!(functions, Functions, default_function(label)),
         "users" => add!(users, Users, default_user(label)),
         "activities" => {
-            let item: architect_spine::Activity = default_from_json("activities", label, json!({ "code": "ACT", "category": "general", "activityType": "general" }))?;
+            let item: semio_s_plugin_architect_spine::Activity = default_from_json("activities", label, json!({ "code": "ACT", "category": "general", "activityType": "general" }))?;
             add!(activities, Activities, item)
         }
-        "assumptions" => add!(assumptions, Assumptions, default_from_json::<architect_spine::Assumption>("assumptions", label, json!({ "statement": { "text": "" }, "validationStatus": "pending" }),)?),
+        "assumptions" => add!(assumptions, Assumptions, default_from_json::<semio_s_plugin_architect_spine::Assumption>("assumptions", label, json!({ "statement": { "text": "" }, "validationStatus": "pending" }),)?),
         "constraints" => {
-            add!(constraints, Constraints, default_from_json::<architect_spine::ConstraintRecord>("constraints", label, json!({ "constraintType": "general", "summary": { "text": "" }, "severity": "medium", "complianceStatus": "pending" }),)?)
+            add!(constraints, Constraints, default_from_json::<semio_s_plugin_architect_spine::ConstraintRecord>("constraints", label, json!({ "constraintType": "general", "summary": { "text": "" }, "severity": "medium", "complianceStatus": "pending" }),)?)
         }
         "compliance_records" => {
-            add!(compliance_records, ComplianceRecords, default_from_json::<architect_spine::ComplianceRecord>("compliance", label, json!({ "standardRef": "", "obligation": { "text": "" }, "complianceStatus": "pending", "severity": "medium" }),)?)
+            add!(compliance_records, ComplianceRecords, default_from_json::<semio_s_plugin_architect_spine::ComplianceRecord>("compliance", label, json!({ "standardRef": "", "obligation": { "text": "" }, "complianceStatus": "pending", "severity": "medium" }),)?)
         }
         "approvals" => add!(
             approvals,
             Approvals,
-            default_from_json::<architect_spine::ApprovalRecord>(
+            default_from_json::<semio_s_plugin_architect_spine::ApprovalRecord>(
                 "approvals",
                 label,
                 json!({
@@ -665,10 +665,10 @@ fn add_register_item_operation(program: &Program, register: &str, label: &str) -
                 }),
             )?
         ),
-        "meetings" => add!(meetings, Meetings, default_from_json::<architect_spine::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?),
+        "meetings" => add!(meetings, Meetings, default_from_json::<semio_s_plugin_architect_spine::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?),
         "analyses" => add!(analyses, Analyses, default_from_json::<AnalysisRecord>("analysis", label, json!({ "kind": "gap", "title": label, "outputSummary": { "text": "" } }),)?),
         "reports" => add!(reports, Reports, default_from_json::<ReportRecord>("report", label, json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),)?),
-        "templates" => add!(templates, Templates, default_from_json::<architect_spine::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?),
+        "templates" => add!(templates, Templates, default_from_json::<semio_s_plugin_architect_spine::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?),
         "traces" => {
             let from = program.elements.first().map_or_else(|| EntityId::new_serial("from"), |element| element.header.id.clone());
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to"), |element| element.header.id.clone());
@@ -767,11 +767,11 @@ fn patch_register_item_operation(register: &str, entity_id: EntityId, patch: Val
         "stakeholders" => patch!(Stakeholders, StakeholderPatch),
         "elements" => patch!(Elements, ProgramElementPatch),
         "adjacencies" => patch!(Adjacencies, AdjacencyPatch),
-        "requirements" => patch!(Requirements, architect_spine::RequirementPatch),
-        "risks" => patch!(Risks, architect_spine::RiskPatch),
-        "issues" => patch!(Issues, architect_spine::IssuePatch),
-        "functions" => patch!(Functions, architect_spine::FunctionPatch),
-        "users" => patch!(Users, architect_spine::UserProfilePatch),
+        "requirements" => patch!(Requirements, semio_s_plugin_architect_spine::RequirementPatch),
+        "risks" => patch!(Risks, semio_s_plugin_architect_spine::RiskPatch),
+        "issues" => patch!(Issues, semio_s_plugin_architect_spine::IssuePatch),
+        "functions" => patch!(Functions, semio_s_plugin_architect_spine::FunctionPatch),
+        "users" => patch!(Users, semio_s_plugin_architect_spine::UserProfilePatch),
         _ => return None,
     })
 }

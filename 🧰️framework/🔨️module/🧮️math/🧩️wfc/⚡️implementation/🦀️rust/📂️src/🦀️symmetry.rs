@@ -53,7 +53,7 @@ impl Transform2d {
     }
 
     /// 🔄️ `self` applied first, then `other` (i.e. `other ∘ self`).
-    pub fn compose(self, other: Transform2d) -> Transform2d {
+    pub fn semio_compose_rs(self, other: Transform2d) -> Transform2d {
         let (a1, b1, c1, d1) = self.matrix();
         let (a2, b2, c2, d2) = other.matrix();
         Self::from_matrix((a2 * a1 + b2 * c1, a2 * b1 + b2 * d1, c2 * a1 + d2 * c1, c2 * b1 + d2 * d1))
@@ -170,7 +170,7 @@ impl Transform3d {
     }
 
     /// 🔄️ `self` applied first, then `other`.
-    pub fn compose(self, other: Transform3d) -> Transform3d {
+    pub fn semio_compose_rs(self, other: Transform3d) -> Transform3d {
         Transform3d(mat3_mul(other.0, self.0))
     }
 
@@ -258,7 +258,7 @@ impl SymmetryGroup3d {
                 (0..4)
                     .map(|_| {
                         let cur = t;
-                        t = t.compose(z90);
+                        t = t.semio_compose_rs(z90);
                         cur
                     })
                     .collect()
@@ -277,16 +277,16 @@ mod tests {
     #[test]
     fn identity_matrix_is_neutral() {
         for &t in &Transform2d::ALL {
-            assert_eq!(t.compose(Transform2d::Identity), t);
-            assert_eq!(Transform2d::Identity.compose(t), t);
+            assert_eq!(t.semio_compose_rs(Transform2d::Identity), t);
+            assert_eq!(Transform2d::Identity.semio_compose_rs(t), t);
         }
     }
 
     #[test]
     fn inverse_composes_to_identity() {
         for &t in &Transform2d::ALL {
-            assert_eq!(t.compose(t.inverse()), Transform2d::Identity);
-            assert_eq!(t.inverse().compose(t), Transform2d::Identity);
+            assert_eq!(t.semio_compose_rs(t.inverse()), Transform2d::Identity);
+            assert_eq!(t.inverse().semio_compose_rs(t), Transform2d::Identity);
         }
     }
 
@@ -294,7 +294,7 @@ mod tests {
     fn four_quarter_rotations_is_identity() {
         let mut t = Transform2d::Identity;
         for _ in 0..4 {
-            t = t.compose(Transform2d::Rot90);
+            t = t.semio_compose_rs(Transform2d::Rot90);
         }
         assert_eq!(t, Transform2d::Identity);
     }
@@ -302,7 +302,7 @@ mod tests {
     #[test]
     fn two_flips_is_identity() {
         for &t in &[Transform2d::FlipH, Transform2d::FlipV, Transform2d::FlipDiag, Transform2d::FlipAntiDiag] {
-            assert_eq!(t.compose(t), Transform2d::Identity);
+            assert_eq!(t.semio_compose_rs(t), Transform2d::Identity);
         }
     }
 
@@ -310,7 +310,7 @@ mod tests {
     fn group_closure_every_composition_stays_in_d4() {
         for &a in &Transform2d::ALL {
             for &b in &Transform2d::ALL {
-                let c = a.compose(b);
+                let c = a.semio_compose_rs(b);
                 assert!(Transform2d::ALL.contains(&c));
             }
         }
@@ -378,7 +378,7 @@ mod tests {
         let rots = cube_rotations_24();
         for &a in &rots {
             for &b in &rots {
-                let c = a.compose(b);
+                let c = a.semio_compose_rs(b);
                 assert!(rots.contains(&c), "composition left the rotation group");
             }
         }
@@ -389,8 +389,8 @@ mod tests {
         let rots = cube_rotations_24();
         let id = Transform3d::identity();
         for &t in &rots {
-            assert_eq!(t.compose(t.inverse()), id);
-            assert_eq!(t.inverse().compose(t), id);
+            assert_eq!(t.semio_compose_rs(t.inverse()), id);
+            assert_eq!(t.inverse().semio_compose_rs(t), id);
         }
     }
 
@@ -417,7 +417,7 @@ mod tests {
         }
         // A fifth quarter-turn from the last element returns to identity.
         let z90 = elements[1];
-        assert_eq!(elements[3].compose(z90), Transform3d::identity());
+        assert_eq!(elements[3].semio_compose_rs(z90), Transform3d::identity());
     }
 }
 // #endregion 🔖️Tests

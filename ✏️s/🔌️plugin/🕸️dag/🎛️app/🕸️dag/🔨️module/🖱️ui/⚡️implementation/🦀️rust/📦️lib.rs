@@ -284,6 +284,8 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
     UiNode::Tree(UiTreeNode {
         sections,
         presence: UiPresence::default(),
+        selected_ids: None,
+        highlighted_ids: None,
         selection_change: None,
         drop_action: None,
     })
@@ -317,6 +319,8 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
                 .collect(),
         }],
         presence: UiPresence::default(),
+        selected_ids: None,
+        highlighted_ids: None,
         selection_change: None,
         drop_action: None,
     })

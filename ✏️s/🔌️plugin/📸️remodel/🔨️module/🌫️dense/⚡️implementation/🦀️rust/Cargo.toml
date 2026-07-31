@@ -1,5 +1,5 @@
 [package]
-name = "remodel_dense"
+name = "semio-s-plugin-remodel-dense"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -12,7 +12,7 @@ crate-type = ["rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌫️dense/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }
-remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "remodel_camera" }
+remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-image" }
+remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-camera" }
 mathematical_algebra = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/➕️algebra/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
 mathematical_spatial = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/🗺️spatial/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-spatial" }

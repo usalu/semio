@@ -14,7 +14,7 @@ pub struct BlobRef {
 /// `DocumentKind::ContentAddressedBlob` (`framework/core/rs` 🔖️MergeStrategy region). `put` is idempotent —
 /// it dedupes by the Blake3 hash of the bytes ({@link semio_framework_hash::hash_bytes}), so writing
 /// the same content twice never rewrites storage. Implementors decide the backing medium (sqlite here,
-/// a hub HTTP route in a later ticket, an IndexedDB cache in the browser).
+/// a semio_hub HTTP route in a later ticket, an IndexedDB cache in the browser).
 pub trait BlobStore: Send + Sync {
     fn put(&self, bytes: &[u8], media_type: &str) -> Result<BlobRef, VcsError>;
     fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, VcsError>;

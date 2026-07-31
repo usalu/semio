@@ -1,4 +1,4 @@
-//! 🏪️ `compose-gql`: HTTP GraphQL sidecar over native [`compose::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
+//! 🏪️ `semio_compose_rs-gql`: HTTP GraphQL sidecar over native [`semio_compose_rs::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
 
 //#region 🏪️State
 
@@ -12,8 +12,8 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use compose::gql;
-use compose::worker::ParentStore;
+use semio_compose_rs::gql;
+use semio_compose_rs::worker::ParentStore;
 use serde::Deserialize;
 use tokio::net::TcpListener;
 use tokio::sync::Mutex;
@@ -31,12 +31,12 @@ mod errors {
     use std::net::SocketAddr;
     use thiserror::Error;
 
-    /// ⚠️ compose-gql install/request/serve failure.
+    /// ⚠️ semio_compose_rs-gql install/request/serve failure.
     #[derive(Debug, Error)]
     pub enum StoreError {
         #[error("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote")]
         AmbiguousInstallSource,
-        #[error("{0}: not wired in compose-gql yet")]
+        #[error("{0}: not wired in semio_compose_rs-gql yet")]
         NotWired(&'static str),
         #[error("no install field")]
         NoInstallField,
@@ -47,7 +47,7 @@ mod errors {
         #[error("invalid graphql json: {0}")]
         InvalidGraphqlJson(serde_json::Error),
         #[error(transparent)]
-        Kit(#[from] compose::error::ComposeError),
+        Kit(#[from] semio_compose_rs::error::ComposeError),
         #[error("bind {addr}: {source}")]
         BindFailed {
             addr: SocketAddr,
@@ -184,7 +184,7 @@ fn is_mutation_request(body: &str) -> Result<bool, StoreError> {
     Ok(false)
 }
 
-/// @emoji 🌐️ GraphQL-over-HTTP POST: JSON body `query`, optional `variables`, optional `operationName` (same contract as `compose::gql::graphql_request_from_json_str`).
+/// @emoji 🌐️ GraphQL-over-HTTP POST: JSON body `query`, optional `variables`, optional `operationName` (same contract as `semio_compose_rs::gql::graphql_request_from_json_str`).
 async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl IntoResponse {
     let (rt, installed): (Arc<ParentStore>, bool) = {
         let l = state.runtime.lock().await;
@@ -210,12 +210,12 @@ async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl 
 }
 
 async fn get_graphiql() -> Html<String> {
-    let html: String = GraphiQLSource::build().title("compose-gql GraphiQL").endpoint("/graphql").finish();
+    let html: String = GraphiQLSource::build().title("semio_compose_rs-gql GraphiQL").endpoint("/graphql").finish();
     Html(html)
 }
 
 async fn get_health() -> impl IntoResponse {
-    "compose-gql\n"
+    "semio_compose_rs-gql\n"
 }
 
 async fn post_shutdown() -> StatusCode {
@@ -260,11 +260,11 @@ async fn serve(listener: TcpListener, app: Router) {
         let _ = std::io::stdout().lock().flush();
     }
     let base = format!("http://127.0.0.1:{}", actual_port);
-    tracing::info!(target: "compose_gql", "┌️ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
-    tracing::info!(target: "compose_gql", "└️ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
+    tracing::info!(target: "semio_compose_gql", "┌️ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
+    tracing::info!(target: "semio_compose_gql", "└️ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
 
     if let Err(e) = axum::serve(listener, app.into_make_service()).with_graceful_shutdown(shutdown_signal()).await {
-        tracing::error!(target: "compose_gql", "server: {e}");
+        tracing::error!(target: "semio_compose_gql", "server: {e}");
     }
 }
 
@@ -286,7 +286,7 @@ async fn shutdown_signal() {
 #[tokio::main]
 async fn main() -> std::process::ExitCode {
     let _ = tracing_subscriber::fmt()
-        .with_env_filter(std::env::var("RUST_LOG").or_else(|_| std::env::var("RUST_TRACING")).unwrap_or_else(|_| "error,compose_gql=info,compose_gql_event=off".to_string()))
+        .with_env_filter(std::env::var("RUST_LOG").or_else(|_| std::env::var("RUST_TRACING")).unwrap_or_else(|_| "error,semio_compose_gql=info,compose_gql_event=off".to_string()))
         .with_target(false)
         .with_writer(io::stderr)
         .try_init();
@@ -294,7 +294,7 @@ async fn main() -> std::process::ExitCode {
     match run().await {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(e) => {
-            tracing::error!(target: "compose_gql", "{e}");
+            tracing::error!(target: "semio_compose_gql", "{e}");
             std::process::ExitCode::FAILURE
         }
     }
@@ -315,7 +315,7 @@ mod tests {
         let state = Arc::new(build_state().await);
         let handle = tokio::spawn(async move {
             if let Err(e) = axum::serve(listener, app_with_state(state).into_make_service()).await {
-                tracing::error!(target: "compose_gql", "test server: {e}");
+                tracing::error!(target: "semio_compose_gql", "test server: {e}");
             }
         });
         Ok((handle, format!("http://127.0.0.1:{port}")))
@@ -346,7 +346,7 @@ mod tests {
         let client = reqwest::Client::new();
         let html = client.get(format!("{base}/graphiql")).send().await?.error_for_status()?.text().await?;
 
-        assert!(html.contains("compose-gql GraphiQL"));
+        assert!(html.contains("semio_compose_rs-gql GraphiQL"));
         assert!(html.contains("/graphql"));
         assert!(html.contains("graphiql@4"));
         assert!(!html.contains("catch(() => response.text())"));
@@ -444,7 +444,7 @@ mod tests {
 
     #[tokio::test]
     async fn sidecar_install_create_accepts_full_kit_store_bundle_doc() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        use compose::kit_backbone::{DevBackboneBundleDoc, KIT_BUNDLE_HASH_STUB};
+        use semio_compose_rs::kit_backbone::{DevBackboneBundleDoc, KIT_BUNDLE_HASH_STUB};
 
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
@@ -534,7 +534,7 @@ mod tests {
     }
 
     fn comprehensive_fixture_path() -> Option<std::path::PathBuf> {
-        compose::kit_store_comprehensive_e2e::kit_store_comprehensive_fixture_path()
+        semio_compose_rs::kit_store_comprehensive_e2e::kit_store_comprehensive_fixture_path()
     }
 
     async fn run_comprehensive_fixture_sidecar_steps(fixture: &Value, client: &reqwest::Client, base: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -609,7 +609,7 @@ mod tests {
         Ok(())
     }
 
-    /// @emoji 🧪️ Full catalog E2E: in-process GraphQL + backbone replay, then live compose-gql HTTP sidecar steps.
+    /// @emoji 🧪️ Full catalog E2E: in-process GraphQL + backbone replay, then live semio_compose_rs-gql HTTP sidecar steps.
     #[tokio::test]
     async fn comprehensive_fixture_end_to_end() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let Some(path) = comprehensive_fixture_path() else {
@@ -617,7 +617,7 @@ mod tests {
             return Ok(());
         };
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path)?)?;
-        compose::kit_store_comprehensive_e2e::run_in_process(&fixture).await;
+        semio_compose_rs::kit_store_comprehensive_e2e::run_in_process(&fixture).await;
         let (server, base) = spawn_server().await?;
         let client = reqwest::Client::new();
         run_comprehensive_fixture_sidecar_steps(&fixture, &client, &base).await?;

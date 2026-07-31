@@ -3,7 +3,7 @@ mod header {
     // HubDirectory over Neo4j (neo4rs). Users/Spaces/Memberships are real nodes+relationships —
     // where graph traversal earns its keep (role lookups, VFS tree walks). Document persistence
     // and blobs are no longer this crate's concern — `db::Database` and `db_storage_neo4j` own
-    // that half now (see `os-hub`'s `bin.rs`).
+    // that half now (see `os-semio_hub`'s `bin.rs`).
 }
 
 use async_trait::async_trait;

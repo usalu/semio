@@ -166,7 +166,7 @@ fn plane_from_depth_normal(intr: &remodel_camera::Intrinsics, center: (u32, u32)
 /// 🔀️ Warps one reference-pixel offset into a source view via ray-plane intersection against
 /// `plane`, in the reference camera frame. This is mathematically the same induced-homography warp
 /// used by Gipuma-style PatchMatch MVS (`K_src (R_rel - t_rel nᵀ/d) K_ref⁻¹`), computed per-sample
-/// via an explicit ray/plane intersection instead of a precomputed 3x3 matrix — simpler to compose
+/// via an explicit ray/plane intersection instead of a precomputed 3x3 matrix — simpler to semio_compose_rs
 /// from `remodel_camera`'s existing `project`/`unproject_ray`/`act` primitives, at the cost of
 /// redoing the intersection for every neighbor pixel instead of amortizing it into one matrix.
 fn warp_point_to_src(

@@ -6,7 +6,7 @@
 // #endregion 🧲️Header
 
 import { Design, Kit, type Design as DesignType, type DesignPlain } from "@semio-tech/compose-react";
-import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/asset";
 import { NakaginCapsuleTowerDiffDesign as nakaginDiff } from "@semio-tech/compose-fixture";
 import { ComposeDiagram as Diagram } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";

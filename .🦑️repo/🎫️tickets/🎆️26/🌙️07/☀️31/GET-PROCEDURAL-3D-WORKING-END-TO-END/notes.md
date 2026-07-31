@@ -18,3 +18,19 @@ Chain:
 
 ## Verify
 `bun e2e-verify.mts` on http://127.0.0.1:6018 → title `semio · procedural · 3d`, Flow+Preview, 3 canvases, no render/ghost errors.
+
+
+## 2026-07-31 regression (compose→workspace rename)
+
+### Failures
+1. `getWorkspaceRoot()` still matched root `package.json` name `"compose"`; under nx cwd it returned the package dir and doubled the plugin-registry path.
+2. `UiTreeNode` gained `selected_ids`/`highlighted_ids` without updating all struct initializers → `semio-framework-ui-wgpu` (and others) failed to compile.
+3. CAD engine `Cargo.toml` had one-too-many `../` to math-graph-dsl → resolved to `/Users/ueli/Documents/🧰framework/...` and broke flow-core wasm.
+
+### Fixes
+- `getWorkspaceRoot`: match `"workspace"`.
+- `UiTreeNode`: `Default` impl + fill missing fields across wgpu/workflow/plugins; `PanelTreeBuilder::build` stamps without moving id lists.
+- CAD engine path: 10×`../` → 9×`../`.
+
+### Verify
+`bun e2e-verify.mts` on http://127.0.0.1:6018 → ok: title `semio · procedural · 3d`, Flow+Preview, 3 canvases, no render/ghost errors.

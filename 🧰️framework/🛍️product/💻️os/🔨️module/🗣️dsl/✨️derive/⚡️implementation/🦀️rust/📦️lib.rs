@@ -41,6 +41,11 @@ struct FieldAttrs {
     /// `#[dsl(lang = "jack")]` — a scalar `String` field prints/parses as `Shape::Embed(lang)`
     /// (fenced verbatim in Document mode) instead of plain `Shape::Text`.
     lang: Option<String>,
+    /// `#[dsl(coord)]` — a `[f64; 3]` (or any `DslField` array) field prints/parses as
+    /// `Shape::Coord(3)` (`@x,y,z`) instead of a bare comma tuple.
+    coord: bool,
+    /// `#[dsl(dir)]` — same mechanism as `coord`, `Shape::Dir` (`^x,y,z`) instead.
+    dir: bool,
 }
 
 fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
@@ -107,6 +112,10 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
             } else if meta.path.is_ident("lang") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 out.lang = Some(value.value());
+            } else if meta.path.is_ident("coord") {
+                out.coord = true;
+            } else if meta.path.is_ident("dir") {
+                out.dir = true;
             }
             Ok(())
         });
@@ -260,6 +269,10 @@ struct FieldPlan {
     defines: Option<String>,
     /// `#[dsl(lang = "...")]`, only meaningful for `FieldKind::Scalar`/`OptionScalar`.
     lang: Option<String>,
+    /// `#[dsl(coord)]`, only meaningful for `FieldKind::Scalar`/`OptionScalar` on an array type.
+    coord: bool,
+    /// `#[dsl(dir)]`, ditto.
+    dir: bool,
 }
 
 fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
@@ -279,7 +292,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
             None
         };
         let block = attrs.block && !matches!(kind, FieldKind::VecBlockStatements(_));
-        out.push(FieldPlan { ident, id: index as u16, key, positional, optional, kind, elem_ty, block, unit: attrs.unit.clone(), angle: attrs.angle.clone(), refs: attrs.refs.clone(), defines: attrs.defines.clone(), lang: attrs.lang.clone() });
+        out.push(FieldPlan { ident, id: index as u16, key, positional, optional, kind, elem_ty, block, unit: attrs.unit.clone(), angle: attrs.angle.clone(), refs: attrs.refs.clone(), defines: attrs.defines.clone(), lang: attrs.lang.clone(), coord: attrs.coord, dir: attrs.dir });
     }
     out
 }
@@ -295,7 +308,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
     let mut field_idents = Vec::new();
 
     for plan in &plans {
-        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, block, unit, angle, refs, defines, lang } = plan;
+        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, block, unit, angle, refs, defines, lang, coord, dir } = plan;
         // A `#[dsl(unit = "...")]`/`#[dsl(angle = "...")]` scalar field's Shape is resolved at
         // spec-build time via `dsl::__rt::unit_for_derive` — same lazy-per-call pattern every other
         // `fn() -> RecordSpec`-backed Shape in this engine already uses, so an unknown unit symbol
@@ -309,6 +322,10 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             Some(quote! { ::dsl::Shape::Ref(#kind) })
         } else if let Some(l) = lang {
             Some(quote! { ::dsl::Shape::Embed(#l) })
+        } else if *coord {
+            Some(quote! { ::dsl::Shape::Coord(3) })
+        } else if *dir {
+            Some(quote! { ::dsl::Shape::Dir })
         } else {
             None
         };

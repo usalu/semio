@@ -2232,7 +2232,16 @@ export type HostEffect =
   /** @emoji 🔁️ Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a program
    * advance staged/progressive work over several ticks without blocking the host; the response's own
    * `requestedEffects` are fed back through `applyHostEffects` recursively. */
-  | { readonly dispatchAction: { readonly action: string; readonly args?: unknown; readonly delayMs: number } };
+  | { readonly dispatchAction: { readonly action: string; readonly args?: unknown; readonly delayMs: number } }
+  /** @emoji 🎯️ Patches world-3d selection chrome and document-tree `selectedIds` without a composite re-render. */
+  | {
+      readonly patchWorld3dChrome: {
+        readonly selectionJson: string;
+        readonly vorticesJson?: string;
+        readonly documentSelectedIds: readonly string[];
+        readonly documentHighlightedIds?: readonly string[];
+      };
+    };
 
 /**
  * @emoji 🐢️ Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually

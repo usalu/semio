@@ -13,6 +13,6 @@ path = "../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/◻2d/�
 [dependencies]
 dsl = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
-fem_core = { path = "../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "fem_core" }
+fem_core = { path = "../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-core" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -168,7 +168,7 @@ pub mod pack_rt {
     /// @emoji 🌱️ Field id the JSON bridge's synthetic single-field record wraps a whole
     /// `serde_json::Value` payload in — mirrors `dsl::DslField for serde_json::Value`'s
     /// `Shape::Value` escape hatch (`dsl/rs/lib.rs`), lifted one level from "one field" to "one
-    /// whole document" so schema-less apps (puzzle plugins, compose kit) get a pack encoding too.
+    /// whole document" so schema-less apps (puzzle plugins, semio_compose_rs kit) get a pack encoding too.
     const JSON_BRIDGE_FIELD_ID: u16 = 1;
 
     fn json_bridge_spec() -> RecordSpec {
@@ -242,7 +242,7 @@ pub trait DocumentPack: Sized {
     }
 
     /// @emoji 🧬️ This document kind's structural field spec, for `DocumentCodec::pack_schema_hash`
-    /// (W5.7's hub schema-hash validation — see that field's doc). Default `None` for hand-written
+    /// (W5.7's semio_hub schema-hash validation — see that field's doc). Default `None` for hand-written
     /// `DocumentPack` impls with no `RecordSpec` (schema-erased or synthetic fixture types, e.g.
     /// `serde_json::Value` above): those document kinds simply opt out (a zero hash reads as
     /// "schema-agnostic" everywhere this is consumed). `#[derive(dsl::DslDocument)]` overrides this
@@ -289,7 +289,7 @@ pub fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vc
 }
 
 /// @emoji 🌱️ Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-plugin/
-/// compose-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
+/// semio_compose_rs-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
 impl DocumentPack for serde_json::Value {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         Ok(pack_rt::encode_json_value(self))
@@ -331,7 +331,7 @@ pub struct DocumentCodec {
     /// @emoji 🧬️ W5.7: a structural fingerprint of this document kind's field shape —
     /// `pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
     /// `RecordSpec` (hand-written `DocumentPack` impls, see that trait method's doc). Hub actors
-    /// send this in `ClientFrame::Hello`; the hub pins the first non-zero hash it sees per
+    /// send this in `ClientFrame::Hello`; the semio_hub pins the first non-zero hash it sees per
     /// `(space, document)` scope and rejects a later mismatching one before `Welcome` — a zero
     /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
     /// catalog once it grows a column for it; this in-memory pin is this wave's scope.
@@ -2416,7 +2416,7 @@ where
                     .unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
                 undo_policy: operation.undo_policy(),
                 // 🎞️ CW3: direct blake3 (same primitive `pack_core::ContentHash` uses) replaces the
-                // old `semio_framework_hash::hash_bytes` String hash — `protocol_core::PayloadHash` is
+                // old `framework_hash::hash_bytes` String hash — `protocol_core::PayloadHash` is
                 // now `[u8; 32]`, not a hex string. NOT `pack::content_hash`, which reads a pack
                 // FILE's footer rather than hashing arbitrary bytes. 🎯️ B2: hashes the real
                 // `OpBinary` encoding, not a JSON serialization — two ops that encode identically
@@ -2441,7 +2441,7 @@ where
     }
 
     /// @emoji 🕹️ Decodes `command_bytes` via [`decode_command`] and dispatches it — the binary
-    /// entry point used for both communication (backbone/hub) and storage (`.spr`).
+    /// entry point used for both communication (backbone/semio_hub) and storage (`.spr`).
     pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError>
     where
         Operation: protocol::OpBinary,
@@ -2915,12 +2915,12 @@ pub fn decode_backbone_message(bytes: &[u8]) -> Result<BackboneMessage, protocol
 /// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
 /// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
-/// hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
+/// semio_hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
 /// which owns the other end; the store's `pump()`/`flush_outbound()` run synchronously on the
 /// caller's thread and must never be blocked by transport work.
 ///
 /// URI schemes are resolved by the host actor (`framework/sync`): `temp://` (in-memory),
-/// `file://` (single JSON blob), `folder://` (sqlite `.semio/document.db`), `remote://` (OS hub).
+/// `file://` (single JSON blob), `folder://` (sqlite `.semio/document.db`), `remote://` (OS semio_hub).
 pub trait Backbone: Send + Sync {
     fn descriptor(&self) -> DocumentBackboneRef;
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;
@@ -3241,9 +3241,9 @@ pub struct BlobRef {
 
 /// @emoji 🗄️ Content-addressed blob persistence backing `MergeStrategyKind::ContentAddressedBlob` /
 /// `DocumentKind::ContentAddressedBlob` (`framework/core/rs` 🔖️MergeStrategy region). `put` is idempotent —
-/// it dedupes by the Blake3 hash of the bytes ({@link semio_framework_hash::hash_bytes}), so writing
+/// it dedupes by the Blake3 hash of the bytes ({@link framework_hash::hash_bytes}), so writing
 /// the same content twice never rewrites storage. Implementors decide the backing medium (sqlite here,
-/// a hub HTTP route in a later ticket, an IndexedDB cache in the browser).
+/// a semio_hub HTTP route in a later ticket, an IndexedDB cache in the browser).
 pub trait BlobStore: Send + Sync {
     fn put(&self, bytes: &[u8], media_type: &str) -> Result<BlobRef, VcsError>;
     fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, VcsError>;
@@ -3584,7 +3584,7 @@ impl Operation<SpaceHistoryProjection> for SpaceHistoryOperation {
 // the deleted `serde_json::to_vec` hatch this replaces). TEXT face: JSON text, the same
 // documented, scoped exception the `Value`-projected apps already have.
 // 🎯️ `renormalize_whole_number_floats` moved into `pack_rt` (this file's :209) — general
-// property of `pack_rt::decode_json_value`'s output, not specific to this type; `compose`'s
+// property of `pack_rt::decode_json_value`'s output, not specific to this type; `semio_compose_rs`'s
 // `ComposeWireOperation` needs the exact same fix and calls the same `pack_rt::` function.
 use pack_rt::renormalize_whole_number_floats;
 

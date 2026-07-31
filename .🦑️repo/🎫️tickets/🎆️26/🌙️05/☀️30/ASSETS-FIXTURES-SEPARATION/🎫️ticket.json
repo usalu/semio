@@ -1,8 +1,8 @@
 {
   "title": "Assets Fixtures Separation",
   "status": "closed",
-  "description": "Clean separation: @semio-tech/semio-assets ships builtin kits/meshes/icons; @semio-tech/compose-fixtures ships test JSON; @semio-tech/puzzle-assets ships play JSON; cad/assets/play for CAD samples.",
-  "summary": "Moved Metabolism kit, representations, icons, placeholder mesh from compose/fixtures to assets. Created @semio-tech/compose-fixtures package for test/story JSON. Removed test re-exports from @semio-tech/semio-assets. Updated storybook, dev/algorithms, puzzle 3d vite, sketchpad vite paths. Renamed cad/assets/builtin to cad/assets/play.",
+  "description": "Clean separation: @semio-tech/assets ships builtin kits/meshes/icons; @semio-tech/compose-fixtures ships test JSON; @semio-tech/puzzle-assets ships play JSON; cad/assets/play for CAD samples.",
+  "summary": "Moved Metabolism kit, representations, icons, placeholder mesh from compose/fixtures to assets. Created @semio-tech/compose-fixtures package for test/story JSON. Removed test re-exports from @semio-tech/assets. Updated storybook, dev/algorithms, puzzle 3d vite, sketchpad vite paths. Renamed cad/assets/builtin to cad/assets/play.",
   "files": [
     "assets/index.ts",
     "assets/AGENTS.md",

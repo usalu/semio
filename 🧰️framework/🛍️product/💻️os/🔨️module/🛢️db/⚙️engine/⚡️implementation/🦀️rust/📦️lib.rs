@@ -860,7 +860,7 @@ impl Database {
 
     /// @emoji 🔌️ The underlying storage substrate this `Database` was opened with — an escape
     /// hatch for callers below the document-actor boundary that need direct `PayloadStorage`/
-    /// `WalStorage` access (e.g. `os-hub`'s content-addressed blob routes, or a wire-v2 hub
+    /// `WalStorage` access (e.g. `os-semio_hub`'s content-addressed blob routes, or a wire-v2 semio_hub
     /// session driving `db_sync::handle_frontier_advertise` directly). Additive: not part of the
     /// contract-frozen `Database` API surface listed in `contract.md`'s "Stable API" block, so it
     /// carries no compatibility promise beyond this crate's own semver.
@@ -881,7 +881,7 @@ impl Database {
 
     /// @emoji 👋️ A real `db_sync::handle_hello` call for `document` — the server-side half of the
     /// wire-v2 handshake (frontier exchange / bootstrap-plan decision). No transport of its own:
-    /// wiring this to an actual `protocol_wire` socket is CW5/CW6's job (framework/sync, hub
+    /// wiring this to an actual `protocol_wire` socket is CW5/CW6's job (framework/sync, semio_hub
     /// rebuilds), out of this crate's scope this wave.
     pub fn hello(
         &self,
@@ -1277,12 +1277,12 @@ mod tests {
         let batch = db_document::CommandBatch::new(vec![envelope("op-1", &[], "alice", &document, &[("x", serde_json::json!(1))])]).unwrap();
         db_actor::block_on(handle.submit(batch, db_document::SubmitOptions::default())).unwrap().unwrap();
 
-        let response = database.hello(&document, None, "session-1".to_string(), &protocol::ActorId("hub".to_string()), 4096).unwrap();
+        let response = database.hello(&document, None, "session-1".to_string(), &protocol::ActorId("semio_hub".to_string()), 4096).unwrap();
         assert!(matches!(response.welcome, protocol::ServerFrame::Welcome { .. }));
     }
 
     // 🔬️ `storage()` is a real escape hatch to the same backend `Database::open_at` wired — a
-    // caller below the document-actor boundary (os-hub's blob routes) can round-trip a payload
+    // caller below the document-actor boundary (os-semio_hub's blob routes) can round-trip a payload
     // through it directly, independent of any document actor.
     #[test]
     fn storage_accessor_reaches_the_same_backend_payload_store() {

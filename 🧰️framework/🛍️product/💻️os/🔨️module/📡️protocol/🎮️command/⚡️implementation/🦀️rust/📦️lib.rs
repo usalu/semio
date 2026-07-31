@@ -178,7 +178,7 @@ pub trait Patchable<TPatch> {
     fn diff_patch(&self, other: &Self) -> Option<TPatch>;
 }
 
-/// @emoji 🧩️ Sparse collection patch entry (mirrors compose `XModified`). Moved verbatim from
+/// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`). Moved verbatim from
 /// `vcs::ItemPatch`.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -187,7 +187,7 @@ pub struct ItemPatch<TId, TPatch> {
     pub patch: TPatch,
 }
 
-/// @emoji 🧩️ Sparse collection diff (mirrors compose `XCollectionDiff`). Moved verbatim from
+/// @emoji 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`). Moved verbatim from
 /// `vcs::CollectionDiff`.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]

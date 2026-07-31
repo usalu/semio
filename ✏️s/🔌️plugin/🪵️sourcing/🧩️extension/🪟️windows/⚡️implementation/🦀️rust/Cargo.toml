@@ -1,5 +1,5 @@
 [package]
-name = "sourcing-module-windows"
+name = "semio-s-plugin-sourcing-windows"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

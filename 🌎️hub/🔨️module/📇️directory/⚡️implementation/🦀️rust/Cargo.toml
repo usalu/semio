@@ -7,7 +7,7 @@
 # #endregion 🔖️Header
 
 [package]
-name = "hub-directory"
+name = "semio-hub-directory"
 version = "0.1.0"
 edition = "2021"
 

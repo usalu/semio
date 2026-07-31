@@ -1,6 +1,6 @@
 mod header {
     // 🧲️Header
-    // Backend-agnostic os-hub identity/tenancy directory. HubDirectory is the single seam every
+    // Backend-agnostic os-semio_hub identity/tenancy directory. HubDirectory is the single seam every
     // persistence backend (sqlite/postgres/neo4j) implements; bin.rs never sees a driver type
     // (sqlx/neo4rs/rusqlite), only this trait and the DTOs in `model` — satisfies the "external
     // libraries stay behind an interface" rule for a trait three backends must share.
@@ -8,7 +8,7 @@ mod header {
     // 🎯️ Design choice (split from the pre-CW6 `HubStorage`): document persistence (snapshots,
     // operations) and content-addressed blobs are no longer this crate's concern — `db::Database`
     // (server-side document authority) and `db`'s own `PayloadStorage` own that now (see
-    // `os-hub`'s `bin.rs`). This crate keeps exactly the identity/tenancy surface that has no `db`
+    // `os-semio_hub`'s `bin.rs`). This crate keeps exactly the identity/tenancy surface that has no `db`
     // counterpart: users, spaces, memberships, auth sessions, share tokens, VFS nodes, and
     // realtime sync sessions.
 }
@@ -120,7 +120,7 @@ pub mod model {
     }
 
     /// @emoji 🔴️ A realtime document connection — the "session as live-features backend" record;
-    /// written by `os-hub`'s wire-v2 WS handler on Hello/disconnect, not per-operation.
+    /// written by `os-semio_hub`'s wire-v2 WS handler on Hello/disconnect, not per-operation.
     pub struct SyncSessionRecord {
         pub id: String,
         pub document_id: String,
@@ -137,10 +137,10 @@ pub mod model {
 use error::DirectoryResult;
 use model::*;
 
-/// @emoji 🗄️ Backend-agnostic os-hub identity/tenancy directory. Implemented once per backend
+/// @emoji 🗄️ Backend-agnostic os-semio_hub identity/tenancy directory. Implemented once per backend
 /// (sqlite/postgres/neo4j); `HubState` holds an `Arc<dyn HubDirectory>` so the directory backend is
 /// a deploy-time choice, not a compile-time one — independent of `db::Database`'s own storage
-/// backend choice (see `os-hub`'s `bin.rs`, `OS_HUB_DIRECTORY_BACKEND` vs `OS_HUB_STORAGE_BACKEND`).
+/// backend choice (see `os-semio_hub`'s `bin.rs`, `OS_HUB_DIRECTORY_BACKEND` vs `OS_HUB_STORAGE_BACKEND`).
 #[async_trait::async_trait]
 pub trait HubDirectory: Send + Sync + 'static {
     //#region Vfs

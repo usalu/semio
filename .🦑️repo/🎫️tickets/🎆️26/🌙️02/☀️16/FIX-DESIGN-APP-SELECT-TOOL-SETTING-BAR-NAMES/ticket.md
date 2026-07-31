@@ -22,7 +22,7 @@ Fixed the Design app select tool setting bar names. The DesignSelectSettings com
 
 - Identified mismatch between element IDs in DesignSelectSettings and test expectations
 - Verified en.json and de.json have all required translations at correct paths
-- Imported IntersectIcon from @semio-tech/semio-assets
+- Imported IntersectIcon from @semio-tech/assets
 - Rewrote DesignSelectSettings with 6 toggles matching test IDs
 - Resolved merge conflict in Sketchpad.tsx
 

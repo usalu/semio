@@ -25,7 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "lib", "lib", "{1F6DF4CD-A26
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net", "net", "{E9E1C7C8-AC8F-1C53-82B8-E9B42A5F9418}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Elements.Styling", "compose\client\lib\net\Elements.Styling\cs\cs\Elements.Styling.csproj", "{909197EE-7F17-4D96-BD30-91B33D66C415}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Semio.Framework.Ui.Styling", "compose\client\lib\net\Elements.Styling\cs\Elements.Styling.csproj", "{909197EE-7F17-4D96-BD30-91B33D66C415}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -218,7 +218,7 @@ pub fn shooting_asset_scale(asset: &ShootingAsset) -> [f64; 3] {
 }
 
 /// 🧭️ Quaternion (Hamilton product) multiply — `a * b`, both `[x, y, z, w]`. Shared by `op`'s
-/// `RotateAssets` diff/backwards math and any other consumer that needs to compose orientations.
+/// `RotateAssets` diff/backwards math and any other consumer that needs to semio_compose_rs orientations.
 pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
     [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
 }

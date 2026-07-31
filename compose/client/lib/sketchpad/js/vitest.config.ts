@@ -18,7 +18,7 @@ export default defineConfig({
       "@semio-tech/compose-js": resolve(root, "../../js/index.ts"),
       "@semio-tech/reasoning-mindmap-wires-react": resolve(root, "../../../../../reasoning/mindmap/wires/react/index.ts"),
       "@semio-tech/reasoning-mindmap-react": resolve(root, "../../../../../reasoning/mindmap/react/index.tsx"),
-      "@semio-tech/infinite-cavas-react-renderer": resolve(root, "../../../../../infinite/cavas/react-renderer/index.tsx"),
+      "@semio-tech/infinite-canvas-react-renderer": resolve(root, "../../../../../infinite/cavas/react-renderer/index.tsx"),
       "@semio-tech/infinite-world-r3f": resolve(root, "../../../../../infinite/world/r3f/index.tsx"),
       "@semio-tech/puzzle-2d-react": resolve(root, "../../../../../puzzle/2d/react/index.tsx"),
     },

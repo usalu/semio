@@ -7,7 +7,7 @@
 # #endregion 🔖️Header
 
 [package]
-name = "hub-directory-postgres"
+name = "semio-hub-directory-postgres"
 version = "0.1.0"
 edition = "2021"
 
@@ -23,7 +23,7 @@ serde_json = "1.0"
 uuid = { version = "1.20", features = ["v7"] }
 sqlx_core = { package = "sqlx-core", version = "0.8", features = ["_rt-tokio", "_tls-rustls-ring-webpki", "json"] }
 sqlx_postgres = { package = "sqlx-postgres", version = "0.8", features = ["uuid", "json"] }
-os-hub-directory = { path = "../../../../../../🌎️hub/🔨️module/📇️directory/⚡️implementation/🦀️rust", package = "hub-directory" }
+os-hub-directory = { path = "../../../../../../🌎️hub/🔨️module/📇️directory/⚡️implementation/🦀️rust", package = "semio-hub-directory" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

@@ -93,7 +93,7 @@ Sorted with skipped and not-fully-within-budget units first.
 | `@semio-tech/graph-dsl` | cargo | 3.4 | 5.5 | 8→8 | ✅️ |  |
 | `@semio-tech/graph-dsl-core` | vitest | — | 1.9 | 0→8 | ✅️ |  |
 | `@semio-tech/graph-manifest` | cargo | — | — | 3→3 | ✅️ |  |
-| `@semio-tech/infinite-cavas-react-renderer` | vitest | 17.81 | 17.81 | 1→1 | ✅️ |  |
+| `@semio-tech/infinite-canvas-react-renderer` | vitest | 17.81 | 17.81 | 1→1 | ✅️ |  |
 | `@semio-tech/infinite-world-r3f` | vitest | 21.2 | 19.5 | 70→66 | ✅️ |  |
 | `@semio-tech/kernel-2d-js` | vitest | 0.3 | 0.3 | 4→4 | ✅️ |  |
 | `@semio-tech/kernel-3d-js` | vitest | 2.46 | 2.46 | 1→1 | ✅️ |  |

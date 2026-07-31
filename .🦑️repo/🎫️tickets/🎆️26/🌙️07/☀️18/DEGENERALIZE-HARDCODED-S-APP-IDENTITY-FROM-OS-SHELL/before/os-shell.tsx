@@ -1,6 +1,6 @@
 import { Component, createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import type { GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
+import type { GraphWasmSession } from "@semio-tech/infinite-canvas-react-renderer";
 import {
   App,
   applyDockSkeleton,

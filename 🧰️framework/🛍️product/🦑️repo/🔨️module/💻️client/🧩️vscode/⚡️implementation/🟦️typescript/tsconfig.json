@@ -10,8 +10,8 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "paths": {
-      "@semio-tech/semio-asset/*": ["../../../asset/*"],
-      "@semio-tech/semio-asset": ["../../../asset/index.ts"]
+      "@semio-tech/asset/*": ["../../../asset/*"],
+      "@semio-tech/asset": ["../../../asset/index.ts"]
     }
   },
   "include": ["🟦️extension.test.ts", "🟦️extension.ts"],

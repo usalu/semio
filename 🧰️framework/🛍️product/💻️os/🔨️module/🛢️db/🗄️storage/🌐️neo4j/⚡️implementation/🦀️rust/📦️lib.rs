@@ -3,7 +3,7 @@
 //! over a live Neo4j server via `neo4rs`. Frozen contract:
 //! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, "storage substrate is pluggable"). Informed by the deleted
-//! `os-hub-storage-neo4j` crate's schema conventions (base64-encoded byte properties, `MERGE`
+//! `os-semio_hub-storage-neo4j` crate's schema conventions (base64-encoded byte properties, `MERGE`
 //! `ON CREATE`/`ON MATCH` freshness flags for idempotent-create-with-conflict-detection).
 //!
 //! 🕸️ Schema shape: every trait's records are flat, labeled nodes keyed by their trait-level
@@ -13,7 +13,7 @@
 //! traversal is not this trait family's shape (see `db_storage`'s module doc: every trait here
 //! stores/retrieves opaque byte blobs). Byte payloads are base64-encoded into string properties —
 //! the bolt protocol's ergonomic param API has no first-class arbitrary-length byte-array type in
-//! this driver version, mirroring the same convention `os-hub-storage-neo4j` already used.
+//! this driver version, mirroring the same convention `os-semio_hub-storage-neo4j` already used.
 //!
 //! ⏳️ Sync boundary: `neo4rs` is fully async (`tokio`); every `DbStorage` sub-trait method here is
 //! synchronous (matching `MemoryStorage`/`FsStorage`'s signatures). This backend owns a dedicated

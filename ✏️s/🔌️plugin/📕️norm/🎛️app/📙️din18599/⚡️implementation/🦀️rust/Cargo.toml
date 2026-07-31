@@ -13,5 +13,5 @@ path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📙�
 [dependencies]
 dsl = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
-norm_core = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "norm_core" }
+norm_core = { path = "../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-norm-core" }
 serde = { version = "1.0.219", features = ["derive"] }

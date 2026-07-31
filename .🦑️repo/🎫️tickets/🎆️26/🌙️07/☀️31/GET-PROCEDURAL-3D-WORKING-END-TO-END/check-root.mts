@@ -1,0 +1,11 @@
+import { getWorkspaceRoot } from "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproduct/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodule/\ud83d\udcda\ufe0flib/\u26a1\ufe0fimplementation/\ud83d\udfe6\ufe0ftypescript/\ud83d\udce6\ufe0findex.ts";
+import { join } from "node:path";
+import { existsSync } from "node:fs";
+const repoRoot = getWorkspaceRoot();
+console.log("cwd", process.cwd());
+console.log("repoRoot", repoRoot);
+const registryScript = join(repoRoot, "./\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproduct/\ud83d\udcbb\ufe0fos/\ud83d\udd28\ufe0fmodule/\ud83d\udd0c\ufe0fplugin/\u26a1\ufe0fimplementation/\ud83d\udfe6\ufe0ftypescript/\ud83d\udcc7\ufe0fregistry/\ud83d\udcdc\ufe0fscript.ts");
+console.log("registryScript", registryScript);
+console.log("exists", existsSync(registryScript));
+if (repoRoot !== "/Users/ueli/Documents/semio") process.exit(2);
+if (!existsSync(registryScript)) process.exit(1);

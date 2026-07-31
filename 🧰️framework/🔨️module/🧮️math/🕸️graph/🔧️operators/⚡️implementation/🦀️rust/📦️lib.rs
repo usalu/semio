@@ -113,8 +113,8 @@ where
     dst
 }
 
-/// 🧩️ NetworkX `compose`: union of node/edge sets in the *shared* id space; wherever both graphs define the same node or (for non-multi storages) the same edge, `h`'s attributes overwrite `g`'s matching keys (via `PropertyBag::extend`), non-conflicting keys from both survive. For ported (multi-edge) storages there is no "same edge" identity beyond a fresh parallel edge, so both graphs' edges simply accumulate.
-pub fn compose<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
+/// 🧩️ NetworkX `semio_compose_rs`: union of node/edge sets in the *shared* id space; wherever both graphs define the same node or (for non-multi storages) the same edge, `h`'s attributes overwrite `g`'s matching keys (via `PropertyBag::extend`), non-conflicting keys from both survive. For ported (multi-edge) storages there is no "same edge" identity beyond a fresh parallel edge, so both graphs' edges simply accumulate.
+pub fn semio_compose_rs<P: PortModel, D: Directedness>(g: &Storage<P, D>, h: &Storage<P, D>) -> Storage<P, D>
 where
     P::Endpoint: From<NodeId>,
 {
@@ -570,7 +570,7 @@ mod tests {
         h.add_node_with_id(2, PropertyBag::new());
         h.add_edge_with(0, 1, attrs_of(&[("kind", "h")]));
 
-        let composed = compose(&g, &h);
+        let composed = semio_compose_rs(&g, &h);
         assert_eq!(composed.node_count(), 3);
         assert_eq!(composed.node_attrs(0).unwrap().get("color").unwrap().as_str(), Some("blue"));
         let edge = composed.edges_between(0, 1).next().unwrap();

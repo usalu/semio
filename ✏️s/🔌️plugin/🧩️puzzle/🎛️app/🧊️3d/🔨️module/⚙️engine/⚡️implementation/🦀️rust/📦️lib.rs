@@ -118,7 +118,7 @@ impl Pose3d {
     fn transform_point(&self, point: &Point3d) -> Point3d {
         Point3d(self.0 * point.0)
     }
-    fn compose(&self, other: &Self) -> Self {
+    fn semio_compose_rs(&self, other: &Self) -> Self {
         Self(self.0 * other.0)
     }
 }
@@ -683,9 +683,9 @@ fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, worl
         return false;
     }
     for part_a in &a.parts {
-        let pose_a = world_a.compose(&part_a.local_pose);
+        let pose_a = world_a.semio_compose_rs(&part_a.local_pose);
         for part_b in &b.parts {
-            let pose_b = world_b.compose(&part_b.local_pose);
+            let pose_b = world_b.semio_compose_rs(&part_b.local_pose);
             if shapes_intersect(&pose_a, &part_a.shape, &pose_b, &part_b.shape) {
                 return true;
             }
@@ -2228,9 +2228,9 @@ mod tests {
         let mut engine = Puzzle3dEngine::new();
         engine.fill = Some(fill);
 
-        let display = engine.compose_fill_display(4).expect("compose display");
+        let display = engine.compose_fill_display(4).expect("semio_compose_rs display");
         assert_eq!(display.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0", "p1", "p2", "p3"]);
-        assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 2, "compose must not mutate applied_count");
+        assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 2, "semio_compose_rs must not mutate applied_count");
 
         let applied = engine.apply_fill_count(4).expect("apply fill count");
         assert_eq!(applied.objects.len(), display.objects.len());
@@ -2554,7 +2554,7 @@ mod tests {
         assert_eq!((transformed.x(), transformed.y(), transformed.z()), (1.0, 2.0, 3.0));
         let back = pose.inverse().transform_point(&transformed);
         assert!(back.x().abs() < 1e-6 && back.y().abs() < 1e-6 && back.z().abs() < 1e-6);
-        let composed = pose.compose(&Pose3d::identity());
+        let composed = pose.semio_compose_rs(&Pose3d::identity());
         let composed_point = composed.transform_point(&point);
         assert_eq!((composed_point.x(), composed_point.y(), composed_point.z()), (1.0, 2.0, 3.0));
     }

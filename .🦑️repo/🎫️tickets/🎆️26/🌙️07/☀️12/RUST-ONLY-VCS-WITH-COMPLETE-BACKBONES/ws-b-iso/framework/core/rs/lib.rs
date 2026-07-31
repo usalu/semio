@@ -733,7 +733,7 @@ pub struct WindowOptions {
 
 //#region 🔖️WireFormatGoldenTests
 /** 🧊️ Golden wire-format tests: freeze exact JSON for layout/action/engagement types
-before these move into ui_wgpu, so the move can be proven byte-identical. */
+before these move into semio_framework_ui_wgpu, so the move can be proven byte-identical. */
 #[cfg(test)]
 mod layout_wire_format_tests {
     use super::*;
@@ -3680,7 +3680,7 @@ pub fn tool_collection(
 }
 
 //#region 🔖️WireFormatGoldenTests
-/** 🧊️ Golden wire-format tests: freeze exact JSON for ToolNode before it moves into ui_wgpu. */
+/** 🧊️ Golden wire-format tests: freeze exact JSON for ToolNode before it moves into semio_framework_ui_wgpu. */
 #[cfg(test)]
 mod tool_node_wire_format_tests {
     use super::*;
@@ -6649,7 +6649,7 @@ pub struct PresencePeer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub selection_json: Option<String>,
     pub connected_at_ms: i64,
-    /// @emoji 🪪️ Authenticated hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
+    /// @emoji 🪪️ Authenticated semio_hub user id, when this peer connected with an `AuthSession` rather than an anonymous share token.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub user_id: Option<String>,
     /// @emoji 🎚️ The peer's resolved studio role (`"owner"`/`"member"`/`"viewer"`), present alongside `user_id`.
@@ -6657,7 +6657,7 @@ pub struct PresencePeer {
     pub role: Option<String>,
 }
 
-/// @emoji 📨️ Client→server hub wire frames; the counterpart is {@link HubServerFrame}.
+/// @emoji 📨️ Client→server semio_hub wire frames; the counterpart is {@link HubServerFrame}.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum HubClientFrame {
@@ -6680,7 +6680,7 @@ pub enum HubClientFrame {
     Bye,
 }
 
-/// @emoji 📬️ Server→client hub wire frames; the counterpart is {@link HubClientFrame}.
+/// @emoji 📬️ Server→client semio_hub wire frames; the counterpart is {@link HubClientFrame}.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum HubServerFrame {
@@ -6939,7 +6939,7 @@ mod app_document_tests {
 
 //#region 🔖️WireFormatGoldenTests
 /** 🧊️ Golden wire-format tests: freeze exact JSON for every UiNode/scene/SurfaceKind
-before these types move into ui_wgpu, so the move can be proven byte-identical. */
+before these types move into semio_framework_ui_wgpu, so the move can be proven byte-identical. */
 #[cfg(test)]
 mod ui_node_wire_format_tests {
     use super::*;
@@ -7136,7 +7136,7 @@ mod ui_node_wire_format_tests {
         let json = serde_json::to_string(&node).unwrap();
         assert_eq!(
             json, GOLDEN_UI_NODE_TREE_JSON,
-            "UiNode wire format drifted \u{2014} lock this in before moving the type into ui_wgpu"
+            "UiNode wire format drifted \u{2014} lock this in before moving the type into semio_framework_ui_wgpu"
         );
         let roundtripped: UiNode = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, node);

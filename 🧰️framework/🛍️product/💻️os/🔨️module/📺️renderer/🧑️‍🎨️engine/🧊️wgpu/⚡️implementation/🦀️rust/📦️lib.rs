@@ -16901,17 +16901,17 @@ impl ShellState {
 
     pub async fn boot(&mut self) -> Result<(), String> {
         if let Some(cfg) = self.host_config() {
-            let s_plugin = self
+            let semio_s_plugin_space = self
                 .plugins
                 .iter()
                 .find(|p| p.plugin_id == cfg.plugin_id)
                 .ok_or("host program missing")?;
-            let s_app = s_plugin
+            let s_app = semio_s_plugin_space
                 .manifest
                 .apps
                 .iter()
                 .find(|app| app.id == cfg.landing_app_id)
-                .or_else(|| s_plugin.manifest.apps.first())
+                .or_else(|| semio_s_plugin_space.manifest.apps.first())
                 .ok_or("host program missing landing app")?
                 .clone();
             let workflows = self.build_space_workflows();
@@ -16921,7 +16921,7 @@ impl ShellState {
                 spawned_apps: vec![],
                 active_spawned_id: None,
             };
-            let instance_id = s_plugin.create_app(&s_app.id).await?;
+            let instance_id = semio_s_plugin_space.create_app(&s_app.id).await?;
             let view_state = ViewState {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
@@ -16938,7 +16938,7 @@ impl ShellState {
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
-                plugin_id: s_plugin.plugin_id.clone(),
+                plugin_id: semio_s_plugin_space.plugin_id.clone(),
                 instance_id,
                 app: s_app,
                 view_state,
@@ -17866,7 +17866,7 @@ impl ShellState {
     /// @emoji 🧭️ Parses a shell sync-card uri into the `framework/sync` persistence bindings a
     /// document actor opens. `folder://` → the multi-document sqlite store; `file://x.json` → its
     /// parent folder's store (single-blob export demoted per the plan); `remote://host:port[/space_id]`
-    /// → the hub over WebSocket, studio-scoped (an omitted studio segment falls back to `"default"`).
+    /// → the semio_hub over WebSocket, studio-scoped (an omitted studio segment falls back to `"default"`).
     /// Superseded the fetch/CRUD `shell_backbone_read`/`write` pair.
     #[cfg(not(target_arch = "wasm32"))]
     fn parse_persistence_binding(uri: &str) -> Result<Vec<PersistenceBinding>, String> {
@@ -18576,12 +18576,12 @@ impl ShellState {
         view_state: Option<ViewState>,
     ) -> Result<(), String> {
         let cfg = self.host_config().ok_or("host config missing")?;
-        let s_plugin = self
+        let semio_s_plugin_space = self
             .plugins
             .iter()
             .find(|program| program.plugin_id == cfg.plugin_id)
             .ok_or("host program missing")?;
-        let app = s_plugin
+        let app = semio_s_plugin_space
             .manifest
             .apps
             .iter()
@@ -18589,7 +18589,7 @@ impl ShellState {
             .ok_or("host app missing")?
             .clone();
         if let Some(session) = &self.session {
-            if session.plugin_id == s_plugin.plugin_id && session.app.id == app_id {
+            if session.plugin_id == semio_s_plugin_space.plugin_id && session.app.id == app_id {
                 if let Some(next_view_state) = view_state {
                     if let Some(mut current) = self.session.take() {
                         current.view_state = next_view_state;
@@ -18600,7 +18600,7 @@ impl ShellState {
                 return Ok(());
             }
         }
-        let instance_id = s_plugin.create_app(&app.id).await?;
+        let instance_id = semio_s_plugin_space.create_app(&app.id).await?;
         let workflows = self.build_space_workflows();
         let panel_state = SpacePanelState {
             active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(),
@@ -18627,7 +18627,7 @@ impl ShellState {
             self.open_space_id = None;
         }
         self.session = Some(ActiveSession {
-            plugin_id: s_plugin.plugin_id.clone(),
+            plugin_id: semio_s_plugin_space.plugin_id.clone(),
             instance_id,
             app,
             view_state: next_view_state,

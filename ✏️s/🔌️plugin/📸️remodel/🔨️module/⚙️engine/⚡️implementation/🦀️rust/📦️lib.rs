@@ -508,7 +508,7 @@ impl ReconstructionEngine {
     /// 🕸️ Sequential-window pairs `(i, j)` for `j in (i, i + sequential_window]`, plus an explicit
     /// `(0, f)`/`(1, f)` "anchor" pair for every later frame `f`: `IncrementalSfm::init_pair` triangulates
     /// only tracks directly spanning both anchor frames, so without a direct anchor↔f pair a later frame's
-    /// `register_next` PnP can only find 2D-3D correspondences through incidental hub-chained tracks —
+    /// `register_next` PnP can only find 2D-3D correspondences through incidental semio_hub-chained tracks —
     /// sparse enough on real matches to starve most frames of the 6 correspondences PnP needs. Explicit
     /// anchor pairs make every registerable frame's correspondence-to-the-seed-pair direct instead of
     /// coincidental.

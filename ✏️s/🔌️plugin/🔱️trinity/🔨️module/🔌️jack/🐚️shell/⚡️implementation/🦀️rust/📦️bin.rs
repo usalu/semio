@@ -26,7 +26,7 @@ enum TrinityJackShellError {
 
 fn main() {
     if let Err(err) = run_main() {
-        eprintln!("trinity_jack_shell: {err}");
+        eprintln!("semio_s_plugin_trinity_jack_shell: {err}");
         std::process::exit(1);
     }
 }

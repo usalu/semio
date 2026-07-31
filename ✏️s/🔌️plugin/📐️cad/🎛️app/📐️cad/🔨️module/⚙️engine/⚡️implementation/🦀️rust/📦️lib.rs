@@ -2372,7 +2372,7 @@ pub const CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC: &str = "aec.building.structure
 
 const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/🖼️concrete-forest-reference.png";
 
-pub const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 22.0;
+pub const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 24.0;
 
 pub const CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX: f64 = 1430.0;
 
@@ -3006,3 +3006,171 @@ pub fn cad_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result
     serde_json::to_value(&scene).map_err(|err| err.to_string())
 }
 //#endregion 🔖️Compute
+
+//#region 🔖️Construct
+/// @emoji 🕸️ "Construct" — CAD's topology query capability — is NOT a new parser: it is Jack
+/// (`mathematical_graph_dsl`, an already-complete Cypher-like language with its own parser,
+/// executor, formatter, and LSP) applied to brep topology through this `QueryableGraph`
+/// implementation. Every editable entity (`CadVertex`/`CadEdge`/`CadWire`/`CadFace`/`CadShell`/
+/// `CadSolid`) becomes a Jack node labeled by its kind (`"Vertex"`/`"Edge"`/.../`"Solid"`);
+/// `[:BOUNDED_BY]` moves down one topological dimension (Solid->Shell, Shell->Face, Face->Wire),
+/// `[:CONTAINS]` reaches the entities that directly compose a boundary member (Wire->Edge,
+/// Edge->Vertex) — exactly the relationship vocabulary `.🦑️repo/✍️notes/construct.md`'s TopoCypher
+/// design calls for. A query like `MATCH (f:Face)-[:BOUNDED_BY]->(w:Wire)-[:CONTAINS]->(e:Edge)`
+/// runs against this today via `mathematical_graph_dsl::run_query`, with zero new grammar.
+pub mod construct {
+    use cad_document::CadGeometry;
+    use mathematical_graph_manifest::PropertyValue;
+    use mathematical_graph_dsl::{QueryableEdge, QueryableGraph};
+    use std::collections::BTreeSet;
+
+    /// @emoji 🏷️ The Jack node-label vocabulary for brep entities — mirrors TopoCypher's
+    /// `(:Vertex) (:Edge) (:Wire) (:Face) (:Shell) (:Solid)` (the "Cell"/"CellComplex"/"Cluster"
+    /// labels from `construct.md` have no `CadGeometry` equivalent yet, so they're omitted rather
+    /// than faked).
+    const KIND_VERTEX: &str = "Vertex";
+    const KIND_EDGE: &str = "Edge";
+    const KIND_WIRE: &str = "Wire";
+    const KIND_FACE: &str = "Face";
+    const KIND_SHELL: &str = "Shell";
+    const KIND_SOLID: &str = "Solid";
+
+    const REL_BOUNDED_BY: &str = "BOUNDED_BY";
+    const REL_CONTAINS: &str = "CONTAINS";
+
+    /// @emoji 🕸️ One `CadGeometry` pane (e.g. `scene.shape_geometry`), exposed as a Jack
+    /// `QueryableGraph` — read-only, matching `construct.md`'s explicit constraint that direct
+    /// graph mutation is unsafe for a B-rep and must go through a validated command layer instead.
+    pub struct CadTopologyGraph<'a> {
+        geometry: &'a CadGeometry,
+    }
+
+    impl<'a> CadTopologyGraph<'a> {
+        pub fn new(geometry: &'a CadGeometry) -> Self {
+            Self { geometry }
+        }
+    }
+
+    impl QueryableGraph for CadTopologyGraph<'_> {
+        fn manifest(&self) -> Option<&mathematical_graph_manifest::GraphManifest> {
+            // No compile-time schema for a dynamically-shaped brep pane — every query resolves
+            // purely against `node_kind`/`node_property`, matching `EmptyGraph`'s precedent in
+            // `mathematical_graph_dsl`'s own idiom-hooks completion path.
+            None
+        }
+
+        fn node_ids(&self) -> Vec<String> {
+            let g = self.geometry;
+            g.vertices.iter().map(|v| v.id.clone())
+                .chain(g.edges.iter().map(|e| e.id.clone()))
+                .chain(g.wires.iter().map(|w| w.id.clone()))
+                .chain(g.faces.iter().map(|f| f.id.clone()))
+                .chain(g.shells.iter().map(|s| s.id.clone()))
+                .chain(g.solids.iter().map(|s| s.id.clone()))
+                .collect()
+        }
+
+        fn node_kind(&self, id: &str) -> Option<String> {
+            let g = self.geometry;
+            if g.vertices.iter().any(|v| v.id == id) {
+                return Some(KIND_VERTEX.to_string());
+            }
+            if g.edges.iter().any(|e| e.id == id) {
+                return Some(KIND_EDGE.to_string());
+            }
+            if g.wires.iter().any(|w| w.id == id) {
+                return Some(KIND_WIRE.to_string());
+            }
+            if g.faces.iter().any(|f| f.id == id) {
+                return Some(KIND_FACE.to_string());
+            }
+            if g.shells.iter().any(|s| s.id == id) {
+                return Some(KIND_SHELL.to_string());
+            }
+            if g.solids.iter().any(|s| s.id == id) {
+                return Some(KIND_SOLID.to_string());
+            }
+            None
+        }
+
+        fn node_name(&self, id: &str) -> Option<String> {
+            // Brep entities have no separate display name distinct from their id.
+            self.node_kind(id).map(|_| id.to_string())
+        }
+
+        fn node_property(&self, id: &str, key: &str) -> Option<PropertyValue> {
+            let g = self.geometry;
+            match key {
+                "position" => g.vertices.iter().find(|v| v.id == id).map(|v| {
+                    PropertyValue::Array(v.position.iter().map(|c| PropertyValue::Number(*c)).collect())
+                }),
+                "curveKind" => g.edges.iter().find(|e| e.id == id).map(|e| PropertyValue::String(e.curve.kind.clone())),
+                "surfaceKind" => g.faces.iter().find(|f| f.id == id).map(|f| PropertyValue::String(f.surface.kind.clone())),
+                "normal" => g.faces.iter().find(|f| f.id == id).map(|f| {
+                    PropertyValue::Array(f.surface.normal.iter().map(|c| PropertyValue::Number(*c)).collect())
+                }),
+                _ => None,
+            }
+        }
+
+        fn edges(&self) -> Vec<QueryableEdge> {
+            let g = self.geometry;
+            let mut out = Vec::new();
+            let mut next_id = 0usize;
+            let mut push = |kind: &str, source_node_id: String, target_node_id: String| {
+                next_id += 1;
+                out.push(QueryableEdge {
+                    id: format!("{kind}-{next_id}"),
+                    kind: kind.to_string(),
+                    source_node_id,
+                    target_node_id,
+                    source_port: None,
+                    target_port: None,
+                    properties: mathematical_graph_manifest::PropertyBag::default(),
+                });
+            };
+            for solid in &g.solids {
+                for shell_id in &solid.shell_ids {
+                    push(REL_BOUNDED_BY, solid.id.clone(), shell_id.clone());
+                }
+            }
+            for shell in &g.shells {
+                for face_id in &shell.face_ids {
+                    push(REL_BOUNDED_BY, shell.id.clone(), face_id.clone());
+                }
+            }
+            for face in &g.faces {
+                for wire_id in &face.wire_ids {
+                    push(REL_BOUNDED_BY, face.id.clone(), wire_id.clone());
+                }
+            }
+            for wire in &g.wires {
+                for edge_id in &wire.edge_ids {
+                    push(REL_CONTAINS, wire.id.clone(), edge_id.clone());
+                }
+            }
+            for edge in &g.edges {
+                for vertex_id in &edge.vertex_ids {
+                    push(REL_CONTAINS, edge.id.clone(), vertex_id.clone());
+                }
+            }
+            out
+        }
+
+        fn subgraph_fixture_json(&self, _node_ids: &BTreeSet<String>, _edge_ids: &BTreeSet<String>) -> Option<String> {
+            // Not needed for querying — this graph is read directly off `CadGeometry`, never
+            // round-tripped through Jack's own fixture JSON format.
+            None
+        }
+    }
+
+    /// @emoji 🔍️ Runs a Jack query against one `CadGeometry` pane and returns its JSON result —
+    /// the single entry point `cad-ui`/an MCP tool calls for topology queries (`saved selections`,
+    /// non-manifold-edge checks, adjacency lookups), reusing `mathematical_graph_dsl::run_query_json`
+    /// unchanged.
+    pub fn run_construct_query(geometry: &CadGeometry, source: &str) -> Result<String, mathematical_graph_dsl::GraphDslError> {
+        let graph = CadTopologyGraph::new(geometry);
+        mathematical_graph_dsl::run_query_json(&graph, source)
+    }
+}
+//#endregion 🔖️Construct

@@ -396,7 +396,7 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// post the repo-wide `store::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax
 /// convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip
 /// straight through the still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack
-/// encoding respectively), same local-bridge shape as `compose`'s `KitSnapshot`. `Operation`/
+/// encoding respectively), same local-bridge shape as `semio_compose_rs`'s `KitSnapshot`. `Operation`/
 /// `OperationDiff` delegate straight through to the `Value` impls above too.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Puzzle2dPlayProjection(pub Value);

@@ -24,7 +24,7 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️product/�
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 mathematical_geometry = { path = "../../../../../../../../../🧰️framework/🔨️module/🧮️math/📐️geometry/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-geometry" }
 infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
-reasoning_mindmap = { path = "../../../../../../../../../✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust", package = "reasoning_mindmap" }
+reasoning_mindmap = { path = "../../../../../../../../../✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust", package = "semio-s-kernel-reasoning-mindmap" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

@@ -2,7 +2,7 @@
 // 💻️ .storybook/stories/framework/hosts/Canvas2dHost.stories.tsx
 // Specs: Host the framework renderer's `Canvas2dHost` with zero WASM engine — its `sessionFactory` builds a
 // `JsonLayersCanvasSession`, a pure-`CanvasRenderingContext2D` implementation of `GraphWasmSession`
-// (`@semio-tech/infinite-cavas-react-renderer`'s generic canvas host), so no `cdylib` session is involved.
+// (`@semio-tech/infinite-canvas-react-renderer`'s generic canvas host), so no `cdylib` session is involved.
 // Summary: `layersJson` drives real drawing (bounds-based node boxes, a dashed "wire" line) with zero fixture
 // setup; wheel-zoom/middle-drag-pan already round-trip for real inside `JsonLayersCanvasSession` itself, so the
 // story-local reducer only needs to fold the debounced `setCamera` dispatch back into `cameraX`/`cameraY`/`zoom`.

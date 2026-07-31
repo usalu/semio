@@ -184,11 +184,11 @@ impl PortUndirectedGraph {
         }
     }
 
-    /// ⭐️ First node is the hub, the rest are leaves connected to it (NetworkX `add_star`).
+    /// ⭐️ First node is the semio_hub, the rest are leaves connected to it (NetworkX `add_star`).
     pub fn add_star(&mut self, nodes: impl IntoIterator<Item = NodeId>) -> Vec<EdgeId> {
         let nodes: Vec<NodeId> = nodes.into_iter().collect();
-        let Some(&hub) = nodes.first() else { return Vec::new() };
-        nodes[1..].iter().map(|&leaf| self.add_edge(hub, leaf)).collect()
+        let Some(&semio_hub) = nodes.first() else { return Vec::new() };
+        nodes[1..].iter().map(|&leaf| self.add_edge(semio_hub, leaf)).collect()
     }
 }
 // #endregion 🔖️EdgeOperations
@@ -719,12 +719,12 @@ mod tests {
         let mut g = PortUndirectedGraph::new();
         assert!(g.add_star(Vec::<NodeId>::new()).is_empty());
 
-        let hub = g.add_node();
+        let semio_hub = g.add_node();
         let leaf1 = g.add_node();
         let leaf2 = g.add_node();
-        let ids = g.add_star([hub, leaf1, leaf2]);
+        let ids = g.add_star([semio_hub, leaf1, leaf2]);
         assert_eq!(ids.len(), 2);
-        assert!(g.has_edge(hub, leaf1) && g.has_edge(hub, leaf2));
+        assert!(g.has_edge(semio_hub, leaf1) && g.has_edge(semio_hub, leaf2));
         assert!(!g.has_edge(leaf1, leaf2));
     }
 

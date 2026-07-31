@@ -13,7 +13,7 @@ pub mod dock {
 
 use semio_framework_core::AppDefinition;
 use std::collections::HashMap;
-use ui_wgpu::{
+use semio_framework_ui_wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_border, push_chrome_group_border,
     push_window_cap_border, even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, GlassTier,
     HitKind, HitTarget, IconAtlas, InputState, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild,
@@ -679,7 +679,7 @@ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
                     .collect(),
             })
         }
-        DockNode::Row(children) => WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode {
+        DockNode::Row(children) => WindowLayoutRoot::Axis(semio_framework_ui_wgpu::WindowLayoutAxisNode {
             kind: "row".into(),
             size: None,
             children: children
@@ -687,7 +687,7 @@ pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {
                 .map(|(child, size)| dock_child_from_node(child, *size))
                 .collect(),
         }),
-        DockNode::Column(children) => WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode {
+        DockNode::Column(children) => WindowLayoutRoot::Axis(semio_framework_ui_wgpu::WindowLayoutAxisNode {
             kind: "column".into(),
             size: None,
             children: children
@@ -715,7 +715,7 @@ fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
                 })
                 .collect(),
         }),
-        DockNode::Row(children) => WindowLayoutChild::Axis(ui_wgpu::WindowLayoutAxisNode {
+        DockNode::Row(children) => WindowLayoutChild::Axis(semio_framework_ui_wgpu::WindowLayoutAxisNode {
             kind: "row".into(),
             size: Some(size as f64),
             children: children
@@ -723,7 +723,7 @@ fn dock_child_from_node(node: &DockNode, size: f32) -> WindowLayoutChild {
                 .map(|(child, child_size)| dock_child_from_node(child, *child_size))
                 .collect(),
         }),
-        DockNode::Column(children) => WindowLayoutChild::Axis(ui_wgpu::WindowLayoutAxisNode {
+        DockNode::Column(children) => WindowLayoutChild::Axis(semio_framework_ui_wgpu::WindowLayoutAxisNode {
             kind: "column".into(),
             size: Some(size as f64),
             children: children
@@ -939,7 +939,7 @@ fn collect_stack_tab_bars(
 }
 
 /// 🪟️ Wgpu-local adapter: builds the balanced fallback layout via
-/// `ui_wgpu::even_window_layout` and converts it to a runtime `DockNode`.
+/// `semio_framework_ui_wgpu::even_window_layout` and converts it to a runtime `DockNode`.
 fn even_layout(window_ids: &[String]) -> DockNode {
     dock_from_window_layout(&even_window_layout(window_ids).root)
 }
@@ -1811,7 +1811,7 @@ fn dock_text(
 #[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
-    use ui_wgpu::{create_default_layout, WindowOptions};
+    use semio_framework_ui_wgpu::{create_default_layout, WindowOptions};
     use crate::shell::ShellState;
     use semio_framework_core::{
         AppDefinition, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition,
@@ -1839,7 +1839,7 @@ mod tests {
                         id: (*id).into(),
                         label: (*id).into(),
                         body_key: format!("{id}.body"),
-                        surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                        surface_kind: semio_framework_ui_wgpu::SurfaceKind::Canvas2d,
                         icon_id: None,
                         options: WindowOptions::default(),
                         actions: vec![],
@@ -2240,7 +2240,7 @@ mod tests {
         // `[1]` to `[0]`. A stale-path reuse would now silently misdirect `active_stack`/
         // `maximized_stack` at `a` instead of following `b` by key.
         let reversed = WindowLayout {
-            root: WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode {
+            root: WindowLayoutRoot::Axis(semio_framework_ui_wgpu::WindowLayoutAxisNode {
                 kind: "row".into(),
                 size: None,
                 children: vec![
@@ -2393,7 +2393,7 @@ mod tests {
     use semio_framework_core::{
         ActionArgDef, ActionDefinition, ActionKind, ActionRef, UtilityDefinition, UtilityRef,
     };
-    use ui_wgpu::{KeyAction, PointerModifiers};
+    use semio_framework_ui_wgpu::{KeyAction, PointerModifiers};
 
     fn mods(meta: bool, ctrl: bool, shift: bool, alt: bool) -> PointerModifiers {
         PointerModifiers { meta, ctrl, shift, alt }
@@ -2543,7 +2543,7 @@ mod tests {
     /// absent from BOTH buckets otherwise — untagged groups always stay in the general Measures rail.
     #[test]
     fn utility_options_partition_gates_tagged_group_by_active_utility() {
-        use ui_wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
+        use semio_framework_ui_wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
         let measures = vec![
             WindowMeasure::Group {
                 id: "brush-params".into(),
@@ -2592,14 +2592,14 @@ pub mod engine_canvas {
 
 use crate::interpreter::FrameworkWidgetContext;
 use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
-use framework_editor::EditorHost;
-use framework_surface_node_graph::GraphHost;
+use semio_framework_editor::EditorHost;
+use semio_framework_os_kernel_surface_node_graph::GraphHost;
 use infinite_cavas as cavas;
-use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+use semio_framework_ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
+use semio_framework_ui_wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
@@ -2642,7 +2642,7 @@ fn flow_fixture_semantic_eq(left: &FlowFixture, right: &FlowFixture) -> bool {
 struct EngineSurface {
     node_graph: Option<NodeGraphEngine>,
     sync_cache: NodeGraphSyncCache,
-    map_host: Option<framework_surface_tiled_map::MapHost>,
+    map_host: Option<semio_framework_os_kernel_surface_tiled_map::MapHost>,
     map_sync_cache: MapSyncCache,
     board_host: Option<puzzle_2d::BoardHost>,
     board_sync_cache: BoardSyncCache,
@@ -2748,7 +2748,7 @@ fn raster_key(surface_id: &str) -> String {
     format!("engine:{surface_id}")
 }
 
-fn is_flow_graph(graph: &ui_wgpu::NodeGraphScene) -> bool {
+fn is_flow_graph(graph: &semio_framework_ui_wgpu::NodeGraphScene) -> bool {
     if graph
         .fixture_json
         .as_ref()
@@ -2780,15 +2780,15 @@ fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value
     }
 }
 
-fn graph_scene_json(graph: &ui_wgpu::NodeGraphScene) -> String {
+fn graph_scene_json(graph: &semio_framework_ui_wgpu::NodeGraphScene) -> String {
     serde_json::to_string(graph).unwrap_or_else(|_| "{}".into())
 }
 
-fn editor_scene_json(editor: &ui_wgpu::TextEditorScene) -> String {
+fn editor_scene_json(editor: &semio_framework_ui_wgpu::TextEditorScene) -> String {
     serde_json::to_string(editor).unwrap_or_else(|_| "{}".into())
 }
 
-fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
+fn sync_flow_host(host: &mut FlowHost, graph: &semio_framework_ui_wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
     if let Some(json) = &graph.operators_json {
         if sync_field(&mut cache.operators_json, json) {
             host.set_neuron_kind_infos_json(json);
@@ -3078,7 +3078,7 @@ pub fn paint_node_graph(
         event: None,
         control_id: Some(format!("{}.pane", scene.surface_id)),
         kind: HitKind::ScrollRegion,
-        drag_axis: Some(ui_wgpu::input::DragAxis::Both),
+        drag_axis: Some(semio_framework_ui_wgpu::input::DragAxis::Both),
         drag_data: None,
     });
 }
@@ -3741,7 +3741,7 @@ fn paint_node_graph_selection_marquee(
         .iter()
         .map(|(x, y)| [inner.x + x, inner.y + y])
         .collect();
-    ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
+    semio_framework_ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
 }
 
 fn paint_node_graph_selection_bounds(
@@ -3827,8 +3827,8 @@ fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
 }
 
 fn sync_map_host(
-    host: &mut framework_surface_tiled_map::MapHost,
-    scene: &ui_wgpu::TiledMapScene,
+    host: &mut semio_framework_os_kernel_surface_tiled_map::MapHost,
+    scene: &semio_framework_ui_wgpu::TiledMapScene,
     cache: &mut MapSyncCache,
     pw: u32,
     ph: u32,
@@ -3876,7 +3876,7 @@ fn sync_map_host(
     }
 }
 
-fn queue_map_tile_fetches(surface_id: &str, scene: &ui_wgpu::TiledMapScene, host: &mut framework_surface_tiled_map::MapHost) {
+fn queue_map_tile_fetches(surface_id: &str, scene: &semio_framework_ui_wgpu::TiledMapScene, host: &mut semio_framework_os_kernel_surface_tiled_map::MapHost) {
     host.prepare_visible_tiles();
     let needs_raster = scene.render_mode == "image" || scene.render_mode == "combined";
     let needs_vector = scene.render_mode == "vector" || scene.render_mode == "combined";
@@ -4006,7 +4006,7 @@ pub fn paint_tiled_map(
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.map_host.is_none() {
-            entry.map_host = Some(framework_surface_tiled_map::MapHost::new());
+            entry.map_host = Some(semio_framework_os_kernel_surface_tiled_map::MapHost::new());
             entry.map_sync_cache = MapSyncCache::default();
         }
         let host = entry.map_host.as_mut().expect("map host");
@@ -4028,12 +4028,12 @@ pub fn paint_tiled_map(
         event: None,
         control_id: Some(format!("{}.map", scene.surface_id)),
         kind: HitKind::ScrollRegion,
-        drag_axis: Some(ui_wgpu::input::DragAxis::Both),
+        drag_axis: Some(semio_framework_ui_wgpu::input::DragAxis::Both),
         drag_data: None,
     });
 }
 
-pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut framework_surface_tiled_map::MapHost) -> R) -> Option<R> {
+pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut semio_framework_os_kernel_surface_tiled_map::MapHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(surface_id)?;
@@ -4042,7 +4042,7 @@ pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut framework_surf
     })
 }
 
-pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&framework_surface_tiled_map::MapHost) -> R) -> Option<R> {
+pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&semio_framework_os_kernel_surface_tiled_map::MapHost) -> R) -> Option<R> {
     ENGINE_SURFACES.with(|cell| {
         let map = cell.borrow();
         let entry = map.get(surface_id)?;
@@ -4159,7 +4159,7 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
 pub fn map_interaction_actions(
     surface_id: &str,
     controller_id: &str,
-    host: &framework_surface_tiled_map::MapHost,
+    host: &semio_framework_os_kernel_surface_tiled_map::MapHost,
 ) -> Vec<ActionDescriptor> {
   let selection = json!({
       "positions": host.selected_positions_json(),
@@ -4173,17 +4173,17 @@ pub fn map_interaction_actions(
   vec![
       map_action(
           controller_id,
-          ui_wgpu::tiled_map_actions::SET_CAMERA,
+          semio_framework_ui_wgpu::tiled_map_actions::SET_CAMERA,
           json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }),
       ),
       map_action(
           controller_id,
-          ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+          semio_framework_ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
           json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] }),
       ),
       map_action(
           controller_id,
-          ui_wgpu::tiled_map_actions::SET_HOVER,
+          semio_framework_ui_wgpu::tiled_map_actions::SET_HOVER,
           json!({ "surfaceId": surface_id, "hover": hover }),
       ),
   ]
@@ -4295,7 +4295,7 @@ fn parse_board_selection_ids(json: &str) -> Vec<String> {
 }
 
 /// @emoji 🔁️ Applies scene fields onto `host`, diffing against `cache` so only changed fields re-sync. Mirrors `applyFixtureToSession` plus the independent per-field effects in the React host: reparsing the fixture resets selection/camera, so both are silently re-applied right after. Skips fixture/selection/camera sync entirely while `host` defers descriptor sync (mid-gesture), matching `pendingFixtureSceneRef`.
-fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &ui_wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
+fn sync_board_host(host: &mut puzzle_2d::BoardHost, scene: &semio_framework_ui_wgpu::Board2dScene, cache: &mut BoardSyncCache, pw: u32, ph: u32, dpr: f64) {
     let size_key = format!("{pw}x{ph}@{dpr}");
     if sync_field(&mut cache.size_key, &size_key) {
         host.set_size(pw, ph, dpr);
@@ -4401,7 +4401,7 @@ pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext
             event: None,
             control_id: Some(format!("{}.board", scene.surface_id)),
             kind: HitKind::ScrollRegion,
-            drag_axis: Some(ui_wgpu::input::DragAxis::Both),
+            drag_axis: Some(semio_framework_ui_wgpu::input::DragAxis::Both),
             drag_data: None,
         });
     }
@@ -4643,8 +4643,8 @@ mod board2d_engine_tests {
 //#region TextEditor
 pub fn text_editor_apply_key(
     scene: &UiComponentSceneNode,
-    key: ui_wgpu::KeyAction,
-    modifiers: &ui_wgpu::PointerModifiers,
+    key: semio_framework_ui_wgpu::KeyAction,
+    modifiers: &semio_framework_ui_wgpu::PointerModifiers,
 ) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -4655,12 +4655,12 @@ pub fn text_editor_apply_key(
             return Vec::new();
         };
         match key {
-            ui_wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+            semio_framework_ui_wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
                 host.insert_text(&ch.to_string());
             }
-            ui_wgpu::KeyAction::Backspace => host.backspace(),
-            ui_wgpu::KeyAction::Delete => host.delete_forward(),
-            ui_wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+            semio_framework_ui_wgpu::KeyAction::Backspace => host.backspace(),
+            semio_framework_ui_wgpu::KeyAction::Delete => host.delete_forward(),
+            semio_framework_ui_wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
                 host.select_all();
             }
             _ => return Vec::new(),
@@ -4920,12 +4920,12 @@ pub fn text_editor_caret_screen(scene: &UiComponentSceneNode, inner: Rect) -> Op
 
 pub mod interpreter {
 // #region interpreter
-//! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
+//! 🧩️ Maps framework UiNode trees to semio_framework_ui_wgpu widget nodes.
 
 use crate::scenes::{queue_canvas_image_upload, decode_canvas_image, render_component_scene, TiledMapSurface, NodeGraphSurface, Board2dSurface};
-use ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use semio_framework_ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
-use ui_wgpu::{
+use semio_framework_ui_wgpu::{
     draw_text, gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect,
     SelectItem, Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
     measure_widget, render_widget,
@@ -5254,7 +5254,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
 }
 //#endregion RenderPlanValidator
 
-pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiNode) -> (f32, f32) {
+pub fn measure_ui_node(atlas: &mut semio_framework_ui_wgpu::FontAtlas, theme: &Theme, node: &UiNode) -> (f32, f32) {
     match node {
         UiNode::ComponentScene(_) => (320.0, 240.0),
         UiNode::Image(_) => (128.0, 128.0),
@@ -5291,7 +5291,7 @@ pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiN
 }
 
 //#region RetainedEngineCutover
-/** 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::engine::Ui`
+/** 🧵️ The wave-3 cutover: `render_ui_node`'s live implementation is now `semio_framework_ui_wgpu::engine::Ui`
  * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
  * One process-wide `Ui` façade (its own internal `HashMap<window_id, UiWindow>` already partitions
  * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, mirroring
@@ -5308,7 +5308,7 @@ pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiN
  * filed as a pure wiring request: without it the crate does not compile, and no identity for the
  * retained per-window bucket can be derived from anything else already flowing into this function.
  *
- * ✅️ RESOLVED (was a KNOWN, CONFIRMED GAP): `ui_wgpu::Ui` no longer owns a private `FontAtlas`/
+ * ✅️ RESOLVED (was a KNOWN, CONFIRMED GAP): `semio_framework_ui_wgpu::Ui` no longer owns a private `FontAtlas`/
  * `Option<IconAtlas>` at all — `set_icons`/the old `atlas`/`icons` fields are gone. `Ui::frame` now
  * takes `atlas: &mut FontAtlas, icons: Option<&IconAtlas>` as parameters, mirroring how
  * `flex::LayoutEngine::compute`/`paint::paint_tree` already receive them internally. `render_ui_node`
@@ -5319,7 +5319,7 @@ pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiN
  * `.repo/🎫️/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
  * for the original gap and the follow-up ticket work that closed it. */
 thread_local! {
-    static UI_ENGINE: std::cell::RefCell<ui_wgpu::Ui> = std::cell::RefCell::new(ui_wgpu::Ui::new());
+    static UI_ENGINE: std::cell::RefCell<semio_framework_ui_wgpu::Ui> = std::cell::RefCell::new(semio_framework_ui_wgpu::Ui::new());
     /// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
     /// detect Down/Up edges from `InputState`'s per-frame aggregate (which only carries *current*
     /// state, not a transition) without needing a `ShellTypes` field either.
@@ -5328,7 +5328,7 @@ thread_local! {
 }
 
 /** 🖇️ Public hook for the sibling `w3-shell-input-cutover` workstream (region `shell::ShellInput`,
- * which this ticket must not touch): routes a fully-formed `ui_wgpu::UiEvent` (built from raw
+ * which this ticket must not touch): routes a fully-formed `semio_framework_ui_wgpu::UiEvent` (built from raw
  * winit input, e.g. real key events/IME/focus-scoped routing this function's own per-frame
  * pointer-only synthesis below deliberately does not attempt) into the same process-wide retained
  * engine `render_ui_node` itself drives, and forwards any resulting `UiCommand::App` action into the
@@ -5338,17 +5338,17 @@ thread_local! {
  * concern, not this function's). */
 pub fn dispatch_ui_event(
     window_id: &str,
-    event: ui_wgpu::UiEvent,
-    input: &mut ui_wgpu::InputState<ActionDescriptor>,
-) -> Vec<ui_wgpu::UiCommand> {
+    event: semio_framework_ui_wgpu::UiEvent,
+    input: &mut semio_framework_ui_wgpu::InputState<ActionDescriptor>,
+) -> Vec<semio_framework_ui_wgpu::UiCommand> {
     let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, event));
     apply_ui_commands(&commands, input);
     commands
 }
 
-fn apply_ui_commands(commands: &[ui_wgpu::UiCommand], input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+fn apply_ui_commands(commands: &[semio_framework_ui_wgpu::UiCommand], input: &mut semio_framework_ui_wgpu::InputState<ActionDescriptor>) {
     for command in commands {
-        if let ui_wgpu::UiCommand::App { action, .. } = command {
+        if let semio_framework_ui_wgpu::UiCommand::App { action, .. } = command {
             input.queue_event(action.clone());
         }
         // 🚧️ FocusChanged/OverlayClosed/DropCommitted/DropCancelled/Clipboard* are host/EventRouter
@@ -5363,11 +5363,11 @@ fn apply_ui_commands(commands: &[ui_wgpu::UiCommand], input: &mut ui_wgpu::Input
 /// as a boolean and ignore which button), so this assumes the common `0 = primary` convention; the
 /// `w3-shell-input-cutover` workstream owns the real winit `MouseButton` mapping and should correct
 /// this if its own convention differs.
-fn pointer_button_from_code(code: i16) -> ui_wgpu::PointerButton {
+fn pointer_button_from_code(code: i16) -> semio_framework_ui_wgpu::PointerButton {
     match code {
-        1 => ui_wgpu::PointerButton::Secondary,
-        2 => ui_wgpu::PointerButton::Middle,
-        _ => ui_wgpu::PointerButton::Primary,
+        1 => semio_framework_ui_wgpu::PointerButton::Secondary,
+        2 => semio_framework_ui_wgpu::PointerButton::Middle,
+        _ => semio_framework_ui_wgpu::PointerButton::Primary,
     }
 }
 
@@ -5381,11 +5381,11 @@ fn pointer_button_from_code(code: i16) -> ui_wgpu::PointerButton {
  * currently has keyboard focus" bookkeeping this ticket's `must_not_touch` `shell` regions own. Use
  * `dispatch_ui_event` (above) for that once `w3-shell-input-cutover` lands it. */
 fn dispatch_pointer_events(
-    engine: &mut ui_wgpu::Ui,
+    engine: &mut semio_framework_ui_wgpu::Ui,
     window_id: &str,
     bounds: Rect,
-    input: &ui_wgpu::InputState<ActionDescriptor>,
-) -> Vec<ui_wgpu::UiCommand> {
+    input: &semio_framework_ui_wgpu::InputState<ActionDescriptor>,
+) -> Vec<semio_framework_ui_wgpu::UiCommand> {
     let local_x = input.pointer_x - bounds.x;
     let local_y = input.pointer_y - bounds.y;
     let inside = local_x >= 0.0 && local_y >= 0.0 && local_x <= bounds.w && local_y <= bounds.h;
@@ -5393,18 +5393,18 @@ fn dispatch_pointer_events(
     let was_down = POINTER_EDGE_STATE.with(|cell| cell.borrow().get(window_id).map(|(down, _)| *down).unwrap_or(false));
     let mut commands = Vec::new();
     if inside {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerMove { x: local_x, y: local_y }));
+        commands.extend(engine.dispatch_event(window_id, semio_framework_ui_wgpu::UiEvent::PointerMove { x: local_x, y: local_y }));
         if input.wheel_delta != 0.0 {
             commands.extend(engine.dispatch_event(
                 window_id,
-                ui_wgpu::UiEvent::Scroll { x: local_x, y: local_y, delta_x: 0.0, delta_y: input.wheel_delta },
+                semio_framework_ui_wgpu::UiEvent::Scroll { x: local_x, y: local_y, delta_x: 0.0, delta_y: input.wheel_delta },
             ));
         }
     }
     if input.pointer_down && !was_down && inside {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerDown { x: local_x, y: local_y, button }));
+        commands.extend(engine.dispatch_event(window_id, semio_framework_ui_wgpu::UiEvent::PointerDown { x: local_x, y: local_y, button }));
     } else if !input.pointer_down && was_down {
-        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerUp { x: local_x, y: local_y, button }));
+        commands.extend(engine.dispatch_event(window_id, semio_framework_ui_wgpu::UiEvent::PointerUp { x: local_x, y: local_y, button }));
     }
     POINTER_EDGE_STATE.with(|cell| {
         cell.borrow_mut().insert(window_id.to_string(), (input.pointer_down, input.pointer_button));
@@ -5412,22 +5412,22 @@ fn dispatch_pointer_events(
     commands
 }
 
-fn shift_instance(instance: &ui_wgpu::draw::UiInstance, dx: f32, dy: f32) -> ui_wgpu::draw::UiInstance {
+fn shift_instance(instance: &semio_framework_ui_wgpu::draw::UiInstance, dx: f32, dy: f32) -> semio_framework_ui_wgpu::draw::UiInstance {
     let mut shifted = *instance;
     shifted.rect[0] += dx;
     shifted.rect[1] += dy;
     shifted
 }
 
-fn shift_vertex(vertex: &ui_wgpu::draw::VectorVertex, dx: f32, dy: f32) -> ui_wgpu::draw::VectorVertex {
+fn shift_vertex(vertex: &semio_framework_ui_wgpu::draw::VectorVertex, dx: f32, dy: f32) -> semio_framework_ui_wgpu::draw::VectorVertex {
     let mut shifted = *vertex;
     shifted.position[0] += dx;
     shifted.position[1] += dy;
     shifted
 }
 
-fn shift_scissor(scissor: ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wgpu::draw::ScissorRect {
-    ui_wgpu::draw::ScissorRect {
+fn shift_scissor(scissor: semio_framework_ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> semio_framework_ui_wgpu::draw::ScissorRect {
+    semio_framework_ui_wgpu::draw::ScissorRect {
         x: ((scissor.x as f32) + dx).max(0.0) as u32,
         y: ((scissor.y as f32) + dy).max(0.0) as u32,
         w: scissor.w,
@@ -5447,7 +5447,7 @@ fn shift_scissor(scissor: ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wg
  * push (today's `paint::paint_component_scene` placeholder — no `SceneHost` is registered, see the
  * `ComponentScene`/`Image` shadow-paint note below — doesn't populate `scene_passes`, so this is
  * presently a no-op copy of an empty `Vec`, kept for correctness rather than left a silent gap). */
-fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wgpu::DrawList, offset_x: f32, offset_y: f32) {
+fn composite_retained_draw_list(target: &mut semio_framework_ui_wgpu::DrawList, retained: &semio_framework_ui_wgpu::DrawList, offset_x: f32, offset_y: f32) {
     let glass_base = target.glass_regions.len();
     for region in &retained.glass_regions {
         let mut shifted = *region;
@@ -5457,7 +5457,7 @@ fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wg
     }
     let layer_base = target.layers.len();
     for layer in &retained.layers {
-        target.layers.push(ui_wgpu::draw::DrawLayer {
+        target.layers.push(semio_framework_ui_wgpu::draw::DrawLayer {
             scissor: layer.scissor.map(|s| shift_scissor(s, offset_x, offset_y)),
             foreground_of: layer.foreground_of.map(|idx| idx + glass_base),
             ui_instances: layer.ui_instances.iter().map(|inst| shift_instance(inst, offset_x, offset_y)).collect(),
@@ -5500,7 +5500,7 @@ fn paint_unbridged_scene_and_image_leaves(
     node: &UiNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
@@ -5566,7 +5566,7 @@ fn paint_unbridged_scene_and_image_leaves(
 }
 
 /** 🔁️ The live cutover entry point (was `ui_node_to_widget`+`render_widget`, now
- * `ui_wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
+ * `semio_framework_ui_wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
  * bucket this call's `node`/`bounds` belong to — see `RetainedEngineCutover`'s doc comment for why
  * this had to become a new parameter and which two call sites outside `interpreter` were touched. */
 pub fn render_ui_node(
@@ -5574,7 +5574,7 @@ pub fn render_ui_node(
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     window_id: &str,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
@@ -5610,7 +5610,7 @@ fn render_ui_node_inner(
     node: &UiNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
@@ -5920,7 +5920,7 @@ fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect {
 }
 //#endregion UiImageLoading
 
-fn render_ui_image(image: &ui_wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+fn render_ui_image(image: &semio_framework_ui_wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let (key, natural_size) = resolve_ui_image(&image.id, image.src.trim());
     let Some(key) = key else {
         if let Some(alt) = &image.alt {
@@ -6014,7 +6014,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             classifier_kind: icon.classifier_kind.clone(),
             on_change: Some(icon.on_change.clone()),
         },
-        UiNode::Field(field) => match ui_wgpu::ui_node_to_control(&field.child) {
+        UiNode::Field(field) => match semio_framework_ui_wgpu::ui_node_to_control(&field.child) {
             Some(control) => WidgetNode::Field {
                 id: field.id.clone(),
                 label: field.label.clone(),
@@ -6245,11 +6245,11 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescripto
 }
 
 pub fn framework_widget_context<'a>(
-    draw: &'a mut ui_wgpu::DrawList,
-    overlay: Option<&'a mut ui_wgpu::DrawList>,
-    atlas: &'a mut ui_wgpu::FontAtlas,
-    icons: Option<&'a ui_wgpu::IconAtlas>,
-    input: &'a mut ui_wgpu::InputState<ActionDescriptor>,
+    draw: &'a mut semio_framework_ui_wgpu::DrawList,
+    overlay: Option<&'a mut semio_framework_ui_wgpu::DrawList>,
+    atlas: &'a mut semio_framework_ui_wgpu::FontAtlas,
+    icons: Option<&'a semio_framework_ui_wgpu::IconAtlas>,
+    input: &'a mut semio_framework_ui_wgpu::InputState<ActionDescriptor>,
     theme: &'a Theme,
     scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
@@ -6275,7 +6275,7 @@ pub fn framework_widget_context<'a>(
 #[cfg(test)]
 mod render_plan_validator_tests {
     use super::*;
-    use ui_wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
+    use semio_framework_ui_wgpu::{build_table_scene, build_world_3d_scene, TableScene, UiStackNode, World3dScene};
 
     #[test]
     fn validate_ui_node_rejects_oversized_json_payload() {
@@ -6458,7 +6458,7 @@ pub mod plugin_bridge {
 //! 🔌️ Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
 use semio_framework_core::{PluginManifest, ViewState};
-use ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
+use semio_framework_ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -6713,8 +6713,8 @@ async fn handle_action_js(
             return Ok(parsed);
         }
         if let Ok(ops) = serde_json::from_str::<Vec<String>>(&text) {
-            let descriptor: ui_wgpu::ActionDescriptor =
-                serde_json::from_str(action_json).unwrap_or(ui_wgpu::ActionDescriptor {
+            let descriptor: semio_framework_ui_wgpu::ActionDescriptor =
+                serde_json::from_str(action_json).unwrap_or(semio_framework_ui_wgpu::ActionDescriptor {
                     controller_id: String::new(),
                     action: String::new(),
                     args: None,
@@ -6942,13 +6942,13 @@ use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDE
 use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem, ShellState};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
-use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+use semio_framework_ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::input::{DragAxis, KeyAction};
-use ui_wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
+use semio_framework_ui_wgpu::input::{DragAxis, KeyAction};
+use semio_framework_ui_wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
 
 //#region SceneRuntime
 #[derive(Clone, Copy, Debug, Default)]
@@ -7796,7 +7796,7 @@ pub fn render_component_scene(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     world3d_states: &mut HashMap<String, World3dState>,
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut HashMap<String, TiledMapSurface>,
@@ -7939,7 +7939,7 @@ mod render_entry_tests {
 
     fn ink_scene(surface_id: &str) -> UiComponentSceneNode {
         let mut scene = test_scene(surface_id, SurfaceKind::InkCanvas);
-        scene.ink_canvas = Some(ui_wgpu::InkCanvasScene {
+        scene.ink_canvas = Some(semio_framework_ui_wgpu::InkCanvasScene {
             document_json: "{}".into(),
             selection_json: "[]".into(),
             hovered_id: None,
@@ -7954,10 +7954,10 @@ mod render_entry_tests {
     /// `render_ui_node`'s own tests build one (see `interpreter::framework_widget_context`), so
     /// `apply_scene_wheel`/`apply_scene_pointer` can be exercised without a real GPU.
     struct Fixture {
-        draw: ui_wgpu::DrawList,
-        atlas: ui_wgpu::FontAtlas,
+        draw: semio_framework_ui_wgpu::DrawList,
+        atlas: semio_framework_ui_wgpu::FontAtlas,
         theme: Theme,
-        input: ui_wgpu::InputState<ActionDescriptor>,
+        input: semio_framework_ui_wgpu::InputState<ActionDescriptor>,
         scroll_offsets: HashMap<String, f32>,
         collapsed_sections: HashMap<String, bool>,
         open_selects: HashMap<String, bool>,
@@ -7966,10 +7966,10 @@ mod render_entry_tests {
     impl Fixture {
         fn new() -> Self {
             Self {
-                draw: ui_wgpu::DrawList::default(),
-                atlas: ui_wgpu::FontAtlas::builtin(),
+                draw: semio_framework_ui_wgpu::DrawList::default(),
+                atlas: semio_framework_ui_wgpu::FontAtlas::builtin(),
                 theme: Theme::default(),
-                input: ui_wgpu::InputState::<ActionDescriptor>::default(),
+                input: semio_framework_ui_wgpu::InputState::<ActionDescriptor>::default(),
                 scroll_offsets: HashMap::new(),
                 collapsed_sections: HashMap::new(),
                 open_selects: HashMap::new(),
@@ -8356,7 +8356,7 @@ fn render_paint_2d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
 ) {
     let theme = ctx.theme;
     let Some(paint_2d) = &scene.paint_2d else {
@@ -8443,7 +8443,7 @@ struct TableSortJson {
     direction: String,
 }
 
-/// 🧾️ Mirrors `ui_wgpu::TableCell` — a typed table cell value parsed out of a row's raw JSON.
+/// 🧾️ Mirrors `semio_framework_ui_wgpu::TableCell` — a typed table cell value parsed out of a row's raw JSON.
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum TableCellPayload {
@@ -8701,7 +8701,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
 #[cfg(test)]
 mod table_tests {
     use super::*;
-    use ui_wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
+    use semio_framework_ui_wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
 
     fn table_scene(surface_id: &str, table: TableScene) -> UiComponentSceneNode {
         UiComponentSceneNode {
@@ -8856,7 +8856,7 @@ struct BlockListStepJson {
     blocks: Vec<BlockListBlockJson>,
 }
 
-/// 🧩️ Mirrors `ui_wgpu::BlockPaletteEntry`'s wire format (`{blockKind, label, iconId}`).
+/// 🧩️ Mirrors `semio_framework_ui_wgpu::BlockPaletteEntry`'s wire format (`{blockKind, label, iconId}`).
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct BlockListPaletteEntryJson {
@@ -9091,7 +9091,7 @@ fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 #[cfg(test)]
 mod block_list_tests {
     use super::*;
-    use ui_wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
+    use semio_framework_ui_wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
 
     fn block_list_scene(surface_id: &str, block_list: BlockListScene) -> UiComponentSceneNode {
         UiComponentSceneNode {
@@ -9744,10 +9744,10 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
  * continuously-rendering surface (paint-2d) was pushing up to `(extent/cell)^2` solid quads every
  * single frame regardless of zoom/pan, which starves headless WebGPU frame pacing. */
 fn draw_checkerboard(
-    draw: &mut ui_wgpu::DrawList,
+    draw: &mut semio_framework_ui_wgpu::DrawList,
     viewport: &Viewport,
     inner: Rect,
-    theme: &ui_wgpu::Theme,
+    theme: &semio_framework_ui_wgpu::Theme,
     extent: f32,
 ) {
     let cell = 16.0;
@@ -9786,7 +9786,7 @@ fn draw_checkerboard(
 }
 
 fn draw_dashed_line(
-    draw: &mut ui_wgpu::DrawList,
+    draw: &mut semio_framework_ui_wgpu::DrawList,
     x0: f32,
     y0: f32,
     x1: f32,
@@ -9960,7 +9960,7 @@ fn canvas_set_sat(c: [f32; 3], s: f32) -> [f32; 3] {
 /** 🎨️ Approximates the React `Canvas2dScene`'s 16 CSS blend modes (`BLEND_MODE_TO_COMPOSITE` in
  * `canvas-2d-host.tsx`) by pre-blending the resolved fill/stroke color against `backdrop` — a
  * stand-in for true per-pixel GPU compositing, which would require a `wgpu::BlendState` change per
- * draw call in the shared `ui_wgpu` pipeline (out of scope for this ticket's Canvas2d/Paint2d
+ * draw call in the shared `semio_framework_ui_wgpu` pipeline (out of scope for this ticket's Canvas2d/Paint2d
  * regions; see ticket 26/07/11/WGPU-RENDERER-FULL-PARITY). The four non-separable modes
  * (hue/saturation/color/luminosity) follow the W3C SetLum/SetSat algorithm exactly. */
 fn canvas_apply_blend_mode(mode: Option<&str>, backdrop: Rgba, source: Rgba) -> Rgba {
@@ -9998,7 +9998,7 @@ fn canvas_circle_points(cx: f32, cy: f32, radius: f32, segments: usize) -> Vec<[
         .collect()
 }
 
-fn push_shape_fill(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
+fn push_shape_fill(draw: &mut semio_framework_ui_wgpu::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
         let cy = rect.y + rect.h * 0.5;
@@ -10009,7 +10009,7 @@ fn push_shape_fill(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, is_cir
     }
 }
 
-fn push_circle_outline(draw: &mut ui_wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
+fn push_circle_outline(draw: &mut semio_framework_ui_wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
     let points = canvas_circle_points(cx, cy, radius.max(0.5), CANVAS_CIRCLE_SEGMENTS);
     for i in 0..points.len() {
         let a = points[i];
@@ -10018,7 +10018,7 @@ fn push_circle_outline(draw: &mut ui_wgpu::DrawList, cx: f32, cy: f32, radius: f
     }
 }
 
-fn push_shape_outline(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
+fn push_shape_outline(draw: &mut semio_framework_ui_wgpu::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
     if is_circle {
         let cx = rect.x + rect.w * 0.5;
         let cy = rect.y + rect.h * 0.5;
@@ -10037,10 +10037,10 @@ fn push_shape_outline(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, wid
 }
 
 /** 🌈️ Bands a linear gradient across `clip` (scissor-bounded to the shape's screen bbox) as
- * `CANVAS_GRADIENT_BANDS` solid quads perpendicular to the `(x1,y1)-(x2,y2)` axis — `ui_wgpu::
+ * `CANVAS_GRADIENT_BANDS` solid quads perpendicular to the `(x1,y1)-(x2,y2)` axis — `semio_framework_ui_wgpu::
  * DrawList` has no per-vertex gradient primitive, see `canvas_apply_blend_mode` doc comment. */
 fn push_linear_gradient_fill(
-    draw: &mut ui_wgpu::DrawList,
+    draw: &mut semio_framework_ui_wgpu::DrawList,
     viewport: &Viewport,
     inner: Rect,
     clip: Rect,
@@ -10092,7 +10092,7 @@ fn push_linear_gradient_fill(
 /** 🌈️ Bands a radial gradient as `CANVAS_GRADIENT_BANDS` concentric circles painted outer-to-inner
  * (painter's algorithm — smaller/later circles overpaint the center), scissor-bounded to `clip`. */
 fn push_radial_gradient_fill(
-    draw: &mut ui_wgpu::DrawList,
+    draw: &mut semio_framework_ui_wgpu::DrawList,
     viewport: &Viewport,
     inner: Rect,
     clip: Rect,
@@ -10119,7 +10119,7 @@ fn push_radial_gradient_fill(
 /** 🖌️ Resolves and draws a Canvas2dScene draw record's `fill` (solid / linear / radial gradient) and
  * `stroke`, matching `drawSceneNode`'s fill/stroke resolution in `canvas-2d-host.tsx`. */
 fn render_canvas_shape_fill(
-    draw: &mut ui_wgpu::DrawList,
+    draw: &mut semio_framework_ui_wgpu::DrawList,
     viewport: &Viewport,
     inner: Rect,
     shape_rect: Rect,
@@ -11148,14 +11148,14 @@ fn ink_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f
 //#endregion InkCanvasState
 
 //#region InkCanvasRender
-fn draw_ink_rect_outline(draw: &mut ui_wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
+fn draw_ink_rect_outline(draw: &mut semio_framework_ui_wgpu::DrawList, x: f32, y: f32, w: f32, h: f32, color: Rgba, width: f32) {
     draw.push_line(x, y, x + w, y, color, width);
     draw.push_line(x + w, y, x + w, y + h, color, width);
     draw.push_line(x + w, y + h, x, y + h, color, width);
     draw.push_line(x, y + h, x, y, color, width);
 }
 
-fn draw_ink_grid(draw: &mut ui_wgpu::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
+fn draw_ink_grid(draw: &mut semio_framework_ui_wgpu::DrawList, camera: InkCameraF, inner: Rect, theme: &Theme, spacing: f64, subdivisions: u32, opacity: f64) {
     let major_px = (spacing * camera.zoom) as f32;
     if major_px < 2.0 {
         return;
@@ -11326,7 +11326,7 @@ fn draw_ink_item(
     draw_ink_rect_outline(ctx.draw, sx, sy, w.max(4.0), h.max(4.0), border, border_w);
 }
 
-fn draw_ink_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camera: InkCameraF, inner: Rect, bounds: InkBoundsF, show_handles: bool) {
+fn draw_ink_selection_chrome(draw: &mut semio_framework_ui_wgpu::DrawList, theme: &Theme, camera: InkCameraF, inner: Rect, bounds: InkBoundsF, show_handles: bool) {
     let (sx, sy) = ink_world_to_screen(camera, inner, bounds.x, bounds.y);
     let w = (bounds.w * camera.zoom) as f32;
     let h = (bounds.h * camera.zoom) as f32;
@@ -11342,7 +11342,7 @@ fn draw_ink_selection_chrome(draw: &mut ui_wgpu::DrawList, theme: &Theme, camera
     }
 }
 
-fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::GpuContext) {
+fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut semio_framework_ui_wgpu::GpuContext) {
     let _ = gpu;
     let theme = ctx.theme;
     let Some(ink) = &scene.ink_canvas else {
@@ -11387,7 +11387,7 @@ fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 
     if state.ink_marquee_points.len() >= 2 {
         let points: Vec<[f32; 2]> = state.ink_marquee_points.iter().map(|p| [p.0, p.1]).collect();
-        ui_wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
+        semio_framework_ui_wgpu::paint_selection_marquee(ctx.draw, theme, false, false, &points, false);
     }
 
     ctx.draw.pop_scissor();
@@ -11408,7 +11408,7 @@ fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 mod raster_frame_cost_tests {
     use super::*;
 
-    fn count_solids(draw: &ui_wgpu::DrawList) -> usize {
+    fn count_solids(draw: &semio_framework_ui_wgpu::DrawList) -> usize {
         draw.layers.iter().map(|layer| layer.ui_instances.len()).sum()
     }
 
@@ -11450,7 +11450,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn draw_checkerboard_clamps_to_visible_viewport() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = semio_framework_ui_wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let theme = Theme::default();
@@ -11462,7 +11462,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn draw_checkerboard_falls_back_to_full_extent_when_zoom_is_zero() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = semio_framework_ui_wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 0.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let theme = Theme::default();
@@ -11525,7 +11525,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn push_linear_gradient_fill_emits_banded_triangle_fan_geometry() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = semio_framework_ui_wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let clip = Rect::new(50.0, 50.0, 100.0, 40.0);
@@ -11548,7 +11548,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn push_radial_gradient_fill_emits_concentric_ring_geometry() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = semio_framework_ui_wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let clip = Rect::new(0.0, 0.0, 80.0, 80.0);
@@ -11570,7 +11570,7 @@ mod raster_frame_cost_tests {
 
     #[test]
     fn render_canvas_shape_fill_draws_solid_fill_and_stroke_for_plain_records() {
-        let mut draw = ui_wgpu::DrawList::default();
+        let mut draw = semio_framework_ui_wgpu::DrawList::default();
         let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
         let shape_rect = Rect::new(10.0, 10.0, 40.0, 20.0);
@@ -11734,7 +11734,7 @@ struct GraphContextMenuItem {
     args: Option<Value>,
 }
 
-fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &ui_wgpu::NodeGraphScene) {
+fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &semio_framework_ui_wgpu::NodeGraphScene) {
     let Some(raw) = graph.context_menu_json.as_deref() else {
         return;
     };
@@ -11881,7 +11881,7 @@ fn render_node_graph(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
 ) {
     let Some(graph) = &scene.node_graph else {
@@ -11937,7 +11937,7 @@ pub struct TiledMapSurface {
 }
 
 fn query_map_feature_hits(
-    host: &framework_surface_tiled_map::MapHost,
+    host: &semio_framework_os_kernel_surface_tiled_map::MapHost,
     method: &str,
     points: &[(f32, f32)],
     crossing: bool,
@@ -11992,8 +11992,8 @@ fn paint_tiled_map_marquee(
         .iter()
         .map(|(x, y)| [inner.x + x, inner.y + y])
         .collect();
-    let crossing = ui_wgpu::marquee_is_crossing_from_path(&global, lasso);
-    ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, false);
+    let crossing = semio_framework_ui_wgpu::marquee_is_crossing_from_path(&global, lasso);
+    semio_framework_ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, false);
 }
 
 /** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
@@ -12027,7 +12027,7 @@ pub fn push_tiled_map_context_menu(
             label: "Select".into(),
             action: Some(engine_canvas::map_action(
                 controller_id,
-                ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+                semio_framework_ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                 json!({
                     "surfaceId": surface_id,
                     "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -12042,7 +12042,7 @@ pub fn push_tiled_map_context_menu(
                 label: "Deselect".into(),
                 action: Some(engine_canvas::map_action(
                     controller_id,
-                    ui_wgpu::tiled_map_actions::DESELECT,
+                    semio_framework_ui_wgpu::tiled_map_actions::DESELECT,
                     json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
                 )),
             });
@@ -12052,7 +12052,7 @@ pub fn push_tiled_map_context_menu(
             label: "Focus / zoom to".into(),
             action: Some(engine_canvas::map_action(
                 controller_id,
-                ui_wgpu::tiled_map_actions::FOCUS_FEATURE,
+                semio_framework_ui_wgpu::tiled_map_actions::FOCUS_FEATURE,
                 json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
             )),
         });
@@ -12071,7 +12071,7 @@ pub fn push_tiled_map_context_menu(
                     label: "Open source".into(),
                     action: Some(engine_canvas::map_action(
                         controller_id,
-                        ui_wgpu::tiled_map_actions::OPEN_SOURCE,
+                        semio_framework_ui_wgpu::tiled_map_actions::OPEN_SOURCE,
                         json!({ "surfaceId": surface_id, "featureId": id }),
                     )),
                 });
@@ -12084,7 +12084,7 @@ pub fn push_tiled_map_context_menu(
         label: "Select all".into(),
         action: Some(engine_canvas::map_action(
             controller_id,
-            ui_wgpu::tiled_map_actions::SELECT_ALL,
+            semio_framework_ui_wgpu::tiled_map_actions::SELECT_ALL,
             json!({ "surfaceId": surface_id }),
         )),
     });
@@ -12098,7 +12098,7 @@ pub fn push_tiled_map_context_menu(
         action: if has_selection {
             Some(engine_canvas::map_action(
                 controller_id,
-                ui_wgpu::tiled_map_actions::CLEAR_SELECTION,
+                semio_framework_ui_wgpu::tiled_map_actions::CLEAR_SELECTION,
                 json!({ "surfaceId": surface_id }),
             ))
         } else {
@@ -12110,7 +12110,7 @@ pub fn push_tiled_map_context_menu(
         label: "Fit world".into(),
         action: Some(engine_canvas::map_action(
             controller_id,
-            ui_wgpu::tiled_map_actions::FIT_WORLD,
+            semio_framework_ui_wgpu::tiled_map_actions::FIT_WORLD,
             json!({ "surfaceId": surface_id }),
         )),
     });
@@ -12227,7 +12227,7 @@ pub fn tiled_map_pointer_move(
     });
     vec![engine_canvas::map_action(
         controller_id,
-        ui_wgpu::tiled_map_actions::SET_HOVER,
+        semio_framework_ui_wgpu::tiled_map_actions::SET_HOVER,
         json!({ "surfaceId": surface_id, "hover": hover }),
     )]
 }
@@ -12277,7 +12277,7 @@ pub fn tiled_map_pointer_up(
                 .unwrap_or_default();
                 actions.push(engine_canvas::map_action(
                     controller_id,
-                    ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+                    semio_framework_ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                     json!({
                         "surfaceId": surface_id,
                         "positions": positions,
@@ -12298,7 +12298,7 @@ pub fn tiled_map_pointer_up(
                 if let (Some(kind), Some(id)) = (kind, id) {
                     actions.push(engine_canvas::map_action(
                         controller_id,
-                        ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
+                        semio_framework_ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
                         json!({
                             "surfaceId": surface_id,
                             "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
@@ -12330,7 +12330,7 @@ fn render_tiled_map(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     tiled_map_states: &mut HashMap<String, TiledMapSurface>,
 ) {
     let Some(map_scene) = &scene.tiled_map else {
@@ -12490,7 +12490,7 @@ fn render_icon_render(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     icon_render_states: &mut HashMap<String, World3dState>,
 ) {
     let Some(icon_render) = &scene.icon_render else {
@@ -12527,7 +12527,7 @@ fn render_icon_render(
         icon_render_camera_json(&request.camera),
         semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
         instances_json,
-        ui_wgpu::world3d_default_selection_json(),
+        semio_framework_ui_wgpu::world3d_default_selection_json(),
         &semio_framework_plugin::WorldSunConfig::default(),
     );
     synthetic_world.environment_json = Some(icon_render_environment_json(&request));
@@ -12604,7 +12604,7 @@ fn render_board2d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
     board2d_states: &mut HashMap<String, Board2dSurface>,
 ) {
     let Some(board_scene) = &scene.board2d else {
@@ -13219,7 +13219,7 @@ fn store_text_editor_ui_state(surface_id: &str, state: TextEditorUiState) {
     });
 }
 
-fn text_editor_completions(editor: &ui_wgpu::TextEditorScene) -> Vec<TextEditorCompletionItem> {
+fn text_editor_completions(editor: &semio_framework_ui_wgpu::TextEditorScene) -> Vec<TextEditorCompletionItem> {
     editor
         .completions_json
         .as_deref()
@@ -13227,7 +13227,7 @@ fn text_editor_completions(editor: &ui_wgpu::TextEditorScene) -> Vec<TextEditorC
         .unwrap_or_default()
 }
 
-fn text_editor_rename_info(editor: &ui_wgpu::TextEditorScene) -> Option<TextEditorRenameInfo> {
+fn text_editor_rename_info(editor: &semio_framework_ui_wgpu::TextEditorScene) -> Option<TextEditorRenameInfo> {
     editor.rename_json.as_deref().and_then(|json| serde_json::from_str(json).ok())
 }
 
@@ -13258,11 +13258,11 @@ fn text_editor_line_range(buffer: &str, cursor: usize) -> (usize, usize) {
 }
 
 /// 🧭️ Right-click menu rows, mirroring `buildTextEditorContextMenuItems` (`text-editor-host.tsx`) minus
-/// clipboard (no OS clipboard binding exists anywhere in this crate yet — see `ui_wgpu::events`'
+/// clipboard (no OS clipboard binding exists anywhere in this crate yet — see `semio_framework_ui_wgpu::events`'
 /// `UiCommand::ClipboardCopy/Cut/PasteRequested`, which even there says the OS read/write is a
 /// "host-region concern" still unwired) and the domain-specific "pick target" rows (those need a new
 /// `EditorHost::pick_targets_at_screen_json` wrapper; deferred, noted in the ticket report).
-fn text_editor_context_menu_items(editor: &ui_wgpu::TextEditorScene) -> Vec<TextEditorMenuItem> {
+fn text_editor_context_menu_items(editor: &semio_framework_ui_wgpu::TextEditorScene) -> Vec<TextEditorMenuItem> {
     let mut items = Vec::new();
     if !text_editor_completions(editor).is_empty() {
         items.push(TextEditorMenuItem { id: "suggest", label: "Suggest Completions" });
@@ -13283,7 +13283,7 @@ fn text_editor_context_menu_items(editor: &ui_wgpu::TextEditorScene) -> Vec<Text
 /// Ctrl/Cmd+A path instead of adding a sixth wrapper.
 fn text_editor_run_menu_action(
     scene: &UiComponentSceneNode,
-    editor: &ui_wgpu::TextEditorScene,
+    editor: &semio_framework_ui_wgpu::TextEditorScene,
     inner: Rect,
     menu: &TextEditorContextMenu,
     action_id: &str,
@@ -13308,7 +13308,7 @@ fn text_editor_run_menu_action(
             }
         }
         "select-all" => {
-            let modifiers = ui_wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+            let modifiers = semio_framework_ui_wgpu::PointerModifiers { ctrl: true, ..Default::default() };
             for action in engine_canvas::text_editor_apply_key(scene, KeyAction::Char("a".to_string()), &modifiers) {
                 ctx.input.queue_event(action);
             }
@@ -13364,8 +13364,8 @@ fn text_editor_menu_hit(menu: &TextEditorContextMenu, theme: &Theme, x: f32, y: 
     (0..menu.items.len()).find(|&index| text_editor_menu_row_rect(menu, theme, index).contains(x, y))
 }
 
-/// 🍿️ Local fallback popup: `ui_wgpu::events::{OverlayKind, open_overlay}` (the w1d-events-overlay
-/// workstream) is `pub(crate)` inside `ui_wgpu` — not reachable from this crate yet ("None of the new
+/// 🍿️ Local fallback popup: `semio_framework_ui_wgpu::events::{OverlayKind, open_overlay}` (the w1d-events-overlay
+/// workstream) is `pub(crate)` inside `semio_framework_ui_wgpu` — not reachable from this crate yet ("None of the new
 /// `EventRouter` API or new public types are called/re-exported from `engine`/crate-root yet", per that
 /// workstream's own report) — so this draws directly via `ctx.draw`, same convention as row-list surfaces
 /// elsewhere in this module (`render_vfs`'s `theme.selected`/`theme.row_hover` rows). Known limitation:
@@ -13465,7 +13465,7 @@ fn render_text_editor(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
+    gpu: &mut semio_framework_ui_wgpu::GpuContext,
 ) {
     let Some(editor) = &scene.text_editor else {
         return render_placeholder("text-editor", bounds, ctx);
@@ -13724,8 +13724,8 @@ mod text_editor_tests {
         buffer: &str,
         completions_json: Option<&str>,
         rename_json: Option<&str>,
-    ) -> ui_wgpu::TextEditorScene {
-        ui_wgpu::TextEditorScene {
+    ) -> semio_framework_ui_wgpu::TextEditorScene {
+        semio_framework_ui_wgpu::TextEditorScene {
             buffer: buffer.to_string(),
             language: None,
             selection_json: None,
@@ -13759,10 +13759,10 @@ mod text_editor_tests {
     /// 🧰️ GPU-free `FrameworkWidgetContext` fixture, same construction as `render_entry_tests::Fixture`
     /// (private to that module, so duplicated here rather than reused).
     struct Fixture {
-        draw: ui_wgpu::DrawList,
-        atlas: ui_wgpu::FontAtlas,
+        draw: semio_framework_ui_wgpu::DrawList,
+        atlas: semio_framework_ui_wgpu::FontAtlas,
         theme: Theme,
-        input: ui_wgpu::InputState<ActionDescriptor>,
+        input: semio_framework_ui_wgpu::InputState<ActionDescriptor>,
         scroll_offsets: HashMap<String, f32>,
         collapsed_sections: HashMap<String, bool>,
         open_selects: HashMap<String, bool>,
@@ -13771,10 +13771,10 @@ mod text_editor_tests {
     impl Fixture {
         fn new() -> Self {
             Self {
-                draw: ui_wgpu::DrawList::default(),
-                atlas: ui_wgpu::FontAtlas::builtin(),
+                draw: semio_framework_ui_wgpu::DrawList::default(),
+                atlas: semio_framework_ui_wgpu::FontAtlas::builtin(),
                 theme: Theme::default(),
-                input: ui_wgpu::InputState::<ActionDescriptor>::default(),
+                input: semio_framework_ui_wgpu::InputState::<ActionDescriptor>::default(),
                 scroll_offsets: HashMap::new(),
                 collapsed_sections: HashMap::new(),
                 open_selects: HashMap::new(),
@@ -14107,8 +14107,8 @@ use semio_framework_core::{
     app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition,
     ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
 };
-use ui_wgpu::component::layout::WindowEngagementPossible;
-use ui_wgpu::{
+use semio_framework_ui_wgpu::component::layout::WindowEngagementPossible;
+use semio_framework_ui_wgpu::{
     ActionDescriptor, UtilityCategory, UtilityNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode,
     UiTextNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -14118,7 +14118,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::JsCast;
 use std::collections::HashMap;
-use ui_wgpu::{
+use semio_framework_ui_wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DrawList, DragAxis, FontAtlas, GlassTier,
     HitKind, HitTarget, IconAtlas, InputState, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
     WidgetInteractionMaps,
@@ -14345,11 +14345,11 @@ pub struct ShellState {
     pub tree_drag_origin: (f32, f32),
     pub dock_drag: Option<DockDragState>,
     pub pending_dock_drag: Option<(DockDragPayload, (f32, f32))>,
-    pub dock_drag_snapshot: Option<ui_wgpu::WindowLayout>,
+    pub dock_drag_snapshot: Option<semio_framework_ui_wgpu::WindowLayout>,
     pub dock_canvas_bounds: Rect,
     pub dock_drop_tab_bars: Vec<(Vec<usize>, Rect, Vec<f32>)>,
     pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
-    pub layout_override: Option<ui_wgpu::WindowLayout>,
+    pub layout_override: Option<semio_framework_ui_wgpu::WindowLayout>,
     pub split_resize_origin: Vec<f32>,
     pub split_resize_secondary_path: Option<Vec<usize>>,
     pub split_resize_secondary_index: usize,
@@ -14784,17 +14784,17 @@ impl ShellState {
 
     pub async fn boot(&mut self) -> Result<(), String> {
         if self.studio_mode {
-            let s_plugin = self
+            let semio_s_plugin_space = self
                 .plugins
                 .iter()
                 .find(|p| p.plugin_id == "s")
                 .ok_or("s studio plugin missing")?;
-            let s_app = s_plugin
+            let s_app = semio_s_plugin_space
                 .manifest
                 .apps
                 .iter()
                 .find(|app| app.id == S_HOME_APP_ID)
-                .or_else(|| s_plugin.manifest.apps.first())
+                .or_else(|| semio_s_plugin_space.manifest.apps.first())
                 .ok_or("s home app missing")?
                 .clone();
             let programs = self.build_studio_programs();
@@ -14804,7 +14804,7 @@ impl ShellState {
                 spawned_apps: vec![],
                 active_spawned_id: None,
             };
-            let instance_id = s_plugin.create_app(&s_app.id).await?;
+            let instance_id = semio_s_plugin_space.create_app(&s_app.id).await?;
             let view_state = ViewState {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
@@ -14817,7 +14817,7 @@ impl ShellState {
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
-                plugin_id: s_plugin.plugin_id.clone(),
+                plugin_id: semio_s_plugin_space.plugin_id.clone(),
                 instance_id,
                 app: s_app,
                 view_state,
@@ -15060,7 +15060,7 @@ impl ShellState {
             self.panel_ui.insert(tab.id().to_string(), resolved);
         }
         // 🧰️ The toolbar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
-        // window kind) via `ui_wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
+        // window kind) via `semio_framework_ui_wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
         // `find_active_utility_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
         self.active_utilities = self.derive_toolbar_nodes(&session);
         self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
@@ -15581,7 +15581,7 @@ impl ShellState {
     /// @emoji 🧭️ Parses a shell sync-card uri into the `framework/sync` persistence bindings a
     /// document actor opens. `folder://` → the multi-document sqlite store; `file://x.json` → its
     /// parent folder's store (single-blob export demoted per the plan); `remote://host:port[/studio_id]`
-    /// → the hub over WebSocket, studio-scoped (an omitted studio segment falls back to `"default"`).
+    /// → the semio_hub over WebSocket, studio-scoped (an omitted studio segment falls back to `"default"`).
     /// Superseded the fetch/CRUD `shell_backbone_read`/`write` pair.
     #[cfg(not(target_arch = "wasm32"))]
     fn parse_persistence_binding(uri: &str) -> Result<Vec<PersistenceBinding>, String> {
@@ -16148,12 +16148,12 @@ impl ShellState {
         app_id: &str,
         view_state: Option<ViewState>,
     ) -> Result<(), String> {
-        let s_plugin = self
+        let semio_s_plugin_space = self
             .plugins
             .iter()
             .find(|plugin| plugin.plugin_id == "s")
             .ok_or("s plugin missing")?;
-        let app = s_plugin
+        let app = semio_s_plugin_space
             .manifest
             .apps
             .iter()
@@ -16161,7 +16161,7 @@ impl ShellState {
             .ok_or("s app missing")?
             .clone();
         if let Some(session) = &self.session {
-            if session.plugin_id == s_plugin.plugin_id && session.app.id == app_id {
+            if session.plugin_id == semio_s_plugin_space.plugin_id && session.app.id == app_id {
                 if let Some(next_view_state) = view_state {
                     if let Some(mut current) = self.session.take() {
                         current.view_state = next_view_state;
@@ -16172,7 +16172,7 @@ impl ShellState {
                 return Ok(());
             }
         }
-        let instance_id = s_plugin.create_app(&app.id).await?;
+        let instance_id = semio_s_plugin_space.create_app(&app.id).await?;
         let programs = self.build_studio_programs();
         let panel_state = StudioPanelState {
             active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
@@ -16195,7 +16195,7 @@ impl ShellState {
             self.open_studio_id = None;
         }
         self.session = Some(ActiveSession {
-            plugin_id: s_plugin.plugin_id.clone(),
+            plugin_id: semio_s_plugin_space.plugin_id.clone(),
             instance_id,
             app,
             view_state: next_view_state,
@@ -17837,17 +17837,17 @@ impl ShellState {
 
     pub fn handle_keyboard(
         &mut self,
-        action: ui_wgpu::KeyAction,
-        modifiers: &ui_wgpu::PointerModifiers,
+        action: semio_framework_ui_wgpu::KeyAction,
+        modifiers: &semio_framework_ui_wgpu::PointerModifiers,
         input: &mut InputState<ActionDescriptor>,
     ) {
-        if action == ui_wgpu::KeyAction::Escape {
+        if action == semio_framework_ui_wgpu::KeyAction::Escape {
             if self.dock_drag.take().is_some() || self.pending_dock_drag.take().is_some() {
                 self.restore_dock_drag_snapshot();
                 self.dock_drag_snapshot = None;
                 return;
             }
-            // 🪟️ Escape closes exactly the topmost overlay first — matches ui_wgpu's overlay-manager
+            // 🪟️ Escape closes exactly the topmost overlay first — matches semio_framework_ui_wgpu's overlay-manager
             // precedence (`EventRouter::close_topmost_overlay`, report-w1d-events-overlay.md: "Escape
             // closes only the topmost") even though these ad-hoc chrome overlays predate that stack and
             // aren't routed through it yet. A Select dropdown is the most local/transient overlay, so it
@@ -17869,7 +17869,7 @@ impl ShellState {
         // the user is typing". Previously these six chords fired unconditionally, so e.g. Ctrl+B while
         // typing in a focused Input would silently toggle the left panel instead of inserting "b".
         let editing = input.focused_id.is_some() || self.sync_card_kind.is_some();
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
+        if !editing && meta && matches!(action, semio_framework_ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
             self.search_open = !self.search_open;
             self.find_open = false;
             self.overlay_state = if self.search_open {
@@ -17882,7 +17882,7 @@ impl ShellState {
             }
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
+        if !editing && meta && matches!(action, semio_framework_ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
             self.find_open = !self.find_open;
             self.search_open = false;
             self.overlay_state = if self.find_open {
@@ -17895,21 +17895,21 @@ impl ShellState {
             }
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "[") {
+        if !editing && meta && matches!(action, semio_framework_ui_wgpu::KeyAction::Char(ref c) if c == "[") {
             if self.uri_index > 0 {
                 self.uri_index -= 1;
             }
             self.pending_shell_uri_apply = true;
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "]") {
+        if !editing && meta && matches!(action, semio_framework_ui_wgpu::KeyAction::Char(ref c) if c == "]") {
             if self.uri_index + 1 < self.uri_history.len() {
                 self.uri_index += 1;
             }
             self.pending_shell_uri_apply = true;
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::ArrowUp) {
+        if !editing && meta && matches!(action, semio_framework_ui_wgpu::KeyAction::ArrowUp) {
             let uri = self.shell_uri();
             if let Some(parent) = uri.rsplit_once('/').map(|(p, _)| p.to_string()) {
                 if !parent.is_empty() {
@@ -17919,11 +17919,11 @@ impl ShellState {
             self.pending_shell_uri_apply = true;
             return;
         }
-        if !editing && meta && modifiers.shift && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
+        if !editing && meta && modifiers.shift && matches!(action, semio_framework_ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
             self.right_panel_open = !self.right_panel_open;
             return;
         }
-        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
+        if !editing && meta && matches!(action, semio_framework_ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
             self.left_panel_open = !self.left_panel_open;
             return;
         }
@@ -17935,19 +17935,19 @@ impl ShellState {
         // whenever nothing else claims focus — this renderer has no DOM, so there was no cross-window
         // Tab order at all before this fix (only ever within a single scene, e.g. the text editor's own
         // `KeyAction::Tab` handling). Single-window content-level Tab cycling among widgets is a
-        // separate, content-layer concern for `ui_wgpu`'s own engine/EventRouter (owned by the
+        // separate, content-layer concern for `semio_framework_ui_wgpu`'s own engine/EventRouter (owned by the
         // interpreter cutover), not this chrome-level routing.
-        if !editing && !palette_open && self.dock_drag.is_none() && action == ui_wgpu::KeyAction::Tab {
+        if !editing && !palette_open && self.dock_drag.is_none() && action == semio_framework_ui_wgpu::KeyAction::Tab {
             self.cycle_active_window(!modifiers.shift);
             return;
         }
         if self.sync_card_kind.is_some() {
             match action {
-                ui_wgpu::KeyAction::Escape => {
+                semio_framework_ui_wgpu::KeyAction::Escape => {
                     self.sync_card_kind = None;
                     return;
                 }
-                ui_wgpu::KeyAction::Enter => {
+                semio_framework_ui_wgpu::KeyAction::Enter => {
                     self.deferred_actions.push(ActionDescriptor {
                         controller_id: "framework.sync".into(),
                         action: "attach".into(),
@@ -17958,11 +17958,11 @@ impl ShellState {
                     });
                     return;
                 }
-                ui_wgpu::KeyAction::Char(key) => {
+                semio_framework_ui_wgpu::KeyAction::Char(key) => {
                     self.sync_card_draft.push_str(&key);
                     return;
                 }
-                ui_wgpu::KeyAction::Backspace => {
+                semio_framework_ui_wgpu::KeyAction::Backspace => {
                     self.sync_card_draft.pop();
                     return;
                 }
@@ -17971,13 +17971,13 @@ impl ShellState {
         }
         if palette_open {
             match action {
-                ui_wgpu::KeyAction::Escape => {
+                semio_framework_ui_wgpu::KeyAction::Escape => {
                     self.overlay_state = OverlayState::None;
                     self.search_open = false;
                     self.find_open = false;
                     input.focused_id = None;
                 }
-                ui_wgpu::KeyAction::ArrowDown => {
+                semio_framework_ui_wgpu::KeyAction::ArrowDown => {
                     if self.overlay_state == OverlayState::Search {
                         let len = self.filtered_search_items().len();
                         if len > 0 {
@@ -17990,18 +17990,18 @@ impl ShellState {
                         }
                     }
                 }
-                ui_wgpu::KeyAction::ArrowUp => {
+                semio_framework_ui_wgpu::KeyAction::ArrowUp => {
                     if self.overlay_state == OverlayState::Search {
                         self.search_selected = self.search_selected.saturating_sub(1);
                     } else {
                         self.find_selected = self.find_selected.saturating_sub(1);
                     }
                 }
-                ui_wgpu::KeyAction::Enter => {
+                semio_framework_ui_wgpu::KeyAction::Enter => {
                     let runtime = ();
                     let _ = runtime;
                 }
-                ui_wgpu::KeyAction::Char(key) => {
+                semio_framework_ui_wgpu::KeyAction::Char(key) => {
                     if self.overlay_state == OverlayState::Search {
                         self.search_query.push_str(&key);
                         self.search_selected = 0;
@@ -18010,7 +18010,7 @@ impl ShellState {
                         self.find_selected = 0;
                     }
                 }
-                ui_wgpu::KeyAction::Backspace => {
+                semio_framework_ui_wgpu::KeyAction::Backspace => {
                     if self.overlay_state == OverlayState::Search {
                         self.search_query.pop();
                         self.search_selected = 0;
@@ -18025,9 +18025,9 @@ impl ShellState {
         }
         if input.focused_id.is_some() {
             match action {
-                ui_wgpu::KeyAction::Char(key) => input.text_buffer.push_str(&key),
-                ui_wgpu::KeyAction::Backspace => input.backspace(),
-                ui_wgpu::KeyAction::Delete => input.delete_forward(),
+                semio_framework_ui_wgpu::KeyAction::Char(key) => input.text_buffer.push_str(&key),
+                semio_framework_ui_wgpu::KeyAction::Backspace => input.backspace(),
+                semio_framework_ui_wgpu::KeyAction::Delete => input.delete_forward(),
                 _ => {}
             }
         }
@@ -18035,21 +18035,21 @@ impl ShellState {
 
     pub async fn handle_keyboard_async(
         &mut self,
-        action: ui_wgpu::KeyAction,
-        modifiers: &ui_wgpu::PointerModifiers,
+        action: semio_framework_ui_wgpu::KeyAction,
+        modifiers: &semio_framework_ui_wgpu::PointerModifiers,
         input: &mut InputState<ActionDescriptor>,
     ) -> Result<(), String> {
-        if matches!(self.overlay_state, OverlayState::Search) && action == ui_wgpu::KeyAction::Enter {
+        if matches!(self.overlay_state, OverlayState::Search) && action == semio_framework_ui_wgpu::KeyAction::Enter {
             self.activate_search_item(self.search_selected).await?;
             return Ok(());
         }
-        if matches!(self.overlay_state, OverlayState::Find) && action == ui_wgpu::KeyAction::Enter {
+        if matches!(self.overlay_state, OverlayState::Find) && action == semio_framework_ui_wgpu::KeyAction::Enter {
             self.activate_find_item(self.find_selected).await?;
             return Ok(());
         }
         if input.focused_id.is_some() {
             match action {
-                ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::Escape => {
+                semio_framework_ui_wgpu::KeyAction::Enter | semio_framework_ui_wgpu::KeyAction::Escape => {
                     self.commit_focused_input(input).await?;
                     return Ok(());
                 }
@@ -18061,7 +18061,7 @@ impl ShellState {
             && self.sync_card_kind.is_none()
             && self.dock_drag.is_none();
         // 🧰️ Escape deactivates the active utility for the focused window (P5).
-        if idle && action == ui_wgpu::KeyAction::Escape {
+        if idle && action == semio_framework_ui_wgpu::KeyAction::Escape {
             if let Some(window_id) = self.active_window_id.clone() {
                 if self.active_utility_by_window.remove(&window_id).is_some() {
                     self.refresh_ui().await?;
@@ -18084,8 +18084,8 @@ impl ShellState {
     /// ⌨️ The app keybinding matching the current key event, if any.
     fn match_app_keybinding(
         &self,
-        action: &ui_wgpu::KeyAction,
-        modifiers: &ui_wgpu::PointerModifiers,
+        action: &semio_framework_ui_wgpu::KeyAction,
+        modifiers: &semio_framework_ui_wgpu::PointerModifiers,
     ) -> Option<ActionDescriptor> {
         let session = self.session.as_ref()?;
         session
@@ -18934,9 +18934,9 @@ fn fmt_num(value: f64) -> String {
     }
 }
 
-/// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link ui_wgpu::SemioCursor}.
-fn semio_cursor_from_name(name: &str) -> ui_wgpu::SemioCursor {
-    use ui_wgpu::SemioCursor;
+/// 🖱️ Maps a `UtilityDefinition.cursor` CSS/winit cursor name onto the shell's {@link semio_framework_ui_wgpu::SemioCursor}.
+fn semio_cursor_from_name(name: &str) -> semio_framework_ui_wgpu::SemioCursor {
+    use semio_framework_ui_wgpu::SemioCursor;
     match name.trim().to_ascii_lowercase().as_str() {
         "pointer" => SemioCursor::Pointer,
         "text" => SemioCursor::Text,
@@ -18956,14 +18956,14 @@ fn semio_cursor_from_name(name: &str) -> ui_wgpu::SemioCursor {
 
 /// ⌨️ Whether a key event is one of the hardcoded shell chords (palette/find/panels/nav) that must win
 /// over app-declared keybindings (P4 — "reserved shell chords still win").
-pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> bool {
+pub(crate) fn is_reserved_shell_chord(action: &semio_framework_ui_wgpu::KeyAction, modifiers: &semio_framework_ui_wgpu::PointerModifiers) -> bool {
     let accelerator = modifiers.meta || modifiers.ctrl;
     if !accelerator {
         return false;
     }
     match action {
-        ui_wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
-        ui_wgpu::KeyAction::ArrowUp => true,
+        semio_framework_ui_wgpu::KeyAction::Char(c) => matches!(c.to_ascii_lowercase().as_str(), "p" | "f" | "b" | "[" | "]"),
+        semio_framework_ui_wgpu::KeyAction::ArrowUp => true,
         _ => false,
     }
 }
@@ -18972,8 +18972,8 @@ pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &u
 /// `"mod"` is the platform accelerator (meta OR ctrl). Declared modifiers must be present and no
 /// undeclared accelerator/shift/alt may be held, so `mod+z` never fires for `mod+shift+z`.
 pub(crate) fn key_event_matches_chord(
-    action: &ui_wgpu::KeyAction,
-    modifiers: &ui_wgpu::PointerModifiers,
+    action: &semio_framework_ui_wgpu::KeyAction,
+    modifiers: &semio_framework_ui_wgpu::PointerModifiers,
     chord: &str,
 ) -> bool {
     let mut want_mod = false;
@@ -19005,17 +19005,17 @@ pub(crate) fn key_event_matches_chord(
         return false;
     }
     match action {
-        ui_wgpu::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
-        ui_wgpu::KeyAction::Enter => key_token == "enter" || key_token == "return",
-        ui_wgpu::KeyAction::Escape => key_token == "escape" || key_token == "esc",
-        ui_wgpu::KeyAction::Backspace => key_token == "backspace",
-        ui_wgpu::KeyAction::Delete => key_token == "delete" || key_token == "del",
-        ui_wgpu::KeyAction::Tab => key_token == "tab",
-        ui_wgpu::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
-        ui_wgpu::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
-        ui_wgpu::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
-        ui_wgpu::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
-        ui_wgpu::KeyAction::Space(_) => key_token == "space",
+        semio_framework_ui_wgpu::KeyAction::Char(c) => c.eq_ignore_ascii_case(&key_token),
+        semio_framework_ui_wgpu::KeyAction::Enter => key_token == "enter" || key_token == "return",
+        semio_framework_ui_wgpu::KeyAction::Escape => key_token == "escape" || key_token == "esc",
+        semio_framework_ui_wgpu::KeyAction::Backspace => key_token == "backspace",
+        semio_framework_ui_wgpu::KeyAction::Delete => key_token == "delete" || key_token == "del",
+        semio_framework_ui_wgpu::KeyAction::Tab => key_token == "tab",
+        semio_framework_ui_wgpu::KeyAction::ArrowLeft => key_token == "arrowleft" || key_token == "left",
+        semio_framework_ui_wgpu::KeyAction::ArrowRight => key_token == "arrowright" || key_token == "right",
+        semio_framework_ui_wgpu::KeyAction::ArrowUp => key_token == "arrowup" || key_token == "up",
+        semio_framework_ui_wgpu::KeyAction::ArrowDown => key_token == "arrowdown" || key_token == "down",
+        semio_framework_ui_wgpu::KeyAction::Space(_) => key_token == "space",
     }
 }
 
@@ -19047,9 +19047,9 @@ impl ShellState {
         if resolved.is_empty() {
             return Vec::new();
         }
-        let specs: Vec<ui_wgpu::component::utilities::DerivedUtilitySpec> = resolved
+        let specs: Vec<semio_framework_ui_wgpu::component::utilities::DerivedUtilitySpec> = resolved
             .iter()
-            .map(|utility| ui_wgpu::component::utilities::DerivedUtilitySpec {
+            .map(|utility| semio_framework_ui_wgpu::component::utilities::DerivedUtilitySpec {
                 id: utility.id.clone(),
                 label: utility.label.clone(),
                 icon_id: utility.icon_id.clone(),
@@ -19061,7 +19061,7 @@ impl ShellState {
             .active_utility_by_window
             .get(&window_kind.id)
             .map(String::as_str);
-        ui_wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
+        semio_framework_ui_wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
     }
     // #endregion
 
@@ -19090,8 +19090,8 @@ impl ShellState {
     }
 
     /// 🖱️ The cursor the active utility requests while the pointer is over the active window's body — maps
-    /// `UtilityDefinition.cursor` onto a {@link ui_wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
-    pub(crate) fn utility_cursor_override(&self, x: f32, y: f32) -> Option<ui_wgpu::SemioCursor> {
+    /// `UtilityDefinition.cursor` onto a {@link semio_framework_ui_wgpu::SemioCursor} (P5). `None` when no utility/cursor applies.
+    pub(crate) fn utility_cursor_override(&self, x: f32, y: f32) -> Option<semio_framework_ui_wgpu::SemioCursor> {
         let session = self.session.as_ref()?;
         let window_id = self.active_window_id.as_deref()?;
         let utility_id = self.active_utility_for_window(window_id)?;
@@ -19775,7 +19775,7 @@ mod command_registry_tests {
                 id: "main".into(),
                 label: "Main".into(),
                 body_key: "main.body".into(),
-                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                surface_kind: semio_framework_ui_wgpu::SurfaceKind::Canvas2d,
                 icon_id: None,
                 options: Default::default(),
                 actions: vec![],
@@ -20028,9 +20028,9 @@ mod command_registry_tests {
 // tour — layered on the existing immediate-mode chrome without new `ShellState` fields or `OverlayState`
 // variants (both live in the off-limits `ShellTypes` region this wave, see region-claims.json). State
 // lives in thread-locals, mirroring this file's own `CONTEXT_MENU_SINK`/`FIND_ITEM_SINK` idiom just above.
-// Placement math reuses `ui_wgpu`'s w1d-events-overlay manager types (`OverlayKind`, `OverlayPlacement`,
+// Placement math reuses `semio_framework_ui_wgpu`'s w1d-events-overlay manager types (`OverlayKind`, `OverlayPlacement`,
 // `resolve_overlay_placement`) even though the manager's own `EventRouter`/`open_overlay` stay
-// `pub(crate)` to `ui_wgpu` (an `engine::Ui`/retained-`UiTree` implementation detail) and out of reach
+// `pub(crate)` to `semio_framework_ui_wgpu` (an `engine::Ui`/retained-`UiTree` implementation detail) and out of reach
 // for this non-tree-based immediate-mode chrome renderer — confirmed unreachable the same way
 // `report-w2-text-editor.md` found for its own local-fallback popup.
 
@@ -20214,7 +20214,7 @@ fn chrome_advance_introduction(step_count: usize) {
 /// renderer: the first `possible` (in the order the host already gave them — wgpu's engagement rail has
 /// no ranked-match dropdown to reorder by) whose label case-insensitively prefix-matches `query`, sliced
 /// on a char boundary (never a byte index) so a multi-byte label can't panic.
-fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::WindowEngagementPossible]>) -> String {
+fn engagement_completion_suffix(query: &str, possibles: Option<&[semio_framework_ui_wgpu::WindowEngagementPossible]>) -> String {
     let query = query.trim();
     if query.is_empty() {
         return String::new();
@@ -20271,7 +20271,7 @@ impl ShellState {
         icons: &IconAtlas,
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         self.load_ui_prefs_once();
         let w = self.screen_w;
@@ -20813,7 +20813,7 @@ impl ShellState {
         tabs: &[PanelTabDefinition],
         active_tab_id: &str,
         side_left: bool,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         const PANEL_RESIZE_HIT_PX: f32 = 20.0;
         let resize_id = if side_left {
@@ -20943,7 +20943,7 @@ impl ShellState {
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         body: Rect,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
@@ -20979,7 +20979,7 @@ impl ShellState {
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         body: Rect,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
@@ -21015,7 +21015,7 @@ impl ShellState {
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         bounds: Rect,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
         let session = match self.session.as_ref() {
@@ -21297,7 +21297,7 @@ impl ShellState {
         content: Rect,
         ui: &UiNode,
         window_id: &str,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         let scroll_key = format!("window.{window_id}");
         let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
@@ -21581,7 +21581,7 @@ impl ShellState {
     }
 
     /// 💬️ Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
-    /// `ui_wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
+    /// `semio_framework_ui_wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
     fn render_chrome_tooltip(
         &self,
         overlay: &mut DrawList,
@@ -21626,13 +21626,13 @@ impl ShellState {
         let (text_w, text_h) = atlas.measure_text(&text, theme.font_size_small);
         let content_w = text_w + padding * 2.0;
         let content_h = text_h + padding * 2.0;
-        let scratch_tree = ui_wgpu::UiTree::new();
-        let (x, y) = ui_wgpu::resolve_overlay_placement(
+        let scratch_tree = semio_framework_ui_wgpu::UiTree::new();
+        let (x, y) = semio_framework_ui_wgpu::resolve_overlay_placement(
             &scratch_tree,
-            ui_wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
+            semio_framework_ui_wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
             (content_w, content_h),
             (width, height),
-            ui_wgpu::OverlayKind::Tooltip.default_placement(),
+            semio_framework_ui_wgpu::OverlayKind::Tooltip.default_placement(),
         );
         overlay.push_glass([x, y, content_w, content_h], theme.border_radius, GlassTier::Menu, theme);
         chrome_text(
@@ -21671,13 +21671,13 @@ impl ShellState {
         overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35));
         let dialog_w = 360.0_f32;
         let dialog_h = 168.0_f32;
-        let scratch_tree = ui_wgpu::UiTree::new();
-        let (x, y) = ui_wgpu::resolve_overlay_placement(
+        let scratch_tree = semio_framework_ui_wgpu::UiTree::new();
+        let (x, y) = semio_framework_ui_wgpu::resolve_overlay_placement(
             &scratch_tree,
-            ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 },
+            semio_framework_ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 },
             (dialog_w, dialog_h),
             (width, height),
-            ui_wgpu::OverlayKind::Dialog.default_placement(),
+            semio_framework_ui_wgpu::OverlayKind::Dialog.default_placement(),
         );
         let dialog_rect = Rect::new(x, y, dialog_w, dialog_h);
         overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, GlassTier::Panel, theme);
@@ -21780,21 +21780,21 @@ impl ShellState {
         };
         let box_w = 320.0_f32;
         let box_h = 168.0_f32;
-        let scratch_tree = ui_wgpu::UiTree::new();
+        let scratch_tree = semio_framework_ui_wgpu::UiTree::new();
         let (x, y) = match anchor_rect {
-            Some(rect) => ui_wgpu::resolve_overlay_placement(
+            Some(rect) => semio_framework_ui_wgpu::resolve_overlay_placement(
                 &scratch_tree,
-                ui_wgpu::OverlayAnchor::Point { x: rect.x, y: rect.y + rect.h },
+                semio_framework_ui_wgpu::OverlayAnchor::Point { x: rect.x, y: rect.y + rect.h },
                 (box_w, box_h),
                 (width, height),
-                ui_wgpu::OverlayPlacement::BelowAnchorWithFlip,
+                semio_framework_ui_wgpu::OverlayPlacement::BelowAnchorWithFlip,
             ),
-            None => ui_wgpu::resolve_overlay_placement(
+            None => semio_framework_ui_wgpu::resolve_overlay_placement(
                 &scratch_tree,
-                ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 },
+                semio_framework_ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 },
                 (box_w, box_h),
                 (width, height),
-                ui_wgpu::OverlayKind::Dialog.default_placement(),
+                semio_framework_ui_wgpu::OverlayKind::Dialog.default_placement(),
             ),
         };
         overlay.push_glass([x, y, box_w, box_h], theme.border_radius, GlassTier::Panel, theme);
@@ -22039,7 +22039,7 @@ impl ShellState {
     }
 
     fn window_engagement_chrome_visible(
-        engagement: &ui_wgpu::WindowEngagement,
+        engagement: &semio_framework_ui_wgpu::WindowEngagement,
         window_id: &str,
         engagement_inputs: &HashMap<String, String>,
         activated: bool,
@@ -22073,7 +22073,7 @@ impl ShellState {
             .or_else(|| kind.options.engagement.as_option().cloned())
             .or_else(|| {
                 if kind.surface_kind.is_viewport() {
-                    Some(ui_wgpu::default_viewport_engagement())
+                    Some(semio_framework_ui_wgpu::default_viewport_engagement())
                 } else {
                     None
                 }
@@ -22091,12 +22091,12 @@ impl ShellState {
         content: &Rect,
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) -> WindowMeasuresRailOutcome {
         let inset = theme.gap_standard;
         let active_utility = self.active_utility_by_window.get(window_id).cloned();
         let (measures, _utility_options) =
-            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
+            semio_framework_ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
         if measures.is_empty() {
             return WindowMeasuresRailOutcome {
                 chip_hit: None,
@@ -22283,12 +22283,12 @@ impl ShellState {
         content: &Rect,
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         let inset = theme.gap_standard;
         let active_utility = self.active_utility_by_window.get(window_id).cloned();
         let (_general, utility_options) =
-            ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
+            semio_framework_ui_wgpu::partition_window_measures(&self.measures_for_kind(kind), active_utility.as_deref());
         if utility_options.is_empty() {
             return;
         }
@@ -22363,10 +22363,10 @@ impl ShellState {
         theme: &Theme,
         bounds: Rect,
         measure: &WindowMeasure,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) -> f32 {
-        use ui_wgpu::component::layout::MeasureSelectItem;
-        use ui_wgpu::widgets::{render_widget, ControlNode, WidgetNode};
+        use semio_framework_ui_wgpu::component::layout::MeasureSelectItem;
+        use semio_framework_ui_wgpu::widgets::{render_widget, ControlNode, WidgetNode};
         let height = measure_window_measure_height(theme, &self.collapsed_sections, measure);
         let mut y = bounds.y;
         match measure {
@@ -22426,7 +22426,7 @@ impl ShellState {
                     value: value.clone(),
                     items: items
                         .iter()
-                        .map(|item: &MeasureSelectItem| ui_wgpu::widgets::SelectItem {
+                        .map(|item: &MeasureSelectItem| semio_framework_ui_wgpu::widgets::SelectItem {
                             value: item.value.clone(),
                             label: item.label.clone(),
                         })
@@ -22518,7 +22518,7 @@ impl ShellState {
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
         measures_reserve: f32,
-        gpu: &mut ui_wgpu::GpuContext,
+        gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) -> Option<(Rect, String)> {
         let inset = theme.gap_standard;
         let measures_expanded = self
@@ -22699,8 +22699,8 @@ impl ShellState {
         bounds: Rect,
         window_id: &str,
         spec: &WindowEngagementInput,
-        possibles: Option<&[ui_wgpu::WindowEngagementPossible]>,
-        _gpu: &mut ui_wgpu::GpuContext,
+        possibles: Option<&[semio_framework_ui_wgpu::WindowEngagementPossible]>,
+        _gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
         let id = spec
             .id
@@ -22718,7 +22718,7 @@ impl ShellState {
         // `query` input in `ui/js/react/index.tsx`.
         let focused = input.focused_id.as_deref() == Some(id.as_str());
         let live_query = if focused { input.text_buffer.clone() } else { committed_value.clone() };
-        let node = ui_wgpu::widgets::WidgetNode::Input {
+        let node = semio_framework_ui_wgpu::widgets::WidgetNode::Input {
             id: id.clone(),
             input_kind: "text".into(),
             value: committed_value,
@@ -22735,7 +22735,7 @@ impl ShellState {
                 scroll_offsets, collapsed_sections, open_selects,
                         None,
                     );
-            ui_wgpu::widgets::render_widget(&node, bounds, &mut ctx);
+            semio_framework_ui_wgpu::widgets::render_widget(&node, bounds, &mut ctx);
         }
         // #region GhostTextCompletion (item 6: engagement inline-completion ghost text)
         // 👻️ Ports `engagementInlineCompletion`/`engagementCompletionSuffix` (`ui/js/react/index.tsx`) —
@@ -22788,9 +22788,9 @@ impl ShellState {
         theme: &Theme,
         bounds: Rect,
         control: &WindowEngagementControl,
-        _gpu: &mut ui_wgpu::GpuContext,
+        _gpu: &mut semio_framework_ui_wgpu::GpuContext,
     ) {
-        use ui_wgpu::widgets::{render_widget, WidgetNode};
+        use semio_framework_ui_wgpu::widgets::{render_widget, WidgetNode};
         let node = match control {
             WindowEngagementControl::Slider { id, value, min, max, step, on_change, .. } => {
                 WidgetNode::Slider {
@@ -22818,7 +22818,7 @@ impl ShellState {
                     value: value.clone().unwrap_or_default(),
                     items: items
                         .iter()
-                        .map(|item| ui_wgpu::widgets::SelectItem {
+                        .map(|item| semio_framework_ui_wgpu::widgets::SelectItem {
                             value: item.value.clone(),
                             label: item.label.clone(),
                         })
@@ -23608,7 +23608,7 @@ fn shell_pref_locks() -> ShellPrefLocks {
 //#region 🎨️ThemeRegistry
 /// 🎨️ A user-defined theme's color overrides for one appearance — deliberately scoped down from
 /// React's full `UiTheme` (colors/spacing/fontStacks/canvasFonts/strokes/radii/opacities/metrics
-/// per :ui/styling/js/theme.ts`) to the handful of paints `ui_wgpu::Theme` actually varies by
+/// per :ui/styling/js/theme.ts`) to the handful of paints `semio_framework_ui_wgpu::Theme` actually varies by
 /// chrome palette (see `ui/wgpu/rs/lib.rs`'s `from_chrome`, read-only reference). A full token-level
 /// draft editor would require porting `resolveThemePaint`'s token/mix resolver wholesale; this
 /// covers "load/mutate/save a custom theme's token values programmatically" per the WP14 scope note.
@@ -23810,7 +23810,7 @@ fn apply_chrome_color_overrides(base: &Theme, overrides: &ChromeColorOverrides) 
 /// 🎨️ The "mono" premade's real chrome palette (`ui/styling/theme/mono.theme.json`), resolved once
 /// via `ui/styling/js/theme.ts`'s own `resolveThemeAppearancePalettes` (ticket scratchpad
 /// `resolve-mono-chrome.ts`) and hand-ported here as `Rgba::from_srgb8` calls: this crate has no
-/// dependency on the `ui_styling` Rust codegen crate (only `ui_wgpu` does, and its `ChromePalette`/
+/// dependency on the `semio_framework_ui_styling` Rust codegen crate (only `semio_framework_ui_wgpu` does, and its `ChromePalette`/
 /// `from_chrome` aren't `pub`), and `Cargo.toml` is a reserved wave-3 choke point, so a generated
 /// `MONO_LIGHT`/`MONO_DARK` constant isn't reachable this wave — these are real resolved values, not
 /// invented ones. Metrics/fonts/checker/diagram/error/focus-ring-alpha etc. are shared with "semio"
@@ -23935,10 +23935,10 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
     }
 }
 
-/// 🗣️ `id`'s locale-aware label via `ui_wgpu::framework_panel_tab_label` (the one existing
+/// 🗣️ `id`'s locale-aware label via `semio_framework_ui_wgpu::framework_panel_tab_label` (the one existing
 /// locale-aware string helper, per a prior wave), falling back to `fallback` for app-declared ids.
 fn shell_panel_tab_label(id: &str, fallback: &'static str, is_de: bool) -> String {
-    ui_wgpu::framework_panel_tab_label(id, is_de).unwrap_or(fallback).to_string()
+    semio_framework_ui_wgpu::framework_panel_tab_label(id, is_de).unwrap_or(fallback).to_string()
 }
 
 /// 🎓️ Reads whether `app_id`'s introduction has already been shown, byte-identical semantics to
@@ -24459,19 +24459,19 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn utility_subtree_has_active_path_finds_a_pressed_toggle_at_the_top_level() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
-        let nodes = vec![ui_wgpu::utility_toggle("a", "icon", "A", true, action)];
+        let nodes = vec![semio_framework_ui_wgpu::utility_toggle("a", "icon", "A", true, action)];
         assert!(utility_subtree_has_active_path(&nodes));
     }
 
     #[test]
     fn utility_subtree_has_active_path_recurses_into_nested_collections() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
-        let inner = vec![ui_wgpu::utility_toggle("b", "icon", "B", true, action.clone())];
-        let nested = ui_wgpu::utility_collection(
+        let inner = vec![semio_framework_ui_wgpu::utility_toggle("b", "icon", "B", true, action.clone())];
+        let nested = semio_framework_ui_wgpu::utility_collection(
             "group-2",
             "icon",
             "Group 2",
-            vec![ui_wgpu::utility_collection("group-1", "icon", "Group 1", inner)],
+            vec![semio_framework_ui_wgpu::utility_collection("group-1", "icon", "Group 1", inner)],
         );
         assert!(utility_subtree_has_active_path(std::slice::from_ref(&nested)));
     }
@@ -24480,8 +24480,8 @@ mod chrome_overlays_tour_tests {
     fn utility_subtree_has_active_path_false_when_nothing_pressed() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
         let nodes = vec![
-            ui_wgpu::utility_toggle("a", "icon", "A", false, action.clone()),
-            ui_wgpu::utility_collection("group", "icon", "Group", vec![ui_wgpu::utility_toggle("b", "icon", "B", false, action)]),
+            semio_framework_ui_wgpu::utility_toggle("a", "icon", "A", false, action.clone()),
+            semio_framework_ui_wgpu::utility_collection("group", "icon", "Group", vec![semio_framework_ui_wgpu::utility_toggle("b", "icon", "B", false, action)]),
         ];
         assert!(!utility_subtree_has_active_path(&nodes));
     }
@@ -24493,9 +24493,9 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
-        let leaf_toggle = ui_wgpu::utility_toggle("leaf", "icon", "Leaf", false, action.clone());
-        let inner_collection = ui_wgpu::utility_collection("inner", "icon", "Inner", vec![leaf_toggle]);
-        let outer_collection = ui_wgpu::utility_collection("outer", "icon", "Outer", vec![inner_collection]);
+        let leaf_toggle = semio_framework_ui_wgpu::utility_toggle("leaf", "icon", "Leaf", false, action.clone());
+        let inner_collection = semio_framework_ui_wgpu::utility_collection("inner", "icon", "Inner", vec![leaf_toggle]);
+        let outer_collection = semio_framework_ui_wgpu::utility_collection("outer", "icon", "Outer", vec![inner_collection]);
         let utilities = vec![outer_collection];
 
         let mut collection_expanded = HashMap::new();
@@ -24519,14 +24519,14 @@ mod chrome_overlays_tour_tests {
     //#region GhostText
     #[test]
     fn engagement_completion_suffix_matches_label_prefix() {
-        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+        let possibles = vec![semio_framework_ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
         assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "x");
         assert_eq!(engagement_completion_suffix("bo", Some(&possibles)), "x");
     }
 
     #[test]
     fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
-        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+        let possibles = vec![semio_framework_ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
         assert_eq!(engagement_completion_suffix("", Some(&possibles)), "");
         assert_eq!(engagement_completion_suffix("zz", Some(&possibles)), "");
         assert_eq!(engagement_completion_suffix("Box", Some(&possibles)), ""); // fully typed: no suffix left
@@ -24536,8 +24536,8 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn engagement_completion_suffix_picks_first_matching_possible_in_order() {
         let possibles = vec![
-            ui_wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None },
-            ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None },
+            semio_framework_ui_wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None },
+            semio_framework_ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None },
         ];
         assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "at");
     }
@@ -24545,7 +24545,7 @@ mod chrome_overlays_tour_tests {
     /// 🧪️ Char-boundary safety: a multi-byte label prefix-matched by a query must not panic on slicing.
     #[test]
     fn engagement_completion_suffix_is_multibyte_safe() {
-        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
+        let possibles = vec![semio_framework_ui_wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
         assert_eq!(engagement_completion_suffix("M", Some(&possibles)), "ünster");
     }
 
@@ -24699,7 +24699,7 @@ pub mod icon_atlas {
 // #region icon_atlas
 //! 🖼️ CPU-rasterized Lucide icon atlas for native and web wgpu shells.
 
-use ui_wgpu::IconAtlas;
+use semio_framework_ui_wgpu::IconAtlas;
 
 const ICON_SIZE: u32 = 24;
 const ATLAS_COLS: u32 = 16;
@@ -24787,19 +24787,19 @@ use infinite_world::{
     handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag,
     handle_world3d_pointer_move, handle_world3d_wheel,
 };
-use ui_wgpu::ActionDescriptor;
+use semio_framework_ui_wgpu::ActionDescriptor;
 use shell::ShellState;
 use std::cell::RefCell;
 use std::io::Read;
 use std::rc::Rc;
 use std::sync::Arc;
-use ui_wgpu::{
+use semio_framework_ui_wgpu::{
     apply_window_cursor, dispatch_window_event, fetch_font_bytes, resolve_semio_cursor, schedule_frame,
     CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerCallbacks,
     PointerModifiers, SemioCursor, Theme, WindowInputState,
 };
 #[cfg(target_arch = "wasm32")]
-use ui_wgpu::apply_canvas_cursor;
+use semio_framework_ui_wgpu::apply_canvas_cursor;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]

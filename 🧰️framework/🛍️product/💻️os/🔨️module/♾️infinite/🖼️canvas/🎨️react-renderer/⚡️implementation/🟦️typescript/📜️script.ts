@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🖼️ `@semio-tech/infinite-cavas-react-renderer` router: `bun ./📜️script.ts test`. */
+/** 🖼️ `@semio-tech/infinite-canvas-react-renderer` router: `bun ./📜️script.ts test`. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
 
 class TestScript extends BundleScript {

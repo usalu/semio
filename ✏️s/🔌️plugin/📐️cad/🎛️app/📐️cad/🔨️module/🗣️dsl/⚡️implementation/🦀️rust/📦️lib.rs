@@ -2,6 +2,11 @@
 
 use cad_document::CadScene;
 
+/// 📄️ The `default` example scene, handcrafted in the `.cad` DSL — a small structural column with
+/// a two-vertex/one-edge/one-wire/one-face/one-shell/one-solid brep, a site-photo reference, and
+/// objects across the shape/building/structure-classic panes.
+pub const CAD_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/📐️cad/📚️example/📐️default.cad");
+
 /// 📖️ Parses `.cad` DSL text into a `CadScene`.
 pub fn parse_dsl(text: &str) -> Result<CadScene, store::TextError> {
     <CadScene as store::DocumentDsl>::parse_dsl(text)
@@ -72,6 +77,12 @@ mod tests {
         scene.references_by_model_definition_id.insert(CadPaneId::Shape.model_definition_id().to_string(), vec![sample_reference()]);
         scene.active_model_definition_id = CadPaneId::Shape.model_definition_id().to_string();
         scene
+    }
+
+    #[test]
+    fn default_example_dsl_round_trips() {
+        let document = parse_dsl(CAD_DEFAULT_EXAMPLE_TEXT).expect("parse default .cad example");
+        store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]

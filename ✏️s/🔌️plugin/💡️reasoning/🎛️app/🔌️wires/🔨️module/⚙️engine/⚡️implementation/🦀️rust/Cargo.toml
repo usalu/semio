@@ -13,7 +13,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛�
 [dependencies]
 reasoning_wires = { path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires" }
 reasoning_wires_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires-dsl" }
-reasoning_mindmap = { path = "../../../../../../../../../✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust", package = "reasoning_mindmap" }
+reasoning_mindmap = { path = "../../../../../../../../../✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust", package = "semio-s-kernel-reasoning-mindmap" }
 infinite_board_normal_undirected = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board-normal-undirected" }
 infinite_cavas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

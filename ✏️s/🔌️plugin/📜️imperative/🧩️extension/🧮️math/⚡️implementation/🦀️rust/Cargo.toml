@@ -1,5 +1,5 @@
 [package]
-name = "imperative_module_math"
+name = "semio-s-plugin-imperative-math"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

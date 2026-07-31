@@ -13,4 +13,4 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/
 [dependencies]
 en1990 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990" }
 en1990_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📘️en1990/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-norm-en1990-op" }
-norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "norm_core" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-norm-core" }

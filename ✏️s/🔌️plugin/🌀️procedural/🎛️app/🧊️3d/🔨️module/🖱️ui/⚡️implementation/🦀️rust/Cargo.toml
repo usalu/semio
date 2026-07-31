@@ -20,8 +20,8 @@ flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product
 playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
-ui_wgpu = { path = "../../../../../../../../../🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust", package = "ui_wgpu" }
-ui_styling = { path = "../../../../../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust", package = "ui_styling" }
+ui_wgpu = { path = "../../../../../../../../../🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust", package = "semio-framework-ui-wgpu" }
+ui_styling = { path = "../../../../../../../../../🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🦀️rust", package = "semio-framework-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

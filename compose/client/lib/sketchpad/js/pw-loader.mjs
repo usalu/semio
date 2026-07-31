@@ -26,7 +26,7 @@ const RESOLVE_ALIASES = [
   ["@semio-tech/framework-playground-renderer-react/boot", resolvePath(repoRoot, "framework/product/playground/renderer/react/index.tsx")],
   ["@semio-tech/framework-playground-renderer-react", resolvePath(repoRoot, "framework/product/playground/renderer/react/index.tsx")],
   ["@semio-tech/ui-react", resolvePath(repoRoot, "framework/ui/js/react/index.tsx")],
-  ["@semio-tech/infinite-cavas-react-renderer", resolvePath(repoRoot, "framework/os/kernel/infinite/canvas/react-renderer/index.tsx")],
+  ["@semio-tech/infinite-canvas-react-renderer", resolvePath(repoRoot, "framework/os/kernel/infinite/canvas/react-renderer/index.tsx")],
   ["@semio-tech/infinite-world-r3f", resolvePath(repoRoot, "framework/os/kernel/infinite/world/r3f/index.tsx")],
   ["@semio-tech/gis-2d-play", resolvePath(repoRoot, "gis/2d/play/index.ts")],
   ["@semio-tech/gis-2d-react", resolvePath(repoRoot, "gis/2d/react/index.tsx")],

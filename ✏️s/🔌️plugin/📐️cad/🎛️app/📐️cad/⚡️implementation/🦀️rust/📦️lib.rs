@@ -45,6 +45,7 @@ pub struct CadPrimitiveSlot {
 #[serde(rename_all = "camelCase")]
 pub struct CadVertex {
     pub id: String,
+    #[dsl(coord)]
     pub position: [f64; 3],
 }
 
@@ -74,7 +75,9 @@ pub struct CadWire {
 #[serde(rename_all = "camelCase")]
 pub struct CadPlaneSurface {
     pub kind: String,
+    #[dsl(coord)]
     pub origin: [f64; 3],
+    #[dsl(dir)]
     pub normal: [f64; 3],
 }
 
@@ -132,6 +135,7 @@ pub struct CadObject {
     #[serde(default)]
     pub locked: bool,
     #[serde(default)]
+    #[dsl(coord)]
     pub origin: [f64; 3],
     #[serde(default)]
     pub orientation: Option<[f64; 4]>,
@@ -186,8 +190,10 @@ fn default_width_world() -> f64 {
 #[serde(rename_all = "camelCase")]
 pub struct CadCamera {
     #[serde(default = "default_camera_position")]
+    #[dsl(coord)]
     pub position: [f64; 3],
     #[serde(default = "default_camera_target")]
+    #[dsl(coord)]
     pub target: [f64; 3],
     #[serde(default = "one_f64")]
     pub zoom: f64,

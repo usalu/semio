@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/semio-asset",
+  "name": "@semio-tech/asset",
   "version": "1.0.0",
   "type": "module",
   "$schema": "../node_modules/nx/schemas/project-schema.json",

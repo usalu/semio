@@ -14,5 +14,5 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/
 din18599 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📙️din18599/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din18599" }
 din4108_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📕️din4108/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din4108-engine" }
 din16798_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📗️din16798/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-norm-din16798-engine" }
-norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "norm_core" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-norm-core" }
 serde = { version = "1.0.219", features = ["derive"] }

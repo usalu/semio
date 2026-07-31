@@ -202,7 +202,7 @@ pub enum VcsError {
 //#endregion 🔖️Errors
 
 //#region 🔖️CollectionDiff
-/// @emoji 🧩️ Sparse collection patch entry (mirrors compose `XModified`).
+/// @emoji 🧩️ Sparse collection patch entry (mirrors semio_compose_rs `XModified`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemPatch<TId, TPatch> {
@@ -210,7 +210,7 @@ pub struct ItemPatch<TId, TPatch> {
     pub patch: TPatch,
 }
 
-/// @emoji 🧩️ Sparse collection diff (mirrors compose `XCollectionDiff`).
+/// @emoji 🧩️ Sparse collection diff (mirrors semio_compose_rs `XCollectionDiff`).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CollectionDiff<TId, TPatch, TAdded> {
@@ -1482,7 +1482,7 @@ pub enum BackboneMessage {
 /// @emoji 🧵️ Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
 /// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
-/// hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
+/// semio_hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
 /// which owns the other end; the store's `pump()`/`flush_outbound()` run synchronously on the
 /// caller's thread and must never be blocked by transport work.
 pub trait Backbone: Send + Sync {

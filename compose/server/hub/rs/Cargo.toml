@@ -28,7 +28,7 @@ redundant_clone = "warn"
 # phase B (enable after the T2/T3 waves land): unwrap_used = "warn"
 
 [package]
-name = "compose-hub"
+name = "semio-compose-hub"
 version = "0.1.0"
 edition = "2021"
 
@@ -36,7 +36,7 @@ edition = "2021"
 workspace = true
 
 [[bin]]
-name = "compose-hub"
+name = "semio-compose-hub"
 path = "bin.rs"
 
 [dependencies]

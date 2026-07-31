@@ -1,7 +1,7 @@
 mod header {
     // 🧲️Header
     // HubDirectory over PostgreSQL — direct `sqlx-postgres`/`sqlx-core` (not the `sqlx` facade),
-    // matching the exact precedent in `compose/server/hub/rs/bin.rs`. The scale-out backend for
+    // matching the exact precedent in `semio_compose_rs/server/semio_hub/rs/bin.rs`. The scale-out backend for
     // multi-node self-hosted deployments; schema bootstrap is `directory/postgres/🛢️schema.sql`.
 }
 

@@ -1,5 +1,5 @@
 [package]
-name = "reasoning-mindmap-plugin"
+name = "semio-s-plugin-reasoning-mindmap"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

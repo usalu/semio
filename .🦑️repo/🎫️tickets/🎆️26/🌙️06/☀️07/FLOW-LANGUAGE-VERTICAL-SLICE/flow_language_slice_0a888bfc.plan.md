@@ -18,7 +18,7 @@ todos:
    content: "Implement flow/core (flow_core cdylib): Widget model, FlowSession wasm API (scene + evaluate), Cargo.toml, script.ts wasm build; add to workspace; native eval test."
    status: completed
  - id: react
-   content: Create flow/react FlowCanvas renderer consuming @semio-tech/flow-core wasm via @semio-tech/infinite-cavas-react-renderer + package.json/project.json/script.ts.
+   content: Create flow/react FlowCanvas renderer consuming @semio-tech/flow-core wasm via @semio-tech/infinite-canvas-react-renderer + package.json/project.json/script.ts.
    status: completed
  - id: play
    content: Create flow/play PlaygroundFlow + controller + declarative body + default slider->add->preview fixture + index.html/globals.css/vite/vitest/package.json/project.json/script.ts.
@@ -106,7 +106,7 @@ Repo MCP is not connected in this session. At execution start: read `repo://goal
 
 ## Part 3b - Flow React renderer
 
-- `flow/react/index.tsx` (new) + `package.json` (`@semio-tech/flow-react`), `project.json` (`test`), `script.ts` (prebuild wasm then vitest). Imports wasm relative `../core/pkg/flow_core.js` (top-level `await initFlowWasm()`), exports `FlowCanvas`, fixture types, `ensureFlowWasmLoaded`. Render DAG/widgets via `@semio-tech/infinite-cavas-react-renderer` driven by `FlowSession` (mirror `@semio-tech/puzzle-2d-react` `GpuWasmBridge`).
+- `flow/react/index.tsx` (new) + `package.json` (`@semio-tech/flow-react`), `project.json` (`test`), `script.ts` (prebuild wasm then vitest). Imports wasm relative `../core/pkg/flow_core.js` (top-level `await initFlowWasm()`), exports `FlowCanvas`, fixture types, `ensureFlowWasmLoaded`. Render DAG/widgets via `@semio-tech/infinite-canvas-react-renderer` driven by `FlowSession` (mirror `@semio-tech/puzzle-2d-react` `GpuWasmBridge`).
 
 ## Part 3c - Flow play app
 

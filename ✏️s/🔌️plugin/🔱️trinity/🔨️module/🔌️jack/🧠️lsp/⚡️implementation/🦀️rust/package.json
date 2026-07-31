@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/trinity-jack-lsp-worker",
+  "name": "@semio-tech/trinity-jack-lsp",
   "private": true,
   "type": "module"
 }

@@ -713,7 +713,7 @@ Refactor and extend everything cleanly.
 
 We are splitting puzzle 2d into general reusable bundles.
 It must be extendable on multiple levels.
-every extension is just a rust file.@semio-tech/infinite-cavas-react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @semio-tech/infinite-cavas-react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap
+every extension is just a rust file.@semio-tech/infinite-canvas-react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @semio-tech/infinite-canvas-react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap
 
 ---
 

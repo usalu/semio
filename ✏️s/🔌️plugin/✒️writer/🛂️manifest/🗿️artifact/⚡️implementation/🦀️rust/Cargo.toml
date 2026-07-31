@@ -1,5 +1,5 @@
 [package]
-name = "writer-plugin"
+name = "semio-s-plugin-writer"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -22,7 +22,7 @@ path = "../../../../../../../✏️s/🔌️plugin/✒️writer/🛂️manifest/
 
 [dependencies]
 semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
-framework_editor = { path = "../../../../../../../🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust", package = "framework_editor" }
+framework_editor = { path = "../../../../../../../🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust", package = "semio-framework-editor" }
 writer = { path = "../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/⚡️implementation/🦀️rust", package = "semio-s-app-writer" }
 writer_op = { path = "../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-writer-op" }
 writer_ui = { path = "../../../../../../../✏️s/🔌️plugin/✒️writer/🎛️app/✒️writer/🔨️module/🖱️ui/⚡️implementation/🦀️rust", package = "semio-s-app-writer-ui" }

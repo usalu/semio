@@ -37,7 +37,7 @@ export type BreachRecord = {
 //#endregion 🔖️breach
 
 //#region 🔖️cli
-/** 🔎️Resolves monorepo root (directory containing root package.json named `compose`). */
+/** 🔎️Resolves monorepo root (directory containing root package.json named `workspace`). */
 export function getWorkspaceRoot(): string {
   const fromEnv = process.env.REPO_ROOT?.trim();
   if (fromEnv) return resolve(fromEnv);
@@ -47,7 +47,7 @@ export function getWorkspaceRoot(): string {
     if (existsSync(pkg)) {
       try {
         const j = JSON.parse(readFileSync(pkg, "utf8")) as { name?: string };
-        if (j.name === "compose") return dir;
+        if (j.name === "workspace") return dir;
       } catch {
         /* ignore */
       }

@@ -1,5 +1,5 @@
 [package]
-name = "ui_tui"
+name = "semio-framework-ui-tui"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -20,7 +20,7 @@ terminal = ["dep:libc", "dep:windows-sys"]
 bindgen = ["dep:wasm-bindgen"]
 
 [dependencies]
-ui_styling = { path = "../../../🎨️styling/⚡️implementation/🦀️rust", package = "ui_styling" }
+ui_styling = { path = "../../../🎨️styling/⚡️implementation/🦀️rust", package = "semio-framework-ui-styling" }
 unicode-width = "0.2.2"
 
 [target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]

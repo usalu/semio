@@ -1,5 +1,5 @@
-//! 🎞️ Protocol hub wire frames: the lane-tagged `ClientFrame`/`ServerFrame` envelopes a
-//! browser/native sync client exchanges with the collaboration hub, plus their binary codec. Frozen
+//! 🎞️ Protocol semio_hub wire frames: the lane-tagged `ClientFrame`/`ServerFrame` envelopes a
+//! browser/native sync client exchanges with the collaboration semio_hub, plus their binary codec. Frozen
 //! contract: `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment`
 //! §`protocol_wire`.
 //!
@@ -41,7 +41,7 @@ impl Lane {
 //#endregion 🔖️Lane
 
 //#region 🔖️ClientFrame
-/// @emoji 📨️ One frame a client sends to the hub.
+/// @emoji 📨️ One frame a client sends to the semio_hub.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
     Hello {
@@ -85,7 +85,7 @@ pub enum Bootstrap {
     Tail,
 }
 
-/// @emoji ⚖️ How the hub resolved one submitted operation against concurrent history.
+/// @emoji ⚖️ How the semio_hub resolved one submitted operation against concurrent history.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ApplyOutcome {
     Accepted,
@@ -104,7 +104,7 @@ pub enum AckStage {
     Applied { outcome: Box<ApplyOutcome> },
 }
 
-/// @emoji 📬️ One frame the hub sends to a client.
+/// @emoji 📬️ One frame the semio_hub sends to a client.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ServerFrame {
     Welcome {

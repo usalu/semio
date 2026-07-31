@@ -149,7 +149,7 @@ class GenerateScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(): void {
     runGenerate();
-    console.log("@semio-tech/semio-asset build complete.");
+    console.log("@semio-tech/asset build complete.");
   }
 }
 

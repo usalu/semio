@@ -1,5 +1,5 @@
 [package]
-name = "playbook-module-procedural"
+name = "semio-s-plugin-playbook-procedural"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

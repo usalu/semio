@@ -65,7 +65,7 @@ pub struct BlockCompatibilityRule {
     pub bidirectional: bool,
 }
 
-/// 🧱️ One representation (mesh at a LOD/tag combination) a kind ships with — compose's "Representation".
+/// 🧱️ One representation (mesh at a LOD/tag combination) a kind ships with — semio_compose_rs's "Representation".
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct BlockRepresentation {

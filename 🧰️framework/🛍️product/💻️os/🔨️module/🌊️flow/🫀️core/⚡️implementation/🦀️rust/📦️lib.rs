@@ -5215,7 +5215,7 @@ mod flow_vcs_tests {
 
     /// 📜️ `store::test_support::assert_store_roundtrip` over a real `DocumentStore<FlowFixture,
     /// FlowOperation>` — proves the `Operation`/`OperationDiff` (`🔖️Operations`) and `OpText`
-    /// (`🔖️OpText`) layers compose correctly end to end, matching every other converted crate's test.
+    /// (`🔖️OpText`) layers semio_compose_rs correctly end to end, matching every other converted crate's test.
     #[test]
     fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
         let document = FlowFixture::default();

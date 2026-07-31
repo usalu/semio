@@ -1482,18 +1482,14 @@ impl PanelTreeBuilder {
     }
 
     pub fn build(mut self) -> UiNode {
-        let selected = self
-            .selected_ids
-            .map(|ids| ids.into_iter().collect::<HashSet<_>>())
-            .unwrap_or_default();
-        let highlighted = self
-            .highlighted_ids
-            .map(|ids| ids.into_iter().collect::<HashSet<_>>())
-            .unwrap_or_default();
+        let selected = self.selected_ids.iter().flatten().cloned().collect::<HashSet<_>>();
+        let highlighted = self.highlighted_ids.iter().flatten().cloned().collect::<HashSet<_>>();
         ui_tree_stamp_presence(&mut self.sections, &selected, &highlighted);
         UiNode::Tree(UiTreeNode {
             sections: self.sections,
             presence: UiPresence::default(),
+            selected_ids: self.selected_ids.clone(),
+            highlighted_ids: self.highlighted_ids.clone(),
             selection_change: self.selection_change,
             drop_action: self.drop_action,
         })
@@ -3317,6 +3313,8 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
             items,
         }],
         presence: UiPresence::default(),
+        selected_ids: None,
+        highlighted_ids: None,
         selection_change: None,
         drop_action: None,
     });

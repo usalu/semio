@@ -811,6 +811,8 @@ pub mod generation_forms {
         UiNode::Tree(UiTreeNode {
             sections,
             presence: UiPresence::default(),
+            selected_ids: None,
+            highlighted_ids: None,
             selection_change: Some(generation_action(controller_id, "selectGeneration", None)),
             drop_action: None,
         })

@@ -9,7 +9,7 @@
 //!
 //! 🎯️ Design choice: this crate links the SAME bundled `rusqlite`/`libsqlite3-sys` version
 //! already pinned in the workspace `Cargo.lock` by `vcs` and
-//! `framework/product/os/hub/storage/sqlite` (a Cargo workspace may only link one native
+//! `framework/product/os/semio_hub/storage/sqlite` (a Cargo workspace may only link one native
 //! `sqlite3` — `links = "sqlite3"` — so a version drift here would be a hard build break, not a
 //! style choice). Bundled sqlite's C build doesn't target `wasm32-unknown-unknown`, so — per the
 //! contract's "everything storage/thread-touching is `#[cfg(not(target_arch = "wasm32"))]`

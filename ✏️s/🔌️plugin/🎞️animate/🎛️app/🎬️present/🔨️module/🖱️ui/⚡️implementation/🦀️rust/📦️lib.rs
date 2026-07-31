@@ -268,6 +268,8 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
             items: if items.is_empty() { vec![tree_item("empty", labels.no_tiles)] } else { items },
         }],
         presence: UiPresence::default(),
+        selected_ids: None,
+        highlighted_ids: None,
         selection_change: Some(animate_present_action("setSelectedIds", Some(json!({ "ids": [] })))),
         drop_action: None,
     })

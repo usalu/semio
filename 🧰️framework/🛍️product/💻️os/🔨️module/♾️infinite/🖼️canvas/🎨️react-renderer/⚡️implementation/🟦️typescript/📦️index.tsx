@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🖼️ `@semio-tech/infinite-cavas-react-renderer` — r3f-style reconciler host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
+/** @emoji 🖼️ `@semio-tech/infinite-canvas-react-renderer` — r3f-style reconciler host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

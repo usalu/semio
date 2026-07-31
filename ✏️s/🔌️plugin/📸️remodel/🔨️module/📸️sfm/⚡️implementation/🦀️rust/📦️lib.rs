@@ -639,7 +639,7 @@ impl LeastSquaresProblem for EssentialRefineProblem<'_> {
     fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let cur_r: [f64; 3] = std::array::from_fn(|k| x.get(k));
         let d_r: [f64; 3] = std::array::from_fn(|k| dx.get(k));
-        let new_r = So3::exp(d_r).compose(&So3::exp(cur_r)).log();
+        let new_r = So3::exp(d_r).semio_compose_rs(&So3::exp(cur_r)).log();
         VecD::from_vec(vec![new_r[0], new_r[1], new_r[2], x.get(3) + dx.get(3), x.get(4) + dx.get(4)])
     }
 }
@@ -1439,7 +1439,7 @@ impl LeastSquaresProblem for PoseRefineProblem<'_> {
     fn plus(&self, x: &VecD, dx: &VecD) -> VecD {
         let cur: [f64; 6] = std::array::from_fn(|k| x.get(k));
         let ddelta: [f64; 6] = std::array::from_fn(|k| dx.get(k));
-        VecD::from_vec(Se3::exp(ddelta).compose(&Se3::exp(cur)).log().to_vec())
+        VecD::from_vec(Se3::exp(ddelta).semio_compose_rs(&Se3::exp(cur)).log().to_vec())
     }
 }
 
@@ -1575,7 +1575,7 @@ pub fn rotation_averaging(relative_rotations: &[(usize, usize, So3)]) -> Vec<So3
         for &(j, rij) in &adj[i] {
             if !visited[j] {
                 visited[j] = true;
-                rotations[j] = rij.compose(&rotations[i]);
+                rotations[j] = rij.semio_compose_rs(&rotations[i]);
                 queue.push_back(j);
             }
         }
@@ -1587,12 +1587,12 @@ pub fn rotation_averaging(relative_rotations: &[(usize, usize, So3)]) -> Vec<So3
             }
             let mut sum_tangent = [0.0; 3];
             for &(j, rij) in &adj[i] {
-                let implied = rij.inverse().compose(&rotations[j]);
-                let delta = implied.compose(&rotations[i].inverse()).log();
+                let implied = rij.inverse().semio_compose_rs(&rotations[j]);
+                let delta = implied.semio_compose_rs(&rotations[i].inverse()).log();
                 sum_tangent = add3(sum_tangent, delta);
             }
             let avg = scale3(sum_tangent, 1.0 / adj[i].len() as f64);
-            rotations[i] = So3::exp(avg).compose(&rotations[i]);
+            rotations[i] = So3::exp(avg).semio_compose_rs(&rotations[i]);
         }
     }
     rotations
@@ -1782,9 +1782,9 @@ impl LeastSquaresProblem for PoseGraphProblem<'_> {
         for (row, &(i, j, zij)) in self.edges.iter().enumerate() {
             let pi = self.pose_at(x, i);
             let pj = self.pose_at(x, j);
-            let predicted = pj.compose(&pi.inverse());
+            let predicted = pj.semio_compose_rs(&pi.inverse());
             let z_se3 = Se3 { r: zij.r, t: zij.t };
-            let err = z_se3.inverse().compose(&predicted).log();
+            let err = z_se3.inverse().semio_compose_rs(&predicted).log();
             for (k, value) in err.into_iter().enumerate() {
                 out.set(row * 6 + k, value);
             }
@@ -1801,7 +1801,7 @@ impl LeastSquaresProblem for PoseGraphProblem<'_> {
             let base = 6 * (node - 1);
             let cur: [f64; 6] = std::array::from_fn(|k| x.get(base + k));
             let ddelta: [f64; 6] = std::array::from_fn(|k| dx.get(base + k));
-            let updated = Se3::exp(ddelta).compose(&Se3::exp(cur)).log();
+            let updated = Se3::exp(ddelta).semio_compose_rs(&Se3::exp(cur)).log();
             for (k, value) in updated.into_iter().enumerate() {
                 out.set(base + k, value);
             }
@@ -1914,7 +1914,7 @@ pub struct Reconstruction {
 /// A-blocks are cameras (6-dof `se(3)` log-tangent), B-blocks are points (3-dof XYZ), both updated via
 /// `schur_lm`'s plain elementwise vector addition — since `BipartiteResiduals` has no manifold-retraction
 /// hook (unlike [`LeastSquaresProblem::plus`]), a camera's raw tangent parameter is *not* re-retracted
-/// through `Se3::exp`/`compose` between iterations, only added to directly. This is a first-order
+/// through `Se3::exp`/`semio_compose_rs` between iterations, only added to directly. This is a first-order
 /// approximation, exact only for small per-iteration steps; it's adequate here because `local_ba`/
 /// `global_ba` are always seeded from an already-reasonable pose (PnP/triangulation output), keeping
 /// steps small. `observations` maps `(a_index, b_index)` to that camera-point pair's pixel observation,
@@ -2392,8 +2392,8 @@ mod tests {
         let recovered = decompose_essential(&e, &inlier_rays).expect("cheirality vote should pick a candidate");
         let pose_a = scene.cameras[0].1;
         let pose_b = scene.cameras[1].1;
-        let true_rel = pose_b.0.compose(&pose_a.0.inverse());
-        let rot_err = vec3d_length(recovered.r.inverse().compose(&true_rel.r).log());
+        let true_rel = pose_b.0.semio_compose_rs(&pose_a.0.inverse());
+        let rot_err = vec3d_length(recovered.r.inverse().semio_compose_rs(&true_rel.r).log());
         assert!(rot_err < 1.0_f64.to_radians(), "rotation error {rot_err} rad");
         let true_dir = vec3d_normalize(true_rel.t);
         let dir_err = vec3d_length(vec3d_sub(recovered.t, true_dir));
@@ -2483,7 +2483,7 @@ mod tests {
         assert!(!candidates.is_empty(), "expected at least one P3P solution");
         let mut best_err = f64::MAX;
         for pose in &candidates {
-            let rot_err = vec3d_length(pose.r.inverse().compose(&true_pose.r).log());
+            let rot_err = vec3d_length(pose.r.inverse().semio_compose_rs(&true_pose.r).log());
             let t_err = vec3d_length(vec3d_sub(pose.t, true_pose.t));
             best_err = best_err.min(rot_err + t_err);
         }
@@ -2509,7 +2509,7 @@ mod tests {
         }
         let initial = epnp(&intr, &world_pts, &obs).expect("epnp should recover an initial pose");
         let refined = refine_pose_lm(&intr, &world_pts, &obs, initial);
-        let rot_err = vec3d_length(refined.r.inverse().compose(&true_pose.r).log());
+        let rot_err = vec3d_length(refined.r.inverse().semio_compose_rs(&true_pose.r).log());
         // 0.2deg is tight for a 10-point/1px-noise PnP MLE: verified `refined`'s summed-squared
         // reprojection error is *lower* than the true pose's for this seed (12.95 vs 18.77), i.e. LM
         // converged correctly to the maximum-likelihood pose — the residual rotation error here is exactly
@@ -2550,7 +2550,7 @@ mod tests {
         }
         let cfg = RansacConfig { threshold: 2.0, confidence: 0.999, max_iters: 3000, seed: 5, scoring: RansacScoring::Msac };
         let (pose, inliers) = pnp_ransac(&intr, &world_pts, &obs, &cfg).expect("pnp_ransac should recover a pose");
-        let rot_err = vec3d_length(pose.0.r.inverse().compose(&true_pose.r).log());
+        let rot_err = vec3d_length(pose.0.r.inverse().semio_compose_rs(&true_pose.r).log());
         assert!(rot_err < 2.0_f64.to_radians(), "rotation error {rot_err} rad");
         assert!(inliers.len() + n_outliers + 3 >= world_pts.len(), "inliers {} should be close to {} planted inliers", inliers.len(), world_pts.len() - n_outliers);
     }
@@ -2688,7 +2688,7 @@ mod tests {
         let mut relative_directions = Vec::new();
         for &(i, j) in &edges_idx {
             let noise = So3::exp([0.01 * (rng.next_f64() - 0.5), 0.01 * (rng.next_f64() - 0.5), 0.01 * (rng.next_f64() - 0.5)]);
-            let rij = noise.compose(&true_rotations[j].compose(&true_rotations[i].inverse()));
+            let rij = noise.semio_compose_rs(&true_rotations[j].semio_compose_rs(&true_rotations[i].inverse()));
             relative_rotations.push((i, j, rij));
             let dir_world = vec3d_normalize(vec3d_sub(true_centers[j], true_centers[i]));
             let local_dir = true_rotations[i].act(dir_world);
@@ -2698,7 +2698,7 @@ mod tests {
         let recovered_rotations = rotation_averaging(&relative_rotations);
         assert_eq!(recovered_rotations.len(), n);
         for i in 1..n {
-            let err = vec3d_length(recovered_rotations[i].inverse().compose(&true_rotations[i]).log());
+            let err = vec3d_length(recovered_rotations[i].inverse().semio_compose_rs(&true_rotations[i]).log());
             assert!(err < 0.1, "node {i} rotation error {err} rad too high");
         }
 
@@ -2774,24 +2774,24 @@ mod tests {
         for i in 1..n {
             let step = Se3 { r: So3::exp([0.05 * (rng.next_f64() - 0.5), 0.2, 0.02 * (rng.next_f64() - 0.5)]), t: [1.0, 0.05 * (rng.next_f64() - 0.5), 0.02 * (rng.next_f64() - 0.5)] };
             let prev = true_poses[i - 1];
-            true_poses.push(step.compose(&prev));
+            true_poses.push(step.semio_compose_rs(&prev));
         }
 
         let drift = Se3 { r: So3::exp([0.0, 0.02, 0.0]), t: [0.05, 0.0, 0.0] };
         let mut initial_poses = vec![Se3::identity()];
         let mut edges = Vec::new();
         for i in 1..n {
-            let true_rel = true_poses[i].compose(&true_poses[i - 1].inverse());
-            let noisy_rel = drift.compose(&true_rel);
+            let true_rel = true_poses[i].semio_compose_rs(&true_poses[i - 1].inverse());
+            let noisy_rel = drift.semio_compose_rs(&true_rel);
             edges.push((i - 1, i, Sim3 { s: 1.0, r: noisy_rel.r, t: noisy_rel.t }));
-            initial_poses.push(noisy_rel.compose(&initial_poses[i - 1]));
+            initial_poses.push(noisy_rel.semio_compose_rs(&initial_poses[i - 1]));
         }
-        let loop_rel = true_poses[0].compose(&true_poses[n - 1].inverse());
+        let loop_rel = true_poses[0].semio_compose_rs(&true_poses[n - 1].inverse());
         edges.push((n - 1, 0, Sim3 { s: 1.0, r: loop_rel.r, t: loop_rel.t }));
 
         let residual_of = |poses: &[Se3]| -> f64 {
-            let predicted = poses[0].compose(&poses[n - 1].inverse());
-            let err = loop_rel.inverse().compose(&predicted).log();
+            let predicted = poses[0].semio_compose_rs(&poses[n - 1].inverse());
+            let err = loop_rel.inverse().semio_compose_rs(&predicted).log();
             err.iter().map(|v| v * v).sum::<f64>().sqrt()
         };
         let before = residual_of(&initial_poses);
@@ -2818,7 +2818,7 @@ mod tests {
 
         let recovered = align_to_priors(&recon, &gps_priors).expect("alignment should succeed for well-posed input");
         assert!((recovered.s - truth.s).abs() < 1e-6, "scale error: got {} want {}", recovered.s, truth.s);
-        let rot_err = vec3d_length(recovered.r.inverse().compose(&truth.r).log());
+        let rot_err = vec3d_length(recovered.r.inverse().semio_compose_rs(&truth.r).log());
         assert!(rot_err < 1e-6, "rotation error {rot_err}");
         let t_err = vec3d_length(vec3d_sub(recovered.t, truth.t));
         assert!(t_err < 1e-6, "translation error {t_err}");
@@ -2842,11 +2842,11 @@ mod tests {
     use std::collections::HashMap;
 
     fn relative_pose(a: &CameraPose, b: &CameraPose) -> Se3 {
-        b.0.compose(&a.0.inverse())
+        b.0.semio_compose_rs(&a.0.inverse())
     }
 
     fn rotation_error_deg(a: &So3, b: &So3) -> f64 {
-        norm3(a.compose(&b.inverse()).log()).to_degrees()
+        norm3(a.semio_compose_rs(&b.inverse()).log()).to_degrees()
     }
 
     fn frob_norm(m: &[[f64; 3]; 3]) -> f64 {
@@ -3158,7 +3158,7 @@ mod tests {
             .map(|(i, (_, pose))| {
                 let mut rng = Rng::from_seed(1000 + i as u64);
                 let perturb: [f64; 6] = std::array::from_fn(|_| (rng.next_f64() - 0.5) * 0.02);
-                VecD::from_vec(Se3::exp(perturb).compose(&pose.0).log().to_vec())
+                VecD::from_vec(Se3::exp(perturb).semio_compose_rs(&pose.0).log().to_vec())
             })
             .collect();
         let b0: Vec<VecD> = point_ids
@@ -3207,12 +3207,12 @@ mod tests {
 
             let biased_step = |i: usize| -> Se3 {
                 let true_step = relative_pose(&CameraPose(truth[i - 1]), &CameraPose(truth[i]));
-                Se3 { r: bias.compose(&true_step.r), t: true_step.t }
+                Se3 { r: bias.semio_compose_rs(&true_step.r), t: true_step.t }
             };
 
             let mut drifted = vec![truth[0]; N];
             for i in 1..N {
-                drifted[i] = biased_step(i).compose(&drifted[i - 1]);
+                drifted[i] = biased_step(i).semio_compose_rs(&drifted[i - 1]);
             }
             let drift_before = norm3(sub3(camera_center(&CameraPose(drifted[N - 1])), camera_center(&CameraPose(truth[N - 1]))));
             println!("[loop_closure] drift before correction (last camera): {drift_before} (orbit radius {orbit_radius})");

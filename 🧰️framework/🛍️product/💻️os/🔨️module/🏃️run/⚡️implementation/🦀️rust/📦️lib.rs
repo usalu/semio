@@ -150,7 +150,7 @@ impl RunState {
 /// binary pack+dsl form — see `semio_framework_os::encode_os_space_payload`), one plain document per
 /// app instance under `documents/`, and the runner's own `run/state.json` + `run/media/` cache. Ids
 /// only — no paths inside the space document itself — so the bundle is relocatable and syncs the
-/// same way over `file://` or a hub backbone.
+/// same way over `file://` or a semio_hub backbone.
 pub struct SpaceBundle {
     root: PathBuf,
 }
@@ -306,7 +306,7 @@ pub fn plan(graph: &OsWorkflow, documents: &BTreeMap<String, Vec<u8>>, state: &R
     for node_id in &order {
         let node = *node_by_id.get(node_id.as_str()).ok_or_else(|| RunError::UnknownNode(node_id.clone()))?;
         let document_bytes = documents.get(&node.instance_id).cloned().unwrap_or_default();
-        let document_fingerprint = semio_framework_hash::hash_bytes(&document_bytes);
+        let document_fingerprint = framework_hash::hash_bytes(&document_bytes);
         let mut input_fingerprints: BTreeMap<String, String> = BTreeMap::new();
         for edge in incoming.get(node_id.as_str()).into_iter().flatten() {
             let fingerprint = state.nodes.get(&edge.source_node_id).and_then(|record| record.output_fingerprints.get(&edge.source_port_id)).cloned().unwrap_or_default();
@@ -416,7 +416,7 @@ impl<H: MediaNodeHost> SpaceRunner<H> {
             let node = *node_by_id.get(node_id.as_str()).ok_or_else(|| RunError::UnknownNode(node_id.clone()))?;
             let instance = *instance_by_id.get(node.instance_id.as_str()).ok_or_else(|| RunError::UnknownInstance(node.instance_id.clone()))?;
             let document_bytes = documents_out.get(&instance.id).cloned().unwrap_or_default();
-            let document_fingerprint = semio_framework_hash::hash_bytes(&document_bytes);
+            let document_fingerprint = framework_hash::hash_bytes(&document_bytes);
 
             let mut input_fingerprints: BTreeMap<String, String> = BTreeMap::new();
             for edge in incoming.get(node_id.as_str()).into_iter().flatten() {

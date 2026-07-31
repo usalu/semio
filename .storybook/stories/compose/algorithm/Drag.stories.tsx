@@ -12,7 +12,7 @@ import * as React from "react";
 
 import { AlgorithmApp, WindowKind, dragPieces, mergeKitDesigns, pieceIdsFromWire, useAlgorithmAsyncRun, useFlatDesignPreview, useReconciledPieceSelection, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio-tech/compose-algorithm";
 
-import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
+import { MetabolismKit as metabolismKit } from "@semio-tech/asset";
 import { DragDesign, DragOffset, DragPieces } from "@semio-tech/compose-fixture";
 
 const rawDesign = { ...DragDesign, id: "drag-preset-id", name: "Drag Preset" };

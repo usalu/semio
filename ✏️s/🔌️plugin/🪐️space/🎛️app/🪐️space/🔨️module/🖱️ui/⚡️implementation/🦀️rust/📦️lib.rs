@@ -79,7 +79,7 @@ fn workflow_context_menu_json(labels: &SStudioLabels) -> String {
 }
 
 // 🫀️ The shared `presence:` backbone-URI hack (`read_os_presence_peers`/`write_os_presence`/
-// `OsPresencePeer`) was deleted from os-core — presence now flows through the hub's duplex
+// `OsPresencePeer`) was deleted from os-core — presence now flows through the semio_hub's duplex
 // `PresencePeer`/`Presence` frames via `framework/sync`'s `DocumentEvent::Presence` for migrated
 // apps. `s` isn't wired onto `DocumentHost` yet (WS-F's last wave), so it keeps this tiny
 // self-contained in-memory heartbeat map until then — same upsert/prune/exclude-self semantics as

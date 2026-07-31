@@ -1,5 +1,5 @@
 [package]
-name = "reasoning_mindmap"
+name = "semio-s-kernel-reasoning-mindmap"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

@@ -1,5 +1,5 @@
 [package]
-name = "remodel_geo"
+name = "semio-s-plugin-remodel-geo"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -12,11 +12,11 @@ crate-type = ["rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🗺️geo/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-remodel_sfm = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📸️sfm/⚡️implementation/🦀️rust", package = "remodel_sfm" }
-remodel_dense = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌫️dense/⚡️implementation/🦀️rust", package = "remodel_dense" }
-remodel_mesh = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🥽️mesh/⚡️implementation/🦀️rust", package = "remodel_mesh" }
-remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "remodel_image" }
-remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "remodel_camera" }
+remodel_sfm = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📸️sfm/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-sfm" }
+remodel_dense = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🌫️dense/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-dense" }
+remodel_mesh = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🥽️mesh/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-mesh" }
+remodel_image = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/🖼️image/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-image" }
+remodel_camera = { path = "../../../../../../../✏️s/🔌️plugin/📸️remodel/🔨️module/📷️camera/⚡️implementation/🦀️rust", package = "semio-s-plugin-remodel-camera" }
 mathematical_algebra = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/➕️algebra/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-algebra" }
 mathematical_lie = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/🔷️lie/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-lie" }
 mathematical_spatial = { path = "../../../../../../../🧰️framework/🔨️module/🧮️math/🗺️spatial/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-spatial" }

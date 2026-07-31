@@ -31,7 +31,7 @@ isProject: false
 
 ## Goal
 
-Mirror the existing `procedural/3d` editor as a new `procedural/2d` editor whose preview renders on the infinite canvas (`@semio-tech/infinite-cavas-react-renderer`), backed by a new full-featured 2D vector-graphics flow module/kernel (paths/beziers, fills, strokes, gradients, text, layers, clipping, boolean ops), and add SVG/PDF/PNG export.
+Mirror the existing `procedural/3d` editor as a new `procedural/2d` editor whose preview renders on the infinite canvas (`@semio-tech/infinite-canvas-react-renderer`), backed by a new full-featured 2D vector-graphics flow module/kernel (paths/beziers, fills, strokes, gradients, text, layers, clipping, boolean ops), and add SVG/PDF/PNG export.
 
 This is a large epic. It is staged so each stage is independently runnable/testable. Repo rules apply: open one ticket (associate a goal first via `repo://goals`), keep temp files inside the ticket folder, extend existing files with regions, no new script files (only `script.ts`), register all runnable commands in [.vscode/launch.json](.vscode/launch.json), external libs behind interfaces, no migration/back-compat shims.
 
@@ -66,7 +66,7 @@ Mirror `geometry/brep` (`rs/`, `engine/`, `js/`). Define a `Drawing` scene model
 
 ## Stage 4 — `procedural/2d/react` (`@semio-tech/procedural-2d-react`)
 
-- New package mirroring [procedural/3d/react/index.tsx](procedural/3d/react/index.tsx): `Procedural2dExtensionHost` activating `draw` (instead of `brep`), and a `Procedural2dPreview` built on `@semio-tech/infinite-cavas-react-renderer` (`GraphWasmCanvas`/`Puzzle2dCanvas` pattern from [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx)) rendering the `DrawingScene` with pan/zoom, selection marquee, and channel preview extraction analogous to `extractChannelPreviewItems`.
+- New package mirroring [procedural/3d/react/index.tsx](procedural/3d/react/index.tsx): `Procedural2dExtensionHost` activating `draw` (instead of `brep`), and a `Procedural2dPreview` built on `@semio-tech/infinite-canvas-react-renderer` (`GraphWasmCanvas`/`Puzzle2dCanvas` pattern from [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx)) rendering the `DrawingScene` with pan/zoom, selection marquee, and channel preview extraction analogous to `extractChannelPreviewItems`.
 - Reuse `ProceduralFlowEditor`/`FlowCanvas` for the graph editor (flow is already 2D); only the preview viewport differs.
 
 ## Stage 5 — `procedural/2d/play` (`@semio-tech/procedural-2d-play`)

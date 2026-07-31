@@ -282,7 +282,7 @@ export default defineConfig(async ({ mode }) => {
   const workspaceAliases: Array<{ find: string | RegExp; replacement: string }> = [
     { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname) },
     { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
-    { find: "@semio-tech/semio-asset/icon", replacement: path.resolve(workspaceRoot, "framework/asset/js/index.ts") },
+    { find: "@semio-tech/asset/icon", replacement: path.resolve(workspaceRoot, "framework/asset/js/index.ts") },
     ...(workspaceResolve.resolve?.alias ?? []),
     { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
     { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },

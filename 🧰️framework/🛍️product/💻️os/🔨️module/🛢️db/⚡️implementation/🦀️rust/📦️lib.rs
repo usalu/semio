@@ -9,7 +9,7 @@
 //! 🎯️ Design choice (layout): the frozen `Database`/`DocumentHandle` API and its companion types
 //! (`CommandReceipt`, `Frontier`, `Consistency`, `DurabilityClass`, …) already live in `db_engine`
 //! — this crate promotes exactly that surface to its own root (`//#region 🔖️Database`), unchanged,
-//! since that is the "primary entry point" every downstream caller (`os-hub`, `compose-hub`,
+//! since that is the "primary entry point" every downstream caller (`os-semio_hub`, `semio_compose_rs-semio_hub`,
 //! plugin crates) is meant to reach for. `db_engine` already exposes `Database::open_at` verbatim
 //! (`FsStorage`, zero-touch) — no extra convenience wrapper is needed here. Every other `db_*`
 //! crate is additionally reachable in full through a same-named (minus the `db_` prefix)

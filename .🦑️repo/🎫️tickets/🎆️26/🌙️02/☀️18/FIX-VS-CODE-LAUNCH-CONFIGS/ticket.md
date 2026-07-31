@@ -19,8 +19,8 @@ Fix incorrect VSCode launch.json and tasks.json configs.
 
 nx projects and their actual roots:
 
-- `@semio-tech/semio-logo` → `assets/logo` (configs say `compose/logo` — wrong)
-- `@semio-tech/semio-icons` → `assets/icons` (configs say `compose/icons` — wrong)
+- `@semio-tech/logo` → `assets/logo` (configs say `compose/logo` — wrong)
+- `@semio-tech/icons` → `assets/icons` (configs say `compose/icons` — wrong)
 - `@semio-tech/compose-net` → `compose/net/Compose` (configs say `compose/net` — wrong)
 - `@semio-tech/compose-sketchpad` → `compose/sketchpad` (missing from configs)
 - `compose/grasshopper` → does NOT exist in nx (remove)

@@ -12,7 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/�
 
 [dependencies]
 fem3d = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-fem-3d" }
-fem_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "fem_core" }
+fem_core = { path = "../../../../../../../../../✏️s/🔌️plugin/🏗️fem/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-fem-core" }
 thiserror = "2.0.12"
 
 [dev-dependencies]

@@ -43,7 +43,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     titlePrefix: "🖱️ui⚛️react",
     sourceRoots: [repoRelative("framework/module/ui/js/react"), repoRelative("framework/module/ui/styling"), repoRelative("framework/module/ui/asset"), repoRelative("s/plugin/puzzle/module/asset"), repoRelative("framework/product/os/module/infinite/canvas/react-renderer"), repoRelative("compose/client/ui/desktop")],
     aliases: {
-      "@semio-tech/infinite-cavas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
+      "@semio-tech/infinite-canvas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
       "@elements/ui/globals.css": "framework/module/ui/js/react/globals.css",
       "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
     },
@@ -86,7 +86,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
       "@semio-tech/ui-react/globals.css": "framework/module/ui/js/react/globals.css",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
-    optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/semio-asset"],
+    optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/asset"],
   },
   {
     id: "compose/ui",
@@ -142,7 +142,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     titlePrefix: "♾️infinite",
     sourceRoots: [repoRelative("framework/product/os/module/infinite/canvas/react-renderer"), repoRelative("framework/product/os/module/infinite/world/r3f"), repoRelative("framework/product/os/module/infinite/fixture")],
     aliases: {
-      "@semio-tech/infinite-cavas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
+      "@semio-tech/infinite-canvas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
     },
   },
   {

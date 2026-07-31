@@ -93,7 +93,7 @@
   },
   "@infinite/cavas/react-renderer": {
     "path": "infinite/cavas/react-renderer/package.json",
-    "newName": "@semio-tech/infinite-cavas-react-renderer"
+    "newName": "@semio-tech/infinite-canvas-react-renderer"
   },
   "@infinite/world/r3f": {
     "path": "infinite/world/r3f/package.json",
@@ -261,19 +261,19 @@
   },
   "@asset": {
     "path": "asset/package.json",
-    "newName": "@semio-tech/semio-asset"
+    "newName": "@semio-tech/asset"
   },
   "@compose/icon": {
     "path": "asset/icon/package.json",
-    "newName": "@semio-tech/semio-icon"
+    "newName": "@semio-tech/icon"
   },
   "@compose/logo": {
     "path": "asset/logo/package.json",
-    "newName": "@semio-tech/semio-logo"
+    "newName": "@semio-tech/logo"
   },
   "@compose/image": {
     "path": "asset/image/package.json",
-    "newName": "@semio-tech/semio-image"
+    "newName": "@semio-tech/image"
   },
   "@puzzle/2d/react": {
     "path": "puzzle/2d/react/package.json",

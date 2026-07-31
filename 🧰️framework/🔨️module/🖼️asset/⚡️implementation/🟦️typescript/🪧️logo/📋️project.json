@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/semio-logo",
+  "name": "@semio-tech/logo",
   "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "dev": {

@@ -1,5 +1,5 @@
 [package]
-name = "block-plugin"
+name = "semio-s-plugin-block"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

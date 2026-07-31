@@ -1702,6 +1702,49 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     if unchanged {
         return;
     }
+    let geometry_unchanged = state.scene_camera_json.as_deref() == Some(world.camera_json.as_str())
+        && state.scene_meshes_json.as_deref() == Some(world.meshes_json.as_str())
+        && state.scene_instances_json.as_deref() == Some(world.instances_json.as_str())
+        && state.scene_attractions_json.as_deref() == world.attractions_json.as_deref()
+        && state.scene_target_volumes_json.as_deref() == world.target_volumes_json.as_deref()
+        && state.scene_references_json.as_deref() == world.references_json.as_deref()
+        && state.scene_brush_preview_json.as_deref() == world.brush_preview_json.as_deref()
+        && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref()
+        && state.scene_engagement_preview_json.as_deref() == world.engagement_preview_json.as_deref()
+        && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
+        && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref()
+        && state.scene_environment_json.as_deref() == world.environment_json.as_deref()
+        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref();
+    if geometry_unchanged {
+        let selection_changed = state.scene_selection_json.as_deref() != Some(world.selection_json.as_str());
+        let vortices_changed = state.scene_vortices_json.as_deref() != world.vortices_json.as_deref();
+        if selection_changed {
+            state.scene_selection_json = Some(world.selection_json.clone());
+            let selection: WorldSelectionRecord = serde_json::from_str(&world.selection_json).unwrap_or_default();
+            state.selection_method = selection.method.unwrap_or_else(|| "rectangle".into());
+            state.local_hover_id = selection.hovered_id;
+            state.selected_ids = selection.ids.clone().unwrap_or_default();
+            state.component_ids = selection.component_ids.clone().unwrap_or_default();
+            state.granularity = selection.granularity.or(selection.selection_mode).unwrap_or_else(|| "object".into());
+            if state.granularity == "object" {
+                state.granularity = "mesh".into();
+            }
+            state.interaction_mode = selection.interaction_mode.unwrap_or_else(|| "model".into());
+            state.gumball_target = selection.gumball_target.map(|target| [target[0] as f32, target[1] as f32, target[2] as f32]);
+            apply_hovered_component_from_selection(state, &world.selection_json);
+            state.show_edges = selection.show_edges.unwrap_or(true);
+            state.selection_targets = selection.targets.unwrap_or_default();
+            state.active_object_id = selection.active_object_id;
+            state.transform_mode = selection.transform_mode.unwrap_or_else(|| "translate".into());
+        }
+        if vortices_changed {
+            state.scene_vortices_json = world.vortices_json.clone();
+            state.vortices = world.vortices_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
+        }
+        if selection_changed || vortices_changed {
+            return;
+        }
+    }
     let camera_changed = state.scene_camera_json.as_deref() != Some(world.camera_json.as_str());
     state.scene_camera_json = Some(world.camera_json.clone());
     state.scene_meshes_json = Some(world.meshes_json.clone());

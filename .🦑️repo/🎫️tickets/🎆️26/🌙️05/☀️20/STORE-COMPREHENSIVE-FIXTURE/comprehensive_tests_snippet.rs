@@ -1,7 +1,7 @@
 
-    /// @emoji 📋️ Full store scenario catalog (`kit-store.comprehensive.compose.json`) under `assets/compose/`.
+    /// @emoji 📋️ Full store scenario catalog (`kit-store.comprehensive.semio_compose_rs.json`) under `assets/semio_compose_rs/`.
     fn kit_store_comprehensive_fixture_path() -> Option<PathBuf> {
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/compose/kit-store.comprehensive.compose.json");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../assets/semio_compose_rs/kit-store.comprehensive.semio_compose_rs.json");
         if path.is_file() {
             Some(path)
         } else {
@@ -157,7 +157,7 @@
     }
 
     fn kit_store_validate_comprehensive_fixture(fixture: &serde_json::Value) {
-        assert_eq!(fixture["kind"].as_str(), Some("compose.kit_store.comprehensive"));
+        assert_eq!(fixture["kind"].as_str(), Some("semio_compose_rs.kit_store.comprehensive"));
         assert!(fixture["schema"].as_str().is_some(), "schema");
         assert!(fixture["storeId"].as_str().is_some(), "storeId");
         let steps = fixture["steps"].as_array().expect("steps array");
@@ -204,7 +204,7 @@
                 let uri_local = format!("local://{}", proj_canon.display());
                 let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
                 let g_bootstrap = crate::store::Graph::new().await;
-                let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
+                let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .semio_compose_rs layout");
                 let g2 = crate::store::Graph::new().await;
                 let legacy_workspace = ops_json["draftId"].as_str().expect("draftId");
                 let graph_workspace = g2.id.as_str().to_string();
@@ -214,7 +214,7 @@
                         op.workspace_id = graph_workspace.clone();
                     }
                 }
-                let db_path = proj_canon.join(".compose").join("wip.db");
+                let db_path = proj_canon.join(".semio_compose_rs").join("wip.db");
                 let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
                 for operation in &stored {
                     let input_json = serde_json::to_string(&operation.input).expect("input json");
@@ -279,7 +279,7 @@
     #[test]
     fn kit_store_comprehensive_fixture_contract_is_valid() {
         let Some(path) = kit_store_comprehensive_fixture_path() else {
-            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.compose.json");
+            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.semio_compose_rs.json");
             return;
         };
         let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
@@ -311,7 +311,7 @@
     fn kit_store_comprehensive_fixture_all_scenarios() {
         block_on(async {
             let Some(path) = kit_store_comprehensive_fixture_path() else {
-                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.compose.json");
+                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.semio_compose_rs.json");
                 return;
             };
             let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");

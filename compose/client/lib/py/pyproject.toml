@@ -1,5 +1,5 @@
 [project]
-name = "compose"
+name = "semio-compose"
 version = "4.4.0"
 description = "🏘️ compose domain representations for Python"
 authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]

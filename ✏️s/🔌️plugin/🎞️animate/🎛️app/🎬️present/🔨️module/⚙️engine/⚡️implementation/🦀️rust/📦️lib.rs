@@ -68,7 +68,7 @@ pub mod compiler {
             "player": {
                 "kind": "wgpu",
                 "wasm": "/animate/plugin/wasm/animate_plugin_bg.wasm",
-                "js": "/animate/plugin/wasm/animate_plugin.js",
+                "js": "/animate/plugin/wasm/semio_s_plugin_animate.js",
                 "boot": "/animate/plugin/wasm/🟨️boot.js"
             },
             "assets": {
@@ -97,7 +97,7 @@ pub mod compiler {
         <canvas id="animate-present-canvas" width="1280" height="720"></canvas>
         <script id="animate-present-deck" type="application/json">{escaped}</script>
       </main>
-      <script type="module" src="/animate/plugin/wasm/animate_plugin.js"></script>
+      <script type="module" src="/animate/plugin/wasm/semio_s_plugin_animate.js"></script>
       <script type="module" src="player.js"></script>
     </body>
     </html>
@@ -212,7 +212,7 @@ pub mod compiler {
             compile_present_site(&deck, &output).expect("compile site");
             let index = std::fs::read_to_string(output.join("🌐️index.html")).expect("🌐️index.html");
             assert!(index.contains("animate.present.deck"));
-            assert!(index.contains("animate_plugin.js"));
+            assert!(index.contains("semio_s_plugin_animate.js"));
             let player = std::fs::read_to_string(output.join("player.js")).expect("player.js");
             assert!(player.contains("sceneClips"));
             let manifest: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");

@@ -1,5 +1,5 @@
 [package]
-name = "framework_surface_terrain"
+name = "semio-framework-os-kernel-surface-terrain"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"

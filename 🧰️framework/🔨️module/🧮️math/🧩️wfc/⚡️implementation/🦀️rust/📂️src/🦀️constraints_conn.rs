@@ -171,7 +171,7 @@ mod tests {
         b.compile().unwrap()
     }
 
-    /// A 5-node "H" shape: 0-1-2, 2-3, 2-4 (so node2 is a hub).
+    /// A 5-node "H" shape: 0-1-2, 2-3, 2-4 (so node2 is a semio_hub).
     fn hub_adjacency() -> AdjacencyView {
         let edges = [(0, 1), (1, 2), (2, 3), (2, 4)];
         let mut neighbors = vec![Vec::new(); 5];
@@ -187,7 +187,7 @@ mod tests {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ConnectivityConstraint::new(model, PatternSelector::Pattern(PatternId(0)));
-        // floor at 0,1,2 (connected through the hub), wall elsewhere.
+        // floor at 0,1,2 (connected through the semio_hub), wall elsewhere.
         let assignment = vec![PatternId(0), PatternId(0), PatternId(0), PatternId(1), PatternId(1)];
         assert!(c.validate_complete(&assignment, &adjacency).is_ok());
     }
@@ -197,7 +197,7 @@ mod tests {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ConnectivityConstraint::new(model, PatternSelector::Pattern(PatternId(0)));
-        // floor at 0 and at 3+4, split by wall at the hub (node2) and node1.
+        // floor at 0 and at 3+4, split by wall at the semio_hub (node2) and node1.
         let assignment = vec![PatternId(0), PatternId(1), PatternId(1), PatternId(0), PatternId(0)];
         assert!(c.validate_complete(&assignment, &adjacency).is_err());
     }
@@ -225,7 +225,7 @@ mod tests {
         let model = floor_wall_model();
         let adjacency = hub_adjacency();
         let c = ReachabilityConstraint::new(model, vec![NodeId(0)], vec![NodeId(3)], PatternSelector::Pattern(PatternId(0)));
-        // Wall at the hub (node2) blocks the only path from 0 to 3.
+        // Wall at the semio_hub (node2) blocks the only path from 0 to 3.
         let assignment = vec![PatternId(0), PatternId(0), PatternId(1), PatternId(0), PatternId(0)];
         assert!(c.validate_complete(&assignment, &adjacency).is_err());
     }

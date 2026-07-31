@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/semio-asset",
+  "name": "@semio-tech/asset",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {

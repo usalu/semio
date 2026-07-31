@@ -11,7 +11,7 @@ workspace = true
 path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/🔌️jack/🔨️module/📡️protocol/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "trinity_ram" }
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🔨️module/🐏️ram/⚡️implementation/🦀️rust", package = "semio-s-plugin-trinity-ram" }
 trinity_jack_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🔱️trinity/🎛️app/🔌️jack/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-trinity-jack-op" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }

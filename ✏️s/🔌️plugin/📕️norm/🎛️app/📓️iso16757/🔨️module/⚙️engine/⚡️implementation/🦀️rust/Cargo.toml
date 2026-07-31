@@ -12,7 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/
 
 [dependencies]
 iso16757 = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🎛️app/📓️iso16757/⚡️implementation/🦀️rust", package = "semio-s-app-norm-iso16757" }
-norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "norm_core" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌️plugin/📕️norm/🔨️module/🫀️core/⚡️implementation/🦀️rust", package = "semio-s-plugin-norm-core" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

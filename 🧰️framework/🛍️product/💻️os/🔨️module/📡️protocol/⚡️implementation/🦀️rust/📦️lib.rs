@@ -46,7 +46,7 @@ pub fn decompile_ops(bytes: &[u8], options: &DecodeOptions) -> Result<String, Pr
 
 //#region 🔖️Sync
 /// 🔗️ Zero-copy: one contiguous borrowed byte span of whole record frames covering an edit-ordinal
-/// range — itself a valid record stream, shippable as-is in a binary backbone/hub frame.
+/// range — itself a valid record stream, shippable as-is in a binary backbone/semio_hub frame.
 pub struct RecordSlice<'a> {
     pub bytes: &'a [u8],
     pub first_edit_ordinal: u64,
@@ -101,7 +101,7 @@ pub fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Range<u64
 /// `digest_i = blake3(full frame bytes)` primitive, folding every frame's digest in the slice into
 /// one `blake3(digest_1 || .. || digest_k)` value — i.e. the same shape as a commit's chain_hash,
 /// but rooted at nothing (no `chain_{n-1}` prefix) since a slice is deliberately position-agnostic.
-/// A caller (e.g. a hub relaying a `RecordSlice`) computes this once at the source and ships the
+/// A caller (e.g. a semio_hub relaying a `RecordSlice`) computes this once at the source and ships the
 /// digest alongside the bytes; the receiver calls `verify_slice` to detect any in-transit tamper.
 pub fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), ProtocolError> {
     let computed = slice_content_chain(slice)?;

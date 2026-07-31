@@ -6,7 +6,7 @@
 # #endregion 🔖️Header
 
 [package]
-name = "hub-directory-sqlite"
+name = "semio-hub-directory-sqlite"
 version = "0.1.0"
 edition = "2021"
 
@@ -21,7 +21,7 @@ async-trait = "0.1"
 serde_json = "1.0"
 uuid = { version = "1.20", features = ["v7"] }
 rusqlite = { version = "0.38.0", features = ["bundled"] }
-os-hub-directory = { path = "../../../../../../🌎️hub/🔨️module/📇️directory/⚡️implementation/🦀️rust", package = "hub-directory" }
+os-hub-directory = { path = "../../../../../../🌎️hub/🔨️module/📇️directory/⚡️implementation/🦀️rust", package = "semio-hub-directory" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

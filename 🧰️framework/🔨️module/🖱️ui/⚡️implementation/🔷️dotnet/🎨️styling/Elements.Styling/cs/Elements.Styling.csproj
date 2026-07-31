@@ -7,8 +7,8 @@
     <Nullable>enable</Nullable>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
-    <RootNamespace>Elements.Styling</RootNamespace>
-    <AssemblyName>Elements.Styling</AssemblyName>
+    <RootNamespace>Semio.Framework.Ui.Styling</RootNamespace>
+    <AssemblyName>Semio.Framework.Ui.Styling</AssemblyName>
     <Description>Generated from elements/core/styling (🛂️manifest.jsonadapters.manifest.json); Palette hex strings from 🔣️tokens.json colors.</Description>
   </PropertyGroup>
 

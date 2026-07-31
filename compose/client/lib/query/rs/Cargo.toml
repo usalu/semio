@@ -1,5 +1,5 @@
 [package]
-name = "compose_query"
+name = "semio-compose-query"
 version = "0.1.0"
 edition = "2021"
 
@@ -30,7 +30,7 @@ serde-wasm-bindgen = "0.6.5"
 console_error_panic_hook = "0.1.7"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-compose = { path = "../../rs" }
+semio_compose_rs = { path = "../../rs", package = "semio-compose-rs" }
 async-graphql = { version = "7.2.1", default-features = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]

@@ -1164,7 +1164,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     //#endregion 🔖️Backbone
 
     // 🫀️ Presence used to be a `presence:` backbone-URI polling hack (`OS_PRESENCE_URI_PREFIX` /
-    // `write_os_presence` / `read_os_presence_peers`) — deleted. Presence now flows through the hub's
+    // `write_os_presence` / `read_os_presence_peers`) — deleted. Presence now flows through the semio_hub's
     // duplex `PresencePeer`/`HubServerFrame::Presence` frames (`framework/core/rs`'s 🔖️HubProtocol
     // region) via `framework/sync`'s `DocumentHost::subscribe` yielding `DocumentEvent::Presence`; the
     // `host_runtime` module below is where a native host translates that event into
@@ -1766,8 +1766,8 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         // 🫀️ The old `presence_upserts_prunes_and_excludes_self` test exercised the deleted `presence:`
         // backbone-URI hack (`write_os_presence`/`read_os_presence_peers`). Presence now flows through
-        // the hub's `PresencePeer`/`HubServerFrame::Presence` frames and `framework/sync`'s
-        // `DocumentEvent::Presence` — see `framework/product/os/hub/rs/bin.rs` and
+        // the semio_hub's `PresencePeer`/`HubServerFrame::Presence` frames and `framework/sync`'s
+        // `DocumentEvent::Presence` — see `framework/product/os/semio_hub/rs/bin.rs` and
         // `framework/sync/rs/lib.rs` for that layer's own coverage.
 
         // #region 🔖️DslAndOpText
@@ -2177,7 +2177,7 @@ pub mod host_runtime {
         PersistenceBinding::Folder { path: folder_path }
     }
 
-    /// @emoji ☁️ The hub persistence binding for a document.
+    /// @emoji ☁️ The semio_hub persistence binding for a document.
     pub fn hub_binding(base_url: impl Into<String>, space_id: impl Into<String>, token: Option<String>) -> PersistenceBinding {
         PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), token }
     }
@@ -2271,8 +2271,8 @@ pub mod instance {
         pub schema: String,
     }
 
-    /// @emoji 🆔️ Mints a fresh app document id — uuid-v7 (time-ordered), matching the id shape hub already
-    /// uses for its own entities (`framework/product/os/hub/rs/bin.rs`'s `Uuid::now_v7()`).
+    /// @emoji 🆔️ Mints a fresh app document id — uuid-v7 (time-ordered), matching the id shape semio_hub already
+    /// uses for its own entities (`framework/product/os/semio_hub/rs/bin.rs`'s `Uuid::now_v7()`).
     pub fn create_os_document_id() -> String {
         uuid::Uuid::now_v7().to_string()
     }

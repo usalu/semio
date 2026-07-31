@@ -16,7 +16,7 @@ export default defineConfig({
       { find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "🧰️framework/🔨️module/🖱️ui/🎨️styling/⚡️implementation/🟦️typescript") },
       { find: "@semio-tech/framework-core", replacement: resolve(repoRoot, "🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts") },
       {
-        find: "@semio-tech/infinite-cavas-react-renderer",
+        find: "@semio-tech/infinite-canvas-react-renderer",
         replacement: resolve(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/🎨️react-renderer/⚡️implementation/🟦️typescript/📦️index.tsx"),
       },
       {

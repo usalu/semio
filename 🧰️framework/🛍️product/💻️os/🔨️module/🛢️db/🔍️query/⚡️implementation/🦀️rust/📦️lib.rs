@@ -339,7 +339,7 @@ impl<'a> ConsistencyResolver for IndexConsistencyResolver<'a> {
 //#endregion 🔖️Consistency
 
 //#region 🔖️Query
-/// @emoji 🎯️ A single filter condition. `And`/`Or`/`Not` compose the rest into an arbitrary boolean
+/// @emoji 🎯️ A single filter condition. `And`/`Or`/`Not` semio_compose_rs the rest into an arbitrary boolean
 /// tree; `And([])` is vacuously true and `Or([])` is vacuously false, matching standard boolean
 /// algebra rather than being treated as errors.
 #[derive(Clone, Debug, PartialEq)]
