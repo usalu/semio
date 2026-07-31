@@ -873,8 +873,20 @@
 % every other table; the top strut rides in the cell-fill prefix, the bottom
 % strut in each column's <{} slot.
 \newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{0pt}\semio@cell@struttop}
+% First-column variant: the outer edge pad (\semio@project@padendL) may only net
+% \semio@chrome@padding (0.2em) or the border/tab alignment breaks (see above), so
+% column 1's text would otherwise sit just 0.2em off the frame — far tighter than
+% the ~0.75em (chrome+cellpad) inset every interior column and every other table
+% has, which reads as a broken-looking left margin. Restore parity by adding one
+% cellpad of \leftskip INSIDE col 1's cell: the paragraph insets on every line
+% (not just line 1), the canvas \cellcolor still fills the full box so no cream
+% shows, and the column SLOT is unchanged — the box keeps its width, so the border,
+% top rule and P.K.x tab stay exactly where they are. Cost: Bauteil text loses one
+% cellpad of wrap width (handled by the re-pack). \leftskip is set after
+% \raggedright (which leaves \leftskip=0) and before the paragraph body.
+\newcommand{\semio@project@cellfill@first}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\leftskip\semio@table@long@cellpad\relax\hspace{0pt}\semio@cell@struttop}
 \newcommand{\semio@project@colspec}{%
-|@{\semio@project@padendL}>{\semio@project@cellfill}m{\dimexpr0.15\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+|@{\semio@project@padendL}>{\semio@project@cellfill@first}m{\dimexpr0.15\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
 @{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
 @{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.09\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
 @{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.11\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%

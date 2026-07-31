@@ -36,10 +36,20 @@
 }
 
 \ExplSyntaxOff
-% \AddressBreak: section separator inside a cover address block. It is a line
-% break plus a small gap, used in \antragstellendeinstitution / \kooperationspartner
-% to split the organisation lines from the people lines into two visual sections.
-\newcommand{\AddressBreak}{\\[0.7em]}
+% Cover-address sections. \AddressOrg{…} renders the organisation lines inside a
+% fixed-height box (\semio@cover@address@orglines line-slots tall) so the
+% following \AddressPeople{…} block starts at the SAME vertical level in every
+% address tile — regardless of how many lines the organisation part wraps to.
+\newcommand{\semio@cover@address@orglines}{5}
+\newcommand{\AddressOrg}[1]{%
+  \parbox[t][\dimexpr\semio@cover@address@orglines\baselineskip\relax][t]{\linewidth}{%
+    \raggedright #1%
+  }\par
+}
+\newcommand{\AddressPeople}[1]{%
+  \vspace{0.4\baselineskip}%
+  \raggedright #1\par
+}
 \ExplSyntaxOn
 
 %region PageNumbering
