@@ -93,7 +93,7 @@
 \tl_new:N \l_semio_window_valign_tl
 \tl_new:N \l_semio_window_halign_tl
 \tl_set:Nn \l_semio_window_valign_tl { top }
-\tl_set:Nn \l_semio_window_halign_tl { justify }
+\tl_set:Nn \l_semio_window_halign_tl { left }
 \dim_new:N \l_semio_window_height_dim
 \bool_new:N \l_semio_window_height_set_bool
 \dim_new:N \l_semio_window_textsize_dim
@@ -925,7 +925,7 @@
 
 \cs_new_protected:Npn \semio_window_content_state_reset: {
   \tl_set:Nn \l_semio_window_valign_tl { top }
-  \tl_set:Nn \l_semio_window_halign_tl { justify }
+  \tl_set:Nn \l_semio_window_halign_tl { left }
   \bool_set_false:N \l_semio_window_height_set_bool
   \dim_zero:N \l_semio_window_height_dim
   \bool_set_false:N \l_semio_window_textsize_set_bool
@@ -937,7 +937,7 @@
   \ExplSyntaxOff
   \makeatletter
   \gdef\semio@window@valign{top}
-  \gdef\semio@window@halign{justify}
+  \gdef\semio@window@halign{left}
   \gdef\semio@window@height@dim{}
   \makeatother
   \group_end:
@@ -1132,17 +1132,9 @@
 % text. \ExplSyntaxOff is also pointless here at runtime; nothing in the
 % payload needs `_`/`:` to be non-letters.
 \cs_new_protected:Npn \semio_window_textsize_apply: {
-  \bool_if:NTF \l_semio_window_textsize_set_bool {
+  \bool_if:NT \l_semio_window_textsize_set_bool {
     \tl_set:Nx \l_tmpa_tl { \dim_use:N \l_semio_window_textsize_dim }
     \fontsize{\tl_use:N \l_tmpa_tl}{\tl_use:N \l_tmpa_tl}\selectfont
-  } {
-    % TEST: with no explicit text-size, default window body text to the same
-    % size tables use (\semio@chrome@font@body), so window and table text match.
-    % Skip text-size=fit windows (e.g. the cover tiles) — those auto-scale their
-    % text to fill the box, so pinning a base size here would fight the fit.
-    \bool_if:NF \l_semio_window_textfit_bool {
-      \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
-    }
   }
 }
 
@@ -2963,7 +2955,7 @@
 \newlength{\semio@window@gap}
 \setlength{\semio@window@gap}{\semio@spacing@single}
 \gdef\semio@window@valign{top}
-\gdef\semio@window@halign{justify}
+\gdef\semio@window@halign{left}
 \newcommand{\semio@window@height@dim}{}
 \newcommand{\semio@image@target@w@plain}{0pt}
 \newcommand{\semio@image@target@h@plain}{0pt}

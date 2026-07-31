@@ -103,8 +103,8 @@
 
 \newcommand{\SemioTableTocRow}[3]{%
   \SemioTableRow{%
-    \cellcolor{semio-chrome-canvas}\semio@toc@number{#1} &
-    \cellcolor{semio-chrome-canvas}#2 &
+    \cellcolor{semio-chrome-canvas}\semio@toc@link{#3}{\mbox{\semio@toc@number{#1}}} &
+    \cellcolor{semio-chrome-canvas}\semio@toc@link{#3}{\textcolor{semio-chrome-text-normal}{#2}} &
     \cellcolor{semio-chrome-canvas}\semio@toc@page@link{#3}
   }%
 }
