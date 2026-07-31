@@ -35,6 +35,13 @@
   \group_end:
 }
 
+\ExplSyntaxOff
+% \AddressBreak: section separator inside a cover address block. It is a line
+% break plus a small gap, used in \antragstellendeinstitution / \kooperationspartner
+% to split the organisation lines from the people lines into two visual sections.
+\newcommand{\AddressBreak}{\\[0.7em]}
+\ExplSyntaxOn
+
 %region PageNumbering
 \cs_new_protected:Npn \semio_frontmatter_begin: {
   \renewcommand{\thepage}{\roman{page}}
@@ -240,12 +247,12 @@
           \WindowItem[\tl_use:N \l_semio_cover_institution_weight_tl]{
             \begin{WindowRow}
               \WindowItem{
-                \begin{Window}[title=Antragstellende~Institution, anchor=nw, text-size=8pt]
+                \begin{Window}[title=Antragstellende~Institution, anchor=nw, text-size=fit]
                   \semio_cover_address:n { \tl_use:N \l_semio_antragstellendeinstitution_tl }
                 \end{Window}
               }
               \WindowItem{
-                \begin{Window}[title=Kooperationspartner, anchor=nw, text-size=8pt]
+                \begin{Window}[title=Kooperationspartner, anchor=nw, text-size=fit]
                   \semio_cover_address:n { \tl_use:N \l_semio_kooperationspartner_tl }
                 \end{Window}
               }
