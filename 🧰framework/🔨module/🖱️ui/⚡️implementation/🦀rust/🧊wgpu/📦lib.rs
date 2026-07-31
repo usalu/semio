@@ -168,6 +168,15 @@ pub const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID: &str = "framework.panel.inspec
 pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ID: &str = "framework.panel.parameters";
 pub const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL: &str = "Parameters";
 pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID: &str = "framework.panel.parameters";
+/// 🕰️ Auto-injected into every app's `panel_tabs` by `AppBuilder::build_definition` — unlike
+/// Document/Catalogue/Inspection/Parameters (per-app content, opt-in), the command-history panel's
+/// content is framework-generic (`HistoryView`), so every app gets it unconditionally.
+pub const FRAMEWORK_PANEL_TAB_HISTORY_ID: &str = "framework.panel.history";
+pub const FRAMEWORK_PANEL_TAB_HISTORY_LABEL: &str = "History";
+pub const FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID: &str = "framework.panel.history";
+/// 🕰️ Reserved `body_key` intercepted first in `VcsDocumentApp::render`, before any app-specific
+/// body-key match — both renderers fetch it like any other panel-tab body.
+pub const FRAMEWORK_HISTORY_BODY_KEY: &str = "framework.body.history";
 
 /// 🗣️ Resolves a well-known framework panel-tab id to its native English/German label; unknown ids resolve to None so app-specific panel tabs are left untouched.
 pub fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> {
@@ -180,6 +189,8 @@ pub fn framework_panel_tab_label(id: &str, is_de: bool) -> Option<&'static str> 
         (FRAMEWORK_PANEL_TAB_INSPECTION_ID, true) => Some("Inspektion"),
         (FRAMEWORK_PANEL_TAB_PARAMETERS_ID, false) => Some(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL),
         (FRAMEWORK_PANEL_TAB_PARAMETERS_ID, true) => Some("Parameter"),
+        (FRAMEWORK_PANEL_TAB_HISTORY_ID, false) => Some(FRAMEWORK_PANEL_TAB_HISTORY_LABEL),
+        (FRAMEWORK_PANEL_TAB_HISTORY_ID, true) => Some("Verlauf"),
         _ => None,
     }
 }
@@ -19898,6 +19909,8 @@ pub use component::layout::{
     default_viewport_engagement, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_HISTORY_LABEL,
+    FRAMEWORK_HISTORY_BODY_KEY,
     FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
     FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,

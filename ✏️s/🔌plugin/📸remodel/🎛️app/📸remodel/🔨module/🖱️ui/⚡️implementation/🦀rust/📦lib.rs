@@ -1795,7 +1795,7 @@ mod tests {
     fn render_does_not_panic_for_known_body_keys() {
         let app = testkit::new_app::<RemodelPlayApp>();
         let store_projection = app.projection().expect("projection");
-        let doc = DocumentView { projection: &store_projection, history: &semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() } };
+        let doc = DocumentView { projection: &store_projection, history: &semio_framework_plugin::HistoryView::empty() };
         let inner = RemodelPlayApp::default();
         for body_key in [
             REMODEL_PLAY_BODY_MAIN,

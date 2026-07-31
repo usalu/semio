@@ -16117,7 +16117,7 @@ use ui_wgpu::{
     ActionDescriptor, UtilityCategory, UtilityNode, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode,
     UiTextNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 use serde::{Deserialize, Serialize};
 #[cfg(target_arch = "wasm32")]
@@ -21348,6 +21348,9 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     }
     if tab.id() == FRAMEWORK_PANEL_TAB_CATALOGUE_ID {
         return "library";
+    }
+    if tab.id() == FRAMEWORK_PANEL_TAB_HISTORY_ID {
+        return "undo";
     }
     "circle-dot"
 }

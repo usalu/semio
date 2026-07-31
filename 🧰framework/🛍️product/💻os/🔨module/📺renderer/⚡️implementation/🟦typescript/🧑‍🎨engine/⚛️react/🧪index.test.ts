@@ -30,7 +30,7 @@ import {
   UDK_LOGO_URL,
   UDK_URL,
   ZUKUNFT_BAU_PROJECT_URL,
-} from "../../../../../../../../../♻️mit-bestand/🧺aggregator/⚛️⚛️footer.tsx";
+} from "../../../../../../../../../♻️mit-bestand/🧺aggregator/⚛️footer.tsx";
 import {
   Canvas2dHost,
   worldToScreenLogical,
@@ -141,7 +141,7 @@ import {
   findPressedUtilityLeafId,
   resolveUtilityNodes,
   resolveUtilities,
-  frameworkHistoryUtilityNodes,
+  panelTabDefinitionToNode,
   actionStageKey,
   actionRequiresStagedForm,
   resolveKeybindingIntent,
@@ -3953,7 +3953,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(translated.position).toEqual([3, -2, 1.5]);
   });
 
-  it("resolveWindowActions surfaces panel-eligible actions and frameworkHistoryUtilityNodes derives History buttons", () => {
+  it("resolveWindowActions surfaces panel-eligible actions and excludes history/setActiveUtility orphans", () => {
     const actionsApp = {
       controllerId: "draw",
       actions: [
@@ -3966,9 +3966,32 @@ describe("registry-derived utilities and activation (P5)", () => {
     const resolved = resolveWindowActions(actionsApp, { actions: [] as string[] });
     // orphan operation appears; history + setActiveUtility are never panel-eligible orphans
     expect(resolved.map((action) => action.id)).toEqual(["extrude"]);
-    const history = frameworkHistoryUtilityNodes({ controllerId: "draw", actions: actionsApp.actions });
-    expect(history).toHaveLength(1);
-    expect(history[0]).toMatchObject({ id: "undo", kind: "button", category: "history", onPress: { controllerId: "draw", action: "undo" } });
+  });
+
+  it("panelTabDefinitionToNode maps the framework-injected History panel tab through its rendered body", () => {
+    // 🕰️ id mirrors Rust `FRAMEWORK_PANEL_TAB_HISTORY_ID` — auto-injected into every app's panelTabs
+    // by `AppBuilder::build_definition` (see `🧰framework/🛍️product/💻os/🔨module/🔌plugin`).
+    const emptyAppLabelsOverlay = {
+      windowKindLabels: {},
+      panelTabLabels: {},
+      modeLabels: {},
+      actionLabels: {},
+      utilityLabels: {},
+      exampleLabels: {},
+      actionArgLabels: {},
+      dialogLabels: {},
+      introductionLabels: {},
+      groupLabels: {},
+    };
+    const historyTab = { kind: { kind: "app" as const, id: "framework.panel.history" }, label: "History", group: "settings" as const, bodyKey: "framework.body.history", children: [] };
+    const historyUiNode = { type: "tree" as const, sections: [{ id: "framework.history.commands", label: undefined, defaultOpen: true, items: [{ id: "framework.history.entry.1", label: "Increment" }] }] };
+    const node = panelTabDefinitionToNode(historyTab, "settings", { "framework.panel.history": historyUiNode }, () => {}, 1, emptyAppLabelsOverlay);
+    expect(node.kind).toBe("leaf");
+    if (node.kind !== "leaf") return;
+    expect(node.id).toBe("framework.panel.history");
+    const source = node.trees[0].tree;
+    const config = "resolveTree" in source ? source.resolveTree() : source;
+    expect(config.sections[0]?.items?.[0]?.id).toBe("framework.history.entry.1");
   });
 });
 

@@ -3,7 +3,7 @@ name = "semio-framework-os-kernel-math-graph-manifest"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-build = "📦build.rs"
+build = "build.rs"
 
 
 [lints]

@@ -2148,14 +2148,7 @@ mod tests {
 
     //#region 🔧Harness
     fn empty_history() -> HistoryView {
-        HistoryView {
-            columns: Vec::new(),
-            can_undo: false,
-            can_redo: false,
-            active_alternative_id: None,
-            current_checkpoint_id: None,
-            recent_ops: Vec::new(),
-        }
+        HistoryView::empty()
     }
 
     /// 🎛️ Drives the typed `SpaceApp::handle_action` against a projection snapshot, returning its emit.

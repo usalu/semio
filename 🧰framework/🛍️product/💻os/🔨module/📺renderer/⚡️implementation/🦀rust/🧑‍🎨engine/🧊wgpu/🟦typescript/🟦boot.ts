@@ -4,7 +4,7 @@
 
 import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework-core";
 import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
-import { PLAYGROUND_SESSION } from "../../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/🤖generated/🟦🟦session.ts";
+import { PLAYGROUND_SESSION } from "../../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/🤖generated/🟦session.ts";
 
 await new Promise<void>((resolve) => {
   if (document.readyState === "loading") {

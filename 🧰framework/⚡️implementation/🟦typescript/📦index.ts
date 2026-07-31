@@ -76,6 +76,10 @@ export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspectio
 export const FRAMEWORK_PANEL_TAB_PARAMETERS_ID = "framework.panel.parameters";
 export const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL = "Parameters";
 export const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID = "framework.panel.parameters";
+/** 🕰️ Mirrors Rust `FRAMEWORK_PANEL_TAB_HISTORY_ID` — auto-injected into every app's `panelTabs`. */
+export const FRAMEWORK_PANEL_TAB_HISTORY_ID = "framework.panel.history";
+export const FRAMEWORK_PANEL_TAB_HISTORY_LABEL = "History";
+export const FRAMEWORK_PANEL_TAB_HISTORY_ICON_ID = "framework.panel.history";
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
 

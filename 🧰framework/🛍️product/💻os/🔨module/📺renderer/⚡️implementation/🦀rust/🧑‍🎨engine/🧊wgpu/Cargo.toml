@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 description = "Raw wgpu WASM renderer for declarative framework UiNode trees"
-build = "📦build.rs"
+build = "build.rs"
 
 
 [lints]

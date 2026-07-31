@@ -107,7 +107,7 @@ export const UtilitiesIcon = createIconComponent("wrench");
 export const UtilityBarIcon = createIconComponent("hammer");
 export const WorkbenchIcon = createIconComponent("workbench");
 export type { IconName } from "@semio-tech/ui-asset";
-export { isMetabolismIconName, METABOLISM_ICONS, METABOLISM_ICON_NAMES, type MetabolismIconName } from "../../../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🔣icon/🤖generated/🟦metabolism_🟦icons.ts";
+export { isMetabolismIconName, METABOLISM_ICONS, METABOLISM_ICON_NAMES, type MetabolismIconName } from "../../../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🔣icon/🤖generated/🟦metabolism_icons.ts";
 export { resolveMetabolismIconNameFromTheme, resolveMetabolismIconSvgFromTheme } from "../../../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🟦icon_resolver.ts";
 //#endregion 🔖Icons
 

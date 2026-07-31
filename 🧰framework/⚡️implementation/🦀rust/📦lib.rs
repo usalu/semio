@@ -3429,7 +3429,12 @@ impl ActionDefinition {
     }
 }
 
-/// @emoji 🕹️ The six framework-owned History actions, auto-injected into every `AppDefinition`.
+/// @emoji ⏪ The framework-owned action id apps dispatch to revert to a past command-log entry —
+/// auto-injected as the 7th `history_action_definitions()` entry (never in the palette; needs a
+/// concrete `entrySeq` from the history panel's "backwards" button).
+pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
+
+/// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
 pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition {
@@ -3444,7 +3449,34 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
         ActionDefinition::new("createAlternative", "Create Alternative", ActionKind::History),
         ActionDefinition::new("switchAlternative", "Switch Alternative", ActionKind::History),
         ActionDefinition::new("checkoutCheckpoint", "Checkout Checkpoint", ActionKind::History),
+        ActionDefinition {
+            in_palette: false,
+            ..ActionDefinition::new(REVERT_TO_COMMAND_ACTION_ID, "Revert to Command", ActionKind::History)
+        }
+        .with_args([ActionArgDef::number("entrySeq", "Entry").required()]),
     ]
+}
+
+/// @emoji 🎚️ The framework-owned action id apps dispatch to change the history panel's operations
+/// filter — auto-injected unconditionally (mirrors `RECORD_TUTORIAL_ACTION_ID`).
+pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter";
+
+/// @emoji 🎚️ The framework-injected `setHistoryCommandFilter` View action (never in the palette):
+/// switches the history panel's tri-state operations filter. Ephemeral UI state, never an
+/// operation — `ActionKind::View`. Arg id is `"value"` (not `"filter"`) — a top-level `UiNode::Select`
+/// always dispatches its picked option merged into `args` under the `"value"` key (both renderers'
+/// `Select` interpreters hardcode that key; see `with_item_value_arg` in ui_wgpu).
+pub fn set_history_command_filter_action_definition() -> ActionDefinition {
+    let options = vec![
+        ActionArgOption::new("all", "All"),
+        ActionArgOption::new("withoutOperations", "Without Operations"),
+        ActionArgOption::new("onlyOperations", "Only Operations"),
+    ];
+    ActionDefinition {
+        in_palette: false,
+        ..ActionDefinition::new(SET_HISTORY_COMMAND_FILTER_ACTION_ID, "Set History Filter", ActionKind::View)
+    }
+    .with_args([ActionArgDef::select("value", "Filter", options).default_value(serde_json::json!("all"))])
 }
 
 //#region 🔖Clipboard

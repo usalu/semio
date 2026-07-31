@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 import type { ShellBrand } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
-import { ENTWERFEN_MIT_BESTAND_BRAND } from "../../../../../../../../♻️mit-bestand/🧺aggregator/🟦🟦brand.ts";
+import { ENTWERFEN_MIT_BESTAND_BRAND } from "../../../../../../../../♻️mit-bestand/🧺aggregator/🟦brand.ts";
 
 //#region 🏷️ShellBrandCatalog
 /** 🏷️ Brand ids referenced by `brand = "…"` playground registry rows and the `SEMIO_BRAND` env var. */

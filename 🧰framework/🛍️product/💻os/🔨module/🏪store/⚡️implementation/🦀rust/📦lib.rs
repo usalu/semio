@@ -608,7 +608,10 @@ where
     Ok(reconcile_with_last(last_operation, projection))
 }
 
-fn now_iso() -> String {
+/// 🕰️ Single timestamp source for `Edit.started_at`/`Checkpoint.timestamp` — re-exported so
+/// callers outside this crate (e.g. the framework session command log) stamp entries in the
+/// exact same format.
+pub fn now_iso() -> String {
     format!("{}", now_ms())
 }
 

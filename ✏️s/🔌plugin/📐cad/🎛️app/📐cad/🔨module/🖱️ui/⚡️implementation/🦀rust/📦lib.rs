@@ -3054,14 +3054,7 @@ mod tests {
     }
 
     fn empty_history() -> HistoryView {
-        HistoryView {
-            columns: Vec::new(),
-            can_undo: false,
-            can_redo: false,
-            active_alternative_id: None,
-            current_checkpoint_id: None,
-            recent_ops: Vec::new(),
-        }
+        HistoryView::empty()
     }
 
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped) so tests can inspect ephemeral

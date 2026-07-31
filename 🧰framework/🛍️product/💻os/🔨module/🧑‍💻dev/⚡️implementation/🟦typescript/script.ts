@@ -40,7 +40,7 @@ const playgroundSessionPath = join(repoRoot, "./🧰framework/🛍️product/�
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
 //#region 🔖PlaygroundVariantResolution
-/** @emoji 📚 Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🟦🟦playgrounds.ts`). */
+/** @emoji 📚 Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🟦playgrounds.ts`). */
 const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
 
 /** @emoji 🧭 A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */

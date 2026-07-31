@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 description = "Puzzle 2d app — headless compute (constitutional: engine)"
-build = "📦build.rs"
+build = "build.rs"
 
 [lints]
 workspace = true

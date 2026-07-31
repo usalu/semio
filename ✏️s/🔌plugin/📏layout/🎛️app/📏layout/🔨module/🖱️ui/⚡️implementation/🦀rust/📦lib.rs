@@ -2474,7 +2474,7 @@ mod tests {
     /// the `VcsDocumentApp` wrapper, which has no accessor into the inner app) since `canvasDragOver` is
     /// the natural per-tick gesture handler.
     fn bare_history_view() -> HistoryView {
-        HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() }
+        HistoryView::empty()
     }
 
     #[test]

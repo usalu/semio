@@ -22,8 +22,8 @@ import {
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
-import { startAssetServer } from "../../../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦🟦vite-elements-assets.ts";
-import type { PlaygroundAssetSpec } from "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦🟦playgrounds.ts";
+import { startAssetServer } from "../../../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
+import type { PlaygroundAssetSpec } from "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦playgrounds.ts";
 import { writePlaygroundSession } from "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();

@@ -1851,7 +1851,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     fn with_doc_view<R>(program: &Program, run: impl FnOnce(DocumentView<'_, Program>) -> R) -> R {
-        let history = HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() };
+        let history = HistoryView::empty();
         run(DocumentView { projection: program, history: &history })
     }
 

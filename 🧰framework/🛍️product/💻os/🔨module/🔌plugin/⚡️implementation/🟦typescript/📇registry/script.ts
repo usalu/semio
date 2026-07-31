@@ -672,10 +672,10 @@ class GenerateScript extends BundleScript {
     const playgrounds = generatePlaygroundRegistry(repoRoot);
     const outDir = join(this.root, "🤖generated");
     mkdirSync(outDir, { recursive: true });
-    writeFileSync(join(outDir, "🔣🔣plugins.json"), `${JSON.stringify(entries, null, 2)}\n`);
-    writeFileSync(join(outDir, "🟦🟦plugins.ts"), emitTypeScript(entries));
-    writeFileSync(join(outDir, "🔣🔣playgrounds.json"), `${JSON.stringify(playgrounds, null, 2)}\n`);
-    writeFileSync(join(outDir, "🟦🟦playgrounds.ts"), emitPlaygroundsTypeScript(playgrounds));
+    writeFileSync(join(outDir, "🔣plugins.json"), `${JSON.stringify(entries, null, 2)}\n`);
+    writeFileSync(join(outDir, "🟦plugins.ts"), emitTypeScript(entries));
+    writeFileSync(join(outDir, "🔣playgrounds.json"), `${JSON.stringify(playgrounds, null, 2)}\n`);
+    writeFileSync(join(outDir, "🟦playgrounds.ts"), emitPlaygroundsTypeScript(playgrounds));
     writeFileSync(join(outDir, "🦀hosts.rs"), emitRustHosts(entries, playgrounds));
     console.log(`plugin registry catalog refreshed (${entries.length} plugin crates, ${playgrounds.length} playgrounds) -> ${outDir}`);
   }
@@ -689,10 +689,10 @@ class CheckScript extends BundleScript {
     const playgrounds = generatePlaygroundRegistry(repoRoot);
     const outDir = join(this.root, "🤖generated");
     const expected: Record<string, string> = {
-      "🔣🔣plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
-      "🟦🟦plugins.ts": emitTypeScript(entries),
-      "🔣🔣playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
-      "🟦🟦playgrounds.ts": emitPlaygroundsTypeScript(playgrounds),
+      "🔣plugins.json": `${JSON.stringify(entries, null, 2)}\n`,
+      "🟦plugins.ts": emitTypeScript(entries),
+      "🔣playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
+      "🟦playgrounds.ts": emitPlaygroundsTypeScript(playgrounds),
       "🦀hosts.rs": emitRustHosts(entries, playgrounds),
     };
     const stale = Object.entries(expected)

@@ -803,7 +803,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     fn history_view() -> HistoryView {
-        HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() }
+        HistoryView::empty()
     }
 
     //#region 🔖RendersScenes

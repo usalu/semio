@@ -60,7 +60,7 @@ export function isMetabolismIconName(key: string): key is MetabolismIconName {
   return key in METABOLISM_ICONS;
 }
 `;
-  writeFileSync(join(generatedDir, "🟦metabolism_🟦icons.ts"), body, "utf8");
+  writeFileSync(join(generatedDir, "🟦metabolism_icons.ts"), body, "utf8");
 }
 
 function generateRustMetabolism(icons: Record<string, string>, generatedDir: string): void {

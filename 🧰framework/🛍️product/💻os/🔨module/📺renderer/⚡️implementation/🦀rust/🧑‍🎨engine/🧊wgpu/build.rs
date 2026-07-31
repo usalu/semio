@@ -11,7 +11,7 @@ fn main() {
     fs::create_dir_all(&out_icons).expect("create OUT_DIR/icons");
 
     println!("cargo:rerun-if-changed={}", icons_dir.display());
-    fs::copy(manifest_dir.join("🔣🔣semio_🔣logo.svg"), out_dir.join("🔣🔣semio_🔣logo.svg")).expect("copy semio logo");
+    fs::copy(manifest_dir.join("🔣semio_logo.svg"), out_dir.join("🔣semio_logo.svg")).expect("copy semio logo");
 
     let mut entries: Vec<String> = Vec::new();
     if let Ok(read_dir) = fs::read_dir(&icons_dir) {

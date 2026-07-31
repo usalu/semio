@@ -296,6 +296,7 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
   FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+  FRAMEWORK_PANEL_TAB_HISTORY_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
@@ -3045,6 +3046,7 @@ function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }>
   if (group === "workbench") return shellTabIcon(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
   if (tabId.includes("parameters")) return shellTabIcon(FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID);
   if (tabId.includes("inspector")) return shellTabIcon(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID);
+  if (tabId === FRAMEWORK_PANEL_TAB_HISTORY_ID) return shellTabIcon("undo");
   return shellTabIcon(tabId);
 }
 
@@ -3062,7 +3064,7 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
 }
 
 /** @emoji 🌳 Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}. */
-function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: string, panelUiByKey: Readonly<Record<string, UiNode>>, onAction: (action: ActionDescriptor) => void, order: number, appLabelsOverlay: PluginAppLabelsOverlay): PanelTabNode {
+export function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: string, panelUiByKey: Readonly<Record<string, UiNode>>, onAction: (action: ActionDescriptor) => void, order: number, appLabelsOverlay: PluginAppLabelsOverlay): PanelTabNode {
   const tabId = panelTabKindId(tab.kind);
   const label = resolvePanelTabLabel(appLabelsOverlay, tabId, tab.label);
   if (tab.children && tab.children.length > 0) {
@@ -3237,12 +3239,13 @@ function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): s
   return resolveTranslationLabel(uiI18n.t(key, options)) ?? key;
 }
 
-/** @emoji 🧭 The four panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
+/** @emoji 🧭 The five panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
 const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
   [FRAMEWORK_PANEL_TAB_DOCUMENT_ID]: "ui.panel.document",
   [FRAMEWORK_PANEL_TAB_CATALOGUE_ID]: "ui.panel.catalogue",
   [FRAMEWORK_PANEL_TAB_INSPECTION_ID]: "ui.panel.inspection",
   [FRAMEWORK_PANEL_TAB_PARAMETERS_ID]: "ui.panel.parameters",
+  [FRAMEWORK_PANEL_TAB_HISTORY_ID]: "ui.panel.history",
 };
 
 /** @emoji 🧭 Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the plugin overlay (`resolveAppLabel`). */
@@ -7381,23 +7384,14 @@ export function FrameworkOsShell({
 
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
-  //#region 🧰FooterUtilityLeaves — bottom-right's History tab, now sourced from the framework-owned History
-  // actions in the app registry (the plugin `list-tools` surface is gone; the per-window Actions rail
-  // replaces the old footer Actions tab entirely per P6).
+  //#region 🧰FooterUtilityLeaves — bottom-right's History tab, sourced from the framework-injected
+  // `framework.panel.history` panel tab (every app gets one — see `AppBuilder::build_definition`).
   const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
     if (!session) return null;
-    const grouped = groupUtilityNodesByCategory(frameworkHistoryUtilityNodes(session.app), ["history"]);
-    if (!grouped.length) return null;
-    return singleTreeLeaf({
-      id: "framework.utilities.history",
-      icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.history),
-      name: shellLabel("ui.panel.history"),
-      order: 1,
-      tree: {
-        sections: [{ id: "framework.utilities.history.root", label: "", items: [{ id: "framework.utilities.history.tree", label: "", control: <UtilityTree id="ui.utilities.footer.history" utilities={grouped} onAction={onAction} direction="up" /> }] }],
-      },
-    });
-  }, [onAction, session, uiLocale]);
+    const tab = session.app.panelTabs.find((candidate) => panelTabKindId(candidate.kind) === FRAMEWORK_PANEL_TAB_HISTORY_ID);
+    if (!tab) return null;
+    return panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, 1, appLabelsOverlay);
+  }, [appLabelsOverlay, onAction, panelUiByKey, session, uiLocale]);
   //#endregion 🧰FooterUtilityLeaves
 
   //#region 🔄SyncLeaf — bottom-left's sync tab, replacing the old floating footer SyncAttachCard.
@@ -9347,25 +9341,6 @@ function utilityNodeCategory(node: UtilityNode): UtilityCategory {
   if (node.kind === "separator") return "utilities";
   if (node.category) return node.category;
   return "utilities";
-}
-
-/**
- * 🕰️ Framework-owned History utility nodes derived from an app's registry (the six injected History
- * actions). Sources the bottom-right History footer tab now that the plugin `list-tools` surface is gone.
- */
-export function frameworkHistoryUtilityNodes(app: Pick<AppDefinition, "actions" | "controllerId">): UtilityNode[] {
-  return (app.actions ?? [])
-    .filter((action) => action.kind === "history")
-    .map((action, order) => ({
-      id: action.id,
-      kind: "button" as const,
-      iconId: action.iconId ?? "undo",
-      label: action.label,
-      text: action.label,
-      order,
-      category: "history" as const,
-      onPress: { controllerId: app.controllerId, action: action.id },
-    }));
 }
 
 /** @emoji 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildUtilityRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `utilities` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */

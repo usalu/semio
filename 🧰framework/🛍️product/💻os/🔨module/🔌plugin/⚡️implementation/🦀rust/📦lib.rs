@@ -45,7 +45,7 @@ pub mod component {
             context: InvocationContextJson,
         ) -> Result<InvocationResponseJson, PluginError> {
             ensure_plugin_initialized();
-            let result = plugin_handle_action(instance_id, &🔣action.json, &context.json)
+            let result = plugin_handle_action(instance_id, &action.json, &context.json)
                 .map_err(PluginError::Message)?;
             Ok(InvocationResponseJson {
                 json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
@@ -187,20 +187,20 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, PastePlacement, Rights,
         ArtifactKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, record_tutorial_action_definition,
+    set_active_tool_action_definition, set_active_utility_action_definition, set_history_command_filter_action_definition, start_introduction_action_definition, record_tutorial_action_definition,
     start_tutorial_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
     ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, WorkflowDefinition, ToolDefinition, ToolRef, TutorialDefinition,
     UtilityDefinition, UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
-    START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID,
+    START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID,
     UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor,
     NamedLayout, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence,
-    UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout,
-    WindowMeasure, WindowOptions, SurfaceKind,
+    UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind, FRAMEWORK_HISTORY_BODY_KEY,
 };
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
@@ -769,7 +769,7 @@ impl AppBuilder {
     /// @emoji 🧷 Keybinding-vs-action-registry consistency is only enforced for apps that declare
     /// actions via `.operation()`/`.view_action()`/`.shell_action()` — apps with an empty action
     /// registry keybind directly against controller actions instead, so there is nothing to check.
-    pub fn build_definition(self) -> AppDefinition {
+    pub fn build_definition(mut self) -> AppDefinition {
         assert!(
             !self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty()),
             "app {} document must contain non-empty segments",
@@ -818,6 +818,18 @@ impl AppBuilder {
         let mut panel_tab_ids = HashSet::new();
         for tab in &self.panel_tabs {
             validate_panel_tab_spec(&self.id, tab, &mut panel_tab_ids);
+        }
+        // 🕰️ Unlike Document/Catalogue/Inspection/Parameters (per-app content, opt-in via
+        // `.panel_tab(...)`), the history panel's content is framework-generic (`HistoryView`), so
+        // every app gets it unconditionally — unless it already declared the reserved id itself.
+        if panel_tab_ids.insert(ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()) {
+            self.panel_tabs.push(PanelTabSpec::framework(
+                PanelTabKind::App(ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID.to_string()),
+                ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_LABEL,
+                PanelGroup::Settings,
+                Some(FRAMEWORK_HISTORY_BODY_KEY.to_string()),
+                Vec::new(),
+            ));
         }
         let mut layout_window_ids = Vec::new();
         if let Some(layout) = &self.default_layout {
@@ -916,6 +928,9 @@ impl AppBuilder {
         }
         if declared_action_ids.insert(RECORD_TUTORIAL_ACTION_ID.to_string()) {
             actions.push(record_tutorial_action_definition());
+        }
+        if declared_action_ids.insert(SET_HISTORY_COMMAND_FILTER_ACTION_ID.to_string()) {
+            actions.push(set_history_command_filter_action_definition());
         }
         let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
         let mut keybindings: Vec<Keybinding> = self
@@ -2293,7 +2308,8 @@ mod app_builder_tests {
             .build_definition();
         assert_eq!(definition.window_kinds.len(), 1);
         assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
-        assert_eq!(definition.panel_tabs.len(), 1);
+        // 🕰️ 1 declared + the auto-injected framework History tab.
+        assert_eq!(definition.panel_tabs.len(), 2);
     }
 
     #[test]
@@ -2378,6 +2394,31 @@ mod app_builder_tests {
         assert_eq!(copy_binding.action.controller_id, "clipboard-app");
         let paste_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+v").expect("paste keybinding auto-injected");
         assert_eq!(paste_binding.action.action, "paste");
+    }
+
+    #[test]
+    fn build_definition_auto_injects_the_history_panel_tab_and_filter_action() {
+        let definition = minimal_app("history-panel-app").build_definition();
+        assert!(definition.panel_tabs.iter().any(|tab| tab.id() == ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID));
+        let action_ids: HashSet<&str> = definition.actions.iter().map(|a| a.id.as_str()).collect();
+        assert!(action_ids.contains(REVERT_TO_COMMAND_ACTION_ID));
+        assert!(action_ids.contains(SET_HISTORY_COMMAND_FILTER_ACTION_ID));
+        let revert = definition.actions.iter().find(|a| a.id == REVERT_TO_COMMAND_ACTION_ID).expect("revertToCommand declared");
+        assert_eq!(revert.kind, ActionKind::History);
+        assert!(!revert.in_palette);
+        let filter = definition.actions.iter().find(|a| a.id == SET_HISTORY_COMMAND_FILTER_ACTION_ID).expect("setHistoryCommandFilter declared");
+        assert_eq!(filter.kind, ActionKind::View);
+        assert!(!filter.in_palette);
+    }
+
+    #[test]
+    fn build_definition_does_not_duplicate_a_manually_declared_history_panel_tab() {
+        let definition = minimal_app("manual-history-app")
+            .panel_tab(ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID, "Custom History", PanelGroup::Settings, "custom.history")
+            .build_definition();
+        assert_eq!(definition.panel_tabs.iter().filter(|tab| tab.id() == ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).count(), 1);
+        let tab = definition.panel_tabs.iter().find(|tab| tab.id() == ui_wgpu::FRAMEWORK_PANEL_TAB_HISTORY_ID).expect("history tab present");
+        assert_eq!(tab.body_key.as_deref(), Some("custom.history"));
     }
 
     #[test]
@@ -3064,12 +3105,53 @@ pub struct DocumentView<'a, P> {
     pub history: &'a HistoryView,
 }
 
-/// @emoji 🔢 Cap on {@link HistoryView::recent_ops} — enough for a compact recent-activity list without
-/// unbounded growth on a long-lived document.
-const HISTORY_VIEW_RECENT_OPS_LIMIT: usize = 20;
+//#region 🔖CommandLog
+/// @emoji 🎚️ Tri-state operations filter of the framework history panel — `All` is the default.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum HistoryCommandFilter {
+    #[default]
+    All,
+    WithoutOperations,
+    OnlyOperations,
+}
 
-/// @emoji 📜 Checkpoint/alternative history summary exposed to apps — the swimlane columns plus the
-/// undo/redo availability and the current checkout position. Built once per store generation.
+/// @emoji 🧾 One appended session-command record — runtime-only, never persisted (the VCS envelope
+/// is the persisted half; see `CommandView::op_lines`, derived live from `envelope.vcs.edits`).
+/// Append-only: `VcsDocumentApp` only ever pushes to `command_log`, including for undo/redo.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CommandLogEntry {
+    pub seq: u64,
+    pub action_id: String,
+    pub label: String,
+    pub kind: ActionKind,
+    pub timestamp: String,
+    /// @emoji 🔗 Set iff this command created/amended a VCS edit — `None` for pure cursor motion
+    /// (undo/redo/revert) and view-kind commands that never reach `dispatch_emit`.
+    pub edit_id: Option<String>,
+}
+
+/// @emoji 🧾 One row of the merged command+operation timeline handed to renderers — `CommandLogEntry`
+/// plus everything derived live from the current `envelope.vcs.edits` state.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CommandView {
+    pub seq: u64,
+    pub action_id: String,
+    pub label: String,
+    pub kind: ActionKind,
+    pub timestamp: String,
+    pub edit_id: Option<String>,
+    /// @emoji 📜 This entry's edit's forward operations, printed via `OpText::print_op` — empty for
+    /// cursor-motion entries and for a dangling `edit_id` (document replaced mid-session).
+    pub op_lines: Vec<String>,
+    /// @emoji ✅ The linked edit is currently on the applied stack (`false` once undone).
+    pub applied: bool,
+    /// @emoji ⏪ `applied` AND authored by the local actor — only these entries offer "backwards".
+    pub revertible: bool,
+}
+
+/// @emoji 📜 Checkpoint/alternative history summary exposed to apps — the swimlane columns, the
+/// undo/redo availability, the current checkout position, and the merged command+operation timeline.
+/// Built once per store generation.
 #[derive(Clone, Debug, PartialEq)]
 pub struct HistoryView {
     pub columns: Vec<HistoryColumn>,
@@ -3077,13 +3159,140 @@ pub struct HistoryView {
     pub can_redo: bool,
     pub active_alternative_id: Option<String>,
     pub current_checkpoint_id: Option<String>,
-    /// @emoji 📜 The most recent applied operations' printed op-text lines (via `store::OpText::print_op`),
-    /// newest first, capped at {@link HISTORY_VIEW_RECENT_OPS_LIMIT} — a text-DSL timeline surface can
-    /// show these directly instead of/alongside the JSON envelope. Empty for every hand-built test
-    /// fixture `HistoryView` across the workspace (only {@link VcsDocumentApp::build_history_view}
-    /// populates it from a real store).
-    pub recent_ops: Vec<String>,
+    /// @emoji 📜 The session command log merged with live VCS op-text, newest first. Every edit in
+    /// `envelope.vcs.edits` is referenced by exactly one entry (see `VcsDocumentApp::backfill_command_log`).
+    pub commands: Vec<CommandView>,
+    pub command_filter: HistoryCommandFilter,
 }
+
+impl HistoryView {
+    /// @emoji 🕳️ An empty view for hand-built test/fixture `DocumentView`s that don't exercise history.
+    pub fn empty() -> Self {
+        Self {
+            columns: Vec::new(),
+            can_undo: false,
+            can_redo: false,
+            active_alternative_id: None,
+            current_checkpoint_id: None,
+            commands: Vec::new(),
+            command_filter: HistoryCommandFilter::default(),
+        }
+    }
+}
+//#endregion 🔖CommandLog
+
+//#region 🔖HistoryPanel
+/// @emoji 🔢 Newest-rendered rows in `ui_history_panel` — the log itself stays complete, only display
+/// is capped, matching the "no silent caps" convention (never truncates data, only the view).
+const HISTORY_PANEL_ROW_LIMIT: usize = 300;
+
+fn ui_stack_horizontal_tight(children: Vec<UiNode>) -> UiNode {
+    UiNode::Stack(UiStackNode {
+        direction: "horizontal".into(),
+        gap: Some("tight".into()),
+        padding: None,
+        id: None,
+        presence: UiPresence::default(),
+        activate: None,
+        children,
+        drop_action: None,
+        drop_overlay: None,
+    })
+}
+
+fn history_panel_icon_id(kind: ActionKind) -> IconName {
+    match kind {
+        ActionKind::Operation => IconName::Pencil,
+        ActionKind::History => IconName::Undo,
+        ActionKind::Clipboard => IconName::Clipboard,
+        ActionKind::View | ActionKind::Shell => IconName::CircleDot,
+    }
+}
+
+/// @emoji 🕰️ Builds the framework's history panel body from a `HistoryView`: undo/redo/checkpoint/
+/// alternative header buttons, a tri-state operations filter, and a newest-first command tree with a
+/// per-item "backwards" revert action. Shared by both renderers — `VcsDocumentApp::render` returns
+/// this verbatim for `FRAMEWORK_HISTORY_BODY_KEY`, so every app gets the identical panel (mirrors
+/// `ui_wgpu::ui_recovery_panel`'s "one Rust builder, both renderers" shape).
+pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool) -> UiNode {
+    let act = |action: &str, args: Option<Value>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
+    let history_button = |icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
+        UiNode::Button(UiButtonNode {
+            id: Some(format!("framework.history.{action}")),
+            icon_id,
+            label: if is_de { label_de.to_string() } else { label_en.to_string() },
+            action: act(action, None),
+            style: None,
+            presence: if enabled { UiPresence::default() } else { UiPresence::state(UiState::Disabled) },
+        })
+    };
+    let header = ui_stack_horizontal_tight(vec![
+        history_button(IconName::Undo, "Undo", "Rückgängig", "undo", history.can_undo),
+        history_button(IconName::Redo, "Redo", "Wiederholen", "redo", history.can_redo),
+        history_button(IconName::GitCommit, "Commit Checkpoint", "Checkpoint", "commitCheckpoint", true),
+        history_button(IconName::GitBranch, "Create Alternative", "Alternative erstellen", "createAlternative", true),
+    ]);
+
+    let filter_value = match history.command_filter {
+        HistoryCommandFilter::All => "all",
+        HistoryCommandFilter::WithoutOperations => "withoutOperations",
+        HistoryCommandFilter::OnlyOperations => "onlyOperations",
+    };
+    let filter = UiNode::Select(UiSelectNode {
+        id: "framework.history.filter".into(),
+        value: filter_value.into(),
+        items: vec![
+            UiSelectItem { value: "all".into(), label: if is_de { "Alle" } else { "All" }.into() },
+            UiSelectItem { value: "withoutOperations".into(), label: if is_de { "Ohne Operationen" } else { "Without Operations" }.into() },
+            UiSelectItem { value: "onlyOperations".into(), label: if is_de { "Nur Operationen" } else { "Only Operations" }.into() },
+        ],
+        placeholder: None,
+        on_change: act(SET_HISTORY_COMMAND_FILTER_ACTION_ID, None),
+        presence: UiPresence::default(),
+    });
+
+    let items: Vec<UiTreeItemNode> = history
+        .commands
+        .iter()
+        .filter(|entry| match history.command_filter {
+            HistoryCommandFilter::All => true,
+            HistoryCommandFilter::WithoutOperations => entry.edit_id.is_none(),
+            HistoryCommandFilter::OnlyOperations => entry.edit_id.is_some(),
+        })
+        .take(HISTORY_PANEL_ROW_LIMIT)
+        .map(|entry| {
+            let mut item = UiTreeItemNode::base(format!("framework.history.entry.{}", entry.seq), entry.label.clone());
+            item.description = if entry.op_lines.is_empty() { None } else { Some(entry.op_lines.join(" · ")) };
+            item.icon_id = Some(history_panel_icon_id(entry.kind));
+            item.dimmed = (entry.edit_id.is_some() && !entry.applied).then_some(true);
+            if entry.revertible {
+                item.actions = Some(vec![UiTreeItemAction {
+                    icon_id: IconName::RotateCcw,
+                    label: Some(if is_de { "Zurück bis hier" } else { "Backwards" }.into()),
+                    action: act(REVERT_TO_COMMAND_ACTION_ID, Some(serde_json::json!({ "entrySeq": entry.seq }))),
+                    reveal_on_hover: Some(true),
+                }]);
+            }
+            item
+        })
+        .collect();
+
+    let tree = UiNode::Tree(UiTreeNode {
+        sections: vec![UiTreeSectionNode {
+            id: "framework.history.commands".into(),
+            label: None,
+            default_open: Some(true),
+            presence: UiPresence::default(),
+            items,
+        }],
+        presence: UiPresence::default(),
+        selection_change: None,
+        drop_action: None,
+    });
+
+    ui_stack_vertical(vec![header, filter, tree])
+}
+//#endregion 🔖HistoryPanel
 
 /// @emoji 📤 What a typed `DocumentApp::handle_action` emits: zero-or-more typed operations (applied
 /// through the store with a true inverse), an optional description/coalesce key for the resulting
@@ -3543,6 +3752,9 @@ pub trait PluginApp: Send {
 pub struct AppActionRegistry {
     actions: HashMap<String, ActionDefinition>,
     commands: HashMap<String, CommandDefinition>,
+    /// @emoji 📇 The app's `controller_id` — addresses `ActionDescriptor.controller_id` for the
+    /// framework-built history panel. Empty for the registry-less test path.
+    controller_id: String,
 }
 
 impl AppActionRegistry {
@@ -3552,6 +3764,7 @@ impl AppActionRegistry {
         Self {
             actions: definition.actions.iter().map(|action| (action.id.clone(), action.clone())).collect(),
             commands: definition.commands.iter().map(|command| (command.id.clone(), command.clone())).collect(),
+            controller_id: definition.controller_id.clone(),
         }
     }
 
@@ -3576,6 +3789,11 @@ pub struct VcsDocumentApp<A: DocumentApp> {
     store: DocumentStore<A::Projection, A::Operation>,
     cache: Option<(u64, A::Projection, HistoryView)>,
     registry: AppActionRegistry,
+    /// @emoji 🧾 Append-only session command log — see `🔖CommandLog`. Never persisted, never
+    /// truncated: undo/redo/revert push entries, they never remove any.
+    command_log: Vec<CommandLogEntry>,
+    next_command_seq: u64,
+    history_filter: HistoryCommandFilter,
 }
 
 const HISTORY_ACTION_IDS: [&str; 6] = [
@@ -3612,12 +3830,23 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             store,
             cache: None,
             registry,
+            command_log: Vec::new(),
+            next_command_seq: 0,
+            history_filter: HistoryCommandFilter::default(),
         }
     }
 
     #[cfg(test)]
     pub(crate) fn test_projection(&self) -> A::Projection {
         self.store.projection().expect("materialize projection")
+    }
+
+    /// @emoji 🧪 Refreshes (backfilling the command log) and returns the current `HistoryView` —
+    /// the merged command+operation timeline test harness accessor.
+    #[cfg(test)]
+    pub(crate) fn test_history(&mut self) -> HistoryView {
+        self.refresh_cache().expect("refresh cache");
+        self.build_history_view()
     }
 
     /// @emoji 📸 Materializes and returns the current projection — the typed counterpart to
@@ -3638,23 +3867,79 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.store.backbone_ref()
     }
 
+    /// @emoji 🧾 Appends one entry to the session command log. `timestamp: None` stamps "now"
+    /// (live dispatch); `Some(..)` preserves an edit's original `started_at` (backfill).
+    fn log_command(&mut self, action_id: &str, label: String, kind: ActionKind, edit_id: Option<String>, timestamp: Option<String>) {
+        self.next_command_seq += 1;
+        self.command_log.push(CommandLogEntry {
+            seq: self.next_command_seq,
+            action_id: action_id.to_string(),
+            label,
+            kind,
+            timestamp: timestamp.unwrap_or_else(store::now_iso),
+            edit_id,
+        });
+    }
+
+    /// @emoji 🕰️ Appends a command-log entry for every VCS edit not yet referenced by the log —
+    /// covers seeded (`app.seed`), ingested (`ingest_operations*`), and loaded
+    /// (`load_document_text`/`load_document_pack`) edits that never passed through `dispatch_emit`.
+    /// Invariant: after this runs, every `envelope.vcs.edits` entry is referenced by exactly one
+    /// `CommandLogEntry`. Idempotent — re-running finds nothing missing.
+    fn backfill_command_log(&mut self) {
+        let logged: HashSet<&str> = self.command_log.iter().filter_map(|entry| entry.edit_id.as_deref()).collect();
+        let missing: Vec<(String, String, String)> = self
+            .store
+            .envelope()
+            .vcs
+            .edits
+            .iter()
+            .filter(|edit| !logged.contains(edit.id.as_str()))
+            .map(|edit| {
+                let label = edit.description.clone().unwrap_or_else(|| edit.forwards.first().map(OpText::print_op).unwrap_or_else(|| edit.id.clone()));
+                (edit.id.clone(), label, edit.started_at.clone())
+            })
+            .collect();
+        for (edit_id, label, timestamp) in missing {
+            self.log_command("apply", label, ActionKind::Operation, Some(edit_id), Some(timestamp));
+        }
+    }
+
     fn build_history_view(&self) -> HistoryView {
+        let applied_ids: HashSet<&str> = self.store.applied_edit_ids().iter().map(String::as_str).collect();
+        let local_actor = self.store.local_actor_id();
+        let mut commands: Vec<CommandView> = self
+            .command_log
+            .iter()
+            .map(|entry| {
+                let edit = entry.edit_id.as_deref().and_then(|edit_id| self.store.envelope().vcs.edits.iter().find(|edit| edit.id == edit_id));
+                let op_lines = edit.map(|edit| edit.forwards.iter().map(OpText::print_op).collect()).unwrap_or_default();
+                // 🪞 Mirrors `store::DocumentStore::edit_is_local` (private to that crate): an edit
+                // with no recorded actor is treated as local, same as a real undo would.
+                let applied = entry.edit_id.as_deref().is_some_and(|edit_id| applied_ids.contains(edit_id));
+                let revertible = applied && edit.is_some_and(|edit| edit.actor.is_none() || edit.actor.as_deref() == local_actor);
+                CommandView {
+                    seq: entry.seq,
+                    action_id: entry.action_id.clone(),
+                    label: entry.label.clone(),
+                    kind: entry.kind,
+                    timestamp: entry.timestamp.clone(),
+                    edit_id: entry.edit_id.clone(),
+                    op_lines,
+                    applied,
+                    revertible,
+                }
+            })
+            .collect();
+        commands.reverse();
         HistoryView {
             columns: build_history_columns(self.store.envelope()),
             can_undo: !self.store.applied_edit_ids().is_empty(),
             can_redo: !self.store.redo_edit_ids().is_empty(),
             active_alternative_id: self.store.envelope().active_alternative_id.clone(),
             current_checkpoint_id: self.store.current_checkpoint_id().map(str::to_string),
-            recent_ops: self
-                .store
-                .envelope()
-                .vcs
-                .edits
-                .iter()
-                .rev()
-                .flat_map(|edit| edit.forwards.iter().rev().map(OpText::print_op))
-                .take(HISTORY_VIEW_RECENT_OPS_LIMIT)
-                .collect(),
+            commands,
+            command_filter: self.history_filter,
         }
     }
 
@@ -3662,6 +3947,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     fn refresh_cache(&mut self) -> Result<(), String> {
         let generation = self.store.generation();
         if self.cache.as_ref().map(|(gen, _, _)| *gen) != Some(generation) {
+            self.backfill_command_log();
             let projection = self.store.projection().map_err(|error| error.to_string())?;
             let history = self.build_history_view();
             self.cache = Some((generation, projection, history));
@@ -3830,6 +4116,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         // instead, the offsets are moot (checked via edit identity, not reused blindly).
         let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
         let (before_forwards_len, before_backwards_len) = self.store.edit_operations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
+        let log_label = description.clone();
         let vcs_command = match coalesce_key {
             Some(key) => DocumentCommand::AmendLast {
                 operations: operations,
@@ -3843,6 +4130,19 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.store.dispatch(vcs_command).map_err(|error| error.to_string())?;
         self.cache = None;
         let amended_same_edit = before_edit_id.is_some() && self.store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_edit_id.as_ref();
+        // 🧾 One command-log entry per VCS edit — a coalesced gesture (`amended_same_edit`) grows the
+        // existing entry's `op_lines` live (see `build_history_view`), it never appends a new entry.
+        if !amended_same_edit {
+            if let Some(edit_id) = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) {
+                // 🧾 `verb` is an action id (`handle_action`) or a command id (`handle_command`) —
+                // `CommandDefinition` has no `ActionKind` (commands aren't View/Shell/History), and
+                // reaching here means operations were dispatched, so `Operation` is always correct.
+                let kind = self.registry.get(verb).map(|def| def.kind).unwrap_or(ActionKind::Operation);
+                let registry_label = self.registry.get(verb).map(|def| def.label.clone()).or_else(|| self.registry.get_command(verb).map(|def| def.label.clone()));
+                let label = log_label.or(registry_label).unwrap_or_else(|| verb.to_string());
+                self.log_command(verb, label, kind, Some(edit_id), None);
+            }
+        }
         let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
         Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset))
     }
@@ -3879,11 +4179,16 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             match self.store.dispatch(command) {
                 Ok(()) => {
                     self.cache = None;
+                    // 🧾 Undo/redo/checkpoint/alternative are pure cursor motion (`edit_id: None`) —
+                    // append-only: this NEVER removes a prior entry, including undo's.
+                    let label = self.registry.get(action).map(|def| def.label.clone()).unwrap_or_else(|| action.to_string());
+                    self.log_command(action, label, ActionKind::History, None, None);
                     // 🐢 History actions (undo/redo/checkpoint/alternative) can touch any part of the
                     // document — always Full, never opt into a narrower scope.
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
                 }
-                // Benign no-operations (nothing to undo/redo, foreign tail) collapse to an empty result.
+                // Benign no-operations (nothing to undo/redo, foreign tail) collapse to an empty result
+                // and are NOT logged — they never touched the store.
                 Err(vcs::VcsError::NothingToUndo)
                 | Err(vcs::VcsError::NothingToRedo)
                 | Err(vcs::VcsError::ForeignEdit(_)) => {
@@ -3891,6 +4196,50 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                 }
                 Err(error) => Err(error.to_string()),
             }
+        } else if action == REVERT_TO_COMMAND_ACTION_ID {
+            self.refresh_cache()?;
+            let entry_seq = args.and_then(|value| value.get("entrySeq")).and_then(Value::as_u64);
+            // ⏪ Only a `revertible` entry (applied, edit-linked, locally authored) has a real anchor
+            // to revert to — see `CommandView::revertible` in `build_history_view`.
+            let target_edit_id = entry_seq.and_then(|seq| {
+                self.cache
+                    .as_ref()
+                    .and_then(|(_, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible))
+                    .and_then(|entry| entry.edit_id.clone())
+            });
+            let target_position = target_edit_id.and_then(|edit_id| self.store.applied_edit_ids().iter().position(|id| *id == edit_id));
+            match target_position {
+                Some(position) => {
+                    let undo_count = self.store.applied_edit_ids().len() - (position + 1);
+                    for _ in 0..undo_count {
+                        match self.store.dispatch(DocumentCommand::Undo) {
+                            Ok(()) => {}
+                            // 🛑 Stop early rather than error — a foreign edit further up the stack
+                            // still leaves the revert partially applied, which is the best this can do.
+                            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => break,
+                            Err(error) => return Err(error.to_string()),
+                        }
+                    }
+                    self.cache = None;
+                    // 🧾 One entry for the revert itself — the internal undos it performs are an
+                    // implementation detail, not separately logged commands.
+                    self.log_command(action, "Revert to Command".into(), ActionKind::History, None, None);
+                    Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
+                }
+                None => Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::None)),
+            }
+        } else if action == SET_HISTORY_COMMAND_FILTER_ACTION_ID {
+            // 🎚️ Arg key is `"value"`, not `"filter"` — see `set_history_command_filter_action_definition`'s doc.
+            let filter = args.and_then(|value| value.get("value")).and_then(Value::as_str).unwrap_or("all");
+            self.history_filter = match filter {
+                "withoutOperations" => HistoryCommandFilter::WithoutOperations,
+                "onlyOperations" => HistoryCommandFilter::OnlyOperations,
+                _ => HistoryCommandFilter::All,
+            };
+            // 🗂️ The store's generation counter doesn't bump for a filter-only change — clear the
+            // cache explicitly or the next render would still see the old `command_filter`.
+            self.cache = None;
+            Ok(Self::empty_result(action, meta, Vec::new(), Vec::new(), semio_framework_core::kernel::UiDirtyScope::Full))
         } else if CLIPBOARD_ACTION_IDS.contains(&action) {
             self.refresh_cache()?;
             let emit = {
@@ -4054,6 +4403,11 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         view_state: &ViewState,
     ) -> Result<UiNode, String> {
         self.refresh_cache()?;
+        if body_key == FRAMEWORK_HISTORY_BODY_KEY {
+            // 🕰️ Framework-owned, projection-independent — served before any app body-key match.
+            let (_, _, history) = self.cache.as_ref().expect("cache refreshed above");
+            return Ok(ui_history_panel(history, &self.registry.controller_id, is_de_locale(view_state)));
+        }
         if let Some(json) = projection_override_json {
             let projection: A::Projection =
                 serde_json::from_str(json).map_err(|error| error.to_string())?;
@@ -4862,11 +5216,12 @@ mod semio_plugin_macro_tests {
     //! actions that emit no operations, history interception, and remote-operation ingest idempotency.
 
     use crate::app::{
-        ActionEmit, ActionMeta, App, AppActionRegistry, DocumentApp, DocumentView, PluginApp, VcsDocumentApp,
+        ActionEmit, ActionMeta, App, AppActionRegistry, CommandView, DocumentApp, DocumentView, HistoryCommandFilter, HistoryView,
+        PluginApp, VcsDocumentApp, ui_history_panel,
     };
     use crate::{ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
     use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
-    use semio_framework_core::{ActionArgDef, MediaForm};
+    use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
@@ -5277,6 +5632,157 @@ mod semio_plugin_macro_tests {
         assert!(checkpoint.operations.is_empty());
         assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
     }
+
+    //#region 🔖CommandLogTests
+    #[test]
+    fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), 1);
+        let entry = &history.commands[0];
+        assert_eq!(entry.action_id, "increment");
+        assert_eq!(entry.label, "increment");
+        assert_eq!(entry.kind, ActionKind::Operation);
+        assert!(entry.edit_id.is_some());
+        assert!(!entry.op_lines.is_empty(), "operation entry must carry printed op-text");
+        assert!(entry.applied && entry.revertible);
+    }
+
+    #[test]
+    fn a_coalesced_gesture_appends_exactly_one_command_log_entry() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        for value in ["a", "ab", "abc"] {
+            app.handle_action("setLabel", Some(&json!({ "value": value })), &ViewState::default(), &meta()).expect("setLabel");
+        }
+        let history = app.test_history();
+        let set_label_entries: Vec<&CommandView> = history.commands.iter().filter(|entry| entry.action_id == "setLabel").collect();
+        assert_eq!(set_label_entries.len(), 1, "a coalesced gesture must grow one entry's op_lines, not append new entries");
+    }
+
+    #[test]
+    fn undo_and_redo_append_entries_and_never_shrink_the_log() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+        assert_eq!(app.test_history().commands.len(), 1);
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        let after_undo = app.test_history();
+        assert_eq!(after_undo.commands.len(), 2, "undo appends, it does not remove the increment entry");
+        assert!(after_undo.commands.iter().any(|entry| entry.action_id == "increment"));
+        app.handle_action("redo", None, &ViewState::default(), &meta()).expect("redo");
+        let after_redo = app.test_history();
+        assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
+        assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
+    }
+
+    #[test]
+    fn revert_to_command_restores_the_projection_and_appends_one_entry() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc1");
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc2");
+        assert_eq!(app.test_projection().count, 2);
+        // 🧾 `commands` is newest-first — take the MINIMUM seq among "increment" entries to target inc1, not inc2.
+        let first_increment_seq = app.test_history().commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
+        let before_len = app.test_history().commands.len();
+
+        let result = app
+            .handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": first_increment_seq })), &ViewState::default(), &meta())
+            .expect("revertToCommand");
+        assert!(result.events.iter().any(|event| event.kind == "history-changed"));
+        assert_eq!(app.test_projection().count, 1, "revert leaves the target edit applied, undoing only what came after it");
+        let history = app.test_history();
+        assert_eq!(history.commands.len(), before_len + 1, "exactly one entry appended for the revert itself");
+        // 🧾 `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
+        assert_eq!(history.commands.first().map(|entry| entry.action_id.as_str()), Some(REVERT_TO_COMMAND_ACTION_ID));
+    }
+
+    #[test]
+    fn ingested_remote_edits_are_backfilled_into_the_command_log() {
+        let mut sender = VcsDocumentApp::new(TestApp::default());
+        let (near, mut far) = MemoryBackbone::pair("mem://doc-history-backfill", "mem://doc-history-backfill");
+        sender.attach_backbone(Box::new(near)).expect("attach");
+        sender.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
+
+        let mut envelopes = Vec::new();
+        for message in far.receive().expect("receive") {
+            if let BackboneMessage::Operations { envelopes: operations } = message {
+                envelopes.extend(operations);
+            }
+        }
+        let operations = protocol::encode_envelopes(&envelopes);
+
+        // 🧾 The receiver never dispatched anything itself — any log entry it has must come from backfill.
+        let mut receiver = VcsDocumentApp::new(TestApp::default());
+        receiver.ingest_operations(&operations).expect("ingest");
+        let history = receiver.test_history();
+        assert_eq!(history.commands.len(), 1);
+        assert!(history.commands[0].edit_id.is_some());
+        assert!(!history.commands[0].op_lines.is_empty());
+    }
+
+    #[test]
+    fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app
+            .handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&json!({ "value": "onlyOperations" })), &ViewState::default(), &meta())
+            .expect("setHistoryCommandFilter");
+        assert!(result.operations.is_empty());
+        assert_eq!(app.test_history().command_filter, HistoryCommandFilter::OnlyOperations);
+    }
+
+    #[test]
+    fn ui_history_panel_filters_rows_and_gates_the_backwards_action() {
+        let history = HistoryView {
+            columns: Vec::new(),
+            can_undo: true,
+            can_redo: false,
+            active_alternative_id: None,
+            current_checkpoint_id: None,
+            commands: vec![
+                CommandView {
+                    seq: 1,
+                    action_id: "increment".into(),
+                    label: "Increment".into(),
+                    kind: ActionKind::Operation,
+                    timestamp: "0".into(),
+                    edit_id: Some("e1".into()),
+                    op_lines: vec!["set-count value=1".into()],
+                    applied: true,
+                    revertible: true,
+                },
+                CommandView {
+                    seq: 2,
+                    action_id: "undo".into(),
+                    label: "Undo".into(),
+                    kind: ActionKind::History,
+                    timestamp: "1".into(),
+                    edit_id: None,
+                    op_lines: Vec::new(),
+                    applied: false,
+                    revertible: false,
+                },
+            ],
+            command_filter: HistoryCommandFilter::All,
+        };
+        let UiNode::Stack(all_stack) = ui_history_panel(&history, "ctrl", false) else { panic!("expected a Stack root") };
+        let UiNode::Tree(all_tree) = &all_stack.children[2] else { panic!("expected the tree as the third child") };
+        assert_eq!(all_tree.sections[0].items.len(), 2);
+        assert!(all_tree.sections[0].items[0].actions.is_some(), "the revertible entry must offer backwards");
+        assert!(all_tree.sections[0].items[1].actions.is_none(), "the non-revertible entry must not offer backwards");
+
+        let only_ops = HistoryView { command_filter: HistoryCommandFilter::OnlyOperations, ..history.clone() };
+        let UiNode::Stack(ops_stack) = ui_history_panel(&only_ops, "ctrl", false) else { panic!("expected a Stack root") };
+        let UiNode::Tree(ops_tree) = &ops_stack.children[2] else { panic!("expected the tree as the third child") };
+        assert_eq!(ops_tree.sections[0].items.len(), 1);
+        assert_eq!(ops_tree.sections[0].items[0].id, "framework.history.entry.1");
+
+        let without_ops = HistoryView { command_filter: HistoryCommandFilter::WithoutOperations, ..history };
+        let UiNode::Stack(no_ops_stack) = ui_history_panel(&without_ops, "ctrl", false) else { panic!("expected a Stack root") };
+        let UiNode::Tree(no_ops_tree) = &no_ops_stack.children[2] else { panic!("expected the tree as the third child") };
+        assert_eq!(no_ops_tree.sections[0].items.len(), 1);
+        assert_eq!(no_ops_tree.sections[0].items[0].id, "framework.history.entry.2");
+    }
+    //#endregion 🔖CommandLogTests
 
     #[test]
     fn undo_on_empty_history_is_a_benign_no_operation() {
