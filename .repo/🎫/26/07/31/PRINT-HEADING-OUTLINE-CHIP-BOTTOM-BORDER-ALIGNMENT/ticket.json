@@ -2,8 +2,8 @@
   "title": "Print Heading Outline Chip Bottom Border Alignment",
   "emoji": "🖨️",
   "status": "closed",
-  "description": "Outline paragraph chips (e.g. Bauteilportal) still show verticals poking below the baseline and imperfect junctions with the connecting line. Solid/colored chips are fine. Follow-up: outline pair chips must open at the bottom onto a single shared baseline row instead of stacking chip-bottom + gap strokes.",
-  "summary": "Root cause was TeX digit-gluing: 2\\\\semio@stroke@hairline expanded to 20.75pt (not 1.5pt), so outline chip top/bottom strokes were ~19.25pt wider than the mid verticals. Shared \\\\linewidth baseline then overshot the visible right edge (Bauteilportal). Fixed via \\\\semio@window@cap@outer@w = cap@w+hairline+hairline for closed and open outline frames; Needspace keep uses the same sum pattern. Probe raster: leftDelta=rightDelta=0 for Bauteilportal and Bauteilbörsen; BR corner flush.",
+  "description": "Outline Bauteilportal fixed; solid Bauteileinspeisung stepped because number chip was shorter than title+gap. Sync pair heights to max(tab,ctrl); solid gap overlaps one hairline.",
+  "summary": "Outline overshoot: 2\\\\semio@stroke@hairline glued to 20.75pt — fixed via cap@outer@w (hairline+hairline). Solid step: number chip shorter than title/gap — fixed with two-pass \\\\semio@heading@pair@sync@height (min titleh = max of both) plus hairline gap overlap. Outline open chips add +hairline when converting measured box height back to titleh. Probe: solid and outline topDelta=botDelta=0, outline rightDelta=0, no cream seam at title/gap.",
   "goal": "🎯r2602",
   "sessions": []
 }

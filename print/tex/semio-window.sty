@@ -2222,6 +2222,12 @@
 \newlength{\semio@window@gap@w}
 \newlength{\semio@window@cap@w}
 \newlength{\semio@window@cap@body@h}
+% 📐 Floor for \semio@window@cap@titleh during a heading-pair rebuild. Zero
+% outside pairs; set to max(tab,ctrl) so both chips (and the solid gap band)
+% share one height — otherwise the shorter number chip steps below/above the
+% title+gap band (Bauteileinspeisung).
+\newlength{\semio@window@cap@min@titleh}
+\setlength{\semio@window@cap@min@titleh}{\z@}
 
 % 🔲 Effective cap-box height. The nominal \semio@chrome@titlebar@height (1.4em)
 % resolves against the *ambient* body font, so an enlarged chip font (e.g. 14pt
@@ -2257,6 +2263,9 @@
   }%
   \ifdim\semio@window@cap@titleh<\dimexpr\semio@chrome@titlebar@height\relax
     \setlength{\semio@window@cap@titleh}{\dimexpr\semio@chrome@titlebar@height\relax}%
+  \fi
+  \ifdim\semio@window@cap@titleh<\semio@window@cap@min@titleh\relax
+    \setlength{\semio@window@cap@titleh}{\semio@window@cap@min@titleh}%
   \fi
   \setlength{\semio@window@cap@body@h}{%
     \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
@@ -2548,17 +2557,39 @@
 % 📐 Solid heading pairs: filled gap band (not a full-linewidth baseline underlay).
 % The underlay used to run past the right chip's outer edge by a hairline under
 % PDF rasterization; a width-exact gap between the measured chip boxes stays flush.
+% Two-pass height sync makes title and number the same tallness (max of both);
+% gap overlaps each chip by one hairline so same-colour abutments don't flash a
+% cream seam under rasterization (same trick as muted title bars).
+\newcommand{\semio@heading@pair@sync@height}{%
+  \setlength{\semio@window@cap@min@titleh}{%
+    \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax
+  }%
+  \ifdim\dimexpr\ht\semio@window@ctrl@box+\dp\semio@window@ctrl@box\relax>\semio@window@cap@min@titleh\relax
+    \setlength{\semio@window@cap@min@titleh}{%
+      \dimexpr\ht\semio@window@ctrl@box+\dp\semio@window@ctrl@box\relax
+    }%
+  \fi
+}
+
 \newcommand{\semio@heading@pair}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \semio@heading@pair@sync@height
+  \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
   \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box
+      +\semio@stroke@hairline+\semio@stroke@hairline\relax
   }%
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
+      \hskip-\semio@stroke@hairline\relax
       \semio@window@header@gap@paint{#1}{#1}%
+      \hskip-\semio@stroke@hairline\relax
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -2585,15 +2616,29 @@
 
 \newcommand{\semio@heading@pair@outline}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
+  \semio@heading@pair@sync@height
+  % Open chips box to titleh−hairline (baseline is the pair row below); sync
+  % measured that shorter box, so lift the floor back to full titleh.
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
   \semio@heading@pair@outline@row{#1}%
 }
 
 \newcommand{\semio@heading@pair@nofill@num}[4]{%
   \semio@hierarchy@path@set{#1}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
+  \semio@heading@pair@sync@height
+  \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
+  \setlength{\semio@window@cap@min@titleh}{\z@}%
   \semio@heading@pair@outline@row{#4}%
 }
 
