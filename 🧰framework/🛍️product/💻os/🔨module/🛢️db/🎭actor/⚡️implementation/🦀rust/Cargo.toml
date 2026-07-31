@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-db-actor"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db actor runtime — bounded priority mailbox, supervision, generations, hand-rolled send/recv/reply futures, thread spawner"
+
+[lints]
+workspace = true
+[lib]
+name = "db_actor"
+path = "../../../🎭actor/⚡️implementation/🦀rust/📦lib.rs"
+
+[features]
+default = ["thread"]
+thread = []
+
+[dependencies]
+db_core = { path = "../../../🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-core" }

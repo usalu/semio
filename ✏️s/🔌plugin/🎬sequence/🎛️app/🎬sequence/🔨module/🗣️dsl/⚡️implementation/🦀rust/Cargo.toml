@@ -15,4 +15,4 @@ sequence = { path = "../../../../../../../../../✏️s/🔌plugin/🎬sequence/
 store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
-neural_engine = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚙️engine/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-neural-engine" }

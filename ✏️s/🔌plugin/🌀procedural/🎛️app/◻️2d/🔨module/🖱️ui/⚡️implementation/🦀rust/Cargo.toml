@@ -16,11 +16,11 @@ procedural_2d_engine = { path = "../../../../../../../../../✏️s/🔌plugin/�
 procedural_2d_op = { path = "../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/🔨module/🔧op/⚡️implementation/🦀rust", package = "semio-s-app-procedural-2d-op" }
 protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
-flow_core = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-flow-core" }
 playbook = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔁workflow/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-workflow" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
-ui_styling = { path = "../../../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling", package = "ui_styling" }
+ui_styling = { path = "../../../../../../../../../🧰framework/🔨module/🖱️ui/🎨styling/⚡️implementation/🦀rust", package = "ui_styling" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

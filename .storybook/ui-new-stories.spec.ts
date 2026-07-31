@@ -84,3 +84,25 @@ for (const storyId of NEW_UI_STORY_IDS) {
     await expectStoryMounts(page, storyId);
   });
 }
+
+test("celebrated panel tab icons paint conic ink through --icon-mask, not a rectangular fill", async ({ page }) => {
+  await expectStoryMounts(page, "🖱️ui⚛️react-paneltabbar--panel-variant");
+  const paint = await page.evaluate(() => {
+    const tab = document.querySelector("[data-slot=\"panel-tab-button\"]") as HTMLElement | null;
+    if (!tab) return null;
+    tab.setAttribute("data-celebrated", "true");
+    const icon = tab.querySelector("[data-icon]") as HTMLElement | null;
+    if (!icon) return null;
+    const iconStyle = getComputedStyle(icon);
+    const beforeStyle = getComputedStyle(icon, "::before");
+    return {
+      maskImage: iconStyle.maskImage,
+      backgroundImage: iconStyle.backgroundImage,
+      beforeBackgroundImage: beforeStyle.backgroundImage,
+    };
+  });
+  expect(paint).not.toBeNull();
+  expect(paint!.maskImage.startsWith("url(\"data:image/svg+xml")).toBe(true);
+  expect(paint!.backgroundImage).toContain("conic-gradient");
+  expect(paint!.beforeBackgroundImage === "none" || paint!.beforeBackgroundImage === "").toBe(true);
+});

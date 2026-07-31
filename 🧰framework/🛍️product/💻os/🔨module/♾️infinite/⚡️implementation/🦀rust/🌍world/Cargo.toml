@@ -10,10 +10,10 @@ name = "infinite_world"
 path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🌍world/📦lib.rs"
 
 [dependencies]
-kernel_3d_scene = { path = "../../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/🎬scene", package = "semio-framework-os-kernel-3d-scene" }
-ui_wgpu = { path = "../../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🧊wgpu", features = ["engine"], package = "ui_wgpu" }
+kernel_3d_scene = { path = "../../../../../../../../✏️s/🔨module/🧊3d/🎬scene/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-3d-scene" }
+ui_wgpu = { path = "../../../../../../../🔨module/🖱️ui/🧊wgpu/⚡️implementation/🦀rust", features = ["engine"], package = "ui_wgpu" }
 semio-framework-core = { path = "../../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
-framework_surface_terrain = { path = "../../../../../../../../🧰framework/🔨module/🗺️surface/⚡️implementation/🦀rust/🏔️terrain", package = "framework_surface_terrain" }
+framework_surface_terrain = { path = "../../../../../../../🔨module/🗺️surface/🏔️terrain/⚡️implementation/🦀rust", package = "framework_surface_terrain" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"

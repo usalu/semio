@@ -1087,17 +1087,17 @@ async function buildEngineWasm(variant: string, renderer: string): Promise<void>
   // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
   // the build class rather than the generic command default since those inner builds can legitimately
   // approach [[buildBudgetMs]] themselves.
-  const graphScript = join(repoRoot, "./🧰framework/🔨module/🗺️surface/⚡️implementation/🦀rust/🕸️node-graph/📜script.ts");
+  const graphScript = join(repoRoot, "./🧰framework/🔨module/🗺️surface/🕸️node-graph/⚡️implementation/🦀rust/📜script.ts");
   if (runCmdStatus("bun", [graphScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
   const editorScript = join(repoRoot, "./🧰framework/🔨module/✍️editor/⚡️implementation/🦀rust/📜script.ts");
   if (runCmdStatus("bun", [editorScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-editor wasm build failed");
   // React renderer always `import("@semio-tech/flow-core/pkg/flow_core.js")` for `createFlowSession`, so the
   // pkg must exist even when the active playground's `engines = []` (e.g. Aggregator / puzzle).
-  const flowCoreScript = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/📜script.ts");
+  const flowCoreScript = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/⚡️implementation/🦀rust/📜script.ts");
   if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("flow-core wasm build failed");
   const row = playgroundCatalog.find((entry) => entry.variant === variant);
   for (const engineCratePath of row?.engines ?? []) {
-    if (engineCratePath === "./🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core" || engineCratePath === "./🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🟦typescript/🫀core") continue;
+    if (engineCratePath === "./🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/⚡️implementation/🦀rust" || engineCratePath === "./🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🟦typescript/🫀core") continue;
     const script = engineWasmScriptPath(engineCratePath);
     if (runCmdStatus("bun", [script, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${engineCratePath} wasm build failed`);
   }
@@ -1142,9 +1142,9 @@ class DevScript extends BundleScript {
           process.exit(1);
         }
       }
-      const wgpuScript = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/⚡️implementation/🦀rust/🧑‍🎨engine/🧊wgpu/📜script.ts");
+      const wgpuScript = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/🧑‍🎨engine/🧊wgpu/⚡️implementation/🦀rust/📜script.ts");
       const serveStatus = runCmdStatus("bun", [wgpuScript, "serve"], {
-        cwd: join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/⚡️implementation/🦀rust/🧑‍🎨engine/🧊wgpu"),
+        cwd: join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/🧑‍🎨engine/🧊wgpu/⚡️implementation/🦀rust"),
         env: {
           ...process.env,
           SEMIO_PLUGIN: plugin,
@@ -1185,7 +1185,7 @@ class BuildScript extends BundleScript {
     await new PluginBuildScript(this.root).run([plugin]);
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
-      const wgpuScript = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/⚡️implementation/🦀rust/🧑‍🎨engine/🧊wgpu/📜script.ts");
+      const wgpuScript = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/🧑‍🎨engine/🧊wgpu/⚡️implementation/🦀rust/📜script.ts");
       if (runCmdStatus("bun", [wgpuScript, "wasm", "--release"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("wgpu trunk build failed");
       return;
     }
@@ -1497,7 +1497,7 @@ class VerifyScript extends BundleScript {
       const packageName = await readPackageName(target.cratePath);
       if (runCmdStatus("cargo", ["test", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
     }
-    if (runCmdStatus("bunx", ["vitest", "run"], { cwd: join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/⚡️implementation/🟦typescript/🧑‍🎨engine/⚛️react") }) !== 0) throw new Error("framework-renderer-react tests failed");
+    if (runCmdStatus("bunx", ["vitest", "run"], { cwd: join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/🧑‍🎨engine/⚛️react/⚡️implementation/🟦typescript") }) !== 0) throw new Error("framework-renderer-react tests failed");
     await runStudioE2eVerify(studioUrl, timeoutMs);
     await new PluginCapabilityLintScript(this.root).run([]);
     console.log(`[DEBUG] s studio verify passed (${studioUrl})`);

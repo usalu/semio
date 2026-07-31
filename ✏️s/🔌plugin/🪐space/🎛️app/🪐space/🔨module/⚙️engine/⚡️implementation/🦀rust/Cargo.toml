@@ -14,7 +14,7 @@ path = "../../../../../../../../../✏️s/🔌plugin/🪐space/🎛️app/🪐s
 space = { path = "../../../../../../../../../✏️s/🔌plugin/🪐space/🎛️app/🪐space/⚡️implementation/🦀rust", package = "semio-s-app-space-space" }
 semio-framework-os = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/⚡️implementation/🦀rust", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", package = "semio-framework-plugin" }
-infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🎲board/🔌port/➡️directed/🕸️dag", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+infinite_board_port_directed_dag = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/🎲board/🔌port/➡️directed/🕸️dag/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
 serde_json = "1.0.140"
 
 [dev-dependencies]

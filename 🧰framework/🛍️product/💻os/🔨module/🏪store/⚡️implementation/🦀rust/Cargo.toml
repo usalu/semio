@@ -20,7 +20,7 @@ path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
-dsl_core = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-dsl-core" }
+dsl_core = { path = "../../../🗣️dsl/🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl-core" }
 dsl = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
 pack = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack" }
 semio-framework-core = { path = "../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }

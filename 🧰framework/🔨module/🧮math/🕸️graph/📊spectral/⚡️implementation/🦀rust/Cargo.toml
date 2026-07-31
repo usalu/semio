@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-spectral"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_spectral"
+crate-type = ["rlib"]
+path = "../../../../🕸️graph/📊spectral/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../🕸️graph/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_algebra = { path = "../../../../➕algebra/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-algebra" }

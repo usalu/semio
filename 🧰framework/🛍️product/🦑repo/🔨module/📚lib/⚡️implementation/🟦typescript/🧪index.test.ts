@@ -19,7 +19,7 @@ import {
   loadFrameworkOsPlaygroundCatalog,
   playgroundPlayViteDefine,
 } from "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
-import { playgroundStaticSiteBuildOptions } from "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨module/🖱️ui/🎨styling/⚡️implementation/🦀rust/🟦vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");

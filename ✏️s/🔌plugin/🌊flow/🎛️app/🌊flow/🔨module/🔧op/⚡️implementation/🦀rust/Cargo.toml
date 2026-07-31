@@ -11,4 +11,4 @@ workspace = true
 path = "../../../../../../../../../✏️s/🔌plugin/🌊flow/🎛️app/🌊flow/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
 
 [dependencies]
-flow_core = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-flow-core" }

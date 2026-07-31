@@ -1,0 +1,23 @@
+[package]
+name = "semio-framework-os-kernel-infinite-board"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "infinite_board"
+crate-type = ["rlib"]
+path = "../../../🎲board/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+ui_styling = { path = "../../../../../../../🔨module/🖱️ui/🎨styling/⚡️implementation/🦀rust", package = "ui_styling" }
+infinite_cavas = { path = "../../../🖼️canvas/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-infinite-canvas" }
+mathematical_graph = { path = "../../../../../../../🔨module/🧮math/🕸️graph/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_drawing = { path = "../../../../../../../🔨module/🧮math/🕸️graph/🖊️drawing/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph-drawing" }
+mathematical_geometry = { path = "../../../../../../../🔨module/🧮math/📐geometry/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-geometry" }
+mathematical_graph_manifest = { path = "../../../../../../../🔨module/🧮math/🕸️graph/🛂manifest/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph-manifest" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

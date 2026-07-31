@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-math-polynomial"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_polynomial"
+crate-type = ["rlib"]
+path = "../../../📈polynomial/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+mathematical_number = { path = "../../../🔢number/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-number" }
+mathematical_random = { path = "../../../🎲random/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-random" }

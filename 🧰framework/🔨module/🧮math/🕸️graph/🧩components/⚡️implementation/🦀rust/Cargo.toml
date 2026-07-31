@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-components"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_components"
+crate-type = ["rlib"]
+path = "../../../../🕸️graph/🧩components/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../🕸️graph/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_traversal = { path = "../../../../🕸️graph/🚶traversal/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph-traversal" }

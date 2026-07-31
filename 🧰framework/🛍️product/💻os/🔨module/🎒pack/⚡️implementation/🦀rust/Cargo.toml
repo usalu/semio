@@ -13,14 +13,14 @@ name = "pack"
 path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs"
 
 [dependencies]
-pack_core = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-pack-core" }
-pack_format = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/📐format", package = "semio-framework-os-kernel-pack-format" }
-pack_value = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🔢value", package = "semio-framework-os-kernel-pack-value" }
-pack_io = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🔌io", package = "semio-framework-os-kernel-pack-io" }
-pack_async = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/⏳async", package = "semio-framework-os-kernel-pack-async" }
-pack_http = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🌐http", package = "semio-framework-os-kernel-pack-http" }
-pack_index = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🔢index", package = "semio-framework-os-kernel-pack-index" }
-dsl_schema = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust/🧬schema", package = "semio-framework-os-kernel-dsl-schema" }
+pack_core = { path = "../../🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack-core" }
+pack_format = { path = "../../📐format/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack-format" }
+pack_value = { path = "../../🔢value/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack-value" }
+pack_io = { path = "../../🔌io/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack-io" }
+pack_async = { path = "../../⏳async/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack-async" }
+pack_http = { path = "../../🌐http/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack-http" }
+pack_index = { path = "../../🔢index/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack-index" }
+dsl_schema = { path = "../../../🗣️dsl/🧬schema/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl-schema" }
 
 [features]
 default = ["deflate"]

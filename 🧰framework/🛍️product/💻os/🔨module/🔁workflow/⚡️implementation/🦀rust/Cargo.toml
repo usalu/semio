@@ -21,7 +21,7 @@ vcs = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨mod
 store = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
 dsl = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
-ui_wgpu = { path = "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🧊wgpu", package = "ui_wgpu" }
+ui_wgpu = { path = "../../../../../../🔨module/🖱️ui/🧊wgpu/⚡️implementation/🦀rust", package = "ui_wgpu" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

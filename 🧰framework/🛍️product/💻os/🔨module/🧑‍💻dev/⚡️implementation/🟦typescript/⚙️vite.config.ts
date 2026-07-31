@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, uiAssetsVitePlugin } from "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin, uiAssetsVitePlugin } from "../../../../../../🔨module/🖱️ui/🎨styling/⚡️implementation/🦀rust/🟦vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦playgrounds.ts";
 import { isStudioPluginFilter } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/📜script.ts";
 import { resolveShellBrandById } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/🏷️brand/📦index.ts";
@@ -71,13 +71,13 @@ export default defineConfig({
   resolve: {
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),
-      { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/📦index.tsx") },
+      { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/⚛️react/⚡️implementation/🟦typescript/📦index.tsx") },
       { find: "@semio-tech/ui-asset", replacement: path.resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript") },
-      { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling") },
-      { find: "@semio-tech/infinite-cavas-react-renderer", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🟦typescript/🖼️canvas/🎨react-renderer/📦index.tsx") },
-      { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🟦typescript/🌍world/🎨r3f/📦index.tsx") },
-      { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/⚡️implementation/🟦typescript/🧑‍🎨engine/⚛️react/📦index.tsx") },
-      { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/⚡️implementation/🦀rust/🧑‍🎨engine/🧊wgpu/📦index.ts") },
+      { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/🎨styling/⚡️implementation/🟦typescript") },
+      { find: "@semio-tech/infinite-cavas-react-renderer", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/♾️infinite/🖼️canvas/🎨react-renderer/⚡️implementation/🟦typescript/📦index.tsx") },
+      { find: "@semio-tech/infinite-world-r3f", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/♾️infinite/🌍world/🎨r3f/⚡️implementation/🟦typescript/📦index.tsx") },
+      { find: "@semio-tech/framework-renderer-react", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/🧑‍🎨engine/⚛️react/⚡️implementation/🟦typescript/📦index.tsx") },
+      { find: "@semio-tech/framework-renderer-wgpu", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/📺renderer/🧑‍🎨engine/🧊wgpu/⚡️implementation/🦀rust/📦index.ts") },
       { find: "@semio-tech/framework-core", replacement: path.resolve(repoRoot, "./🧰framework/⚡️implementation/🟦typescript/📦index.ts") },
       { find: "@semio-tech/framework-os-core", replacement: path.resolve(repoRoot, "./🧰framework/🛍️product/💻os/⚡️implementation/🟦typescript/📦index.ts") },
       { find: "/plugin-modules", replacement: pluginModulesDir },

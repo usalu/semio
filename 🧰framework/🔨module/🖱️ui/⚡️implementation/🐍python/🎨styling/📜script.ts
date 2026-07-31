@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Delegates styling generation and Python import smoke test. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
-import { generateStylingArtifacts } from "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/📜script.ts";
+import { generateStylingArtifacts } from "../../../🎨styling/⚡️implementation/🦀rust/📜script.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {

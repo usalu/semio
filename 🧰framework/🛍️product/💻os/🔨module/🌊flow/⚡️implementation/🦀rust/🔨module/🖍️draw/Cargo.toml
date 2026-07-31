@@ -17,7 +17,7 @@ standalone-wasm = ["dep:wasm-bindgen"]
 flow_module_wasm = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🔨module/🕸️wasm", package = "semio-s-kernel-flow-module-wasm" }
 kernel_2d_engine = { path = "../../../../../../../../../✏️s/🔨module/◻️2d/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-kernel-geometry-2d-engine" }
 kernel_2d_rs = { path = "../../../../../../../../../✏️s/🔨module/◻️2d/⚡️implementation/🦀rust", package = "semio-s-kernel-geometry-2d" }
-neural_engine = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../🧠neural/⚙️engine/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-neural-engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

@@ -12,7 +12,7 @@ path = "../../../../../../../../../✏️s/🔌plugin/🌊flow/🎛️app/🌊fl
 
 [dependencies]
 flow = { path = "../../../../../../../../../✏️s/🔌plugin/🌊flow/🎛️app/🌊flow/⚡️implementation/🦀rust", package = "semio-s-app-flow" }
-flow_core = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-flow-core" }
 flow_engine = { path = "../../../../../../../../../✏️s/🔌plugin/🌊flow/🎛️app/🌊flow/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-flow-engine" }
 flow_op = { path = "../../../../../../../../../✏️s/🔌plugin/🌊flow/🎛️app/🌊flow/🔨module/🔧op/⚡️implementation/🦀rust", package = "semio-s-app-flow-op" }
 playbook = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔁workflow/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-workflow" }

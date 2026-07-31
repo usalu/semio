@@ -1,0 +1,20 @@
+[package]
+name = "semio-framework-os-kernel-math-statistics"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_statistics"
+crate-type = ["rlib"]
+path = "../../../📊statistics/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../../➕algebra/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_probability = { path = "../../../🎲probability/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-probability" }
+mathematical_tabular = { path = "../../../📋tabular/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-tabular" }
+serde = { version = "1.0.219", features = ["derive"] }
+thiserror = "2.0.12"

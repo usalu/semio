@@ -22,9 +22,9 @@ playbook = { path = "../../../../../../../🧰framework/🛍️product/💻os/�
 vcs = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌿vcs/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
-flow_core = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-flow-core" }
+flow_core = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-flow-core" }
 flow_module_brep = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🔨module/📐brep", default-features = false, package = "semio-s-kernel-flow-module-brep" }
-kernel_3d_engine = { path = "../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep/⚙️engine", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
+kernel_3d_engine = { path = "../../../../../../🔨module/🧊3d/📐brep/⚙️engine/⚡️implementation/🦀rust", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
 semio-framework-plugin = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", features = ["component-guest"], package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
 dsl = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }

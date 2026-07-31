@@ -1,0 +1,22 @@
+[package]
+name = "semio-framework-plugin-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../🖥️host/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
+ui_wgpu = { path = "../../../../../../../🔨module/🖱️ui/🧊wgpu/⚡️implementation/🦀rust", package = "ui_wgpu" }
+vcs = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌿vcs/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
+wasmtime-wasi = "22.0.1"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

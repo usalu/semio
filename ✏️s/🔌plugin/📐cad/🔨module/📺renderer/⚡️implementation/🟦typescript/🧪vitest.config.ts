@@ -2,7 +2,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { createWorkspaceViteResolveConfig } from "../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../../../../🧰framework/🔨module/🖱️ui/🎨styling/⚡️implementation/🦀rust/🟦vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -31,7 +31,7 @@ export default defineConfig({
       { find: "@semio-tech/cad-js-module-aec-building", replacement: resolve(root, "../../../../🧩extension/🏢aec-building/⚡️implementation/🟦typescript/📦index.ts") },
       { find: "@semio-tech/cad-js-module-aec-building-energy", replacement: resolve(root, "../../../../🧩extension/🔥aec-building-energy/⚡️implementation/🟦typescript/📦index.ts") },
       { find: "@semio-tech/cad-js-module-aec-building-structure", replacement: resolve(root, "../../../../🧩extension/🏛️aec-building-structure/⚡️implementation/🟦typescript/📦index.ts") },
-      { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🟦typescript/🌍world/🎨r3f/📦index.tsx") },
+      { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/♾️infinite/🌍world/🎨r3f/⚡️implementation/🟦typescript/📦index.tsx") },
       { find: /^react$/, replacement: resolve(reactRoot, "index.js") },
       { find: /^react\/jsx-runtime$/, replacement: resolve(reactRoot, "jsx-🟨runtime.js") },
       { find: /^react\/jsx-dev-runtime$/, replacement: resolve(reactRoot, "jsx-dev-🟨runtime.js") },

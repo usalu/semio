@@ -12,24 +12,24 @@ name = "db"
 path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📦lib.rs"
 
 [dependencies]
-db_core = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-db-core" }
-db_actor = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🎭actor", package = "semio-framework-os-kernel-db-actor" }
-db_state = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔘state", package = "semio-framework-os-kernel-db-state" }
-db_storage = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage", package = "semio-framework-os-kernel-db-storage" }
-db_wal = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📝wal", package = "semio-framework-os-kernel-db-wal" }
-db_snapshot = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📸snapshot", package = "semio-framework-os-kernel-db-snapshot" }
-db_index = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔢index", package = "semio-framework-os-kernel-db-index" }
-db_conflict = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/⚔️conflict", package = "semio-framework-os-kernel-db-conflict" }
-db_projection = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📽️projection", package = "semio-framework-os-kernel-db-projection" }
-db_query = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔍query", package = "semio-framework-os-kernel-db-query" }
-db_preview = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/👁️preview", package = "semio-framework-os-kernel-db-preview" }
-db_security = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔒security", package = "semio-framework-os-kernel-db-security" }
-db_document = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📄document", package = "semio-framework-os-kernel-db-document" }
-db_compact = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗜️compact", package = "semio-framework-os-kernel-db-compact" }
-db_sync = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔄sync", package = "semio-framework-os-kernel-db-sync" }
-db_cluster = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🌐cluster", package = "semio-framework-os-kernel-db-cluster" }
-db_observe = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/👁️observe", package = "semio-framework-os-kernel-db-observe" }
-db_engine = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-db-engine" }
+db_core = { path = "../../🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-core" }
+db_actor = { path = "../../🎭actor/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-actor" }
+db_state = { path = "../../🔘state/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-state" }
+db_storage = { path = "../../🗄️storage/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-storage" }
+db_wal = { path = "../../📝wal/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-wal" }
+db_snapshot = { path = "../../📸snapshot/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-snapshot" }
+db_index = { path = "../../🔢index/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-index" }
+db_conflict = { path = "../../⚔️conflict/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-conflict" }
+db_projection = { path = "../../📽️projection/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-projection" }
+db_query = { path = "../../🔍query/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-query" }
+db_preview = { path = "../../👁️preview/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-preview" }
+db_security = { path = "../../🔒security/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-security" }
+db_document = { path = "../../📄document/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-document" }
+db_compact = { path = "../../🗜️compact/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-compact" }
+db_sync = { path = "../../🔄sync/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-sync" }
+db_cluster = { path = "../../🌐cluster/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-cluster" }
+db_observe = { path = "../../👁️observe/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-observe" }
+db_engine = { path = "../../⚙️engine/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-engine" }
 # 🎯 Genuinely missing addition (this facade's non-test code names `pack_core::ContentHash`
 # directly — `CommandReceipt.state_hash`'s type — and re-exports it as `db::ContentHash`; `pack`
 # (not `pack_core` directly) because `pack`'s own facade already re-exports `ContentHash` plus the
@@ -62,17 +62,17 @@ postgres = ["dep:db_storage_postgres"]
 neo4j = ["dep:db_storage_neo4j"]
 
 [dependencies.db_storage_sqlite]
-path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage/🪶sqlite"
+path = "../../🗄️storage/🪶sqlite/⚡️implementation/🦀rust"
 package = "semio-framework-os-kernel-db-storage-sqlite"
 optional = true
 
 [dependencies.db_storage_postgres]
-path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage/🐘postgres"
+path = "../../🗄️storage/🐘postgres/⚡️implementation/🦀rust"
 package = "semio-framework-os-kernel-db-storage-postgres"
 optional = true
 
 [dependencies.db_storage_neo4j]
-path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage/🌐neo4j"
+path = "../../🗄️storage/🌐neo4j/⚡️implementation/🦀rust"
 package = "semio-framework-os-kernel-db-storage-neo4j"
 optional = true
 

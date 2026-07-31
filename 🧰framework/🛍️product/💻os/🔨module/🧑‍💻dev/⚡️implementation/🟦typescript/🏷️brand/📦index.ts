@@ -2,7 +2,7 @@
 /** @emoji 🏷️ Shell brand catalog — every brand this shell host can ship as, selected via `SEMIO_BRAND` / a playground registry row's `brand` column. */
 // #endregion 🧲Header
 
-import type { ShellBrand } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
+import type { ShellBrand } from "../../../../../../../🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
 import { ENTWERFEN_MIT_BESTAND_BRAND } from "../../../../../../../../♻️mit-bestand/🧺aggregator/🟦brand.ts";
 
 //#region 🏷️ShellBrandCatalog

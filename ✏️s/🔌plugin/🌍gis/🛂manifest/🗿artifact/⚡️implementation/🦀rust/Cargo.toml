@@ -17,14 +17,14 @@ variant = "gis2d"
 aliases = ["gis 2d"]
 app = "gis2d-play"
 ports = { react = 6040, wgpu = 6140 }
-engines = ["🧰framework/🔨module/🗺️surface/⚡️implementation/🦀rust/🗺️tiled-map"]
+engines = ["./🧰framework/🔨module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀rust"]
 
 [[package.metadata.semio.playground]]
 variant = "gis3d"
 aliases = ["gis 3d"]
 app = "gis3d-play"
 ports = { react = 6083, wgpu = 6183 }
-engines = ["🧰framework/🔨module/🗺️surface/⚡️implementation/🦀rust/🏔️terrain"]
+engines = ["./🧰framework/🔨module/🗺️surface/🏔️terrain/⚡️implementation/🦀rust"]
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"

@@ -26,7 +26,7 @@ class GenerateScript extends BundleScript {
   async run(extra: string[]): Promise<void> {
     const { bootstrapCadModules } = await import("@semio-tech/cad-js-runtime");
     const { defaultModelDefinitionId } = await import("@semio-tech/cad-js-core");
-    const { buildSpatialStatelyMachineCatalogView } = await import("../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts");
+    const { buildSpatialStatelyMachineCatalogView } = await import("../../../../../../../🧰framework/🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts");
     bootstrapCadModules();
     let outPath = join(this.root, "🔣machine.json");
     let modelDefinitionId = defaultModelDefinitionId();

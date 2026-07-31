@@ -13,7 +13,7 @@ crate-type = ["rlib"]
 path = "../../../../../../../✏️s/🔌plugin/🎞️animate/🔨module/🫀core/⚡️implementation/🦀rust/📦lib.rs"
 
 [dependencies]
-mathematical_geometry = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/📐geometry", package = "semio-framework-os-kernel-math-geometry" }
+mathematical_geometry = { path = "../../../../../../../🧰framework/🔨module/🧮math/📐geometry/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-geometry" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../../../🧰framework/🔨module/#️⃣hash/⚡️implementation/🦀rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -1,0 +1,12 @@
+[package]
+name = "ui_styling"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Framework-neutral styling tokens generated from ui/styling/🔣tokens.json"
+
+
+[lints]
+workspace = true
+[lib]
+path = "../../../🎨styling/⚡️implementation/🦀rust/📦lib.rs"

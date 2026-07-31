@@ -16,8 +16,8 @@ remodel_dense = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/�
 remodel_image = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/🖼️image/⚡️implementation/🦀rust", package = "remodel_image" }
 remodel_camera = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/📷camera/⚡️implementation/🦀rust", package = "remodel_camera" }
 semio-framework-core = { path = "../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
-mathematical_algebra = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/➕algebra", package = "semio-framework-os-kernel-math-algebra" }
-mathematical_spatial = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🗺️spatial", package = "semio-framework-os-kernel-math-spatial" }
-mathematical_graph = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph", package = "semio-framework-os-kernel-math-graph" }
-mathematical_lie = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🔷lie", package = "semio-framework-os-kernel-math-lie" }
+mathematical_algebra = { path = "../../../../../../../🧰framework/🔨module/🧮math/➕algebra/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_spatial = { path = "../../../../../../../🧰framework/🔨module/🧮math/🗺️spatial/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-spatial" }
+mathematical_graph = { path = "../../../../../../../🧰framework/🔨module/🧮math/🕸️graph/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_lie = { path = "../../../../../../../🧰framework/🔨module/🧮math/🔷lie/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-lie" }
 base64 = "0.22"

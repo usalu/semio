@@ -22,8 +22,8 @@ remodel_mesh = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/�
 remodel_motion = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/🏃motion/⚡️implementation/🦀rust", package = "remodel_motion" }
 remodel_geo = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/🗺️geo/⚡️implementation/🦀rust", package = "remodel_geo" }
 semio-framework-core = { path = "../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
-mathematical_random = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🎲random", package = "semio-framework-os-kernel-math-random" }
+mathematical_random = { path = "../../../../../../../🧰framework/🔨module/🧮math/🎲random/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-random" }
 
 [dev-dependencies]
-mathematical_lie = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🔷lie", package = "semio-framework-os-kernel-math-lie" }
-mathematical_algebra = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/➕algebra", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_lie = { path = "../../../../../../../🧰framework/🔨module/🧮math/🔷lie/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-lie" }
+mathematical_algebra = { path = "../../../../../../../🧰framework/🔨module/🧮math/➕algebra/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-algebra" }

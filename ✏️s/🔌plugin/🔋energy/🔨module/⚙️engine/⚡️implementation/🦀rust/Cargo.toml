@@ -11,7 +11,7 @@ workspace = true
 path = "../../../../../../../✏️s/🔌plugin/🔋energy/🔨module/⚙️engine/⚡️implementation/🦀rust/📦lib.rs"
 
 [dependencies]
-mathematical_algebra = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/➕algebra", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_algebra = { path = "../../../../../../../🧰framework/🔨module/🧮math/➕algebra/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-algebra" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

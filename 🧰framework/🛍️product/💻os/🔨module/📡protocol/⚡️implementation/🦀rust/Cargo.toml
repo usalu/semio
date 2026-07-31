@@ -17,14 +17,14 @@ default = ["deflate"]
 deflate = ["protocol_format/deflate"]
 
 [dependencies]
-protocol_core = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-protocol-core" }
-protocol_command = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🎮command", package = "semio-framework-os-kernel-protocol-command" }
-protocol_causal = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🔗causal", package = "semio-framework-os-kernel-protocol-causal" }
-protocol_crdt = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🔀crdt", package = "semio-framework-os-kernel-protocol-crdt" }
-protocol_format = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/📐format", package = "semio-framework-os-kernel-protocol-format" }
-protocol_history = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/📜history", package = "semio-framework-os-kernel-protocol-history" }
-protocol_materialize = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/💎materialize", package = "semio-framework-os-kernel-protocol-materialize" }
-protocol_wire = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/📡wire", package = "semio-framework-os-kernel-protocol-wire" }
+protocol_core = { path = "../../🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-core" }
+protocol_command = { path = "../../🎮command/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-command" }
+protocol_causal = { path = "../../🔗causal/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-causal" }
+protocol_crdt = { path = "../../🔀crdt/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-crdt" }
+protocol_format = { path = "../../📐format/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-format" }
+protocol_history = { path = "../../📜history/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-history" }
+protocol_materialize = { path = "../../💎materialize/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-materialize" }
+protocol_wire = { path = "../../📡wire/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-wire" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-protocol_io = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🔌io", package = "semio-framework-os-kernel-protocol-io" }
+protocol_io = { path = "../../🔌io/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol-io" }

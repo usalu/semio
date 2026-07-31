@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/repo-vscode` router: `bun ./📜script.ts <dev|test [level]|build|lint|build-vsix>`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../../../../🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
 
 class DevScript extends BundleScript {
   run(): void {

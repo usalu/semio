@@ -12,6 +12,6 @@ path = "../../../../../../../../../✏️s/🔌plugin/➗mathematical/🎛️app
 
 [dependencies]
 mathematical = { path = "../../../../../../../../../✏️s/🔌plugin/➗mathematical/🎛️app/➗mathematical/⚡️implementation/🦀rust", package = "semio-s-app-mathematical" }
-mathematical_graph = { path = "../../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph", package = "semio-framework-os-kernel-math-graph" }
-mathematical_geometry = { path = "../../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/📐geometry", package = "semio-framework-os-kernel-math-geometry" }
+mathematical_graph = { path = "../../../../../../../../../🧰framework/🔨module/🧮math/🕸️graph/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-graph" }
+mathematical_geometry = { path = "../../../../../../../../../🧰framework/🔨module/🧮math/📐geometry/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-math-geometry" }
 serde_json = "1.0.140"

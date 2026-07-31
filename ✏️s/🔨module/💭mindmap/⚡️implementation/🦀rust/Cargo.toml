@@ -15,8 +15,8 @@ crate-type = ["rlib", "cdylib"]
 path = "../../../../../✏️s/🔨module/💭mindmap/⚡️implementation/🦀rust/📦lib.rs"
 
 [dependencies]
-infinite_board_normal_directed = { path = "../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🎲board/➕normal/➡️directed", package = "semio-framework-os-kernel-infinite-board-normal-directed" }
-infinite_cavas = { path = "../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🖼️canvas", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_board_normal_directed = { path = "../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/🎲board/➕normal/➡️directed/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-infinite-board-normal-directed" }
+infinite_cavas = { path = "../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/🖼️canvas/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-infinite-canvas" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

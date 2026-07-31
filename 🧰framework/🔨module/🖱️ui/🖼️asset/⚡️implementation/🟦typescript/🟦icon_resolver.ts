@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 import { ICONS, isIconName, type IconName } from "../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔣icon/🤖generated/🟦icons.ts";
-import type { UiThemeIcons } from "../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
+import type { UiThemeIcons } from "../../../../🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
 
 /** @emoji 🖼 Resolves catalog icon SVG markup with optional theme aliases and variants. */
 export function resolveCatalogIconSvgFromTheme(name: IconName, icons: UiThemeIcons | undefined): string {

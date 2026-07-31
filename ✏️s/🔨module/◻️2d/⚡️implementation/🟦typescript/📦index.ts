@@ -405,14 +405,14 @@ export async function ensureDrawingWasmLoaded(): Promise<DrawingWasmModule> {
     const { dirname, join } = await import("node:path");
     const { fileURLToPath } = await import("node:url");
     const here = dirname(fileURLToPath(import.meta.url));
-    const mod = (await import("../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/pkg/flow_core.js")) as DrawingWasmModule;
+    const mod = (await import("../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/pkg/⚡️implementation/🦀rust/flow_core.js")) as DrawingWasmModule;
     mod.initSync?.({ module: readFileSync(join(here, "../../../../framework/product/os/module/flow/core/rs/pkg/flow_core_bg.wasm")) });
     drawingWasm = mod;
     return mod;
   }
   const [{ default: initFlow, render_drawing_scene, export_drawing_svg, export_drawing_pdf, dispose_drawing, trace_drawing_bitmap, boolean_drawing_segments, export_drawing_dwg, import_drawing_dwg }, { default: wasmUrl }] = await Promise.all([
-    import("../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/pkg/flow_core.js"),
-    import("../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/pkg/flow_core_bg.wasm?url"),
+    import("../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/pkg/⚡️implementation/🦀rust/flow_core.js"),
+    import("../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/🫀core/pkg/⚡️implementation/🦀rust/flow_core_bg.wasm?url"),
   ]);
   if (typeof render_drawing_scene !== "function" || typeof export_drawing_svg !== "function" || typeof export_drawing_pdf !== "function" || typeof dispose_drawing !== "function") {
     throw new Error("flow_core drawing exports missing — rebuild flow/core wasm");

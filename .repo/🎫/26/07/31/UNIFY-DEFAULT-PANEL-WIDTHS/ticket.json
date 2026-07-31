@@ -1,0 +1,14 @@
+{
+  "title": "Unify Default Panel Widths",
+  "emoji": "↔️",
+  "status": "closed",
+  "description": "Make every UI panel use the same default width, set slightly wider than the current document panel default. Centralize the width and extend existing tests.",
+  "summary": "Unified React and native panel defaults at 300px, preserved resized values, added focused tests, and verified React plus Rust coverage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2384"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪b6218b5d13fa4618930113e732bca526"
+  ]
+}

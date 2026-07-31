@@ -15,9 +15,9 @@ standalone-wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
 flow_module_wasm = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🔨module/🕸️wasm", package = "semio-s-kernel-flow-module-wasm" }
-kernel_3d_brepkit = { path = "../../../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep", package = "semio-framework-os-kernel-3d-brep" }
-kernel_3d_engine = { path = "../../../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep/⚙️engine", package = "semio-framework-os-kernel-3d-brep-engine" }
-neural_engine = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-neural-engine" }
+kernel_3d_brepkit = { path = "../../../../../../../../../✏️s/🔨module/🧊3d/📐brep/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-3d-brep" }
+kernel_3d_engine = { path = "../../../../../../../../../✏️s/🔨module/🧊3d/📐brep/⚙️engine/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-3d-brep-engine" }
+neural_engine = { path = "../../../../../🧠neural/⚙️engine/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-neural-engine" }
 semio-framework-core = { path = "../../../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
 base64 = "0.22"
 serde = { version = "1.0.219", features = ["derive"] }

@@ -6,7 +6,7 @@ import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runProbe, tryRun, TEST_LEVELS } from "../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
-import { oklabMix } from "../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/📜script.ts";
+import { oklabMix } from "../../../../🔨module/🖱️ui/🎨styling/⚡️implementation/🦀rust/📜script.ts";
 
 const printRoot = import.meta.dir;
 const repoRoot = getWorkspaceRoot();

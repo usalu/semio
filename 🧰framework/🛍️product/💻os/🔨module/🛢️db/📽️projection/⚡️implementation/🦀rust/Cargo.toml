@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-db-projection"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db projections — projection classes, DAG deps, incremental apply, frontier tracking, historical + preview-augmented"
+
+[lints]
+workspace = true
+[lib]
+name = "db_projection"
+path = "../../../📽️projection/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+db_core = { path = "../../../🫀core/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-core" }
+db_state = { path = "../../../🔘state/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-state" }
+db_index = { path = "../../../🔢index/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-index" }
+db_storage = { path = "../../../🗄️storage/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-db-storage" }
+protocol = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }

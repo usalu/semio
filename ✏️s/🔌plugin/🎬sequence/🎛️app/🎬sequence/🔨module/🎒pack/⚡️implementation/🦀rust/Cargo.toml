@@ -17,4 +17,4 @@ store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os
 
 [dev-dependencies]
 sequence_dsl = { path = "../../../../../../../../../✏️s/🔌plugin/🎬sequence/🎛️app/🎬sequence/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-s-app-sequence-dsl" }
-neural_engine = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚙️engine/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-neural-engine" }

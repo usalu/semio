@@ -1,0 +1,15 @@
+[package]
+name = "semio-framework-os-kernel-math-entropy"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+name = "mathematical_entropy"
+crate-type = ["rlib"]
+path = "../../../🎲entropy/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]

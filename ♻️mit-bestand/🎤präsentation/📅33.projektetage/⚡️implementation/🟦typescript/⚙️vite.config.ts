@@ -4,16 +4,16 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { uiAssetsVitePlugin, playgroundStaticSiteBuildOptions } from "../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦vite-elements-assets.ts";
+import { uiAssetsVitePlugin, playgroundStaticSiteBuildOptions } from "../../../../../🧰framework/🔨module/🖱️ui/🎨styling/⚡️implementation/🦀rust/🟦vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const bundleRoot = dir;
 const repoRoot = resolve(bundleRoot, "../../../../..");
 const uiAssetsRoot = resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/🖼️asset");
-const uiReact = resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/📦index.tsx");
+const uiReact = resolve(repoRoot, "./🧰framework/🔨module/🖱️ui/⚛️react/⚡️implementation/🟦typescript/📦index.tsx");
 const presentationCore = resolve(repoRoot, "./✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/⚡️implementation/🟦typescript/📦index.ts");
-const presentationRenderer = resolve(repoRoot, "./✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/⚡️implementation/🟦typescript/📺renderer/⚛️react/📦index.tsx");
+const presentationRenderer = resolve(repoRoot, "./✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/📺renderer/⚛️react/⚡️implementation/🟦typescript/📦index.tsx");
 const frameworkCore = resolve(repoRoot, "./🧰framework/⚡️implementation/🟦typescript/📦index.ts");
 
 export default defineConfig({

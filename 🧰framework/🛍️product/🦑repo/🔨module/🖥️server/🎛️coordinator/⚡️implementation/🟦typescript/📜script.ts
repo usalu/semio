@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭 Coordinator package router: `bun ./📜script.ts build|test|policy`. */
-import type { BundleLinter } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
-import { dependencyBoundaryBreachesForBundleDir } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
-import { getWorkspaceRoot } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
-import { defineLint } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts";
+import type { BundleLinter } from "../../../../../../../🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../../../../../../../🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
+import { getWorkspaceRoot } from "../../../../../../../🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd } from "../../../../../../../🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
+import { defineLint } from "../../../../../../../🔨module/🧮math/🕸️graph/🗣️dsl/🫀core/⚡️implementation/🟦typescript/🟦typescript/📦index.ts";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();
