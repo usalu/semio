@@ -2377,13 +2377,25 @@
       \vfil
     }%
   \else
+    % 📐 Full-outer horizontal strokes (cap@w + 2·hairline) with body-height side
+    % strokes stacked between them — corners share the exact same outer x so the
+    % bottom rule cannot overshoot the right vertical (the old “sides outside a
+    % body-width rule” assembly left a sub-pixel tail at that junction).
     \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
-      \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
+      \hbox{%
+        \semio@window@stroke@h{#1}{\dimexpr\semio@window@cap@w+2\semio@stroke@hairline\relax}%
+      }%
       \nointerlineskip
-      \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
+      \hbox{%
+        {\color{#1}\rule{\semio@stroke@hairline}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+        \semio@window@cap@paint@nofill{\semio@window@cap@w}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}%
+        {\color{#1}\rule{\semio@stroke@hairline}{\dimexpr\semio@window@cap@body@h-\semio@stroke@hairline\relax}}%
+      }%
       \nointerlineskip
-      \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
+      \hbox{%
+        \semio@window@stroke@h{#1}{\dimexpr\semio@window@cap@w+2\semio@stroke@hairline\relax}%
+      }%
     }%
   \fi
 }
@@ -2407,16 +2419,7 @@
 }
 
 \newcommand{\semio@heading@cap@nofill}[3]{%
-  \if\relax\detokenize{#3}\relax
-    \hbox{\semio@heading@cap@nofill@core{#1}{#2}{#3}}%
-  \else
-    \hbox{%
-      \semio@window@cap@raise{\semio@window@stroke@v{#3}}%
-      \semio@heading@cap@nofill@core{#1}{#2}{#3}%
-      \semio@window@cap@left@overlay{#3}%
-      \semio@window@cap@raise{\semio@window@stroke@v{#3}}%
-    }%
-  \fi
+  \hbox{\semio@heading@cap@nofill@core{#1}{#2}{#3}}%
 }
 
 \newcommand{\semio@heading@cap@muted@core}[1]{%
