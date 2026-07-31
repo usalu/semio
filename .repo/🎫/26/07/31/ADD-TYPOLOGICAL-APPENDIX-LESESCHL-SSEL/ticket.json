@@ -1,0 +1,12 @@
+{
+  "title": "Add Typological Appendix Leseschl?ssel",
+  "emoji": "🎫",
+  "status": "closed",
+  "description": "Deeply analyze the typological appendix, especially any introductory material at its beginning, and move content to the end only where the document logic, consistency, and rendered layout justify it. Verify source order, cross-references, light and dark PDFs, and page transitions before closing.",
+  "summary": "Aligned the typological appendix with the Projects and Bauteilb?rsen appendix pattern after a deep content review. Moved the typology-independent Grunddaten content from the beginning to the end, kept the conceptual introduction and four-family classification first, and added an explicit pointer to the end-of-appendix key. Structured TZ.L as four separate, non-redundant tables: Zeichen und Angaben, Typologiefamilien und Abgrenzungen, Tabellenangaben und Abgrenzungen, and Grunddaten und Abgrenzungen. Added controlled page breaks so every family heading stays with its table. Built both light and dark PDFs through Bun and Nx; verified TZ.L.a through TZ.L.d, stable family references, no TZ.E remnants, and no undefined references. Visually inspected all five affected pages in both themes with no orphan headings, table splits, clipping, or overlap.",
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪9f53a8b13471470b877470b879af7149",
+    "⚪cd07255f31b94348828254e46273409a"
+  ]
+}

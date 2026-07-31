@@ -1,19 +1,14 @@
 \label{anlage:typologie}
 
+%#region 🧭 Einordnung
+
 Die Tabellen dienen als Arbeitsgrundlage für tragende und tragwerksnahe Bauteile, die erneut eingesetzt werden sollen. Entscheidend ist nicht die Bezeichnung aus dem Herkunftsbauwerk, sondern die Form und der konstruktive Zusammenhang, die nach Ausbau oder Zuschnitt tatsächlich erhalten bleiben.
 
-\begin{Table}[title=Grunddaten zum Bauteil, key=tab:typologie-grunddaten]
-\begin{SemioTable}{@{}T{0.22\linewidth-2\tabcolsep}T{0.78\linewidth-2\tabcolsep}@{}}
-\SemioTableHeaderRow{Bereich & Erfassung}
-\SemioTableRow{Herkunft & Bauteil-ID, Quellbauwerk, ursprünglicher Einbauort, Baualter, Stückzahl und Verfügbarkeit}
-\SemioTableRow{Geometrie & Aufmaß, Orientierung, Masse, Verformungen, Toleranzen sowie vorhandene Schnitt- und Handhabungspunkte}
-\SemioTableRow{Material und Aufbau & Materialart, relevante Kennwerte und konstruktive Details; bei Stahlbeton zum Beispiel Bewehrung, Vorspannung, Betondeckung und Verankerung}
-\SemioTableRow{Zustand und Vorgeschichte & Schäden, Exposition, frühere Lagerung und Anschlüsse, bekannte Lastgeschichte sowie Ausbau-, Schnitt- und Reparaturspuren}
-\SemioTableRow{Nachweisstand & Herkunft der Angaben, Prüfverfahren, Genauigkeit, Unsicherheiten und offene Punkte}
-\end{SemioTable}
-\end{Table}
+Die folgenden Tabellen ordnen jede Typologie einer der vier Typologiefamilien zu. Für jede Typologie nennen sie Beispiele, die ursprüngliche Tragrolle, naheliegende Wiederverwendungsrollen, fachlich zu prüfende Rollenwechsel und typologiespezifische Zusatzparameter (\tableref{tab:typologien-lineare}, \tableref{tab:typologien-flaechige}, \tableref{tab:typologien-knoten}, \tableref{tab:typologien-rahmen}). Leseschlüssel und Begriffsabgrenzungen finden sich am Ende dieser Anlage.
 
-Die folgenden Tabellen ordnen jede Typologie einer der vier Typologiefamilien zu. Für jede Typologie nennen sie Beispiele, die ursprüngliche Tragrolle, naheliegende Wiederverwendungsrollen, fachlich zu prüfende Rollenwechsel und typologiespezifische Zusatzparameter (\tableref{tab:typologien-lineare}, \tableref{tab:typologien-flaechige}, \tableref{tab:typologien-knoten}, \tableref{tab:typologien-rahmen}).
+%#endregion
+
+%#region 🧱 Typologiefamilien
 
 \subsection{Lineare Elemente}
 
@@ -23,6 +18,8 @@ Die folgenden Tabellen ordnen jede Typologie einer der vier Typologiefamilien zu
   \SemioTableRow{Axiales Stab-\SemioSlash{}Aus\-steifungs\-element & \SemioCellList[,]{Zugstab, Druckstab, Fachwerkstab, Diagonale, Verbandsstab} & Zug, Druck oder wechselnde Normalkraft innerhalb eines Stab- oder Aus\-steifungs\-systems & Axiales Stab-, Fachwerk- oder Aussteifungsglied & \SemioCellList{Träger oder Riegel; Stütze oder Pfosten} & \SemioCellList{Stablänge und Querschnitt; Geradheit; Endausbildung; Anschlussversätze; Verankerungen und Kraft\-einleitungs\-bereiche}}
   \SemioTableRow{Flexibles Zugelement -- Sonderform & \SemioCellList[,]{Seil, Litze, Drahtseil, flexibles Zugband} & Zug\-beanspruchung & Abspann-, Hänge- oder zugbeanspruchtes Aus\-steifungs\-element & \SemioCellList{—} & \SemioCellList{Länge und Zugquerschnitt; Aufbau und Dehnsteifigkeit; Vorspannung und Durchhang; Ermüdungs- und Schadensgeschichte; Verankerung und Wieder\-veranker\-barkeit}}
 }
+
+\clearpage
 
 \subsection{Flächige Elemente}
 
@@ -38,6 +35,8 @@ Die folgenden Tabellen ordnen jede Typologie einer der vier Typologiefamilien zu
   \SemioTableRow{Mehrgliedriges Knoten-\SemioSlash{}Übergangs\-element & \SemioCellList[,]{Decke--Träger--Stütze-Fragment und ähnliche lokale Konfigurationen} & Lokale Kraftübertragung zwischen mehreren linearen und\SemioSlash{}oder flächigen Teilbereichen & Mehrgliedriger Anschluss oder Rahmenknoten; lokales Auflager- oder Lastverteilungsmodul & \SemioCellList{—} & \SemioCellList{Lokale Topologie; Anzahl und Lage der Teilbereiche; Restlängen und Restabmessungen; Kraftübertragungsflächen; Schnitt- und Anschluss\-bereiche}}
 }
 
+\clearpage
+
 \subsection{Rahmen- und Systemelemente}
 
 \SemioTableLong[text-size=7.2pt, key=tab:typologien-rahmen]{Rahmen- und Systemelemente}{0.14,0.20,0.16,0.20,0.14,0.16}{Typologie & Beispiele & Ursprüngliche Tragrolle & Naheliegende Wiederverwendungsrollen & Fachlich zu prüfende Rollenwechsel & Typologiespezifische Zusatzparameter}{%
@@ -46,3 +45,43 @@ Die folgenden Tabellen ordnen jede Typologie einer der vier Typologiefamilien zu
   \SemioTableRow{Trägerrost-\SemioSlash{}Raumrahmen\-system & \SemioCellList[,]{Träger\-rost\-fragment, Raumrahmen\-fragment} & Flächig oder räumlich gekoppelte Tragwirkung mehrerer Glieder und Knoten & Trägerrost-, Raumrahmen- oder räumliches Stabtragwerkssegment beziehungsweise -modul & \SemioCellList{—} & \SemioCellList{Raster und Systemgeometrie; Gliederhierarchie; Teilquerschnitte; Knoten und Verbindungen; Lager- und Stabilisierungspunkte; Transport- und Montage\-grenzen}}
   \SemioTableRow{Gemischte Tragwerks\-baugruppe & \SemioCellList[,]{Größere Decken--Träger--Stützen-Baugruppe oder gemischtes Tragwerksmodul mit erhaltener Systemwirkung} & Gemeinsamer Lastabtrag unterschiedlicher linearer und flächiger Teilbereiche & Tragwerksmodul entsprechend der erhaltenen Systemwirkung & \SemioCellList{—} & \SemioCellList{Gesamtgeometrie und Aufbau; Lage der Komponenten; Vollständigkeit; Systemgrenzen; Knoten und Verbindungen; fehlende Teile; Schnitt-, Transport- und Montage\-grenzen}}
 }
+
+%#endregion
+
+%#region 🔑 Leseschlüssel
+
+\clearpage
+
+\appendixsection[L]{Leseschlüssel}
+
+\SemioTableLong{Zeichen und Angaben}{0.25,0.75}{Zeichen oder Angabe & Bedeutung}{%
+  \SemioTableRow{\texttt{—} & Kein fachlich naheliegender Rollenwechsel ausgewiesen; keine Aussage über technische Unmöglichkeit.}
+}
+
+\SemioTableLong{Typologiefamilien und Abgrenzungen}{0.25,0.75}{Typologiefamilie & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Lineare Elemente & Bauteile, deren erhaltene Form und Tragwirkung im Wesentlichen entlang einer Hauptachse organisiert sind.}
+  \SemioTableRow{Flächige Elemente & Bauteile, deren erhaltene Form und Tragwirkung über eine Fläche mit gegenüber Länge und Breite geringer Dicke organisiert sind.}
+  \SemioTableRow{Knoten- und Übergangselemente & Lokale Bauteilausschnitte, die Kräfte zwischen angrenzenden Teilbereichen einleiten, umlenken oder weiterleiten; keine eigenständige Systemwirkung.}
+  \SemioTableRow{Rahmen- und Systemelemente & Mehrgliedrige Bauteile oder Baugruppen mit erhaltener gemeinsamer Tragwirkung; nicht auf einen lokalen Knoten begrenzt.}
+}
+
+\clearpage
+
+\SemioTableLong{Tabellenangaben und Abgrenzungen}{0.25,0.75}{Tabellenangabe & Verbindliche Abgrenzung}{%
+  \SemioTableRow{Typologie & Konkrete Klasse innerhalb einer Familie, bestimmt durch erhaltene Form, konstruktiven Zusammenhang und Tragwirkung.}
+  \SemioTableRow{Beispiele & Typische Herkunftsbezeichnungen und Ausprägungen; keine abschließende Liste und kein Eignungsnachweis.}
+  \SemioTableRow{Ursprüngliche Tragrolle & Funktion im Herkunftsbauwerk; keine Aussage über die Tragfähigkeit nach Ausbau oder Bearbeitung.}
+  \SemioTableRow{Naheliegende Wiederverwendungsrollen & Rollen mit grundsätzlich vergleichbarer geometrischer und konstruktiver Logik; Eignung und Nachweise bleiben projektspezifisch.}
+  \SemioTableRow{Fachlich zu prüfende Rollenwechsel & Rollen mit geänderter Orientierung, Beanspruchung oder Systemzuordnung, die eine vertiefte fachliche Bewertung erfordern.}
+  \SemioTableRow{Typologiespezifische Zusatzparameter & Angaben, die die typologieübergreifenden Grunddaten für die jeweilige Typologie ergänzen.}
+}
+
+\SemioTableLong[key=tab:typologie-grunddaten]{Grunddaten und Abgrenzungen}{0.25,0.75}{Grunddatenbereich & Erfassungsumfang}{%
+  \SemioTableRow{Herkunft & Bauteil-ID, Quellbauwerk, ursprünglicher Einbauort, Baualter, Stückzahl und Verfügbarkeit.}
+  \SemioTableRow{Geometrie & Aufmaß, Orientierung, Masse, Verformungen, Toleranzen sowie Schnitt- und Handhabungspunkte.}
+  \SemioTableRow{Material und Aufbau & Materialart, relevante Kennwerte und konstruktive Details; bei Stahlbeton insbesondere Bewehrung, Vorspannung, Betondeckung und Verankerung.}
+  \SemioTableRow{Zustand und Vorgeschichte & Schäden, Exposition, frühere Lagerung und Anschlüsse, bekannte Lastgeschichte sowie Ausbau-, Schnitt- und Reparaturspuren.}
+  \SemioTableRow{Nachweisstand & Herkunft und Genauigkeit der Angaben, Prüfverfahren, Unsicherheiten und offene Punkte.}
+}
+
+%#endregion
