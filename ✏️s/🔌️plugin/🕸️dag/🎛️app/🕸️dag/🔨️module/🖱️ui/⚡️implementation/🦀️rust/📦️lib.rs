@@ -130,6 +130,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
         dimmed: None,
         menu: None,
     }
+}
 //#endregion 🔖️DocumentHelpers
 
 //#region 🔖️Terminology
@@ -227,7 +228,7 @@ fn dag_play_labels(view_state: &ViewState) -> &'static DagPlayLabels {
 /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_dag_app`'s
 /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn dag_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+fn dag_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("addNode", "Add Node", "Knoten hinzufügen"),
         ("removeNode", "Remove Node", "Knoten entfernen"),
@@ -517,9 +518,16 @@ fn render_compiled_dag(document: &DagDocument, camera: &DagCamera) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️DagPlayApp
-#[derive(Default)]
+use std::cell::RefCell;
+
 pub struct DagPlayApp {
-    runtime: DagPlayRuntime,
+    runtime: RefCell<DagPlayRuntime>,
+}
+
+impl Default for DagPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(DagPlayRuntime::default()) }
+    }
 }
 
 impl DagPlayApp {
@@ -550,22 +558,29 @@ impl DocumentApp for DagPlayApp {
         default_dag_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, DagDocument>, _view_state: &ViewState) -> ActionEmit<DagOperation> {
+    fn handle_action(
+        &self,
+        action: &str,
+        args: Option<&Value>,
+        doc: &DocumentView<'_, DagDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<DagOperation> {
         let document = doc.projection;
         match action {
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.selected_node_ids = Self::parse_selection(args);
+                self.runtime.borrow_mut().selected_node_ids = Self::parse_selection(args);
                 ActionEmit::default()
             }
             "nodeGraphHover" => ActionEmit::default(),
             "graphPointerDown" => {
-                self.runtime.selected_node_ids.clear();
+                self.runtime.borrow_mut().selected_node_ids.clear();
                 ActionEmit::default()
             }
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                     if let Ok(camera) = serde_json::from_str::<DagCamera>(viewport_json) {
-                        self.runtime.camera = camera;
+                        self.runtime.borrow_mut().camera = camera;
                     }
                 }
                 ActionEmit::default()
@@ -578,16 +593,16 @@ impl DocumentApp for DagPlayApp {
                         "setFixture" => {
                             if let Some(fixture_json) = operation.get("fixtureJson").and_then(|value| value.as_str()) {
                                 if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
-                                    self.runtime.camera = fixture.camera.clone();
+                                    self.runtime.borrow_mut().camera = fixture.camera.clone();
                                     emitted.push(DagOperation::SetDocument { document: dag_document_from_fixture(&fixture) });
                                 }
                             }
                         }
                         "deleteSelection" => {
-                            let ids = self.runtime.selected_node_ids.clone();
+                            let ids = self.runtime.borrow_mut().selected_node_ids.clone();
                             let removes = remove_nodes_operations(document, &ids);
                             if !removes.is_empty() {
-                                self.runtime.selected_node_ids.clear();
+                                self.runtime.borrow_mut().selected_node_ids.clear();
                                 emitted.extend(removes);
                             }
                         }
@@ -608,12 +623,12 @@ impl DocumentApp for DagPlayApp {
                 ActionEmit::operations(emitted)
             }
             "deleteSelection" => {
-                let ids = self.runtime.selected_node_ids.clone();
+                let ids = self.runtime.borrow_mut().selected_node_ids.clone();
                 let removes = remove_nodes_operations(document, &ids);
                 if removes.is_empty() {
                     return ActionEmit::default();
                 }
-                self.runtime.selected_node_ids.clear();
+                self.runtime.borrow_mut().selected_node_ids.clear();
                 ActionEmit::operations(removes)
             }
             "renameDagNode" => {
@@ -636,7 +651,7 @@ impl DocumentApp for DagPlayApp {
                                 }
                             })
                             .collect();
-                        self.runtime.selected_node_ids = vec![trimmed.into()];
+                        self.runtime.borrow_mut().selected_node_ids = vec![trimmed.into()];
                         return ActionEmit::operations(vec![DagOperation::SetNodes { nodes }, DagOperation::SetEdges { edges }]);
                     }
                 }
@@ -647,7 +662,7 @@ impl DocumentApp for DagPlayApp {
                 if let Some(node_id) = node_id {
                     let removes = remove_nodes_operations(document, &[node_id.to_string()]);
                     if !removes.is_empty() {
-                        self.runtime.selected_node_ids.retain(|id| id != node_id);
+                        self.runtime.borrow_mut().selected_node_ids.retain(|id| id != node_id);
                         return ActionEmit::operations(removes);
                     }
                 }
@@ -689,11 +704,11 @@ impl DocumentApp for DagPlayApp {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let node = default_node_for_kind(kind, &id, x, y);
-                self.runtime.selected_node_ids = vec![id];
+                self.runtime.borrow_mut().selected_node_ids = vec![id];
                 ActionEmit::operations(vec![DagOperation::Nodes(CollectionOperation::Add { id: node.id.clone(), at: document.nodes.len(), item: node })])
             }
             "reorganize" => {
-                if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(document, self.runtime.camera.clone())).unwrap_or_default()) {
+                if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(document, self.runtime.borrow_mut().camera.clone())).unwrap_or_default()) {
                     let _ = host.reorganize(&DagLayoutOptions::default());
                     if let Ok(json) = host.fixture_json() {
                         if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
@@ -719,10 +734,17 @@ impl DocumentApp for DagPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, DagDocument>, view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, DagDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> UiNode {
         let document = doc.projection;
-        let selected = &self.runtime.selected_node_ids;
-        let camera = &self.runtime.camera;
+        let runtime = self.runtime.borrow();
+        let selected = &runtime.selected_node_ids;
+        let camera = &runtime.camera;
         let labels = dag_play_labels(view_state);
         match body_key {
             DAG_PLAY_BODY_MAIN => render_main_graph(document, camera, selected, labels),
@@ -738,12 +760,12 @@ impl DocumentApp for DagPlayApp {
         let labels = dag_play_labels(view_state);
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([(DAG_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()), (DAG_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string())]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::from([("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string())]),
+            window_kind_labels: HashMap::from([(DAG_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()), (DAG_PLAY_WINDOW_COMPILED.to_string(), labels.window_compiled.to_string())]),
+            panel_tab_labels: HashMap::new(),
+            mode_labels: HashMap::from([("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string())]),
             action_labels: dag_action_labels(is_de),
             utility_labels: HashMap::new(),
-            example_labels: std::collections::HashMap::from([("demo".to_string(), "Demo".to_string())]),
+            example_labels: HashMap::from([("demo".to_string(), "Demo".to_string())]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),

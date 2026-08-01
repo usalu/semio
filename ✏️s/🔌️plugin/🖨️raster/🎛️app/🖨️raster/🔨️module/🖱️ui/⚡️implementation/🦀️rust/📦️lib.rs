@@ -694,12 +694,12 @@ impl DocumentApp for RasterPlayApp {
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, RasterDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, RasterDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let measures = raster_window_measures(&self.runtime);
         HashMap::from([(RASTER_PLAY_WINDOW_COMPOSITE.into(), measures)])
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<RasterPlayLabels>(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(RASTER_DEFAULT_UTILITY);

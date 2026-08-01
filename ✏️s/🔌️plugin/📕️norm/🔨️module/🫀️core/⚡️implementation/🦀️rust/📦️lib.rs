@@ -487,7 +487,7 @@ pub trait NormFamily: Send + Sync + 'static {
     fn evaluate(document: &Self::Document) -> CheckReport;
 }
 
-/// 📤 Replace the whole family document (VCS undoable).
+/// 📤️ Replace the whole family document (VCS undoable).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocumentDiff<D> {
@@ -507,7 +507,7 @@ impl<D: Clone + Default + Serialize + DeserializeOwned> OperationDiff<D> for Doc
     }
 }
 
-/// 📤 Whole-document replacement operation shared by norm family sessions.
+/// 📤️ Whole-document replacement operation shared by norm family sessions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum SetDocumentOperation<D> {
@@ -528,7 +528,7 @@ impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Operation<D>
     }
 }
 
-/// 🧠 Retained headless session: document inputs plus the last computed compliance report.
+/// 🧠️ Retained headless session: document inputs plus the last computed compliance report.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(bound(serialize = "F::Document: Serialize", deserialize = "F::Document: DeserializeOwned"))]
 pub struct NormHost<F: NormFamily> {
@@ -570,10 +570,10 @@ impl<F: NormFamily> NormHost<F> {
         self.report = F::evaluate(&self.document);
     }
 }
-// #endregion 🔖Family
+// #endregion 🔖️Family
 
-// #region 🔖OpText
-/// ✂ Escapes `\`, `"`, `\n` for embedding arbitrary (possibly multi-line) text inside a single quoted
+// #region 🔖️OpText
+/// ✂️ Escapes `\`, `"`, `\n` for embedding arbitrary (possibly multi-line) text inside a single quoted
 /// op-text field. Mirrors vcs's own private `escape_text_field`/`unescape_text_field` convention
 /// exactly (same three escapes, same order) so escaping behaves identically repo-wide, even though vcs
 /// does not expose those helpers for reuse.
@@ -677,7 +677,7 @@ where
         Ok(SetDocumentOperation::SetDocument { document })
     }
 }
-// #endregion 🔖OpText
+// #endregion 🔖️OpText
 
 #[cfg(test)]
 mod tests {
@@ -747,7 +747,7 @@ mod tests {
 
     #[test]
     fn set_document_operation_op_text_escapes_multiline_dsl_text() {
-        // ⚡ The op-text field wraps the newline `print_dsl` always emits, so this exercises the
+        // ⚡️ The op-text field wraps the newline `print_dsl` always emits, so this exercises the
         // `\n` escape (not just the general round-trip law already covered above).
         let printed = SetDocumentOperation::SetDocument { document: DemoDocument { value: 7.0 } }.print_op();
         assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");

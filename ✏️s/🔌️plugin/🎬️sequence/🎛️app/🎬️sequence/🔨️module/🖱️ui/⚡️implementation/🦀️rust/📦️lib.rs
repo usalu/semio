@@ -12,6 +12,7 @@ use sequence_engine::{control_slots, is_control_kind, sequence_example_json, Seq
 use sequence_op::{sequence_fixture_operations, SequenceOperation};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -353,9 +354,14 @@ fn render_compiled_dag(fixture: &SequenceFixture) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️SequencePlayApp
-#[derive(Default)]
 pub struct SequencePlayApp {
-    runtime: SequencePlayRuntime,
+    runtime: RefCell<SequencePlayRuntime>,
+}
+
+impl Default for SequencePlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(SequencePlayRuntime::default()) }
+    }
 }
 
 impl SequencePlayApp {
@@ -385,22 +391,22 @@ impl DocumentApp for SequencePlayApp {
         default_fixture()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, SequenceFixture>, _view_state: &ViewState) -> ActionEmit<SequenceOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, SequenceFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<SequenceOperation> {
         let fixture = doc.projection;
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.selected_step_ids = node_graph_selection_ids(args);
+                self.runtime.borrow_mut().selected_step_ids = node_graph_selection_ids(args);
                 ActionEmit::default()
             }
             "nodeGraphHover" => ActionEmit::default(),
             "graphPointerDown" => {
-                self.runtime.selected_step_ids.clear();
+                self.runtime.borrow_mut().selected_step_ids.clear();
                 ActionEmit::default()
             }
             "setOrientation" => {
                 let orientation = args.and_then(|value| value.get("orientation")).and_then(|value| value.as_str());
-                self.runtime.orientation = match orientation {
+                self.runtime.borrow_mut().orientation = match orientation {
                     Some("topBottom") => DagLayoutOrientation::TopBottom,
                     Some("leftRight") => DagLayoutOrientation::LeftRight,
                     _ => return ActionEmit::default(),
@@ -409,18 +415,18 @@ impl DocumentApp for SequencePlayApp {
             }
             "run" => {
                 let result = host_from_fixture(fixture).run();
-                self.runtime.last_run_json = serde_json::to_string(&result).unwrap_or_default();
+                self.runtime.borrow_mut().last_run_json = serde_json::to_string(&result).unwrap_or_default();
                 ActionEmit::default()
             }
             "stop" => {
-                self.runtime.last_run_json.clear();
+                self.runtime.borrow_mut().last_run_json.clear();
                 ActionEmit::default()
             }
             // 👁️ View action: the node-graph viewport never touches the document — it's written
             // straight into `self.runtime`, session-only, no VCS edit, no undo entry.
             "nodeGraphViewport" => {
                 if let Some(camera) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()).and_then(|json| serde_json::from_str(json).ok()) {
-                    self.runtime.camera = camera;
+                    self.runtime.borrow_mut().camera = camera;
                 }
                 ActionEmit::default()
             }
@@ -431,7 +437,7 @@ impl DocumentApp for SequencePlayApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let mut host = host_from_fixture(fixture);
                 let id = host.add_step(&kind, x, y);
-                self.runtime.selected_step_ids = vec![id];
+                self.runtime.borrow_mut().selected_step_ids = vec![id];
                 ActionEmit::operations(sequence_fixture_operations(fixture, &host.fixture))
             }
             "addStepToSlot" | "addStepDropped" => {
@@ -451,26 +457,26 @@ impl DocumentApp for SequencePlayApp {
                 } else {
                     host.add_step_dropped(&kind, x, y, picked.as_deref())
                 };
-                self.runtime.selected_step_ids = vec![id];
+                self.runtime.borrow_mut().selected_step_ids = vec![id];
                 ActionEmit::operations(sequence_fixture_operations(fixture, &host.fixture))
             }
             "removeStep" => {
                 let step_id = args.and_then(|value| value.get("id")).or_else(|| args.and_then(|value| value.get("stepId"))).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(step_id) = step_id else { return ActionEmit::default() };
-                self.runtime.selected_step_ids.retain(|id| id != &step_id);
+                self.runtime.borrow_mut().selected_step_ids.retain(|id| id != &step_id);
                 ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                     host.remove_step(&step_id);
                 }))
             }
             "deleteSelection" => {
-                let selected = self.runtime.selected_step_ids.clone();
+                let selected = self.runtime.borrow().selected_step_ids.clone();
                 let operations = self.ops_from_host_mutation(fixture, |host| {
                     for step_id in &selected {
                         host.remove_step(step_id);
                     }
                 });
                 if !operations.is_empty() {
-                    self.runtime.selected_step_ids.clear();
+                    self.runtime.borrow_mut().selected_step_ids.clear();
                 }
                 ActionEmit::operations(operations)
             }
@@ -532,7 +538,7 @@ impl DocumentApp for SequencePlayApp {
                 }))
             }
             "reorganize" => {
-                let orientation = self.runtime.orientation;
+                let orientation = self.runtime.borrow().orientation;
                 ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                     let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
                     let _ = host.reorganize(&opts);
@@ -540,7 +546,7 @@ impl DocumentApp for SequencePlayApp {
             }
             "nodeGraphEdit" => {
                 let sub_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
-                let selected = self.runtime.selected_step_ids.clone();
+                let selected = self.runtime.borrow().selected_step_ids.clone();
                 let mut cleared = false;
                 let operations = self.ops_from_host_mutation(fixture, |host| {
                     for operation in &sub_operations {
@@ -569,7 +575,7 @@ impl DocumentApp for SequencePlayApp {
                     }
                 });
                 if cleared {
-                    self.runtime.selected_step_ids.clear();
+                    self.runtime.borrow_mut().selected_step_ids.clear();
                 }
                 ActionEmit::operations(operations)
             }
@@ -577,16 +583,16 @@ impl DocumentApp for SequencePlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, SequenceFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = resolve_labels::<SequenceLabels>(view_state);
         match body_key {
-            SEQUENCE_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime),
-            SEQUENCE_PLAY_BODY_SCRIPT => render_script(fixture, &self.runtime),
+            SEQUENCE_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime.borrow()),
+            SEQUENCE_PLAY_BODY_SCRIPT => render_script(fixture, &self.runtime.borrow()),
             SEQUENCE_PLAY_BODY_COMPILED => render_compiled_dag(fixture),
-            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &self.runtime.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &self.runtime.borrow().selected_step_ids, labels),
             SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, labels),
-            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &self.runtime.selected_step_ids, labels),
+            SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &self.runtime.borrow().selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

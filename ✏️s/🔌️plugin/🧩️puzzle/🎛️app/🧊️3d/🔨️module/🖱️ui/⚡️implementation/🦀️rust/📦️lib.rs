@@ -5,8 +5,8 @@ use puzzle_3d_engine::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineO
 use puzzle_3d_op::{puzzle3d_document_delta_operations, Puzzle3dOperation, Puzzle3dPlayProjection};
 use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, SelectionSet, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
-    ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec,
-    SurfaceKind, ToolRef, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWindowInstance, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec,
+    SurfaceKind, ToolRef, UtilityDefinition, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition,
     window_element_id, panel_tab_element_id, panel_tab_first_draggable_element_id,
@@ -1495,18 +1495,6 @@ fn append_fill_display_tail(fixture: &mut Puzzle3dFixture, payload: &Puzzle3dFil
     fixture.attractions.extend(payload.attractions.iter().skip(attractions_tail_start).cloned());
 }
 
-fn puzzle3d_fixture_with_fill_display(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, applied_count: u32, available_count: u32) -> Puzzle3dFixture {
-    if available_count <= applied_count {
-        return fixture;
-    }
-    if let Some(engine_fixture) = precompute.compose_fill_display(available_count) {
-        if let Some(payload) = fill_display_payload_from_fixture(&engine_fixture) {
-            append_fill_display_tail(&mut fixture, &payload, applied_count, available_count);
-        }
-    }
-    fixture
-}
-
 fn puzzle3d_fixture_with_fill_display_memo(
     mut fixture: Puzzle3dFixture,
     precompute: &Puzzle3dPrecomputeSession,
@@ -2239,7 +2227,6 @@ struct Puzzle3dLabels {
     brush: &'static str,
     move_flag: &'static str,
     rotate_flag: &'static str,
-    edit_volumes: &'static str,
     volume_brush: &'static str,
     voxel: &'static str,
     width: &'static str,
@@ -2329,7 +2316,6 @@ const PUZZLE3D_LABELS_NATIVE_EN: Puzzle3dLabels = Puzzle3dLabels {
     brush: "Brush",
     move_flag: "Move",
     rotate_flag: "Rotate",
-    edit_volumes: "Edit Volumes",
     volume_brush: "Volume Brush",
     voxel: "Voxel",
     width: "Width",
@@ -2418,7 +2404,6 @@ const PUZZLE3D_LABELS_NATIVE_DE: Puzzle3dLabels = Puzzle3dLabels {
     brush: "Pinsel",
     move_flag: "Verschieben",
     rotate_flag: "Drehen",
-    edit_volumes: "Volumen bearbeiten",
     volume_brush: "Volumenpinsel",
     voxel: "Voxel",
     width: "Breite",
@@ -2727,18 +2712,6 @@ fn document_tree_sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) ->
         UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some(labels.attractions.into()), default_open: Some(false), presence: UiPresence::default(), items: attraction_items,
         },
     ]
-}
-
-fn build_document_tree(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
-    UiNode::Tree(UiTreeNode {
-        sections: document_tree_sections(&envelope.fixture, labels),
-        presence: UiPresence::default(),
-        selected_ids: Some(puzzle3d_document_selected_ids(&envelope.runtime.selection)),
-        highlighted_ids: None,
-        selection_change: Some(puzzle3d_action("setSelection", None)),
-        drop_action: None,
-        menu: None,
-    })
 }
 
 /// 🖱️ MIME key `DeclarativeTreePanel` (framework/renderer/react/ui-interpreter.tsx) reads to auto-wire catalogue drag sources.
@@ -3335,10 +3308,6 @@ fn puzzle3d_ensure_catalog_kind_weights(weights: &mut HashMap<String, f64>, kind
     }
 }
 
-fn puzzle3d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
-    kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum()
-}
-
 fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod"),
@@ -3409,28 +3378,6 @@ fn puzzle3d_select_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLa
             WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-attractions"), icon_id: "link".into(), label: Some(labels.attractions.into()), pressed: runtime.selectable_kinds.attractions, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "attractions" }))) },
         ],
     }
-}
-
-fn puzzle3d_kind_weight_measures(prefix: &str, kind_ids: &[String], weights: &HashMap<String, f64>, action: &str) -> Vec<WindowMeasure> {
-    kind_ids
-        .iter()
-        .map(|kind_id| {
-            let weight = weights.get(kind_id).copied().unwrap_or_else(|| if kind_ids.is_empty() { 0.0 } else { 1.0 / kind_ids.len() as f64 });
-            WindowMeasure::Slider {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-{prefix}-{kind_id}"),
-                label: Some(format!("{kind_id} {:.0}%", weight * 100.0)),
-                value: weight,
-                min: 0.0,
-                max: 1.0,
-                step: Some(0.01),
-                ready: None,
-                loading: None, waiting: None,
-                disabled: None,
-                reveal: None,
-                on_change: puzzle3d_action(action, Some(json!({ "kindId": kind_id }))),
-            }
-        })
-        .collect()
 }
 
 fn puzzle3d_object_kind_catalog_entry<'a>(fixture: &'a Puzzle3dFixture, object_kind_id: &str) -> Option<&'a Value> {
@@ -3594,7 +3541,7 @@ fn puzzle3d_voxel_dim_measures(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabel
     let [w, d, h] = runtime.voxel_dims;
     let axis_slider = |axis: &str, label: &str, value: u32| WindowMeasure::Slider {
         id: format!("puzzle3d-voxel-{axis}"),
-        label: Some(format!("{label} {value}")),
+        label: Some(format!("{} {label} {value}", labels.voxel)),
         value: value as f64,
         min: 1.0,
         max: 64.0,
@@ -3759,13 +3706,13 @@ fn puzzle3d_window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPreco
 /// `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
 /// operations; `transformEnd` commits the base→scratch fixture delta once.
 pub struct Puzzle3dPlayApp {
-    precompute: Puzzle3dPrecomputeSession,
-    runtime: Puzzle3dRuntime,
-    transform_drag_active: bool,
-    transform_base: Option<Puzzle3dFixture>,
-    transform_scratch: Option<Puzzle3dFixture>,
+    precompute: std::cell::RefCell<Puzzle3dPrecomputeSession>,
+    runtime: std::cell::RefCell<Puzzle3dRuntime>,
+    transform_drag_active: std::cell::RefCell<bool>,
+    transform_base: std::cell::RefCell<Option<Puzzle3dFixture>>,
+    transform_scratch: std::cell::RefCell<Option<Puzzle3dFixture>>,
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
-    preview_seq: u64,
+    preview_seq: std::cell::RefCell<u64>,
     fill_display_memo: Mutex<Option<FillDisplayMemo>>,
     geometry_cache: Mutex<Option<(u64, String, String)>>,
     document_sections_cache: Mutex<Option<(u64, Vec<UiTreeSectionNode>)>>,
@@ -3774,12 +3721,12 @@ pub struct Puzzle3dPlayApp {
 impl Default for Puzzle3dPlayApp {
     fn default() -> Self {
         Self {
-            precompute: Puzzle3dPrecomputeSession::new(),
-            runtime: Puzzle3dRuntime::default(),
-            transform_drag_active: false,
-            transform_base: None,
-            transform_scratch: None,
-            preview_seq: 0,
+            precompute: std::cell::RefCell::new(Puzzle3dPrecomputeSession::new()),
+            runtime: std::cell::RefCell::new(Puzzle3dRuntime::default()),
+            transform_drag_active: std::cell::RefCell::new(false),
+            transform_base: std::cell::RefCell::new(None),
+            transform_scratch: std::cell::RefCell::new(None),
+            preview_seq: std::cell::RefCell::new(0),
             fill_display_memo: Mutex::new(None),
             geometry_cache: Mutex::new(None),
             document_sections_cache: Mutex::new(None),
@@ -3811,32 +3758,33 @@ impl Puzzle3dPlayApp {
 
 impl Puzzle3dPlayApp {
     /// 🎬️ Snapshots the live fixture as the gumball drag base and clears any prior scratch.
-    fn begin_transform_session(&mut self, projection: &Value) {
+    fn begin_transform_session(&self, projection: &Value) {
         let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
-        self.transform_drag_active = true;
-        self.transform_base = Some(fixture);
-        self.transform_scratch = None;
+        *self.transform_drag_active.borrow_mut() = true;
+        *self.transform_base.borrow_mut() = Some(fixture);
+        *self.transform_scratch.borrow_mut() = None;
     }
 
     /// 🧹️ Drops an in-progress gumball scratch without committing.
-    fn clear_transform_session(&mut self) {
-        self.transform_drag_active = false;
-        self.transform_base = None;
-        self.transform_scratch = None;
+    fn clear_transform_session(&self) {
+        *self.transform_drag_active.borrow_mut() = false;
+        *self.transform_base.borrow_mut() = None;
+        *self.transform_scratch.borrow_mut() = None;
     }
 
     /// 🧲️ One mid-drag gumball tick: accumulates an incremental delta onto `transform_scratch`
     /// (seeded from the drag-start base) and emits zero operations (scratch-commit pattern b).
-    fn transform_drag_tick(&mut self, action: &str, args: Option<&Value>, projection: &Value) -> ActionEmit<Puzzle3dOperation> {
-        if self.transform_base.is_none() {
+    fn transform_drag_tick(&self, action: &str, args: Option<&Value>, projection: &Value) -> ActionEmit<Puzzle3dOperation> {
+        if self.transform_base.borrow().is_none() {
             self.begin_transform_session(projection);
         }
-        let object_ids = mesh_selection_ids(args, &self.runtime.selection.object_ids);
-        let volume_ids = self.runtime.selection.target_volume_ids.to_vec();
+        let object_ids = mesh_selection_ids(args, &self.runtime.borrow().selection.object_ids);
+        let volume_ids = self.runtime.borrow().selection.target_volume_ids.to_vec();
         let mut scratch = self
             .transform_scratch
+            .borrow()
             .clone()
-            .or_else(|| self.transform_base.clone())
+            .or_else(|| self.transform_base.borrow().clone())
             .unwrap_or_else(empty_fixture);
         match action {
             "translateSelection" => {
@@ -3860,20 +3808,23 @@ impl Puzzle3dPlayApp {
             }
             _ => {}
         }
-        self.transform_scratch = Some(scratch);
-        self.preview_seq = self.preview_seq.wrapping_add(1);
+        *self.transform_scratch.borrow_mut() = Some(scratch);
+        {
+            let next = self.preview_seq.borrow().wrapping_add(1);
+            *self.preview_seq.borrow_mut() = next;
+        }
         ActionEmit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
     }
 
     /// 📌️ Commits the whole gumball drag as ONE fixture delta (base → scratch), resolving attractions once.
-    fn commit_transform(&mut self, projection: &Value) -> ActionEmit<Puzzle3dOperation> {
-        self.transform_drag_active = false;
-        let Some(mut scratch) = self.transform_scratch.take() else {
-            self.transform_base = None;
+    fn commit_transform(&self, projection: &Value) -> ActionEmit<Puzzle3dOperation> {
+        *self.transform_drag_active.borrow_mut() = false;
+        let Some(mut scratch) = self.transform_scratch.borrow_mut().take() else {
+            *self.transform_base.borrow_mut() = None;
             return ActionEmit::default();
         };
-        self.transform_base = None;
-        let object_ids = self.runtime.selection.object_ids.to_vec();
+        *self.transform_base.borrow_mut() = None;
+        let object_ids = self.runtime.borrow().selection.object_ids.to_vec();
         let incoming = resolve_puzzle3d_attractions(&mut scratch);
         puzzle3d_rederive_moved_attractions(&mut scratch, &object_ids, &incoming);
         resolve_puzzle3d_attractions(&mut scratch);
@@ -3887,7 +3838,7 @@ impl Puzzle3dPlayApp {
 
     /// 🖼️ Fixture used for world render — live scratch while a gumball drag is in progress.
     fn render_fixture<'a>(&'a self, projection: &'a Value) -> Puzzle3dFixture {
-        if let Some(scratch) = self.transform_scratch.as_ref() {
+        if let Some(scratch) = self.transform_scratch.borrow().as_ref() {
             return scratch.clone();
         }
         serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture())
@@ -3912,12 +3863,14 @@ impl Puzzle3dPlayApp {
     /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
     #[allow(dead_code)]
     fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
-        let base = self.transform_base.as_ref()?;
-        let scratch = self.transform_scratch.as_ref()?;
+        let base_binding = self.transform_base.borrow();
+        let base = base_binding.as_ref()?;
+        let scratch_binding = self.transform_scratch.borrow();
+        let scratch = scratch_binding.as_ref()?;
         let before = serde_json::to_value(base).ok()?;
         let operations = puzzle3d_operations_from_fixture_change(&before, scratch);
         let payload = json!({ "operations": operations });
-        Some(("gesture:transform", self.preview_seq, serde_json::to_vec(&payload).ok()?))
+        Some(("gesture:transform", *self.preview_seq.borrow(), serde_json::to_vec(&payload).ok()?))
     }
     //#endregion 🔖️GesturePreview
 }
@@ -3940,7 +3893,14 @@ impl DocumentApp for Puzzle3dPlayApp {
         Puzzle3dPlayProjection(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)))
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> ActionEmit<Puzzle3dOperation> {
+    fn handle_action(
+        &self,
+        action: &str,
+        args: Option<&Value>,
+        doc: &DocumentView<'_, Puzzle3dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> ActionEmit<Puzzle3dOperation> {
         // 🗨️ Shell-only effect (no document interaction, hence no `envelope`/`before`/`after` scaffolding
         // below): opens the declared "addObject" dialog over a glass veil.
         if action == "openAddObjectDialog" {
@@ -3953,7 +3913,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         if action == "transformEnd" {
             return self.commit_transform(&doc.projection.0);
         }
-        if self.transform_drag_active && matches!(action, "translateSelection" | "rotateSelection" | "scaleSelection") {
+        if *self.transform_drag_active.borrow() && matches!(action, "translateSelection" | "rotateSelection" | "scaleSelection") {
             return self.transform_drag_tick(action, args, &doc.projection.0);
         }
         let document_action = puzzle3d_action_document_intent(action);
@@ -3964,7 +3924,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         // exit below) so a grid/LOD/selection/vortex/sun mutation never leaks into another window's
         // options. Fill count / distribution / overlap stay on the flat runtime and are shared.
         let wid = view_state.window_id.clone().unwrap_or_else(|| PUZZLE3D_PLAY_WINDOW_MAIN.into());
-        let mut runtime_for_window = self.runtime.clone();
+        let mut runtime_for_window = self.runtime.borrow().clone();
         runtime_for_window.load_window(&wid);
         let mut envelope = scene_from_projection(&doc.projection.0, runtime_for_window, &active_utility_initial);
         let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
@@ -3972,7 +3932,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick");
         let skip_precompute_sync = matches!(action, "worldPick" | "worldSelect" | "setSelection" | "clearSelection" | "selectAll");
         if !preserve_fill_plan && !skip_precompute_sync {
-            sync_precompute_session(&mut self.precompute, &envelope);
+            sync_precompute_session(&mut *self.precompute.borrow_mut(), &envelope);
         }
         match action {
             "setFixtureJson" => {
@@ -3999,7 +3959,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                     envelope.runtime = Puzzle3dRuntime::default();
                 }
                 resolve_puzzle3d_attractions(&mut envelope.fixture);
-                drive_precompute(&mut self.precompute, &envelope);
+                drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
             }
             "setSelection" => {
                 if let Some(selection) = args.and_then(|value| value.get("selection")) {
@@ -4019,7 +3979,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                 envelope.runtime.engagement_input = String::new();
                 envelope.runtime.brush_candidate_index = 0;
                 if envelope.active_utility == "brush" || envelope.active_utility == "fill" {
-                    drive_precompute(&mut self.precompute, &envelope);
+                    drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                 }
             }
             "addObjectKind" => {
@@ -4089,12 +4049,12 @@ impl DocumentApp for Puzzle3dPlayApp {
             "selectSameKindSelection" => {
                 let Some(first_id) = envelope.runtime.selection.object_ids.first() else {
                     envelope.runtime.save_window(&wid);
-                    self.runtime = envelope.runtime;
+                    *self.runtime.borrow_mut() = envelope.runtime;
                     return ActionEmit::default();
                 };
                 let Some(kind) = envelope.fixture.objects.iter().find(|object| object.id == *first_id).and_then(|object| object.object_kind.clone()).filter(|kind| !kind.is_empty()) else {
                     envelope.runtime.save_window(&wid);
-                    self.runtime = envelope.runtime;
+                    *self.runtime.borrow_mut() = envelope.runtime;
                     return ActionEmit::default();
                 };
                 envelope.runtime.selection.object_ids = envelope
@@ -4238,7 +4198,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             "worldVortexHover" => {
                 envelope.runtime.hovered_vortex_full_id = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(str::to_string);
                 if envelope.active_utility == "brush" && envelope.runtime.hovered_vortex_full_id.is_some() {
-                    drive_precompute(&mut self.precompute, &envelope);
+                    drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                 }
             }
             "worldVortexSelect" => {
@@ -4259,7 +4219,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                             puzzle3d_clear_non_vortex_selection(&mut envelope.runtime.selection);
                         }
                         envelope.runtime.selection.vortex_ids = merge_world_selection_ids(&envelope.runtime.selection.vortex_ids, &[full_id.to_string()], merge_mode);
-                        drive_precompute(&mut self.precompute, &envelope);
+                        drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                     }
                 }
             }
@@ -4309,7 +4269,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                         }
                     }
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
-                    sync_precompute_session(&mut self.precompute, &envelope);
+                    sync_precompute_session(&mut *self.precompute.borrow_mut(), &envelope);
                 }
             }
             "setSelectionMethod" => {
@@ -4444,14 +4404,14 @@ impl DocumentApp for Puzzle3dPlayApp {
                 let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_string();
                 if let Some(rest) = strip_engagement_prefix(&raw, "fill") {
                     envelope.active_utility = "fill".into();
-                    drive_precompute(&mut self.precompute, &envelope);
+                    drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                     let count = rest.parse::<u32>().ok().unwrap_or(envelope.runtime.fill_count).min(PUZZLE3D_FILL_COUNT_MAX);
-                    envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
+                    envelope = apply_puzzle3d_fill_count(&mut *self.precompute.borrow_mut(), envelope, count);
                 } else {
                     match raw.to_lowercase().as_str() {
                         "brush" => {
                             envelope.active_utility = "brush".into();
-                            drive_precompute(&mut self.precompute, &envelope);
+                            drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                         }
                         "zoom" => apply_puzzle3d_focus_selection(&mut envelope),
                         "clear" => puzzle3d_clear_selection(&mut envelope.runtime.selection),
@@ -4465,7 +4425,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             "engagementRepeatLast" => {
                 if envelope.active_utility == "fill" {
                     let count = (envelope.runtime.fill_count + 1).min(PUZZLE3D_FILL_COUNT_MAX);
-                    envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
+                    envelope = apply_puzzle3d_fill_count(&mut *self.precompute.borrow_mut(), envelope, count);
                 }
             }
             "engagementAbort" => {
@@ -4561,10 +4521,10 @@ impl DocumentApp for Puzzle3dPlayApp {
                 }
             }
             "addBrushObject" => {
-                drive_precompute(&mut self.precompute, &envelope);
+                drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                 if let Some(payload_value) = args {
                     if let Ok(payload) = serde_json::from_value::<BrushPlacePayload>(payload_value.clone()) {
-                        if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = self.precompute.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload }) {
+                        if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = self.precompute.borrow_mut().dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload }) {
                             if let Some(next) = fixture_from_engine_fixture(&envelope, &fixture) {
                                 envelope = next;
                                 puzzle3d_rederive_all_attractions(&mut envelope.fixture);
@@ -4581,13 +4541,13 @@ impl DocumentApp for Puzzle3dPlayApp {
                     .map(|value| value.round().max(0.0) as u32)
                     .unwrap_or(0)
                     .min(PUZZLE3D_FILL_COUNT_MAX);
-                envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
+                envelope = apply_puzzle3d_fill_count(&mut *self.precompute.borrow_mut(), envelope, count);
                 ui_scope = puzzle3d_fill_build_scope();
             }
             "setBrushPlacementOverlapBudget" => {
                 if let Some(value) = puzzle3d_absolute_or_delta(args, envelope.runtime.overlap_budget) {
                     envelope.runtime.overlap_budget = value.clamp(0.0, 1.0);
-                    sync_precompute_session(&mut self.precompute, &envelope);
+                    sync_precompute_session(&mut *self.precompute.borrow_mut(), &envelope);
                 }
             }
             "setObjectKindWeight" | "setVortexKindWeight" => {
@@ -4610,15 +4570,15 @@ impl DocumentApp for Puzzle3dPlayApp {
                 } else {
                     envelope.runtime.vortex_kind_weights = puzzle3d_normalize_kind_weight_group(&envelope.runtime.vortex_kind_weights, &vortex_ids, kind_id, value);
                 }
-                sync_precompute_weights(&mut self.precompute, &envelope);
+                sync_precompute_weights(&mut *self.precompute.borrow_mut(), &envelope);
                 ui_scope = puzzle3d_fill_options_scope();
             }
             "cycleBrushCandidate" | "cycleBrushCandidateBack" => {
-                drive_precompute(&mut self.precompute, &envelope);
+                drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                 let default_delta = if action == "cycleBrushCandidateBack" { -1 } else { 1 };
                 let delta = args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(default_delta);
                 if let Some(vortex_id) = puzzle3d_brush_target_vortex(&envelope) {
-                    let free_count = self.precompute.brush_candidates(&vortex_id).free.len();
+                    let free_count = self.precompute.borrow_mut().brush_candidates(&vortex_id).free.len();
                     if free_count > 0 {
                         let current = envelope.runtime.brush_candidate_index as i64;
                         let next = (current + delta).rem_euclid(free_count as i64);
@@ -4646,10 +4606,10 @@ impl DocumentApp for Puzzle3dPlayApp {
                     envelope.runtime.suggestion_menu = Some(Puzzle3dSuggestionMenu { x, y, window_id });
                     // 🧊️ Drop any stale empty/pending cache for this vortex, then refresh so the popup
                     // does not open on a previous "No placement" result while meshes/candidates are ready.
-                    self.precompute.invalidate_brush_target(full_id);
-                    sync_precompute_session(&mut self.precompute, &envelope);
-                    self.precompute.refresh_brush_candidates(full_id);
-                    drive_precompute(&mut self.precompute, &envelope);
+                    self.precompute.borrow_mut().invalidate_brush_target(full_id);
+                    sync_precompute_session(&mut *self.precompute.borrow_mut(), &envelope);
+                    self.precompute.borrow_mut().refresh_brush_candidates(full_id);
+                    drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                 }
             }
             "closeVortexSuggestions" => {
@@ -4664,7 +4624,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             "acceptSuggestion" => {
                 // 🧹️ Always dismiss the one-shot picker first — a failed preview/place must not leave
                 // `suggestionMenu.open` gating every split pane's regular context menu.
-                drive_precompute(&mut self.precompute, &envelope);
+                drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                 let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(envelope.runtime.brush_candidate_index as u64) as usize;
                 let vortex_id = args
                     .and_then(|value| value.get("fullId"))
@@ -4676,9 +4636,9 @@ impl DocumentApp for Puzzle3dPlayApp {
                 if let Some(vortex_id) = vortex_id {
                     envelope.runtime.selection.vortex_ids = SelectionSet::from(vec![vortex_id.clone()]);
                     envelope.runtime.selection.object_ids.clear();
-                    self.precompute.refresh_brush_candidates(&vortex_id);
-                    if let Some(preview) = self.precompute.brush_preview(&vortex_id, index) {
-                        if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = self.precompute.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: BrushPlacePayload::from(preview) }) {
+                    self.precompute.borrow_mut().refresh_brush_candidates(&vortex_id);
+                    if let Some(preview) = self.precompute.borrow_mut().brush_preview(&vortex_id, index) {
+                        if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = self.precompute.borrow_mut().dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: BrushPlacePayload::from(preview) }) {
                             if let Some(next) = fixture_from_engine_fixture(&envelope, &fixture) {
                                 envelope = next;
                                 puzzle3d_rederive_all_attractions(&mut envelope.fixture);
@@ -4693,7 +4653,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                 }
             }
             "suggestionsTick" => {
-                drive_precompute(&mut self.precompute, &envelope);
+                drive_precompute(&mut *self.precompute.borrow_mut(), &envelope);
                 ui_scope = puzzle3d_suggestions_tick_scope();
             }
             "fillBuildTick" => {
@@ -4702,11 +4662,11 @@ impl DocumentApp for Puzzle3dPlayApp {
                 // never run ahead of `applied_count` — a slider can only request what `render`'s
                 // reveal-tagged instances already show. Ticks purely advance background planning.
                 if puzzle3d_fill_tool_active(view_state) {
-                    let available_before = self.precompute.fill_available_count();
-                    let done_before = self.precompute.fill_is_done();
-                    self.precompute.precompute_step_lane(PrecomputeLane::Fill, 8);
-                    let available_after = self.precompute.fill_available_count();
-                    let done_after = self.precompute.fill_is_done();
+                    let available_before = self.precompute.borrow_mut().fill_available_count();
+                    let done_before = self.precompute.borrow_mut().fill_is_done();
+                    self.precompute.borrow_mut().precompute_step_lane(PrecomputeLane::Fill, 8);
+                    let available_after = self.precompute.borrow_mut().fill_available_count();
+                    let done_after = self.precompute.borrow_mut().fill_is_done();
                     ui_scope = if available_after != available_before || done_after != done_before {
                         puzzle3d_fill_build_scope()
                     } else {
@@ -4722,7 +4682,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                 {
                     let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
                     let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
-                    self.precompute.register_mesh(url, &positions, &indices);
+                    self.precompute.borrow_mut().register_mesh(url, &positions, &indices);
                     if let Ok(mut registry) = PUZZLE3D_MESH_REGISTRY.lock() {
                         registry.insert(url.to_string(), (positions, indices));
                     }
@@ -4742,7 +4702,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         }
         let next_active_utility = envelope.active_utility.clone();
         envelope.runtime.save_window(&wid);
-        self.runtime = envelope.runtime;
+        *self.runtime.borrow_mut() = envelope.runtime;
         let operations = if let Some(before) = before.as_ref() {
             puzzle3d_operations_from_fixture_change(before, &envelope.fixture)
         } else {
@@ -4773,20 +4733,27 @@ impl DocumentApp for Puzzle3dPlayApp {
         ActionEmit { operations, coalesce_key, effects, ui_scope, ..Default::default() }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, Puzzle3dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> UiNode {
         let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
         let active_utility = puzzle3d_scene_active_utility(view_state, Some(wid));
         let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
-        let mut runtime_for_window = self.runtime.clone();
+        let mut runtime_for_window = self.runtime.borrow().clone();
         runtime_for_window.load_window(wid);
         // 🪣️ Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture
         // (see `puzzle3d_fixture_with_fill_display`) — safe even during a live gumball scratch drag,
         // since it never touches/replaces any already-present object (the dragged one included).
+        let fill_available = self.precompute.borrow().fill_available_count();
         let fixture = puzzle3d_fixture_with_fill_display_memo(
             self.render_fixture(&doc.projection.0),
-            &self.precompute,
+            &*self.precompute.borrow(),
             runtime_for_window.fill_count,
-            self.precompute.fill_available_count(),
+            fill_available,
             &self.fill_display_memo,
         );
         let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility: active_utility.clone() };
@@ -4794,7 +4761,7 @@ impl DocumentApp for Puzzle3dPlayApp {
         let (instances_json, meshes_json) = self.geometry_jsons(&envelope.fixture);
         match body_key {
             PUZZLE3D_PLAY_BODY_COMPOSITE => {
-                let brush_preview = world_brush_preview_json(&self.precompute, &envelope);
+                let brush_preview = world_brush_preview_json(&*self.precompute.borrow(), &envelope);
                 build_world_3d_scene(
                     PUZZLE3D_PLAY_SURFACE_VIEWPORT,
                     PUZZLE3D_PLAY_APP_ID,
@@ -4808,7 +4775,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                         Some(world_target_volumes_json(&envelope.fixture)),
                         Some(world_references_json(&envelope.fixture)),
                         brush_preview,
-                        Some(world_interaction_json(&envelope, &self.precompute)),
+                        Some(world_interaction_json(&envelope, &*self.precompute.borrow())),
                         None,
                         Some(world3d_lod_json(&envelope.runtime)),
                         Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
@@ -4833,7 +4800,12 @@ impl DocumentApp for Puzzle3dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(
+        &self,
+        doc: &DocumentView<'_, Puzzle3dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> HashMap<String, WindowEngagement> {
         let labels = puzzle3d_labels(view_state);
         // 🪟️ One entry per live window INSTANCE (split top/perspective panes are two instances of the
         // same kind) — each built from ITS OWN materialized options, never the shared kind entry.
@@ -4841,7 +4813,7 @@ impl DocumentApp for Puzzle3dPlayApp {
             .into_iter()
             .map(|wid| {
                 let active_utility = puzzle3d_scene_active_utility(view_state, Some(&wid));
-                let mut runtime_for_window = self.runtime.clone();
+                let mut runtime_for_window = self.runtime.borrow().clone();
                 runtime_for_window.load_window(&wid);
                 let envelope = scene_from_projection(&doc.projection.0, runtime_for_window, &active_utility);
                 (wid, puzzle3d_engagement(&envelope, labels))
@@ -4849,29 +4821,39 @@ impl DocumentApp for Puzzle3dPlayApp {
             .collect()
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(
+        &self,
+        doc: &DocumentView<'_, Puzzle3dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = puzzle3d_labels(view_state);
         window_instance_ids(view_state, PUZZLE3D_PLAY_WINDOW_MAIN)
             .into_iter()
             .map(|wid| {
                 let active_utility = puzzle3d_scene_active_utility(view_state, Some(&wid));
-                let mut runtime_for_window = self.runtime.clone();
+                let mut runtime_for_window = self.runtime.borrow().clone();
                 runtime_for_window.load_window(&wid);
                 let envelope = scene_from_projection(&doc.projection.0, runtime_for_window, &active_utility);
-                (wid, puzzle3d_window_measures(&envelope, &self.precompute, labels))
+                (wid, puzzle3d_window_measures(&envelope, &*self.precompute.borrow(), labels))
             })
             .collect()
     }
 
-    fn tool_measures(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn tool_measures(
+        &self,
+        doc: &DocumentView<'_, Puzzle3dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> HashMap<String, Vec<WindowMeasure>> {
         let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
         let active_utility = puzzle3d_scene_active_utility(view_state, Some(wid));
         let labels = puzzle3d_labels(view_state);
         let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
-        let mut runtime_for_window = self.runtime.clone();
+        let mut runtime_for_window = self.runtime.borrow().clone();
         runtime_for_window.load_window(wid);
         let envelope = scene_from_projection(&doc.projection.0, runtime_for_window, &active_utility);
-        HashMap::from([("fill".to_string(), puzzle3d_fill_tool_measures(&envelope, &self.precompute, labels))])
+        HashMap::from([("fill".to_string(), puzzle3d_fill_tool_measures(&envelope, &*self.precompute.borrow(), labels))])
     }
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
@@ -4893,7 +4875,7 @@ fn puzzle3d_app_labels_overlay(view_state: &ViewState) -> semio_framework_plugin
         .panel_tab_label("puzzle3d.panel.settings", if is_de { "Einstellungen" } else { "Settings" })
         .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
         .action_labels(puzzle3d_action_labels(view_state))
-        .utility_labels(puzzle3d_utility_labels(is_de))
+        .utility_labels(puzzle3d_utility_labels(&labels, is_de))
         .example_labels(HashMap::from([
             (PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string()),
             (PUZZLE3D_EXAMPLE_NAKAGIN.to_string(), "Nakagin Capsule Tower".to_string()),
@@ -5132,13 +5114,13 @@ fn puzzle3d_action_labels(view_state: &ViewState) -> HashMap<String, String> {
 }
 
 /// 🗣️ (utility id) → localized utility bar button label for every `.utility(...)` / `.tool_simple(...)` in `create_puzzle3d_app`.
-fn puzzle3d_utility_labels(is_de: bool) -> HashMap<String, String> {
+fn puzzle3d_utility_labels(labels: &Puzzle3dLabels, is_de: bool) -> HashMap<String, String> {
     HashMap::from([
-        ("select".to_string(), (if is_de { "Auswählen" } else { "Select" }).to_string()),
+        ("select".to_string(), labels.select.to_string()),
         ("transform".to_string(), (if is_de { "Transformieren" } else { "Transform" }).to_string()),
-        ("brush".to_string(), (if is_de { "Pinsel" } else { "Brush" }).to_string()),
-        ("volumeBrush".to_string(), (if is_de { "Volumenpinsel" } else { "Volume Brush" }).to_string()),
-        ("fill".to_string(), (if is_de { "Füllen" } else { "Fill" }).to_string()),
+        ("brush".to_string(), labels.brush.to_string()),
+        ("volumeBrush".to_string(), labels.volume_brush.to_string()),
+        ("fill".to_string(), labels.fill.to_string()),
         ("worldRelocate".to_string(), (if is_de { "Verlagern" } else { "Relocate" }).to_string()),
     ])
 }
@@ -5360,7 +5342,7 @@ pub fn create_puzzle3d_app() -> App {
 }
 
 /// 🗃️ Real GLB geometry the browser round-tripped via `registerBrushMesh` this session, keyed by mesh url; falls back to a box for anything not yet loaded. `fn` pointers can't capture state, so this backs the export handler's plain-function-pointer signature.
-static PUZZLE3D_MESH_REGISTRY: LazyLock<std::sync::Mutex<HashMap<String, (Vec<f32>, Vec<u32>)>>> = LazyLock::new(|| std::sync::Mutex::new(HashMap::new()));
+static PUZZLE3D_MESH_REGISTRY: LazyLock<Mutex<HashMap<String, (Vec<f32>, Vec<u32>)>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 /// 🌀️ Undoes glTF's Y-up convention to land in this world's Z-up frame — mirrors `GLB_MESH_FRAME_ROTATION_X` (a fixed +90° turn about X) from `@semio-tech/infinite-world-r3f`, which the viewer applies visually but which raw `registerBrushMesh` vertices never carry.
 fn glb_frame_correct(position: [f32; 3]) -> [f32; 3] {
@@ -5377,7 +5359,7 @@ fn quat_rotate_point(point: [f32; 3], quat: [f64; 4]) -> [f32; 3] {
 }
 
 /// 💾️ Bakes each object's world transform (GLB frame correction, then scale/orientation/origin) into a single merged mesh for OBJ/GLB export; objects whose GLB hasn't round-tripped through `registerBrushMesh` this session fall back to a box.
-fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
     let fixture: Puzzle3dFixture = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
     let registry = PUZZLE3D_MESH_REGISTRY.lock().map_err(|_| "puzzle3d mesh registry poisoned".to_string())?;
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
@@ -5409,7 +5391,7 @@ fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framewor
 }
 
 /// 📥️ Tier C DWG mesh import — always returns the empty puzzle-3d fixture; never errors on a structurally valid mesh.
-fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     serde_json::to_value(empty_fixture()).map_err(|error| error.to_string())
 }
 
@@ -7356,7 +7338,7 @@ mod tests {
         let fixture = default_fixture();
         let object_id = fixture.objects[0].id.clone();
         let projection = serde_json::to_value(&fixture).unwrap();
-        app.transform_drag_active = true;
+        *app.transform_drag_active.borrow_mut() = true;
 
         let tick_a = app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id.clone()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection);
         assert!(tick_a.operations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
@@ -7382,7 +7364,7 @@ mod tests {
         let fixture = default_fixture();
         let object_id = fixture.objects[0].id.clone();
         let projection = serde_json::to_value(&fixture).unwrap();
-        app.transform_drag_active = true;
+        *app.transform_drag_active.borrow_mut() = true;
         app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection);
         let scratch_before = app.transform_scratch.clone();
         let _ = app.gesture_preview();

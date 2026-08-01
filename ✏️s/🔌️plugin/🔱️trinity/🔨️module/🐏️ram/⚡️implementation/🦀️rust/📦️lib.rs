@@ -1168,12 +1168,12 @@ impl dsl::DslField for GraphFixture {
         graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| error.to_string())
     }
 }
-//#endregion 🔖DslDocument
+//#endregion 🔖️DslDocument
 
-//#region 🔖Pack
-/// 📦 Binary pack notation for a whole [`GraphFixture`] (`store::DocumentPack`), hand-implemented
+//#region 🔖️Pack
+/// 📦️ Binary pack notation for a whole [`GraphFixture`] (`store::DocumentPack`), hand-implemented
 /// exactly like `impl DocumentDsl for GraphFixture` above (`GraphFixture` itself does not derive
-/// `dsl::DslDocument`, only the `GraphFixtureDsl` mirror does — see `🔖DslMirrors`), delegating
+/// `dsl::DslDocument`, only the `GraphFixtureDsl` mirror does — see `🔖️DslMirrors`), delegating
 /// through the same mirror + `graph_fixture_to_dsl`/`graph_fixture_dsl_to_graph_fixture` pair.
 impl DocumentPack for GraphFixture {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
@@ -1186,12 +1186,12 @@ impl DocumentPack for GraphFixture {
             .map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
     }
 }
-//#endregion 🔖Pack
-//#endregion 🔖Dsl
+//#endregion 🔖️Pack
+//#endregion 🔖️Dsl
 
-//#region 🔖OpText
-/// ⚡ One-line textual notation for [`TrinityGraphOperation`] (`protocol::OpText`), delegating to the
-/// derive-generated `TrinityGraphOperationDsl` mirror (see `🔖DslMirrors`).
+//#region 🔖️OpText
+/// ⚡️ One-line textual notation for [`TrinityGraphOperation`] (`protocol::OpText`), delegating to the
+/// derive-generated `TrinityGraphOperationDsl` mirror (see `🔖️DslMirrors`).
 impl OpText for TrinityGraphOperation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
         <TrinityGraphOperationDsl as OpText>::parse_op(line).map(trinity_graph_operation_from_dsl)
@@ -1202,7 +1202,7 @@ impl OpText for TrinityGraphOperation {
     }
 }
 
-/// ⚡ Binary mirror of the `OpText` impl above — `TrinityGraphOperationDsl` already derives
+/// ⚡️ Binary mirror of the `OpText` impl above — `TrinityGraphOperationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for TrinityGraphOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
@@ -1213,13 +1213,13 @@ impl protocol::OpBinary for TrinityGraphOperation {
         TrinityGraphOperationDsl::decode_op(bytes).map(trinity_graph_operation_from_dsl)
     }
 }
-//#endregion 🔖OpText
+//#endregion 🔖️OpText
 
 pub fn empty_trinity_graph_fixture() -> GraphFixture {
     GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "trinity".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: Vec::new(), edges: Vec::new(), root_node_id: None }
 }
 
-//#region 🔖WasmBridge
+//#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
     use super::*;
@@ -1271,9 +1271,9 @@ mod wasm_bridge {
         }
     }
 }
-//#endregion 🔖WasmBridge
+//#endregion 🔖️WasmBridge
 
-// #region 🔖Tests
+// #region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1536,7 +1536,7 @@ mod tests {
         assert!(err.to_string().contains("derived"));
     }
 
-    //#region 🔖DslTests
+    //#region 🔖️DslTests
     use store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
     #[test]
@@ -1547,14 +1547,14 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_nakagin_fixture() {
-        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity")).expect("nakagin fixture parses");
+        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏️s/🔌️plugin/🔱️trinity/📚️example/🔱️nakagin-capsule-tower.trinity")).expect("nakagin fixture parses");
         assert_dsl_round_trip(&fixture);
         assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
     fn dsl_round_trip_branch_chain_fixture() {
-        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏s/🔌plugin/🔱trinity/📚example/🔱branch-chain.trinity")).expect("branch-chain fixture parses");
+        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏️s/🔌️plugin/🔱️trinity/📚️example/🔱️branch-chain.trinity")).expect("branch-chain fixture parses");
         assert_dsl_round_trip(&fixture);
         assert_dsl_pack_equivalence(&fixture);
     }
@@ -1625,9 +1625,9 @@ mod tests {
         assert_document_text_round_trip(&store);
         assert_document_pack_round_trip(&store);
     }
-    //#endregion 🔖DslTests
+    //#endregion 🔖️DslTests
 
-    //#region 🔖SchemaAndManifestTests
+    //#region 🔖️SchemaAndManifestTests
     #[test]
     fn from_json_rejects_wrong_schema() {
         let json = r#"{"schema":"bogus","name":"x","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
@@ -1657,9 +1657,9 @@ mod tests {
         assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnFixture { .. }));
         assert!(err.to_string().contains("root"));
     }
-    //#endregion 🔖SchemaAndManifestTests
+    //#endregion 🔖️SchemaAndManifestTests
 
-    //#region 🔖GraphAccessorTests
+    //#region 🔖️GraphAccessorTests
     #[test]
     fn graph_accessors_and_mutators() {
         let mut g = Graph::from_fixture(mini_fixture()).unwrap();
@@ -1772,13 +1772,13 @@ mod tests {
         assert_eq!(port_port_id("node@port"), Some("port"));
         assert_eq!(port_key("a", "b"), "a@b");
     }
-    //#endregion 🔖GraphAccessorTests
+    //#endregion 🔖️GraphAccessorTests
 
-    //#region 🔖GraphOperationValidationTests
+    //#region 🔖️GraphOperationValidationTests
     #[test]
     fn graph_op_rejects_port_kind_not_declared_on_operation() {
         let mut fixture = mini_fixture();
-        // 🔀 Nakagin's trinity-projected manifest only resolves a direction for `Connector`, so it is
+        // 🔀️ Nakagin's trinity-projected manifest only resolves a direction for `Connector`, so it is
         // the sole valid trinity port kind there; a second directioned port kind is hand-crafted here
         // to exercise the "known port kind, but not declared on this node kind" branch.
         fixture.manifest = TrinityManifest {

@@ -1343,12 +1343,12 @@ pub fn renyi_entropy(p: &[f64], alpha: f64, base: LogBase) -> Result<f64, Entrop
     Ok(base.from_nats(nats))
 }
 
-/// 📐 Collision entropy: Rényi entropy at `alpha = 2`, `-log(sum p_i^2)`.
+/// 📐️ Collision entropy: Rényi entropy at `alpha = 2`, `-log(sum p_i^2)`.
 pub fn collision_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
     renyi_entropy(p, 2.0, base)
 }
 
-/// 📐 Min-entropy: the `alpha -> infinity` limit of Rényi entropy, `-log(max_i p_i)`.
+/// 📐️ Min-entropy: the `alpha -> infinity` limit of Rényi entropy, `-log(max_i p_i)`.
 pub fn min_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
     base.validate()?;
     let p = validate_probabilities(p, Tolerances::default())?;
@@ -1359,7 +1359,7 @@ pub fn min_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
     Ok(base.from_nats(-max_p.ln()))
 }
 
-/// 📐 Tsallis entropy of entropic index `q`: `S_q(p) = (1 - sum p_i^q) / (q - 1)`. Unitless by
+/// 📐️ Tsallis entropy of entropic index `q`: `S_q(p) = (1 - sum p_i^q) / (q - 1)`. Unitless by
 /// convention (no logarithm base); the `q -> 1` limit equals Shannon entropy in nats.
 pub fn tsallis_entropy(p: &[f64], q: f64) -> Result<f64, EntropyError> {
     if !q.is_finite() {
@@ -1373,7 +1373,7 @@ pub fn tsallis_entropy(p: &[f64], q: f64) -> Result<f64, EntropyError> {
     Ok((1.0 - sum_q) / (q - 1.0))
 }
 
-/// 📐 Sharma-Mittal entropy, a two-parameter family generalizing both Rényi (`beta -> 1`) and
+/// 📐️ Sharma-Mittal entropy, a two-parameter family generalizing both Rényi (`beta -> 1`) and
 /// Tsallis (`beta == alpha`): `SM_{alpha,beta}(p) = (1/(1-beta)) * [(sum p_i^alpha)^((1-beta)/(1-alpha)) - 1]`.
 pub fn sharma_mittal_entropy(p: &[f64], alpha: f64, beta: f64) -> Result<f64, EntropyError> {
     if !alpha.is_finite() || !beta.is_finite() {
@@ -1391,10 +1391,10 @@ pub fn sharma_mittal_entropy(p: &[f64], alpha: f64, beta: f64) -> Result<f64, En
     Ok((sum_alpha.powf(exponent) - 1.0) / (1.0 - beta))
 }
 
-/// 📐 Kaniadakis (kappa-) entropy: `S_kappa(p) = -sum p_i * (p_i^kappa - p_i^{-kappa}) / (2 kappa)`,
+/// 📐️ Kaniadakis (kappa-) entropy: `S_kappa(p) = -sum p_i * (p_i^kappa - p_i^{-kappa}) / (2 kappa)`,
 /// defined for `kappa` in `(-1, 1) \ {0}`; the `kappa -> 0` limit is Shannon entropy in nats.
 pub fn kaniadakis_entropy(p: &[f64], kappa: f64) -> Result<f64, EntropyError> {
-    // 🔐 `kappa.is_nan()` is explicit here (rather than relying on `!(kappa.abs() < 1.0)`'s
+    // 🔐️ `kappa.is_nan()` is explicit here (rather than relying on `!(kappa.abs() < 1.0)`'s
     // NaN-through-negation behavior) so a NaN input is rejected exactly as before.
     if kappa.is_nan() || kappa.abs() >= 1.0 {
         return Err(EntropyError::InvalidConfig { field: "kappa", reason: "must satisfy |kappa| < 1" });

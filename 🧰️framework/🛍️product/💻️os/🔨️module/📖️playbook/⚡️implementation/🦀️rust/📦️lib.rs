@@ -1124,7 +1124,7 @@ pub mod builder_kit {
         BlockListScene { steps_json: serde_json::to_string(&spec.steps).unwrap_or_else(|_| "[]".into()), palette_json: serde_json::to_string(palette).unwrap_or_else(|_| "[]".into()), selected_id: selected_id.map(String::from), dragging_id: None }
     }
 
-    /// 🧩 Renders the strict-list Blockly-like builder as a [`SurfaceKind::BlockList`] component
+    /// 🧩️ Renders the strict-list Blockly-like builder as a [`SurfaceKind::BlockList`] component
     /// scene, handed off to the dedicated `block-list-host.tsx` React host for drag-and-drop.
     pub fn render_playbook_builder(surface_id: &str, spec: &PlaybookSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>, config: &PlaybookBuilderConfig) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
@@ -1152,7 +1152,7 @@ pub mod builder_kit {
             menu: None,
         })
     }
-    //#endregion 🔖Render
+    //#endregion 🔖️Render
 
     #[cfg(test)]
     mod builder_kit_tests {
@@ -1181,9 +1181,9 @@ pub mod builder_kit {
         }
     }
 }
-//#endregion 🔖BuilderKit
+//#endregion 🔖️BuilderKit
 
-//#region 🔖WasmBridge
+//#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
     use super::*;
@@ -1236,9 +1236,9 @@ mod wasm_bridge {
         }
     }
 }
-//#endregion 🔖WasmBridge
+//#endregion 🔖️WasmBridge
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1353,7 +1353,7 @@ mod tests {
         assert_eq!(visible_blocks(&step, &values).len(), 2);
     }
 
-    //#region 🔖DslAndOpText
+    //#region 🔖️DslAndOpText
     fn minimal_block(id: &str, kind: &str) -> PlaybookBlock {
         PlaybookBlock {
             id: id.into(),
@@ -1379,7 +1379,7 @@ mod tests {
         }
     }
 
-    /// 🧱 A block with EVERY optional property populated (including nested `options`/`fields` and a
+    /// 🧱️ A block with EVERY optional property populated (including nested `options`/`fields` and a
     /// deeply nested `condition` exercising every `PlaybookExpr` variant) — the DSL round-trip fixture.
     fn fully_populated_block() -> PlaybookBlock {
         PlaybookBlock {
@@ -1389,7 +1389,7 @@ mod tests {
             description: Some("How many people?".into()),
             required: Some(true),
             placeholder: Some("Enter a number".into()),
-            // 🔢 `default`/`params` bind through the engine's schema-less `Shape::Value` (arbitrary
+            // 🔢️ `default`/`params` bind through the engine's schema-less `Shape::Value` (arbitrary
             // `serde_json::Value`), whose `DslValue::Number` is `f64`-only — a bare JSON integer
             // literal round-trips back as a float (`5` → `5.0`), so DSL-round-tripped fixtures use
             // float literals throughout to stay byte-for-byte equal after `parse_dsl(print_dsl(_))`.

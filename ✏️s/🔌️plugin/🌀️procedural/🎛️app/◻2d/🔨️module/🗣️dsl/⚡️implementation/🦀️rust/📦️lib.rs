@@ -98,7 +98,7 @@ mod tests {
         assert!(error.message.contains("expected Record, found Absent"), "unexpected error: {}", error.message);
     }
 
-    /// 🌱 A bare (unquoted) value is now legitimately accepted for any `Shape::Text` field (the
+    /// 🌱️ A bare (unquoted) value is now legitimately accepted for any `Shape::Text` field (the
     /// unified syntax law's "bare-preferred" strings) — this asserts the genuinely-still-rejected
     /// shape mismatch instead: a raw number token, which is neither `Ident` nor `Text`.
     #[test]
@@ -123,7 +123,7 @@ mod tests {
     }
 
     /// 🧬️ `Widget::Cluster`'s `tree`/`flow` fields are the only remaining genuinely free-form value
-    /// literal (bound via the engine's `Shape::Value`, see `procedural_2d`'s `🔖DslMirror`) —
+    /// literal (bound via the engine's `Shape::Value`, see `procedural_2d`'s `🔖️DslMirror`) —
     /// `params`/`preview` moved to typed `DictEntryDsl` records, so a malformed *value literal* (not
     /// JSON text) is now only reachable through `tree`/`flow`.
     #[test]
@@ -133,7 +133,7 @@ mod tests {
         assert!(error.message.contains("expected a value literal"), "unexpected error: {}", error.message);
     }
 
-    /// 🏷 An unrecognized widget kind keyword is simply left unconsumed by `Shape::Statements`
+    /// 🏷️ An unrecognized widget kind keyword is simply left unconsumed by `Shape::Statements`
     /// (the engine breaks its variant-matching loop rather than erroring — see `dsl_schema::parse`,
     /// out of this crate's ownership scope), so parsing ultimately fails at the enclosing `widgets
     /// { }` block's closing brace instead of with a dedicated "unknown widget kind" message.

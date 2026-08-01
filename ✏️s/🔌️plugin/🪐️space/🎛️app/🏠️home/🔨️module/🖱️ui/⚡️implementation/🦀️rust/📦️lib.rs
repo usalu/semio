@@ -440,7 +440,13 @@ impl DocumentApp for HomeApp {
         }
     }
 
-    fn render(&self, body_key: &str, _doc: &DocumentView<'_, SHomeDocument>, view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        _doc: &DocumentView<'_, SHomeDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> UiNode {
         let labels = resolve_labels::<SHomeLabels>(view_state);
         match body_key {
             S_HOME_BODY => render_home_vfs(labels),

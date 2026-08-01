@@ -11,7 +11,7 @@ Chain:
 
 ## Fixes
 - Repaired broken `@semio-tech/*` symlinks (VS-insensitive path match).
-- Pointed `@semio-tech/flow-core` workspace + symlink at `flow/core/⚡implementation/🦀rust/pkg` (wasm-pack output).
+- Pointed `@semio-tech/flow-core` workspace + symlink at `flow/core/⚡️implementation/🦀️rust/pkg` (wasm-pack output).
 - Changed engine session imports to package mains (`@semio-tech/flow-core`, `@semio-tech/framework-surface-node-graph-rs`, …).
 - Stub resolver now returns the absolute hit path when a stripped `pkg/` candidate exists; stub `FlowSession` includes ghost APIs.
 - Stripped FE0F/FE0E from Rust `char` literals that blocked wasm builds; completed `TokenKind`/`Shape` match arms needed for those builds.
@@ -25,7 +25,7 @@ Chain:
 ### Failures
 1. `getWorkspaceRoot()` still matched root `package.json` name `"compose"`; under nx cwd it returned the package dir and doubled the plugin-registry path.
 2. `UiTreeNode` gained `selected_ids`/`highlighted_ids` without updating all struct initializers → `semio-framework-ui-wgpu` (and others) failed to compile.
-3. CAD engine `Cargo.toml` had one-too-many `../` to math-graph-dsl → resolved to `/Users/ueli/Documents/🧰framework/...` and broke flow-core wasm.
+3. CAD engine `Cargo.toml` had one-too-many `../` to math-graph-dsl → resolved to `/Users/ueli/Documents/🧰️framework/...` and broke flow-core wasm.
 
 ### Fixes
 - `getWorkspaceRoot`: match `"workspace"`.
@@ -34,3 +34,19 @@ Chain:
 
 ### Verify
 `bun e2e-verify.mts` on http://127.0.0.1:6018 → ok: title `semio · procedural · 3d`, Flow+Preview, 3 canvases, no render/ghost errors.
+
+
+## 2026-08-01 regression (SelectionSet + DocumentApp &self)
+
+### Failures
+1. `merge_world_selection_ids` now takes/returns `SelectionSet`; procedural-3d still used `Vec<String>`.
+2. `DocumentApp` is `&self` + `cfg` on `pending_effects`/`render`; procedural 2d/3d mutated bare runtime fields and had stale signatures.
+3. Vite/Node strip-only mode rejected `AppChannelClient` constructor parameter properties.
+
+### Fixes
+- Engine+UI: `selected_node_ids: SelectionSet`.
+- Procedural 2d/3d play apps: `RefCell` runtime + cfg on pending_effects/render.
+- `AppChannelClient`: explicit fields (no parameter properties).
+
+### Verify
+`bun e2e-verify.mts` on http://127.0.0.1:6018 → ok.

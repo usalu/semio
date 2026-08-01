@@ -1,0 +1,1453 @@
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-framework-os-kernel-db-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-framework-os-kernel-pack-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-framework-os-kernel-protocol-cli` (manifest) generated 1 warning
+    Blocking waiting for file lock on package cache
+warning: profile package spec `semio-s-kernel-store` in profile `release` did not match any packages
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:1987:42
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2000:43
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2115:53
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust)
+warning: variant `SvgPlain` is never constructed
+ --> /Users/ueli/Documents/semio/target/wasm32-unknown-unknown/release/build/semio-framework-os-kernel-infinite-canvas-c8eaf0b2d9081c7c/out/icon_shortcode_match.rs:6:5
+  |
+4 | pub enum ShortcodeResolved {
+  |          ----------------- variant in this enum
+5 |     Emoji(&'static str),
+6 |     SvgPlain(&'static str),
+  |     ^^^^^^^^
+  |
+  = note: `ShortcodeResolved` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-infinite-canvas` (lib) generated 1 warning
+   Compiling semio-framework-os-kernel-3d-brep v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-2d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+warning: unused import: `ConfigFieldShape`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:554:32
+    |
+554 |     use semio_framework_core::{ConfigFieldShape, ConfigFieldSpec, ConfigSpec};
+    |                                ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:3683:6
+     |
+3683 | impl protocol::OpText for SpaceHistoryOperation {
+     |      ^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3683 - impl protocol::OpText for SpaceHistoryOperation {
+3683 + impl OpText for SpaceHistoryOperation {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:5861:28
+     |
+5861 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+5861 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+5861 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:5864:28
+     |
+5864 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5864 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+5864 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7007:28
+     |
+7007 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7007:106
+     |
+7007 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7050:28
+     |
+7050 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7050:106
+     |
+7050 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+   Compiling semio-framework-os-kernel-math-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-math-graph-drawing v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🧮️math/🕸️graph/🖊️drawing/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/⚡️implementation/🦀️rust/../../../🎲️board/⚡️implementation/🦀️rust/📦️lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/⚡️implementation/🦀️rust/../../../🎲️board/⚡️implementation/🦀️rust/📦️lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling semio-framework-os-kernel-infinite-board-port v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-normal-undirected v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/↔undirected/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-normal-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/➕️normal/➡️directed/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/⚡️implementation/🦀️rust/../../../../🎲️board/🔌️port/⚡️implementation/🦀️rust/📦️lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+warning: `semio-framework-os-kernel-infinite-board-port` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board-port` to apply 1 suggestion)
+warning: `semio-framework-os-kernel-infinite-board` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board` to apply 2 suggestions)
+   Compiling semio-s-kernel-reasoning-mindmap v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔨️module/💭️mindmap/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/⚡️implementation/🦀️rust)
+warning: `semio-framework-os-kernel-store` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store` to apply 2 suggestions)
+   Compiling semio-s-app-puzzle-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-workflow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-2d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/⚡️implementation/🦀️rust)
+warning: unused import: `DocumentEnvelope`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:104:116
+    |
+104 | ...create_document_envelope, ConfigStore, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, SpaceConflict};
+    |                                                            ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-os-kernel-3d-brep` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-os-kernel-3d-brep` to apply 6 suggestions)
+   Compiling semio-s-app-puzzle-2d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-2d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4083:13
+     |
+4083 |         let mut config_store = ConfigStore::new(config_envelope);
+     |             ----^^^^^^^^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-os-kernel-infinite-board-port-directed-normal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust)
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4758:65
+     |
+4758 |             let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5007:61
+     |
+5007 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5021:61
+     |
+5021 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/../../../../../../🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/📦️lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/../../../../../../🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/📦️lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/../../../../../../🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/📦️lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/../../../../../../🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/📦️lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/../../../../../../🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/📦️lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/../../../../../../🎲️board/🔌️port/➡️directed/➕️normal/⚡️implementation/🦀️rust/📦️lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+   Compiling semio-s-app-puzzle-5d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-3d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-3d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+warning: function `set_instance_view_state` is never used
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5203:4
+     |
+5203 | fn set_instance_view_state(instance_id: u32, view_state: ViewState) {
+     |    ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-5d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-5d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:516:50
+    |
+516 |     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::w...
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+516 -     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+516 +     fn sync_workflow_node_parameter_ports(node: &OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:516:124
+    |
+516 | ...wNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+516 -     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+516 +     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> OsWorkflowNode {
+    |
+
+warning: unused import: `DocumentDsl`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:2089:17
+     |
+2089 |     use store::{DocumentDsl, MemoryBackbonePort};
+     |                 ^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3081:41
+     |
+3081 |     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3081 -     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+3081 +     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3597:30
+     |
+3597 | ...   let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown ...
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3597 -                 let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+3597 +                 let format = OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:21
+     |
+4467 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:72
+     |
+4467 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:127
+     |
+4467 | ...tance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:177
+     |
+4467 | ...e::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:29
+     |
+4476 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:82
+     |
+4476 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:139
+     |
+4476 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:191
+     |
+4476 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:33
+     |
+4490 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:86
+     |
+4490 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:143
+     |
+4490 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:195
+     |
+4490 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4498:30
+     |
+4498 |             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4498 -             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+4498 +             let descriptor = os_artifact_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4516:30
+     |
+4516 |             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4516 -             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+4516 +             let descriptor = os_artifact_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:5308:36
+     |
+5308 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5308 -             terminology_documents: std::collections::HashMap::new(),
+5308 +             terminology_documents: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:5314:21
+     |
+5314 |             config: semio_framework_core::ConfigSpec::empty(),
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5314 -             config: semio_framework_core::ConfigSpec::empty(),
+5314 +             config: ConfigSpec::empty(),
+     |
+
+warning: unused imports: `ThemedSvgLookup` and `board_typst_markup_to_svg`
+  --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:53:88
+   |
+53 | ...icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:86:6
+   |
+86 | impl graph::GraphExtension for Puzzle2dExtension {}
+   |      ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+86 - impl graph::GraphExtension for Puzzle2dExtension {}
+86 + impl GraphExtension for Puzzle2dExtension {}
+   |
+
+warning: function `resolve_node_icon_svg_from_encoding` is never used
+  --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:37:4
+   |
+37 | fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `board_resolve_icon_kind` is never used
+  --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust/📦️lib.rs:54:12
+   |
+54 |     pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-s-app-puzzle-2d-engine` (lib) generated 4 warnings (run `cargo fix --lib -p semio-s-app-puzzle-2d-engine` to apply 2 suggestions)
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 5 suggestions)
+   Compiling semio-s-app-puzzle-5d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+warning: `semio-framework-os-kernel-infinite-board-port-directed-normal` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-os-kernel-infinite-board-port-directed-normal` to apply 6 suggestions)
+   Compiling semio-s-app-puzzle-2d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-puzzle-5d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unused imports: `PluginBundle` and `build_canvas_2d_scene`
+ --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:7:5
+  |
+7 |     build_canvas_2d_scene, build_board2d_scene, create_default_layout,
+  |     ^^^^^^^^^^^^^^^^^^^^^
+8 |     MeasureSelectItem, WindowEngagementStatus,
+9 |     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, A...
+  |                                                                                                                                                                                                                                                                                                                                                                             ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2146:33
+     |
+2146 |             window_kind_labels: std::collections::HashMap::from([
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2146 -             window_kind_labels: std::collections::HashMap::from([
+2146 +             window_kind_labels: HashMap::from([
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2151:31
+     |
+2151 |             panel_tab_labels: std::collections::HashMap::new(),
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2151 -             panel_tab_labels: std::collections::HashMap::new(),
+2151 +             panel_tab_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2152:26
+     |
+2152 |             mode_labels: std::collections::HashMap::new(),
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2152 -             mode_labels: std::collections::HashMap::new(),
+2152 +             mode_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2155:29
+     |
+2155 | ...   example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concr...
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2155 -             example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+2155 +             example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2169:43
+     |
+2169 | fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2169 - fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2169 + fn puzzle2d_action_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2214:44
+     |
+2214 | fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2214 - fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+2214 + fn puzzle2d_utility_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:3058:33
+     |
+3058 |             window_kind_labels: std::collections::HashMap::from([
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3058 -             window_kind_labels: std::collections::HashMap::from([
+3058 +             window_kind_labels: HashMap::from([
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:3062:31
+     |
+3062 |             panel_tab_labels: std::collections::HashMap::new(),
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3062 -             panel_tab_labels: std::collections::HashMap::new(),
+3062 +             panel_tab_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:3063:26
+     |
+3063 |             mode_labels: std::collections::HashMap::new(),
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3063 -             mode_labels: std::collections::HashMap::new(),
+3063 +             mode_labels: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:3066:29
+     |
+3066 | ...   example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_fore...
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3066 -             example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+3066 +             example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:3080:43
+     |
+3080 | fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3080 - fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+3080 + fn puzzle5d_action_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:3143:44
+     |
+3143 | fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3143 - fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+3143 + fn puzzle5d_utility_labels(is_de: bool) -> HashMap<String, String> {
+     |
+
+warning: unused import: `super::*`
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:3316:9
+     |
+3316 |     use super::*;
+     |         ^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+error[E0053]: method `paste_operations` has an incompatible type for trait
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2341:25
+     |
+2341 |     fn paste_operations(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &Paste...
+     |                         ^^^^^^^^^ types differ in mutability
+     |
+     = note: expected signature `fn(&Puzzle5dPlayApp, &DocumentView<'_, _>, &ClipboardFragment, &PastePlacement) -> Result<_, _>`
+                found signature `fn(&mut Puzzle5dPlayApp, &DocumentView<'_, _>, &ClipboardFragment, &PastePlacement) -> Result<_, _>`
+help: change the self-receiver type to match the trait
+     |
+2341 -     fn paste_operations(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
+2341 +     fn paste_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
+     |
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1677:39
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1677 |             sync_host_fixture_content(&mut self.host, &envelope);
+     |                                       ^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1684:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1684 |             let _ = self.host.drain_events_json();
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0594]: cannot assign to `self.last_synced_fixture`, which is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1685:13
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1685 |             self.last_synced_fixture = Some(envelope.fixture.clone());
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be written to
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1687:33
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1687 |         sync_host_runtime_state(&mut self.host, &envelope);
+     |                                 ^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1699:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1699 |                 self.host.set_selection_ids(&envelope.runtime.selected_ids);
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1708:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1708 |                 self.host.delete_selection();
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1725:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1725 |                     self.host.set_selection_ids(&envelope.runtime.selected_ids);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1735:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1735 |                     self.host.set_selection_ids(&envelope.runtime.selected_ids);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1744:25
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1744 |                         self.host.set_camera(x, y, zoom);
+     |                         ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1768:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1768 |                 self.host.brush_fill_session_clear();
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1769:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1769 |                 self.host.brush_cancel_slot();
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1770:25
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1770 |                 let _ = self.host.drain_events_json();
+     |                         ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0594]: cannot assign to `self.runtime.fill_count`, which is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1771:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1771 |                 self.runtime.fill_count = 0;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be written to
+
+error[E0596]: cannot borrow `self.runtime.brush_candidates` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1772:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1772 |                 self.runtime.brush_candidates.clear();
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0594]: cannot assign to `self.runtime.brush_candidate_index`, which is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1773:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1773 |                 self.runtime.brush_candidate_index = 0;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be written to
+
+error[E0594]: cannot assign to `self.runtime.brush_candidate_source_handle_id`, which is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1774:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1774 |                 self.runtime.brush_candidate_source_handle_id = String::new();
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be written to
+
+error[E0596]: cannot borrow `self.runtime.engagement_input_by_pane` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1776:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1776 |                     self.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1796:25
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1796 |                         self.host.set_active_utility(value.as_str());
+     |                         ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1808:25
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1808 |                         self.host.set_selection_ids(&[]);
+     |                         ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1813:25
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1813 |                         self.host.set_selection_options("rectangle", "replace", true, true, true);
+     |                         ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1818:25
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1818 |                         self.host.set_selection_options("lasso", "replace", true, true, true);
+     |                         ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1834:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1834 |                     self.host.set_active_utility(PUZZLE2D_UTILITY_SELECT);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1842:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1842 |                     self.host.brush_set_candidate_index(index);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1856:29
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1856 |                             self.host.set_automatic_lod(true);
+     |                             ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1858:29
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1858 |                             self.host.set_automatic_lod(false);
+     |                             ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1859:29
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1859 |                             self.host.set_forced_draw_lod_label(mode);
+     |                             ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1868:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1868 |                 self.host.set_grid_snap_enabled(enabled);
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1874:29
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1874 |                     let _ = self.host.set_grid_factor(value);
+     |                             ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1881:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1881 |                 self.host.set_selection_options(method, "replace", true, true, true);
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1905:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1905 |                     self.host.set_brush_kind_weights(&weights_json);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1911:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1911 |                     self.host.set_brush_node_size(size);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1920:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1920 |                     self.host.set_suggestion_offset(clamped);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1926:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1926 |                 self.host.brush_cycle_candidate(forward);
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1932:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1932 |                     self.host.brush_set_candidate_index(index as usize);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1939:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1939 |                     self.host.brush_open_slot(handle_id);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1944:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1944 |                 self.host.brush_commit_slot();
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1945:35
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1945 |                 apply_host_events(&mut self.host, &mut envelope);
+     |                                   ^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1949:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1949 |                 self.host.brush_cancel_slot();
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1956:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1956 |                 self.host.set_active_utility("brush");
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1957:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1957 |                 self.host.brush_fill_session_begin(count, 1);
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1958:28
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1958 |                 let step = self.host.brush_fill_session_step(count.max(1));
+     |                            ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1971:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1971 |                 self.host.brush_fill_session_begin(max_count, u64::from(seed));
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1976:28
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1976 |                 let step = self.host.brush_fill_session_step(budget);
+     |                            ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:1987:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+1987 |                 self.host.brush_fill_session_clear();
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2018:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2018 |                 self.host.set_selection_ids(&ids);
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2023:17
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2023 |                 self.host.set_selection_ids(&[]);
+     |                 ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2058:25
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2058 |                         self.host.set_camera(envelope.runtime.camera_x, envelope.runtime.camera_y, envelope.runtime.camera_zoom);
+     |                         ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2073:21
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2073 |                     self.host.set_selection_ids(&envelope.runtime.selected_ids);
+     |                     ^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.host` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2082:27
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2082 |         apply_host_events(&mut self.host, &mut envelope);
+     |                           ^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0594]: cannot assign to `self.runtime`, which is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2083:9
+     |
+1669 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2083 |         self.runtime = envelope.runtime;
+     |         ^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be written to
+
+Some errors have detailed explanations: E0594, E0596.
+For more information about an error, try `rustc --explain E0594`.
+warning: `semio-s-app-puzzle-2d-ui` (lib) generated 7 warnings
+error: could not compile `semio-s-app-puzzle-2d-ui` (lib) due to 50 previous errors; 7 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+error[E0594]: cannot assign to `self.runtime.selection`, which is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2337:9
+     |
+2322 |     fn cut_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_f...
+     |                       ----- this is an immutable reference
+...
+2337 |         self.runtime.selection = Puzzle5dSelection::default();
+     |         ^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be written to
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2411:17
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2411 |                 self.drive_precompute(&envelope);
+     |                 ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2509:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2509 |                     self.drive_precompute(&envelope);
+     |                     ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2527:29
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2527 |                             self.drive_precompute(&envelope);
+     |                             ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2554:17
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2554 |                 self.drive_precompute(&envelope);
+     |                 ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2567:41
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2567 |                     if let Some(next) = self.apply_engine_brush_placement(&envelope, &payload) {
+     |                                         ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2573:17
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2573 |                 self.apply_board_brush_place(&mut envelope, &payload);
+     |                 ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2576:17
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2576 |                 self.drive_precompute(&envelope);
+     |                 ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.precompute` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2581:47
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2581 |                     if let Ok(fixture_json) = self.precompute.apply_fill_count_rust(count) {
+     |                                               ^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2589:17
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2589 |                 self.drive_precompute(&envelope);
+     |                 ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.precompute` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2605:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2605 |                     self.precompute.register_mesh(url, &positions, &indices);
+     |                     ^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `self.registered_mesh_urls` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2606:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2606 |                     self.registered_mesh_urls.insert(url.to_string());
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2613:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2613 |                     self.drive_precompute(&envelope);
+     |                     ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2628:17
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2628 |                 self.drive_precompute(&envelope);
+     |                 ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2633:17
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2633 |                 self.apply_board_brush_place(&mut envelope, &payload);
+     |                 ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2897:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2897 |                     self.drive_precompute(&envelope);
+     |                     ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2904:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2904 |                     self.drive_precompute(&envelope);
+     |                     ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2935:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2935 |                     self.drive_precompute(&envelope);
+     |                     ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0596]: cannot borrow `*self` as mutable, as it is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2962:21
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2962 |                     self.apply_board_events_from_json(events_json, &mut envelope);
+     |                     ^^^^ `self` is a `&` reference, so it cannot be borrowed as mutable
+
+error[E0594]: cannot assign to `self.runtime`, which is behind a `&` reference
+    --> ✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:2969:9
+     |
+2361 |     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_frame...
+     |                      ----- this is an immutable reference
+...
+2969 |         self.runtime = envelope.runtime;
+     |         ^^^^^^^^^^^^ `self` is a `&` reference, so it cannot be written to
+
+Some errors have detailed explanations: E0053, E0594, E0596.
+For more information about an error, try `rustc --explain E0053`.
+warning: `semio-s-app-puzzle-5d-ui` (lib) generated 7 warnings
+error: could not compile `semio-s-app-puzzle-5d-ui` (lib) due to 21 previous errors; 7 warnings emitted
+warning: `semio-framework-os` (lib) generated 21 warnings (run `cargo fix --lib -p semio-framework-os` to apply 21 suggestions)

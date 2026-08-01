@@ -4,15 +4,16 @@ use puzzle_2d::Puzzle2dProjection;
 use puzzle_2d_engine::{handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use puzzle_2d_op::{puzzle2d_document_delta_operations, Puzzle2dOperation, Puzzle2dPlayProjection};
 use semio_framework_plugin::{
-    build_canvas_2d_scene, build_board2d_scene, create_default_layout,
+    build_board2d_scene, create_default_layout,
     MeasureSelectItem, WindowEngagementStatus,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, ArtifactKindSpec, Board2dScene, SurfaceKind, ToolRef, UiInspectorFieldGroup, UiPresence, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, Board2dScene, SurfaceKind, ToolRef, UiInspectorFieldGroup, UiPresence, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     is_de_locale, tree_item, tree_item_with_action,
 };
 use semio_framework_plugin::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
@@ -826,7 +827,7 @@ fn puzzle2d_brush_utility_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLab
     let mut children = vec![
         WindowMeasure::Slider {
             id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
-            label: Some(labels.offset.into()),
+            label: Some(format!("{} ({})", labels.suggestion, labels.offset)),
             value: envelope.runtime.suggestion_offset,
             min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
             max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
@@ -973,35 +974,6 @@ fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, l
 //#endregion 🔖️BoardHost
 
 //#region 🔖️Canvas
-fn fixture_wires(fixture: &Value) -> &[Value] {
-    fixture.get("wires").and_then(|value| value.as_array()).map(|values| values.as_slice()).unwrap_or(&[])
-}
-
-fn fixture_handles(fixture: &Value) -> Vec<Value> {
-    fixture_nodes(fixture).iter().flat_map(|node| node.get("handles").and_then(|value| value.as_array()).into_iter().flatten().cloned()).collect()
-}
-
-fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
-    if let Some((node_id, handle_id)) = endpoint_id.split_once('@') {
-        let node = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(node_id))?;
-        let cx = node.get("x").and_then(|value| value.as_f64())?;
-        let cy = node.get("y").and_then(|value| value.as_f64())?;
-        let handle = node.get("handles").and_then(|value| value.as_array()).into_iter().flatten().find(|handle| handle.get("id").and_then(|value| value.as_str()) == Some(handle_id))?;
-        let angle = handle.get("angle").and_then(|value| value.as_f64()).unwrap_or(0.0);
-        let point = if node.get("shape").and_then(|value| value.as_str()) == Some("rectangle") {
-            let width = node.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0);
-            let height = node.get("height").and_then(|value| value.as_f64()).unwrap_or(48.0);
-            handle_position_on_rectangle(Point::new(cx, cy), width, height, angle)
-        } else {
-            let radius = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0);
-            handle_position_on_circle(Point::new(cx, cy), radius, angle)
-        };
-        return Some((point.x, point.y));
-    }
-    let node = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(endpoint_id))?;
-    Some((node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
-}
-
 //#region 🔖️PaneCamera
 fn puzzle2d_pane_zoom_scale(pane: &str) -> f64 {
     match pane {
@@ -1064,17 +1036,6 @@ fn puzzle2d_pane_camera(fixture: &Value, runtime: &Puzzle2dPlayRuntime, pane: &s
         }
         PUZZLE2D_PANE_SELECTION => (cx - half_span * 0.28 + camera_x * 0.06, cy + half_span * 0.22 + camera_y * 0.05, zoom),
         _ => (cx + camera_x * 0.04, cy + camera_y * 0.03, zoom),
-    }
-}
-
-/// 🖱️ Recovers the pane id from the `canvas-2d-host` surface id echoed back into pointer-action args.
-fn pane_from_surface_id(surface_id: &str) -> &'static str {
-    if surface_id.ends_with(PUZZLE2D_PANE_DETAIL) {
-        PUZZLE2D_PANE_DETAIL
-    } else if surface_id.ends_with(PUZZLE2D_PANE_SELECTION) {
-        PUZZLE2D_PANE_SELECTION
-    } else {
-        PUZZLE2D_PANE_OVERVIEW
     }
 }
 
@@ -1634,17 +1595,17 @@ fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dScene, labels: &Puzzl
 /// rehydrates the host from the projection, mutates a transient {@link Puzzle2dScene}, then emits
 /// the granular operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into the new.
 pub struct Puzzle2dPlayApp {
-    host: BoardHost,
-    runtime: Puzzle2dPlayRuntime,
+    host: RefCell<BoardHost>,
+    runtime: RefCell<Puzzle2dPlayRuntime>,
     /// 🗄️ The fixture content last parsed into `host` via `parse_fixture_v1` — lets `handle_action`
     /// skip that full clear-scene-and-rebuild (and the kind-catalog/kind-compat re-push) on the
     /// large majority of actions (select/camera/utility/…) that never touch fixture content.
-    last_synced_fixture: Option<Value>,
+    last_synced_fixture: RefCell<Option<Value>>,
 }
 
 impl Default for Puzzle2dPlayApp {
     fn default() -> Self {
-        Self { host: puzzle_board_host(), runtime: Puzzle2dPlayRuntime::default(), last_synced_fixture: None }
+        Self { host: RefCell::new(puzzle_board_host()), runtime: RefCell::new(Puzzle2dPlayRuntime::default()), last_synced_fixture: RefCell::new(None) }
     }
 }
 
@@ -1666,25 +1627,25 @@ impl DocumentApp for Puzzle2dPlayApp {
         Puzzle2dPlayProjection(default_empty_fixture())
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> ActionEmit<Puzzle2dOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> ActionEmit<Puzzle2dOperation> {
         let before = doc.projection.0.clone();
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE2D_UTILITY_SELECT).to_string();
-        let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone(), active_utility: active_utility.clone() };
+        let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.borrow().clone(), active_utility: active_utility.clone() };
         // 🐢️ `sync_host_fixture_content` (`parse_fixture_v1`) does a full `clear_scene()` + rebuild of
         // every node/handle/edge — skip it when the fixture content is byte-identical to what `host`
         // already has (the common case: select/camera/utility/… actions never touch fixture content).
-        if self.last_synced_fixture.as_ref() != Some(&envelope.fixture) {
-            sync_host_fixture_content(&mut self.host, &envelope);
+        if self.last_synced_fixture.borrow().as_ref() != Some(&envelope.fixture) {
+            sync_host_fixture_content(&mut self.host.borrow_mut(), &envelope);
             // 🧹️ `parse_fixture_v1` always `clear_scene()`s then rebuilds, so it unconditionally emits
             // an `edgeCreate` for every edge as a side effect of parsing — not a real structural
             // change. Discard that parse-induced noise now so `apply_host_events` below only sees
             // events genuinely produced by *this* action's own engine calls (delete_selection, brush
             // operations, …); otherwise those spurious edgeCreate events get replayed into
             // `envelope.fixture.edges` on the *next* action, duplicating every edge every action.
-            let _ = self.host.drain_events_json();
-            self.last_synced_fixture = Some(envelope.fixture.clone());
+            let _ = self.host.borrow_mut().drain_events_json();
+            *self.last_synced_fixture.borrow_mut() = Some(envelope.fixture.clone());
         }
-        sync_host_runtime_state(&mut self.host, &envelope);
+        sync_host_runtime_state(&mut self.host.borrow_mut(), &envelope);
         // 🎥️ No action coalesces anymore: `setCamera` used to be the sole `coalesce_key` writer, but
         // it is now a View-kind action that never touches the document (see `ActionKind::View` above).
         let coalesce_key: Option<String> = None;
@@ -1696,7 +1657,7 @@ impl DocumentApp for Puzzle2dPlayApp {
         match action {
             "setSelection" | "documentSelect" => {
                 envelope.runtime.selected_ids = selection_ids(args);
-                self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                self.host.borrow_mut().set_selection_ids(&envelope.runtime.selected_ids);
                 ui_scope = puzzle2d_select_scope();
             }
             "addNode" => {
@@ -1705,7 +1666,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                 {}
             }
             "deleteSelection" => {
-                self.host.delete_selection();
+                self.host.borrow_mut().delete_selection();
                 delete_selection_from_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
                 envelope.runtime.selected_ids.clear();
                 {}
@@ -1722,7 +1683,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                     {}
                 } else {
                     envelope.runtime.selected_ids = new_ids;
-                    self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                    self.host.borrow_mut().set_selection_ids(&envelope.runtime.selected_ids);
                     {}
                 }
             }
@@ -1732,7 +1693,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                     {}
                 } else {
                     envelope.runtime.selected_ids = ids;
-                    self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                    self.host.borrow_mut().set_selection_ids(&envelope.runtime.selected_ids);
                     {}
                 }
             }
@@ -1741,7 +1702,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                 // operation is emitted (nothing to coalesce, so no `coalesce_key` either).
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let (Some(x), Some(y), Some(zoom)) = (camera.get("x").and_then(|value| value.as_f64()), camera.get("y").and_then(|value| value.as_f64()), camera.get("zoom").and_then(|value| value.as_f64())) {
-                        self.host.set_camera(x, y, zoom);
+                        self.host.borrow_mut().set_camera(x, y, zoom);
                     }
                     set_runtime_camera(&mut envelope.runtime, camera);
                     ui_scope = puzzle2d_window_only_scope();
@@ -1765,15 +1726,15 @@ impl DocumentApp for Puzzle2dPlayApp {
                 // 🧰️ Host-owned utility switch (framework-injected View action): the new utility already lives in
                 // `view_state.active_utility_id`; here we only clear any in-progress brush/fill scratch and
                 // emit nothing. The host engine was re-pointed at the new utility by `sync_host_runtime_state`.
-                self.host.brush_fill_session_clear();
-                self.host.brush_cancel_slot();
-                let _ = self.host.drain_events_json();
-                self.runtime.fill_count = 0;
-                self.runtime.brush_candidates.clear();
-                self.runtime.brush_candidate_index = 0;
-                self.runtime.brush_candidate_source_handle_id = String::new();
+                self.host.borrow_mut().brush_fill_session_clear();
+                self.host.borrow_mut().brush_cancel_slot();
+                let _ = self.host.borrow_mut().drain_events_json();
+                self.runtime.borrow_mut().fill_count = 0;
+                self.runtime.borrow_mut().brush_candidates.clear();
+                self.runtime.borrow_mut().brush_candidate_index = 0;
+                self.runtime.borrow_mut().brush_candidate_source_handle_id = String::new();
                 for pane in PUZZLE2D_PANES {
-                    self.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
+                    self.runtime.borrow_mut().engagement_input_by_pane.insert(pane.to_string(), String::new());
                 }
                 return ActionEmit::default();
             }
@@ -1793,7 +1754,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                         // 🧰️ Reconcile the engagement text-command utility switch through the host-owned
                         // active utility: point the local engine now and let the framework persist the new
                         // `view_state.active_utility_id` for the pane via `HostEffect::SetActiveUtility`.
-                        self.host.set_active_utility(value.as_str());
+                        self.host.borrow_mut().set_active_utility(value.as_str());
                         effects.push(HostEffect::SetActiveUtility { window_id: pane.clone(), utility_id: value.clone() });
                         true
                     }
@@ -1805,17 +1766,17 @@ impl DocumentApp for Puzzle2dPlayApp {
                     }
                     "clear" => {
                         envelope.runtime.selected_ids.clear();
-                        self.host.set_selection_ids(&[]);
+                        self.host.borrow_mut().set_selection_ids(&[]);
                         true
                     }
                     "rectangle" => {
                         envelope.runtime.selection_method = "rectangle".into();
-                        self.host.set_selection_options("rectangle", "replace", true, true, true);
+                        self.host.borrow_mut().set_selection_options("rectangle", "replace", true, true, true);
                         true
                     }
                     "lasso" => {
                         envelope.runtime.selection_method = "lasso".into();
-                        self.host.set_selection_options("lasso", "replace", true, true, true);
+                        self.host.borrow_mut().set_selection_options("lasso", "replace", true, true, true);
                         true
                     }
                     _ => false,
@@ -1831,7 +1792,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                     envelope.runtime.engagement_input_by_pane.insert(pane.to_string(), String::new());
                 }
                 if active_utility != PUZZLE2D_UTILITY_SELECT {
-                    self.host.set_active_utility(PUZZLE2D_UTILITY_SELECT);
+                    self.host.borrow_mut().set_active_utility(PUZZLE2D_UTILITY_SELECT);
                     effects.push(HostEffect::SetActiveUtility { window_id: pane.to_string(), utility_id: PUZZLE2D_UTILITY_SELECT.into() });
                 }
                 {}
@@ -1839,7 +1800,7 @@ impl DocumentApp for Puzzle2dPlayApp {
             "engagementControlSelect" => {
                 let candidate_id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str()).unwrap_or("");
                 if let Some(index) = candidate_id.strip_prefix("puzzle2d.brush.candidate.").and_then(|rest| rest.parse::<usize>().ok()) {
-                    self.host.brush_set_candidate_index(index);
+                    self.host.borrow_mut().brush_set_candidate_index(index);
                     envelope.runtime.brush_candidate_index = index;
                     {}
                 } else {
@@ -1853,10 +1814,10 @@ impl DocumentApp for Puzzle2dPlayApp {
                     envelope.runtime.lod_mode_by_pane.insert(pane.to_string(), mode.to_string());
                     if pane == PUZZLE2D_PANE_OVERVIEW {
                         if mode == PUZZLE2D_LOD_MODE_AUTOMATIC {
-                            self.host.set_automatic_lod(true);
+                            self.host.borrow_mut().set_automatic_lod(true);
                         } else {
-                            self.host.set_automatic_lod(false);
-                            self.host.set_forced_draw_lod_label(mode);
+                            self.host.borrow_mut().set_automatic_lod(false);
+                            self.host.borrow_mut().set_forced_draw_lod_label(mode);
                         }
                     }
                     ui_scope = puzzle2d_window_and_measures_scope();
@@ -1865,20 +1826,20 @@ impl DocumentApp for Puzzle2dPlayApp {
             "setGridSnapEnabled" => {
                 let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(false);
                 envelope.runtime.grid_snap_enabled = enabled;
-                self.host.set_grid_snap_enabled(enabled);
+                self.host.borrow_mut().set_grid_snap_enabled(enabled);
                 ui_scope = puzzle2d_window_and_measures_scope();
             }
             "setGridFactor" => {
                 if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                     envelope.runtime.grid_factor = value;
-                    let _ = self.host.set_grid_factor(value);
+                    let _ = self.host.borrow_mut().set_grid_factor(value);
                     ui_scope = puzzle2d_window_and_measures_scope();
                 }
             }
             "setSelectionMethod" => {
                 let method = args.and_then(|value| value.get("method")).and_then(|value| value.as_str()).unwrap_or("rectangle");
                 envelope.runtime.selection_method = method.into();
-                self.host.set_selection_options(method, "replace", true, true, true);
+                self.host.borrow_mut().set_selection_options(method, "replace", true, true, true);
                 ui_scope = puzzle2d_window_only_scope();
             }
             "setBrushKindWeights" => {
@@ -1902,13 +1863,13 @@ impl DocumentApp for Puzzle2dPlayApp {
                     "nodeWeights": envelope.runtime.node_kind_weights,
                     "handleWeights": envelope.runtime.handle_kind_weights,
                 })) {
-                    self.host.set_brush_kind_weights(&weights_json);
+                    self.host.borrow_mut().set_brush_kind_weights(&weights_json);
                 }
                 ui_scope = puzzle2d_window_and_measures_scope();
             }
             "setBrushNodeSize" => {
                 if let Some(size) = args.and_then(|value| value.get("size")).and_then(|value| value.as_f64()) {
-                    self.host.set_brush_node_size(size);
+                    self.host.borrow_mut().set_brush_node_size(size);
                     ui_scope = puzzle2d_window_only_scope();
                 }
             }
@@ -1917,45 +1878,45 @@ impl DocumentApp for Puzzle2dPlayApp {
                 if let Some(distance) = distance {
                     let clamped = distance.clamp(PUZZLE2D_SUGGESTION_OFFSET_MIN, PUZZLE2D_SUGGESTION_OFFSET_MAX);
                     envelope.runtime.suggestion_offset = clamped;
-                    self.host.set_suggestion_offset(clamped);
+                    self.host.borrow_mut().set_suggestion_offset(clamped);
                     ui_scope = puzzle2d_window_and_measures_scope();
                 }
             }
             "brushCycleCandidate" => {
                 let forward = args.and_then(|value| value.get("forward")).and_then(|value| value.as_bool()).unwrap_or(true);
-                self.host.brush_cycle_candidate(forward);
+                self.host.borrow_mut().brush_cycle_candidate(forward);
                 envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
                 ui_scope = puzzle2d_window_and_engagements_scope();
             }
             "brushSetCandidateIndex" => {
                 if let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) {
-                    self.host.brush_set_candidate_index(index as usize);
+                    self.host.borrow_mut().brush_set_candidate_index(index as usize);
                     envelope.runtime.brush_candidate_index = index as usize;
                     ui_scope = puzzle2d_window_and_engagements_scope();
                 }
             }
             "brushOpenSlot" => {
                 if let Some(handle_id) = args.and_then(|value| value.get("handleId")).and_then(|value| value.as_str()) {
-                    self.host.brush_open_slot(handle_id);
+                    self.host.borrow_mut().brush_open_slot(handle_id);
                 }
                 {}
             }
             "brushCommitSlot" => {
-                self.host.brush_commit_slot();
-                apply_host_events(&mut self.host, &mut envelope);
+                self.host.borrow_mut().brush_commit_slot();
+                apply_host_events(&mut self.host.borrow_mut(), &mut envelope);
                 {}
             }
             "brushCancelSlot" => {
-                self.host.brush_cancel_slot();
+                self.host.borrow_mut().brush_cancel_slot();
                 {}
             }
             "setFillCount" => {
                 let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE2D_FILL_COUNT_MAX);
                 envelope.runtime.fill_count = count;
                 effects.push(HostEffect::SetActiveTool { tool_id: PUZZLE2D_UTILITY_FILL.into() });
-                self.host.set_active_utility("brush");
-                self.host.brush_fill_session_begin(count, 1);
-                let step = self.host.brush_fill_session_step(count.max(1));
+                self.host.borrow_mut().set_active_utility("brush");
+                self.host.borrow_mut().brush_fill_session_begin(count, 1);
+                let step = self.host.borrow_mut().brush_fill_session_step(count.max(1));
                 if let Ok(progress) = serde_json::from_str::<Value>(&step) {
                     if let Some(placements) = progress.get("placements").and_then(|value| value.as_array()) {
                         for placement in placements {
@@ -1968,12 +1929,12 @@ impl DocumentApp for Puzzle2dPlayApp {
             "brushFillSessionBegin" => {
                 let max_count = args.and_then(|value| value.get("maxCount")).and_then(|value| value.as_u64()).unwrap_or(0) as u32;
                 let seed = args.and_then(|value| value.get("seed")).and_then(|value| value.as_u64()).unwrap_or(1) as u32;
-                self.host.brush_fill_session_begin(max_count, u64::from(seed));
+                self.host.borrow_mut().brush_fill_session_begin(max_count, u64::from(seed));
                 {}
             }
             "brushFillSessionStep" => {
                 let budget = args.and_then(|value| value.get("chunkBudget")).and_then(|value| value.as_u64()).unwrap_or(8) as u32;
-                let step = self.host.brush_fill_session_step(budget);
+                let step = self.host.borrow_mut().brush_fill_session_step(budget);
                 if let Ok(progress) = serde_json::from_str::<Value>(&step) {
                     if let Some(placements) = progress.get("placements").and_then(|value| value.as_array()) {
                         for placement in placements {
@@ -1984,7 +1945,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                 {}
             }
             "brushFillSessionClear" => {
-                self.host.brush_fill_session_clear();
+                self.host.borrow_mut().brush_fill_session_clear();
                 envelope.runtime.fill_count = 0;
                 {}
             }
@@ -2015,12 +1976,12 @@ impl DocumentApp for Puzzle2dPlayApp {
             "selectAll" => {
                 let ids: Vec<String> = fixture_nodes(&envelope.fixture).iter().filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect();
                 envelope.runtime.selected_ids = ids.clone();
-                self.host.set_selection_ids(&ids);
+                self.host.borrow_mut().set_selection_ids(&ids);
                 ui_scope = puzzle2d_select_scope();
             }
             "clearSelection" => {
                 envelope.runtime.selected_ids.clear();
-                self.host.set_selection_ids(&[]);
+                self.host.borrow_mut().set_selection_ids(&[]);
                 ui_scope = puzzle2d_select_scope();
             }
             "focusSelection" => {
@@ -2055,7 +2016,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                             "zoom": 1.0,
                         });
                         set_runtime_camera(&mut envelope.runtime, &camera);
-                        self.host.set_camera(envelope.runtime.camera_x, envelope.runtime.camera_y, envelope.runtime.camera_zoom);
+                        self.host.borrow_mut().set_camera(envelope.runtime.camera_x, envelope.runtime.camera_y, envelope.runtime.camera_zoom);
                         {}
                     } else {
                         {}
@@ -2070,7 +2031,7 @@ impl DocumentApp for Puzzle2dPlayApp {
                     // truth and overwrites `envelope.runtime.selected_ids` with it — mirror the new
                     // selection into the host now (as every other selection-setting arm already does)
                     // or the just-applied `select`/`brushCandidates` selection is silently reverted.
-                    self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                    self.host.borrow_mut().set_selection_ids(&envelope.runtime.selected_ids);
                 }
             }
             "lodScaleJson" => {
@@ -2079,8 +2040,8 @@ impl DocumentApp for Puzzle2dPlayApp {
             }
             _ => {}
         }
-        apply_host_events(&mut self.host, &mut envelope);
-        self.runtime = envelope.runtime;
+        apply_host_events(&mut self.host.borrow_mut(), &mut envelope);
+        *self.runtime.borrow_mut() = envelope.runtime;
         let operations = puzzle2d_document_delta_operations(&before, &envelope.fixture);
         // 🐢️ Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
         // actual document mutation (would silently desync remote clients' UI from the committed operation).
@@ -2090,9 +2051,9 @@ impl DocumentApp for Puzzle2dPlayApp {
         ActionEmit { operations, coalesce_key, effects, ui_scope, ..Default::default() }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document_json = doc.projection.0.to_string();
-        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
+        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
         let labels = puzzle2d_labels(view_state);
         match body_key {
             PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
@@ -2105,7 +2066,7 @@ impl DocumentApp for Puzzle2dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let labels = puzzle2d_labels(view_state);
         // 🪟️ One entry per live window INSTANCE of each pane kind — a split/extra instance of e.g. the
         // overview pane gets its own entry (built from the same pane's per-pane state) instead of being
@@ -2114,28 +2075,28 @@ impl DocumentApp for Puzzle2dPlayApp {
             .iter()
             .flat_map(|pane| {
                 window_instance_ids(view_state, pane).into_iter().map(|wid| {
-                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
-                    (wid, puzzle2d_engagement(&envelope, &self.host, pane, labels))
+                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
+                    (wid, puzzle2d_engagement(&envelope, &self.host.borrow(), pane, labels))
                 })
             })
             .collect()
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = puzzle2d_labels(view_state);
         PUZZLE2D_PANES
             .iter()
             .flat_map(|pane| {
                 window_instance_ids(view_state, pane).into_iter().map(|wid| {
-                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
+                    let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
                     (wid, puzzle2d_window_measures(pane, &envelope, labels))
                 })
             })
             .collect()
     }
 
-    fn tool_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
+    fn tool_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.borrow().clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
         let labels = puzzle2d_labels(view_state);
         HashMap::from([(PUZZLE2D_UTILITY_FILL.to_string(), vec![puzzle2d_fill_tool_measures(&envelope, labels)])])
     }
@@ -2143,16 +2104,16 @@ impl DocumentApp for Puzzle2dPlayApp {
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = puzzle2d_labels(view_state);
         semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
+            window_kind_labels: HashMap::from([
                 (PUZZLE2D_PANE_OVERVIEW.to_string(), labels.window_overview.to_string()),
                 (PUZZLE2D_PANE_DETAIL.to_string(), labels.window_detail.to_string()),
                 (PUZZLE2D_PANE_SELECTION.to_string(), labels.window_selection.to_string()),
             ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
+            panel_tab_labels: HashMap::new(),
+            mode_labels: HashMap::new(),
             action_labels: puzzle2d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-            utility_labels: puzzle2d_utility_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-            example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+            utility_labels: puzzle2d_utility_labels(labels),
+            example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
@@ -2166,7 +2127,7 @@ impl DocumentApp for Puzzle2dPlayApp {
 //#region 🔖️CommandLabels
 /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_puzzle2d_app`'s
 /// static manifest — mirrors `puzzle3d_action_labels`.
-fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+fn puzzle2d_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("addNode", "Add Node", "Knoten hinzufügen"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
@@ -2211,13 +2172,12 @@ fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, Stri
 }
 
 /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle2d_app`.
-fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        (PUZZLE2D_UTILITY_SELECT, "Select", "Auswählen"),
-        (PUZZLE2D_UTILITY_BRUSH, "Brush", "Pinsel"),
-        (PUZZLE2D_UTILITY_FILL, "Fill", "Füllen"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+fn puzzle2d_utility_labels(labels: &Puzzle2dLabels) -> HashMap<String, String> {
+    HashMap::from([
+        (PUZZLE2D_UTILITY_SELECT.into(), labels.select.to_string()),
+        (PUZZLE2D_UTILITY_BRUSH.into(), labels.brush.to_string()),
+        (PUZZLE2D_UTILITY_FILL.into(), labels.fill.to_string()),
+    ])
 }
 //#endregion 🔖️CommandLabels
 
@@ -2322,11 +2282,11 @@ pub fn create_puzzle2d_app() -> App {
             ])
             // 🧰️ Canvas utilities — one exclusive set, active utility host-owned (never a document operation). The
             // select/brush switcher is rendered by the framework utility bar for the interactive pane.
-            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, "Select", "mouse-pointer", UtilityCategory::Selection))
-            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, "Brush", "paintbrush", UtilityCategory::Utilities))
+            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, labels.select, "mouse-pointer", UtilityCategory::Selection))
+            .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, labels.brush, "paintbrush", UtilityCategory::Utilities))
             .window_kind_utilities(PUZZLE2D_PANE_OVERVIEW, vec![PUZZLE2D_UTILITY_SELECT.into(), PUZZLE2D_UTILITY_BRUSH.into()])
             // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
-            .tool_simple(PUZZLE2D_UTILITY_FILL, "Fill", "paint-bucket")
+            .tool_simple(PUZZLE2D_UTILITY_FILL, labels.fill, "paint-bucket")
             .mode_tools("edit", vec![ToolRef::new(PUZZLE2D_UTILITY_FILL)])
             .default_layout(create_default_layout(&[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))),
     );

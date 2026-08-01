@@ -480,7 +480,7 @@ impl DocumentApp for AnimatePresentPlayApp {
         present::default_present_deck()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
         let deck = doc.projection;
         match action {
             "setSelectedIds" => {
@@ -683,7 +683,7 @@ impl DocumentApp for AnimatePresentPlayApp {
     /// break those buttons, since `UiButtonNode` only carries actions). "Reset to Default Grid" has no
     /// existing UI wiring: it's reachable only from the footer command panel / palette, demonstrating a
     /// command that emits a real VCS-tracked operation.
-    fn handle_command(&mut self, command: &str, _args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
+    fn handle_command(&self, command: &str, _args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
         let deck = doc.projection;
         match command {
             "animate.resetGrid" => {
@@ -695,7 +695,7 @@ impl DocumentApp for AnimatePresentPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentDeck>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, PresentDeck>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let deck = doc.projection;
         let selected = &self.runtime.selected_ids;
         let labels = animate_present_labels(view_state);

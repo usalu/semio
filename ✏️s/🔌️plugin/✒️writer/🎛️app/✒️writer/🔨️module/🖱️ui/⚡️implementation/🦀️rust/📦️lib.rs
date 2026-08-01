@@ -700,7 +700,7 @@ impl DocumentApp for WriterPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<WriterPlayLabels>(view_state);
         match body_key {
@@ -712,7 +712,7 @@ impl DocumentApp for WriterPlayApp {
         }
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let settings = &self.runtime.editor_settings;
         let labels = resolve_labels::<WriterPlayLabels>(view_state);
         let engagement = WindowEngagement {
@@ -747,7 +747,7 @@ impl DocumentApp for WriterPlayApp {
         HashMap::from([(WRITER_PLAY_WINDOW_KIND.to_string(), engagement)])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let settings = &self.runtime.editor_settings;
         let labels = resolve_labels::<WriterPlayLabels>(view_state);
         let measures = vec![
@@ -817,16 +817,16 @@ impl DocumentApp for WriterPlayApp {
             .utility_labels(writer_utility_labels(is_de))
     }
 }
-//#endregion 🔖WriterPlayApp
+//#endregion 🔖️WriterPlayApp
 
-//#region 🔖Manifest
-/// 🙈 An internal document operation kept out of the command palette — editor events (text edits,
+//#region 🔖️Manifest
+/// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
 fn writer_hidden_operation(id: &str, label: &str) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
 }
 
-/// 🙈 An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
+/// 🙈️ An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
 /// that mutate only runtime scratch and emit no document operations.
 fn writer_hidden_view(id: &str, label: &str) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::View) }
@@ -878,13 +878,13 @@ pub fn create_writer_app() -> App {
                 PanelGroup::Details,
                 WRITER_PLAY_BODY_INSPECTION,
             )
-            // 🔧 Panel-visible P0 effects: format rewrites the buffer (Operation), lint re-runs
+            // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Operation), lint re-runs
             // diagnostics into runtime (View — an effect, not a document operation).
             .operation("formatDocument", "Format Document")
             .view_action("lintDocument", "Lint Document")
-            // 🔧 P1 example switch (whole-document load) with a staged example choice.
+            // 🔧️ P1 example switch (whole-document load) with a staged example choice.
             .operation("setActiveExample", "Set Active Example")
-            // 🙈 Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
+            // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
             .action_with(writer_hidden_operation("textEdit", "Edit Text"))
             .action_with(writer_hidden_operation("setText", "Set Text"))
@@ -894,7 +894,7 @@ pub fn create_writer_app() -> App {
             .action_with(writer_hidden_operation("setDocument", "Set Document"))
             .action_with(writer_hidden_operation("setDocumentJson", "Set Document JSON"))
             .action_with(writer_hidden_operation("setFixtureJson", "Set Fixture JSON"))
-            // 🙈 Internal View measures — selection, hover, AST navigation, completions, editor settings.
+            // 🙈️ Internal View measures — selection, hover, AST navigation, completions, editor settings.
             .action_with(writer_hidden_view("requestCompletions", "Request Completions"))
             .action_with(writer_hidden_view("textSelect", "Text Select"))
             .action_with(writer_hidden_view("setEditorSelection", "Set Editor Selection"))
@@ -905,7 +905,7 @@ pub fn create_writer_app() -> App {
             .action_with(writer_hidden_view("toggleLineNumbers", "Toggle Line Numbers"))
             .action_with(writer_hidden_view("setEditorSetting", "Set Editor Setting"))
             .action_with(writer_hidden_view("engagementInput", "Engagement Input"))
-            // 📝 Staged argument forms: example choice + the dev JSON setters.
+            // 📝️ Staged argument forms: example choice + the dev JSON setters.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", "Example", vec![
                     ActionArgOption::new("jack", "Jack"),
@@ -921,9 +921,9 @@ pub fn create_writer_app() -> App {
     .example("dag.jack", "Dag Jack", dag_jack_example_json())
     .workflow("writer", "Writer", "text.document")
 }
-//#endregion 🔖Manifest
+//#endregion 🔖️Manifest
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -935,7 +935,7 @@ mod tests {
 
     const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";
 
-    /// ✍ Loads the canonical jack fixture into the store, returning the app ready to exercise.
+    /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
     fn app_with_jack() -> VcsDocumentApp<WriterPlayApp> {
         let mut app = new_app::<WriterPlayApp>();
         app.handle_action("setActiveExample", Some(&json!({ "exampleId": "jack" })), &ViewState::default(), &meta("local")).expect("load jack");

@@ -2173,7 +2173,7 @@ impl DocumentApp for LowpolyPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, LowpolyProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let projection = doc.projection;
         let labels = resolve_labels::<LowpolyLabels>(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_UTILITY_DEFAULT);
@@ -2226,7 +2226,7 @@ impl DocumentApp for LowpolyPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, LowpolyProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_UTILITY_DEFAULT);
         let labels = resolve_labels::<LowpolyLabels>(view_state);
         let engagement = lowpoly_window_engagement(self.view(doc.projection), active_utility, labels);
@@ -2236,7 +2236,7 @@ impl DocumentApp for LowpolyPlayApp {
         ])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, LowpolyProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, LowpolyProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<LowpolyLabels>(view_state);
         let measures = lowpoly_window_measures(&self.runtime, labels);
         HashMap::from([

@@ -116,7 +116,7 @@ fn port_to_io(port: &GraphPortRecord) -> IoPortSpec {
 fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
     let name = record.label.clone().unwrap_or_else(|| record.id.clone());
     let abbreviation = name.chars().take(3).collect::<String>();
-    let icon = record.icon.clone().unwrap_or_else(|| "emoji:🔷".into());
+    let icon = record.icon.clone().unwrap_or_else(|| "emoji:🔷️".into());
     let x = record.x.unwrap_or(0.0);
     let y = record.y.unwrap_or(0.0);
     let width = record.width.unwrap_or(180.0);
@@ -192,10 +192,10 @@ impl NodeGraphScenePayload {
         }
     }
 }
-//#endregion 🔖ScenePayload
+//#endregion 🔖️ScenePayload
 
-//#region 🔖GraphHost
-/// 🕸 Retained generic node-graph host wrapping the DAG canvas engine.
+//#region 🔖️GraphHost
+/// 🕸️ Retained generic node-graph host wrapping the DAG canvas engine.
 pub struct GraphHost {
     pub dag: DagHost,
     pub catalogue_json: String,
@@ -359,7 +359,7 @@ impl GraphHost {
         self.dag.pick_targets_at_screen_json(sx, sy)
     }
 
-    /// @emoji 🎯 Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
+    /// @emoji 🎯️ Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
     /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
     pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
         self.dag.entity_screen_json(domain, id)
@@ -385,9 +385,9 @@ impl GraphHost {
         self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark { &ui_styling::BOARD_DARK } else { &ui_styling::BOARD_LIGHT });
     }
 }
-//#endregion 🔖GraphHost
+//#endregion 🔖️GraphHost
 
-//#region 🔖Wasm
+//#region 🔖️Wasm
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
     use super::*;
@@ -655,9 +655,9 @@ mod wasm_session {
 
 #[cfg(target_arch = "wasm32")]
 pub use wasm_session::GraphSession;
-//#endregion 🔖Wasm
+//#endregion 🔖️Wasm
 
-//#region 🔖Tests
+//#region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -695,7 +695,7 @@ mod tests {
         assert_ne!(dark_stroke.r, light_stroke.r);
     }
 
-    //#region 🔖PortHelpers
+    //#region 🔖️PortHelpers
     #[test]
     fn port_label_uses_last_at_segment_when_label_missing() {
         let port = GraphPortRecord { id: "node@channel@foo".into(), label: None, ..Default::default() };
@@ -733,9 +733,9 @@ mod tests {
         assert_eq!(spec.id, "p2");
         assert!(spec.artifact_kind.is_none());
     }
-    //#endregion 🔖PortHelpers
+    //#endregion 🔖️PortHelpers
 
-    //#region 🔖NodeRecordConversion
+    //#region 🔖️NodeRecordConversion
     #[test]
     fn node_record_to_spec_builds_app_instance_kind() {
         let record = GraphNodeRecord { id: "n1".into(), label: Some("Widget".into()), instance_id: Some("inst-1".into()), plugin_id: None, app_id: None, ..Default::default() };
@@ -764,26 +764,26 @@ mod tests {
         let spec = node_record_to_spec(&record);
         assert_eq!(spec.x, 0.0);
         assert_eq!(spec.y, 0.0);
-        assert_eq!(spec.icon, "emoji:🔷");
+        assert_eq!(spec.icon, "emoji:🔷️");
     }
 
     #[test]
     fn node_record_to_spec_falls_back_to_id_when_label_missing() {
         let record = GraphNodeRecord { id: "n4".into(), ..Default::default() };
         let spec = node_record_to_spec(&record);
-        // 🔤 Computation kind routes through `DagNodeSpec::computation`, which pascal-cases the display name.
+        // 🔤️ Computation kind routes through `DagNodeSpec::computation`, which pascal-cases the display name.
         assert_eq!(spec.name, "N4");
     }
-    //#endregion 🔖NodeRecordConversion
+    //#endregion 🔖️NodeRecordConversion
 
-    //#region 🔖FixtureFromJson
+    //#region 🔖️FixtureFromJson
     #[test]
     fn fixture_from_node_graph_json_defaults_when_inputs_blank() {
         let fixture = fixture_from_node_graph_json("", "", "").expect("fixture");
         assert_eq!(fixture.schema, "dag.fixture");
         assert!(fixture.nodes.is_empty());
         assert!(fixture.edges.is_empty());
-        // 🐛 blank viewport_json takes the `GraphViewport::default()` (derived) path, which zeroes zoom
+        // 🐛️ blank viewport_json takes the `GraphViewport::default()` (derived) path, which zeroes zoom
         // instead of using `default_zoom()` (1.0) — that helper only fires for missing-key JSON parsing.
         assert_eq!(fixture.camera.zoom, 0.0);
     }
@@ -811,9 +811,9 @@ mod tests {
         assert_eq!(fixture.camera.y, -3.0);
         assert_eq!(fixture.camera.zoom, 2.5);
     }
-    //#endregion 🔖FixtureFromJson
+    //#endregion 🔖️FixtureFromJson
 
-    //#region 🔖ScenePayloadFromJson
+    //#region 🔖️ScenePayloadFromJson
     #[test]
     fn node_graph_scene_payload_from_json_defaults_missing_fields() {
         let value = serde_json::json!({});
@@ -853,9 +853,9 @@ mod tests {
         assert_eq!(payload.capabilities_json.as_deref(), Some("cap"));
         assert_eq!(payload.fixture_json.as_deref(), Some("fix"));
     }
-    //#endregion 🔖ScenePayloadFromJson
+    //#endregion 🔖️ScenePayloadFromJson
 
-    //#region 🔖GraphHostSync
+    //#region 🔖️GraphHostSync
     fn payload_with_node(id: &str) -> NodeGraphScenePayload {
         NodeGraphScenePayload { nodes_json: format!(r#"[{{"id":"{id}","label":"A","x":0,"y":0,"outputs":[{{"id":"out"}}],"inputs":[{{"id":"in"}}]}}]"#), edges_json: "[]".into(), viewport_json: r#"{"x":0,"y":0,"zoom":1}"#.into(), ..Default::default() }
     }
@@ -886,7 +886,7 @@ mod tests {
     fn graph_host_sync_from_payload_sets_hover_channel_when_port_present() {
         let mut host = GraphHost::default();
         let mut payload = payload_with_node("a");
-        // 🔬 automatic LOD at high zoom resolves to `micro`/`detail`, which is required for
+        // 🔬️ automatic LOD at high zoom resolves to `micro`/`detail`, which is required for
         // `hover_json`'s nodeId+portId branch to hit channel-row pick instead of node-only hover.
         payload.viewport_json = r#"{"x":0,"y":0,"zoom":3}"#.into();
         payload.hover_json = Some(r#"{"nodeId":"a","portId":"out"}"#.into());

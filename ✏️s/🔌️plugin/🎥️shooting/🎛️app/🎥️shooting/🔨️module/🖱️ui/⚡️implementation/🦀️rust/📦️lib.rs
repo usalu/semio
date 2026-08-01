@@ -1353,7 +1353,7 @@ impl DocumentApp for ShootingPlayApp {
     /// implements for that action (see the module doc comment on `shooting_protocol::ShootingCommand`
     /// for exactly which actions are covered here vs. left on the legacy string-dispatch fallback).
     fn handle_typed_command(
-        &mut self,
+        &self,
         command_bytes: &[u8],
         doc: &DocumentView<'_, ShootingFixture>,
         _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
@@ -1488,7 +1488,7 @@ impl DocumentApp for ShootingPlayApp {
     }
     //#endregion 🔖️TypedChannel
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = resolve_labels::<ShootingLabels>(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_UTILITY_DEFAULT);
@@ -1502,7 +1502,7 @@ impl DocumentApp for ShootingPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, ShootingFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let labels = resolve_labels::<ShootingLabels>(view_state);
         HashMap::from([
             (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(doc.projection, &self.runtime, labels)),
@@ -1510,7 +1510,7 @@ impl DocumentApp for ShootingPlayApp {
         ])
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, doc: &DocumentView<'_, ShootingFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<ShootingLabels>(view_state);
         HashMap::from([
             (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(doc.projection, labels)),

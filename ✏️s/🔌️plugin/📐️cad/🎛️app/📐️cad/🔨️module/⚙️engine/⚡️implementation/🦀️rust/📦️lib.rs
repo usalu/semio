@@ -4,7 +4,7 @@ pub mod geometry_import {
     //! 📐️ Fixture geometry import — builds kernel handles from authored spatial.model geometry.
 
     use cad_document::{CadEdge, CadFace, CadGeometry, CadObject, CadPrimitiveSlot, CadShell, CadSolid, CadWire};
-    use kernel_3d_brepkit::{mesh_data_from_mesh_transfer, BrepkitKernel};
+    use kernel_3d_brepkit::mesh_data_from_mesh_transfer;
     use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, Vec3};
     use semio_framework_core::mesh_from_indexed;
     use semio_framework_plugin::MeshData;
@@ -157,7 +157,7 @@ pub mod geometry_import {
             if points.len() < 2 {
                 continue;
             }
-            if let Ok(handle) = kernel_3d_engine::block_on(kernel.polyline_wire(&points)) {
+            if let Ok(handle) = block_on(kernel.polyline_wire(&points)) {
                 handles.insert(wire.id.clone(), handle.0.clone());
             }
         }
@@ -166,11 +166,11 @@ pub mod geometry_import {
             if let Some(wire_id) = face.wire_ids.first() {
                 if let Some(wire_handle) = handles.get(wire_id) {
                     let wire = GeometryHandle(wire_handle.clone());
-                    if let Ok(handle) = kernel_3d_engine::block_on(kernel.planar_face_from_wire(&wire)) {
+                    if let Ok(handle) = block_on(kernel.planar_face_from_wire(&wire)) {
                         handles.insert(face.id.clone(), handle.0.clone());
                         continue;
                     }
-                    if let Ok(handle) = kernel_3d_engine::block_on(kernel.face_from_wire(&wire)) {
+                    if let Ok(handle) = block_on(kernel.face_from_wire(&wire)) {
                         handles.insert(face.id.clone(), handle.0.clone());
                         continue;
                     }
@@ -180,7 +180,7 @@ pub mod geometry_import {
             if points.len() < 3 {
                 continue;
             }
-            if let Ok(handle) = kernel_3d_engine::block_on(kernel.planar_face_from_points(&points)) {
+            if let Ok(handle) = block_on(kernel.planar_face_from_points(&points)) {
                 handles.insert(face.id.clone(), handle.0.clone());
             }
         }
@@ -195,7 +195,7 @@ pub mod geometry_import {
             if face_handles.len() < 1 {
                 continue;
             }
-            if let Ok(solid) = kernel_3d_engine::block_on(kernel.sew_faces(&face_handles, 0.01)) {
+            if let Ok(solid) = block_on(kernel.sew_faces(&face_handles, 0.01)) {
                 handles.insert(shell.id.clone(), solid.0.clone());
             }
         }
@@ -220,7 +220,7 @@ pub mod geometry_import {
             if face_handles.is_empty() {
                 continue;
             }
-            if let Ok(built) = kernel_3d_engine::block_on(kernel.sew_faces(&face_handles, 0.01)) {
+            if let Ok(built) = block_on(kernel.sew_faces(&face_handles, 0.01)) {
                 handles.insert(solid.id.clone(), built.0.clone());
             }
         }
@@ -343,7 +343,7 @@ pub mod geometry_import {
     /// 🧵️ Tessellates an object through a kernel handle when that handle is still resident.
     pub fn tessellate_object_mesh(kernel: &mut dyn BrepKernel, object: &CadObject, kind: &str) -> Option<MeshData> {
         let handle_id = object.solid_handle.as_deref()?;
-        if kernel_3d_engine::block_on(kernel.kind(&GeometryHandle(handle_id.into()))).is_err() {
+        if block_on(kernel.kind(&GeometryHandle(handle_id.into()))).is_err() {
             return None;
         }
         tessellate_geometry_handle(kernel, handle_id, kind)
@@ -430,7 +430,7 @@ pub mod geometry_import {
     ) -> CadObject {
         let extent = mesh_extent(mesh);
         let solid_handle = if mesh.indices.len() >= 3 {
-            kernel_3d_engine::block_on(kernel.import_obj(&mesh_to_obj_text(mesh), 0.01)).ok().map(|handle| handle.0)
+            block_on(kernel.import_obj(&mesh_to_obj_text(mesh), 0.01)).ok().map(|handle| handle.0)
         } else {
             None
         };
@@ -746,7 +746,7 @@ pub mod transformation {
     //! 🔄️ CAD derive-transformation engine — ports premigration `runDeriveTransformation` onto `kernel_3d_brepkit`.
 
     use cad_document::{CadObject, CadPrimitiveSlot};
-    use kernel_3d_brepkit::BrepkitKernel;
+    
     use kernel_3d_engine::{BrepKernel, GeometryHandle, Vec3};
     use std::collections::HashMap;
 
@@ -1008,7 +1008,7 @@ pub mod transformation {
             Ok(topology) => topology,
             Err(_) => return Vec::new(),
         };
-        let mut face_meta: Vec<FaceMeta> = topology
+        let face_meta: Vec<FaceMeta> = topology
             .faces
             .iter()
             .filter_map(|face| {
@@ -1248,7 +1248,7 @@ pub mod interaction {
         evaluate_expr, CadObject, CadPaneId, CadPrimitiveSlot, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot,
         ExprPathSegment, ExprPathTarget, InteractionSpec,
     };
-    use kernel_3d_brepkit::BrepkitKernel;
+    
     use kernel_3d_engine::BrepKernel;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -2081,7 +2081,7 @@ pub mod interaction {
         }
     }
 
-    fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv, vars: &HashMap<String, Value>) -> Option<Value> {
+    fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, Value>) -> Option<Value> {
         match item {
             DisplayItemSpec::Point { role, position, .. } => {
                 let position = evaluate_expr(position, env, vars);
@@ -2372,7 +2372,7 @@ pub const CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC: &str = "aec.building.structure
 
 const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/🖼️concrete-forest-reference.png";
 
-pub const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 24.0;
+pub const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 28.6;
 
 pub const CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX: f64 = 1430.0;
 
@@ -2401,7 +2401,7 @@ fn typology_brep_mesh(
         return mesh_from_kind(typology_mesh_kind(typology));
     };
     if let Some(handle_id) = solid_handle {
-        let handle = kernel_3d_engine::GeometryHandle(handle_id.into());
+        let handle = GeometryHandle(handle_id.into());
         if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
             return mesh_data_from_mesh_transfer(&mesh);
         }
@@ -2530,10 +2530,6 @@ fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadOb
     };
     let objects = objects_from_fixture_model(&mut **kernel, objects_value, &geometry);
     (objects, geometry)
-}
-
-fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadObject> {
-    cad_document_pane_bundle(source_json, model_index).0
 }
 
 fn forest_references_for_model_definitions(reference_z: f64) -> std::collections::BTreeMap<String, Vec<CadReference>> {
@@ -2752,21 +2748,21 @@ pub struct CadSolidExport {
 
 /// @emoji 📤️ Encodes `solids` through the kernel's native OBJ/STL/STEP codec for `format`; STL is
 /// base64-wrapped since it is a binary format, OBJ/STEP stay UTF-8 text.
-pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: semio_framework_plugin::OsMediaFormat, stem: &str) -> Option<CadSolidExport> {
+pub fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: OsMediaFormat, stem: &str) -> Option<CadSolidExport> {
     let filename = format!("{stem}.{}", format.as_str());
     let mime_type = format.mime_type().to_string();
     match format {
         OsMediaFormat::Obj => {
-            let text = kernel_3d_engine::block_on(kernel.export_obj(solids, 0.1)).ok()?;
+            let text = block_on(kernel.export_obj(solids, 0.1)).ok()?;
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
         }
         OsMediaFormat::Stl => {
-            let bytes = kernel_3d_engine::block_on(kernel.export_stl(solids, 0.1)).ok()?;
+            let bytes = block_on(kernel.export_stl(solids, 0.1)).ok()?;
             let encoded = base64::engine::general_purpose::STANDARD.encode(bytes);
             Some(CadSolidExport { filename, data: Value::String(encoded), mime_type, encoding: Some("base64".into()) })
         }
         OsMediaFormat::Step => {
-            let text = kernel_3d_engine::block_on(kernel.export_step(solids)).ok()?;
+            let text = block_on(kernel.export_step(solids)).ok()?;
             Some(CadSolidExport { filename, data: Value::String(text), mime_type, encoding: None })
         }
         _ => None,
@@ -2794,21 +2790,21 @@ pub fn cad_file_text_from_payload(payload: &Value) -> Option<String> {
 /// (STEP files may hold more than one shape) as a new `CadObject`.
 pub fn import_step_object(text: &str) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().lock().ok()?;
-    let handle = kernel_3d_engine::block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
+    let handle = block_on(kernel.import_step(text)).ok()?.into_iter().next()?;
     Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-step"), "Imported STEP", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊️ Imports an OBJ payload into the shared kernel as a new `CadObject`.
 pub fn import_obj_object(text: &str) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().lock().ok()?;
-    let handle = kernel_3d_engine::block_on(kernel.import_obj(text, 0.01)).ok()?;
+    let handle = block_on(kernel.import_obj(text, 0.01)).ok()?;
     Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-obj"), "Imported OBJ", "spatial.shape.imported", handle))
 }
 
 /// @emoji 🧊️ Imports an STL payload into the shared kernel as a new `CadObject`.
 pub fn import_stl_object(bytes: &[u8]) -> Option<CadObject> {
     let mut kernel = cad_brep_kernel().lock().ok()?;
-    let handle = kernel_3d_engine::block_on(kernel.import_stl(bytes, 0.01)).ok()?;
+    let handle = block_on(kernel.import_stl(bytes, 0.01)).ok()?;
     Some(cad_object_from_solid_handle(&mut **kernel, next_cad_id("object-stl"), "Imported STL", "spatial.shape.imported", handle))
 }
 
@@ -2952,7 +2948,7 @@ pub fn primary_primitive_kind(object: &CadObject) -> &str {
 pub fn object_mesh_data(object: &CadObject, geometry: Option<&CadGeometry>) -> MeshData {
     let kind = primary_primitive_kind(object);
     if let Ok(mut kernel) = cad_brep_kernel().lock() {
-        let mut mesh = geometry
+        let mesh = geometry
             .filter(|_| !object.primitives.is_empty())
             .and_then(|geometry| tessellate_object_mesh_from_fixture(&mut **kernel, object, geometry))
             .or_else(|| tessellate_object_mesh(&mut **kernel, object, kind));
@@ -3002,12 +2998,12 @@ pub fn export_mesh_from_scene(document: &CadScene) -> MeshData {
     typology_brep_mesh(typology, extent, solid_handle, centroid)
 }
 
-pub fn cad_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+pub fn cad_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     let scene: CadScene = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_scene(&scene))
 }
 
-pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<serde_json::Value, String> {
+pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
     let mut scene = default_document();
     let mut kernel = cad_brep_kernel().lock().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
     let objects: Vec<CadObject> = drawing
@@ -3032,7 +3028,7 @@ pub fn cad_document_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Resu
 
 /// @emoji 🧵️ Bridges a `MeshImporter`-decoded mesh (currently only GLB) back into a bare `CadScene`
 /// document, reusing the same OBJ-text-roundtrip kernel import as the DWG/STL/`importCadFile` paths.
-pub fn cad_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+pub fn cad_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let mut scene = default_document();
     let mut kernel = cad_brep_kernel().lock().map_err(|_| "cad brep kernel lock poisoned".to_string())?;
     let object = cad_object_from_mesh(&mut **kernel, next_cad_id("object-glb"), "Imported GLB", "spatial.shape.imported", mesh);

@@ -5484,7 +5484,7 @@ mod tests {
         let remaining_after_tick1 = host.evaluate_step(1);
         assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
         assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
-        // ⏱ Tick 2: "add" is now cached, so this reaches and computes "pass".
+        // ⏱️ Tick 2: "add" is now cached, so this reaches and computes "pass".
         let remaining_after_tick2 = host.evaluate_step(1);
         assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
         assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");
@@ -5495,21 +5495,21 @@ mod tests {
         let (mut host, _pass_id) = host_with_two_node_chain();
         let mut driver = FlowEvalDriver::default();
         assert!(!driver.pending());
-        // 🔁 Nothing changed yet — sync must not arm a chain.
+        // 🔁️ Nothing changed yet — sync must not arm a chain.
         assert!(!driver.sync(&host));
         assert!(!driver.pending());
         host.set_slider_value("slider", 12.0);
         assert!(driver.sync(&host), "a changed slider arms the chain");
         assert!(driver.pending());
         assert!(driver.computing_json().is_some_and(|json| json.contains("add")), "the immediate dependent is reported as active");
-        // 🔁 A `pending_effects`-style resync while a chain is already scheduled must not re-arm it.
+        // 🔁️ A `pending_effects`-style resync while a chain is already scheduled must not re-arm it.
         assert!(!driver.sync(&host));
         assert!(driver.tick(&mut host), "one more tick (\"pass\") is still needed");
         assert!(driver.pending());
         assert!(!driver.tick(&mut host), "the chain has converged");
         assert!(!driver.pending());
         assert_eq!(host.preview_text(), "12");
-        // 🔀 Mid-chain fixture change: arm, tick once, then supersede with a newer value before the
+        // 🔀️ Mid-chain fixture change: arm, tick once, then supersede with a newer value before the
         // chain finishes. `sync` correctly declines to arm a second chain (one is already scheduled —
         // `tick_scheduled` guards exactly this) but the in-flight chain's own ticks always re-derive
         // from the live fixture, so it still converges on the LATEST value, not the superseded one.

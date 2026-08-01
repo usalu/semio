@@ -331,7 +331,7 @@ impl DocumentApp for SourcingCurateApp {
         sourcing_engine::default_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> ActionEmit<SourcingOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, CurateDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> ActionEmit<SourcingOperation> {
         let mut document = doc.projection.clone();
         match action {
             "setDocument" => {
@@ -429,7 +429,7 @@ impl DocumentApp for SourcingCurateApp {
         ActionEmit::default()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, CurateDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<SourcingLabels>(view_state);
         match body_key {

@@ -8,6 +8,7 @@ use semio_framework_plugin::{
     AppLabelsOverlay,
 };
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use store::DocumentDsl;
 
@@ -458,12 +459,18 @@ fn render_fem2d_results_buckling(doc: &Fem2dDocument, source_id: Option<&str>, m
 /// solving is a pure function of the document. `result_display` is ephemeral view state (see
 /// `fem_shared::ResultDisplay`'s doc) — mutated by the `setResultDisplay` view action, defaulting to the
 /// first load case in `Static` mode.
-#[derive(Default)]
 pub struct Fem2dPlayApp {
-    result_display: ResultDisplay,
-    /// 🎥️ Canvas pan/zoom — session-only view state (never a VCS-tracked document field): see
-    /// `"setCamera"` in `handle_action` below.
-    camera: FemCamera,
+    result_display: RefCell<ResultDisplay>,
+  camera: RefCell<FemCamera>,
+}
+
+impl Default for Fem2dPlayApp {
+    fn default() -> Self {
+        Self {
+            result_display: RefCell::new(ResultDisplay::default()),
+            camera: RefCell::new(FemCamera::default()),
+        }
+    }
 }
 
 impl DocumentApp for Fem2dPlayApp {
@@ -484,7 +491,14 @@ impl DocumentApp for Fem2dPlayApp {
         fem2d_engine::empty_fem2d_projection()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Fem2dDocument>, _view_state: &ViewState) -> ActionEmit<fem2d_op::Fem2dOperation> {
+    fn handle_action(
+        &self,
+        action: &str,
+        args: Option<&Value>,
+        doc: &DocumentView<'_, Fem2dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<fem2d_op::Fem2dOperation> {
         match action {
             "addNode" => {
                 if let (Some(x), Some(y)) = (args.and_then(|v| v.get("x")).and_then(Value::as_f64), args.and_then(|v| v.get("y")).and_then(Value::as_f64)) {
@@ -654,11 +668,11 @@ impl DocumentApp for Fem2dPlayApp {
                     args.and_then(|v| v.get("y")).and_then(Value::as_f64),
                     args.and_then(|v| v.get("zoom")).and_then(Value::as_f64),
                 ) {
-                    self.camera = FemCamera { x, y, zoom };
+                    *self.camera.borrow_mut() = FemCamera { x, y, zoom };
                 }
             }
             "setResultDisplay" => {
-                self.result_display = parse_result_display(args);
+                *self.result_display.borrow_mut() = parse_result_display(args);
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(Value::as_str).unwrap_or("");
@@ -667,8 +681,8 @@ impl DocumentApp for Fem2dPlayApp {
                 } else {
                     fem2d_engine::empty_fem2d_projection()
                 };
-                self.result_display = ResultDisplay::default();
-                self.camera = FemCamera::default();
+                *self.result_display.borrow_mut() = ResultDisplay::default();
+                *self.camera.borrow_mut() = FemCamera::default();
                 return ActionEmit::operations(vec![fem2d_op::Fem2dOperation::SetDocument { document }]);
             }
             _ => {}
@@ -676,10 +690,16 @@ impl DocumentApp for Fem2dPlayApp {
         ActionEmit::default()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Fem2dDocument>, _view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, Fem2dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> UiNode {
         match body_key {
-            FEM2D_BODY_MODEL => render_fem2d_model(doc.projection, &self.camera),
-            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &self.result_display, &self.camera),
+            FEM2D_BODY_MODEL => render_fem2d_model(doc.projection, &*self.camera.borrow()),
+            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &*self.result_display.borrow(), &*self.camera.borrow()),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

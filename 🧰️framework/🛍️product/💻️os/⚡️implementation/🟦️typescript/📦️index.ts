@@ -1400,7 +1400,7 @@ export type AppCommandValue =
   | { readonly Configure: { readonly seq: number; readonly config: readonly number[] } }
   | { readonly Command: { readonly seq: number; readonly command: readonly number[]; readonly view_state: readonly number[] } }
   | { readonly CommandText: { readonly seq: number; readonly line: string } }
-  | { readonly RefreshUi: { readonly seq: number; readonly sections: readonly SectionProbe[] } }
+  | { readonly RefreshUi: { readonly seq: number; readonly sections: readonly SectionProbe[]; readonly view_state: readonly number[] } }
   | { readonly ContextMenu: { readonly seq: number; readonly request: readonly number[] } }
   | { readonly DocumentCommand: { readonly seq: number; readonly command: readonly number[] } }
   | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly (readonly number[])[] } }
@@ -1502,6 +1502,7 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     out.push(APP_COMMAND_TAGS.RefreshUi);
     writeVarintU64(out, cmd.RefreshUi.seq);
     writeVecSectionProbe(out, cmd.RefreshUi.sections);
+    writeBytes(out, cmd.RefreshUi.view_state);
   } else if ("ContextMenu" in cmd) {
     out.push(APP_COMMAND_TAGS.ContextMenu);
     writeVarintU64(out, cmd.ContextMenu.seq);
@@ -1572,8 +1573,12 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     }
     case APP_COMMAND_TAGS.CommandText:
       return { CommandText: { seq: readVarintU64(bytes, pos), line: readStr(bytes, pos) } };
-    case APP_COMMAND_TAGS.RefreshUi:
-      return { RefreshUi: { seq: readVarintU64(bytes, pos), sections: readVecSectionProbe(bytes, pos) } };
+    case APP_COMMAND_TAGS.RefreshUi: {
+      const seq = readVarintU64(bytes, pos);
+      const sections = readVecSectionProbe(bytes, pos);
+      const view_state = readBytes(bytes, pos);
+      return { RefreshUi: { seq, sections, view_state } };
+    }
     case APP_COMMAND_TAGS.ContextMenu:
       return { ContextMenu: { seq: readVarintU64(bytes, pos), request: readBytes(bytes, pos) } };
     case APP_COMMAND_TAGS.DocumentCommand:
@@ -1777,13 +1782,17 @@ export type AppChannelHandle = Pick<PluginWasmHandle, "exchange">;
  */
 export class AppChannelClient {
   private seq = 0;
+  private readonly handle: AppChannelHandle;
+  private readonly instanceId: number;
+  private readonly appId: string;
+  private readonly actor: string;
 
-  constructor(
-    private readonly handle: AppChannelHandle,
-    private readonly instanceId: number,
-    private readonly appId: string,
-    private readonly actor: string = "local",
-  ) {}
+  constructor(handle: AppChannelHandle, instanceId: number, appId: string, actor: string = "local") {
+    this.handle = handle;
+    this.instanceId = instanceId;
+    this.appId = appId;
+    this.actor = actor;
+  }
 
   private nextSeq(): number {
     this.seq += 1;
@@ -1817,8 +1826,10 @@ export class AppChannelClient {
   }
 
   /** 🔄️ Cache-probed UI section refresh — one `UiSection` frame per section whose `hash` changed. */
-  async refreshUi(sections: readonly SectionProbe[]): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ RefreshUi: { seq: this.nextSeq(), sections } });
+  async refreshUi(sections: readonly SectionProbe[], viewState: unknown = {}): Promise<AppFrameValue[]> {
+    return this.exchangeOne({
+      RefreshUi: { seq: this.nextSeq(), sections, view_state: Array.from(encodePackValue(viewState)) },
+    });
   }
 
   async configure(config: unknown): Promise<AppFrameValue[]> {
@@ -2088,7 +2099,7 @@ if (import.meta.vitest) {
       { Configure: { seq: 1, config: [4, 5] } },
       { Command: { seq: 2, command: [1], view_state: [2, 3] } },
       { CommandText: { seq: 3, line: "move 1 2" } },
-      { RefreshUi: { seq: 4, sections: [{ kind: 1, key: "panel-a", hash: 42 }, { kind: 2, key: "panel-b", hash: null }] } },
+      { RefreshUi: { seq: 4, sections: [{ kind: 1, key: "panel-a", hash: 42 }, { kind: 2, key: "panel-b", hash: null }], view_state: [] } },
       { ContextMenu: { seq: 5, request: [9, 9] } },
       { DocumentCommand: { seq: 6, command: [7] } },
       { ApplyEnvelopes: { seq: 7, envelopes: [[1, 2], [3, 4, 5], []] } },
@@ -2155,7 +2166,7 @@ if (import.meta.vitest) {
         ["Configure", { Configure: { seq: 1, config: [9] } }],
         ["Command", { Command: { seq: 1, command: [1], view_state: [2] } }],
         ["CommandText", { CommandText: { seq: 1, line: "go" } }],
-        ["RefreshUi", { RefreshUi: { seq: 1, sections: [{ kind: 1, key: "a", hash: 1 }] } }],
+        ["RefreshUi", { RefreshUi: { seq: 1, sections: [{ kind: 1, key: "a", hash: 1 }], view_state: [] } }],
         ["ContextMenu", { ContextMenu: { seq: 1, request: [1] } }],
         ["DocumentCommand", { DocumentCommand: { seq: 1, command: [1] } }],
         ["ApplyEnvelopes", { ApplyEnvelopes: { seq: 1, envelopes: [] } }],
@@ -2173,7 +2184,7 @@ if (import.meta.vitest) {
         Configure: "01010109",
         Command: "020101010102",
         CommandText: "030102676f",
-        RefreshUi: "0401010101610101",
+        RefreshUi: "040101010161010100",
         ContextMenu: "05010101",
         DocumentCommand: "06010101",
         ApplyEnvelopes: "070100",
@@ -2280,7 +2291,7 @@ if (import.meta.vitest) {
       await client.configure({ locale: "en" });
       await client.readDocument();
       await client.loadDocument(new Uint8Array([1]), new Uint8Array([2]));
-      expect(seen[0]).toEqual({ RefreshUi: { seq: 1, sections: [{ kind: 1, key: "panel-a", hash: null }] } });
+      expect(seen[0]).toEqual({ RefreshUi: { seq: 1, sections: [{ kind: 1, key: "panel-a", hash: null }], view_state: [] } });
       expect(seen[1]).toEqual({ Configure: { seq: 2, config: Array.from(encodePackValue({ locale: "en" })) } });
       expect(seen[2]).toEqual({ ReadDocument: { seq: 3 } });
       expect(seen[3]).toEqual({ LoadDocument: { seq: 4, pack: [1], spr: [2] } });

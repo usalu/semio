@@ -1,7 +1,6 @@
 //! 📜️ Note app — textual document grammar surface + laws (constitutional: dsl).
 
-use note::{NoteBlockNode, NoteDocument, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
-use std::collections::BTreeMap;
+use note::NoteDocument;
 
 /// 📄️ The `semio` example document, handcrafted in the `.note` DSL.
 pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🗒️note/📚️example/🗒️semio.note");

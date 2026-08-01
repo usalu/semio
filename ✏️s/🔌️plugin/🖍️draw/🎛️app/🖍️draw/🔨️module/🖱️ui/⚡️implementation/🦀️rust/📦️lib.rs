@@ -1960,7 +1960,7 @@ impl DocumentApp for DrawPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, DrawDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, DrawDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let interaction = &self.interaction;
         let labels = resolve_labels::<DrawPlayLabels>(view_state);

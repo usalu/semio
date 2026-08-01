@@ -71,7 +71,7 @@ macro_rules! define_norm_family_app {
                     Document::default()
                 }
 
-                fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> ActionEmit<Self::Operation> {
+                fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Self::Projection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<Self::Operation> {
                     match action {
                         "setDocument" => {
                             if let Some(next) = args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<Document>(value.clone()).ok()) {
@@ -86,7 +86,7 @@ macro_rules! define_norm_family_app {
                     ActionEmit::default()
                 }
 
-                fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> UiNode {
+                fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
                     let host = NormHost::<Family>::from_document(doc.projection.clone());
                     match body_key {
                         BODY_INPUTS => render_document_json(&doc.projection),

@@ -3,7 +3,7 @@
   "emoji": "\ud83e\uddca",
   "status": "open",
   "description": "Get procedural 3d working end to end. Latest: SelectionSet migration broke procedural-3d-ui (merge_world_selection_ids).",
-  "summary": "Restored procedural 3d after workspace rename regression. Fixed getWorkspaceRoot (\"compose\"\u2192\"workspace\"), UiTreeNode selected_ids/highlighted_ids initializers + Default, PanelTreeBuilder build stamp, and CAD engine Cargo path to math-graph-dsl. Verified :6018 e2e: title semio \u00b7 procedural \u00b7 3d, Flow+Preview, 3 canvases, no render errors.",
+  "summary": "Restored procedural 3d after SelectionSet/DocumentApp regression. Migrated selected_node_ids to SelectionSet, wrapped procedural 2d/3d runtime in RefCell for &self DocumentApp, fixed pending_effects/render cfg params, rewrote AppChannelClient without TS parameter properties. Verified :6018 e2e ok.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2403"
   },

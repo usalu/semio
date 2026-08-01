@@ -1,6 +1,6 @@
 //! 📦️ Trinity Rewrite app — binary document surface + laws (constitutional: pack).
 
-use rewrite::{LayoutPoint, RewriteRuleState};
+use rewrite::RewriteRuleState;
 use store::PackError;
 
 /// 📦️ Encodes a `RewriteRuleState` to its binary pack form.

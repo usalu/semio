@@ -768,7 +768,7 @@ impl DocumentApp for Process3dPlayApp {
         default_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Process3dDocument>, view_state: &ViewState) -> ActionEmit<Process3dOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> ActionEmit<Process3dOperation> {
         match action {
             "setDocument" => {
                 if let Some(document_value) = args.and_then(|value| value.get("document")) {
@@ -1033,7 +1033,7 @@ impl DocumentApp for Process3dPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Process3dDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let labels = resolve_labels::<Process3dLabels>(view_state);
         match body_key {
             PROCESS_3D_PLAY_BODY_MAIN => {
@@ -1057,7 +1057,7 @@ impl DocumentApp for Process3dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Process3dDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), process3d_engagement(doc.projection, &self.runtime, process3d_active_utility(view_state), resolve_labels::<Process3dLabels>(view_state)))])
     }
 
@@ -1070,7 +1070,7 @@ impl DocumentApp for Process3dPlayApp {
             .utility_labels(localized_label_map(is_de, PROCESS3D_UTILITY_LABEL_ENTRIES))
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, Process3dDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, Process3dDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::from([(PROCESS_3D_PLAY_WINDOW_MAIN.into(), vec![world3d_sun_measures("process3d", &self.runtime.sun, process3d_action)])])
     }
 }

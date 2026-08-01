@@ -1,7 +1,6 @@
 //! 📜️ Trinity Rewrite app — textual document grammar surface + laws (constitutional: dsl).
 
-use rewrite::{LayoutPoint, RewriteRuleState};
-use store::DocumentDsl;
+use rewrite::RewriteRuleState;
 
 /// 📄️ The bundled Nakagin `label-core` rewrite rule, handcrafted in the `.rewrite` DSL — mirrors the
 /// `trinity-rewrite` app's own real default rule (`default_rule_state`/`DEFAULT_LHS_JSON`/

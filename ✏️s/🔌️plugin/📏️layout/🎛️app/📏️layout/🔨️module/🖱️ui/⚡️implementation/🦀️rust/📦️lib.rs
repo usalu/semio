@@ -1729,7 +1729,7 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = layout_labels(view_state);
         match body_key {
@@ -1743,7 +1743,7 @@ impl DocumentApp for LayoutPlayApp {
         }
     }
 
-    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let labels = layout_labels(view_state);
         HashMap::from([
             (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&self.runtime, "blueprint", labels)),
@@ -1764,10 +1764,10 @@ impl DocumentApp for LayoutPlayApp {
             .example_labels(HashMap::from([("sample".to_string(), (if is_de { "Beispiel" } else { "Sample" }).to_string())]))
     }
 }
-//#endregion 🔖LayoutPlayApp
+//#endregion 🔖️LayoutPlayApp
 
-//#region 🔖Manifest
-/// 🛠 An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
+//#region 🔖️Manifest
+/// 🛠️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
 fn layout_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
@@ -1818,7 +1818,7 @@ pub fn create_layout_app() -> App {
                 PanelGroup::Details,
                 LAYOUT_PLAY_BODY_INSPECTION,
             )
-            // ✏ Palette-visible content commands — dispatched as VCS operations with a true inverse.
+            // ✏️ Palette-visible content commands — dispatched as VCS operations with a true inverse.
             .operation("addFrame", "Add Frame")
             .operation("addPage", "Add Page")
             .action_args("addFrame", vec![
@@ -1830,16 +1830,16 @@ pub fn create_layout_app() -> App {
                 ActionArgDef::number("x", "X"),
                 ActionArgDef::number("y", "Y"),
             ])
-            // 🐚 Palette-visible shell exports — round-trip through the host.
+            // 🐚️ Palette-visible shell exports — round-trip through the host.
             .shell_action("exportPng", "Export Png")
             .shell_action("exportSvg", "Export Svg")
             .shell_action("exportPdf", "Export Pdf")
             .shell_action("exportPackage", "Export Package")
-            // 🔧 Internal document operations — inspector/DnD-bound, not palette commands.
+            // 🔧️ Internal document operations — inspector/DnD-bound, not palette commands.
             .action_with(layout_internal_action("patchPage", "Patch Page", ActionKind::Operation))
             .action_with(layout_internal_action("patchFrame", "Patch Frame", ActionKind::Operation))
             .action_with(layout_internal_action("canvasDrop", "Canvas Drop", ActionKind::Operation))
-            // 👁 Ephemeral view state — selection, hover, active page, drop ghost, pointer, camera, engagement draft.
+            // 👁️ Ephemeral view state — selection, hover, active page, drop ghost, pointer, camera, engagement draft.
             .action_with(layout_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(layout_internal_action("setActivePage", "Set Active Page", ActionKind::View))
             .action_with(layout_internal_action("setHover", "Set Hover", ActionKind::View))
@@ -1851,9 +1851,9 @@ pub fn create_layout_app() -> App {
             .action_with(layout_internal_action("canvasDragOver", "Canvas Drag Over", ActionKind::View))
             .action_with(layout_internal_action("canvasDragLeave", "Canvas Drag Leave", ActionKind::View))
             .action_with(layout_internal_action("setCamera", "Set Camera", ActionKind::View))
-            // 🐚 Engagement submit — routes typed export intents through the host, emits only shell effects.
+            // 🐚️ Engagement submit — routes typed export intents through the host, emits only shell effects.
             .action_with(layout_internal_action("engagementSubmit", "Engagement Submit", ActionKind::Shell))
-            // 📇 Per-window action scoping — the content-authoring operations only make sense on the
+            // 📇️ Per-window action scoping — the content-authoring operations only make sense on the
             // interactive Blueprint surface; the read-only Preview surface renders output and never
             // creates or edits frames/pages. Exports, camera, pointer/drag, selection and hover are
             // surface-discriminated (via `surfaceId`) or global, so they stay unscoped orphans and
@@ -1865,9 +1865,9 @@ pub fn create_layout_app() -> App {
     .example("sample", "Sample", layout_engine::layout_sample_document_json())
     .workflow("layout", "Layout", "layout")
 }
-//#endregion 🔖Manifest
+//#endregion 🔖️Manifest
 
-//#region 🔖WasmSession
+//#region 🔖️WasmSession
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
     // #region wasm_session
@@ -2107,9 +2107,9 @@ mod wasm_session {
 
 #[cfg(target_arch = "wasm32")]
 pub use wasm_session::LayoutSession;
-//#endregion 🔖WasmSession
+//#endregion 🔖️WasmSession
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2467,7 +2467,7 @@ mod tests {
     #[test]
     fn canvas_drop_adds_frame_at_world_coords() {
         let mut app = testkit::new_app::<LayoutPlayApp>();
-        // 👁 Camera pose is now runtime-default (see `LayoutCamera::default`), not a document field —
+        // 👁️ Camera pose is now runtime-default (see `LayoutCamera::default`), not a document field —
         // the screen point is computed against that same default (x=0 y=0 zoom=1.0), not the app's
         // former fixture-authored zoom=0.5.
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);

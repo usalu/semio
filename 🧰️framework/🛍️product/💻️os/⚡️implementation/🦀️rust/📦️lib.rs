@@ -2316,7 +2316,7 @@ pub mod host_runtime {
         host.close(document_id);
     }
 
-    /// @emoji 👥 Translates a `DocumentEvent::Presence` into the `ViewState.presence_peers_json` contract
+    /// @emoji 👥️ Translates a `DocumentEvent::Presence` into the `ViewState.presence_peers_json` contract
     /// plugins already read (`semio_framework_core::PresencePeer` → JSON array) — the new (only) source
     /// of presence data; the deleted `presence:` backbone hack used to be it.
     pub fn presence_peers_json(event: &DocumentEvent) -> Option<String> {
@@ -2360,7 +2360,7 @@ pub mod host_runtime {
 
 pub mod instance {
     // #region instance
-    //! 📦 App instance schemas, parameters, and studio bindings.
+    //! 📦️ App instance schemas, parameters, and studio bindings.
 
     use semio_framework_core::{ConfigFieldShape, ConfigSpec};
     use serde::{Deserialize, Serialize};
@@ -2371,8 +2371,8 @@ pub mod instance {
 
     pub const OS_PARAMETER_PORT_PREFIX: &str = "param.";
 
-    //#region 🔖Schemas
-    /// @emoji 🔗 Handle to an app's own `framework/sync`-hosted vcs document — the os document never
+    //#region 🔖️Schemas
+    /// @emoji 🔗️ Handle to an app's own `framework/sync`-hosted vcs document — the os document never
     /// embeds app content, only this reference (mirrors `framework/sync`'s `DocumentActorConfig`).
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
@@ -2841,9 +2841,9 @@ pub mod instance {
             })
             .collect()
     }
-    //#endregion 🔖Materialize
+    //#endregion 🔖️Materialize
 
-    //#region 🧪Tests
+    //#region 🧪️Tests
     #[cfg(test)]
     mod tests {
         use super::*;
@@ -2872,8 +2872,8 @@ pub mod instance {
 
         #[test]
         fn resolves_fixture_json_by_slug() {
-            register_os_fixture_json("🖍semio.draw.json", r#"{"schema":"draw.document","id":"semio"}"#);
-            let json = os_fixture_json("🖍semio.draw.json").expect("registered fixture");
+            register_os_fixture_json("🖍️semio.draw.json", r#"{"schema":"draw.document","id":"semio"}"#);
+            let json = os_fixture_json("🖍️semio.draw.json").expect("registered fixture");
             let parsed: Value = serde_json::from_str(&json).expect("json");
             assert_eq!(parsed["schema"], "draw.document");
             assert_eq!(parsed["id"], "semio");
@@ -2943,13 +2943,13 @@ pub mod instance {
             assert_eq!(config["mode"], "A");
         }
     }
-    //#endregion 🧪Tests
+    //#endregion 🧪️Tests
     // #endregion instance
 }
 
 pub mod media_export_raster {
     // #region media_export_raster
-    //! 🖼 SVG rasterization, DWG flattening, and media-export registration helpers.
+    //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
     use crate::workflow::{register_os_media_export_handler, register_os_media_import_handler, OsMediaExportResult, OsMediaFormat};
     use base64::Engine;
@@ -2959,7 +2959,7 @@ pub mod media_export_raster {
     use std::collections::HashMap;
     use std::sync::{Mutex, OnceLock};
 
-    /// @emoji 🖼 Rasterizes SVG markup to a base64-encoded PNG payload.
+    /// @emoji 🖼️ Rasterizes SVG markup to a base64-encoded PNG payload.
     pub fn rasterize_svg_to_png_base64(svg: &str, width: u32, height: u32) -> Result<String, String> {
         let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).map_err(|error| error.to_string())?;
         let size = tree.size();
@@ -2985,7 +2985,7 @@ pub mod media_export_raster {
         Ok(bytes)
     }
 
-    /// @emoji 📐 Flattens SVG markup into a DWG drawing by walking usvg path geometry into layered polylines.
+    /// @emoji 📐️ Flattens SVG markup into a DWG drawing by walking usvg path geometry into layered polylines.
     pub fn svg_to_dwg_bytes(svg: &str) -> Result<Vec<u8>, String> {
         let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).map_err(|error| error.to_string())?;
         let mut drawing = DwgDrawing::default();
@@ -3077,7 +3077,7 @@ pub mod media_export_raster {
         *closed = false;
     }
 
-    /// @emoji 📐 Renders a DWG drawing back to flat SVG markup (lines and closed polygons), for the raster import path.
+    /// @emoji 📐️ Renders a DWG drawing back to flat SVG markup (lines and closed polygons), for the raster import path.
     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
         let width = (drawing.extmax[0] - drawing.extmin[0]).max(1.0).ceil() as u32;
         let height = (drawing.extmax[1] - drawing.extmin[1]).max(1.0).ceil() as u32;
@@ -3101,10 +3101,10 @@ pub mod media_export_raster {
         Ok((svg, width, height))
     }
 
-    /// @emoji 🧷 Signature every 2D-resource-kind SVG document renderer must match to register via {@link register_2d_export_handlers}.
+    /// @emoji 🧷️ Signature every 2D-resource-kind SVG document renderer must match to register via {@link register_2d_export_handlers}.
     pub type Svg2dDocumentRenderer = fn(&Value) -> Result<(String, u32, u32), String>;
 
-    /// @emoji 💾 Registers SVG, PNG, and DWG export handlers for one 2D resource kind.
+    /// @emoji 💾️ Registers SVG, PNG, and DWG export handlers for one 2D resource kind.
     pub fn register_2d_export_handlers(artifact_kind: &'static str, file_stem: &'static str, document_to_svg: Svg2dDocumentRenderer) {
         register_os_media_export_handler(artifact_kind, OsMediaFormat::Svg, move |doc| {
             let (svg, _width, _height) = document_to_svg(doc)?;
@@ -3237,20 +3237,20 @@ pub mod media_export_simple {
         value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
     }
 
-    /// @emoji 🖼 Wraps SVG body markup with explicit dimensions.
+    /// @emoji 🖼️ Wraps SVG body markup with explicit dimensions.
     pub fn wrap_svg(width: u32, height: u32, body: &str) -> (String, u32, u32) {
         let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{body}</svg>"#);
         (svg, width, height)
     }
 
-    /// @emoji 🏷 Builds a title-card SVG from a document JSON value.
+    /// @emoji 🏷️ Builds a title-card SVG from a document JSON value.
     pub fn title_card_svg(value: &Value, label: &str, width: u32, height: u32) -> Result<(String, u32, u32), String> {
         let title = value.get("title").and_then(|entry| entry.as_str()).or_else(|| value.get("id").and_then(|entry| entry.as_str())).unwrap_or(label);
         let body = format!("<rect width=\"100%\" height=\"100%\" fill=\"white\"/><text x=\"32\" y=\"64\" font-size=\"32\" fill=\"#111827\">{}</text>", escape_svg_text(title));
         Ok(wrap_svg(width, height, &body))
     }
 
-    /// @emoji 📄 Serializes page-like rectangles from a `pages` array.
+    /// @emoji 📄️ Serializes page-like rectangles from a `pages` array.
     pub fn pages_rects_svg(value: &Value, fallback_label: &str) -> Result<(String, u32, u32), String> {
         let pages = value.get("pages").and_then(|entry| entry.as_array()).cloned().unwrap_or_default();
         if pages.is_empty() {
@@ -3271,7 +3271,7 @@ pub mod media_export_simple {
         Ok(wrap_svg(max_x.max(1.0).round() as u32, max_y.max(1.0).round() as u32, &body))
     }
 
-    /// @emoji 🗺 Serializes point features from common GIS fixture fields.
+    /// @emoji 🗺️ Serializes point features from common GIS fixture fields.
     pub fn map_points_svg(value: &Value, fallback_label: &str) -> Result<(String, u32, u32), String> {
         let positions = value.get("positions").or_else(|| value.get("points")).and_then(|entry| entry.as_array()).cloned().unwrap_or_default();
         if positions.is_empty() {
@@ -3313,7 +3313,7 @@ pub mod media_export_simple {
 
 pub mod workflow {
     // #region workflow
-    //! 🎬 Workflow, VFS projection types, and media export registry.
+    //! 🎬️ Workflow, VFS projection types, and media export registry.
 
     pub use workflow::workflow_node_for_app;
 
@@ -3331,7 +3331,7 @@ pub mod workflow {
     pub const OS_WORKFLOW_VFS_ROOT_ID: &str = "os-workflow-root";
     pub const OS_MEDIA_FLOW_MODULE_ID: &str = "os-media";
 
-    //#region 🔖Workflow
+    //#region 🔖️Workflow
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct OsMediaPort {
@@ -3353,8 +3353,8 @@ pub mod workflow {
         pub outputs: Vec<OsMediaPort>,
     }
 
-    //#region 🔖MediaContract
-    /// 🤝 A connect-time negotiated wire contract between two `OsMediaPort`s — produced by
+    //#region 🔖️MediaContract
+    /// 🤝️ A connect-time negotiated wire contract between two `OsMediaPort`s — produced by
     /// `negotiate_media_contract` and stored on `OsWorkflowEdge` so later passes (`validate_workflow`,
     /// merge reconciliation) can re-check it without re-resolving the artifact registry. `kind_id`/`media_type`
     /// describe the *accepted* (target) side — see `semio_framework_core::media_types_compatible`.
@@ -3367,7 +3367,7 @@ pub mod workflow {
         pub conversion: Option<(MediaForm, MediaForm)>,
     }
 
-    /// @emoji 🤝 Negotiates the wire contract for connecting `source_port` (a producer/output) to
+    /// @emoji 🤝️ Negotiates the wire contract for connecting `source_port` (a producer/output) to
     /// `target_port` (a consumer/input): resolves each port's `OsArtifactDescriptor` from the resource
     /// registry, checks `media_types_compatible`, and picks a shared wire format. `Err` means the connect
     /// must be rejected outright (see the `s::plugin` connect handlers).
@@ -4865,7 +4865,7 @@ pub mod workflow {
             let paths = workflow_fixture_dsl_paths();
             for dsl_path in &paths {
                 let file_name = dsl_path.file_name().and_then(|name| name.to_str()).unwrap_or_default();
-                let spk_name = if file_name.starts_with('🗣') { file_name.replacen('🗣', "📦", 1).replace(".dsl", ".spk") } else { file_name.replace(".dsl", ".spk") };
+                let spk_name = if file_name.starts_with('🗣️') { file_name.replacen('🗣️', "📦️", 1).replace(".dsl", ".spk") } else { file_name.replace(".dsl", ".spk") };
                 let spk_path = dsl_path.with_file_name(spk_name);
                 let dsl_text = std::fs::read_to_string(dsl_path).unwrap_or_else(|error| panic!("read {dsl_path:?}: {error}"));
                 let spk_bytes = std::fs::read(&spk_path).unwrap_or_else(|error| panic!("read {spk_path:?}: {error}"));

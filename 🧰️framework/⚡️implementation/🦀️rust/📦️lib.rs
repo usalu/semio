@@ -2546,7 +2546,7 @@ fn bulge_to_segment(from: [f64; 2], to: [f64; 2], bulge: f64) -> DwgPathSegment 
     DwgPathSegment::Arc { rx: radius, ry: radius, rotation: 0.0, large_arc: included_angle.abs() > std::f64::consts::PI, sweep: bulge > 0.0, to }
 }
 
-/// ✏ Converts flattened path segments to dwg entities: line/close runs to lwpolylines with bulge arcs, curves to splines.
+/// ✏️ Converts flattened path segments to dwg entities: line/close runs to lwpolylines with bulge arcs, curves to splines.
 pub fn paths_to_dwg_drawing(paths: &[Vec<DwgPathSegment>]) -> DwgDrawing {
     let mut drawing = DwgDrawing::default();
     let layer = drawing.ensure_layer("0");
@@ -2632,7 +2632,7 @@ pub fn paths_to_dwg_drawing(paths: &[Vec<DwgPathSegment>]) -> DwgDrawing {
     drawing
 }
 
-/// ✏ Converts drawing entities back to path segments, one path per entity.
+/// ✏️ Converts drawing entities back to path segments, one path per entity.
 pub fn dwg_drawing_to_paths(drawing: &DwgDrawing) -> Vec<Vec<DwgPathSegment>> {
     let mut paths = Vec::new();
     for entity in &drawing.entities {
@@ -2701,10 +2701,10 @@ mod tests {
         assert_eq!(decoded.indices.len(), mesh.indices.len());
     }
 
-    /// 🏙 Puzzle GLBs may start with non-triangle guide geometry before their renderable surfaces.
+    /// 🏙️ Puzzle GLBs may start with non-triangle guide geometry before their renderable surfaces.
     #[test]
     fn glb_import_collects_triangle_primitives_after_guides() {
-        let decoded = mesh_from_glb(include_bytes!("../../../🧰framework/🔨module/🖼asset/⚡implementation/🟦typescript/🌱metabolism/🎨representation/🧊capsule_J.glb")).expect("decode Puzzle GLB");
+        let decoded = mesh_from_glb(include_bytes!("../../../🧰️framework/🔨️module/🖼️asset/⚡️implementation/🟦️typescript/🌱️metabolism/🎨️representation/🧊️capsule_J.glb")).expect("decode Puzzle GLB");
         assert_eq!(decoded.vertex_count(), 1472);
         assert_eq!(decoded.triangle_count(), 1750);
         assert!(decoded.indices.iter().all(|index| (*index as usize) < decoded.vertex_count()));
@@ -2729,7 +2729,7 @@ mod tests {
         assert_eq!(decoded.positions.len(), mesh.triangle_count() * 9);
     }
 
-    /// 🔺 Small shared-vertex tetrahedron fixture (4 verts, 4 triangles) used by the format round-trip tests below — small enough to assert exact positions/indices, but with enough shared vertices to exercise indexed (not per-face-duplicated) geometry.
+    /// 🔺️ Small shared-vertex tetrahedron fixture (4 verts, 4 triangles) used by the format round-trip tests below — small enough to assert exact positions/indices, but with enough shared vertices to exercise indexed (not per-face-duplicated) geometry.
     fn tetra_mesh_fixture() -> MeshData {
         let mut mesh = MeshData {
             positions: vec![
@@ -3154,7 +3154,7 @@ mod tests {
 
 pub mod platform {
 // #region platform
-//! 🖥 Root shell: apps, URI chrome, panel toggles, and shared action bus.
+//! 🖥️ Root shell: apps, URI chrome, panel toggles, and shared action bus.
 
 use crate::action_bus::ActionBus;
 use crate::ui::AppDefinition;
@@ -3404,7 +3404,7 @@ mod tests {
 
 pub mod ui {
 // #region ui
-//! 🧩 App manifest (`AppDefinition`/`ModeDefinition`/`WindowKindDefinition`/`PluginManifest`/`ViewState`)
+//! 🧩️ App manifest (`AppDefinition`/`ModeDefinition`/`WindowKindDefinition`/`PluginManifest`/`ViewState`)
 //! and kernel types shared by plugins and renderers; the declarative `UiNode` component model itself
 //! lives in `ui_wgpu`'s `component` region.
 
@@ -6906,7 +6906,7 @@ mod app_document_tests {
         );
     }
 
-    //#region 🔖ActionArgsAndUtilitiesTests
+    //#region 🔖️ActionArgsAndUtilitiesTests
     use crate::ui::{
         app_window_document_label, child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args,
         resolve_app_document, resolve_layout_for_mode, resolve_mode_tools,
@@ -7406,7 +7406,7 @@ mod app_document_tests {
             let round: IntroductionPoint = serde_json::from_str(&json).unwrap();
             assert_eq!(round, point);
         }
-        // 🏷 "*" (any-entity wildcard) must round-trip byte-for-byte, not get normalized away.
+        // 🏷️ "*" (any-entity wildcard) must round-trip byte-for-byte, not get normalized away.
         let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex");
         let json = serde_json::to_string(&wildcard).unwrap();
         assert!(json.contains("\"entity\":\"*\""), "{json}");
@@ -7440,7 +7440,7 @@ mod app_document_tests {
             assert_eq!(round, gesture);
         }
 
-        // 🐢 `rename_all` on an enum renames only the variant tag, not fields *within* a struct variant —
+        // 🐢️ `rename_all` on an enum renames only the variant tag, not fields *within* a struct variant —
         // `rename_all_fields` is required too, or this field would silently serialize snake_case
         // (`delta_y`) and desync from the generated TS type's camelCase `deltaY` (see `UiDirtyScope`).
         let scroll_json = serde_json::to_string(&IntroductionGesture::Scroll { at, delta_y: 100.0 }).unwrap();

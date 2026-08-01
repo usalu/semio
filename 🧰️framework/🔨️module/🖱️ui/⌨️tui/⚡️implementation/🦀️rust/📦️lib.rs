@@ -466,7 +466,7 @@ pub mod ansi {
         "\x1b[?1049h\x1b[?25l\x1b[?1002h\x1b[?1006h\x1b[?2004h\x1b[2J"
     }
 
-    /// 🚪 Restores the primary screen and default modes.
+    /// 🚪️ Restores the primary screen and default modes.
     pub fn teardown_sequence() -> &'static str {
         "\x1b[?2004l\x1b[?1006l\x1b[?1002l\x1b[?25h\x1b[?1049l\x1b[0m"
     }
@@ -1482,7 +1482,7 @@ pub mod widget {
 
     /// 🗂️ A semio-styled table: bold muted header with a hairline underline, hairline row
     /// separators, no vertical rules, no striping — mirrors `ui/js/react`'s `Table` and
-    /// `print/tex/🖋semio-table.sty`. Tree rows are plain indented rows in the same table.
+    /// `print/tex/🖋️semio-table.sty`. Tree rows are plain indented rows in the same table.
     pub struct TableState {
         pub columns: Vec<TableColumn>,
         pub rows: Vec<TableRow>,
@@ -1494,7 +1494,7 @@ pub mod widget {
             Self { columns, rows, selected: 0 }
         }
 
-        /// 👁 Row indices in display order, skipping any row nested under a collapsed ancestor.
+        /// 👁️ Row indices in display order, skipping any row nested under a collapsed ancestor.
         pub fn visible_indices(&self) -> Vec<usize> {
             let mut out = Vec::new();
             let mut collapsed_from: Option<u16> = None;
@@ -1513,9 +1513,9 @@ pub mod widget {
             out
         }
     }
-    //#endregion 🔖Table
+    //#endregion 🔖️Table
 
-    /// 🧩 The concrete state of any core widget.
+    /// 🧩️ The concrete state of any core widget.
     pub enum WidgetState {
         Label(LabelState),
         List(ListState),
@@ -1542,7 +1542,7 @@ pub mod widget {
             }
         }
 
-        /// ⌨ Handles one key press, returning a signal when it changes visible state.
+        /// ⌨️ Handles one key press, returning a signal when it changes visible state.
         pub fn on_key(&mut self, ev: &KeyEvent) -> Option<WidgetSignal> {
             match self {
                 WidgetState::List(l) => list_on_key(l, ev),
@@ -1558,7 +1558,7 @@ pub mod widget {
             }
         }
 
-        /// 🖌 Paints this widget's content into `rect` of `buf`.
+        /// 🖌️ Paints this widget's content into `rect` of `buf`.
         pub fn paint(&self, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
             match self {
                 WidgetState::Label(l) => paint_label(l, theme, rect, buf),
@@ -2054,7 +2054,7 @@ pub mod chrome {
     const WINDOW_CONTROLS_MAXIMIZE_OFFSET: u16 = 1;
     const WINDOW_CONTROLS_CLOSE_OFFSET: u16 = 3;
 
-    /// 🪟 One 2-row tab recessed into a top corner of the window: `x` is its own left-wall column,
+    /// 🪟️ One 2-row tab recessed into a top corner of the window: `x` is its own left-wall column,
     /// `interior` is the padded text between its walls (the tab is `interior_width + 2` cells wide).
     struct WindowTab {
         x: u16,
@@ -2068,7 +2068,7 @@ pub mod chrome {
         controls: Option<WindowTab>,
     }
 
-    /// 📐 Shared by paint and click hit-testing so the two can never drift apart. The title tab's own
+    /// 📐️ Shared by paint and click hit-testing so the two can never drift apart. The title tab's own
     /// left wall is the window's left wall; the controls tab's own right wall is the window's right
     /// wall — both 2 rows tall, each bending down into the main body's top edge one row below.
     fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
@@ -3360,9 +3360,9 @@ mod tests {
             ]
         );
     }
-    //#endregion 🔖Ansi
+    //#endregion 🔖️Ansi
 
-    //#region 🔖Scene
+    //#region 🔖️Scene
     #[test]
     fn scene_node_mut_setters_update_content_and_visibility() {
         let mut scene = Scene::new();
@@ -3419,9 +3419,9 @@ mod tests {
         scene.remove(a);
         scene.node(a);
     }
-    //#endregion 🔖Scene
+    //#endregion 🔖️Scene
 
-    //#region 🔖Layout
+    //#region 🔖️Layout
     #[test]
     fn layout_column_direction_stacks_children_vertically() {
         let mut scene = Scene::new();
@@ -3452,9 +3452,9 @@ mod tests {
         assert_eq!(widths.iter().sum::<u16>(), 10);
         assert_eq!(widths[0], 4, "equal fractional remainders are broken by original order");
     }
-    //#endregion 🔖Layout
+    //#endregion 🔖️Layout
 
-    //#region 🔖Widget
+    //#region 🔖️Widget
     #[test]
     fn list_on_key_boundaries_toggle_and_activate() {
         let mut widget = WidgetState::List(ListState::new(vec!["a".to_string(), "b".to_string()]));

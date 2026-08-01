@@ -5183,7 +5183,7 @@ thread_local! {
     /// 1 scope: a destroyed instance id is never reused within one plugin's lifetime today).
     static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
     /// 🪟️ Per-instance last-seen `ViewState`, updated by every `AppCommand::Command` and read back by
-    /// `AppCommand::RefreshUi`/`AppCommand::DocumentCommand` (neither carries its own `ViewState` on
+    /// `AppCommand::RefreshUi`/`AppCommand::DocumentCommand` (`RefreshUi` carries `view_state`; DocumentCommand still
     /// the new channel) — see `plugin_exchange`'s doc comment for this Wave 1 scoping.
     static INSTANCE_VIEW_STATES: RefCell<std::collections::HashMap<u32, ViewState>> = RefCell::new(std::collections::HashMap::new());
 }
@@ -5209,6 +5209,21 @@ fn set_instance_view_state(instance_id: u32, view_state: ViewState) {
 fn instance_view_state(instance_id: u32) -> ViewState {
     INSTANCE_VIEW_STATES.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_default()
 }
+
+/// 🗣️ Decodes a packed `ViewState` payload (empty → default) and records it for `instance_id`.
+fn adopt_instance_view_state(instance_id: u32, view_state_bytes: &[u8]) -> ViewState {
+    let view_state = if view_state_bytes.is_empty() {
+        ViewState::default()
+    } else {
+        store::pack_rt::decode_wire_value(view_state_bytes)
+            .ok()
+            .and_then(|value| serde_json::from_value::<ViewState>(value).ok())
+            .unwrap_or_default()
+    };
+    set_instance_view_state(instance_id, view_state.clone());
+    view_state
+}
+
 
 struct InstanceGuard;
 
@@ -5814,8 +5829,8 @@ fn push_invocation_side_frames(frames: &mut Vec<protocol::AppFrame>, seq: u64, r
 /// (`Error{code:"unsupported"}`, a later wave wires real headless op-text scripts);
 /// `AppCommand::DocumentCommand` only accepts the six history verbs (`DOCUMENT_COMMAND_ACTION_IDS`),
 /// mapped onto the existing magic action-name interception rather than a real typed
-/// `store::DocumentCommand` wire codec; `AppCommand::RefreshUi` has no `view_state` field of its own —
-/// it renders against the last `ViewState` seen on an `AppCommand::Command` for this instance (via
+/// `store::DocumentCommand` wire codec; `AppCommand::RefreshUi` carries a packed `view_state` so first-paint
+/// labels/locale resolve correctly before any `AppCommand::Command` has been seen (via
 /// `instance_view_state`), defaulting to `ViewState::default()` before any `Command` has been
 /// processed; the unsolicited outbox (backbone-driven `AppFrame::DocumentChanged`, a persistent
 /// per-instance frame queue surviving across calls) is NOT implemented — only `pending_effects` is
@@ -5861,8 +5876,8 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                     Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "config".into(), message }),
                 }
             }
-            protocol::AppCommand::Command { seq, command } => {
-                let view_state = instance_view_state(instance_id);
+            protocol::AppCommand::Command { seq, command, view_state } => {
+                let view_state = adopt_instance_view_state(instance_id, &view_state);
                 let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
                 let dispatched = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
@@ -5883,8 +5898,8 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 // 🚧️ Wave 1 stub — see this function's doc comment.
                 frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "unsupported".into(), message: "CommandText not yet wired".into() });
             }
-            protocol::AppCommand::RefreshUi { seq, sections } => {
-                let view_state = instance_view_state(instance_id);
+            protocol::AppCommand::RefreshUi { seq, sections, view_state } => {
+                let view_state = adopt_instance_view_state(instance_id, &view_state);
                 let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
                 let manifest = plugin_manifest();
                 let outcome = with_instances_mut(|list| {

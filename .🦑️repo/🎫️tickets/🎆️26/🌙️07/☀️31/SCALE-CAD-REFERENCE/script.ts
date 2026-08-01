@@ -13,6 +13,6 @@ const width = number("CAD_FOREST_REFERENCE_WIDTH_WORLD");
 const imageWidth = number("CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX");
 const imageHeight = number("CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX");
 const origin = [-24 + width * 0.5, -18 + (width * imageHeight) / imageWidth * 0.5];
-if (width !== 24 || origin[0] !== -12) throw new Error(`unexpected reference scale ${JSON.stringify({ width, origin })}`);
+if (width !== 28.6 || Math.abs(origin[0] - -9.7) > Number.EPSILON) throw new Error(`unexpected reference scale ${JSON.stringify({ width, origin })}`);
 console.log(`[DEBUG] CAD reference width=${width}, anchored center=(${origin[0]}, ${origin[1]})`);
 //#endregion 🔖️ReferenceScale

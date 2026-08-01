@@ -942,7 +942,7 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, GraphFixture>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, GraphFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = resolve_labels::<TrinityJackLabels>(view_state);
         match body_key {
@@ -956,7 +956,7 @@ impl DocumentApp for TrinityJackPlayApp {
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let mode = self
             .runtime
             .lod_mode_by_window

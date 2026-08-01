@@ -21,6 +21,7 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::VecDeque;
 use store::DocumentDsl;
 
@@ -701,32 +702,33 @@ fn remodel_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 
 #[derive(Default)]
 pub struct RemodelPlayApp {
-    runtime: RemodelPlayRuntime,
+    runtime: RefCell<RemodelPlayRuntime>,
 }
 
 impl RemodelPlayApp {
     //#region 🔖️Ingestion
-    fn handle_import_frames(&mut self) -> ActionEmit<RemodelOperation> {
+    fn handle_import_frames(&self) -> ActionEmit<RemodelOperation> {
         ActionEmit::effect(HostEffect::RequestFileOpen { accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true })
     }
 
-    fn handle_import_frame_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+    fn handle_import_frame_payload(&self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         let Some(payload) = arg_str(args, "payload") else { return ActionEmit::default() };
         let Some((mime, bytes)) = payload_from_data_url(payload) else { return ActionEmit::default() };
         if mime.starts_with("video/") {
             return self.handle_import_video_bytes_payload(args, doc);
         }
+        let mut runtime = self.runtime.borrow_mut();
         let name = arg_str(args, "name").unwrap_or("frame").to_string();
         let index = args.and_then(|value| value.get("index")).and_then(Value::as_u64).unwrap_or(0);
 
-        let stream_id = if index == 0 || self.runtime.active_stream_id.is_none() {
-            self.runtime.stream_counter += 1;
-            self.runtime.import_counter += 1;
-            let id = format!("stream-{}", self.runtime.stream_counter);
-            self.runtime.active_stream_id = Some(id.clone());
+        let stream_id = if index == 0 || runtime.active_stream_id.is_none() {
+            runtime.stream_counter += 1;
+            runtime.import_counter += 1;
+            let id = format!("stream-{}", runtime.stream_counter);
+            runtime.active_stream_id = Some(id.clone());
             id
         } else {
-            self.runtime.active_stream_id.clone().unwrap_or_default()
+            runtime.active_stream_id.clone().unwrap_or_default()
         };
 
         let (width, height) = decode_still_image(&mime, &bytes).map_or((0, 0), |image| (image.width, image.height));
@@ -752,10 +754,10 @@ impl RemodelPlayApp {
                 });
             }
         }
-        ActionEmit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{}", self.runtime.import_counter))
+        ActionEmit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{}", runtime.import_counter))
     }
 
-    fn handle_import_video(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+    fn handle_import_video(&self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         let ingest = &doc.projection.params.ingest;
         ActionEmit::effect(HostEffect::RequestMediaFrames {
             accept: REMODEL_VIDEO_ACCEPT.into(),
@@ -773,7 +775,8 @@ impl RemodelPlayApp {
 
     /// 🎞️ Host-decoded video frame tick (Tier 1/2 `RequestMediaFrames` frame dispatch): decodes the
     /// sampled JPEG, runs it through the relative blur gate, and amends it into the active stream.
-    fn handle_import_video_frame_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+    fn handle_import_video_frame_payload(&self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+        let mut runtime = self.runtime.borrow_mut();
         let Some(payload) = arg_str(args, "payload") else { return ActionEmit::default() };
         let Some((_mime, bytes)) = payload_from_data_url(payload) else { return ActionEmit::default() };
         let Ok(image) = remodel_image::decode_jpeg(&bytes) else { return ActionEmit::default() };
@@ -782,17 +785,17 @@ impl RemodelPlayApp {
         let timestamp_ms = args.and_then(|value| value.get("timestampMs")).and_then(Value::as_f64).unwrap_or(0.0);
         let name = arg_str(args, "name").unwrap_or("video").to_string();
 
-        if index == 0 || self.runtime.active_stream_id.is_none() {
-            self.runtime.stream_counter += 1;
-            self.runtime.import_counter += 1;
-            self.runtime.active_stream_id = Some(format!("stream-{}", self.runtime.stream_counter));
-            self.runtime.active_video_import = Some(VideoImportScratch::default());
+        if index == 0 || runtime.active_stream_id.is_none() {
+            runtime.stream_counter += 1;
+            runtime.import_counter += 1;
+            runtime.active_stream_id = Some(format!("stream-{}", runtime.stream_counter));
+            runtime.active_video_import = Some(VideoImportScratch::default());
         }
-        let stream_id = self.runtime.active_stream_id.clone().unwrap_or_default();
+        let stream_id = runtime.active_stream_id.clone().unwrap_or_default();
 
         let score = local_sharpness_score(&image);
         let min_sharpness = doc.projection.params.ingest.min_sharpness;
-        let scratch = self.runtime.active_video_import.get_or_insert_with(VideoImportScratch::default);
+        let scratch = runtime.active_video_import.get_or_insert_with(VideoImportScratch::default);
         if blur_gate_reject(scratch, score, min_sharpness) {
             return ActionEmit::default();
         }
@@ -816,23 +819,24 @@ impl RemodelPlayApp {
                 source: None,
             }),
         }
-        ActionEmit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{}", self.runtime.import_counter))
+        ActionEmit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{}", runtime.import_counter))
     }
 
     /// ✅️ Host-decoded video import finished: writes `VideoSource` provenance on the just-imported
     /// stream. Uses the SAME coalesce key as every preceding `importVideoFramePayload` tick, so the
     /// whole import (every accepted frame plus this final metadata write) collapses into one undo step.
-    fn handle_import_video_done(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
-        let Some(stream_id) = self.runtime.active_stream_id.clone() else { return ActionEmit::default() };
+    fn handle_import_video_done(&self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+        let mut runtime = self.runtime.borrow_mut();
+        let Some(stream_id) = runtime.active_stream_id.clone() else { return ActionEmit::default() };
         let name = arg_str(args, "name").unwrap_or("video").to_string();
         let duration_ms = args.and_then(|value| value.get("durationMs")).and_then(Value::as_f64).unwrap_or(0.0);
         let frame_count = args.and_then(|value| value.get("frameCount")).and_then(Value::as_u64).unwrap_or(0) as u32;
         let width = args.and_then(|value| value.get("width")).and_then(Value::as_u64).unwrap_or(0) as u32;
         let height = args.and_then(|value| value.get("height")).and_then(Value::as_u64).unwrap_or(0) as u32;
         let codec = remodel_app_engine::video_codec_from_label(arg_str(args, "codec").unwrap_or("unknown"));
-        let import_counter = self.runtime.import_counter;
-        self.runtime.active_stream_id = None;
-        self.runtime.active_video_import = None;
+        let import_counter = runtime.import_counter;
+        runtime.active_stream_id = None;
+        runtime.active_video_import = None;
         let mut streams = doc.projection.streams.clone();
         let Some(stream) = streams.iter_mut().find(|stream| stream.id == stream_id) else { return ActionEmit::default() };
         stream.source = Some(VideoSource { name, container: "unknown".into(), codec, duration_ms, frame_count, width, height });
@@ -848,7 +852,8 @@ impl RemodelPlayApp {
     /// self-referential storage — a documented simplification, not a correctness gap (the whole batch
     /// still collapses into one amended undo step). An undecodable codec surfaces as a `Notify` naming
     /// it, with provenance from the probe.
-    fn handle_import_video_bytes_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+    fn handle_import_video_bytes_payload(&self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+        let mut runtime = self.runtime.borrow_mut();
         let Some(payload) = arg_str(args, "payload") else { return ActionEmit::default() };
         let Some((_mime, bytes)) = payload_from_data_url(payload) else { return ActionEmit::default() };
         let probe = match remodel_video::probe(&bytes) {
@@ -863,9 +868,9 @@ impl RemodelPlayApp {
             Err(error) => return ActionEmit::effect(HostEffect::Notify { message: format!("Unsupported video codec ({codec:?}): {error} - probed {container} {width}x{height}") }),
         };
 
-        self.runtime.stream_counter += 1;
-        self.runtime.import_counter += 1;
-        let stream_id = format!("stream-{}", self.runtime.stream_counter);
+        runtime.stream_counter += 1;
+        runtime.import_counter += 1;
+        let stream_id = format!("stream-{}", runtime.stream_counter);
         let name = arg_str(args, "name").unwrap_or("video").to_string();
         let min_sharpness = ingest.min_sharpness;
         let mut scratch = VideoImportScratch::default();
@@ -894,7 +899,7 @@ impl RemodelPlayApp {
             source: Some(VideoSource { name: String::new(), container: container.into(), codec: remodel_app_engine::video_codec_to_document(codec), duration_ms, frame_count: 0, width, height }),
         });
         operations.push(RemodelOperation::SetStreams { streams });
-        ActionEmit::amend(operations, format!("remodel-import:{}", self.runtime.import_counter))
+        ActionEmit::amend(operations, format!("remodel-import:{}", runtime.import_counter))
     }
     //#endregion 🔖️Ingestion
 
@@ -903,8 +908,9 @@ impl RemodelPlayApp {
     /// stream's already-persisted frames into it (video streams are, by the time they reach this
     /// document, already an image sequence with true timestamps — see `remodel`'s own doc comment — so
     /// both `MediaKind` variants push identically), and schedules the first `advanceReconstruction` tick.
-    fn handle_run_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
-        if self.runtime.engine.is_some() {
+    fn handle_run_reconstruction(&self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+        let mut runtime = self.runtime.borrow_mut();
+        if runtime.engine.is_some() {
             return ActionEmit::default(); // a run is already in progress
         }
         let engine_params = remodel_app_engine::build_engine_params(&doc.projection.params);
@@ -923,9 +929,9 @@ impl RemodelPlayApp {
         if pushed < 2 {
             return ActionEmit::default(); // fewer than 2 accepted frames: too little to reconstruct from
         }
-        self.runtime.job_counter += 1;
-        let job_id = format!("job-{}", self.runtime.job_counter);
-        self.runtime.engine = Some(engine);
+        runtime.job_counter += 1;
+        let job_id = format!("job-{}", runtime.job_counter);
+        runtime.engine = Some(engine);
         let job = ReconstructionJob { id: job_id.clone(), stage: ReconstructionStage::Ingesting, progress_0_1: 0.0, cancel_requested: false, stage_cursor: 0, started_at_ms: None, error: None, camera_poses_preview: Vec::new(), sparse_point_cloud_preview: PackedF32::default() };
         ActionEmit { operations: vec![RemodelOperation::SetJob { job }], coalesce_key: Some(format!("remodel-reconstruction:{job_id}")), effects: vec![HostEffect::DispatchAction { action: "advanceReconstruction".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() }
     }
@@ -939,8 +945,9 @@ impl RemodelPlayApp {
     /// collapse into exactly one undo step — using `ActionEmit::commit` on the terminal tick instead
     /// would start a brand-new `Apply`-based edit and defeat that contract (verified directly by
     /// `full_run_collapses_into_a_single_undo_step` below).
-    fn handle_advance_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
-        if self.runtime.engine.is_none() {
+    fn handle_advance_reconstruction(&self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+        let mut runtime = self.runtime.borrow_mut();
+        if runtime.engine.is_none() {
             return ActionEmit::default();
         }
         let job_id = doc.projection.job.id.clone();
@@ -949,17 +956,17 @@ impl RemodelPlayApp {
         }
         let coalesce_key = format!("remodel-reconstruction:{job_id}");
         if doc.projection.job.cancel_requested {
-            self.runtime.engine = None;
+            runtime.engine = None;
             let mut job = doc.projection.job.clone();
             job.stage = ReconstructionStage::Idle;
             job.cancel_requested = false;
             job.error = Some("Cancelled by user".into());
             return ActionEmit::amend(vec![RemodelOperation::SetJob { job }], coalesce_key);
         }
-        let engine = self.runtime.engine.as_mut().expect("checked above");
+        let engine = runtime.engine.as_mut().expect("checked above");
         match engine.advance(RECONSTRUCTION_STEP_BUDGET) {
             remodel_engine::EngineStatus::Working { stage, progress } => {
-                let preview = self.runtime.engine.as_ref().expect("engine present").sparse_preview();
+                let preview = runtime.engine.as_ref().expect("engine present").sparse_preview();
                 let mut job = doc.projection.job.clone();
                 job.stage = remodel_app_engine::map_engine_stage(stage);
                 job.progress_0_1 = progress;
@@ -970,7 +977,7 @@ impl RemodelPlayApp {
             }
             remodel_engine::EngineStatus::Done => {
                 let accepted_count = engine.frame_source().accepted_count();
-                let mut engine = self.runtime.engine.take().expect("checked above");
+                let mut engine = runtime.engine.take().expect("checked above");
                 let preview = engine.sparse_preview();
                 let quality = engine.take_quality();
                 let mesh_data = engine.take_mesh();
@@ -1016,7 +1023,7 @@ impl RemodelPlayApp {
                 ActionEmit::amend(operations, coalesce_key)
             }
             remodel_engine::EngineStatus::Failed(message) => {
-                self.runtime.engine = None;
+                runtime.engine = None;
                 let mut job = doc.projection.job.clone();
                 job.stage = ReconstructionStage::Failed;
                 job.error = Some(message);
@@ -1025,8 +1032,9 @@ impl RemodelPlayApp {
         }
     }
 
-    fn handle_cancel_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
-        if self.runtime.engine.is_none() {
+    fn handle_cancel_reconstruction(&self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+        let runtime = self.runtime.borrow_mut();
+        if runtime.engine.is_none() {
             return ActionEmit::default();
         }
         let mut job = doc.projection.job.clone();
@@ -1040,7 +1048,7 @@ impl RemodelPlayApp {
     /// program oversight. `retryStage`/`runStage` therefore both start a brand-new full run, exactly like
     /// `runReconstruction`; `runStage`'s `stage` arg is accepted but currently has no effect beyond that
     /// — a documented scope-down.
-    fn handle_retry_or_run_stage(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
+    fn handle_retry_or_run_stage(&self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         self.handle_run_reconstruction(doc)
     }
     //#endregion 🔖️StagedReconstruction
@@ -1065,54 +1073,59 @@ impl DocumentApp for RemodelPlayApp {
         default_remodel_scene()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>, _view_state: &ViewState) -> ActionEmit<RemodelOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<RemodelOperation> {
         match action {
             //#region 🔖️ViewActions
             SET_ACTIVE_UTILITY_ACTION_ID => ActionEmit::default(),
             "setSelection" => {
+                let mut runtime = self.runtime.borrow_mut();
                 if let Some(mode) = arg_str(args, "mode") {
-                    self.runtime.selection.mode = mode.into();
+                    runtime.selection.mode = mode.into();
                 }
-                self.runtime.selection.ids = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+                runtime.selection.ids = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 ActionEmit::default()
             }
             "setCamera" => {
+                let mut runtime = self.runtime.borrow_mut();
                 if let Some(position) = args.and_then(|value| value.get("position")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()) {
-                    self.runtime.camera.position = position;
+                    runtime.camera.position = position;
                 }
                 if let Some(target) = args.and_then(|value| value.get("target")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok()) {
-                    self.runtime.camera.target = target;
+                    runtime.camera.target = target;
                 }
                 if let Some(fov) = arg_f64(args, "fov") {
-                    self.runtime.camera.fov = fov;
+                    runtime.camera.fov = fov;
                 }
                 ActionEmit::default()
             }
             "setLayerVisibility" => {
+                let mut runtime = self.runtime.borrow_mut();
                 if let (Some(layer), Some(visible)) = (arg_str(args, "layer"), arg_bool(args, "visible")) {
                     match layer {
-                        "mesh" => self.runtime.layers.mesh = visible,
-                        "dense" => self.runtime.layers.dense = visible,
-                        "sparse" => self.runtime.layers.sparse = visible,
-                        "cameras" => self.runtime.layers.cameras = visible,
-                        "gcps" => self.runtime.layers.gcps = visible,
+                        "mesh" => runtime.layers.mesh = visible,
+                        "dense" => runtime.layers.dense = visible,
+                        "sparse" => runtime.layers.sparse = visible,
+                        "cameras" => runtime.layers.cameras = visible,
+                        "gcps" => runtime.layers.gcps = visible,
                         _ => {}
                     }
                 }
                 ActionEmit::default()
             }
             "setFrameCursor" => {
+                let mut runtime = self.runtime.borrow_mut();
                 if let Some(stream_id) = arg_str(args, "streamId") {
-                    self.runtime.frame_cursor.stream_id = Some(stream_id.into());
+                    runtime.frame_cursor.stream_id = Some(stream_id.into());
                 }
                 if let Some(frame_index) = arg_u32(args, "frameIndex") {
-                    self.runtime.frame_cursor.frame_index = frame_index;
+                    runtime.frame_cursor.frame_index = frame_index;
                 }
                 ActionEmit::default()
             }
             "setReportTable" => {
+                let mut runtime = self.runtime.borrow_mut();
                 if let Some(table) = arg_str(args, "table") {
-                    self.runtime.report_table = table.into();
+                    runtime.report_table = table.into();
                 }
                 ActionEmit::default()
             }
@@ -1126,11 +1139,12 @@ impl DocumentApp for RemodelPlayApp {
             "importVideoDone" => self.handle_import_video_done(args, doc),
             "importVideoBytesPayload" => self.handle_import_video_bytes_payload(args, doc),
             "addStream" => {
+                let mut runtime = self.runtime.borrow_mut();
                 let name = arg_str(args, "name").unwrap_or("Stream").to_string();
                 let kind = if arg_str(args, "kind") == Some("video") { MediaKind::Video } else { MediaKind::ImageSequence };
                 let camera_id = arg_str(args, "cameraId").map(str::to_string);
-                self.runtime.stream_counter += 1;
-                let id = format!("stream-{}", self.runtime.stream_counter);
+                runtime.stream_counter += 1;
+                let id = format!("stream-{}", runtime.stream_counter);
                 let mut streams = doc.projection.streams.clone();
                 streams.push(MediaStream { id, name, kind, camera_id, sync_offset_ms: 0.0, fps_hint: 30.0, frames: Vec::new(), source: None });
                 ActionEmit::operations(vec![RemodelOperation::SetStreams { streams }])
@@ -1207,11 +1221,12 @@ impl DocumentApp for RemodelPlayApp {
                 ActionEmit::operations(vec![RemodelOperation::SetCalibration { calibration }])
             }
             "addGcp" => {
+                let mut runtime = self.runtime.borrow_mut();
                 let name = arg_str(args, "name").unwrap_or("GCP").to_string();
                 let world_position = [arg_f64(args, "worldX").unwrap_or(0.0), arg_f64(args, "worldY").unwrap_or(0.0), arg_f64(args, "worldZ").unwrap_or(0.0)];
-                self.runtime.gcp_counter += 1;
+                runtime.gcp_counter += 1;
                 let mut gcps = doc.projection.gcps.clone();
-                gcps.push(GroundControlPoint { id: format!("gcp-{}", self.runtime.gcp_counter), name, world_position, observations: Vec::new() });
+                gcps.push(GroundControlPoint { id: format!("gcp-{}", runtime.gcp_counter), name, world_position, observations: Vec::new() });
                 ActionEmit::operations(vec![RemodelOperation::SetGcps { gcps }])
             }
             "removeGcp" => {
@@ -1360,32 +1375,33 @@ impl DocumentApp for RemodelPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RemodelScene>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, RemodelScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let scene = doc.projection;
+        let runtime = self.runtime.borrow();
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(REMODEL_DEFAULT_UTILITY);
         let labels = remodel_labels(view_state);
         match body_key {
             REMODEL_PLAY_BODY_MAIN => {
                 let mut world_scene = world3d_scene(
-                    world3d_camera_json(self.runtime.camera.position, self.runtime.camera.target, self.runtime.camera.fov),
+                    world3d_camera_json(runtime.camera.position, runtime.camera.target, runtime.camera.fov),
                     world_meshes_json(scene),
-                    world_instances_json(&self.runtime),
-                    world3d_selection_json(&self.runtime.selection.mode, &[], None),
+                    world_instances_json(&runtime),
+                    world3d_selection_json(&runtime.selection.mode, &[], None),
                     &WorldSunConfig::default(),
                 );
-                world_scene.points_json = world_points_json(scene, &self.runtime);
+                world_scene.points_json = world_points_json(scene, &runtime);
                 build_world_3d_scene(REMODEL_PLAY_SURFACE_MAIN, REMODEL_PLAY_APP_ID, world_scene)
             }
             REMODEL_PLAY_BODY_FRAMES => {
-                let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &self.runtime.frame_cursor) };
+                let scene_2d = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: frames_layers_json(scene, &runtime.frame_cursor) };
                 build_canvas_2d_scene(REMODEL_PLAY_SURFACE_FRAMES, REMODEL_PLAY_APP_ID, scene_2d)
             }
             REMODEL_PLAY_BODY_REPORT => {
-                let (columns_json, rows_json) = report_table_json(scene, &self.runtime.report_table);
+                let (columns_json, rows_json) = report_table_json(scene, &runtime.report_table);
                 build_table_scene(REMODEL_PLAY_SURFACE_REPORT, REMODEL_PLAY_APP_ID, TableScene::base(columns_json, rows_json))
             }
             REMODEL_PLAY_BODY_MEDIA => build_media_panel(scene, labels),
-            REMODEL_PLAY_BODY_PIPELINE => build_pipeline_panel(scene, &self.runtime, active_utility, labels),
+            REMODEL_PLAY_BODY_PIPELINE => build_pipeline_panel(scene, &runtime, active_utility, labels),
             REMODEL_PLAY_BODY_RESULTS => build_results_panel(scene, labels),
             REMODEL_PLAY_BODY_PARAMETERS => build_parameters_panel(scene, labels),
             REMODEL_PLAY_BODY_CALIBRATION => build_calibration_panel(scene, labels),
@@ -1422,8 +1438,9 @@ impl DocumentApp for RemodelPlayApp {
     /// reflect the LIVE `self.runtime.layers` state (not a manifest-frozen snapshot), so it is supplied
     /// here rather than via `AppBuilder::window_kind_measures` (a static, build-once declaration — see
     /// `lowpoly-plugin`'s `world3d_sun_measures`/`window_measures` for the identical pattern this mirrors).
-    fn window_measures(&self, _doc: &DocumentView<'_, RemodelScene>, view_state: &ViewState) -> std::collections::HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
-        std::collections::HashMap::from([(REMODEL_PLAY_WINDOW_MAIN.to_string(), vec![remodel_layer_measures(&self.runtime.layers, remodel_labels(view_state))])])
+    fn window_measures(&self, _doc: &DocumentView<'_, RemodelScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> std::collections::HashMap<String, Vec<semio_framework_plugin::WindowMeasure>> {
+        let runtime = self.runtime.borrow();
+        std::collections::HashMap::from([(REMODEL_PLAY_WINDOW_MAIN.to_string(), vec![remodel_layer_measures(&runtime.layers, remodel_labels(view_state))])])
     }
 }
 

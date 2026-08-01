@@ -241,7 +241,7 @@ impl DocumentApp for ImperativePlayApp {
         default_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ImperativeDocument>, _view_state: &ViewState) -> ActionEmit<ImperativeOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<ImperativeOperation> {
         let document = doc.projection;
         match action {
             "setSelection" => {
@@ -301,7 +301,7 @@ impl DocumentApp for ImperativePlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<ImperativeLabels>(view_state);
         match body_key {

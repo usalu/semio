@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 2;
+pub const CHANNEL_VERSION: u32 = 3;
 //#endregion 🔖️Version
 
 //#region 🔖️SectionProbe
@@ -48,6 +48,8 @@ pub enum AppCommand {
     Command {
         seq: u64,
         command: Vec<u8>,
+        /// 🗣️ Packed `ViewState` (see `store::pack_rt`) the client wants this command evaluated against.
+        view_state: Vec<u8>,
     },
     CommandText {
         seq: u64,
@@ -56,6 +58,9 @@ pub enum AppCommand {
     RefreshUi {
         seq: u64,
         sections: Vec<SectionProbe>,
+        /// 🗣️ Packed `ViewState` for this refresh — locale/terminology/active-utility must arrive before any
+        /// Command, otherwise first-paint `app_labels` resolve against `ViewState::default()`.
+        view_state: Vec<u8>,
     },
     ContextMenu {
         seq: u64,
@@ -285,20 +290,22 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_bytes(&mut out, command);
         }
-        AppCommand::Command { seq, command } => {
+        AppCommand::Command { seq, command, view_state } => {
             out.push(2);
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_bytes(&mut out, command);
+            protocol_core::write_bytes(&mut out, view_state);
         }
         AppCommand::CommandText { seq, line } => {
             out.push(3);
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_str(&mut out, line);
         }
-        AppCommand::RefreshUi { seq, sections } => {
+        AppCommand::RefreshUi { seq, sections, view_state } => {
             out.push(4);
             protocol_core::write_varint_u64(&mut out, *seq);
             write_vec_section_probe(&mut out, sections);
+            protocol_core::write_bytes(&mut out, view_state);
         }
         AppCommand::ContextMenu { seq, request } => {
             out.push(5);
@@ -382,9 +389,14 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, protocol_core::Pro
         2 => AppCommand::Command {
             seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
             command: protocol_core::read_bytes(bytes, &mut pos)?,
+            view_state: protocol_core::read_bytes(bytes, &mut pos)?,
         },
         3 => AppCommand::CommandText { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, line: protocol_core::read_str(bytes, &mut pos)? },
-        4 => AppCommand::RefreshUi { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, sections: read_vec_section_probe(bytes, &mut pos)? },
+        4 => AppCommand::RefreshUi {
+            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
+            sections: read_vec_section_probe(bytes, &mut pos)?,
+            view_state: protocol_core::read_bytes(bytes, &mut pos)?,
+        },
         5 => AppCommand::ContextMenu { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, request: protocol_core::read_bytes(bytes, &mut pos)? },
         6 => AppCommand::DocumentCommand { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, command: protocol_core::read_bytes(bytes, &mut pos)? },
         7 => AppCommand::ApplyEnvelopes { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
@@ -616,7 +628,7 @@ mod tests {
 
     #[test]
     fn app_command_command_round_trips() {
-        assert_command_round_trips(&AppCommand::Command { seq: 2, command: vec![1, 2] });
+        assert_command_round_trips(&AppCommand::Command { seq: 2, command: vec![1, 2], view_state: vec![] });
     }
 
     #[test]
@@ -629,6 +641,7 @@ mod tests {
         assert_command_round_trips(&AppCommand::RefreshUi {
             seq: 4,
             sections: vec![SectionProbe { kind: 1, key: "outline".to_string(), hash: Some(42) }, SectionProbe { kind: 2, key: "inspector".to_string(), hash: None }],
+            view_state: vec![],
         });
     }
 
@@ -794,7 +807,7 @@ mod tests {
     //#region 🔖️Codec
     #[test]
     fn encoding_is_deterministic() {
-        let command = AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }] };
+        let command = AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }], view_state: vec![] };
         assert_eq!(encode_app_command(&command), encode_app_command(&command));
 
         let frame = AppFrame::Error { in_reply_to: Some(1), code: "e".to_string(), message: "m".to_string() };
@@ -868,9 +881,9 @@ mod tests {
         vec![
             ("Hello", AppCommand::Hello { channel_version: CHANNEL_VERSION, app_id: "app".to_string(), actor: "actor".to_string(), config: vec![1, 2] }),
             ("ConfigCommand", AppCommand::ConfigCommand { seq: 1, command: vec![9] }),
-            ("Command", AppCommand::Command { seq: 1, command: vec![1] }),
+            ("Command", AppCommand::Command { seq: 1, command: vec![1], view_state: vec![] }),
             ("CommandText", AppCommand::CommandText { seq: 1, line: "go".to_string() }),
-            ("RefreshUi", AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }] }),
+            ("RefreshUi", AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }], view_state: vec![] }),
             ("ContextMenu", AppCommand::ContextMenu { seq: 1, request: vec![1] }),
             ("DocumentCommand", AppCommand::DocumentCommand { seq: 1, command: vec![1] }),
             ("ApplyEnvelopes", AppCommand::ApplyEnvelopes { seq: 1, envelopes: Vec::new() }),
@@ -913,11 +926,11 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000203617070056163746f72020102",
+            "Hello" => "000303617070056163746f72020102",
             "ConfigCommand" => "01010109",
-            "Command" => "02010101",
+            "Command" => "0201010100",
             "CommandText" => "030102676f",
-            "RefreshUi" => "0401010101610101",
+            "RefreshUi" => "040101010161010100",
             "ContextMenu" => "05010101",
             "DocumentCommand" => "06010101",
             "ApplyEnvelopes" => "070100",
@@ -939,7 +952,7 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0002010101",
+            "Welcome" => "0003010101",
             "Done" => "0101",
             "Invocation" => "0201010100",
             "UiSection" => "03010101016b0100",

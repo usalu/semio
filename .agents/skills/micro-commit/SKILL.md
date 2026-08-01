@@ -108,7 +108,7 @@ Signed-off-by: Name <email@example.com>
 
 ## Script (deterministic)
 
-Counter (from formatted `…🚩️NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊️uloc** metrics (each line is full explicit shape: `📊️uloc💯️{bloc}` total, then `📊️uloc{emoji}{slug}💯️{bloc}` per language — optional `📈️`/`📉️` net (`➕️−➖️`), `➗` percent change vs previous bloc (*100), then `➕️` `✏️` `➖️` `🟰️` with zeros omitted; **🟰️** = ➕️+✏️+➖️; languages largest bloc first), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
+Counter (from formatted `…🚩️NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊️uloc** metrics (each line is full explicit shape: `📊️uloc💯️{bloc}` total, then `📊️uloc{emoji}{slug}💯️{bloc}` per language — optional `📈️`/`📉️` net (`➕️−➖️`), `➗️` percent change vs previous bloc (*100), then `➕️` `✏️` `➖️` `🟰️` with zeros omitted; **🟰️** = ➕️+✏️+➖️; languages largest bloc first), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
 
 After commit, hooks reset to an **empty** `.git/gkcommittemplate.txt` and point `commit.template` at it (GitKraken reuses the last message if that file is missing). Run `g` / `prepare` for the next change set. `bun ./📜️script.ts setup git` installs hooks (post-commit, post-checkout, post-merge, post-rewrite, prepare-commit-msg).
 

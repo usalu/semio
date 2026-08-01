@@ -14,6 +14,7 @@ use semio_framework_plugin::{
 use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
@@ -2125,49 +2126,49 @@ fn build_inspector_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Ui
 /// `VcsDocumentApp`. Each action mutates a transient {@link Puzzle5dScene}, then emits the granular
 /// operation delta. Undo/redo/checkpoints are handled by the wrapper.
 pub struct Puzzle5dPlayApp {
-    precompute: Puzzle5dPrecomputeSession,
-    registered_mesh_urls: HashSet<String>,
-    runtime: Puzzle5dRuntime,
+    precompute: RefCell<Puzzle5dPrecomputeSession>,
+    registered_mesh_urls: RefCell<HashSet<String>>,
+    runtime: RefCell<Puzzle5dRuntime>,
 }
 
 impl Default for Puzzle5dPlayApp {
     fn default() -> Self {
-        Self { precompute: Puzzle5dPrecomputeSession::new(), registered_mesh_urls: HashSet::new(), runtime: Puzzle5dRuntime::default() }
+        Self { precompute: RefCell::new(Puzzle5dPrecomputeSession::new()), registered_mesh_urls: RefCell::new(HashSet::new()), runtime: RefCell::new(Puzzle5dRuntime::default()) }
     }
 }
 
 impl Puzzle5dPlayApp {
-    fn drive_precompute(&mut self, envelope: &Puzzle5dScene) {
-        let _ = self.precompute.set_scene(&scene_config_json(envelope));
+    fn drive_precompute(&self, envelope: &Puzzle5dScene) {
+        let _ = self.precompute.borrow_mut().set_scene(&scene_config_json(envelope));
         // 🧊️ Guarded by `has_mesh` (mirrors the puzzle3d path): `register_mesh` now invalidates the
         // precompute cache, so re-registering the same fallback body on every drive would wipe
         // suggestion/fill progress every call and defeat `set_scene`'s idempotence above.
-        if !self.precompute.has_mesh(PUZZLE5D_FALLBACK_MESH_KIND) {
+        if !self.precompute.borrow_mut().has_mesh(PUZZLE5D_FALLBACK_MESH_KIND) {
             let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
-            self.precompute.register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+            self.precompute.borrow_mut().register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
         }
         for url in collect_mesh_urls(&envelope.document) {
-            if !self.registered_mesh_urls.contains(&url) && !self.precompute.has_mesh(&url) {
+            if !self.registered_mesh_urls.borrow_mut().contains(&url) && !self.precompute.borrow_mut().has_mesh(&url) {
                 let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
-                self.precompute.register_mesh(&url, &fallback.positions, &fallback.indices);
+                self.precompute.borrow_mut().register_mesh(&url, &fallback.positions, &fallback.indices);
             }
         }
-        let _ = self.precompute.precompute_step(8);
+        let _ = self.precompute.borrow_mut().precompute_step(8);
     }
 
-    fn apply_engine_brush_placement(&mut self, envelope: &Puzzle5dScene, payload: &Value) -> Option<Puzzle5dScene> {
+    fn apply_engine_brush_placement(&self, envelope: &Puzzle5dScene, payload: &Value) -> Option<Puzzle5dScene> {
         let brush_payload = serde_json::from_value::<BrushPlacePayload>(payload.clone()).ok()?;
-        let fixture_json = self.precompute.apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
+        let fixture_json = self.precompute.borrow_mut().apply_brush_placement_rust(&serde_json::to_string(&brush_payload).ok()?).ok()?;
         merge_engine_fixture(envelope, &fixture_json)
     }
 
     /// 🖌️ Paired placement for a board `brushPlace` event: the engine picks the volume pose for the flat payload's kind, both aspects land in one part.
-    fn apply_board_brush_place(&mut self, envelope: &mut Puzzle5dScene, payload: &Value) {
+    fn apply_board_brush_place(&self, envelope: &mut Puzzle5dScene, payload: &Value) {
         self.drive_precompute(envelope);
         let node_kind = payload.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("Part").to_string();
         let source_grip = payload.get("sourceHandleId").and_then(|value| value.as_str()).map(str::to_string).or_else(|| puzzle5d_brush_target_grip(envelope));
         if let Some(source_grip) = source_grip.as_ref() {
-            let candidates = parse_brush_candidates_free(&self.precompute.brush_candidates(source_grip));
+            let candidates = parse_brush_candidates_free(&self.precompute.borrow().brush_candidates(source_grip));
             let candidate_index = candidates
                 .iter()
                 .position(|candidate| candidate.get("objectKindId").or_else(|| candidate.get("objectKind")).and_then(|value| value.as_str()) == Some(node_kind.as_str()))
@@ -2209,7 +2210,7 @@ impl Puzzle5dPlayApp {
         envelope.runtime.selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(vec![id]), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
     }
 
-    fn apply_board_events_from_json(&mut self, events_json: &str, envelope: &mut Puzzle5dScene) {
+    fn apply_board_events_from_json(&self, events_json: &str, envelope: &mut Puzzle5dScene) {
         let Ok(events) = serde_json::from_str::<Vec<Value>>(events_json) else {
             return;
         };
@@ -2301,9 +2302,9 @@ impl DocumentApp for Puzzle5dPlayApp {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
     }
 
-    fn copy_fragment(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
         let document: Puzzle5dDocument = serde_json::from_value(doc.projection.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
-        let selection = self.runtime.selection.clone();
+        let selection = self.runtime.borrow_mut().selection.clone();
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
         if parts.is_empty() {
             return Err(ClipboardError::EmptySelection);
@@ -2319,12 +2320,12 @@ impl DocumentApp for Puzzle5dPlayApp {
         })
     }
 
-    fn cut_operations(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _view_state: &ViewState) -> Vec<Puzzle5dOperation> {
+    fn cut_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> Vec<Puzzle5dOperation> {
         let before = doc.projection.0.clone();
         let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
             return Vec::new();
         };
-        let selection = self.runtime.selection.clone();
+        let selection = self.runtime.borrow_mut().selection.clone();
         let (parts, fasteners) = copy_selection_local(&document, selection.part_ids.as_slice(), selection.fastener_ids.as_slice());
         if parts.is_empty() {
             return Vec::new();
@@ -2334,11 +2335,11 @@ impl DocumentApp for Puzzle5dPlayApp {
         let mut after = document;
         after.parts.retain(|part| !remove_part_ids.contains(part.id.as_str()));
         after.fasteners.retain(|fastener| !remove_fastener_ids.contains(fastener.id.as_str()));
-        self.runtime.selection = Puzzle5dSelection::default();
+        self.runtime.borrow_mut().selection = Puzzle5dSelection::default();
         puzzle5d_operations_from_document_change(&before, &after)
     }
 
-    fn paste_operations(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
+    fn paste_operations(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
         let expected = self.clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
         if fragment.media_type != expected {
             return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
@@ -2354,14 +2355,14 @@ impl DocumentApp for Puzzle5dPlayApp {
         let mut after = document;
         after.parts.extend(fresh_parts);
         after.fasteners.extend(fresh_fasteners);
-        self.runtime.selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(new_part_ids), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
+        self.runtime.borrow_mut().selection = Puzzle5dSelection { part_ids: SelectionSet::from_ids(new_part_ids), grip_ids: SelectionSet::default(), fastener_ids: SelectionSet::default() };
         Ok(puzzle5d_operations_from_document_change(&before, &after))
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> ActionEmit<Puzzle5dOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> ActionEmit<Puzzle5dOperation> {
         let before = doc.projection.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
-        let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_utility_initial);
+        let mut envelope = scene_from_projection(&before, self.runtime.borrow_mut().clone(), &active_utility_initial);
         match action {
             "setFixtureJson" => {
                 if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
@@ -2578,7 +2579,7 @@ impl DocumentApp for Puzzle5dPlayApp {
                 envelope.runtime.fill_count = count;
                 if count > 0 {
                     envelope.active_utility = "fill".into();
-                    if let Ok(fixture_json) = self.precompute.apply_fill_count_rust(count) {
+                    if let Ok(fixture_json) = self.precompute.borrow_mut().apply_fill_count_rust(count) {
                         if let Some(next) = merge_engine_fixture(&envelope, &fixture_json) {
                             envelope = next;
                         }
@@ -2588,7 +2589,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             "cycleBrushCandidate" => {
                 self.drive_precompute(&envelope);
                 if let Some(grip_full_id) = puzzle5d_brush_target_grip(&envelope) {
-                    let free = parse_brush_candidates_free(&self.precompute.brush_candidates(&grip_full_id)).len();
+                    let free = parse_brush_candidates_free(&self.precompute.borrow().brush_candidates(&grip_full_id)).len();
                     if free > 0 {
                         envelope.runtime.brush_candidate_index = (envelope.runtime.brush_candidate_index + 1) % free;
                     }
@@ -2602,8 +2603,8 @@ impl DocumentApp for Puzzle5dPlayApp {
                 {
                     let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
                     let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
-                    self.precompute.register_mesh(url, &positions, &indices);
-                    self.registered_mesh_urls.insert(url.to_string());
+                    self.precompute.borrow_mut().register_mesh(url, &positions, &indices);
+                    self.registered_mesh_urls.borrow_mut().insert(url.to_string());
                 }
                 return ActionEmit::default();
             }
@@ -2966,7 +2967,7 @@ impl DocumentApp for Puzzle5dPlayApp {
             _ => {}
         }
         let next_active_utility = envelope.active_utility.clone();
-        self.runtime = envelope.runtime;
+        *self.runtime.borrow_mut() = envelope.runtime;
         let operations = puzzle5d_operations_from_document_change(&before, &envelope.document);
         // 🌀️ Coalesce each gumball drag tick into one undoable edit (compact per-part records, not full meshes).
         let coalesce_key = match action {
@@ -2985,14 +2986,14 @@ impl DocumentApp for Puzzle5dPlayApp {
         ActionEmit { operations, coalesce_key, effects, ..Default::default() }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let active_utility = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
-        let envelope = scene_from_projection(&doc.projection.0, self.runtime.clone(), &active_utility);
+        let envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
         let labels = puzzle5d_labels(view_state);
         match body_key {
             PUZZLE5D_PLAY_BODY_2D => build_board2d_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
             PUZZLE5D_PLAY_BODY_3D => {
-                let brush_preview = world_brush_preview_json(&self.precompute, &envelope);
+                let brush_preview = world_brush_preview_json(&self.precompute.borrow(), &envelope);
                 build_world_3d_scene(
                     PUZZLE5D_PLAY_SURFACE_3D,
                     PUZZLE5D_PLAY_CONTROLLER_ID,
@@ -3022,7 +3023,7 @@ impl DocumentApp for Puzzle5dPlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let labels = puzzle5d_labels(view_state);
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — a split/extra
         // instance gets its own entry instead of being silently absent.
@@ -3031,22 +3032,22 @@ impl DocumentApp for Puzzle5dPlayApp {
             .flat_map(|window| {
                 window_instance_ids(view_state, window).into_iter().map(|wid| {
                     let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
-                    let envelope = scene_from_projection(&doc.projection.0, self.runtime.clone(), &active_utility);
+                    let envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
                     (wid, puzzle5d_engagement(&envelope, window, labels))
                 })
             })
             .collect()
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = puzzle5d_labels(view_state);
         PUZZLE5D_PLAY_WINDOWS
             .iter()
             .flat_map(|window| {
                 window_instance_ids(view_state, window).into_iter().map(|wid| {
                     let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
-                    let envelope = scene_from_projection(&doc.projection.0, self.runtime.clone(), &active_utility);
-                    (wid, puzzle5d_window_measures(window, &envelope, &self.precompute, labels))
+                    let envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
+                    (wid, puzzle5d_window_measures(window, &envelope, &self.precompute.borrow(), labels))
                 })
             })
             .collect()
@@ -3054,16 +3055,17 @@ impl DocumentApp for Puzzle5dPlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         let labels = puzzle5d_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
         semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
+            window_kind_labels: HashMap::from([
                 (PUZZLE5D_PLAY_WINDOW_2D.to_string(), labels.window_2d.to_string()),
                 (PUZZLE5D_PLAY_WINDOW_3D.to_string(), labels.window_3d.to_string()),
             ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::new(),
+            panel_tab_labels: HashMap::new(),
+            mode_labels: HashMap::new(),
             action_labels: puzzle5d_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-            utility_labels: puzzle5d_utility_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-            example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+            utility_labels: puzzle5d_utility_labels(labels, is_de),
+            example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
@@ -3077,7 +3079,7 @@ impl DocumentApp for Puzzle5dPlayApp {
 //#region 🔖️CommandLabels
 /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_puzzle5d_app`'s
 /// static manifest — mirrors `puzzle3d_action_labels`.
-fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+fn puzzle5d_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
@@ -3140,17 +3142,16 @@ fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, Stri
 }
 
 /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle5d_app`.
-fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("select", "Select", "Auswählen"),
-        ("move", "Move", "Verschieben"),
-        ("rotate", "Rotate", "Drehen"),
-        ("scale", "Scale", "Skalieren"),
-        ("brush", "Brush", "Pinsel"),
-        ("fill", "Fill", "Füllen"),
-        ("worldRelocate", "Relocate", "Verlagern"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+fn puzzle5d_utility_labels(labels: &Puzzle5dLabels, is_de: bool) -> HashMap<String, String> {
+    HashMap::from([
+        ("select".to_string(), labels.select.to_string()),
+        ("move".to_string(), (if is_de { "Verschieben" } else { "Move" }).to_string()),
+        ("rotate".to_string(), (if is_de { "Drehen" } else { "Rotate" }).to_string()),
+        ("scale".to_string(), (if is_de { "Skalieren" } else { "Scale" }).to_string()),
+        ("brush".to_string(), labels.brush.to_string()),
+        ("fill".to_string(), labels.fill.to_string()),
+        ("worldRelocate".to_string(), (if is_de { "Verlagern" } else { "Relocate" }).to_string()),
+    ])
 }
 //#endregion 🔖️CommandLabels
 
@@ -3257,7 +3258,7 @@ pub fn create_puzzle5d_app() -> App {
                 ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
             ])
             // 🧰️ Flat per-window set of utilities (host-owned `view_state.active_utility_id`); `select` is the default.
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", manifest_labels.select, "mouse-pointer") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })

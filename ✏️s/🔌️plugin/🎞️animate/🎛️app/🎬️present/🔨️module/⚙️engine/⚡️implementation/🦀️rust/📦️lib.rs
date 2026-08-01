@@ -475,7 +475,7 @@ pub fn build_tile_morph_prompt(source: &present::FigureTileSource, drafts: &[pre
 
 //#region 🔖️VideoExport
 /// 🎬️ Renders every unique `scene_hash` referenced by a {@link PresentScene}.
-pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Path) -> std::result::Result<Vec<SceneAssetBundle>, PresentError> {
+pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Path) -> Result<Vec<SceneAssetBundle>, PresentError> {
     let hashes = scene.scene_hashes();
     if hashes.is_empty() {
         return Err(PresentError::NoSceneHashes);
@@ -486,12 +486,12 @@ pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Pat
 
 //#region 🔖️MediaCodec
 /// 🖼️ Title-card SVG export for the app catalogue/thumbnail surface.
-pub fn animate_present_document_json_to_svg(value: &serde_json::Value) -> std::result::Result<(String, u32, u32), String> {
+pub fn animate_present_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
     semio_framework_os::title_card_svg(value, "Animate Present", 1280, 720)
 }
 
 /// 📥️ Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG import path.
-pub fn animate_present_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> std::result::Result<serde_json::Value, String> {
+pub fn animate_present_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -> Result<serde_json::Value, String> {
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height)?;
     let frame = present::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };

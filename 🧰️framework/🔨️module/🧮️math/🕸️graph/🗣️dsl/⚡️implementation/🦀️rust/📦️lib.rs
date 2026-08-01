@@ -380,16 +380,16 @@ pub mod wire {
             _ => PropertyBag::new(),
         }
     }
-    // #endregion 🔖PropertyBridge
+    // #endregion 🔖️PropertyBridge
 
-    // #region 🔖WireLiteral
+    // #region 🔖️WireLiteral
     fn render_wire_line(value: &dsl_schema::WireValue) -> String {
         let mut writer = dsl_schema::Writer::new();
         dsl_schema::print_shape(&dsl_schema::FieldValue::Wire(value.clone()), &dsl_schema::Shape::Wire, &mut writer);
         writer.render(dsl_schema::JoinMode::Inline)
     }
 
-    /// 📝 Render wire-literal text from neutral node/edge rows, one unified `dsl_schema::Wire`
+    /// 📝️ Render wire-literal text from neutral node/edge rows, one unified `dsl_schema::Wire`
     /// statement per line.
     pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
         let mut lines = Vec::new();
@@ -414,7 +414,7 @@ pub mod wire {
         lines.join("\n")
     }
 
-    /// 🔍 Parse wire-literal text into neutral node/edge rows. Delegates lexing+parsing to
+    /// 🔍️ Parse wire-literal text into neutral node/edge rows. Delegates lexing+parsing to
     /// `dsl_schema::parse_wire_text` (the one unified wire grammar — `->`/`<-` sugar/`--`,
     /// `{k=v}` double-quoted properties) one statement (line) at a time, then enforces this
     /// module's own DAG domain rule on top: an edge's ports are mandatory on BOTH ends (the
@@ -582,7 +582,7 @@ pub mod wire {
 
         #[test]
         fn dag_from_wire_literal_parses_undirected_dash_dash_edge() {
-            // 🆕 unified undirected sigil is `--`, not the old single `-`.
+            // 🆕️ unified undirected sigil is `--`, not the old single `-`.
             let (_, edges) = dag_from_wire_literal("a:x@out--b:y@in").unwrap();
             assert_eq!(edges.len(), 1);
             assert!(!edges[0].directed);
@@ -601,7 +601,7 @@ pub mod wire {
             assert_eq!(parsed_nodes[0].properties.get("label"), Some(&PropertyValue::String("hi".into())));
         }
     }
-    // #endregion 🔖Tests
+    // #endregion 🔖️Tests
     // #endregion wire
 }
 
@@ -614,8 +614,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 // #region jack_impl
 
-// #region 🔖Ast
-/// 🌳 Jack query abstract syntax tree.
+// #region 🔖️Ast
+/// 🌳️ Jack query abstract syntax tree.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Query {
     pub clauses: Vec<Clause>,
@@ -625,7 +625,7 @@ pub struct Query {
 pub enum Clause {
     Match(Vec<Pattern>),
     Where(Expr),
-    /// 🚧 Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
+    /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
     /// semio_compose_rs's Architect query language onto Jack.
     With(Vec<ReturnItem>),
     /// 🚧️ Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
@@ -1455,7 +1455,7 @@ fn format_token(tok: &Token) -> String {
     }
 }
 
-/// 🪞 Format jack source canonically (idempotent).
+/// 🪞️ Format jack source canonically (idempotent).
 pub fn format(source: &str) -> Result<String, GraphDslError> {
     let tokens = lex_spanned(source, false)?;
     let mut out = String::new();
@@ -2841,7 +2841,7 @@ mod tests {
             assert!(matches!(err, GraphDslError::UnsupportedClause), "query {query} should report UnsupportedClause, got {err:?}");
         }
     }
-    // #endregion 🔖WithUnwindCallTests
+    // #endregion 🔖️WithUnwindCallTests
 
     #[test]
     fn lexer_accepts_both_single_and_double_quoted_strings_and_always_prints_double_quoted() {

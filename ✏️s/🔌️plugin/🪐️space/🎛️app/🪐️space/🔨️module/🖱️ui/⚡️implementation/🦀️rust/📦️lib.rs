@@ -6,6 +6,7 @@
 //! documents through the Home launcher's own catalog port (`openSpace`, `exportStudioPack`,
 //! `exportStudioDsl`, `importSpacePackPayload`) — a real, non-test dependency, not just a test fixture.
 
+use std::cell::RefCell;
 use space::{
     SpacePanelState, SpaceProgramEntry, StudioRuntimeState, S_PLAY_APP_ID, S_PLAY_BODY_COMPILED_DAG,
     S_PLAY_BODY_MEDIA_VFS, S_PLAY_BODY_WORKFLOW, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CATALOGUE_DRAG_MIME,
@@ -49,7 +50,7 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap};
 use std::sync::{LazyLock, Mutex};
 
 //#region 🔖️DocumentHelpers
@@ -995,9 +996,8 @@ fn render_media_vfs(projection: &OsProjection, labels: &SStudioLabels) -> UiNode
 //#endregion 🔖️Render
 
 //#region 🔖️SpaceApp
-#[derive(Default)]
 pub struct SpaceApp {
-    runtime: StudioRuntimeState,
+    runtime: RefCell<StudioRuntimeState>,
 }
 
 impl SpaceApp {
@@ -1005,8 +1005,14 @@ impl SpaceApp {
     /// `openSpace` → `HostEffect::LoadDocument`; demo content is no longer the silent default.
     pub fn new() -> Self {
         Self {
-            runtime: StudioRuntimeState::default(),
+            runtime: RefCell::new(StudioRuntimeState::default()),
         }
+    }
+}
+
+impl Default for SpaceApp {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -1171,7 +1177,7 @@ impl DocumentApp for SpaceApp {
                         })
                         .unwrap_or(semio_framework_os::WorkflowPosition { x: 80.0, y: 80.0 });
                     if let Some((operation, instance_id)) = spawn_app_instance_operation(plugin_id, app_id, None, position) {
-                        self.runtime.active_instance_id = Some(instance_id);
+                        self.runtime.borrow_mut().active_instance_id = Some(instance_id);
                         operations.push(operation);
                     }
                 }
@@ -1236,39 +1242,39 @@ impl DocumentApp for SpaceApp {
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .or_else(|| primary_selected_instance_id(&self.runtime, projection));
+                    .or_else(|| primary_selected_instance_id(&*self.runtime.borrow(), projection));
                 if let Some(instance_id) = instance_id {
                     operations.push(OsOperation::RemoveAppInstance {
                         instance_id: instance_id.clone(),
                     });
-                    if self.runtime.active_instance_id.as_deref() == Some(instance_id.as_str()) {
-                        self.runtime.active_instance_id = None;
+                    if self.runtime.borrow_mut().active_instance_id.as_deref() == Some(instance_id.as_str()) {
+                        self.runtime.borrow_mut().active_instance_id = None;
                     }
-                    if self.runtime.focused_instance_id.as_deref() == Some(instance_id.as_str()) {
-                        self.runtime.focused_instance_id = None;
+                    if self.runtime.borrow_mut().focused_instance_id.as_deref() == Some(instance_id.as_str()) {
+                        self.runtime.borrow_mut().focused_instance_id = None;
                     }
                 }
             }
             "deleteSelection" => {
-                let instance_ids = selected_instance_ids(&self.runtime, projection);
+                let instance_ids = selected_instance_ids(&*self.runtime.borrow(), projection);
                 for instance_id in instance_ids {
                     operations.push(OsOperation::RemoveAppInstance {
                         instance_id: instance_id.clone(),
                     });
                 }
-                self.runtime.selected_app_instance_ids.clear();
-                self.runtime.selected_media_node_ids.clear();
-                self.runtime.active_instance_id = None;
-                self.runtime.focused_instance_id = None;
+                self.runtime.borrow_mut().selected_app_instance_ids.clear();
+                self.runtime.borrow_mut().selected_media_node_ids.clear();
+                self.runtime.borrow_mut().active_instance_id = None;
+                self.runtime.borrow_mut().focused_instance_id = None;
             }
             "copyAppInstance" => {
-                self.runtime.clipboard_instance_ids = selected_instance_ids(&self.runtime, projection);
+                self.runtime.borrow_mut().clipboard_instance_ids = selected_instance_ids(&*self.runtime.borrow(), projection);
             }
             "duplicateAppInstance" | "pasteAppInstance" => {
                 let source_ids = if action == "pasteAppInstance" {
-                    self.runtime.clipboard_instance_ids.clone()
+                    self.runtime.borrow_mut().clipboard_instance_ids.clone()
                 } else {
-                    selected_instance_ids(&self.runtime, projection)
+                    selected_instance_ids(&*self.runtime.borrow(), projection)
                 };
                 for instance_id in source_ids {
                     let Some(instance) = projection
@@ -1295,13 +1301,13 @@ impl DocumentApp for SpaceApp {
                         Some(&label),
                         position,
                     ) {
-                        self.runtime.active_instance_id = Some(new_id);
+                        self.runtime.borrow_mut().active_instance_id = Some(new_id);
                         operations.push(operation);
                     }
                 }
             }
             "renameAppInstance" => {
-                if let Some(instance_id) = primary_selected_instance_id(&self.runtime, projection) {
+                if let Some(instance_id) = primary_selected_instance_id(&*self.runtime.borrow(), projection) {
                     let next_label = args
                         .and_then(|value| value.get("label"))
                         .and_then(|value| value.as_str())
@@ -1379,8 +1385,8 @@ impl DocumentApp for SpaceApp {
                     args.and_then(|value| value.get("instanceId")).and_then(|value| value.as_str()),
                     args.and_then(|value| value.get("format")).and_then(|value| value.as_str()),
                 ) {
-                    self.runtime.pending_import_instance_id = Some(instance_id.to_string());
-                    self.runtime.pending_import_format = Some(format.to_string());
+                    self.runtime.borrow_mut().pending_import_instance_id = Some(instance_id.to_string());
+                    self.runtime.borrow_mut().pending_import_format = Some(format.to_string());
                     return ActionEmit::effect(HostEffect::RequestFileOpen {
                         accept: format!(".{format}"),
                         read_as: Some("dataUrl".into()),
@@ -1391,7 +1397,7 @@ impl DocumentApp for SpaceApp {
                 return ActionEmit::default();
             }
             "importMediaPayload" => {
-                if let (Some(instance_id), Some(format_name)) = (self.runtime.pending_import_instance_id.take(), self.runtime.pending_import_format.take()) {
+                if let (Some(instance_id), Some(format_name)) = (self.runtime.borrow_mut().pending_import_instance_id.take(), self.runtime.borrow_mut().pending_import_format.take()) {
                     let payload = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str());
                     let format = semio_framework_os::OsMediaFormat::parse(&format_name);
                     if let (Some(payload), Some(format)) = (payload, format) {
@@ -1411,7 +1417,7 @@ impl DocumentApp for SpaceApp {
                 return ActionEmit::default();
             }
             "exportStudioPack" => {
-                let space_id = runtime_space_id(&self.runtime);
+                let space_id = runtime_space_id(&*self.runtime.borrow());
                 if let Some(document) = home_ui::resolve_studio_document(&space_id) {
                     // 📦️ Whole-document pack<->dsl codec (`register_document_codec_for_app::<SpaceApp>`
                     // in `register_s_exports`, see `🔖️DocumentCodecs`), not the per-instance media
@@ -1435,7 +1441,7 @@ impl DocumentApp for SpaceApp {
                 }
             }
             "exportStudioDsl" => {
-                let space_id = runtime_space_id(&self.runtime);
+                let space_id = runtime_space_id(&*self.runtime.borrow());
                 if let Some(document) = home_ui::resolve_studio_document(&space_id) {
                     if let Ok(text_files) = export_os_space_dsl(&document) {
                         effects.push(HostEffect::DownloadMediaExport {
@@ -1473,19 +1479,19 @@ impl DocumentApp for SpaceApp {
                 return ActionEmit::default();
             }
             "selectInstance" => {
-                self.runtime.active_instance_id = args
+                self.runtime.borrow_mut().active_instance_id = args
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
-                if let Some(instance_id) = self.runtime.active_instance_id.clone() {
+                if let Some(instance_id) = self.runtime.borrow_mut().active_instance_id.clone() {
                     let node_id = projection
                         .workflow
                         .nodes
                         .iter()
                         .find(|node| node.instance_id == instance_id)
                         .map(|node| node.id.clone());
-                    self.runtime.selected_app_instance_ids = vec![instance_id];
-                    self.runtime.selected_media_node_ids = node_id.into_iter().collect();
+                    self.runtime.borrow_mut().selected_app_instance_ids = vec![instance_id];
+                    self.runtime.borrow_mut().selected_media_node_ids = node_id.into_iter().collect();
                 }
             }
             "nodeGraphSelect" | "setMediaNodeSelection" => {
@@ -1506,8 +1512,8 @@ impl DocumentApp for SpaceApp {
                         })
                         .unwrap_or_default()
                 };
-                self.runtime.selected_media_node_ids = node_ids.clone();
-                self.runtime.selected_app_instance_ids = node_ids
+                self.runtime.borrow_mut().selected_media_node_ids = node_ids.clone();
+                self.runtime.borrow_mut().selected_app_instance_ids = node_ids
                     .iter()
                     .filter_map(|node_id| {
                         projection
@@ -1518,15 +1524,15 @@ impl DocumentApp for SpaceApp {
                             .map(|node| node.instance_id.clone())
                     })
                     .collect();
-                if self.runtime.selected_app_instance_ids.len() == 1 {
-                    self.runtime.active_instance_id = self.runtime.selected_app_instance_ids.first().cloned();
+                if self.runtime.borrow_mut().selected_app_instance_ids.len() == 1 {
+                    self.runtime.borrow_mut().active_instance_id = self.runtime.borrow_mut().selected_app_instance_ids.first().cloned();
                 }
             }
             "reorganizeWorkflow" => {
-                let node_ids: Vec<String> = if self.runtime.selected_media_node_ids.is_empty() {
+                let node_ids: Vec<String> = if self.runtime.borrow_mut().selected_media_node_ids.is_empty() {
                     projection.workflow.nodes.iter().map(|node| node.id.clone()).collect()
                 } else {
-                    self.runtime.selected_media_node_ids.clone()
+                    self.runtime.borrow_mut().selected_media_node_ids.clone()
                 };
                 for (index, node_id) in node_ids.iter().enumerate() {
                     let col = (index % 4) as f64;
@@ -1539,7 +1545,7 @@ impl DocumentApp for SpaceApp {
                 }
             }
             "nodeGraphHover" | "textHover" => {
-                self.runtime.hovered_media_node_id = args
+                self.runtime.borrow_mut().hovered_media_node_id = args
                     .and_then(|value| value.get("hoverJson"))
                     .and_then(|value| {
                         if value.is_null() {
@@ -1560,7 +1566,7 @@ impl DocumentApp for SpaceApp {
                     .and_then(|value| value.as_str())
                     .and_then(|viewport_json| serde_json::from_str::<OsWorkflowCamera>(viewport_json).ok())
                 {
-                    self.runtime.workflow_camera = Some(camera);
+                    self.runtime.borrow_mut().workflow_camera = Some(camera);
                 }
             }
             "nodeGraphEdit" => {
@@ -1578,7 +1584,7 @@ impl DocumentApp for SpaceApp {
                                     .and_then(|fixture| fixture.get("camera").cloned())
                                     .and_then(|camera| serde_json::from_value::<OsWorkflowCamera>(camera).ok())
                                 {
-                                    self.runtime.workflow_camera = Some(camera);
+                                    self.runtime.borrow_mut().workflow_camera = Some(camera);
                                 }
                                 operations.extend(apply_flow_fixture_to_os_workflow(&projection.workflow, fixture_json));
                             }
@@ -1615,7 +1621,7 @@ impl DocumentApp for SpaceApp {
                             }
                         }
                         "deleteSelection" => {
-                            for node_id in &self.runtime.selected_media_node_ids {
+                            for node_id in &*self.runtime.borrow().selected_media_node_ids {
                                 if let Some(node) = projection.workflow.nodes.iter().find(|node| node.id == *node_id) {
                                     operations.push(OsOperation::RemoveAppInstance { instance_id: node.instance_id.clone() });
                                 }
@@ -1627,8 +1633,8 @@ impl DocumentApp for SpaceApp {
             }
             "presenceHeartbeat" => {
                 if let Some(client_id) = args.and_then(|value| value.get("clientId")).and_then(|value| value.as_str()) {
-                    self.runtime.client_id = Some(client_id.into());
-                    self.runtime.client_name = Some(
+                    self.runtime.borrow_mut().client_id = Some(client_id.into());
+                    self.runtime.borrow_mut().client_name = Some(
                         args.and_then(|value| value.get("name"))
                             .and_then(|value| value.as_str())
                             .unwrap_or("Guest")
@@ -1649,8 +1655,8 @@ impl DocumentApp for SpaceApp {
                             .collect()
                     })
                     .unwrap_or_default();
-                self.runtime.selected_app_instance_ids = instance_ids.clone();
-                self.runtime.selected_media_node_ids = instance_ids
+                self.runtime.borrow_mut().selected_app_instance_ids = instance_ids.clone();
+                self.runtime.borrow_mut().selected_media_node_ids = instance_ids
                     .iter()
                     .filter_map(|instance_id| {
                         projection
@@ -1662,7 +1668,7 @@ impl DocumentApp for SpaceApp {
                     })
                     .collect();
                 if instance_ids.len() == 1 {
-                    self.runtime.active_instance_id = Some(instance_ids[0].clone());
+                    self.runtime.borrow_mut().active_instance_id = Some(instance_ids[0].clone());
                 }
             }
             "patchMediaNodes" => {
@@ -1783,11 +1789,11 @@ impl DocumentApp for SpaceApp {
                     .and_then(|value| value.get("spaceId"))
                     .and_then(|value| value.as_str())
                 {
-                    self.runtime.space_id = Some(space_id.into());
-                    self.runtime.focused_instance_id = None;
-                    self.runtime.selected_media_node_ids.clear();
-                    self.runtime.selected_app_instance_ids.clear();
-                    self.runtime.clipboard_instance_ids.clear();
+                    self.runtime.borrow_mut().space_id = Some(space_id.into());
+                    self.runtime.borrow_mut().focused_instance_id = None;
+                    self.runtime.borrow_mut().selected_media_node_ids.clear();
+                    self.runtime.borrow_mut().selected_app_instance_ids.clear();
+                    self.runtime.borrow_mut().clipboard_instance_ids.clear();
                     let document = home_ui::resolve_studio_document(space_id)
                         .or_else(|| {
                             if space_id == "demo" {
@@ -1798,10 +1804,10 @@ impl DocumentApp for SpaceApp {
                         })
                         .unwrap_or_else(|| create_empty_os_document(space_id, "Untitled Studio"));
                     if let Ok(projection) = materialize_os_projection(&document, &[]) {
-                        self.runtime.active_instance_id =
+                        self.runtime.borrow_mut().active_instance_id =
                             projection.app_instances.first().map(|instance| instance.id.clone());
                     } else {
-                        self.runtime.active_instance_id = None;
+                        self.runtime.borrow_mut().active_instance_id = None;
                     }
                     if let Some(files) = home_ui::space_document_envelope_pack(&document) {
                         eprintln!(
@@ -1813,7 +1819,7 @@ impl DocumentApp for SpaceApp {
                         return ActionEmit::effect(HostEffect::LoadDocument { pack: files.pack, spr: files.spr });
                     }
                     eprintln!("[DEBUG] openSpace missing envelope id={space_id}");
-                    self.runtime.active_instance_id = None;
+                    self.runtime.borrow_mut().active_instance_id = None;
                 }
                 return ActionEmit::default();
             }
@@ -1822,18 +1828,18 @@ impl DocumentApp for SpaceApp {
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .or_else(|| primary_selected_instance_id(&self.runtime, projection));
+                    .or_else(|| primary_selected_instance_id(&*self.runtime.borrow(), projection));
                 if let Some(instance_id) = instance_id {
-                    self.runtime.focused_instance_id = Some(instance_id.clone());
-                    self.runtime.active_instance_id = Some(instance_id.clone());
-                    self.runtime.selected_app_instance_ids = vec![instance_id.clone()];
+                    self.runtime.borrow_mut().focused_instance_id = Some(instance_id.clone());
+                    self.runtime.borrow_mut().active_instance_id = Some(instance_id.clone());
+                    self.runtime.borrow_mut().selected_app_instance_ids = vec![instance_id.clone()];
                     if let Some(node) = projection
                         .workflow
                         .nodes
                         .iter()
                         .find(|row| row.instance_id == instance_id)
                     {
-                        self.runtime.selected_media_node_ids = vec![node.id.clone()];
+                        self.runtime.borrow_mut().selected_media_node_ids = vec![node.id.clone()];
                     }
                     if let Some(instance) = projection
                         .app_instances
@@ -1849,14 +1855,14 @@ impl DocumentApp for SpaceApp {
                 }
             }
             "closeFocusedInstance" => {
-                self.runtime.focused_instance_id = None;
+                self.runtime.borrow_mut().focused_instance_id = None;
                 let mut panel = parse_panel_state(view_state);
                 panel.active_spawned_id = None;
                 return ActionEmit::effect(HostEffect::SetPanel { panel_json: panel_json(&panel) });
             }
             "goHome" => return ActionEmit::effect(HostEffect::Navigate { uri: "/".into() }),
             "workflowEngagementInput" => {
-                self.runtime.workflow_engagement_input = args
+                self.runtime.borrow_mut().workflow_engagement_input = args
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("")
@@ -1867,7 +1873,7 @@ impl DocumentApp for SpaceApp {
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .unwrap_or_else(|| self.runtime.workflow_engagement_input.clone());
+                    .unwrap_or_else(|| self.runtime.borrow_mut().workflow_engagement_input.clone());
                 let mut parts = raw.split_whitespace();
                 if let (Some(plugin_id), Some(app_id)) = (parts.next(), parts.next()) {
                     if let Some((operation, instance_id)) = spawn_app_instance_operation(
@@ -1876,13 +1882,13 @@ impl DocumentApp for SpaceApp {
                         None,
                         semio_framework_os::WorkflowPosition { x: 80.0, y: 80.0 },
                     ) {
-                        self.runtime.active_instance_id = Some(instance_id);
+                        self.runtime.borrow_mut().active_instance_id = Some(instance_id);
                         operations.push(operation);
                     }
                 }
             }
             "compiledDagEngagementInput" => {
-                self.runtime.compiled_dag_engagement_input = args
+                self.runtime.borrow_mut().compiled_dag_engagement_input = args
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("")
@@ -1895,7 +1901,7 @@ impl DocumentApp for SpaceApp {
             action,
             "presenceHeartbeat" | "nodeGraphSelect" | "setMediaNodeSelection" | "selectInstance" | "setAppInstanceSelection" | "deleteSelection"
         ) {
-            publish_presence(&self.runtime);
+            publish_presence(&*self.runtime.borrow());
         }
         ActionEmit {
             operations,
@@ -1906,26 +1912,37 @@ impl DocumentApp for SpaceApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, OsProjection>, view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, OsProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> UiNode {
         let projection = doc.projection;
         let panel = parse_panel_state(view_state);
         let labels = resolve_labels::<SStudioLabels>(view_state);
         match body_key {
-            S_PLAY_BODY_WORKFLOW => render_workflow(projection, &self.runtime, labels),
+            S_PLAY_BODY_WORKFLOW => render_workflow(projection, &*self.runtime.borrow(), labels),
             S_PLAY_BODY_MEDIA_VFS => render_media_vfs(projection, labels),
             S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(projection),
             S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(&panel, labels),
             S_PLAY_PARAMETERS_BODY_KEY => build_parameters_tree(projection, labels),
-            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(projection, &self.runtime, labels),
+            S_PLAY_INSPECTOR_BODY_KEY => build_inspector_tree(projection, &*self.runtime.borrow(), labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, OsProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(
+        &self,
+        doc: &DocumentView<'_, OsProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<SStudioLabels>(view_state);
         HashMap::from([(
             S_PLAY_WINDOW_WORKFLOW.into(),
-            workflow_measures(&self.runtime, &doc.projection.app_instances, labels),
+            workflow_measures(&*self.runtime.borrow(), &doc.projection.app_instances, labels),
         )])
     }
 
@@ -3102,7 +3119,7 @@ mod tests {
         assert!(inspector_json.contains("Wähle Workflow-Knoten oder App-Instanzen im Arbeitsbereich aus."));
     }
 
-    /// 🌉 Moved from `home_ui`'s own test module: exercises BOTH apps together (Home's `createStudio`
+    /// 🌉️ Moved from `home_ui`'s own test module: exercises BOTH apps together (Home's `createStudio`
     /// followed by Space's `openSpace`) — this crate already regular-depends on `home_ui`, so the
     /// integration test lives beside the app that owns the dependency edge instead of requiring a new
     /// dev-dependency cycle back from `home_ui` onto this crate.

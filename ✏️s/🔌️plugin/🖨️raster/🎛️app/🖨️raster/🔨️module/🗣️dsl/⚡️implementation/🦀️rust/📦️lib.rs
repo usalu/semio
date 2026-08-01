@@ -1,7 +1,6 @@
 //! 📜️ Raster app — textual document grammar surface + laws (constitutional: dsl).
 
-use raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterProjection, RasterTransform, RASTER_DOCUMENT_SCHEMA};
-use std::collections::BTreeMap;
+use raster::RasterProjection;
 
 /// 📄️ The `semio` example document, handcrafted in the `.raster` DSL.
 pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🖨️raster/📚️example/🖨️semio.raster");

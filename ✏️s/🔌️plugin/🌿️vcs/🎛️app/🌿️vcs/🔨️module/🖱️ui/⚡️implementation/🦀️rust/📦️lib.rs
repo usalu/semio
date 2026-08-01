@@ -530,10 +530,17 @@ fn render_history(history: &HistoryView) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️VcsPlayApp
+use std::cell::RefCell;
+
 /// 🎛️ Ephemeral view state: the multi-selected checkpoint ids in the document tree.
-#[derive(Default)]
 pub struct VcsPlayApp {
-    selected_checkpoint_ids: Vec<String>,
+    selected_checkpoint_ids: RefCell<Vec<String>>,
+}
+
+impl Default for VcsPlayApp {
+    fn default() -> Self {
+        Self { selected_checkpoint_ids: RefCell::new(Vec::new()) }
+    }
 }
 
 impl DocumentApp for VcsPlayApp {
@@ -571,7 +578,7 @@ impl DocumentApp for VcsPlayApp {
         // `handle_action`, dispatching them straight to `DocumentCommand`.
         match action {
             "setSelection" => {
-                self.selected_checkpoint_ids = selection_ids(args);
+                *self.selected_checkpoint_ids.borrow_mut() = selection_ids(args);
                 ActionEmit::default()
             }
             "incrementCounter" => ActionEmit::operations(vec![VcsDemoOperation::SetCounter { counter: doc.projection.counter + 1 }]),
@@ -606,12 +613,12 @@ impl DocumentApp for VcsPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, VcsDemoProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let labels = resolve_labels::<VcsLabels>(view_state);
         match body_key {
             VCS_PLAY_BODY_EDITOR => render_editor(doc.projection, labels),
             VCS_PLAY_BODY_HISTORY => render_history(doc.history),
-            VCS_PLAY_BODY_DOCUMENT => build_document_tree(doc.history, &self.selected_checkpoint_ids, labels),
+            VCS_PLAY_BODY_DOCUMENT => build_document_tree(doc.history, &self.selected_checkpoint_ids.borrow(), labels),
             VCS_PLAY_BODY_INSPECTION => build_inspection_tree(doc.projection, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }

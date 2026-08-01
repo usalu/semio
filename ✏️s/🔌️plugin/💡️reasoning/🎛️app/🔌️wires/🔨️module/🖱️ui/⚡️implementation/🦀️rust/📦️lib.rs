@@ -643,7 +643,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<WiresLabels>(view_state);
         match body_key {

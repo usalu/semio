@@ -1,0 +1,11 @@
+{
+  "title": "Fix Cad SelectionSet Merge",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "CAD fails to build: merge_world_selection_ids now takes/returns SelectionSet but CadPlayRuntime.selected_object_ids is still Vec\u003cString\u003e. Migrate CAD to SelectionSet and get cad dev running e2e again.",
+  "summary": "Migrated CadPlayRuntime.selected_object_ids from Vec\u003cString\u003e to SelectionSet so merge_world_selection_ids type-checks. CAD plugin wasm builds; playground at :6020 smoke-tested (title semio · cad, 4 canvases, no page errors).",
+  "goal": "🎯️aioptimizedrepo",
+  "sessions": [
+    "⚪️148f2ada89a844729b9d730d9055effa"
+  ]
+}

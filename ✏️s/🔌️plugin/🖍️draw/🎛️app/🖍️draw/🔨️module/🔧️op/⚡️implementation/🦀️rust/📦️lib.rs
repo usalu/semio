@@ -1,6 +1,6 @@
 //! ⚡️ Draw app — operation enum + laws (constitutional: op).
 
-use draw::{DrawDocument, DrawLayerNode, DrawTextBody, DrawTransform, DrawTraceParams, FillStyle, PathSegment, StrokeStyle};
+use draw::{DrawDocument, DrawLayerNode, DrawTransform, DrawTraceParams, FillStyle, StrokeStyle};
 use draw_engine::{
     clone_draw_layer_node, extract_layer_node, find_draw_layer, find_draw_layer_location, hex_to_rgba, insert_layer, layer_base, layer_base_mut, mutate_draw_layer,
     remove_layer_from_tree, update_layer_in_tree,

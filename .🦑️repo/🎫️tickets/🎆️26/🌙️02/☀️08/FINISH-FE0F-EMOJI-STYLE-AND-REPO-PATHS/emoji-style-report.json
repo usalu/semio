@@ -1,0 +1,30 @@
+{
+  "renamed": 10859,
+  "text_changed": 7349,
+  "bad_fe0e_basenames": 8,
+  "bad_missing_fe0f_basenames": 8,
+  "bad_fe0e_samples": [
+    ".🦑️repo",
+    ".🦑️repo/🎫️tickets",
+    ".🦑️repo/🎫️tickets/🎆️26",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️31",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️31/GET-PROCEDURAL-3D-WORKING-END-TO-END/🎫️ticket.json",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️31/GET-PROCEDURAL-3D-WORKING-END-TO-END/📌️important.md",
+    "✏️s/🔌️plugin/📐️cad/🧫️fixture/🖼️concrete-forest-reference.png"
+  ],
+  "bad_miss_samples": [
+    ".🦑️repo",
+    ".🦑️repo/🎫️tickets",
+    ".🦑️repo/🎫️tickets/🎆️26",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️31",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️31/GET-PROCEDURAL-3D-WORKING-END-TO-END/🎫️ticket.json",
+    ".🦑️repo/🎫️tickets/🎆️26/🌙️07/☀️31/GET-PROCEDURAL-3D-WORKING-END-TO-END/📌️important.md",
+    "✏️s/🔌️plugin/📐️cad/🧫️fixture/🖼️concrete-forest-reference.png"
+  ],
+  "gitignore_fe0e": 0,
+  "gitignore_fe0f": 78,
+  "script": true,
+  "meta": true
+}

@@ -311,7 +311,7 @@ type BucklingInputs = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, fem_core:
 /// per-case load translation (nodal/member-UDL/area loads), erroring `"load case not found: {case_id}"`
 /// if `case_id` isn't in `doc.load_cases`.
 fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<BucklingInputs, Fem2dError> {
-    let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
+    let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let member_node_ids: std::collections::HashSet<String> = doc.nodes.iter().map(|n| n.id.clone()).collect();
     let nodes: Vec<Node> = nodes.into_iter().filter(|n| member_node_ids.contains(&n.id)).collect();
     let elements: Vec<Box<dyn Element>> = elements.into_iter().take(doc.elements.len()).collect();

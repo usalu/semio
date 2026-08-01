@@ -82,11 +82,18 @@ fn render_builder(spec: &PlaybookSpec, selected_id: Option<&str>) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️PlaybookPlayApp
+use std::cell::RefCell;
+
 /// 🎛️ Ephemeral view state (the current block/step selection) — lives in the app struct, never in the
 /// document, so selecting an element never pollutes undo history.
-#[derive(Default)]
 pub struct PlaybookPlayApp {
-    selected_ids: Vec<String>,
+    selected_ids: RefCell<Vec<String>>,
+}
+
+impl Default for PlaybookPlayApp {
+    fn default() -> Self {
+        Self { selected_ids: RefCell::new(Vec::new()) }
+    }
 }
 
 impl DocumentApp for PlaybookPlayApp {
@@ -119,7 +126,7 @@ impl DocumentApp for PlaybookPlayApp {
         match action {
             "setSelection" => {
                 if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()) {
-                    self.selected_ids = ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect();
+                    *self.selected_ids.borrow_mut() = ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect();
                 }
                 ActionEmit::default()
             }
@@ -153,7 +160,7 @@ impl DocumentApp for PlaybookPlayApp {
                     return ActionEmit::default();
                 };
                 let block_id = format!("block-{}", spec.steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
-                self.selected_ids = vec![block_id.clone()];
+                *self.selected_ids.borrow_mut() = vec![block_id.clone()];
                 ActionEmit::operations(vec![add_block_operation(&step_id, default_block(block_id, kind), None)])
             }
             "removeBlock" => {
@@ -162,7 +169,7 @@ impl DocumentApp for PlaybookPlayApp {
                 if step_id.is_empty() || block_id.is_empty() {
                     return ActionEmit::default();
                 }
-                self.selected_ids.retain(|id| id != block_id);
+                self.selected_ids.borrow_mut().retain(|id| id != block_id);
                 ActionEmit::operations(vec![remove_block_operation(step_id, block_id)])
             }
             "moveBlock" => {
@@ -186,9 +193,9 @@ impl DocumentApp for PlaybookPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
         match body_key {
-            PLAYBOOK_PLAY_BODY_BUILDER => render_builder(doc.projection, self.selected_ids.first().map(String::as_str)),
+            PLAYBOOK_PLAY_BODY_BUILDER => render_builder(doc.projection, self.selected_ids.borrow().first().map(String::as_str)),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

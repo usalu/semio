@@ -13,7 +13,6 @@ use std::cell::Cell;
 use std::collections::{BTreeMap, HashMap};
 use trinity_jack::{execute, parse};
 use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_operations, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TrinityGraphStore};
-use store::DocumentDsl;
 use rewrite::TrinityRewriteError;
 
 pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
@@ -25,7 +24,6 @@ const TRINITY_HANDLE_RADIUS: f64 = 5.0;
 const TRINITY_BOARD_PORT_HANDLE_KIND: &str = "port";
 const TRINITY_DEFAULT_NODE_RADIUS: f64 = 44.0;
 const TRINITY_BOARD_KIND_CATALOGS_JSON: &str = "{\"handleKinds\":[{\"id\":\"port\",\"name\":\"Port\",\"color\":\"#6b7280\"}],\"edgeKinds\":[{\"id\":\"Connection\",\"name\":\"Connection\",\"color\":\"#94a3b8\"}]}";
-const TRINITY_EDGE_STROKE: f64 = 1.5;
 // #region 🔖️Rewrite
 /// ◀️ Left-hand side pattern for rewriting.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -311,29 +309,33 @@ impl TrinityDrawLod {
         }
     }
 
+    #[cfg(test)]
     fn handles_visible(self) -> bool {
         matches!(self, Self::Detail | Self::Micro)
     }
 
+    #[cfg(test)]
     fn labels_visible(self) -> bool {
         !matches!(self, Self::Minimap | Self::Overview)
     }
 
+    #[cfg(test)]
     fn full_labels(self) -> bool {
         matches!(self, Self::Normal | Self::Detail | Self::Micro)
     }
 }
 
-fn trinity_lod_index(zoom: f64) -> usize {
-    TRINITY_LOD_SCALE.resolve_index(zoom.max(0.05))
-}
-
+#[cfg(test)]
 fn trinity_abbreviate_label(name: &str) -> String {
     let trimmed = name.trim();
     if trimmed.len() <= 4 {
         return trimmed.to_string();
     }
     trimmed.chars().take(3).collect()
+}
+
+fn trinity_lod_index(zoom: f64) -> usize {
+    TRINITY_LOD_SCALE.resolve_index(zoom.max(0.05))
 }
 
 pub fn trinity_lod_scale_json() -> String {
@@ -778,10 +780,6 @@ impl TrinityHost {
             return Ok(());
         }
         self.dispatch(operations)
-    }
-
-    fn sync_positions_from_engine(&mut self) {
-        self.sync_ephemeral_positions_from_engine();
     }
 
     fn sync_board_from_graph(&mut self) {

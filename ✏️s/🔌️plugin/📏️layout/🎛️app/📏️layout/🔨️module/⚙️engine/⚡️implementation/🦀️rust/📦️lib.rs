@@ -409,14 +409,14 @@ pub struct SceneQuery<'a> {
     pub viewport: &'a Viewport,
 }
 
-pub fn build_scene_from_document_json(json: &str, query: &SceneQuery, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
+pub fn build_scene_from_document_json(json: &str, query: &SceneQuery<'_>, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
     let list = build_display_list_for_page(&doc, page, query.page_id, query.selected_ids, query.hovered_id, query.chrome_blueprint);
     Ok(display_list_to_scene(&list, query.chrome_blueprint, query.camera, query.viewport, drop_preview))
 }
 
-pub fn hit_test_document_json(json: &str, sx: f64, sy: f64, query: &SceneQuery) -> Result<Option<String>, LayoutError> {
+pub fn hit_test_document_json(json: &str, sx: f64, sy: f64, query: &SceneQuery<'_>) -> Result<Option<String>, LayoutError> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == query.page_id).ok_or_else(|| LayoutError::PageNotFound(query.page_id.to_string()))?;
     let list = build_display_list_for_page(&doc, page, query.page_id, query.selected_ids, query.hovered_id, true);
@@ -552,7 +552,7 @@ pub fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8
     zip.write_all(doc_json.as_bytes())?;
     zip.start_file("preflight-report.json", options)?;
     zip.write_all(preflight_json.as_bytes())?;
-    let manifest_links: Vec<serde_json::Value> = doc
+    let manifest_links: Vec<Value> = doc
         .links
         .iter()
         .map(|link| {
@@ -596,12 +596,12 @@ pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, Layout
     }
     Ok(bytes)
 }
-//#endregion 📤 Export
+//#endregion 📤️ Export
 
-//#region 🔖 DocumentHelpers
+//#region 🔖️ DocumentHelpers
 const LAYOUT_SAMPLE_TEXT: &str = layout_dsl::LAYOUT_SAMPLE_TEXT;
 
-/// 📄 The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_projection`
+/// 📄️ The bundled sample fixture, parsed once — the source of truth for `LayoutPlayApp::initial_projection`
 /// and the app manifest's `.example(...)` document.
 pub fn default_document() -> LayoutDocument {
     <LayoutDocument as store::DocumentDsl>::parse_dsl(LAYOUT_SAMPLE_TEXT).expect("sample layout fixture")

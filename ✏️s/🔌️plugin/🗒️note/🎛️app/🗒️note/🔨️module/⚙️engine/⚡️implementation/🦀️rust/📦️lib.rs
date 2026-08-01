@@ -1,6 +1,6 @@
 //! ⚙️ Note app — headless compute (constitutional: engine).
 
-use note::{NoteBlockNode, NoteDocument, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
+use note::{NoteBlockNode, NoteDocument, NoteTableCell, NoteTextParagraph, NoteTextRun, NOTE_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
 use serde_json::Value;
 use std::collections::BTreeMap;

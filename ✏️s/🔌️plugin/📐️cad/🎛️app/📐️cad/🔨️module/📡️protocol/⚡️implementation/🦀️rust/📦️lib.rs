@@ -3,7 +3,7 @@
 //! (from `cad_document_op`) alongside `CadScene` (from `cad_document`), so this is the first
 //! constitutional crate in the stack where that pairing is available.
 
-use cad_document::{empty_cad_projection, CadScene, CAD_DOCUMENT_SCHEMA};
+use cad_document::CadScene;
 use cad_document_op::CadOperation;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};

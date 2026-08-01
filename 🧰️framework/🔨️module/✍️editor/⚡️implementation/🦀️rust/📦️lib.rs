@@ -2443,9 +2443,9 @@ mod tests {
 
     #[test]
     fn char_boundary_helpers_handle_multibyte() {
-        let text = "a😀b";
+        let text = "a😀️b";
         let emoji_start = 1;
-        let emoji_end = 1 + '😀'.len_utf8();
+        let emoji_end = 1 + '😀️'.len_utf8();
         assert_eq!(next_char_boundary(text, emoji_start), emoji_end);
         assert_eq!(prev_char_boundary(text, emoji_end), emoji_start);
         assert_eq!(prev_char_boundary(text, 0), 0);

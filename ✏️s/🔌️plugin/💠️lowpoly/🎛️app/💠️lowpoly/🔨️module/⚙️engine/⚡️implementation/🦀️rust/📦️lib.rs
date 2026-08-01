@@ -275,7 +275,7 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<serde_json::Value, LowpolyCoreError> {
+    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<Value, LowpolyCoreError> {
         let transfer = mesh.tessellate()?;
         Ok(serde_json::json!({
             "positions": transfer.positions,
@@ -499,7 +499,7 @@ pub fn mesh_data_from_transfer(transfer: &Value, paint_texture: Option<String>) 
 
 //#region 🔖️MediaExportImport
 /// 🔺️ Tessellates a lowpoly document's active object into a `MeshData` for media export.
-pub fn lowpoly_mesh_from_document(doc: &serde_json::Value) -> Result<MeshData, String> {
+pub fn lowpoly_mesh_from_document(doc: &Value) -> Result<MeshData, String> {
     let projection: LowpolyProjection = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     let loaded = LowpolyDocument::new(projection).map_err(|e| e.to_string())?;
     Ok(loaded
@@ -511,7 +511,7 @@ pub fn lowpoly_mesh_from_document(doc: &serde_json::Value) -> Result<MeshData, S
 }
 
 /// 🔺️ Rebuilds a fresh single-object lowpoly projection from a DWG-imported mesh.
-pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
+pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let halfedge = HalfedgeMesh::from_indexed_triangles(&mesh.positions, &mesh.indices).map_err(|err| format!("{err:?}"))?;
     let mesh_json = halfedge.to_json().map_err(|err| format!("{err:?}"))?;
     let projection = lowpoly::projection_from_mesh_json(&mesh_json, "obj-1", "Imported Mesh");
@@ -519,12 +519,12 @@ pub fn lowpoly_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, 
 }
 
 /// 🧊️ Minimal document wrapper for `3d.mesh` resources — no dedicated schema exists yet.
-pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<serde_json::Value, String> {
+pub fn mesh_document_from_mesh(mesh: &MeshData) -> Result<Value, String> {
     let mesh_value = serde_json::to_value(mesh).map_err(|err| err.to_string())?;
     Ok(serde_json::json!({ "schema": "mesh.document", "mesh": mesh_value }))
 }
 
-pub fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<MeshData, String> {
+pub fn mesh_from_mesh_document(doc: &Value) -> Result<MeshData, String> {
     doc.get("mesh")
         .and_then(|value| serde_json::from_value(value.clone()).ok())
         .filter(|mesh: &MeshData| !mesh.positions.is_empty() && !mesh.indices.is_empty())

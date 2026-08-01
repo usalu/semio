@@ -795,9 +795,16 @@ fn render_generate_preview(runtime: &FlowPlayRuntime) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️FlowPlayApp
-#[derive(Default)]
+use std::cell::RefCell;
+
 pub struct FlowPlayApp {
-    runtime: FlowPlayRuntime,
+    runtime: RefCell<FlowPlayRuntime>,
+}
+
+impl Default for FlowPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(FlowPlayRuntime::default()) }
+    }
 }
 
 impl FlowPlayApp {
@@ -889,23 +896,24 @@ impl DocumentApp for FlowPlayApp {
         FlowFixture::default()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, FlowFixture>, _view_state: &ViewState) -> ActionEmit<FlowOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, FlowFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<FlowOperation> {
         let fixture = doc.projection;
+        let mut runtime = self.runtime.borrow_mut();
         match action {
             // 👁️ View/config actions — mutate runtime, emit no operations (never pollute undo).
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.selected_node_ids = Self::parse_selection(args);
+                runtime.selected_node_ids = Self::parse_selection(args);
                 ActionEmit::default()
             }
             "nodeGraphHover" => ActionEmit::default(),
             "graphPointerDown" => {
-                self.runtime.selected_node_ids.clear();
+                runtime.selected_node_ids.clear();
                 ActionEmit::default()
             }
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                     if let Ok(camera) = serde_json::from_str::<CameraJson>(viewport_json) {
-                        self.runtime.camera = camera;
+                        runtime.camera = camera;
                     }
                 }
                 ActionEmit::default()
@@ -915,15 +923,15 @@ impl DocumentApp for FlowPlayApp {
             // mutation only while the "auto-evaluate" extension is on, but this explicit action
             // always kicks at least one run to completion regardless of that toggle.
             "evaluate" => {
-                let host = host_from_fixture(fixture, &self.runtime);
-                if self.runtime.eval_driver.sync(&host) {
+                let host = host_from_fixture(fixture, &*runtime);
+                if runtime.eval_driver.sync(&host) {
                     return ActionEmit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() };
                 }
                 ActionEmit::default()
             }
             "flowEvalTick" => {
-                let mut host = host_from_fixture(fixture, &self.runtime);
-                let more = self.runtime.eval_driver.tick(&mut host);
+                let mut host = host_from_fixture(fixture, &*runtime);
+                let more = runtime.eval_driver.tick(&mut host);
                 ActionEmit {
                     effects: if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() },
                     ..ActionEmit::default()
@@ -932,46 +940,46 @@ impl DocumentApp for FlowPlayApp {
             "setLodMode" => {
                 if let Some(mode) = args.and_then(|value| value.get("mode").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
                     if mode == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(mode).is_some() {
-                        self.runtime.lod_mode = mode.into();
+                        runtime.lod_mode = mode.into();
                     }
                 }
                 ActionEmit::default()
             }
             "setProximityDistance" => {
                 if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
-                    self.runtime.proximity_distance = value.max(0.0);
+                    runtime.proximity_distance = value.max(0.0);
                 }
                 ActionEmit::default()
             }
             "setGridVisible" => {
                 let pressed = args.and_then(|value| value.get("pressed").or_else(|| value.get("enabled"))).and_then(|value| value.as_bool());
-                self.runtime.grid_visible = pressed.unwrap_or(!self.runtime.grid_visible);
+                runtime.grid_visible = pressed.unwrap_or(!runtime.grid_visible);
                 ActionEmit::default()
             }
             "setGridSnapEnabled" => {
                 let pressed = args.and_then(|value| value.get("pressed").or_else(|| value.get("enabled"))).and_then(|value| value.as_bool());
-                self.runtime.grid_snap_enabled = pressed.unwrap_or(!self.runtime.grid_snap_enabled);
+                runtime.grid_snap_enabled = pressed.unwrap_or(!runtime.grid_snap_enabled);
                 ActionEmit::default()
             }
             "setGridFactor" => {
                 if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
-                    self.runtime.grid_factor = value.clamp(0.5, 50.0);
+                    runtime.grid_factor = value.clamp(0.5, 50.0);
                 }
                 ActionEmit::default()
             }
             "selectAll" => {
-                self.runtime.selected_node_ids = fixture.widgets.iter().map(widget_id).map(str::to_string).collect();
+                runtime.selected_node_ids = fixture.widgets.iter().map(widget_id).map(str::to_string).collect();
                 ActionEmit::default()
             }
             "clearSelection" => {
-                self.runtime.selected_node_ids.clear();
+                runtime.selected_node_ids.clear();
                 ActionEmit::default()
             }
             "contextMenuAt" => {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 if let Some(id) = id {
                     if !id.is_empty() {
-                        self.runtime.selected_node_ids = vec![id.to_string()];
+                        runtime.selected_node_ids = vec![id.to_string()];
                     }
                 }
                 ActionEmit::default()
@@ -980,30 +988,30 @@ impl DocumentApp for FlowPlayApp {
                 let ids: Vec<String> = args
                     .and_then(|value| value.get("ids"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_else(|| self.runtime.selected_node_ids.clone());
+                    .unwrap_or_else(|| runtime.selected_node_ids.clone());
                 let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_bool()).unwrap_or(true);
                 if value {
                     for id in ids {
-                        if !self.runtime.preview_off_node_ids.contains(&id) {
-                            self.runtime.preview_off_node_ids.push(id);
+                        if !runtime.preview_off_node_ids.contains(&id) {
+                            runtime.preview_off_node_ids.push(id);
                         }
                     }
                 } else {
-                    self.runtime.preview_off_node_ids.retain(|id| !ids.contains(id));
+                    runtime.preview_off_node_ids.retain(|id| !ids.contains(id));
                 }
                 ActionEmit::default()
             }
             "openSpotlight" => ActionEmit::default(),
             "replaceImage" => ActionEmit::default(),
             "focusSelection" => {
-                if let Some(camera) = focus_selection_camera(fixture, &self.runtime) {
-                    self.runtime.camera = camera;
+                if let Some(camera) = focus_selection_camera(fixture, &*runtime) {
+                    runtime.camera = camera;
                 }
                 ActionEmit::default()
             }
             "setCatalogueSections" => {
                 if let Some(sections) = args.and_then(|value| value.get("sections")) {
-                    self.runtime.catalogue_sections_json = sections.to_string();
+                    runtime.catalogue_sections_json = sections.to_string();
                 }
                 ActionEmit::default()
             }
@@ -1011,17 +1019,17 @@ impl DocumentApp for FlowPlayApp {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool());
                 if let (Some(id), Some(enabled)) = (id, enabled) {
-                    self.runtime.extension_enabled.insert(id.into(), enabled);
+                    runtime.extension_enabled.insert(id.into(), enabled);
                 }
                 ActionEmit::default()
             }
             "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
                 let spec = flow_fixture_to_form_spec(fixture);
-                let mut generation = self.runtime.generation.clone();
+                let mut generation = runtime.generation.clone();
                 if handle_generation_action(action, args, &mut generation, &spec, FLOW_PLAY_APP_ID) {
-                    self.runtime.generation = generation;
+                    runtime.generation = generation;
                     if matches!(action, "addGeneration" | "selectGeneration" | "updateGenerationValues") {
-                        refresh_generation_preview(fixture, &mut self.runtime);
+                        refresh_generation_preview(fixture, &mut *runtime);
                     }
                 }
                 ActionEmit::default()
@@ -1039,7 +1047,7 @@ impl DocumentApp for FlowPlayApp {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let mut new_id = None;
-                let operations = host_operations(fixture, &self.runtime, |host| match host.add_widget(&descriptor, x, y) {
+                let operations = host_operations(fixture, &*runtime, |host| match host.add_widget(&descriptor, x, y) {
                     Ok(id) => {
                         new_id = Some(id);
                         true
@@ -1047,7 +1055,7 @@ impl DocumentApp for FlowPlayApp {
                     Err(_) => false,
                 });
                 if let Some(id) = new_id {
-                    self.runtime.selected_node_ids = vec![id];
+                    runtime.selected_node_ids = vec![id];
                 }
                 ActionEmit::operations(operations)
             }
@@ -1056,20 +1064,20 @@ impl DocumentApp for FlowPlayApp {
                 let Some(widget_id) = widget_id else {
                     return ActionEmit::default();
                 };
-                let operations = host_operations(fixture, &self.runtime, |host| host.remove_widget(&widget_id).is_ok());
+                let operations = host_operations(fixture, &*runtime, |host| host.remove_widget(&widget_id).is_ok());
                 if !operations.is_empty() {
-                    self.runtime.selected_node_ids.retain(|id| id != &widget_id);
+                    runtime.selected_node_ids.retain(|id| id != &widget_id);
                 }
                 ActionEmit::operations(operations)
             }
             "deleteSelection" => {
-                let selected = self.runtime.selected_node_ids.clone();
-                let operations = host_operations(fixture, &self.runtime, |host| {
+                let selected = runtime.selected_node_ids.clone();
+                let operations = host_operations(fixture, &*runtime, |host| {
                     sync_host_selection(host, &selected);
                     host.delete_selection().is_ok()
                 });
                 if !operations.is_empty() {
-                    self.runtime.selected_node_ids.clear();
+                    runtime.selected_node_ids.clear();
                 }
                 ActionEmit::operations(operations)
             }
@@ -1078,7 +1086,7 @@ impl DocumentApp for FlowPlayApp {
                 let Some(synapse_id) = synapse_id else {
                     return ActionEmit::default();
                 };
-                ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.disconnect(&synapse_id).is_ok()))
+                ActionEmit::operations(host_operations(fixture, &*runtime, |host| host.disconnect(&synapse_id).is_ok()))
             }
             "connectMediaPorts" => {
                 let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str()).map(str::to_string);
@@ -1088,7 +1096,7 @@ impl DocumentApp for FlowPlayApp {
                 let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) else {
                     return ActionEmit::default();
                 };
-                ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.connect_ports(&from, &from_port, &to, &to_port).is_ok()))
+                ActionEmit::operations(host_operations(fixture, &*runtime, |host| host.connect_ports(&from, &from_port, &to, &to_port).is_ok()))
             }
             "moveMediaNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
@@ -1097,7 +1105,7 @@ impl DocumentApp for FlowPlayApp {
                 let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) else {
                     return ActionEmit::default();
                 };
-                let operations = host_operations(fixture, &self.runtime, |host| {
+                let operations = host_operations(fixture, &*runtime, |host| {
                     host.begin_change();
                     host.move_widget(&node_id, x, y).is_ok()
                 });
@@ -1106,7 +1114,7 @@ impl DocumentApp for FlowPlayApp {
                 }
                 ActionEmit::amend(operations, format!("move-{node_id}"))
             }
-            "reorganize" => ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+            "reorganize" => ActionEmit::operations(host_operations(fixture, &*runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
             "patchFlowWidgets" => {
                 let widget_ids: Vec<String> = args.and_then(|value| value.get("widgetIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
@@ -1127,14 +1135,14 @@ impl DocumentApp for FlowPlayApp {
                 let Some(next) = Self::renamed_fixture(fixture, old_id, new_id) else {
                     return ActionEmit::default();
                 };
-                self.runtime.selected_node_ids = vec![new_id.trim().into()];
+                runtime.selected_node_ids = vec![new_id.trim().into()];
                 ActionEmit::operations(flow_fixture_operations(fixture, &next))
             }
             "nodeGraphEdit" | "spotlightCommit" => {
                 let raw_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
-                let selected = self.runtime.selected_node_ids.clone();
+                let selected = runtime.selected_node_ids.clone();
                 let mut clear_selection = false;
-                let operations = host_operations(fixture, &self.runtime, |host| {
+                let operations = host_operations(fixture, &*runtime, |host| {
                     let mut changed = false;
                     for operation in &raw_operations {
                         match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
@@ -1171,7 +1179,7 @@ impl DocumentApp for FlowPlayApp {
                     changed
                 });
                 if clear_selection {
-                    self.runtime.selected_node_ids.clear();
+                    runtime.selected_node_ids.clear();
                 }
                 ActionEmit::operations(operations)
             }
@@ -1184,14 +1192,14 @@ impl DocumentApp for FlowPlayApp {
                 let Some((id, _, _, _, effect)) = entry else {
                     return ActionEmit::default();
                 };
-                if !self.runtime.extension_enabled.get(*id).copied().unwrap_or(false) {
+                if !runtime.extension_enabled.get(*id).copied().unwrap_or(false) {
                     return ActionEmit::default();
                 }
                 match *effect {
-                    "reorganize" => ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+                    "reorganize" => ActionEmit::operations(host_operations(fixture, &*runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
                     "evaluate" => {
-                        let host = host_from_fixture(fixture, &self.runtime);
-                        if self.runtime.eval_driver.sync(&host) {
+                        let host = host_from_fixture(fixture, &*runtime);
+                        if runtime.eval_driver.sync(&host) {
                             return ActionEmit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() };
                         }
                         ActionEmit::default()
@@ -1205,27 +1213,29 @@ impl DocumentApp for FlowPlayApp {
 
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, example load, remote operations) in one place.
-    fn pending_effects(&mut self, doc: &DocumentView<'_, FlowFixture>, _view_state: &ViewState) -> Vec<HostEffect> {
-        let host = host_from_fixture(doc.projection, &self.runtime);
-        if self.runtime.eval_driver.sync(&host) {
+    fn pending_effects(&self, doc: &DocumentView<'_, FlowFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> Vec<HostEffect> {
+        let mut runtime = self.runtime.borrow_mut();
+        let host = host_from_fixture(doc.projection, &*runtime);
+        if runtime.eval_driver.sync(&host) {
             vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
         } else {
             Vec::new()
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, FlowFixture>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, FlowFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
         let labels = resolve_labels::<FlowPlayLabels>(view_state);
+        let runtime = self.runtime.borrow();
         match body_key {
-            FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, &self.runtime, labels),
-            FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, &self.runtime),
-            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(&self.runtime),
-            FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, &self.runtime),
-            FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&self.runtime),
-            FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &self.runtime.selected_node_ids, labels),
-            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, &self.runtime, labels),
-            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &self.runtime.selected_node_ids, &self.runtime, labels),
+            FLOW_PLAY_BODY_MAIN => render_main_graph(fixture, &runtime, labels),
+            FLOW_PLAY_BODY_COMPILED => render_compiled_dag(fixture, &runtime),
+            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(&runtime),
+            FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(fixture, &runtime),
+            FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&runtime),
+            FLOW_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &runtime.selected_node_ids, labels),
+            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(fixture, &runtime, labels),
+            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(fixture, &runtime.selected_node_ids, &runtime, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1245,17 +1255,18 @@ impl DocumentApp for FlowPlayApp {
             .example_labels(HashMap::from([("demo".to_string(), "Demo".to_string())]))
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, FlowFixture>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, FlowFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<FlowPlayLabels>(view_state);
+        let runtime = self.runtime.borrow();
         window_instance_ids(view_state, FLOW_PLAY_WINDOW_MAIN)
             .into_iter()
-            .map(|window_id| (window_id, flow_window_measures(&self.runtime, labels)))
+            .map(|window_id| (window_id, flow_window_measures(&*runtime, labels)))
             .collect()
     }
 }
-//#endregion 🔖FlowPlayApp
+//#endregion 🔖️FlowPlayApp
 
-//#region 🔖Manifest
+//#region 🔖️Manifest
 pub fn create_flow_app() -> App {
     App::from_builder(
         App::builder(FLOW_PLAY_APP_ID, "Flow").document(["semio", "flow"])
@@ -1327,7 +1338,7 @@ pub fn create_flow_app() -> App {
                 PanelGroup::Details,
                 FLOW_PLAY_BODY_INSPECTOR,
             )
-            // ✏ Document-mutating actions — dispatched as VCS operations with true inverses.
+            // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
             .operation("addWidget", "Add Widget")
             .operation("removeWidget", "Remove Widget")
             .operation("deleteSelection", "Delete Selection")
@@ -1339,9 +1350,9 @@ pub fn create_flow_app() -> App {
             .operation("renameFlowWidget", "Rename Widget")
             .operation("nodeGraphEdit", "Node Graph Edit")
             .operation("spotlightCommit", "Spotlight Commit")
-            // 🧩 Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
+            // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
-            // 👁 Ephemeral view/config actions — mutate runtime, emit no operations.
+            // 👁️ Ephemeral view/config actions — mutate runtime, emit no operations.
             .view_action("evaluate", "Evaluate")
             .view_action("selectAll", "Select All")
             .view_action("focusSelection", "Zoom to Selection")
@@ -1368,7 +1379,7 @@ pub fn create_flow_app() -> App {
             .action_with(flow_internal_action("selectGeneration", "Select Generation", ActionKind::View))
             .action_with(flow_internal_action("renameGeneration", "Rename Generation", ActionKind::View))
             .action_with(flow_internal_action("updateGenerationValues", "Update Generation Values", ActionKind::View))
-            // 📝 Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
+            // 📝️ Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", "Kind", vec![
                     ActionArgOption::new("inputSlider", "Slider"),
@@ -1382,9 +1393,9 @@ pub fn create_flow_app() -> App {
     .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"))
     .workflow("flow", "Flow", "graph")
 }
-//#endregion 🔖Manifest
+//#endregion 🔖️Manifest
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1523,7 +1534,7 @@ mod tests {
         assert!(german.contains("Synapsen"), "german labels: {german}");
     }
 
-    /// 🤝 Definitional merge proof: two instances on one backbone make DISJOINT edits (one renames a
+    /// 🤝️ Definitional merge proof: two instances on one backbone make DISJOINT edits (one renames a
     /// widget, the other adds a widget); after exchanging operations both converge — impossible under
     /// whole-fixture `setDocument` snapshots, which would clobber one side.
     #[test]

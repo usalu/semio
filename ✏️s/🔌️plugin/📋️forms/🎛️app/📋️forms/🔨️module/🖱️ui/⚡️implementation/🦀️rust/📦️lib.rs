@@ -1916,7 +1916,7 @@ impl DocumentApp for FormsPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, FormSpec>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, FormSpec>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let spec = doc.projection;
         let contributions = parse_contributions(view_state);
         let labels = resolve_labels::<FormsLabels>(view_state);

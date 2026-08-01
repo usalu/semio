@@ -1370,7 +1370,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let state = doc.projection;
         let runtime = &self.runtime;
         let labels = resolve_labels::<TrinityRewriteLabels>(view_state);
@@ -1416,7 +1416,7 @@ impl DocumentApp for TrinityRewritePlayApp {
         }
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, RewriteRuleState>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, RewriteRuleState>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let mode_for = |window_id: &str| self.runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
         HashMap::from([
             (TRINITY_REWRITE_PLAY_WINDOW_BEFORE.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, mode_for(TRINITY_REWRITE_PLAY_WINDOW_BEFORE))]),

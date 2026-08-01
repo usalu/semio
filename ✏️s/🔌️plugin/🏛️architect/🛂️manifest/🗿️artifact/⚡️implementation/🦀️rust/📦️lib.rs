@@ -1441,7 +1441,7 @@ impl DocumentApp for ArchitectApp {
         sample_plugin()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Program>, _view_state: &ViewState) -> ActionEmit<ProgramOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Program>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<ProgramOperation> {
         self.ensure_default_register();
         let program = doc.projection;
         match action {
@@ -1703,7 +1703,7 @@ impl DocumentApp for ArchitectApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Program>, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Program>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
         let program = doc.projection;
         match body_key {
             ARCHITECT_BODY_ADJACENCY => render_adjacency_body(program, &self.runtime),

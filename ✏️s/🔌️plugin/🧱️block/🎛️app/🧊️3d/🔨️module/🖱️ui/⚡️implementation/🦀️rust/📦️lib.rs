@@ -9,6 +9,7 @@ use semio_framework_plugin::{
     UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiTreeItemNode, ViewState,
 };
 use serde_json::{json, Value};
+use std::cell::RefCell;
 
 //#region 🔖️Constants
 pub const BLOCK3D_PLAY_APP_ID: &str = "block3d-play";
@@ -152,10 +153,18 @@ fn render_world(definition: &Block3dDefinition, active_representation_id: Option
 //#endregion 🔖️Panels
 
 //#region 🔖️Block3dPlayApp
-#[derive(Default)]
 pub struct Block3dPlayApp {
-    selected_ids: Vec<String>,
-    active_representation_id: Option<String>,
+    selected_ids: RefCell<Vec<String>>,
+    active_representation_id: RefCell<Option<String>>,
+}
+
+impl Default for Block3dPlayApp {
+    fn default() -> Self {
+        Self {
+            selected_ids: RefCell::new(Vec::new()),
+            active_representation_id: RefCell::new(None),
+        }
+    }
 }
 
 impl DocumentApp for Block3dPlayApp {
@@ -176,14 +185,24 @@ impl DocumentApp for Block3dPlayApp {
         block_3d_engine::empty_block3d_definition()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Block3dDefinition>, _view_state: &ViewState) -> ActionEmit<Block3dOperation> {
+    fn handle_action(
+        &self,
+        action: &str,
+        args: Option<&Value>,
+        doc: &DocumentView<'_, Block3dDefinition>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<Block3dOperation> {
         match action {
             "setSelection" => {
-                self.selected_ids = selection_ids(args);
+                *self.selected_ids.borrow_mut() = selection_ids(args);
                 ActionEmit::default()
             }
             "setActiveRepresentation" => {
-                self.active_representation_id = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).map(str::to_string);
+                *self.active_representation_id.borrow_mut() = args
+                    .and_then(|value| value.get("value"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
                 ActionEmit::default()
             }
             "patchObjectKind" => {
@@ -249,12 +268,19 @@ impl DocumentApp for Block3dPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Block3dDefinition>, view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, Block3dDefinition>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> UiNode {
         let labels = resolve_labels::<Block3dLabels>(view_state);
+        let active_representation_id = self.active_representation_id.borrow();
         match body_key {
-            BLOCK3D_BODY_WORLD => render_world(doc.projection, self.active_representation_id.as_deref(), labels),
-            BLOCK3D_BODY_DOCUMENT => build_document_tree(doc.projection, &self.selected_ids, labels),
-            BLOCK3D_BODY_INSPECTOR => build_inspection_tree(doc.projection, self.active_representation_id.as_deref(), labels),
+            BLOCK3D_BODY_WORLD => render_world(doc.projection, active_representation_id.as_deref(), labels),
+            BLOCK3D_BODY_DOCUMENT => build_document_tree(doc.projection, &*self.selected_ids.borrow(), labels),
+            BLOCK3D_BODY_INSPECTOR => build_inspection_tree(doc.projection, active_representation_id.as_deref(), labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

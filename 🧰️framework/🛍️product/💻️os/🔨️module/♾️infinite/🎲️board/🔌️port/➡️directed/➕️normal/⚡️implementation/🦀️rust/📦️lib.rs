@@ -178,14 +178,14 @@ pub fn puzzle_2d_lod_scale_json() -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
-/// @emoji 🎨 Whether drawable style resolves committed selection chrome or neutral cached geometry.
+/// @emoji 🎨️ Whether drawable style resolves committed selection chrome or neutral cached geometry.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum StyleChromePass {
     CachedBase,
     InteractionOverlay,
 }
 
-/// @emoji 🎨 Which node/handle primitives to paint in a layered draw pass (fills behind icons/text).
+/// @emoji 🎨️ Which node/handle primitives to paint in a layered draw pass (fills behind icons/text).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum NodeHandlePaintLayer {
     Full,
@@ -284,22 +284,22 @@ pub struct BoardHost {
     pub wire_kinds: BTreeMap<String, WireKindDef>,
     pub node_kinds: BTreeMap<String, NodeKindDef>,
     pub edge_kinds: BTreeMap<String, EdgeKindDef>,
-    /// @emoji 🔺 Registry of edge tip shapes keyed by catalog id (built-ins seeded at init).
+    /// @emoji 🔺️ Registry of edge tip shapes keyed by catalog id (built-ins seeded at init).
     pub edge_tips: BTreeMap<String, EdgeTipDef>,
-    /// @emoji 🔗 Kind-compatibility rules for link gestures; empty = unrestricted.
+    /// @emoji 🔗️ Kind-compatibility rules for link gestures; empty = unrestricted.
     pub link_compat_rules: Vec<LinkCompatRule>,
     pub selection: BTreeSet<String>,
-    /// @emoji 👁 Live rectangle/lasso preview ids (committed selection stays in `selection` until pointer-up).
+    /// @emoji 👁️ Live rectangle/lasso preview ids (committed selection stays in `selection` until pointer-up).
     pub preselect: BTreeSet<String>,
-    /// @emoji 💠 During preselect: anchor selection \\ `preselect` (secondary chrome while dragging).
+    /// @emoji 💠️ During preselect: anchor selection \\ `preselect` (secondary chrome while dragging).
     pub preselect_removed: BTreeSet<String>,
-    /// @emoji 💠 After commit: ids dropped in the last `select` transition only.
+    /// @emoji 💠️ After commit: ids dropped in the last `select` transition only.
     pub selection_exit_highlight: BTreeSet<String>,
     pub selection_options: SelectionOptions,
     pub hovered_id: Option<String>,
-    /// @emoji 🖱 Transitive same-kind hover `(domain, kind_id)` when hovering a kind row or derived from `hovered_id`.
+    /// @emoji 🖱️ Transitive same-kind hover `(domain, kind_id)` when hovering a kind row or derived from `hovered_id`.
     pub hovered_kind: Option<(String, String)>,
-    /// @emoji 💠 Externally driven highlight ids (e.g. cross-panel variable binding); below hover, above neutral.
+    /// @emoji 💠️ Externally driven highlight ids (e.g. cross-panel variable binding); below hover, above neutral.
     pub highlighted_ids: BTreeSet<String>,
     pub interaction: Interaction,
     pub width: u32,
@@ -314,32 +314,32 @@ pub struct BoardHost {
     /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
     pub link_screen_preview: Option<Vec<Point>>,
     pub canvas_theme: CanvasPalette,
-    /// @emoji 📐 Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
+    /// @emoji 📐️ Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
     pub grid_factor: f64,
-    /// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
+    /// @emoji 🧲️ When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
     pub grid_snap_enabled: bool,
     pub preserve_original_element_style: bool,
-    /// @emoji 📶 When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier when set.
+    /// @emoji 📶️ When true (default), camera zoom selects draw LOD; when false, optional `forced_draw_lod` pins the tier when set.
     pub automatic_lod: bool,
     forced_draw_lod: Option<BoardDrawLod>,
     pub icon_paint_cache: IconPaintCache,
-    /// @emoji 📡 Dedupes {@code linkCompatibleNodes} emissions while a link wire is active.
+    /// @emoji 📡️ Dedupes {@code linkCompatibleNodes} emissions while a link wire is active.
     link_compat_nodes_emit_key: Option<String>,
-    /// @emoji 📡 Dedupes {@code linkTargetRing} emissions while a link wire is active.
+    /// @emoji 📡️ Dedupes {@code linkTargetRing} emissions while a link wire is active.
     link_target_ring_emit_key: Option<String>,
-    /// @emoji 📡 Dedupes `select` emissions when ids are unchanged but modifier merge mode changes mid‑gesture.
+    /// @emoji 📡️ Dedupes `select` emissions when ids are unchanged but modifier merge mode changes mid‑gesture.
     last_select_emit_sig: Option<(Vec<String>, Option<String>)>,
-    /// @emoji 📡 Dedupes `preselect` emissions during area-select drag.
+    /// @emoji 📡️ Dedupes `preselect` emissions during area-select drag.
     last_preselect_emit_sig: Option<(Vec<String>, Vec<String>, Option<String>)>,
-    /// @emoji 🧿 Bumped when drawable content changes (not camera); keys {@link BoardHost.world_content_cache}.
+    /// @emoji 🧿️ Bumped when drawable content changes (not camera); keys {@link BoardHost.world_content_cache}.
     content_scene_generation: u64,
-    /// @emoji 🎨 World-space Vello content reused across pan/zoom when generation and LOD match.
+    /// @emoji 🎨️ World-space Vello content reused across pan/zoom when generation and LOD match.
     world_content_cache: RefCell<Option<(u64, BoardDrawLod, Scene)>>,
-    /// @emoji 🔍 True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
+    /// @emoji 🔍️ True while the wheel zoom gesture is active (skip grid + per-tile rebuild hot paths).
     wheel_zoom_active: bool,
-    /// @emoji 📶 LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
+    /// @emoji 📶️ LOD tier pinned for the active wheel gesture so pan/zoom does not rebuild {@link BoardHost.world_content_cache} on every band crossing.
     wheel_zoom_render_lod: Option<BoardDrawLod>,
-    /// @emoji 🖌 Active viewport utility (`select` suppresses brush slot logic).
+    /// @emoji 🖌️ Active viewport utility (`select` suppresses brush slot logic).
     active_utility: ActiveUtility,
     suggestion_offset: f64,
     brush_node_size: f64,
@@ -353,11 +353,11 @@ pub struct BoardHost {
     brush_placement_serial: u64,
     brush_node_kind_weights: HashMap<String, f64>,
     brush_handle_kind_weights: HashMap<String, f64>,
-    /// @emoji ⌥ Alt held while brushing — enables suggestion offset and commit-on-leave.
+    /// @emoji ⌥️ Alt held while brushing — enables suggestion offset and commit-on-leave.
     brush_alt_pressed: bool,
-    /// @emoji ✨ Suggestions menu opened a slot outside brush utility — use suggestion offset and highlight source handle.
+    /// @emoji ✨️ Suggestions menu opened a slot outside brush utility — use suggestion offset and highlight source handle.
     brush_slot_suggestions_active: bool,
-    /// @emoji 🪣 Resumable greedy fill session for chunked WASM builds.
+    /// @emoji 🪣️ Resumable greedy fill session for chunked WASM builds.
     brush_fill_session: Option<BrushFillSession>,
     pub port_mode: GraphPortMode,
 }
@@ -430,7 +430,7 @@ impl Default for BoardHost {
 }
 
 impl BoardHost {
-    /// @emoji 📶 Draw LOD used while building the vector scene (pins during wheel zoom).
+    /// @emoji 📶️ Draw LOD used while building the vector scene (pins during wheel zoom).
     fn draw_lod_for_frame(&self) -> BoardDrawLod {
         if self.wheel_zoom_active {
             if let Some(pinned) = self.wheel_zoom_render_lod {

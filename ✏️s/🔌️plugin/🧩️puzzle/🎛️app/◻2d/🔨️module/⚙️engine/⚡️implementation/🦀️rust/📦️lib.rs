@@ -34,28 +34,6 @@ mod board_metabolism_icons {
     include!(concat!(env!("OUT_DIR"), "/board_metabolism_icon_match.rs"));
 }
 
-fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
-    let t = encoded.trim();
-    if t.is_empty() {
-        return None;
-    }
-    if let Some(s) = board_metabolism_icons::board_metabolism_icon_svg(t) {
-        return Some(s.to_string());
-    }
-    let lower = t.to_ascii_lowercase();
-    if lower.starts_with("<?xml") || lower.contains("<svg") {
-        return Some(t.to_string());
-    }
-    None
-}
-
-mod board_icon_codec {
-    pub use crate::cavas::icon_codec::{board_resolve_icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
-    pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
-        resolve_with_lookup(encoded, super::puzzle_themed_icon_lookup)
-    }
-}
-
 pub fn puzzle_themed_icon_lookup(key: &str) -> Option<&'static str> {
     board_metabolism_icons::board_metabolism_icon_svg(key)
 }
@@ -83,7 +61,7 @@ impl cavas::CanvasExtension for Puzzle2dExtension {
     }
 }
 
-impl graph::GraphExtension for Puzzle2dExtension {}
+impl GraphExtension for Puzzle2dExtension {}
 // #endregion 🔖️Puzzle2dExtension
 
 

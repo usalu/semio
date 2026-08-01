@@ -471,7 +471,7 @@ pub fn idiom(lang: &str) -> Option<IdiomHooks> {
 pub mod test_support {
     use super::*;
 
-    /// @emoji 🔁 `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
+    /// @emoji 🔁️ `parse(print(value)) == value` for a `RecordSpec` and an already-built `RecordValue`.
     pub fn assert_schema_round_trip(value: &RecordValue, spec: &RecordSpec) {
         let printed = print(value, spec, JoinMode::Document);
         let opts = ParseOptions::default();
@@ -479,14 +479,14 @@ pub mod test_support {
         assert_eq!(value, &reparsed, "schema round trip diverged;\nprinted:\n{printed}");
     }
 
-    /// @emoji ♻ `canonicalize(canonicalize(x)) == canonicalize(x)`.
+    /// @emoji ♻️ `canonicalize(canonicalize(x)) == canonicalize(x)`.
     pub fn assert_idempotent(text: &str, spec: &RecordSpec) {
         let once = canonicalize(text, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("canonicalize failed: {e}"));
         let twice = canonicalize(&once, spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("second canonicalize failed: {e}"));
         assert_eq!(once, twice, "canonicalization must be idempotent");
     }
 
-    /// @emoji 📏 Document and Inline renders of the same value must parse back to equal values,
+    /// @emoji 📏️ Document and Inline renders of the same value must parse back to equal values,
     /// and the Inline render must be exactly one line — the newline law, checked generically.
     pub fn assert_document_inline_agree(value: &RecordValue, spec: &RecordSpec) {
         let inline_text = print(value, spec, JoinMode::Inline);
@@ -496,9 +496,9 @@ pub mod test_support {
         assert_eq!(value, &reparsed, "Document and Inline renders must parse to the same value");
     }
 }
-//#endregion 🔖TestSupport
+//#endregion 🔖️TestSupport
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;

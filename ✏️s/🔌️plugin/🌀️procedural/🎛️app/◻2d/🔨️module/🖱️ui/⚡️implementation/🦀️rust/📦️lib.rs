@@ -18,6 +18,7 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::{json, Value};
+use std::cell::RefCell;
 
 //#region 🔖️Constants
 const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
@@ -425,7 +426,7 @@ fn render_generate_preview(play: &Procedural2dPlayView, labels: &Procedural2dLab
 //#region 🔖️Procedural2dPlayApp
 #[derive(Default)]
 pub struct Procedural2dPlayApp {
-    runtime: Procedural2dPlayRuntime,
+    runtime: RefCell<Procedural2dPlayRuntime>,
 }
 
 impl Procedural2dPlayApp {
@@ -447,20 +448,21 @@ impl Procedural2dPlayApp {
     /// 🧬️ Emits generation operations for the generate-mode actions, updating ephemeral selection and
     /// preview from the post-operation state. `selectGeneration` is a view action (no operations).
     fn handle_generation(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         projection: &Procedural2dDocument,
     ) -> ActionEmit<Procedural2dOperation> {
         let spec = flow_fixture_to_form_spec(&projection.fixture);
         let mut state = projection.generation.clone();
-        state.selected_generation_id = self.runtime.selected_generation_id.clone();
+        let mut runtime = self.runtime.borrow_mut();
+        state.selected_generation_id = runtime.selected_generation_id.clone();
         if action == "selectGeneration" {
             if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
                 select_generation(&mut state, id);
             }
-            self.runtime.selected_generation_id = state.selected_generation_id.clone();
-            refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
+            runtime.selected_generation_id = state.selected_generation_id.clone();
+            refresh_generation_preview(&mut runtime, &projection.fixture, &state);
             return ActionEmit::default();
         }
         let Some(operations) = generation_operations(action, args, &state, &spec) else {
@@ -469,8 +471,8 @@ impl Procedural2dPlayApp {
         for operation in &operations {
             apply_generation_operation(&mut state, operation);
         }
-        self.runtime.selected_generation_id = state.selected_generation_id.clone();
-        refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
+        runtime.selected_generation_id = state.selected_generation_id.clone();
+        refresh_generation_preview(&mut runtime, &projection.fixture, &state);
         let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
         ActionEmit {
             operations: operations.into_iter().map(Procedural2dOperation::Generation).collect(),
@@ -510,31 +512,32 @@ impl DocumentApp for Procedural2dPlayApp {
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.selected_ids = selection_ids(args);
+                self.runtime.borrow_mut().selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "nodeGraphHover" => ActionEmit::default(),
             "setShowMode" => {
                 if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                    self.runtime.show_mode = mode.into();
+                    self.runtime.borrow_mut().show_mode = mode.into();
                 }
                 ActionEmit::default()
             }
             "generate" => {
-                self.runtime.show_mode = "generate".into();
+                self.runtime.borrow_mut().show_mode = "generate".into();
                 ActionEmit::default()
             }
             "setEvalOutputs" => {
                 if let Some(outputs) = args.and_then(|value| value.get("outputs")) {
-                    self.runtime.eval_driver.set_eval_json(outputs.to_string());
+                    self.runtime.borrow_mut().eval_driver.set_eval_json(outputs.to_string());
                 } else if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
-                    self.runtime.eval_driver.set_eval_json(json_text.into());
+                    self.runtime.borrow_mut().eval_driver.set_eval_json(json_text.into());
                 }
                 ActionEmit::default()
             }
             "flowEvalTick" => {
-                let mut host = host_from_fixture_with_driver(fixture, Some(&self.runtime.eval_driver));
-                let more = self.runtime.eval_driver.tick(&mut host);
+                let mut runtime = self.runtime.borrow_mut();
+                let mut host = host_from_fixture_with_driver(fixture, Some(&runtime.eval_driver));
+                let more = runtime.eval_driver.tick(&mut host);
                 ActionEmit { effects: if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() }, ..ActionEmit::default() }
             }
             "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
@@ -545,7 +548,7 @@ impl DocumentApp for Procedural2dPlayApp {
                     .and_then(|value| value.as_str())
                     .and_then(|json| serde_json::from_str(json).ok())
                 {
-                    self.runtime.camera = camera;
+                    self.runtime.borrow_mut().camera = camera;
                 }
                 ActionEmit::default()
             }
@@ -556,7 +559,7 @@ impl DocumentApp for Procedural2dPlayApp {
                     .and_then(|value| value.as_array())
                     .cloned()
                     .unwrap_or_default();
-                let selected = self.runtime.selected_ids.clone();
+                let selected = self.runtime.borrow().selected_ids.clone();
                 let mut cleared = false;
                 let operations = self.ops_from_host_mutation(fixture, |host| {
                     for operation in &sub_operations {
@@ -591,7 +594,7 @@ impl DocumentApp for Procedural2dPlayApp {
                     }
                 });
                 if cleared {
-                    self.runtime.selected_ids.clear();
+                    self.runtime.borrow_mut().selected_ids.clear();
                 }
                 ActionEmit::operations(operations)
             }
@@ -621,7 +624,7 @@ impl DocumentApp for Procedural2dPlayApp {
                 let mut host = host_from_fixture(fixture);
                 let baseline = host.fixture.clone();
                 if let Ok(id) = host.add_widget(&descriptor, x, y) {
-                    self.runtime.selected_ids = vec![id];
+                    self.runtime.borrow_mut().selected_ids = vec![id];
                     return ActionEmit::operations(procedural2d_fixture_operations(&baseline, &host.fixture));
                 }
                 ActionEmit::default()
@@ -633,7 +636,7 @@ impl DocumentApp for Procedural2dPlayApp {
                         let _ = host.remove_widget(&widget_id);
                     });
                     if !operations.is_empty() {
-                        self.runtime.selected_ids.retain(|id| id != &widget_id);
+                        self.runtime.borrow_mut().selected_ids.retain(|id| id != &widget_id);
                     }
                     return ActionEmit::operations(operations);
                 }
@@ -664,17 +667,29 @@ impl DocumentApp for Procedural2dPlayApp {
     /// 🧵️ Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
     /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
     /// action re-checking. `FlowEvalDriver::sync` is cheap when nothing changed.
-    fn pending_effects(&mut self, doc: &DocumentView<'_, Procedural2dDocument>, _view_state: &ViewState) -> Vec<semio_framework_core::kernel::HostEffect> {
-        let host = host_from_fixture_with_driver(&doc.projection.fixture, Some(&self.runtime.eval_driver));
-        if self.runtime.eval_driver.sync(&host) {
+    fn pending_effects(
+        &self,
+        doc: &DocumentView<'_, Procedural2dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> Vec<semio_framework_core::kernel::HostEffect> {
+        let mut runtime = self.runtime.borrow_mut();
+        let host = host_from_fixture_with_driver(&doc.projection.fixture, Some(&runtime.eval_driver));
+        if runtime.eval_driver.sync(&host) {
             vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
         } else {
             Vec::new()
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Procedural2dDocument>, view_state: &ViewState) -> UiNode {
-        let play = play_view(doc.projection, &self.runtime);
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, Procedural2dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> UiNode {
+        let play = play_view(doc.projection, &self.runtime.borrow());
         let labels = procedural2d_labels(view_state);
         match body_key {
             PROCEDURAL2D_PLAY_BODY_MAIN => render_main_graph(&play, labels),

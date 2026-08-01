@@ -1274,7 +1274,7 @@ impl DocumentApp for NotePlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, NoteDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<NotePlayLabels>(view_state);
         let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into());
@@ -1304,7 +1304,7 @@ impl DocumentApp for NotePlayApp {
         }
     }
 
-    fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+    fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into());
         HashMap::from([
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(doc.projection, &self.camera, &self.selected_ids, &self.engagement_input)),
@@ -1312,7 +1312,7 @@ impl DocumentApp for NotePlayApp {
         ])
     }
 
-    fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<NotePlayLabels>(view_state);
         HashMap::from([
             (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, &self.camera, labels)),
@@ -1330,9 +1330,9 @@ impl DocumentApp for NotePlayApp {
             .utility_labels(note_utility_labels(is_de))
     }
 }
-//#endregion 🔖NotePlayApp
+//#endregion 🔖️NotePlayApp
 
-//#region 🔖Manifest
+//#region 🔖️Manifest
 pub fn create_note_app() -> App {
     let document = empty_note_document();
     let mut app = App::from_builder(
@@ -1378,18 +1378,18 @@ pub fn create_note_app() -> App {
                 PanelGroup::Details,
                 NOTE_PLAY_BODY_PROPERTIES,
             )
-            // 📇 Palette-visible selection commands (P0) — ephemeral selection is View, block edits are Operations.
+            // 📇️ Palette-visible selection commands (P0) — ephemeral selection is View, block edits are Operations.
             .view_action("selectAll", "Select All")
             .view_action("clearSelection", "Clear Selection")
             .operation("deleteSelection", "Delete Selection")
             .operation("duplicateSelection", "Duplicate Selection")
-            // ➕ Palette-visible block insertion (P1) with a staged argument form.
+            // ➕️ Palette-visible block insertion (P1) with a staged argument form.
             .operation("addBlock", "Add Block")
             .operation("setActiveExample", "Set Active Example")
-            // 🐚 Import/export footer actions → panel Shell actions emitting host effects (S).
+            // 🐚️ Import/export footer actions → panel Shell actions emitting host effects (S).
             .shell_action("loadRequest", "Import")
             .shell_action("saveDownload", "Export")
-            // 🔧 Internal content operations — inspector/tree/drag/import-bound, not palette commands.
+            // 🔧️ Internal content operations — inspector/tree/drag/import-bound, not palette commands.
             .action_with(note_internal_action("setGridVisible", "Set Grid Visible", ActionKind::Operation))
             .action_with(note_internal_action("toggleGrid", "Toggle Grid", ActionKind::Operation))
             .action_with(note_internal_action("setGridSpacing", "Set Grid Spacing", ActionKind::Operation))
@@ -1417,14 +1417,14 @@ pub fn create_note_app() -> App {
             .action_with(note_internal_action("nudgeSelectionDownFast", "Nudge Selection Down Fast", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionLeftFast", "Nudge Selection Left Fast", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionRightFast", "Nudge Selection Right Fast", ActionKind::Operation))
-            // 👁 Ephemeral view state — selection/hover/engagement/camera scratch, never a document operation.
+            // 👁️ Ephemeral view state — selection/hover/engagement/camera scratch, never a document operation.
             .action_with(note_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(note_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(note_internal_action("engagementInput", "Engagement Input", ActionKind::View))
             .action_with(note_internal_action("navigatorEngagementInput", "Navigator Engagement Input", ActionKind::View))
             .action_with(note_internal_action("setCamera", "Set Camera", ActionKind::View))
             .action_with(note_internal_action("setCameraZoom", "Set Camera Zoom", ActionKind::View))
-            // 📝 Staged argument forms for the palette-eligible actions.
+            // 📝️ Staged argument forms for the palette-eligible actions.
             .action_args("addBlock", vec![
                 ActionArgDef::select("kind", "Kind", vec![
                     ActionArgOption::new("text", "Text"),
@@ -1443,7 +1443,7 @@ pub fn create_note_app() -> App {
                 ]).required().default_value("semio"),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
-            // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
+            // 🧰️ Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
             .utility(note_utility("text", "Text", "type", "Block", UtilityCategory::Utilities))
@@ -1486,9 +1486,9 @@ pub fn create_note_app() -> App {
     app.example("semio", "Semio", semio_example_json())
         .workflow("note", "Note", "document")
 }
-//#endregion 🔖Manifest
+//#endregion 🔖️Manifest
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1717,7 +1717,7 @@ mod tests {
         assert!(undo.events.is_empty(), "no gesture edit should exist to undo");
     }
 
-    /// 🎥 `setCamera`/`setCameraZoom` are View actions — they must never emit a `NoteOperation` (no VCS
+    /// 🎥️ `setCamera`/`setCameraZoom` are View actions — they must never emit a `NoteOperation` (no VCS
     /// edit, no undo entry) and instead write straight into `self.camera`, which the composite scene's
     /// `documentJson.camera` then reflects.
     #[test]

@@ -1,0 +1,5 @@
+beispiel count 1
+has Abbau true
+has Betonwald false
+has Concrete false
+options [ "Vollbild" ]

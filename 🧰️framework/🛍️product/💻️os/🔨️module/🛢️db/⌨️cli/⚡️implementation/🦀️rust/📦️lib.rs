@@ -1041,14 +1041,14 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     std::process::exit(main_impl(&args));
 }
-//#endregion 🔖Cli
+//#endregion 🔖️Cli
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    //#region 🧸Fixtures
+    //#region 🧸️Fixtures
     fn tempdir(name: &str) -> std::path::PathBuf {
         let mut dir = std::env::temp_dir();
         dir.push(format!("db_cli-test-{name}-{}-{}", std::process::id(), now_ms()));
@@ -1074,7 +1074,7 @@ mod tests {
         }
     }
 
-    /// 🌱 Seeds `doc-1` at `root` with one committed, `Fsync`-durable transaction through the real
+    /// 🌱️ Seeds `doc-1` at `root` with one committed, `Fsync`-durable transaction through the real
     /// `Database::create_document`/`DocumentHandle::submit` round trip, then cleanly shuts down.
     fn seed_document(root: &Path) {
         let database = db::Database::open_at(root, db::Profile::Test).unwrap();
@@ -1084,17 +1084,17 @@ mod tests {
         db::actor::block_on(handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync })).unwrap().unwrap();
         database.shutdown(std::time::Duration::from_secs(1)).unwrap();
     }
-    //#endregion 🧸Fixtures
+    //#endregion 🧸️Fixtures
 
-    //#region 🔖Inspect
+    //#region 🔖️Inspect
     #[test]
     fn cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root() {
         let root = tempdir("inspect-fresh");
         assert_eq!(main_impl(&[String::from("inspect"), root.to_string_lossy().to_string()]), 0);
     }
-    //#endregion 🔖Inspect
+    //#endregion 🔖️Inspect
 
-    //#region 🔖FullCycle
+    //#region 🔖️FullCycle
     #[test]
     fn cli_full_cycle_succeeds_for_a_seeded_document() {
         let root = tempdir("full-cycle");
@@ -1120,9 +1120,9 @@ mod tests {
         assert_eq!(main_impl(&[String::from("doc"), root_str.clone(), String::from("never-created")]), 1);
         assert_eq!(main_impl(&[String::from("query"), root_str, String::from("never-created"), String::from("x")]), 1);
     }
-    //#endregion 🔖FullCycle
+    //#endregion 🔖️FullCycle
 
-    //#region 🔖Verify
+    //#region 🔖️Verify
     #[test]
     fn cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it() {
         let root = tempdir("torn-tail");
@@ -1146,9 +1146,9 @@ mod tests {
         assert_eq!(main_impl(&[String::from("repair"), root_str.clone(), String::from("doc-1")]), 0);
         assert_eq!(main_impl(&[String::from("verify"), root_str, String::from("doc-1")]), 0);
     }
-    //#endregion 🔖Verify
+    //#endregion 🔖️Verify
 
-    //#region 🔖ConflictSimulate
+    //#region 🔖️ConflictSimulate
     #[test]
     fn cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones() {
         assert_eq!(
@@ -1166,9 +1166,9 @@ mod tests {
         assert_eq!(main_impl(&[String::from("conflict-simulate")]), 2);
         assert_eq!(main_impl(&[String::from("conflict-simulate"), String::from("--touch-a"), String::from("a")]), 2);
     }
-    //#endregion 🔖ConflictSimulate
+    //#endregion 🔖️ConflictSimulate
 
-    //#region 🔖ReplicaSimulate
+    //#region 🔖️ReplicaSimulate
     #[test]
     fn cli_replica_simulate_copies_missing_commands_to_a_fresh_follower() {
         let leader_root = tempdir("replica-leader");
@@ -1180,9 +1180,9 @@ mod tests {
         assert_eq!(main_impl(&[String::from("replica-simulate"), leader_str, follower_str.clone(), String::from("doc-1")]), 0);
         assert_eq!(main_impl(&[String::from("verify"), follower_str, String::from("doc-1")]), 0);
     }
-    //#endregion 🔖ReplicaSimulate
+    //#endregion 🔖️ReplicaSimulate
 
-    //#region 🔖Migrate
+    //#region 🔖️Migrate
     #[test]
     fn cli_migrate_appends_a_migration_record_visible_to_wal_inspect() {
         let root = tempdir("migrate");
@@ -1198,9 +1198,9 @@ mod tests {
     fn cli_migrate_reports_a_usage_error_with_too_few_args() {
         assert_eq!(main_impl(&[String::from("migrate"), String::from("root-only")]), 2);
     }
-    //#endregion 🔖Migrate
+    //#endregion 🔖️Migrate
 
-    //#region 🔖Profile
+    //#region 🔖️Profile
     #[test]
     fn cli_profile_reports_throughput_for_n_commands_on_a_fresh_document() {
         let root = tempdir("profile");
@@ -1209,7 +1209,7 @@ mod tests {
             main_impl(&[String::from("profile"), root_str.clone(), String::from("doc-1"), String::from("--commands"), String::from("5"), String::from("--durability"), String::from("memory")]),
             0
         );
-        // 🎯 The 5 profiled commands are real, durable commits — verified via the query subcommand
+        // 🎯️ The 5 profiled commands are real, durable commits — verified via the query subcommand
         // rather than parsing this test's own stdout (`println!` isn't easily captured in-process).
         assert_eq!(main_impl(&[String::from("query"), root_str, String::from("doc-1"), String::from("cli/profile/counter")]), 0);
     }

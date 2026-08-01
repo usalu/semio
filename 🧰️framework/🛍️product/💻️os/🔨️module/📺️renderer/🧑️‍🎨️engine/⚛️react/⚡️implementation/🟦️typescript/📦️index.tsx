@@ -9066,7 +9066,7 @@ async function performRefreshUi(client: AppChannelClient, request: PluginUiRefre
   }
   if (probes.length === 0) return {};
 
-  const frames = await client.refreshUi(probes);
+  const frames = await client.refreshUi(probes, request.viewState ?? {});
   const sections = frames.filter((frame): frame is Extract<AppFrameValue, { readonly UiSection: unknown }> => "UiSection" in frame);
   if (sections.length !== probes.length) {
     const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);

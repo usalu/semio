@@ -75,8 +75,7 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         diff_view: None,
         event_feed: None,
         menu: None,
-    },
-    menu: None,
+    }
 }
 
 fn render_graph_window(graph: &MathGraph, camera: &MathCamera) -> UiNode {
@@ -95,6 +94,8 @@ fn render_geometry_window(geometry: &MathGeometry) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️MathematicalPlayApp
+use std::cell::RefCell;
+
 /// 🎛️ Ephemeral view state (node-graph camera) — lives in the app struct, not the document, so it
 /// stays out of undo history and off the operation channel.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -102,9 +103,14 @@ struct MathPlayRuntime {
     camera: MathCamera,
 }
 
-#[derive(Default)]
 pub struct MathematicalPlayApp {
-    runtime: MathPlayRuntime,
+    runtime: RefCell<MathPlayRuntime>,
+}
+
+impl Default for MathematicalPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(MathPlayRuntime::default()) }
+    }
 }
 
 impl DocumentApp for MathematicalPlayApp {
@@ -125,7 +131,7 @@ impl DocumentApp for MathematicalPlayApp {
         MathProjection::default()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, MathProjection>, _view_state: &ViewState) -> ActionEmit<MathOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, MathProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<MathOperation> {
         match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<MathProjection>(value.clone()).ok()) {
@@ -193,7 +199,7 @@ impl DocumentApp for MathematicalPlayApp {
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(Value::as_str) {
                     if let Ok(camera) = serde_json::from_str::<MathCamera>(viewport_json) {
-                        self.runtime.camera = camera;
+                        self.runtime.borrow_mut().camera = camera;
                     }
                 }
             }
@@ -207,9 +213,9 @@ impl DocumentApp for MathematicalPlayApp {
         ActionEmit::default()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, MathProjection>, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, MathProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
         match body_key {
-            MATH_BODY_GRAPH => render_graph_window(&doc.projection.graph, &self.runtime.camera),
+            MATH_BODY_GRAPH => render_graph_window(&doc.projection.graph, &self.runtime.borrow().camera),
             MATH_BODY_GEOMETRY => render_geometry_window(&doc.projection.geometry),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }

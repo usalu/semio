@@ -756,9 +756,9 @@ fn cmd_upgrade(rest: &[String]) -> i32 {
         }
     }
 }
-//#endregion 🔖Upgrade
+//#endregion 🔖️Upgrade
 
-//#region 🔖Cli
+//#region 🔖️Cli
 fn print_help() {
     println!("protocol — inspect/verify/hash/log/compile/decompile/diff/compact/repair/upgrade .spr binary op-log files\n");
     println!("USAGE:");
@@ -774,7 +774,7 @@ fn print_help() {
     println!("  protocol upgrade <file>");
 }
 
-/// 🚪 The CLI's single testable entry point — `main` is a thin `std::process::exit` wrapper
+/// 🚪️ The CLI's single testable entry point — `main` is a thin `std::process::exit` wrapper
 /// around this. Never panics on malformed input; every subcommand handler maps errors to a
 /// printed message and a non-zero exit code instead. Exit codes: `0` success, `1` runtime/decode
 /// failure, `2` usage error.

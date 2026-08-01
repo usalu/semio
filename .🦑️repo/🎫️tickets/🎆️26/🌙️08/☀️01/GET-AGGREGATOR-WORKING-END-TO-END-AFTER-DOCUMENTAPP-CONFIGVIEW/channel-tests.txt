@@ -1,0 +1,65 @@
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-framework-os-kernel-protocol-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-framework-os-kernel-db-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-framework-os-kernel-pack-cli` (manifest) generated 1 warning
+warning: profile package spec `semio-s-kernel-store` in profile `release` did not match any packages
+   Compiling semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 1.21s
+     Running unittests ../../../🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs (/Users/ueli/Documents/semio/target/debug/deps/protocol_channel-429774fdf3657613)
+
+running 44 tests
+test tests::app_command_attach_backbone_round_trips ... ok
+test tests::app_command_apply_envelopes_round_trips ... ok
+test tests::app_command_bye_round_trips ... ok
+test tests::app_command_context_menu_round_trips ... ok
+test tests::app_command_config_command_round_trips ... ok
+test tests::app_command_detach_backbone_round_trips ... ok
+test tests::app_command_command_text_round_trips ... ok
+test tests::app_command_command_round_trips ... ok
+test tests::app_command_document_command_round_trips ... ok
+test tests::app_command_fixture_corpus_matches_golden_hex_and_round_trips ... ok
+test tests::app_command_load_config_round_trips ... ok
+test tests::app_command_hello_round_trips ... ok
+test tests::app_command_load_document_round_trips ... ok
+test tests::app_command_media_fingerprint_round_trips ... ok
+test tests::app_command_media_in_round_trips ... ok
+test tests::app_command_media_out_round_trips ... ok
+test tests::app_command_read_config_round_trips ... ok
+test tests::app_command_read_document_round_trips ... ok
+test tests::app_command_refresh_ui_round_trips ... ok
+test tests::app_frame_config_changed_round_trips ... ok
+test tests::app_frame_config_round_trips ... ok
+test tests::app_frame_context_menu_round_trips ... ok
+test tests::app_frame_document_changed_round_trips ... ok
+test tests::app_frame_document_round_trips ... ok
+test tests::app_frame_done_round_trips ... ok
+test tests::app_frame_effects_round_trips ... ok
+test tests::app_frame_error_round_trips ... ok
+test tests::app_frame_events_round_trips ... ok
+test tests::app_frame_fixture_corpus_matches_golden_hex_and_round_trips ... ok
+test tests::app_frame_media_fingerprint_round_trips ... ok
+test tests::app_frame_media_round_trips ... ok
+test tests::app_frame_invocation_round_trips ... ok
+test tests::app_frame_welcome_round_trips ... ok
+test tests::app_frame_ui_section_round_trips_with_and_without_optionals ... ok
+test tests::decode_app_command_rejects_empty_bytes ... ok
+test tests::decode_app_command_never_panics_on_arbitrary_short_buffers ... ok
+test tests::decode_app_command_rejects_truncated_field ... ok
+test tests::decode_app_command_rejects_unknown_tag ... ok
+test tests::decode_app_frame_never_panics_on_arbitrary_short_buffers ... ok
+test tests::decode_app_frame_rejects_empty_bytes ... ok
+test tests::decode_app_frame_rejects_truncated_field ... ok
+test tests::decode_app_frame_rejects_unknown_tag ... ok
+test tests::encoding_is_deterministic ... ok
+test tests::section_probe_round_trips_standalone_and_with_and_without_hash ... ok
+
+test result: ok. 44 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

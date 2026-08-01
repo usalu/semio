@@ -7269,7 +7269,7 @@ mod tests {
         assert!(printed.contains("n1") && printed.contains("n2"), "expected node ids in {printed}");
     }
 
-    /// 🌬 A member UDL on an element that doesn't override `equivalent_nodal_loads` (the trait default,
+    /// 🌬️ A member UDL on an element that doesn't override `equivalent_nodal_loads` (the trait default,
     /// `None`) is silently a no-op — same displacement as solving with no member load at all.
     #[test]
     fn member_udl_on_element_without_udl_support_is_a_no_op() {

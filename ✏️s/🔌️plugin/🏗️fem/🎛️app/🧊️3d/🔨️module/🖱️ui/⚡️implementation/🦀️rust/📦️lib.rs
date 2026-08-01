@@ -8,6 +8,7 @@ use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionEmit, App, AppLabelsOverlay, DocumentApp, DocumentView, SurfaceKind, UiNode, ViewState, WorldSunConfig,
 };
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use store::DocumentDsl;
 
@@ -361,12 +362,18 @@ fn render_fem3d_results_buckling(doc: &Fem3dDocument, source_id: Option<&str>, m
 /// 🧮️ v0 design: mirrors `Fem2dPlayApp` — results are recomputed fresh inside `render()`, no cache, no
 /// `RunAnalysis` operation. `result_display` is ephemeral view state (see `fem_shared::ResultDisplay`'s
 /// doc), defaulting to the first load case in `Static` mode.
-#[derive(Default)]
 pub struct Fem3dPlayApp {
-    result_display: ResultDisplay,
-    /// 🎥️ Camera pose (opaque JSON, plugin-layer-owned shape) — session-only view state (never a
-    /// VCS-tracked document field): see `"setCamera"` in `handle_action` below.
-    camera: FemCamera,
+    result_display: RefCell<ResultDisplay>,
+    camera: RefCell<FemCamera>,
+}
+
+impl Default for Fem3dPlayApp {
+    fn default() -> Self {
+        Self {
+            result_display: RefCell::new(ResultDisplay::default()),
+            camera: RefCell::new(FemCamera::default()),
+        }
+    }
 }
 
 impl DocumentApp for Fem3dPlayApp {
@@ -387,7 +394,14 @@ impl DocumentApp for Fem3dPlayApp {
         fem3d_engine::empty_fem3d_projection()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Fem3dDocument>, _view_state: &ViewState) -> ActionEmit<fem3d_op::Fem3dOperation> {
+    fn handle_action(
+        &self,
+        action: &str,
+        args: Option<&Value>,
+        doc: &DocumentView<'_, Fem3dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<fem3d_op::Fem3dOperation> {
         match action {
             "addNode" => {
                 if let (Some(x), Some(y), Some(z)) = (
@@ -576,11 +590,11 @@ impl DocumentApp for Fem3dPlayApp {
             }
             "setCamera" => {
                 if let Some(json_str) = args.and_then(|v| v.get("json")).and_then(Value::as_str) {
-                    self.camera = FemCamera { json: json_str.into() };
+                    *self.camera.borrow_mut() = FemCamera { json: json_str.into() };
                 }
             }
             "setResultDisplay" => {
-                self.result_display = parse_result_display(args);
+                *self.result_display.borrow_mut() = parse_result_display(args);
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(Value::as_str).unwrap_or("");
@@ -589,8 +603,8 @@ impl DocumentApp for Fem3dPlayApp {
                 } else {
                     fem3d_engine::empty_fem3d_projection()
                 };
-                self.result_display = ResultDisplay::default();
-                self.camera = FemCamera::default();
+                *self.result_display.borrow_mut() = ResultDisplay::default();
+                *self.camera.borrow_mut() = FemCamera::default();
                 return ActionEmit::operations(vec![fem3d_op::Fem3dOperation::SetDocument { document }]);
             }
             _ => {}
@@ -598,10 +612,16 @@ impl DocumentApp for Fem3dPlayApp {
         ActionEmit::default()
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Fem3dDocument>, _view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, Fem3dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> UiNode {
         match body_key {
-            FEM3D_BODY_MODEL => render_fem3d_model(doc.projection, &self.camera),
-            FEM3D_BODY_RESULTS => render_fem3d_results(doc.projection, &self.result_display, &self.camera),
+            FEM3D_BODY_MODEL => render_fem3d_model(doc.projection, &*self.camera.borrow()),
+            FEM3D_BODY_RESULTS => render_fem3d_results(doc.projection, &*self.result_display.borrow(), &*self.camera.borrow()),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

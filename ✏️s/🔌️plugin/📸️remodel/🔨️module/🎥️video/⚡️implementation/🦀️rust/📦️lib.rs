@@ -3576,7 +3576,7 @@ fn mp4_build_moov(codec_fourcc: &[u8; 4], width: u32, height: u32, sizes: &[u32]
     mp4_box(b"moov", &moov)
 }
 
-/// 🏗 Builds an MP4 with `ftyp`/`moov`/`mdat`, `timescale = 1000` (milliseconds); `probe_mp4` recovers exact
+/// 🏗️ Builds an MP4 with `ftyp`/`moov`/`mdat`, `timescale = 1000` (milliseconds); `probe_mp4` recovers exact
 /// frame count/timestamps/sync flags/dimensions from it.
 fn mp4_mux(codec_fourcc: &[u8; 4], width: u32, height: u32, samples: &[Vec<u8>], fps: f64, extra: &[u8]) -> Vec<u8> {
     let ftyp = mp4_box(b"ftyp", b"isom\0\0\x02\0isomiso2avc1mp41");
@@ -3589,14 +3589,14 @@ fn mp4_mux(codec_fourcc: &[u8; 4], width: u32, height: u32, samples: &[Vec<u8>],
     [ftyp, moov, mdat].concat()
 }
 
-/// ✍ Muxes pre-encoded JPEG frames into a minimal `mjpg`-codec MP4, fixture-synthesis only (no `avcC`,
+/// ✍️ Muxes pre-encoded JPEG frames into a minimal `mjpg`-codec MP4, fixture-synthesis only (no `avcC`,
 /// timescale fixed at milliseconds). Dimensions come from decoding `frames[0]`.
 pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
     let (w, h) = frames.first().and_then(|f| remodel_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
     mp4_mux(b"mjpg", w, h, frames, fps, &[])
 }
 
-/// ✍ Builds an `avcC` (AVCDecoderConfigurationRecord) box from this crate's internal `(u16 length, NAL)*`
+/// ✍️ Builds an `avcC` (AVCDecoderConfigurationRecord) box from this crate's internal `(u16 length, NAL)*`
 /// SPS/PPS format (as produced by [`h264_enc_sps_pps`] or extracted by `probe_mp4`).
 fn build_avcc(sps_pps_nals: &[u8]) -> Vec<u8> {
     let mut sps_list = Vec::new();
@@ -3932,9 +3932,9 @@ pub fn extract_frames<'a>(bytes: &'a [u8], opts: &VideoIngestOptions) -> Result<
         },
     }
 }
-// #endregion 🔖Extract
+// #endregion 🔖️Extract
 
-// #region 🔖Tests
+// #region 🔖️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3960,7 +3960,7 @@ mod tests {
         img
     }
 
-    // #region 🔖CoreTests
+    // #region 🔖️CoreTests
     #[test]
     fn fourcc_debug_and_display_render_printable_ascii() {
         let fcc = FourCc::new(b"avc1");
@@ -3992,9 +3992,9 @@ mod tests {
         assert_eq!(H264Error::NoSps.to_string(), "h264 slice references an unparsed sps");
         assert_eq!(H264Error::NoPps.to_string(), "h264 slice references an unparsed pps");
     }
-    // #endregion 🔖CoreTests
+    // #endregion 🔖️CoreTests
 
-    // #region 🔖BmffTests
+    // #region 🔖️BmffTests
     #[test]
     fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
         let frames: Vec<Vec<u8>> = (0..5).map(|i| remodel_image::encode_jpeg(&synth_rgba(16, 16, 100 + i), 90)).collect();
@@ -4178,9 +4178,9 @@ mod tests {
         let sizes = SampleSizes::Uniform { size: 1, count: 1 };
         assert!(matches!(resolve_samples(&[], &[0], &sizes), Err(VideoError::BadBox(_))));
     }
-    // #endregion 🔖BmffTests
+    // #endregion 🔖️BmffTests
 
-    // #region 🔖AviTests
+    // #region 🔖️AviTests
     #[test]
     fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
         let frames: Vec<Vec<u8>> = (0..4).map(|i| remodel_image::encode_jpeg(&synth_rgba(8, 8, 300 + i), 85)).collect();
@@ -4294,9 +4294,9 @@ mod tests {
         bytes.extend_from_slice(&body);
         assert!(matches!(probe_avi(&bytes), Err(VideoError::NoVideoTrack)));
     }
-    // #endregion 🔖AviTests
+    // #endregion 🔖️AviTests
 
-    // #region 🔖ProbeTests
+    // #region 🔖️ProbeTests
     #[test]
     fn probe_dispatches_by_riff_magic() {
         let frames: Vec<Vec<u8>> = (0..2).map(|i| remodel_image::encode_jpeg(&synth_rgba(4, 4, 900 + i), 80)).collect();
@@ -4315,9 +4315,9 @@ mod tests {
         assert_eq!(codec_fourcc_hint(VideoCodec::Mjpeg), FourCc(*b"mjpg"));
         assert_eq!(codec_fourcc_hint(VideoCodec::Unknown(FourCc(*b"zzzz"))), FourCc(*b"zzzz"));
     }
-    // #endregion 🔖ProbeTests
+    // #endregion 🔖️ProbeTests
 
-    // #region 🔖ExtractTests
+    // #region 🔖️ExtractTests
     #[test]
     fn extract_frames_mjpeg_applies_stride_and_max_frames_exactly() {
         let frames: Vec<Vec<u8>> = (0..10).map(|i| remodel_image::encode_jpeg(&synth_rgba(8, 8, 500 + i), 85)).collect();
@@ -4460,9 +4460,9 @@ mod tests {
         let out_of_bounds = vec![SampleInfo { offset: 100, size: 10, timestamp_ms: 0.0, is_sync: true }];
         assert!(matches!(frame_iter_sample_bytes(b"short", &out_of_bounds, 0), Err(VideoError::Truncated)));
     }
-    // #endregion 🔖ExtractTests
+    // #endregion 🔖️ExtractTests
 
-    // #region 🔖H264Tests
+    // #region 🔖️H264Tests
     fn pcm_frame(mb_w: u32, mb_h: u32, seed: u64) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
         let mut state = seed;
         let luma = fill_deterministic(&mut state, (mb_w * 16 * mb_h * 16) as usize);
@@ -4723,7 +4723,7 @@ mod tests {
         assert!(matches!(H264Decoder::new(&nals), Err(H264Error::Unsupported(_))));
     }
 
-    /// 🏗 Like [`h264_enc_i_pcm_sample`] but with a configurable `disable_deblocking_filter_idc`/offsets, to
+    /// 🏗️ Like [`h264_enc_i_pcm_sample`] but with a configurable `disable_deblocking_filter_idc`/offsets, to
     /// exercise the in-loop deblocking filter path that this crate's own encoder never turns on.
     #[allow(clippy::too_many_arguments)]
     fn i_pcm_sample_with_deblocking(mb_w: u32, mb_h: u32, frame_num: u32, luma: &[u8], cb: &[u8], cr: &[u8], disable_idc: u32, alpha_off_div2: i32, beta_off_div2: i32) -> Vec<u8> {

@@ -7,6 +7,7 @@ use flow_module_brep::tessellate_geometry_json;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument};
 use semio_framework_core::mesh_from_indexed;
+use semio_framework_plugin::SelectionSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashSet;
@@ -74,7 +75,7 @@ pub fn default_preview_fov() -> f64 {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Procedural3dRuntime {
-    pub selected_node_ids: Vec<String>,
+    pub selected_node_ids: SelectionSet,
     pub lod_mode: String,
     pub show_mode: String,
     pub selection_method: String,
@@ -93,7 +94,7 @@ pub struct Procedural3dRuntime {
 impl Default for Procedural3dRuntime {
     fn default() -> Self {
         Self {
-            selected_node_ids: Vec::new(),
+            selected_node_ids: SelectionSet::default(),
             lod_mode: String::new(),
             show_mode: default_show_mode(),
             selection_method: default_selection_method(),
@@ -268,7 +269,7 @@ pub fn preview_camera_json(runtime: &Procedural3dRuntime) -> String {
 pub fn preview_selection_json(runtime: &Procedural3dRuntime, active_utility: &str) -> String {
     let mut value: Value = serde_json::from_str(&semio_framework_plugin::world3d_selection_json(
         &runtime.selection_method,
-        &runtime.selected_node_ids,
+        runtime.selected_node_ids.as_slice(),
         runtime.hovered_node_id.as_deref(),
     ))
     .unwrap_or_else(|_| json!({}));
@@ -574,7 +575,7 @@ pub fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_fra
     semio_framework_plugin::mesh_from_kind(kind)
 }
 
-pub fn procedural3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+pub fn procedural3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
     let projection: Procedural3dDocument = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
     Ok(export_mesh_from_document(&projection))
 }

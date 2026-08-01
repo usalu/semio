@@ -276,7 +276,7 @@ pub enum TokenClass {
     Error,
 }
 
-/// @emoji 🧾 One lexed token: kind, interned text, and a real span (never `(1,1)` placeholder).
+/// @emoji 🧾️ One lexed token: kind, interned text, and a real span (never `(1,1)` placeholder).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpannedToken {
     pub id: TokenId,
@@ -285,10 +285,10 @@ pub struct SpannedToken {
     pub span: TextSpan,
     pub byte_range: (u32, u32),
 }
-//#endregion 🔖Tokens
+//#endregion 🔖️Tokens
 
-//#region 🔖Escape
-/// @emoji 🔐 The ONE canonical escape scheme for quoted `Text` tokens: `\\ \" \n \r \t` plus
+//#region 🔖️Escape
+/// @emoji 🔐️ The ONE canonical escape scheme for quoted `Text` tokens: `\\ \" \n \r \t` plus
 /// `\u{XXXX}` for any other control character. Nesting-sound because quoting is a token
 /// boundary — re-escaping an already-printed line is exactly invertible, no percent-encoding
 /// or per-technology scheme needed. Strict superset of every hand-rolled scheme it replaces.
@@ -308,7 +308,7 @@ pub fn escape_text(value: &str) -> String {
     out
 }
 
-/// @emoji 🔓 Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
+/// @emoji 🔓️ Inverse of [`escape_text`]. Unknown escapes in strict mode are an error; `forgiving`
 /// keeps the backslash and following character literal instead (editor/recovery mode).
 pub fn unescape_text(value: &str, forgiving: bool) -> Result<String, String> {
     let mut out = String::with_capacity(value.len());
@@ -906,10 +906,10 @@ pub fn is_bare_ident(s: &str) -> bool {
         Err(_) => false,
     }
 }
-//#endregion 🔖Lexer
+//#endregion 🔖️Lexer
 
-//#region 🔖Trust
-/// @emoji 🛂 A value that has passed [`crate::lex`] in strict mode. Constructible only within
+//#region 🔖️Trust
+/// @emoji 🛂️ A value that has passed [`crate::lex`] in strict mode. Constructible only within
 /// this crate/its trusted callers — public API never lets a caller wrap arbitrary text as
 /// `Sanitized` without going through the real check.
 #[derive(Clone, Debug)]
@@ -929,7 +929,7 @@ impl<T> Sanitized<T> {
     }
 }
 
-/// @emoji 🛂 A value that has additionally passed schema validation. Reserved for the
+/// @emoji 🛂️ A value that has additionally passed schema validation. Reserved for the
 /// `dsl_schema` layer to construct.
 #[derive(Clone, Debug)]
 pub struct SchemaValid<T>(T);
@@ -947,9 +947,9 @@ impl<T> SchemaValid<T> {
         &self.0
     }
 }
-//#endregion 🔖Trust
+//#endregion 🔖️Trust
 
-//#region 🧪Tests
+//#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -960,7 +960,7 @@ mod tests {
             "plain text",
             "with \"quotes\" and \\backslash\\",
             "line1\nline2\ttabbed\r\n",
-            "unicode: 🔖 café naïve",
+            "unicode: 🔖️ café naïve",
             "\u{0007}bell and \u{001b}escape",
         ];
         for case in cases {

@@ -136,11 +136,16 @@ fn render_board(definition: &Block2dDefinition, labels: &Block2dLabels) -> UiNod
 }
 //#endregion 🔖️Panels
 
-//#region 🔖️Block2dPlayApp
+use std::cell::RefCell;
 /// 🎛️ Ephemeral view state: the multi-selected row ids in the document tree.
-#[derive(Default)]
 pub struct Block2dPlayApp {
-    selected_ids: Vec<String>,
+    selected_ids: RefCell<Vec<String>>,
+}
+
+impl Default for Block2dPlayApp {
+    fn default() -> Self {
+        Self { selected_ids: RefCell::new(Vec::new()) }
+    }
 }
 
 impl DocumentApp for Block2dPlayApp {
@@ -161,10 +166,17 @@ impl DocumentApp for Block2dPlayApp {
         block_2d_engine::empty_block2d_definition()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Block2dDefinition>, _view_state: &ViewState) -> ActionEmit<Block2dOperation> {
+    fn handle_action(
+        &self,
+        action: &str,
+        args: Option<&Value>,
+        doc: &DocumentView<'_, Block2dDefinition>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+    ) -> ActionEmit<Block2dOperation> {
         match action {
             "setSelection" => {
-                self.selected_ids = selection_ids(args);
+                *self.selected_ids.borrow_mut() = selection_ids(args);
                 ActionEmit::default()
             }
             "patchNodeKind" => {
@@ -235,11 +247,17 @@ impl DocumentApp for Block2dPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Block2dDefinition>, view_state: &ViewState) -> UiNode {
+    fn render(
+        &self,
+        body_key: &str,
+        doc: &DocumentView<'_, Block2dDefinition>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+    ) -> UiNode {
         let labels = resolve_labels::<Block2dLabels>(view_state);
         match body_key {
             BLOCK2D_BODY_BOARD => render_board(doc.projection, labels),
-            BLOCK2D_BODY_DOCUMENT | BLOCK2D_BODY_KINDS => build_document_tree(doc.projection, &self.selected_ids, labels),
+            BLOCK2D_BODY_DOCUMENT | BLOCK2D_BODY_KINDS => build_document_tree(doc.projection, &*self.selected_ids.borrow(), labels),
             BLOCK2D_BODY_INSPECTOR => build_inspection_tree(doc.projection, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }

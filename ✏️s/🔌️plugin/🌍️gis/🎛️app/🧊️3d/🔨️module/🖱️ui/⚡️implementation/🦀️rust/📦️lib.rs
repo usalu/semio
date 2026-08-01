@@ -292,7 +292,7 @@ impl DocumentApp for Gis3dPlayApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
         match body_key {
             GIS3D_PLAY_BODY_COMPOSITE => render_canvas(doc.projection, &self.runtime),
             _ => ui_text(format!("Unknown body: {body_key}")),

@@ -5432,7 +5432,7 @@ mod sobject {
             self.point_ratio = snap.point_ratio;
         }
 
-        /// 🔀 Linearly blend two snapshots into the live VSobject state.
+        /// 🔀️ Linearly blend two snapshots into the live VSobject state.
         pub fn interpolate_snapshots(&mut self, from: &VSobjectSnapshot, to: &VSobjectSnapshot, t: f64) {
             let t = t.clamp(0.0, 1.0);
             self.opacity = lerp_f64(from.opacity, to.opacity, t);
@@ -5442,7 +5442,7 @@ mod sobject {
             self.paths = interpolate_path_sets(&from.paths, &to.paths, t);
         }
 
-        /// 🎯 Blend from saved state toward the generated target.
+        /// 🎯️ Blend from saved state toward the generated target.
         pub fn interpolate_saved_to_target(&mut self, t: f64) {
             if self.saved.is_none() {
                 self.save_state();
@@ -5462,7 +5462,7 @@ mod sobject {
         a + (b - a) * t.clamp(0.0, 1.0)
     }
 
-    /// ✂ Trim a path to a partial reveal ratio in [0,1].
+    /// ✂️ Trim a path to a partial reveal ratio in [0,1].
     pub fn trim_path_at_ratio(path: &BezPath, ratio: f64) -> BezPath {
         let ratio = ratio.clamp(0.0, 1.0);
         if ratio >= 1.0 {
@@ -5702,7 +5702,7 @@ mod sobject {
         }
     }
 
-    /// 📦 Group of heterogeneous Sobjects.
+    /// 📦️ Group of heterogeneous Sobjects.
     pub struct Group {
         pub id: u64,
         pub name: String,
@@ -5878,7 +5878,7 @@ mod sobject {
         }
     }
 
-    /// ✏ Vector-only group convenience wrapper.
+    /// ✏️ Vector-only group convenience wrapper.
     pub type VGroup = Group;
 
     pub fn vgroup(children: Vec<Box<dyn Sobject>>) -> VGroup {
@@ -5902,7 +5902,7 @@ mod sobject {
         mover.shift(shift);
     }
 
-    /// 📏 Arrange children in a line.
+    /// 📏️ Arrange children in a line.
     pub fn arrange(group: &mut Group, direction: Vec2, buff: f64) {
         if group.children.is_empty() {
             return;
@@ -5917,7 +5917,7 @@ mod sobject {
         }
     }
 
-    /// 🎯 Align `mover` to `anchor` along an edge or center.
+    /// 🎯️ Align `mover` to `anchor` along an edge or center.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum AlignEdge {
         Left,
@@ -6114,7 +6114,7 @@ mod sobject {
 }
 
 mod text {
-    //! 🔤 Text and math labels via Typst-to-SVG compilation.
+    //! 🔤️ Text and math labels via Typst-to-SVG compilation.
 
     use crate::color::Color;
     use crate::sobject::{Sobject, VSobject};
@@ -6135,7 +6135,7 @@ mod text {
     const TEXT_MARGIN_PT: f64 = 8.0;
     const TEXT_SIZE_PT: f64 = 36.0;
 
-    /// 📝 Plain text Sobject rendered through Typst.
+    /// 📝️ Plain text Sobject rendered through Typst.
     #[derive(Clone)]
     pub struct Text {
         pub inner: VSobject,
@@ -6165,7 +6165,7 @@ mod text {
         format!("{value:.prec$}", prec = decimals as usize)
     }
 
-    /// 🔢 Decimal number label with interpolatable value.
+    /// 🔢️ Decimal number label with interpolatable value.
     #[derive(Clone)]
     pub struct DecimalNumber {
         pub value: f64,
@@ -6190,7 +6190,7 @@ mod text {
         }
     }
 
-    /// 🔢 Integer label wrapper.
+    /// 🔢️ Integer label wrapper.
     #[derive(Clone)]
     pub struct Integer {
         pub value: i64,
@@ -6207,7 +6207,7 @@ mod text {
         }
     }
 
-    /// 📄 Multi-line paragraph wrapper.
+    /// 📄️ Multi-line paragraph wrapper.
     #[derive(Clone)]
     pub struct Paragraph {
         pub lines: Vec<EcoString>,
@@ -6226,7 +6226,7 @@ mod text {
         }
     }
 
-    /// 💻 Monospace code block wrapper.
+    /// 💻️ Monospace code block wrapper.
     #[derive(Clone)]
     pub struct Code {
         pub source: EcoString,

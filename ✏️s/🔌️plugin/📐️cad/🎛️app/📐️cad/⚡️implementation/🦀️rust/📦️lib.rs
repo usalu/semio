@@ -553,7 +553,7 @@ fn expr_as_f64(value: &Value) -> f64 {
 }
 
 /// Evaluates an {@link Expr} against `env` and an outer `let`-binding scope (`vars`).
-pub fn evaluate_expr(expr: &Expr, env: &ExprEnv, vars: &std::collections::HashMap<String, Value>) -> Value {
+pub fn evaluate_expr(expr: &Expr, env: &ExprEnv<'_>, vars: &std::collections::HashMap<String, Value>) -> Value {
     match expr {
         Expr::Path { root, segments } => {
             let root_value = match root {
@@ -979,7 +979,7 @@ impl InteractionSpec {
         self.machine.states.iter().find(|state| state.name == name)
     }
 
-    pub fn guard(&self, name: &str, env: &ExprEnv) -> bool {
+    pub fn guard(&self, name: &str, env: &ExprEnv<'_>) -> bool {
         self.guards.iter().find(|guard| guard.name == name).map(|guard| expr_value_truthy(&evaluate_expr(&guard.expr, env, &std::collections::HashMap::new()))).unwrap_or(false)
     }
 }

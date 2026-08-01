@@ -575,7 +575,7 @@ impl DocumentApp for ModuleApp {
         default_payload()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ModuleRenderPayload>, _view_state: &ViewState) -> ActionEmit<ModulePayloadOperation> {
+    fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<ModulePayloadOperation> {
         match action {
             ACTION_EXPORT_SOLID => {
                 let mut payload = doc.projection.clone();
@@ -591,7 +591,7 @@ impl DocumentApp for ModuleApp {
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, ModuleRenderPayload>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let labels = module_labels(view_state);
         match body_key {
             BODY_PARAMS => render_params_body(doc.projection, labels),

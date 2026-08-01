@@ -2927,7 +2927,7 @@ export function formatMetricLocCount(n: number): string {
 }
 
 /** ➗️Formats a ratio with 3 significant digits as a short decimal; never formats a positive value as 0. */
-/** ➗Formats net/previous as a percentage (*100) with 3 significant digits; never formats a positive value as 0. */
+/** ➗️Formats net/previous as a percentage (*100) with 3 significant digits; never formats a positive value as 0. */
 export function formatMetricRatio(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return "0";
   // Caller passes a fraction (net/previous); display as percent.
@@ -3171,8 +3171,8 @@ export type MicroCommitLevel = "prepare-only" | "prepare-and-commit" | "prepare-
 type Contributor = { alias: string; emoji: string; name: string; email: string; emails?: string[] };
 
 const EMOJI_PRESENTATION_SELECTOR_RE = /[\uFE0E\uFE0F]/g;
-const COUNTER_RE = /^(.+🎆[\uFE0E\uFE0F]?\d{2}🌙[\uFE0E\uFE0F]?\d{2}☀[\uFE0E\uFE0F]?\d{2})🚩[\uFE0E\uFE0F]?(\d+)$/u;
-const BUNDLE_TAG_RE = /^(.+🎆[\uFE0E\uFE0F]?\d{2}🌙[\uFE0E\uFE0F]?\d{2}☀[\uFE0E\uFE0F]?\d{2})🚩[\uFE0E\uFE0F]?$/u;
+const COUNTER_RE = /^(.+🎆️[\uFE0E\uFE0F]?\d{2}🌙️[\uFE0E\uFE0F]?\d{2}☀️[\uFE0E\uFE0F]?\d{2})🚩️[\uFE0E\uFE0F]?(\d+)$/u;
+const BUNDLE_TAG_RE = /^(.+🎆️[\uFE0E\uFE0F]?\d{2}🌙️[\uFE0E\uFE0F]?\d{2}☀️[\uFE0E\uFE0F]?\d{2})🚩️[\uFE0E\uFE0F]?$/u;
 const NUMERIC_COUNTER_RE = /^(\d+)$/;
 const TICKET_JSON_RE = /^\.🦑️repo\/🎫️tickets\/.+\/🎫️ticket\.json$/;
 export function digestMicroCommitMessage(message: string): string {
@@ -3324,7 +3324,7 @@ export function normalizeEmojiPresentation(value: string): string {
 
 /** 🧭️Renders a historical WIP epoch with the contributor's current canonical emoji presentation. */
 export function canonicalWipLine1Base(line1Base: string, contributor: Contributor): string {
-  const match = /🎆(\d{2})🌙(\d{2})☀(\d{2})$/u.exec(normalizeEmojiPresentation(line1Base));
+  const match = /🎆️(\d{2})🌙️(\d{2})☀️(\d{2})$/u.exec(normalizeEmojiPresentation(line1Base));
   if (!match) return line1Base;
   return `${contributor.emoji}${contributor.alias}🎆️${match[1]}🌙️${match[2]}☀️${match[3]}`;
 }
@@ -3397,7 +3397,7 @@ export function bumpCounterFromHistory(
   if (max > 0) return { line1Base: epoch, nnn: pad3(max + 1) };
   const unparsedPrior = subjectsNewestFirst.find((subject) => {
     const normalized = normalizeEmojiPresentation(subject.trim());
-    return normalized.startsWith(`${contributorPrefix}🎆`) && /🚩\d+$/u.test(normalized);
+    return normalized.startsWith(`${contributorPrefix}🎆️`) && /🚩️\d+$/u.test(normalized);
   });
   if (unparsedPrior) throw new Error(`micro-commit: refusing to reset counter to 001 because prior subject could not be parsed: ${unparsedPrior}`);
   return { line1Base: epoch, nnn: "001" };

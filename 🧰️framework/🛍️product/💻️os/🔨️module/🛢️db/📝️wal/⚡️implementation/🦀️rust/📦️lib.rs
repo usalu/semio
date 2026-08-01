@@ -902,9 +902,9 @@ mod tests {
         let recovered = transform.decrypt(&stored_ciphertext).unwrap();
         assert_eq!(recovered, plaintext);
     }
-    //#endregion 🔖PayloadTransform
+    //#endregion 🔖️PayloadTransform
 
-    //#region 🔖GroupCommit
+    //#region 🔖️GroupCommit
     #[test]
     fn group_commit_policy_is_due_on_any_threshold() {
         let policy = GroupCommitPolicy { max_delay_ms: 100, max_bytes: 1000, max_records: 10 };
@@ -914,9 +914,9 @@ mod tests {
         assert!(policy.is_due(0, 0, Some(0), 100));
         assert!(!policy.is_due(0, 0, Some(50), 100));
     }
-    //#endregion 🔖GroupCommit
+    //#endregion 🔖️GroupCommit
 
-    //#region 🔖Segment + DocumentWal
+    //#region 🔖️Segment + DocumentWal
     #[test]
     fn single_segment_write_commit_flush_recovers_cleanly() {
         let storage = MemoryStorage::new();
