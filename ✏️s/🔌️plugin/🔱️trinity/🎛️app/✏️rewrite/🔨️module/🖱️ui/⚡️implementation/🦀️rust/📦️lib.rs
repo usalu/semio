@@ -1489,7 +1489,7 @@ pub fn create_rewrite_app() -> App {
     App::from_builder(
         App::builder(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite").document(["semio", "trinity", "rewrite"])
             .icon_id("trinity-rewrite")
-            .mode("explore", "Explore")
+            .mode("explore", "Explore", "compass")
             .default_mode_id("explore")
             .window_kind(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, "Before", TRINITY_REWRITE_PLAY_BODY_BEFORE, SurfaceKind::NodeGraph, "git-branch")
             .window_kind(TRINITY_REWRITE_PLAY_WINDOW_AFTER, "After", TRINITY_REWRITE_PLAY_BODY_AFTER, SurfaceKind::NodeGraph, "arrow-right")
@@ -1529,8 +1529,8 @@ pub fn create_rewrite_app() -> App {
             .operation("patchTrinityNodes", "Patch Nodes")
             .operation("nodeGraphEdit", "Edit Graph")
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setLhsJson", "Set LHS Json", ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setRhsJson", "Set RHS Json", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setLhsJson", "Set LHS Json", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setRhsJson", "Set RHS Json", ActionKind::Operation) })
             // 👁️ Ephemeral view state — selection, hover, text cursor, recompute/layout, LOD.
             .view_action("setSelection", "Set Selection")
             .view_action("selectNode", "Select Node")
@@ -1560,7 +1560,7 @@ pub fn create_rewrite_app() -> App {
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+alt+s", "commitCheckpoint"),
     )
-    .example("label-core", "Label Core", default_rule_state().print_dsl())
+    .example("label-core", "Label Core", default_rule_state().print_dsl(), "file-text")
     .workflow("trinity-rewrite", "Trinity Rewrite", "graph")
 }
 //#endregion 🔖️Manifest

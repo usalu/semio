@@ -2,7 +2,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/infinite-canvas-react-renderer",
   "version": "0.1.0",
-  "description": "infinite · cavas react renderer",
+  "description": "infinite · canvas react renderer",
   "type": "module",
   "private": true,
   "exports": {

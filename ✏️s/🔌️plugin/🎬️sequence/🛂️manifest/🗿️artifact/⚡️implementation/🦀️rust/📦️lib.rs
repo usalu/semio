@@ -19,7 +19,7 @@ mod wasm_session {
 
     struct SequenceSessionInner {
         host: SequenceHost,
-        gpu: infinite_cavas::gpu_session::CanvasGpuSession,
+        gpu: infinite_canvas::gpu_session::CanvasGpuSession,
         width: u32,
         height: u32,
         dpr: f64,
@@ -40,7 +40,7 @@ mod wasm_session {
             Self {
                 state: Rc::new(RefCell::new(SequenceSessionInner {
                     host: SequenceHost::default(),
-                    gpu: infinite_cavas::gpu_session::CanvasGpuSession::default(),
+                    gpu: infinite_canvas::gpu_session::CanvasGpuSession::default(),
                     width: 1,
                     height: 1,
                     dpr: 1.0,
@@ -144,7 +144,7 @@ mod wasm_session {
             let pw = ((lw as f64 * dpr).round() as u32).max(1);
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = infinite_cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+                let (render_ctx, renderer, surface) = infinite_canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 g.width = lw;
                 g.height = lh;
@@ -177,20 +177,20 @@ mod wasm_session {
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
             inner.host.camera = sequence_camera_from_dag(inner.host.dag.fixture.camera.clone());
-            let mut scene = infinite_cavas::Scene::new();
+            let mut scene = infinite_canvas::Scene::new();
             let clear = inner.host.dag.canvas_theme.raster_clear;
             inner.host.dag.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
-            let scene = infinite_cavas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
+            let scene = infinite_canvas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
             inner.gpu.render_frame(&scene, clear)
         }
 
         #[wasm_bindgen(js_name = worldFromScreen)]
         pub fn world_from_screen(&self, sx: f64, sy: f64) -> Result<String, JsValue> {
-            use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-            use infinite_cavas::Point;
+            use infinite_canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
+            use infinite_canvas::Point;
             let inner = self.state.borrow();
             let viewport = Viewport { width: inner.width.max(1), height: inner.height.max(1), dpr: inner.dpr.max(1.0) };
-            let camera = CavasCamera { x: inner.host.dag.fixture.camera.x, y: inner.host.dag.fixture.camera.y, zoom: inner.host.dag.fixture.camera.zoom };
+            let camera = CanvasCamera { x: inner.host.dag.fixture.camera.x, y: inner.host.dag.fixture.camera.y, zoom: inner.host.dag.fixture.camera.zoom };
             let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
             Ok(format!("{{\"x\":{},\"y\":{}}}", world.x, world.y))
         }
@@ -241,11 +241,11 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = wheelScreen)]
         pub fn wheel_screen(&self, sx: f64, sy: f64, delta_y: f64) {
-            use infinite_cavas::camera::{wheel_screen, Camera as CavasCamera, Viewport};
+            use infinite_canvas::camera::{wheel_screen, Camera as CanvasCamera, Viewport};
             let mut inner = self.state.borrow_mut();
             inner.host.dag.set_wheel_zoom_active(true);
             let viewport = Viewport { width: inner.width.max(1), height: inner.height.max(1), dpr: inner.dpr.max(1.0) };
-            let mut camera = CavasCamera { x: inner.host.dag.fixture.camera.x, y: inner.host.dag.fixture.camera.y, zoom: inner.host.dag.fixture.camera.zoom };
+            let mut camera = CanvasCamera { x: inner.host.dag.fixture.camera.x, y: inner.host.dag.fixture.camera.y, zoom: inner.host.dag.fixture.camera.zoom };
             wheel_screen(&mut camera, &viewport, sx, sy, delta_y);
             inner.host.dag.set_camera(camera.x, camera.y, camera.zoom);
             inner.host.dag.set_wheel_zoom_active(false);

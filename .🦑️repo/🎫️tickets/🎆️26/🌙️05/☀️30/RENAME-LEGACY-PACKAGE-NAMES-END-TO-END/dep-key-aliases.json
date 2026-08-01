@@ -38,7 +38,7 @@
   "semio_framework_os_kernel_infinite_board_port_directed": "infinite_board_port_directed",
   "semio_framework_os_kernel_infinite_board_port_directed_dag": "infinite_board_port_directed_dag",
   "semio_framework_os_kernel_infinite_board_port_directed_normal": "infinite_board_port_directed_normal",
-  "semio_framework_os_kernel_infinite_canvas": "infinite_cavas",
+  "semio_framework_os_kernel_infinite_canvas": "infinite_canvas",
   "semio_framework_os_kernel_math_algebra": "mathematical_algebra",
   "semio_framework_os_kernel_math_entropy": "mathematical_entropy",
   "semio_framework_os_kernel_math_geometry": "mathematical_geometry",

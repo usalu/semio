@@ -729,7 +729,7 @@ Refactor and extend everything cleanly.
 
 We are splitting puzzle 2d into general reusable bundles.
 It must be extendable on multiple levels.
-every extension is just a rust file.@semio-tech/infinite-canvas-react-renderer/index.tsx @infinite/cavas/vello/lib.rs @infinite/cavas/AGENTS.md @infinite @infinite/cavas @semio-tech/infinite-canvas-react-renderer @infinite/cavas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap
+every extension is just a rust file.@semio-tech/infinite-canvas-react-renderer/index.tsx @infinite/canvas/vello/lib.rs @infinite/canvas/AGENTS.md @infinite @infinite/canvas @semio-tech/infinite-canvas-react-renderer @infinite/canvas/vello @gis/map/AGENTS.md @gis/map/lib.rs @gis @gis/map @mathematical/graph/AGENTS.md @mathematical/graph/lib.rs @mathematical/graph @reasoning/mindmap/AGENTS.md @reasoning/mindmap/lib.rs @reasoning/mindmap
 
 ---
 
@@ -893,6 +893,12 @@ This MUST NOT happen.
 ## ui
 
 ###
+
+---
+
+All context menu items must be enumerated and while the context menu is open, the number keyboard and the arrows can be used to hover over options, when pressing spacebar or enter it is equivalent to clicking the option. 
+For nested context menus, left and right arrow keys also work.
+Make wasd also work.
 
 ---
 
@@ -3584,7 +3590,7 @@ The two specific implemtations must be used:
 @spatial/js/kernel-brepjs/index.ts @spatial/js/machine-stately/index.ts
 
 ---
-
+‚
 ## 🥅️framework
 
 ###
@@ -10141,6 +10147,10 @@ Add timeouts, heartbeats, and auto-restart
 Keep the renderer isolated from native details
 
 ## ♻️mit-bestand
+
+### demonstrator
+
+The current aggregator should be generalized into a demonstrator
 
 ### 🟨️33.projekttage
 

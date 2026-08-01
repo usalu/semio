@@ -4,7 +4,7 @@
 
 - `mathematical_graph_port_directed_dag`: 4 passed
 - `puzzle_2d`: 108 passed (unchanged)
-- `infinite_cavas`: 3 passed
+- `infinite_canvas`: 3 passed
 - `mathematical_graph`: 3 passed
 
 ## Vitest

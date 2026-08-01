@@ -77,9 +77,9 @@ flowchart LR
 - New `DagPreviewContent` enum (in a `//#region`): `Empty`, `Scalar { text }`, `Image { src }`, `Tree { json: serde_json::Value }`.
 - Refactor `DagNodeKind::Preview { text, input }` -> `Preview { content: DagPreviewContent, #[serde(default)] expanded: BTreeSet<String>, input }`.
 - Add `DagNodeKind::Image { src: String, output: IoPortSpec }` for the new image input node (shares image paint/measure with Preview).
-- Image decode cache on `DagHost` (reuse `cavas::raster` `ImageData`/`RasterImageCache`); record natural width/height per `src`.
+- Image decode cache on `DagHost` (reuse `canvas::raster` `ImageData`/`RasterImageCache`); record natural width/height per `src`.
 - `measure_preview_content(content, expanded)`: scalar -> text width; image -> natural size clamped to a max box (aspect preserved); tree -> visible-rows x row-height and max visible row width. Call it where Preview/Image nodes are sized (replace label sizing in `fit_node_size` and the Preview/Image arms).
-- Painting: extend the `Preview` arm (line 2745) to dispatch on content - scalar line, `cavas::raster::draw_image` for images (affine fit, `push_clip_layer` to node bounds), and a row-by-row fold tree (indent by depth, fold triangle glyph + `key: value`/`{...}` summary). Add an `Image` arm mirroring the image path.
+- Painting: extend the `Preview` arm (line 2745) to dispatch on content - scalar line, `canvas::raster::draw_image` for images (affine fit, `push_clip_layer` to node bounds), and a row-by-row fold tree (indent by depth, fold triangle glyph + `key: value`/`{...}` summary). Add an `Image` arm mirroring the image path.
 - Layout/hit helpers: `preview_tree_rows(node)` -> ordered visible `(path, depth, has_children, row_rect, toggle_rect)`; extend `widget_hit_at`/`try_widget_pointer_down` (lines 1869-1909) with a Preview branch that toggles a path in `expanded` (Select-style click + early return), then re-measures size.
 - Update demo fixture node (line 4117) and round-trip/interaction tests in the existing test module (`Preview` content, fold toggle, image sizing, `Image` node).
 

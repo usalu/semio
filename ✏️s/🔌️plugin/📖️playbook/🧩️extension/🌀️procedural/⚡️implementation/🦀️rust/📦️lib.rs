@@ -605,7 +605,7 @@ fn create_module_app() -> App {
     App::from_builder(
         App::builder(MODULE_APP_ID, "Playbook Module Procedural")
             .document(["semio", "forms"])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph, "clipboard-list")
             .window_kind(MODULE_WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d, "preview")
             .default_layout(create_default_layout(

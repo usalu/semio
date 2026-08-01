@@ -328,7 +328,7 @@
       "controlValueColumnUiSpacing": 50,
       "windowMeasureValueColumnUiSpacing": 32.5,
       "resizableCornerGrabUiSpacing": 7.5,
-      "layoutPanelRailUiSpacing": 70,
+      "layoutPanelRailUiSpacing": 93.75,
       "layoutPanelMinUiSpacing": 46.875,
       "layoutPanelMaxUiSpacing": 150,
       "layoutEngagementMaxUiSpacing": 140,
@@ -466,6 +466,25 @@
         "labelHalo": {
           "token": "light-8-9",
           "alpha": 0.78
+        },
+        "minimapWidgetPanelFill": {
+          "mix": ["light-8-9", "gray", 0.12],
+          "alpha": 0.92
+        },
+        "minimapWidgetPanelStroke": {
+          "token": "gray",
+          "alpha": 0.65
+        },
+        "minimapWidgetViewportFill": {
+          "mix": ["primary", "transparent", 0.08],
+          "alpha": 0.08
+        },
+        "minimapWidgetViewportStroke": {
+          "token": "primary",
+          "alpha": 0.85
+        },
+        "minimapWidgetViewportStrokeHovered": {
+          "token": "primary"
         }
       },
       "map": {
@@ -712,6 +731,25 @@
         "labelHalo": {
           "token": "dark-6-7",
           "alpha": 0.78
+        },
+        "minimapWidgetPanelFill": {
+          "mix": ["dark-6-7", "gray-400", 0.18],
+          "alpha": 0.94
+        },
+        "minimapWidgetPanelStroke": {
+          "token": "gray-600",
+          "alpha": 0.75
+        },
+        "minimapWidgetViewportFill": {
+          "mix": ["primary", "transparent", 0.1],
+          "alpha": 0.1
+        },
+        "minimapWidgetViewportStroke": {
+          "token": "primary",
+          "alpha": 0.9
+        },
+        "minimapWidgetViewportStrokeHovered": {
+          "token": "primary"
         }
       },
       "map": {

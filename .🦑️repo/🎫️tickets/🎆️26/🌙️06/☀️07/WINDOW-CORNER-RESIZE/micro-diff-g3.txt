@@ -24,7 +24,7 @@ index 000000000..c984a64cb
 +    content: "Implement flow/core (flow_core cdylib): Widget model, FlowSession wasm API (scene + evaluate), Cargo.toml, script.ts wasm build; add to workspace; native eval test."
 +    status: completed
 +  - id: react
-+    content: Create flow/react FlowCanvas renderer consuming @flow/core wasm via @infinite/cavas/react-renderer + package.json/project.json/script.ts.
++    content: Create flow/react FlowCanvas renderer consuming @flow/core wasm via @infinite/canvas/react-renderer + package.json/project.json/script.ts.
 +    status: completed
 +  - id: play
 +    content: Create flow/play PlaygroundFlow + controller + declarative body + default slider->add->preview fixture + index.html/globals.css/vite/vitest/package.json/project.json/script.ts.
@@ -43,7 +43,7 @@ index 000000000..c984a64cb
 +
 +# Flow Language: End-to-End Vertical Slice
 +
-+Build the three parts of `flow` following the established repo triple pattern (`rs` Rust+wasm crate, `react` renderer, `play` playground app) seen in `puzzle/2d`, reusing `DirectedPortGraphEngine` and the `infinite_cavas` Vello scene/React canvas. Almost all target files are currently empty stubs; only the `AGENTS.md` concept docs are filled in (and must NOT be edited).
++Build the three parts of `flow` following the established repo triple pattern (`rs` Rust+wasm crate, `react` renderer, `play` playground app) seen in `puzzle/2d`, reusing `DirectedPortGraphEngine` and the `infinite_canvas` Vello scene/React canvas. Almost all target files are currently empty stubs; only the `AGENTS.md` concept docs are filled in (and must NOT be edited).
 +
 +## Target architecture
 +
@@ -57,7 +57,7 @@ index 000000000..c984a64cb
 +      DAG["mathematical/graph/port/directed/dag<br/>(mathematical_graph_port_directed_dag, rlib)<br/>rect IO node (inputs|name|outputs), layered layout, fixture"]
 +    end
 +    subgraph p3 [3. Flow UI - specific]
-+      CORE["flow/core (flow_core, cdylib wasm -> @flow/core)<br/>FlowSession: widgets, eval, cavas scene"]
++      CORE["flow/core (flow_core, cdylib wasm -> @flow/core)<br/>FlowSession: widgets, eval, canvas scene"]
 +      REACT["flow/react (@flow/react) FlowCanvas"]
 +      PLAY["flow/play (@flow/play) PlaygroundFlow + default fixture"]
 +    end
@@ -89,7 +89,7 @@ index 000000000..c984a64cb
 +- `flow/modules/math/lib.rs` + new `flow/modules/math/Cargo.toml` (`name = "flow_module_math"`, rlib; dep `neural_engine = { path = "../../../neural/engine" }`). Provide `add` (and a couple more) `NeuronKind`s implementing `Function`, plus `register(registry: &mut Registry)`. Tests cover `add`.
 +
 +## Part 2 - General-purpose DAG UI (Rust)
-+- `mathematical/graph/port/directed/dag/lib.rs` + new `mathematical/graph/port/directed/dag/Cargo.toml` (`name = "mathematical_graph_port_directed_dag"`, rlib; deps mirror sibling `normal`: `mathematical_graph_port_directed = { path = "../normal" }`, `mathematical_graph = { path = "../../.." }`, `mathematical_core = { path = "../../../core" }`, `infinite_cavas = { path = "../../../../infinite/cavas/vello" }`, `serde`, `serde_json`).
++- `mathematical/graph/port/directed/dag/lib.rs` + new `mathematical/graph/port/directed/dag/Cargo.toml` (`name = "mathematical_graph_port_directed_dag"`, rlib; deps mirror sibling `normal`: `mathematical_graph_port_directed = { path = "../normal" }`, `mathematical_graph = { path = "../../.." }`, `mathematical_core = { path = "../../../core" }`, `infinite_canvas = { path = "../../../../infinite/canvas/vello" }`, `serde`, `serde_json`).
 +  - `pub type DagBoardEngine = DirectedPortGraphEngine;` plus a rectangle IO-node model: left input handles, vertical center name, right output handles (per `dag/AGENTS.md`).
 +  - Region `Layout`: layered (rank-by-longest-path) DAG layout writing node `x/y` into a `dag.fixture/v1` value (reuse Buchheim/`mathematical_core::tree_layout` where natural).
 +  - Region `GraphExtension`: `impl`/marker for DAG semantics; acyclicity guard on edge insert.
@@ -97,15 +97,15 @@ index 000000000..c984a64cb
 +- Add `"mathematical/graph/port/directed/dag"` to root [Cargo.toml](Cargo.toml) `members`.
 +
 +## Part 3 - Flow core (Rust cdylib -> wasm)
-+- `flow/core/lib.rs` + new `flow/core/Cargo.toml` (`name = "flow_core"`, `crate-type = ["rlib","cdylib"]`; deps: `neural_engine`, `flow_module_math`, `mathematical_graph_port_directed_dag`, `infinite_cavas`, `serde`, `serde_json`; `[target.'cfg(target_arch="wasm32")'.dependencies]` `wasm-bindgen`, `serde-wasm-bindgen`, `js-sys`, `web-sys` like [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)).
++- `flow/core/lib.rs` + new `flow/core/Cargo.toml` (`name = "flow_core"`, `crate-type = ["rlib","cdylib"]`; deps: `neural_engine`, `flow_module_math`, `mathematical_graph_port_directed_dag`, `infinite_canvas`, `serde`, `serde_json`; `[target.'cfg(target_arch="wasm32")'.dependencies]` `wasm-bindgen`, `serde-wasm-bindgen`, `js-sys`, `web-sys` like [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)).
 +  - Region `Widget`: `Widget = Neuron | Input(Slider|Note) | Output(Preview|Action)` (per [flow/AGENTS.md](flow/AGENTS.md)); maps each widget to a DAG rect node + neural tree node.
-+  - Region `FlowSession` (`#[wasm_bindgen]`, like `BoardSession`): load/serialize a `flow.fixture/v1`, build the DAG board scene (cavas `SceneDescriptorJson`), `attach_canvas`/`renderFrame`, pointer/camera input, and `evaluate()` running the neural engine (math registered) to fill `Preview` outputs.
++  - Region `FlowSession` (`#[wasm_bindgen]`, like `BoardSession`): load/serialize a `flow.fixture/v1`, build the DAG board scene (canvas `SceneDescriptorJson`), `attach_canvas`/`renderFrame`, pointer/camera input, and `evaluate()` running the neural engine (math registered) to fill `Preview` outputs.
 +  - `flow/core/script.ts` (new): `runWasmPackWebBuild({ wasmBaseName: "flow_core", pkg.name: "@flow/core", skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD" })` mirroring [puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts).
 +  - Add `"flow/core"` to root [Cargo.toml](Cargo.toml) `members`.
 +  - Region `Tests`: end-to-end native eval of slider->add->preview fixture.
 +
 +## Part 3b - Flow React renderer
-+- `flow/react/index.tsx` (new) + `package.json` (`@flow/react`), `project.json` (`test`), `script.ts` (prebuild wasm then vitest). Imports wasm relative `../core/pkg/flow_core.js` (top-level `await initFlowWasm()`), exports `FlowCanvas`, fixture types, `ensureFlowWasmLoaded`. Render DAG/widgets via `@infinite/cavas/react-renderer` driven by `FlowSession` (mirror `@puzzle/2d/react` `GpuWasmBridge`).
++- `flow/react/index.tsx` (new) + `package.json` (`@flow/react`), `project.json` (`test`), `script.ts` (prebuild wasm then vitest). Imports wasm relative `../core/pkg/flow_core.js` (top-level `await initFlowWasm()`), exports `FlowCanvas`, fixture types, `ensureFlowWasmLoaded`. Render DAG/widgets via `@infinite/canvas/react-renderer` driven by `FlowSession` (mirror `@puzzle/2d/react` `GpuWasmBridge`).
 +
 +## Part 3c - Flow play app
 +- New under `flow/play/`: `index.ts` (replace empty stub), `index.html`, `globals.css`, `vite.config.ts`, `vitest.config.ts`, `package.json` (`@flow/play`, dep `@framework/playground/core`, devdep `@framework/playground/renderer/react`, `@flow/react`), `project.json` (`dev` env `FLOW_PLAY_PORT: "6016"`, `test` `6029`), `script.ts` (wasm -> vite dev/build/test).
@@ -180,7 +180,7 @@ index 34dfd8d6d..004426b65 100644
 +version = "0.1.0"
 +dependencies = [
 + "flow_module_math",
-+ "infinite_cavas",
++ "infinite_canvas",
 + "js-sys",
 + "mathematical_graph_port_directed_dag",
 + "neural_engine",
@@ -210,7 +210,7 @@ index 34dfd8d6d..004426b65 100644
 +name = "mathematical_graph_port_directed_dag"
 +version = "0.1.0"
 +dependencies = [
-+ "infinite_cavas",
++ "infinite_canvas",
 + "mathematical_core",
 + "mathematical_graph",
 + "mathematical_graph_port_directed",
@@ -337,7 +337,7 @@ index 000000000..f41f7f631
 +neural_engine = { path = "../../neural/engine" }
 +flow_module_math = { path = "../modules/math" }
 +mathematical_graph_port_directed_dag = { path = "../../mathematical/graph/port/directed/dag" }
-+infinite_cavas = { path = "../../infinite/cavas/vello" }
++infinite_canvas = { path = "../../infinite/canvas/vello" }
 +serde = { version = "1.0.219", features = ["derive"] }
 +serde_json = "1.0.140"
 +
@@ -355,7 +355,7 @@ index e69de29bb..4f94241d9 100644
 +//! 🌊️ Flow core: widgets, neural evaluation, and DAG canvas host.
 +
 +pub use flow_module_math;
-+pub use infinite_cavas as cavas;
++pub use infinite_canvas as canvas;
 +pub use mathematical_graph_port_directed_dag as dag;
 +pub use neural_engine as neural;
 +
@@ -720,7 +720,7 @@ index e69de29bb..4f94241d9 100644
 +#[cfg(target_arch = "wasm32")]
 +struct FlowSessionInner {
 +    host: FlowHost,
-+    gpu: cavas::gpu_session::CanvasGpuSession,
++    gpu: canvas::gpu_session::CanvasGpuSession,
 +}
 +
 +#[cfg(target_arch = "wasm32")]
@@ -734,7 +734,7 @@ index e69de29bb..4f94241d9 100644
 +impl FlowSession {
 +    #[wasm_bindgen(constructor)]
 +    pub fn new() -> Self {
-+        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
++        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
 +    }
 +
 +    #[wasm_bindgen(js_name = loadFixtureJson)]
@@ -785,17 +785,17 @@ index e69de29bb..4f94241d9 100644
 +    pub fn render_frame(&self) -> Result<(), JsValue> {
 +        let mut inner = self.state.borrow_mut();
 +        let snap = inner.host.engine.render_snapshot();
-+        let mut scene = cavas::vello::Scene::new();
-+        use cavas::vello::kurbo::{Circle, Point};
-+        use cavas::vello::peniko::{Color, Fill};
++        let mut scene = canvas::vello::Scene::new();
++        use canvas::vello::kurbo::{Circle, Point};
++        use canvas::vello::peniko::{Color, Fill};
 +        for (_nid, center, radius) in &snap.nodes {
-+            scene.fill(Fill::NonZero, cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(90, 110, 140), None, &Circle::new(Point::new(center.x, center.y), *radius));
++            scene.fill(Fill::NonZero, canvas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(90, 110, 140), None, &Circle::new(Point::new(center.x, center.y), *radius));
 +        }
 +        for (_hid, center, radius) in &snap.handles {
-+            scene.fill(Fill::NonZero, cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(180, 200, 230), None, &Circle::new(Point::new(center.x, center.y), *radius));
++            scene.fill(Fill::NonZero, canvas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(180, 200, 230), None, &Circle::new(Point::new(center.x, center.y), *radius));
 +        }
 +        for curve in &snap.edges {
-+            scene.stroke(&cavas::vello::kurbo::Stroke::new(2.0), cavas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(200, 210, 230), None, curve);
++            scene.stroke(&canvas::vello::kurbo::Stroke::new(2.0), canvas::vello::kurbo::Affine::IDENTITY, Color::from_rgb8(200, 210, 230), None, curve);
 +        }
 +        inner.gpu.render_frame(&scene, Color::from_rgba8(20, 22, 28, 255))
 +    }
@@ -1827,7 +1827,7 @@ index 000000000..6bdcf2407
 +mathematical_graph_port_directed = { path = "../normal" }
 +mathematical_graph = { path = "../../.." }
 +mathematical_core = { path = "../../../../core" }
-+infinite_cavas = { path = "../../../../../infinite/cavas/vello" }
++infinite_canvas = { path = "../../../../../infinite/canvas/vello" }
 +serde = { version = "1.0.219", features = ["derive"] }
 +serde_json = "1.0.140"
 diff --git a/mathematical/graph/port/directed/dag/lib.rs b/mathematical/graph/port/directed/dag/lib.rs
@@ -1839,7 +1839,7 @@ index e69de29bb..2894f16d3 100644
 +
 +use serde::{Deserialize, Serialize};
 +
-+pub use infinite_cavas as cavas;
++pub use infinite_canvas as canvas;
 +pub use mathematical_graph_port_directed::{
 +    self as graph, apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json, BoardEngine, BoardEvent, Camera, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
 +};
@@ -2084,7 +2084,7 @@ index e69de29bb..2894f16d3 100644
 +/// 🧩️ DAG-specific graph extension marker.
 +pub struct DagExtension;
 +
-+impl cavas::CanvasExtension for DagExtension {
++impl canvas::CanvasExtension for DagExtension {
 +    fn extension_id(&self) -> &str {
 +        "dag"
 +    }
@@ -2140,11 +2140,11 @@ index 48f83d749..a60e1c5d8 100644
 -mathematical_graph = { path = "../.." }
 -mathematical_graph_normal_undirected = { path = "../../normal/undirected" }
 -mathematical_core = { path = "../../../core" }
--infinite_cavas = { path = "../../../../infinite/cavas/vello" }
+-infinite_canvas = { path = "../../../../infinite/canvas/vello" }
 +mathematical_graph = { path = "../../.." }
 +mathematical_graph_normal_undirected = { path = "../../../normal/undirected" }
 +mathematical_core = { path = "../../../../core" }
-+infinite_cavas = { path = "../../../../../infinite/cavas/vello" }
++infinite_canvas = { path = "../../../../../infinite/canvas/vello" }
  serde = { version = "1.0.219", features = ["derive"] }
  serde_json = "1.0.140"
 diff --git a/neural/engine/Cargo.toml b/neural/engine/Cargo.toml
@@ -2517,7 +2517,7 @@ index ff4c0217f..4ced98933 100644
 +++ b/puzzle/2d/rs/Cargo.toml
 @@ -18,7 +18,7 @@ serde_json = "1.0.140"
  [dependencies]
- infinite_cavas = { path = "../../../infinite/cavas/vello" }
+ infinite_canvas = { path = "../../../infinite/canvas/vello" }
  mathematical_graph_normal_undirected = { path = "../../../mathematical/graph/normal/undirected" }
 -mathematical_graph_port_directed = { path = "../../../mathematical/graph/port/directed" }
 +mathematical_graph_port_directed = { path = "../../../mathematical/graph/port/directed/normal" }

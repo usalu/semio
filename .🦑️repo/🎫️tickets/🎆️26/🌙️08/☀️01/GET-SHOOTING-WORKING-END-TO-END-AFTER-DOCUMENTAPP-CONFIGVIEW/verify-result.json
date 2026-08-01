@@ -1,0 +1,43 @@
+{
+  "url": "http://127.0.0.1:6019/",
+  "canvas": 1,
+  "hasRenderError": false,
+  "pageErrors": [],
+  "consoleErrors": [],
+  "meshOk": true,
+  "meshes": [
+    {
+      "path": "/mesh/🧊️base.glb",
+      "ok": true,
+      "status": 200,
+      "contentType": "model/gltf-binary",
+      "bytes": 284436,
+      "magic": "glTF"
+    },
+    {
+      "path": "/mesh/base.glb",
+      "ok": false,
+      "status": 404,
+      "contentType": null,
+      "bytes": 0,
+      "magic": ""
+    },
+    {
+      "path": "/mesh/placeholder.glb",
+      "ok": false,
+      "status": 404,
+      "contentType": null,
+      "bytes": 0,
+      "magic": ""
+    },
+    {
+      "path": "/mesh/🧊️placeholder.glb",
+      "ok": true,
+      "status": 200,
+      "contentType": "model/gltf-binary",
+      "bytes": 771728,
+      "magic": "glTF"
+    }
+  ],
+  "bodySnippet": "Document\nCatalogue\nInspection\nFullscreen\nsemio · shooting\nExample\nDefault Base Icon\nScene\nFocus\nClose\n256×256 · rectangle\nProjection\nWindow Options\nActions\nSearch\nUtilities\nIcon\nFocus\nClose\n256×256 · rectangle\nOverview Svg · 256×256 · SVG\nWindow Options\nActions\nSearch\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}

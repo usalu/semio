@@ -240,13 +240,13 @@ pub fn create_mathematical_app() -> App {
         App::builder(MATH_APP_ID, "Mathematical")
             .document(["semio", "mathematical"])
             .icon_id("math-app")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(MATH_WINDOW_GRAPH, "Graph", MATH_BODY_GRAPH, SurfaceKind::NodeGraph, "math-graph")
             .window_kind(MATH_WINDOW_GEOMETRY, "Geometry", MATH_BODY_GEOMETRY, SurfaceKind::Canvas2d, "hexagon")
             .default_layout(create_default_layout(&[MATH_WINDOW_GRAPH.into(), MATH_WINDOW_GEOMETRY.into()], "row", Some(&[60.0, 40.0]), Some(&["Graph".into(), "Geometry".into()])))
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setDocument", "Set Document", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setDocument", "Set Document", ActionKind::Operation) })
             .operation("setAlgorithm", "Set Algorithm")
             .operation("setDirected", "Set Directed")
             .operation("nodeGraphEdit", "Node Graph Edit")
@@ -265,7 +265,7 @@ pub fn create_mathematical_app() -> App {
                 ActionArgDef::toggle("directed", "Directed").default_value(true),
             ]),
     )
-    .example("demo", "Demo", MathProjection::default().print_dsl())
+    .example("demo", "Demo", MathProjection::default().print_dsl(), "flask-conical")
     .workflow("mathematical", "Mathematical", "graph")
 }
 //#endregion 🔖️Manifest

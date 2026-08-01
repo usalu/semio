@@ -1,0 +1,14 @@
+{
+  "title": "Fix Lower Right Panel Tab Order",
+  "emoji": "🐛️",
+  "status": "closed",
+  "description": "Fix the bug where pressing lower-right panel toggles such as Settings reverses the visible panel tab order. Preserve declared tab order across fold, unfold, and active-tab changes; add regression coverage and verify behavior.",
+  "summary": "Fixed right-anchored panel tab reversal by isolating each tab row from the panel root spatial RTL flow, preserving declared left-to-right visual and keyboard order across folded and open chrome hosts. Updated dock-drop hit testing to match the preserved order, added toggle-path and insertion-order regression tests, and added a bottom-right chrome-hosted Panel Storybook fixture. Focused Nx tests pass (2/2). The full UI suite and typecheck remain blocked by unrelated pre-existing shared-worktree failures and missing generated modules/WASM artifacts.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2413"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪475b69c2695d4f5a9aa5141e95bb56bd"
+  ]
+}

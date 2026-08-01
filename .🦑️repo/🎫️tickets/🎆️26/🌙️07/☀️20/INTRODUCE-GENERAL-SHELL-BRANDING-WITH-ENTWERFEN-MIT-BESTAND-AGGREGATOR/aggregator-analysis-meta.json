@@ -88,7 +88,7 @@
           "original": "react-dom/client"
         },
         {
-          "path": "/Users/ueli/Documents/semio/infinite/cavas/react-renderer/index.tsx",
+          "path": "/Users/ueli/Documents/semio/infinite/canvas/react-renderer/index.tsx",
           "kind": "import-statement",
           "original": "@semio-tech/infinite-canvas-react-renderer"
         },
@@ -226,7 +226,7 @@
       ],
       "format": "cjs"
     },
-    "infinite/cavas/react-renderer/index.tsx": {
+    "infinite/canvas/react-renderer/index.tsx": {
       "bytes": 9756,
       "imports": [
         {
@@ -25954,7 +25954,7 @@
         "node_modules/react-reconciler/constants.js": {
           "bytesInOutput": 160
         },
-        "infinite/cavas/react-renderer/index.tsx": {
+        "infinite/canvas/react-renderer/index.tsx": {
           "bytesInOutput": 6696
         },
         "framework/product/os/core/js/index.ts": {

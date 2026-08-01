@@ -1043,7 +1043,7 @@ pub fn create_trinity_jack_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("trinity")
-            .mode("explore", "Explore")
+            .mode("explore", "Explore", "compass")
             .default_mode_id("explore")
             .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph, "graph-dag")
             .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, "Jack Query", TRINITY_JACK_PLAY_BODY_EDITOR, SurfaceKind::TextEditor, "document-jack")
@@ -1112,7 +1112,7 @@ pub fn create_trinity_jack_app() -> App {
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+alt+s", "commitCheckpoint"),
     )
-    .example("nakagin", "Nakagin", default_fixture().print_dsl())
+    .example("nakagin", "Nakagin", default_fixture().print_dsl(), "building-2")
     .workflow("trinity", "Trinity", "graph")
 }
 //#endregion 🔖️Manifest

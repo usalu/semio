@@ -368,7 +368,7 @@ function updateCargoWorkspace(): void {
     "cad/rs",
     "framework/product/presentation/rs",
     "ui/styling/rs",
-    "infinite/cavas/rs",
+    "infinite/canvas/rs",
     "reasoning/mindmap/rs",
     "gis/2d/rs",
     "puzzle/2d/rs",

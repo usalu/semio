@@ -217,7 +217,7 @@ pub fn create_playbook_play_app() -> App {
     App::from_builder(
         App::builder(PLAYBOOK_PLAY_APP_ID, "Playbook")
             .document(["semio", "playbook"])
-            .mode("builder", "Builder")
+            .mode("builder", "Builder", "blocks")
             .default_mode_id("builder")
             .window_kind(PLAYBOOK_PLAY_WINDOW_BUILDER, "Builder", PLAYBOOK_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
             .default_layout(create_default_layout(&[PLAYBOOK_PLAY_WINDOW_BUILDER.into()], "row", None, None))

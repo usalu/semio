@@ -1,8 +1,0 @@
-{
-  "title": "Fix Panel Toggle Chip Jump Over Fullscreen",
-  "emoji": "🎛️",
-  "status": "closed",
-  "description": "When toggling chrome-hosted panels (e.g. top-right inspector), the toggle chip should stay aligned with its folded navbar position and not jump over the fullscreen control while the panel body grows from the corner.",
-  "summary": "PanelChromeTabBar keeps a width-matched aria-hidden placeholder while the panel is open so trailing fullscreen does not reflow. Open chrome-hosted right-anchored panels apply shellNavbarTrailingEndReserveCss padding-inline-start on the WindowChrome cap row so chips sit left of the fullscreen slot under RTL flow. Added WindowChrome capRowStyle and vitest coverage.",
-  "goal": "🎯️r2602"
-}

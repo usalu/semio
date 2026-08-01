@@ -2,7 +2,7 @@
    Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
    Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
 warning: unused import: `vello::util`
-  --> infinite/cavas/rs/lib.rs:11:17
+  --> infinite/canvas/rs/lib.rs:11:17
    |
 11 |         pub use vello::util;
    |                 ^^^^^^^^^^^
@@ -10,13 +10,13 @@ warning: unused import: `vello::util`
    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
 warning: unused import: `vello::wgpu`
-  --> infinite/cavas/rs/lib.rs:12:17
+  --> infinite/canvas/rs/lib.rs:12:17
    |
 12 |         pub use vello::wgpu;
    |                 ^^^^^^^^^^^
 
 warning: method `into_brush` is never used
-   --> infinite/cavas/rs/lib.rs:158:12
+   --> infinite/canvas/rs/lib.rs:158:12
     |
 157 |     impl Paint {
     |     ---------- method in this implementation
@@ -25,7 +25,7 @@ warning: method `into_brush` is never used
     |
     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
-warning: `infinite_cavas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_cavas` to apply 2 suggestions)
+warning: `infinite_canvas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_canvas` to apply 2 suggestions)
    Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
 warning: unused variable: `projection`
    --> vcs/rs/lib.rs:405:27
@@ -384,7 +384,7 @@ warning: `infinite_board_port_directed` (lib) generated 1 warning
 warning: unused import: `RasterImage`
  --> infinite/board/port/directed/normal/rs/lib.rs:9:72
   |
-9 | use infinite_cavas::{Affine, Circle, CubicBez, Color, FillRule, Point, RasterImage, Rect, Scene, Stroke, Vec2};
+9 | use infinite_canvas::{Affine, Circle, CubicBez, Color, FillRule, Point, RasterImage, Rect, Scene, Stroke, Vec2};
   |                                                                        ^^^^^^^^^^^
   |
   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default

@@ -119,11 +119,11 @@ if (!specIndexContent.includes("//#region 🔖️spec")) specIndexContent += `\n
 writeFileSync(specIndex, specIndexContent);
 unlinkSync(specPath);
 
-inlineRustMod(join(root, "infinite/cavas/rs/lib.rs"), ["theme"]);
-const iconCodecPath = join(root, "infinite/cavas/rs/icon_codec.rs");
+inlineRustMod(join(root, "infinite/canvas/rs/lib.rs"), ["theme"]);
+const iconCodecPath = join(root, "infinite/canvas/rs/icon_codec.rs");
 if (readFileSync(iconCodecPath, "utf8").length > 0) {
   unlinkSync(iconCodecPath);
-  console.log("removed orphaned infinite/cavas/rs/icon_codec.rs (already inlined in lib.rs)");
+  console.log("removed orphaned infinite/canvas/rs/icon_codec.rs (already inlined in lib.rs)");
 }
 
 inlineRustMod(join(root, "kernel/2d/rs/lib.rs"), ["booleans", "trace"]);

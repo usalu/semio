@@ -2,8 +2,8 @@
 name: Map LOD Mechanism
 overview: Fix the map-play browser crash by making the neutral canvas LOD mechanism a compile-time, data-driven list of LODs (id/name/description/threshold) that each canvas content declares, route puzzle 2d's six tiers through it as the example, and give the map its own named tile-zoom bands that bound tile fetching.
 todos:
- - id: cavas-lod
-   content: Generalize infinite/cavas lod module into compile-time Lod + LodScale; remove DrawLod/LodThresholds/resolve_draw_lod; update crate test
+ - id: canvas-lod
+   content: Generalize infinite/canvas lod module into compile-time Lod + LodScale; remove DrawLod/LodThresholds/resolve_draw_lod; update crate test
    status: completed
  - id: puzzle2d-lod
    content: Declare PUZZLE_2D_LODS const + LodScale in puzzle 2d rust; keep local DrawLod enum; remove runtime threshold override; expose lod_scale_json
@@ -31,9 +31,9 @@ isProject: false
 - JS duplicates Rust tile math (`pickTileZoom`/`visibleTileKeys`/`screenToWorld`) and the two diverge; Rust `tiles::pick_zoom` has the same `+4` miscalibration (`gis/map/rs/lib.rs` lines 55-58).
 - LOD is a fixed 6-variant enum in the neutral canvas crate, consumed only by puzzle 2d; the map has no LOD.
 
-## 1. Generalize `infinite/cavas` LOD into a compile-time, data-driven scale
+## 1. Generalize `infinite/canvas` LOD into a compile-time, data-driven scale
 
-In the `#region Lod` of [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) (lines 809-871), replace the puzzle-specific enum with a neutral, compile-time mechanism:
+In the `#region Lod` of [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs) (lines 809-871), replace the puzzle-specific enum with a neutral, compile-time mechanism:
 
 - `pub struct Lod { pub id: &'static str, pub name: &'static str, pub description: &'static str, pub max_zoom: f64 }` (last/finest band uses `f64::INFINITY`).
 - `pub struct LodScale { pub lods: &'static [Lod] }` with `resolve_index(zoom)->usize`, `resolve(zoom)->&'static Lod`, `index_of(id)->Option<usize>`.
@@ -44,7 +44,7 @@ In the `#region Lod` of [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.r
 In [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs):
 
 - Add `const PUZZLE_2D_LODS: &[Lod; 6]` (minimap, overview, compact, normal, detail, micro) carrying id/name/description and the current default `max_zoom` values (lines 243-247) and a `LodScale` over it.
-- Keep the local `DrawLod` enum for the extensive pattern-matching (it now lives in puzzle 2d, not cavas), derived from the resolved LOD `id`/index. `current_draw_lod` (lines 827-834) calls `LodScale::resolve`.
+- Keep the local `DrawLod` enum for the extensive pattern-matching (it now lives in puzzle 2d, not canvas), derived from the resolved LOD `id`/index. `current_draw_lod` (lines 827-834) calls `LodScale::resolve`.
 - Per "all LODs declared at compile time", remove the runtime threshold override: delete `set_lod_zoom_thresholds_from_json` (lines 860-885) and its wasm binding `setLodZoomThresholdsJson` (lines 5532-5534). Keep automatic/forced selection (`set_automatic_lod`, `set_forced_draw_lod_label`).
 - Add `lod_scale_json()` exposing the compile-time table (id/name/description/max_zoom) so JS can resolve labels from a single source.
 
@@ -72,7 +72,7 @@ In [gis/map/react/index.tsx](gis/map/react/index.tsx):
 
 ## 5. Tests, build, ticket
 
-- Rust: update cavas `lod` test; extend puzzle 2d LOD tests (`overlay_paint_state_json`, forced/automatic) for the table; add gis map tests for band resolution + bounded `visible_tiles_json`.
+- Rust: update canvas `lod` test; extend puzzle 2d LOD tests (`overlay_paint_state_json`, forced/automatic) for the table; add gis map tests for band resolution + bounded `visible_tiles_json`.
 - JS: keep `gis/map/react` vitest; add a `visible_tiles_json` SSOT assertion; adjust puzzle 2d tests that referenced removed thresholds.
 - Rebuild wasm for both crates via existing `script.ts wasm` targets (`gis/map/rs`, `puzzle/2d/rs`); run `nx`/vitest + `cargo test -p gis_map -p puzzle_2d`. Verify map play (`gis/map/play` dev, port 6040) loads without crashing and logs bounded tile counts.
 - Do the work inside a repo MCP ticket (read `repo://goals`, reopen/open as appropriate), keeping any temp logs under the ticket folder.

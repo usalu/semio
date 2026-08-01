@@ -112,7 +112,7 @@ Each kind entry:
 New crate + package at `mathematical/graph/manifest/`:
 
 - [mathematical/graph/manifest/lib.rs](mathematical/graph/manifest/lib.rs) — kernel types, `Manifest`, `PropertyDef`, `ManifestValidator`
-- [mathematical/graph/manifest/build.rs](mathematical/graph/manifest/build.rs) — `include!` generated Rust from manifest sources (same pattern as [infinite/cavas/rs/build.rs](infinite/cavas/rs/build.rs))
+- [mathematical/graph/manifest/build.rs](mathematical/graph/manifest/build.rs) — `include!` generated Rust from manifest sources (same pattern as [infinite/canvas/rs/build.rs](infinite/canvas/rs/build.rs))
 - [mathematical/graph/manifest/script.ts](mathematical/graph/manifest/script.ts) — `generate` command: read all `**/*.manifest.json`, emit Rust + TS + JSON Schema; register in `project.json`, `package.json`, [launch.json](.vscode/launch.json)
 
 Per-manifest codegen output (example `nakagin`):

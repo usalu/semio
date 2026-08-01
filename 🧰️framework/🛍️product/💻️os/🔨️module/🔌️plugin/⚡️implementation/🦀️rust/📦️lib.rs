@@ -106,6 +106,7 @@ use store::{build_history_columns, create_config_envelope, create_document_envel
 pub struct ModeSpec {
     pub id: String,
     pub label: String,
+    pub icon_id: IconName,
     pub tools: Vec<ToolRef>,
     pub layout_id: Option<String>,
     pub commands: Vec<CommandRef>,
@@ -439,10 +440,11 @@ impl AppBuilder {
         self
     }
 
-    pub fn mode(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub fn mode(mut self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
         self.modes.push(ModeSpec {
             id: id.into(),
             label: label.into(),
+            icon_id: icon_id.into(),
             tools: Vec::new(),
             layout_id: None,
             commands: Vec::new(),
@@ -601,17 +603,17 @@ impl AppBuilder {
 
     /// @emoji ✏️ Declares a document-mutating action — dispatched as VCS operations with a true inverse.
     pub fn operation(self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.action_with(ActionDefinition::new(id, label, ActionKind::Operation))
+        self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Operation))
     }
 
     /// @emoji 👁️ Declares an ephemeral view action (camera, selection, hover, active utility) — not recorded in history.
     pub fn view_action(self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.action_with(ActionDefinition::new(id, label, ActionKind::View))
+        self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::View))
     }
 
     /// @emoji 🐚️ Declares a shell-only effect action (navigate, export, spawn) — no document mutation.
     pub fn shell_action(self, id: impl Into<String>, label: impl Into<String>) -> Self {
-        self.action_with(ActionDefinition::new(id, label, ActionKind::Shell))
+        self.action_with(ActionDefinition::new_catalog(id, label, ActionKind::Shell))
     }
 
     /// @emoji 📇️ Declares a fully specified action (icon, args, keybinding, palette visibility, category).
@@ -641,13 +643,13 @@ impl AppBuilder {
 
     /// @emoji 🎛️ Declares an app-scope command (applies whenever this app is focused, in any mode).
     pub fn app_command(self, id: impl Into<String>, label: impl Into<String>, category: impl Into<String>) -> Self {
-        self.command(CommandDefinition::new(id, label, CommandScope::App, category))
+        self.command(CommandDefinition::new_catalog(id, label, CommandScope::App, category))
     }
 
     /// @emoji 🎛️ Declares a mode-scope command definition — still requires `.mode_commands(mode_id, ..)`
     /// to actually scope it to the mode(s) it applies to.
     pub fn mode_command(self, id: impl Into<String>, label: impl Into<String>, category: impl Into<String>) -> Self {
-        self.command(CommandDefinition::new(id, label, CommandScope::Mode, category))
+        self.command(CommandDefinition::new_catalog(id, label, CommandScope::Mode, category))
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to an already-declared command (post-hoc,
@@ -1204,6 +1206,7 @@ impl AppBuilder {
                     .map(|mode| ModeDefinition {
                         id: mode.id,
                         label: mode.label,
+                        icon_id: mode.icon_id,
                         tools: mode.tools,
                         layout_id: mode.layout_id,
                         commands: mode.commands,
@@ -2222,7 +2225,7 @@ mod app_builder_tests {
         let result = std::panic::catch_unwind(|| {
             App::builder("bad-app", "Bad")
                 .document(["semio", "bad"])
-                .mode("edit", "Edit")
+                .mode("edit", "Edit", "square-pen")
                 .mode_tools("edit", vec![])
                 .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
@@ -2235,7 +2238,7 @@ mod app_builder_tests {
     fn build_definition_accepts_valid_manifest() {
         let definition = App::builder("good-app", "Good")
             .document(["semio", "good"])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .mode_tools("edit", vec![])
             .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
@@ -2243,6 +2246,7 @@ mod app_builder_tests {
             .build_definition();
         assert_eq!(definition.window_kinds.len(), 1);
         assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
+        assert_eq!(definition.modes.first().icon_id.as_str(), "square-pen");
         // 🕰️ 1 declared + the auto-injected framework History tab.
         assert_eq!(definition.panel_tabs.len(), 2);
     }
@@ -2252,7 +2256,7 @@ mod app_builder_tests {
         let result = std::panic::catch_unwind(|| {
             App::builder("bad-terminology-app", "Bad")
                 .document(["semio", "bad"])
-                .mode("edit", "Edit")
+                .mode("edit", "Edit", "square-pen")
                 .mode_tools("edit", vec![])
                 .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["main".into()], "row", None, None))
@@ -2266,7 +2270,7 @@ mod app_builder_tests {
     fn build_definition_accepts_declared_terminology_document() {
         let definition = App::builder("good-terminology-app", "Good")
             .document(["semio", "good"])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .mode_tools("edit", vec![])
             .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
@@ -2282,7 +2286,7 @@ mod app_builder_tests {
     fn minimal_app(id: &str) -> AppBuilder {
         App::builder(id, "App")
             .document(["semio", id])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .window_kind("main", "Main", format!("{id}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
     }
 
@@ -2927,7 +2931,7 @@ mod app_builder_tests {
         use semio_framework_core::{CommandDefinition, CommandRef, CommandScope};
         let definition = minimal_app("command-app")
             .app_command("app.export", "Export", "document")
-            .command(CommandDefinition::new("mode.focus", "Focus", CommandScope::Mode, "view"))
+            .command(CommandDefinition::new_catalog("mode.focus", "Focus", CommandScope::Mode, "view"))
             .mode_commands("edit", vec![CommandRef::new("mode.focus")])
             .build_definition();
         assert_eq!(definition.commands.len(), 2);
@@ -2950,7 +2954,7 @@ mod app_builder_tests {
         use semio_framework_core::{CommandDefinition, CommandScope};
         let result = std::panic::catch_unwind(|| {
             minimal_app("os-scope-command-app")
-                .command(CommandDefinition::new("os.theme", "Theme", CommandScope::Os, "appearance"))
+                .command(CommandDefinition::new_catalog("os.theme", "Theme", CommandScope::Os, "appearance"))
                 .build_definition()
         });
         assert!(result.is_err(), "AppBuilder must reject Os/Plugin-scope commands — those are declared by the shell/PluginBundle, not an app");
@@ -2980,7 +2984,7 @@ mod app_builder_tests {
         use semio_framework_core::{CommandDefinition, CommandScope};
         let result = std::panic::catch_unwind(|| {
             minimal_app("orphan-mode-command-app")
-                .command(CommandDefinition::new("mode.focus", "Focus", CommandScope::Mode, "view"))
+                .command(CommandDefinition::new_catalog("mode.focus", "Focus", CommandScope::Mode, "view"))
                 .build_definition()
         });
         assert!(result.is_err());
@@ -3009,10 +3013,18 @@ impl App {
         }
     }
 
-    pub fn example(mut self, id: impl Into<String>, label: impl Into<String>, document_json: impl Into<String>) -> Self {
+    pub fn example(
+        mut self,
+        id: impl Into<String>,
+        label: impl Into<String>,
+        document_json: impl Into<String>,
+        icon_id: impl Into<IconName>,
+    ) -> Self {
+        let id = id.into();
         self.examples.push(ExampleDefinition {
-            id: id.into(),
+            id: id.clone(),
             label: label.into(),
+            icon_id: icon_id.into(),
             document_json: document_json.into(),
             app_id: String::new(),
         });
@@ -3924,7 +3936,7 @@ impl<'a> Menu<'a> {
                 self.items.push(ContextMenuItemSpec {
                     id: action_id.clone(),
                     label: Some(definition.label.clone()),
-                    icon: definition.icon_id.map(|icon| icon.as_str().to_string()),
+                    icon: Some(definition.icon_id.as_str().to_string()),
                     action: Some(action_id),
                     args,
                     ..Default::default()
@@ -3944,7 +3956,7 @@ impl<'a> Menu<'a> {
                 self.items.push(ContextMenuItemSpec {
                     id: command_id.clone(),
                     label: Some(definition.label.clone()),
-                    icon: definition.icon_id.map(|icon| icon.as_str().to_string()),
+                    icon: Some(definition.icon_id.as_str().to_string()),
                     action: Some(command_id),
                     ..Default::default()
                 });
@@ -3996,11 +4008,18 @@ impl<'a> Menu<'a> {
     }
 
     /// 🌿️ Appends a nested submenu, its rows built by a fresh `Menu` sharing this app's registry.
-    pub fn submenu(mut self, id: impl Into<String>, label: impl Into<String>, build: impl FnOnce(Menu<'a>) -> Menu<'a>) -> Self {
+    pub fn submenu(
+        mut self,
+        id: impl Into<String>,
+        label: impl Into<String>,
+        icon_id: impl Into<IconName>,
+        build: impl FnOnce(Menu<'a>) -> Menu<'a>,
+    ) -> Self {
         let children = build(Menu::of(self.registry)).build();
         self.items.push(ContextMenuItemSpec {
             id: id.into(),
             label: Some(label.into()),
+            icon: Some(icon_id.into().as_str().to_string()),
             children: (!children.is_empty()).then_some(children),
             ..Default::default()
         });
@@ -4015,6 +4034,42 @@ impl<'a> Menu<'a> {
 
     pub fn build(self) -> Vec<ContextMenuItemSpec> {
         self.items
+    }
+}
+
+/// 🗣️ Localized conjunction phrase for selection-scoped menu labels — `(count, singular, plural)` per domain.
+pub fn selection_count_phrase(is_de: bool, counts: &[(usize, &str, &str)]) -> String {
+    let parts: Vec<String> = counts
+        .iter()
+        .filter(|(count, _, _)| *count > 0)
+        .map(|(count, singular, plural)| {
+            if *count == 1 {
+                format!("1 {singular}")
+            } else {
+                format!("{count} {plural}")
+            }
+        })
+        .collect();
+    match parts.len() {
+        0 => String::new(),
+        1 => parts[0].clone(),
+        2 => {
+            if is_de {
+                format!("{} und {}", parts[0], parts[1])
+            } else {
+                format!("{} and {}", parts[0], parts[1])
+            }
+        }
+        _ => {
+            let joiner = if is_de { " und " } else { ", and " };
+            let last = parts.last().cloned().unwrap_or_default();
+            let head = parts[..parts.len() - 1].join(", ");
+            if is_de {
+                format!("{head} und {last}")
+            } else {
+                format!("{head}{joiner}{last}")
+            }
+        }
     }
 }
 //#endregion 🖱️MenuBuilder
@@ -6421,7 +6476,7 @@ mod semio_plugin_macro_tests {
         App::from_builder(
             App::builder("synthetic-play", "Synthetic")
                 .document(["state"])
-                .mode("edit", "Edit")
+                .mode("edit", "Edit", "square-pen")
                 .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow),
         )
     }
@@ -6433,7 +6488,7 @@ mod semio_plugin_macro_tests {
         let app = App::from_builder(
             App::builder("synthetic-play", "Synthetic")
                 .document(["state"])
-                .mode("edit", "Edit")
+                .mode("edit", "Edit", "square-pen")
                 .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .operation("setLabelRequired", "Set Label")
                 .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
@@ -7061,6 +7116,19 @@ mod semio_plugin_macro_tests {
         assert_eq!(app.test_projection().label, "hi");
     }
 
+    #[test]
+    fn selection_count_phrase_formats_mixed_selection() {
+        assert_eq!(
+            selection_count_phrase(false, &[(8, "node", "nodes"), (13, "edge", "edges")]),
+            "8 nodes and 13 edges"
+        );
+        assert_eq!(selection_count_phrase(false, &[(1, "node", "nodes")]), "1 node");
+        assert_eq!(
+            selection_count_phrase(true, &[(8, "Knoten", "Knoten"), (13, "Kante", "Kanten")]),
+            "8 Knoten und 13 Kanten"
+        );
+    }
+
     /// 🖱️ `PluginApp::context_menu` end-to-end through `VcsDocumentApp`: with an empty label the
     /// "selection guard" (`Menu::when`) drops the gated command; once a label is set (a stand-in for
     /// "something is selected"), both rows resolve label/icon from the declared registry entries.
@@ -7069,14 +7137,39 @@ mod semio_plugin_macro_tests {
         let mut app = contract_app_under_test();
         let request = ContextMenuRequest { menu: UiMenuRef { id: "window".into(), args: None }, surface: None, window_instance_id: None, point: None };
 
+        use semio_framework_core::{catalog_action_icon_id, catalog_command_icon_id};
+
+        let set_label_icon = catalog_action_icon_id("setLabelRequired", ActionKind::Operation)
+            .as_str()
+            .to_string();
+        let increment_icon = catalog_command_icon_id("incrementViaCommand").as_str().to_string();
+
         let empty_label = app.context_menu(&request, &ViewState::default());
         assert_eq!(empty_label.len(), 1, "the gated command must be absent with no label set: {empty_label:?}");
-        assert_eq!(empty_label[0], ContextMenuItemSpec { id: "setLabelRequired".into(), label: Some("Set Label".into()), action: Some("setLabelRequired".into()), ..Default::default() });
+        assert_eq!(
+            empty_label[0],
+            ContextMenuItemSpec {
+                id: "setLabelRequired".into(),
+                label: Some("Set Label".into()),
+                icon: Some(set_label_icon),
+                action: Some("setLabelRequired".into()),
+                ..Default::default()
+            }
+        );
 
         app.handle_action("setLabelRequired", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta()).expect("set label");
         let with_label = app.context_menu(&request, &ViewState::default());
         assert_eq!(with_label.len(), 2, "the guard must open once a label is set: {with_label:?}");
-        assert_eq!(with_label[1], ContextMenuItemSpec { id: "incrementViaCommand".into(), label: Some("Increment".into()), action: Some("incrementViaCommand".into()), ..Default::default() });
+        assert_eq!(
+            with_label[1],
+            ContextMenuItemSpec {
+                id: "incrementViaCommand".into(),
+                label: Some("Increment".into()),
+                icon: Some(increment_icon),
+                action: Some("incrementViaCommand".into()),
+                ..Default::default()
+            }
+        );
     }
 
     #[test]
@@ -8247,8 +8340,8 @@ mod tests {
 }
 
 pub use app::{
-    ActionEmit, ActionMeta, App, AppBuilder, AppInstance, ConfigView, DocumentApp, DocumentView, HistoryView,
-    KeybindingSpec, MediaClass, MediaType, ModeSpec, NoConfig, NoConfigOperation, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp,
+    ActionEmit, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ConfigView, DocumentApp, DocumentView, HistoryView,
+    KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp,
     PluginBundle, ArtifactKindSpec, VcsDocumentApp, WindowKindSpec,
 };
 pub use semio_framework_core::{MediaForm, MediaPortDirection, MediaPortSpec};

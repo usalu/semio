@@ -9,7 +9,7 @@ todos:
    content: "Build layout/core: Document/Page/Spread/ParentPage/Layer/Frame/TextStory/TextFrame/ImageLink/styles/GridSettings types, fixture JSON schema, command+undo/redo, parent-page inheritance resolver, style cascade resolver, snap resolver, linked-asset state machine, preflight validators, inline tests"
    status: completed
  - id: engine-text-render
-   content: "Build layout/rs engine core: bundled-font Parley+Swash text shaping/threading/pagination, Display List builder, CanvasContent impl (blueprint + preview chrome modes) on infinite/cavas, hit testing"
+   content: "Build layout/rs engine core: bundled-font Parley+Swash text shaping/threading/pagination, Display List builder, CanvasContent impl (blueprint + preview chrome modes) on infinite/canvas, hit testing"
    status: completed
  - id: engine-export
    content: "Build layout/rs export/package: PNG via GPU readback + image/png crate, SVG via hand-written XML serializer, PDF via printpdf, package archive via zip+sha2 with manifest/hashes"
@@ -44,13 +44,13 @@ flowchart TD
   React["layout/react — LayoutCanvas + wasm session bindings"]
   Core["layout/core — Document model, commands, undo/redo, style cascade, snap, preflight (TS)"]
   Engine["layout/rs — Rust/WASM: text shaping, pagination, display list, GPU render, export/package"]
-  Cavas["infinite/cavas — CanvasGpuSession + CanvasContent (existing)"]
+  Canvas["infinite/canvas — CanvasGpuSession + CanvasContent (existing)"]
   Vello["vello / parley / swash"]
 
   Play --> React --> Engine
   Play --> Core
   Engine --> Core
-  Engine --> Cavas
+  Engine --> Canvas
   Engine --> Vello
 ```
 
@@ -89,7 +89,7 @@ flowchart LR
   - Text shaping: `parley::LayoutContext` + `swash`, fonts bundled via `include_bytes!` (no `system` fontique feature — confirmed via research that Parley on wasm32 requires disabling `system` and manual `FontContext`/bundled fonts).
   - Threading: walks `TextFrame` chains (`threadNext`), computes line boxes per frame, overflow -> continues into next frame, else raises overset.
   - Pagination + Display List builder: composites parent+page+overlay layers into a serializable display list (rects/images/paths/glyph runs/guides).
-  - GPU render: implements `infinite_cavas::canvas_content::CanvasContent` (`build_scene`/`clear_color`) in two chrome modes — **Blueprint** (adds frame outlines, guides, margins/columns, baseline grid, selection handles, snap indicators) and **Preview** (display-list only, WYSIWYG, no editing chrome) — both driven off the same Display List.
+  - GPU render: implements `infinite_canvas::canvas_content::CanvasContent` (`build_scene`/`clear_color`) in two chrome modes — **Blueprint** (adds frame outlines, guides, margins/columns, baseline grid, selection handles, snap indicators) and **Preview** (display-list only, WYSIWYG, no editing chrome) — both driven off the same Display List.
   - Hit testing: point -> object id from the display list, for click/drag/selection routed from the React canvas.
   - Export encoders, all operating on the Display List (in-memory, wasm32-safe, no filesystem):
     - PNG: offscreen render via `CanvasGpuSession` texture readback -> `image`/`png` crate encode (both already in `Cargo.lock`).
@@ -97,7 +97,7 @@ flowchart LR
     - PDF: `printpdf` (new dependency, pure-Rust, wasm-safe) walking the display list per page.
   - Packaging: `zip` crate (already declared in `Cargo.lock`/used by `compose`) + `sha2` (already in `Cargo.lock`) build the manifest bundle: `document.json`, `assets/originals/*`, `assets/proxies/*`, `fonts/*`, `preflight-report.json`, `package-manifest.json` (hashes/paths/timestamps/missing files), in-memory via `Cursor<Vec<u8>>`.
   - wasm-bindgen session API mirrors `BoardSession` (`puzzle/2d/rs/lib.rs:154-234`): `attach_canvas`, `set_document_json`, `set_chrome_mode`, `render_frame_gpu`, `hit_test`, `export_png`/`export_svg`/`export_pdf`/`export_package` returning bytes.
-- `layout/react/` (`@semio-tech/layout-react`) — `LayoutEngineSession` wasm wrapper + `LayoutCanvas` component (mirrors `GraphWasmCanvas` in `infinite/cavas/react-renderer/index.tsx:37-152`), parameterized by chrome mode (`blueprint`/`preview`), handles resize/DPR/pointer routing.
+- `layout/react/` (`@semio-tech/layout-react`) — `LayoutEngineSession` wasm wrapper + `LayoutCanvas` component (mirrors `GraphWasmCanvas` in `infinite/canvas/react-renderer/index.tsx:37-152`), parameterized by chrome mode (`blueprint`/`preview`), handles resize/DPR/pointer routing.
 - `layout/play/` (`@semio-tech/layout-play`) — the playground app, built exactly on the `sequence/play` recipe ([sequence/play/index.ts](sequence/play/index.ts)):
   - `LayoutPlayController extends Controller`: fixtureJson, selection, per-window camera, undo/redo, engagement state.
   - Two `WindowKindRuntime`s — `layout-blueprint` (editable, all commands) and `layout-preview` (readonly WYSIWYG, click-to-jump syncs selection/camera back to blueprint) — laid out via `createDefaultLayout(["layout-blueprint","layout-preview"], "row")`.
@@ -119,7 +119,7 @@ flowchart LR
 
 1. Bootstrap technology skeleton (`layout/AGENTS.md`, all `script.ts`/`project.json`/`package.json`, Cargo workspace member, `launch.json` entry) — nothing runs yet, just scaffolding.
 2. `layout/core` document model: types, fixture JSON schema, commands + undo/redo, parent-page inheritance, style cascade, snap resolver, linked-asset state machine, preflight validators + inline tests.
-3. `layout/rs` engine: bundled-font Parley/Swash text shaping + threading/pagination, Display List builder, `CanvasContent` impl for blueprint/preview chrome modes wired to `infinite_cavas`, hit testing.
+3. `layout/rs` engine: bundled-font Parley/Swash text shaping + threading/pagination, Display List builder, `CanvasContent` impl for blueprint/preview chrome modes wired to `infinite_canvas`, hit testing.
 4. `layout/rs` export/package: PNG (GPU readback), SVG (XML serializer), PDF (`printpdf`), package archive (`zip`+`sha2`).
 5. `layout/react` bindings: `LayoutEngineSession`, `LayoutCanvas`.
 6. `layout/play` app: controller, 2-window layout, side panel tree, toolbar/options window, preflight panel, export/package commands wired to downloads.

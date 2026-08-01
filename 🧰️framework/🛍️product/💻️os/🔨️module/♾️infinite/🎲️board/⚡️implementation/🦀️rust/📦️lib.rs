@@ -1,6 +1,6 @@
 //! 🖼️ Interactive board engine: retained graph state, camera, selection, and hit-testing over `mathematical_graph`.
 
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 pub use mathematical_geometry::{clamp_f64, distance_between, distance_point_to_cubic_bezier, normalize_or_zero};
 pub use mathematical_graph::{
     self as graph, orient_endpoints, property_bag_from_json, property_bag_to_json, CoreEdge, Directed, Directedness, EdgeId, ElementSemantics, GraphEdge, Handle, HandleId, HandleRole, Node, NodeId, NodeShape, Normal, PortModel, Ported, Undirected,
@@ -91,16 +91,16 @@ pub mod scene_json {
 
 // #region 🔖️GraphExtension
 /// 🧩️ Extension hook for domain-specific graph behavior.
-pub trait GraphExtension: cavas::CanvasExtension {}
+pub trait GraphExtension: canvas::CanvasExtension {}
 // #endregion 🔖️GraphExtension
 
 // #region 🔖️RenderScene
 /// @emoji 🎨️ Encodes a batch of edge curves into a stroked vello scene.
-pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-    let mut scene = cavas::Scene::new();
-    let stroke = cavas::Stroke::new(stroke_width);
+pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+    let mut scene = canvas::Scene::new();
+    let stroke = canvas::Stroke::new(stroke_width);
     for curve in curves {
-        scene.stroke(&stroke, cavas::Affine::IDENTITY, cavas::Color::new(ui_styling::CANVAS_LIGHT.icon_bg), None, curve);
+        scene.stroke(&stroke, canvas::Affine::IDENTITY, canvas::Color::new(ui_styling::CANVAS_LIGHT.icon_bg), None, curve);
     }
     scene
 }
@@ -109,7 +109,7 @@ pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) 
 // #region 🔖️Kinds
 use std::collections::{BTreeMap, BTreeSet};
 
-use cavas::{CubicBez, Point, Vec2};
+use canvas::{CubicBez, Point, Vec2};
 
 /// 🧭️ Camera state in world units with a zoom scalar suitable for a WASM host bridge.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -258,7 +258,7 @@ impl GraphPortModel for Ported {
 // #endregion 🔖️Kinds
 
 // #region 🔖️SelectionMarquee
-pub use cavas::geom_sel::{
+pub use canvas::geom_sel::{
     inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box, world_box_contains_point, world_box_from_points,
     world_boxes_overlap, WorldBox,
 };
@@ -1721,7 +1721,7 @@ mod tests {
 
     #[test]
     fn selection_union_drag_starts_inside_bounds_without_node_hit() {
-        use cavas::Point;
+        use canvas::Point;
 
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
@@ -1741,7 +1741,7 @@ mod tests {
 
     #[test]
     fn selection_drag_enclosing_lasso_uses_first_horizontal_step() {
-        use cavas::Point;
+        use canvas::Point;
 
         let start = Point::new(100.0, 100.0);
         let left_first = vec![start, Point::new(80.0, 100.0), Point::new(120.0, 100.0)];
@@ -1819,7 +1819,7 @@ mod tests {
         engine.set_handle_role(11, HandleRole::Source);
         engine.set_handle_role(12, HandleRole::Target);
         engine.create_edge(4, 11, 12);
-        use cavas::Point;
+        use canvas::Point;
         let tgt = handle_position_on_rectangle(Point::new(320.0, 0.0), 80.0, 56.0, std::f64::consts::FRAC_PI_2);
         let src = handle_position_on_rectangle(Point::new(0.0, 0.0), 80.0, 56.0, 3.0 * std::f64::consts::FRAC_PI_2);
         engine.pointer_down(tgt.x, tgt.y, false);
@@ -1833,7 +1833,7 @@ mod tests {
 
     #[test]
     fn draw_edge_preview_uses_bezier_from_source_and_target() {
-        use cavas::Point;
+        use canvas::Point;
 
         fn midpoint_bulge(curve: CubicBez) -> f64 {
             let p0 = curve.p0();

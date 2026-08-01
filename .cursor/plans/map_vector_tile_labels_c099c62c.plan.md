@@ -6,7 +6,7 @@ todos:
    content: Read repo://goals and reopen ticket 2026/06/03/MAP-VECTOR-TILES
    status: completed
  - id: text-fix
-   content: Add Node::Text (flattened glyphs, halo-under-fill) handling to render_group in infinite/cavas/vello/lib.rs
+   content: Add Node::Text (flattened glyphs, halo-under-fill) handling to render_group in infinite/canvas/vello/lib.rs
    status: completed
  - id: label-pass
    content: Extract append_vector_tile_labels in gis/map/rs/lib.rs and call from colored + figure styles, gated only by vis.labels
@@ -15,7 +15,7 @@ todos:
    content: Add MAP_VECTOR_STYLE_DEFAULT_LABELS and apply on setVectorStyle in gis/map/play/index.ts; relabel toggle to 'Labels'
    status: completed
  - id: tests
-   content: Extend cavas and gis_map test modules for label rendering and per-style coverage
+   content: Extend canvas and gis_map test modules for label rendering and per-style coverage
    status: completed
  - id: verify
    content: Run cargo tests and verify labels in map play across styles/zoom, then close ticket
@@ -33,7 +33,7 @@ Labels (continent/country/region/city/district/street) are already wired end-to-
 
 ### 1. Root-cause fix: render SVG text glyphs
 
-In [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) `render_group` (lines ~585-618), the `_ => {}` arm drops `usvg::Node::Text`, so `append_label` produces empty scenes.
+In [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs) `render_group` (lines ~585-618), the `_ => {}` arm drops `usvg::Node::Text`, so `append_label` produces empty scenes.
 
 - Add a `usvg::Node::Text(t) => { ... }` arm that renders `t.flattened()` (a `&usvg::Group`) through the same path logic.
 - Draw glyph **stroke (halo) under fill** for legibility (the label SVG uses `paint-order="stroke"`, which the current fill-then-stroke order ignores). Either recurse into a small text-specific variant that strokes before filling, or reorder for the flattened group.
@@ -63,12 +63,12 @@ Reuse the existing `gis-map-layer-labels` toggle; add per-vector-style default a
 
 ### 4. Tests (extend existing files only)
 
-- [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) `mod tests`: add a test that `text::append_label` into a fresh `Scene` yields a non-empty encoding (e.g. `!scene.encoding().path_tags.is_empty()`), and that an empty/whitespace label yields an empty scene — locking in the `Node::Text` fix.
+- [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs) `mod tests`: add a test that `text::append_label` into a fresh `Scene` yields a non-empty encoding (e.g. `!scene.encoding().path_tags.is_empty()`), and that an empty/whitespace label yields an empty scene — locking in the `Node::Text` fix.
 - [gis/map/rs/lib.rs](gis/map/rs/lib.rs) tests: add a figure-ground render test with `labels` visible asserting the scene grows vs labels hidden, plus a `place_label_visible` document coverage assertion.
 
 ### 5. Verification
 
-- `cargo test` for `infinite_cavas` and `gis_map` (via `script.ts`/`nx`, registered in `launch.json`).
+- `cargo test` for `infinite_canvas` and `gis_map` (via `script.ts`/`nx`, registered in `launch.json`).
 - Run map play, switch Colored/Figure-Ground/Inverted, zoom across bands, and confirm labels appear and respect the per-style default with a temporary `[DEBUG]` log of rendered label count; remove the log after confirming.
 
 ### Flow
@@ -78,7 +78,7 @@ flowchart LR
   toggle["Labels toggle / setVectorStyle"] --> ctrl[MapPlayController]
   ctrl --> vis["MapLayerVisibility.labels"]
   vis --> wasm["MapHost.append_vector_tile_labels"]
-  wasm --> appendLabel["cavas::text::append_label"]
+  wasm --> appendLabel["canvas::text::append_label"]
   appendLabel --> renderGroup["render_group (NOW handles Node::Text)"]
   renderGroup --> scene[vello Scene]
 ```

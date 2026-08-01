@@ -314,7 +314,7 @@
    Compiling roxmltree v0.21.1
    Compiling imagesize v0.14.0
    Compiling hypher v0.1.7
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling typst-eval v0.14.2
    Compiling typst-realize v0.14.2
    Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
@@ -417,14 +417,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification

@@ -44,7 +44,7 @@ const BUNDLE_DEFS: BundleDef[] = [
   { label: "🖱️ui⚛️react", keywords: ["@semio-tech/ui-react", "ui/react", "engagement", "ghost", "golden layout", "window fill", "storybook", "scrollbar", "selection/hover", "context-menu", "platform settings"], pathTokens: ["ui", "react"] },
   { label: "🖱️ui🎨️assets", keywords: ["svg icon", "ui/assets", "ui/styling", "vite-elements", "globals-ui"], pathTokens: ["ui", "assets"] },
   { label: "🗺️gis🧭️map", keywords: ["gis", "maplibre", "mvt", "vector tile", "figure-ground", "mapvector", "ancestor map", "lod tier"], pathTokens: ["gis"] },
-  { label: "♾️infinite", keywords: ["infinite", "cavas", "vello", "world r3f"], pathTokens: ["infinite"] },
+  { label: "♾️infinite", keywords: ["infinite", "canvas", "vello", "world r3f"], pathTokens: ["infinite"] },
   { label: "📐️mathematical", keywords: ["mathematical", "graph normal", "graph port"], pathTokens: ["mathematical"] },
   { label: "🧠️reasoning", keywords: ["reasoning"], pathTokens: ["reasoning"] },
   { label: "🧰️repo📚️js", keywords: ["repo/lib", "repo/mcp", "commit bundle", "commit check", "micro-commit", "script.ts", "project.json", "devcontainer", "launch.json", "ticket", "agents skill", ".repo/"], pathTokens: ["repo"] },

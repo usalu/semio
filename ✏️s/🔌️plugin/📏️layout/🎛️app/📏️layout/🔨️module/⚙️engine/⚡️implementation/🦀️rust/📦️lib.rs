@@ -6,8 +6,8 @@ use std::sync::{Arc, OnceLock};
 
 use fontique::Blob;
 use image::{ImageBuffer, Rgba};
-use infinite_cavas::camera::{self, Camera, Viewport};
-use infinite_cavas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
+use infinite_canvas::camera::{self, Camera, Viewport};
+use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 use layout::{
     Frame, GridSettings, Layer, LayoutBounds, LayoutDocument, LayoutRect, Page, PageColumns, PageMargins, ParagraphStyle, Spread, TextStory,
     LAYOUT_FIXTURE_SCHEMA,

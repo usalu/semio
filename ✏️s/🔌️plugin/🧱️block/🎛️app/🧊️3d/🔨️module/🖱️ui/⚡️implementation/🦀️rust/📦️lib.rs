@@ -311,7 +311,7 @@ pub fn create_block3d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("box")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(BLOCK3D_WINDOW_WORLD, "Object Kind", BLOCK3D_BODY_WORLD, SurfaceKind::World3d, "box")
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, BLOCK3D_BODY_DOCUMENT)
@@ -328,8 +328,8 @@ pub fn create_block3d_app() -> App {
             .view_action("setSelection", "Set Selection")
             .view_action("setActiveRepresentation", "Set Active Representation"),
     )
-    .example(BLOCK3D_EXAMPLE_CAPSULE, "Nakagin Capsule", serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default())
-    .example(BLOCK3D_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default())
+    .example(BLOCK3D_EXAMPLE_CAPSULE, "Nakagin Capsule", serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building-2")
+    .example(BLOCK3D_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_3d_dsl::parse_dsl(block_3d_dsl::BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "trees")
     .workflow("block3d", "Block 3D", "model")
 }
 //#endregion 🔖️Manifest

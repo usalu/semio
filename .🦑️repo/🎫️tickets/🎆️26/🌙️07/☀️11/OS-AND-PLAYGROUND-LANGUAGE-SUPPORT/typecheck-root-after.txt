@@ -1912,10 +1912,10 @@ gis/2d/rs/script.ts(4,86): error TS5097: An import path can only end with a '.ts
 gis/2d/rs/script.ts(30,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
 imperative/core/script.ts(3,97): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
 imperative/core/script.ts(31,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
-infinite/cavas/react-renderer/index.tsx(9,92): error TS2724: '"react-reconciler/constants"' has no exported member named 'NoEventPriority'. Did you mean 'IdleEventPriority'?
-infinite/cavas/react-renderer/script.ts(3,76): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
-infinite/cavas/react-renderer/script.ts(11,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
-infinite/cavas/react-renderer/vitest.config.ts(16,5): error TS2769: No overload matches this call.
+infinite/canvas/react-renderer/index.tsx(9,92): error TS2724: '"react-reconciler/constants"' has no exported member named 'NoEventPriority'. Did you mean 'IdleEventPriority'?
+infinite/canvas/react-renderer/script.ts(3,76): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+infinite/canvas/react-renderer/script.ts(11,45): error TS2339: Property 'dir' does not exist on type 'ImportMeta'.
+infinite/canvas/react-renderer/vitest.config.ts(16,5): error TS2769: No overload matches this call.
   The last overload gave the following error.
     Object literal may only specify known properties, and 'mode' does not exist in type 'InlineConfig'.
 infinite/world/r3f/index.tsx(19,8): error TS2305: Module '"@semio-tech/ui-react"' has no exported member 'ReactNode'.

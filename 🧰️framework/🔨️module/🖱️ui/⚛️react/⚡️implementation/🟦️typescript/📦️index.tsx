@@ -1666,10 +1666,12 @@ export const menuListItemClassName = cn(
   "text-element",
   interactiveHoverClass,
   "focus:bg-hover-interactive-fill focus:text-emphasized",
+  "data-[active=true]:bg-hover-interactive-fill data-[active=true]:text-emphasized",
   "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
 );
 
 const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
+const contextMenuOrdinalClassName = "w-small shrink-0 text-center text-xs text-muted-foreground tabular-nums";
 
 /** @emoji 🪟️ Context-menu surface — window-chrome wrapper around menu rows. */
 function contextMenuContentClassName(...extra: Array<string | false | null | undefined>): string {
@@ -1713,18 +1715,26 @@ function renderContextMenuColor(color: string | undefined): React.ReactNode {
   return <span aria-hidden className="size-small shrink-0 rounded-sm border border-border" style={{ background: color }} />;
 }
 
-function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
-  if (!icon) {
+function renderContextMenuIcon(icon: ContextMenuItem["icon"], required = false): React.ReactNode {
+  const resolved = icon ?? (required ? "circle-dot" : undefined);
+  if (!resolved) {
     return null;
   }
-  return <Icon icon={icon as IconSource} size="small" className="shrink-0" />;
+  return <Icon icon={resolved as IconSource} size="small" className="shrink-0" />;
 }
 
 function renderContextMenuLeading(item: ContextMenuItem): React.ReactNode {
+  const requiredIcon = !item.separator;
   return (
     <>
       {renderContextMenuColor(item.color)}
-      {renderContextMenuIcon(item.icon)}
+      {requiredIcon ? (
+        <span data-slot="context-menu-icon" className="flex size-small shrink-0 items-center justify-center">
+          {renderContextMenuIcon(item.icon, true)}
+        </span>
+      ) : (
+        renderContextMenuIcon(item.icon)
+      )}
     </>
   );
 }
@@ -1767,12 +1777,14 @@ export interface ContextMenuProps {
   children: React.ReactNode;
   /** @emoji 🪟️ Title chip on the window-chrome cap row. */
   title?: string;
+  /** @emoji 🪟️ Catalog icon shown in the title chip before the title. */
+  titleIcon?: IconSource;
 }
 
 /**
  * 🧩️ Right-click host: always suppresses the native menu; opens the shared viewport-fixed menu only when `items` is non-empty.
  **/
-export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu" }) => {
+export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu", titleIcon = "menu" }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const hasItems = !!items?.length;
@@ -1784,6 +1796,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title
         if (!hasItems) {
           return;
         }
+        event.stopPropagation();
         setPoint({ x: event.clientX, y: event.clientY });
         setOpen(true);
       }}
@@ -1797,7 +1810,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title
   return (
     <>
       {host}
-      <ContextMenuController open={open} position={point} items={items} onOpenChange={setOpen} title={title} />
+      <ContextMenuController open={open} position={point} items={items} onOpenChange={setOpen} title={title} titleIcon={titleIcon} />
     </>
   );
 };
@@ -1809,37 +1822,259 @@ export interface ContextMenuControllerProps {
   onOpenChange: (open: boolean) => void;
   /** @emoji 🪟️ Title chip on the window-chrome cap row. */
   title?: string;
+  /** @emoji 🪟️ Catalog icon in the title chip. */
+  titleIcon?: IconSource;
   /** 🖱️ When false, selecting a row does not dismiss — the row action owns closing (e.g. acceptSuggestion). Outside pointer / Escape still dismiss. Default true. */
   closeOnSelect?: boolean;
 }
 
-function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenuItem; readonly onClose: () => void }): React.ReactNode {
-  const [open, setOpen] = reactHostPort.useState(false);
+/** @emoji ⌨️ Keyboard navigation direction parsed from a keydown key. */
+export type ContextMenuNavDirection = "up" | "down" | "left" | "right" | "activate" | "escape";
+
+/** @emoji 🔢️ Maps each enabled row id to its 1-based ordinal within `items` (separators skipped). */
+export function contextMenuOrdinals(items: readonly ContextMenuItem[]): ReadonlyMap<string, number> {
+  const map = new Map<string, number>();
+  let ordinal = 0;
+  for (const item of items) {
+    if (item.separator || item.disabled) {
+      continue;
+    }
+    ordinal += 1;
+    map.set(item.id, ordinal);
+  }
+  return map;
+}
+
+function contextMenuEnabledIndices(items: readonly ContextMenuItem[]): number[] {
+  return items.flatMap((item, index) => (!item.separator && !item.disabled ? [index] : []));
+}
+
+/** @emoji 📂️ Resolves the item list at `pathPrefix` (empty = top level). */
+export function contextMenuItemsAtLevel(root: readonly ContextMenuItem[], pathPrefix: readonly number[]): readonly ContextMenuItem[] {
+  let level = root;
+  for (const index of pathPrefix) {
+    const row = level[index];
+    if (!row?.children?.length) {
+      return level;
+    }
+    level = row.children;
+  }
+  return level;
+}
+
+/** @emoji 📍️ Resolves the row at `path` (empty path → undefined). */
+export function contextMenuItemAtPath(root: readonly ContextMenuItem[], path: readonly number[]): ContextMenuItem | undefined {
+  if (path.length === 0) {
+    return undefined;
+  }
+  let level = root;
+  let item: ContextMenuItem | undefined;
+  for (let depth = 0; depth < path.length; depth += 1) {
+    item = level[path[depth]!];
+    if (!item) {
+      return undefined;
+    }
+    if (depth < path.length - 1) {
+      level = item.children ?? [];
+    }
+  }
+  return item;
+}
+
+/** @emoji ✅️ Path to the first enabled `checked` row, if any. */
+export function findContextMenuCheckedPath(root: readonly ContextMenuItem[], prefix: readonly number[] = []): number[] | undefined {
+  for (let index = 0; index < root.length; index += 1) {
+    const item = root[index]!;
+    if (item.separator || item.disabled) {
+      continue;
+    }
+    const path = [...prefix, index];
+    if (item.checked) {
+      return path;
+    }
+    if (item.children?.length) {
+      const nested = findContextMenuCheckedPath(item.children, path);
+      if (nested) {
+        return nested;
+      }
+    }
+  }
+  return undefined;
+}
+
+/** @emoji ⌨️ Maps arrows, wasd, Enter, Space, and Escape to menu navigation. */
+export function contextMenuNavigationFromKey(key: string): ContextMenuNavDirection | undefined {
+  switch (key) {
+    case "ArrowUp":
+    case "w":
+    case "W":
+      return "up";
+    case "ArrowDown":
+    case "s":
+    case "S":
+      return "down";
+    case "ArrowLeft":
+    case "a":
+    case "A":
+      return "left";
+    case "ArrowRight":
+    case "d":
+    case "D":
+      return "right";
+    case "Enter":
+    case " ":
+      return "activate";
+    case "Escape":
+      return "escape";
+    default:
+      return undefined;
+  }
+}
+
+/** @emoji ⌨️ Next active path when moving up or down within the current menu level. */
+export function moveContextMenuActivePath(root: readonly ContextMenuItem[], path: readonly number[], direction: "up" | "down"): number[] {
+  const levelPrefix = path.length > 0 ? path.slice(0, -1) : [];
+  const level = contextMenuItemsAtLevel(root, levelPrefix);
+  const enabled = contextMenuEnabledIndices(level);
+  if (enabled.length === 0) {
+    return [...path];
+  }
+  const currentIndex = path.length > 0 ? path[path.length - 1]! : -1;
+  const position = enabled.indexOf(currentIndex);
+  const nextPosition =
+    position === -1
+      ? direction === "down"
+        ? 0
+        : enabled.length - 1
+      : direction === "down"
+        ? (position + 1) % enabled.length
+        : (position - 1 + enabled.length) % enabled.length;
+  return [...levelPrefix, enabled[nextPosition]!];
+}
+
+/** @emoji 🔢️ Active path for digit `ordinal` (1–9) within the level of `path`. */
+export function contextMenuPathForOrdinal(root: readonly ContextMenuItem[], path: readonly number[], ordinal: number): number[] | undefined {
+  const levelPrefix = path.length > 0 ? path.slice(0, -1) : [];
+  const level = contextMenuItemsAtLevel(root, levelPrefix);
+  let seen = 0;
+  for (let index = 0; index < level.length; index += 1) {
+    const item = level[index]!;
+    if (item.separator || item.disabled) {
+      continue;
+    }
+    seen += 1;
+    if (seen === ordinal) {
+      return [...levelPrefix, index];
+    }
+  }
+  return undefined;
+}
+
+/** @emoji 📂️ Opens the submenu under `path` and selects its first enabled child. */
+export function contextMenuOpenSubmenuPath(root: readonly ContextMenuItem[], path: readonly number[]): number[] | undefined {
+  const item = contextMenuItemAtPath(root, path);
+  if (!item?.children?.length) {
+    return undefined;
+  }
+  const enabled = contextMenuEnabledIndices(item.children);
+  if (enabled.length === 0) {
+    return [...path];
+  }
+  return [...path, enabled[0]!];
+}
+
+function contextMenuHoverItem(item: ContextMenuItem | undefined): void {
+  item?.onHover?.();
+}
+
+function contextMenuHoverEndItem(item: ContextMenuItem | undefined): void {
+  item?.onHoverEnd?.();
+}
+
+function isContextMenuEditableKeyTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  const tag = target.tagName;
+  return tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable;
+}
+
+function renderContextMenuOrdinalBadge(ordinal: number | undefined): React.ReactNode {
+  if (ordinal === undefined || ordinal > 9) {
+    return <span aria-hidden className={contextMenuOrdinalClassName} />;
+  }
   return (
-    <div className="relative" onPointerEnter={() => setOpen(true)} onPointerLeave={() => setOpen(false)}>
-      <button aria-disabled={item.disabled} className={contextMenuItemClassName(item)} data-disabled={item.disabled ? "" : undefined} data-selected={item.checked ? "true" : undefined} disabled={item.disabled} role="menuitem" type="button">
-        {renderContextMenuLeading(item)}
-        <span className="truncate">{item.label ?? item.id}</span>
-        <span aria-hidden className={contextMenuShortcutClassName}>
-          ›
-        </span>
-      </button>
-      {open && item.children?.length ? (
-        <ContextMenuChrome className="absolute start-full top-0 ms-tiny" title={item.label ?? item.id}>
-          {renderFixedContextMenuItems(item.children, onClose)}
-        </ContextMenuChrome>
-      ) : null}
-    </div>
+    <span aria-hidden className={contextMenuOrdinalClassName}>
+      {ordinal}
+    </span>
   );
 }
 
-function renderFixedContextMenuItems(items: readonly ContextMenuItem[], onClose: () => void): React.ReactNode {
-  return items.map((item) => {
+type FixedContextMenuRenderOptions = {
+  readonly rootItems: readonly ContextMenuItem[];
+  readonly activePath: readonly number[];
+  readonly submenuCollapsedAt: readonly number[] | null;
+  readonly setActivePath: (path: number[], collapseSubmenuAt?: readonly number[] | null) => void;
+  readonly onClose: () => void;
+};
+
+function contextMenuPathsEqual(a: readonly number[], b: readonly number[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+function isContextMenuSubmenuOpen(activePath: readonly number[], parentPath: readonly number[]): boolean {
+  if (activePath.length <= parentPath.length) {
+    return false;
+  }
+  return parentPath.every((value, index) => activePath[index] === value);
+}
+
+function renderFixedContextMenuItems(items: readonly ContextMenuItem[], pathPrefix: readonly number[], options: FixedContextMenuRenderOptions): React.ReactNode {
+  const ordinals = contextMenuOrdinals(items);
+  const { activePath, submenuCollapsedAt, setActivePath, onClose } = options;
+  return items.map((item, index) => {
+    const rowPath = [...pathPrefix, index];
     if (item.separator) {
       return <div key={`${item.id}-sep`} className="h-px bg-border my-single" role="separator" />;
     }
+    const ordinal = ordinals.get(item.id);
+    const isActive = contextMenuPathsEqual(activePath, rowPath);
+    const activateRow = (): void => {
+      setActivePath(rowPath, null);
+    };
     if (item.children?.length) {
-      return <FixedContextMenuSubmenu key={item.id} item={item} onClose={onClose} />;
+      const submenuOpen =
+        isContextMenuSubmenuOpen(activePath, rowPath) ||
+        (isActive && !(submenuCollapsedAt && contextMenuPathsEqual(submenuCollapsedAt, rowPath)));
+      return (
+        <div key={item.id} className="relative" onPointerEnter={activateRow}>
+          <button
+            aria-disabled={item.disabled}
+            aria-expanded={submenuOpen}
+            className={contextMenuItemClassName(item)}
+            data-active={isActive ? "true" : undefined}
+            data-disabled={item.disabled ? "" : undefined}
+            data-selected={item.checked ? "true" : undefined}
+            disabled={item.disabled}
+            onPointerEnter={() => item.onHover?.()}
+            onPointerLeave={() => item.onHoverEnd?.()}
+            role="menuitem"
+            type="button"
+          >
+            {renderContextMenuOrdinalBadge(ordinal)}
+            {renderContextMenuLeading(item)}
+            <span className="truncate">{item.label ?? item.id}</span>
+            <span aria-hidden className={contextMenuShortcutClassName}>
+              ›
+            </span>
+          </button>
+          {submenuOpen ? (
+            <ContextMenuChrome className="absolute start-full top-0 ms-tiny" title={item.label ?? item.id} icon={(item.icon ?? "folder") as IconSource}>
+              {renderFixedContextMenuItems(item.children, rowPath, options)}
+            </ContextMenuChrome>
+          ) : null}
+        </div>
+      );
     }
     const role = item.checked === undefined ? "menuitem" : "menuitemcheckbox";
     return (
@@ -1848,6 +2083,7 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], onClose:
         aria-checked={item.checked}
         aria-disabled={item.disabled}
         className={contextMenuItemClassName(item)}
+        data-active={isActive ? "true" : undefined}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
         disabled={item.disabled}
@@ -1855,11 +2091,15 @@ function renderFixedContextMenuItems(items: readonly ContextMenuItem[], onClose:
           item.onSelect?.(event.nativeEvent);
           onClose();
         }}
-        onPointerEnter={() => item.onHover?.()}
+        onPointerEnter={() => {
+          activateRow();
+          item.onHover?.();
+        }}
         onPointerLeave={() => item.onHoverEnd?.()}
         role={role}
         type="button"
       >
+        {renderContextMenuOrdinalBadge(ordinal)}
         {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
         {item.shortcut ? (
@@ -1882,31 +2122,54 @@ export function contextMenuDigitFromKey(key: string): string | undefined {
   return key.length === 1 && key >= "1" && key <= "9" ? key : undefined;
 }
 
-/** @emoji ⌨️ Finds the first enabled top-level row whose shortcut matches `shortcut`. */
-export function findContextMenuItemByShortcut(items: readonly ContextMenuItem[], shortcut: string): ContextMenuItem | undefined {
-  return items.find((item) => !item.separator && !item.disabled && item.shortcut === shortcut);
-}
-
 /** @emoji ⌨️ Finds the first enabled top-level row marked `checked`. */
 export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): ContextMenuItem | undefined {
-  return items.find((item) => !item.separator && !item.disabled && item.checked);
+  const path = findContextMenuCheckedPath(items);
+  return path ? contextMenuItemAtPath(items, path) : undefined;
 }
 
 /**
- * 🧩️ Controlled right-click menu anchored at viewport coordinates (puzzle 2d canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
+ * 🧩️ Controlled right-click menu whose title chip bottom-left anchors at viewport coordinates (puzzle 2d canvas bridge), keeping the first row beside the pointer. Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
-export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title = "Menu", closeOnSelect = true }) => {
+export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title = "Menu", titleIcon = "menu", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const itemsRef = reactHostPort.useRef(items);
   itemsRef.current = items;
+  const [activePath, setActivePath] = reactHostPort.useState<number[]>([]);
+  const [submenuCollapsedAt, setSubmenuCollapsedAt] = reactHostPort.useState<readonly number[] | null>(null);
+  const activePathRef = reactHostPort.useRef(activePath);
+  activePathRef.current = activePath;
+  const previousHoverItemRef = reactHostPort.useRef<ContextMenuItem | undefined>(undefined);
+  reactHostPort.useEffect(() => {
+    if (!open) {
+      setActivePath([]);
+      setSubmenuCollapsedAt(null);
+      previousHoverItemRef.current = undefined;
+      return;
+    }
+    const initial = findContextMenuCheckedPath(items) ?? [];
+    setActivePath(initial);
+    setSubmenuCollapsedAt(null);
+    previousHoverItemRef.current = initial.length ? contextMenuItemAtPath(items, initial) : undefined;
+  }, [open, items]);
+  const applyActivePath = reactHostPort.useCallback((nextPath: number[], collapseSubmenuAt: readonly number[] | null = null) => {
+    const root = itemsRef.current;
+    const previous = previousHoverItemRef.current;
+    const nextItem = nextPath.length ? contextMenuItemAtPath(root, nextPath) : undefined;
+    if (previous !== nextItem) {
+      contextMenuHoverEndItem(previous);
+      contextMenuHoverItem(nextItem);
+      previousHoverItemRef.current = nextItem;
+    }
+    setSubmenuCollapsedAt(collapseSubmenuAt);
+    setActivePath(nextPath);
+  }, []);
   reactHostPort.useEffect(() => {
     if (!open || !items.length || !position) {
       return undefined;
     }
-    // 🛡️ Arm after the opening gesture finishes — opening from another menu's click must not see that
-    // same pointer cycle (or a sibling pane's duplicate menu) as an outside dismiss.
     let armed = false;
     const armTimer = window.setTimeout(() => {
       armed = true;
@@ -1917,34 +2180,72 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       onOpenChange(false);
     };
     const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") {
+      if (isContextMenuEditableKeyTarget(event.target)) {
+        return;
+      }
+      const root = itemsRef.current;
+      const path = activePathRef.current;
+      const direction = contextMenuNavigationFromKey(event.key);
+      if (direction === "escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (path.length > 1) {
+          applyActivePath(path.slice(0, -1), path.slice(0, -1));
+          return;
+        }
         onOpenChange(false);
         return;
       }
-      const currentItems = itemsRef.current;
       const digit = contextMenuDigitFromKey(event.key);
       if (digit) {
-        const item = findContextMenuItemByShortcut(currentItems, digit);
-        if (!item) return;
-        event.preventDefault();
-        event.stopPropagation();
-        if (item.onHover) {
-          item.onHover();
+        const ordinal = Number(digit);
+        const nextPath = contextMenuPathForOrdinal(root, path, ordinal);
+        if (!nextPath) {
           return;
         }
-        if (item.onSelect) {
-          item.onSelect(new Event("select"));
-          if (closeOnSelect) close();
+        event.preventDefault();
+        event.stopPropagation();
+        applyActivePath(nextPath);
+        return;
+      }
+      if (!direction) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if (direction === "up" || direction === "down") {
+        applyActivePath(moveContextMenuActivePath(root, path, direction));
+        return;
+      }
+      if (direction === "left") {
+        if (path.length > 1) {
+          applyActivePath(path.slice(0, -1), path.slice(0, -1));
         }
         return;
       }
-      if (event.key === "Enter") {
-        const item = findCheckedContextMenuItem(currentItems);
-        if (!item?.onSelect) return;
-        event.preventDefault();
-        event.stopPropagation();
-        item.onSelect(new Event("select"));
-        if (closeOnSelect) close();
+      if (direction === "right") {
+        const opened = contextMenuOpenSubmenuPath(root, path);
+        if (opened) {
+          applyActivePath(opened);
+        }
+        return;
+      }
+      if (direction === "activate") {
+        const activeItem = path.length ? contextMenuItemAtPath(root, path) : undefined;
+        if (!activeItem || activeItem.disabled) {
+          return;
+        }
+        if (activeItem.children?.length) {
+          const opened = contextMenuOpenSubmenuPath(root, path);
+          if (opened) {
+            applyActivePath(opened);
+          }
+          return;
+        }
+        activeItem.onSelect?.(new Event("select"));
+        if (closeOnSelect) {
+          close();
+        }
       }
     };
     const bindings = createDOMEventBinding();
@@ -1954,17 +2255,24 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       window.clearTimeout(armTimer);
       bindings.dispose();
     };
-  }, [items.length, onOpenChange, open, position?.x, position?.y]);
+  }, [applyActivePath, close, closeOnSelect, items.length, onOpenChange, open, position?.x, position?.y]);
   if (!items.length) {
     return null;
   }
   if (!open || !position) {
     return null;
   }
+  const renderOptions: FixedContextMenuRenderOptions = {
+    rootItems: items,
+    activePath,
+    submenuCollapsedAt,
+    setActivePath: applyActivePath,
+    onClose: closeOnSelect ? close : () => undefined,
+  };
   return renderPortalInto(
-    <ContextMenuChrome style={{ left: position.x, position: "fixed", top: position.y }} title={title}>
+    <ContextMenuChrome style={{ left: position.x, position: "fixed", top: `calc(${position.y}px - var(--size-medium))` }} title={title} icon={titleIcon}>
       <div dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu">
-        {renderFixedContextMenuItems(items, closeOnSelect ? close : () => undefined)}
+        {renderFixedContextMenuItems(items, [], renderOptions)}
       </div>
     </ContextMenuChrome>,
     getDocumentBody(),
@@ -7155,7 +7463,7 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
             />
           ))}
         </div>
-        <Button id="ui.tutorial.rate" icon={<span className="hidden" aria-hidden />} text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
+        <Button id="ui.tutorial.rate" icon="gauge" text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
         <Button id="ui.tutorial.mute" icon="x" text={muteLabel} aria-pressed={muted} onClick={() => onMutedChange(!muted)} />
         <Button id="ui.tutorial.captions" icon="message-square" text={captionsLabel} aria-pressed={captionsOn} onClick={() => onCaptionsChange(!captionsOn)} />
         {recordAvailable && (
@@ -8247,7 +8555,7 @@ interface PanelTabRowProps {
   readonly fullWidth?: boolean;
 }
 
-/** @emoji 📑️ One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. */
+/** @emoji 📑️ One row of sibling tabs; stacked by {@link PanelTabBar} into a {@link Ribbon}. Tab rows keep declared left-to-right order independently of a right anchor's spatially mirrored panel flow, so folding and unfolding never reverses visual or keyboard progression. */
 const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath = [], tabs, activeId, onSelect, showActiveColor = true, direction = "down", fullWidth = false }) => {
   const barRef = reactHostPort.useRef<HTMLDivElement>(null);
   const dock = usePanelDockContext();
@@ -8288,7 +8596,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const ghostDim = showActiveColor;
 
   return (
-    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} data-slot={`${tabSlot}-tabs`} className={cn(barClass, fullWidth && "w-full", rowDropReady && dropZoneReadyClass)}>
+    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} dir="ltr" data-slot={`${tabSlot}-tabs`} className={cn(barClass, fullWidth && "w-full", rowDropReady && dropZoneReadyClass)}>
       {sortedTabs.map((tab, index) => {
         const isActive = tab.id === resolvedActiveId;
         const isDragSource = Boolean(anchor && dock?.dragTabId === tab.id);
@@ -8565,16 +8873,14 @@ function panelDockRowTabButtons(rowElement: HTMLElement, excludedIds: ReadonlySe
 
 /**
  * 🎯️ Resolves a tab-drag drop target from registered rows. A row hit lands on a branch button's 30–70% center
- * band as `"child"` (nest into it), elsewhere as a midpoint `"insert"` — under a mirrored ({@link anchorHorizontal}
- * `"right"`) row the buttons render right-to-left, so the physical-fraction-to-model-index mapping inverts. Middle
- * anchors are never mirrored, so their buttons always render left-to-right.
+ * band as `"child"` (nest into it), elsewhere as a midpoint `"insert"`. {@link PanelTabRow} preserves declared
+ * left-to-right order at every anchor, so physical and model insertion order always agree.
  **/
 export function computeTabDockDropZone(pointerX: number, pointerY: number, rows: readonly PanelTabRowDropTarget[], excludedIds: ReadonlySet<string>): PanelTabDockTarget | null {
   for (const row of rows) {
     const rect = row.rowElement.getBoundingClientRect();
     if (pointerX < rect.left || pointerX > rect.right || pointerY < rect.top || pointerY > rect.bottom) continue;
     const buttons = panelDockRowTabButtons(row.rowElement, excludedIds);
-    const rtl = anchorHorizontal(row.anchor) === "right";
     for (let index = 0; index < buttons.length; index++) {
       const button = buttons[index]!;
       const buttonRect = button.getBoundingClientRect();
@@ -8583,7 +8889,7 @@ export function computeTabDockDropZone(pointerX: number, pointerY: number, rows:
       if (button.dataset.tabKind === "branch" && fraction > 0.3 && fraction < 0.7) {
         return { kind: "child", anchor: row.anchor, parentId: button.dataset.tabId! };
       }
-      return { kind: "insert", anchor: row.anchor, parentPath: row.parentPath, index: index + (fraction >= 0.5 !== rtl ? 1 : 0) };
+      return { kind: "insert", anchor: row.anchor, parentPath: row.parentPath, index: index + (fraction >= 0.5 ? 1 : 0) };
     }
     return { kind: "insert", anchor: row.anchor, parentPath: row.parentPath, index: buttons.length };
   }
@@ -9315,7 +9621,17 @@ function setSurfaceActiveRoot(next: HTMLElement | null): void {
   surfaceActiveSubscribers.forEach((notify) => notify());
 }
 
+/** @emoji 🎯️ Silhouette gaps are holes onto the canvas, unless an explicit chrome chip is nested inside them. */
+function isSurfaceActiveBackgroundTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const gap = target.closest<HTMLElement>('[data-window-silhouette-gap]');
+  if (!gap) return false;
+  const chip = target.closest<HTMLElement>('[data-window-silhouette-chip]');
+  return !chip || !gap.contains(chip);
+}
+
 function resolveSurfaceActiveRoot(target: Node): HTMLElement | null {
+  if (isSurfaceActiveBackgroundTarget(target)) return null;
   let node: Node | null = target instanceof Element ? target : target.parentElement;
   let match: HTMLElement | null = null;
   while (node instanceof HTMLElement) {
@@ -9343,7 +9659,7 @@ function installSurfaceActiveDocumentListeners(): void {
 }
 
 export interface SurfaceActiveBindProps {
-  readonly onPointerDownCapture: () => void;
+  readonly onPointerDownCapture: (event: React.PointerEvent) => void;
   readonly onFocusCapture: (event: React.FocusEvent) => void;
 }
 
@@ -9369,7 +9685,11 @@ export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): read
   });
   const bind = reactHostPort.useMemo<SurfaceActiveBindProps>(
     () => ({
-      onPointerDownCapture: () => {
+      onPointerDownCapture: (event: React.PointerEvent) => {
+        if (isSurfaceActiveBackgroundTarget(event.target)) {
+          setSurfaceActiveRoot(null);
+          return;
+        }
         const root = ref.current;
         if (root) setSurfaceActiveRoot(root);
       },
@@ -9410,6 +9730,7 @@ export interface WindowChromeProps {
   readonly bodyRef?: React.Ref<HTMLDivElement>;
   readonly stackSlot?: string;
   readonly bodySlot?: string;
+  readonly bodyStyle?: React.CSSProperties;
   readonly titleChips: React.ReactNode;
   readonly body?: React.ReactNode;
   readonly enlarge?: WindowChromeControlAction;
@@ -9514,6 +9835,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       bodyRef,
       stackSlot = "window-chrome-stack",
       bodySlot = "window-chrome-body",
+      bodyStyle,
       titleChips,
       body,
       enlarge,
@@ -9554,7 +9876,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
 
     if (chipOnly) {
       return wrapLevel(
-        <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style}>
+        <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style} {...stackDataAttrs}>
           <WindowChromeSilhouetteBorder stack={stackEl} active={active} borderKind={borderKind} />
           <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
@@ -9616,7 +9938,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
             </div>
           ) : null}
         </div>
-        <div ref={bodyRef} data-slot={bodySlot} data-dim className={cn("relative z-[1] min-h-0 flex-1", bodySurfaceClass, bodyClassName)}>
+        <div ref={bodyRef} data-slot={bodySlot} data-dim className={cn("relative z-[1] min-h-0 flex-1", bodySurfaceClass, bodyClassName)} style={bodyStyle}>
           {body}
         </div>
         {hasFooter ? (
@@ -9670,7 +9992,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
 WindowChrome.displayName = "WindowChrome";
 
 /** @emoji 🪟️ Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. */
-function ContextMenuChrome({ title, children, className, style }: { readonly title: string; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }): React.ReactElement {
+function ContextMenuChrome({ title, icon, children, className, style }: { readonly title: string; readonly icon: IconSource; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }): React.ReactElement {
   return (
     <WindowChrome
       active={false}
@@ -9679,7 +10001,8 @@ function ContextMenuChrome({ title, children, className, style }: { readonly tit
       className={contextMenuContentClassName(className)}
       style={style}
       titleChips={
-        <div data-slot="context-menu-title-chip" className={windowChromeTitleChipClass}>
+        <div data-slot="context-menu-title-chip" className={cn(windowChromeTitleChipClass, "flex min-w-0 items-center gap-single")}>
+          <Icon icon={icon} size="small" className="shrink-0" />
           <span className="truncate">{title}</span>
         </div>
       }
@@ -9694,7 +10017,7 @@ function ContextMenuChrome({ title, children, className, style }: { readonly tit
 /** @emoji 🪟️ Window chrome icon button — element gray by default, emphasize on hover. */
 export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
 
-/** @emoji 📐️ Default unfolded width of the right-edge window options rail (token-derived). */
+/** @emoji 📐️ Default unfolded width of window panes and the options rail (token-derived; matches panel default 300px). */
 export const windowMeasuresDefaultWidthPx = domSizePx("layoutPanelRailUiSpacing");
 
 /** @emoji 📐️ Minimum unfolded width of the window options rail (token-derived). */
@@ -9703,53 +10026,14 @@ export const windowMeasuresMinWidthPx = domSizePx("layoutPanelMinUiSpacing");
 /** @emoji 📐️ Maximum unfolded width of the window options rail (token-derived). */
 export const windowMeasuresMaxWidthPx = domSizePx("layoutPanelMaxUiSpacing");
 
-/** @emoji 📐️ Fixed width of the right-edge window measures column (never wider than the window body). */
-export const windowMeasuresRailWidthClass = "w-[min(14rem,calc(100%-0.5rem))]";
-
-/** @emoji ↔ Left-edge resize handle for the unfolded window options rail. */
-export const windowMeasuresResizeHandleLeftClass = "absolute top-0 bottom-0 left-0 z-20 w-single cursor-ew-resize";
-
 /** @emoji 📐️ Max width cap for window engagement (token-derived). */
 export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacing");
-
-/** @emoji 📐️ Outer overlay for floating window measures along the top-right edge. */
-export const windowMeasuresOverlayClass = "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-0";
-
-/** @emoji 📐️ Scrollable frosted rail for window measures (height follows content, capped by the window body). */
-export const windowMeasuresStackClass = cn(`pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-0 shadow-sm`, glassClass);
-
-/** @emoji 📐️ Window measures rail spanning the full window body (stays below shell side panels). */
-export const windowMeasuresOverlayExpandedClass = "inset-0 z-panel items-stretch";
-
-/** @emoji 📐️ Collapsed options chrome hugging the top-right corner. */
-export const windowMeasuresOverlayFoldedClass = "w-fit max-w-[min(14rem,calc(100%-0.5rem))]";
-
-/** @emoji 📐️ Stack layout when window options fill the window. */
-export const windowMeasuresStackExpandedClass = "h-full max-h-full min-h-0";
-
-/** @emoji 📐️ Stack width when options are folded to the right edge. */
-export const windowMeasuresStackFoldedClass = "w-fit max-w-full";
-
-/** @emoji 📐️ Outer overlay for floating window engagement along the top-left edge. */
-export const windowEngagementOverlayClass = "pointer-events-none absolute top-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
-
-/** @emoji 📐️ Collapsed action chrome hugging the top-left corner. */
-export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
 
 /** @emoji 📐️ Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 max-h-full flex-auto flex-col gap-half overflow-y-auto px-single";
 
-/** @emoji 📐️ Outer overlay for the floating window search pane along the top-middle edge, centered between the engagement and measures overlays. */
-export const windowSearchOverlayClass = "pointer-events-none absolute top-0 left-1/2 z-panel flex max-h-full -translate-x-1/2 flex-col items-center p-0";
-
-/** @emoji 📐️ Collapsed search chrome hugging the top-middle edge. */
-export const windowSearchOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
-
 /** @emoji 📐️ Search input body beside the search chrome toggle: matches the chrome's height for a bare input. */
 export const windowSearchBodyClass = windowEngagementBodyClass;
-
-/** @emoji 📐️ Outer overlay for the floating window utility bar along the bottom-left edge. */
-export const utilityBarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
 
 /** @emoji 📐️ Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
@@ -9889,12 +10173,10 @@ export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-c
 
 /** @emoji 🪟️ Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
 export const windowPaneChromeToggleClass = cn(
-  "inline-flex min-h-0 h-medium w-auto shrink-0 items-center gap-tiny border-0 bg-transparent p-0 px-single",
-  "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
+  modeDockTabClassName,
+  "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent",
   "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
   "disabled:pointer-events-none disabled:opacity-50",
-  hoverExcludingHandleBgFillClass,
-  hoverExcludingHandleTextEmphasizedClass,
 );
 
 /** @emoji 🪟️ Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
@@ -9903,28 +10185,13 @@ export const WINDOW_PANE_ACTIONS_ICON = "play" as const satisfies IconName;
 export const WINDOW_PANE_SEARCH_ICON = "search" as const satisfies IconName;
 export const WINDOW_PANE_UTILITIES_ICON = "hammer" as const satisfies IconName;
 
-/** @emoji 📐️ Compact title bar on top of the window options stack. */
-export const windowMeasuresChromeClass = `pointer-events-auto flex h-medium shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
-
-/** @emoji 📐️ Row-oriented fold/unfold toggle: hugs its own width, right border divides it from sibling content beside it instead of the header's bottom border. */
-export const windowRailChromeAsideClass = cn(windowMeasuresChromeClass, "w-auto shrink-0 border-b-0 border-r");
-
-/** @emoji 📐️ Square icon action in the window options chrome bar. */
-export const windowMeasuresChromeActionClass = cn("size-small min-h-small min-w-small max-h-small max-w-small shrink-0 rounded-none border-0 bg-transparent p-0 text-element transition-colors hover:bg-hover-interactive-fill hover:text-emphasized");
-
-/** @emoji 📐️ Span toggle hugging the stack top-left corner. */
-export const windowMeasuresChromeCornerLeftClass = "border-r border-element/40";
-
-/** @emoji 📐️ Fold toggle hugging the stack top-right corner. */
-export const windowMeasuresChromeCornerRightClass = "border-l border-element/40";
-
 /** @emoji 📐️ Measure tree body: grows with content, scrolls once the stack hits the window bottom. */
 export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col overflow-y-auto overscroll-contain p-tiny";
 
 /** @emoji 📐️ Vertical rhythm between top-level measure groups in the rail. */
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
-/** @emoji 📐️ Single measure tile in the window rail — transparent so it shows the {@link windowMeasuresStackClass} glass it sits inside, never a second glass layer of its own. */
+/** @emoji 📐️ Single measure tile in the window rail — transparent so the {@link WindowChrome} body glass shows through, never a second glass layer of its own. */
 export const windowMeasureTileClass = cn("pointer-events-auto select-none bg-transparent w-full min-w-0 shrink-0 rounded-sm border", `${borderElementClass}/40`, "px-tiny py-tiny");
 
 /** @emoji 📐️ Optional measure caption above a control. */
@@ -15027,9 +15294,70 @@ export function useDocumentFullscreen(): { isFullscreen: boolean; toggle: () => 
   return { isFullscreen, toggle };
 }
 
+let shellNavbarTrailingEndWidthPx = 0;
+const shellNavbarTrailingEndWidthListeners = new Set<() => void>();
+
+function publishShellNavbarTrailingEndWidthPx(width: number) {
+  if (width <= 0 || width === shellNavbarTrailingEndWidthPx) return;
+  shellNavbarTrailingEndWidthPx = width;
+  for (const listener of shellNavbarTrailingEndWidthListeners) listener();
+}
+
+/** @emoji ↔ Measured trailing navbar chrome width (fullscreen toggle footprint). */
+export function useShellNavbarTrailingEndWidthPx(): number {
+  return reactHostPort.useSyncExternalStore(
+    (onStoreChange) => {
+      shellNavbarTrailingEndWidthListeners.add(onStoreChange);
+      return () => shellNavbarTrailingEndWidthListeners.delete(onStoreChange);
+    },
+    () => shellNavbarTrailingEndWidthPx,
+    () => 0,
+  );
+}
+
+/** @emoji ↔ Inline cap-row reserve that clears trailing navbar controls for chrome-hosted right panels. */
+export function shellNavbarTrailingEndReserveStyle(widthPx: number): React.CSSProperties {
+  if (widthPx <= 0) return { paddingInlineStart: shellNavbarTrailingEndReserveCss };
+  return { paddingInlineStart: `${widthPx + uiSpacingPx(1)}px` };
+}
+
 function NavbarFullscreenToggle() {
   const { isFullscreen, toggle } = useDocumentFullscreen();
   return <Toggle id="ui.fullscreen.toggle" pressed={isFullscreen} onPressedChange={toggle} icon={isFullscreen ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />} />;
+}
+
+/** @emoji 🖥️ Navbar trailing slot for fullscreen — parks width so labels do not collapse when panels open. */
+function NavbarTrailingFullscreenSlot() {
+  const shellRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [parkedMinWidth, setParkedMinWidth] = reactHostPort.useState(0);
+
+  reactHostPort.useLayoutEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) return;
+    const measure = () => {
+      const width = shell.getBoundingClientRect().width;
+      if (width > 0) {
+        setParkedMinWidth(width);
+        publishShellNavbarTrailingEndWidthPx(width);
+      }
+    };
+    measure();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    resizeObserver?.observe(shell);
+    return () => resizeObserver?.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={shellRef}
+      key="fullscreenToggle"
+      data-slot="navbar-fullscreen-toggle"
+      className="ms-auto flex h-medium shrink-0 min-w-fit items-center"
+      style={parkedMinWidth > 0 ? { minWidth: parkedMinWidth } : undefined}
+    >
+      <NavbarFullscreenToggle />
+    </div>
+  );
 }
 
 // #endregion 🖥️Fullscreen
@@ -15075,11 +15403,7 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
             {item.content}
           </div>
         ))}
-        {showFullscreenToggle ? (
-          <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
-            <NavbarFullscreenToggle />
-          </div>
-        ) : null}
+        {showFullscreenToggle ? <NavbarTrailingFullscreenSlot /> : null}
       </div>
       {centeredItems.map((item, index) => (
         <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -15145,6 +15469,7 @@ export function normalizePlaygroundExampleId(exampleId: string): string {
 export interface NavbarExampleOption {
   readonly id: string;
   readonly label: string;
+  readonly icon: IconName;
 }
 
 /** @emoji 🧪️ Props for {@link NavbarExampleSelect}. */
@@ -15166,21 +15491,28 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
   const resolvedOptions = reactHostPort.useMemo(() => {
     const withoutSentinels = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID && row.id !== "empty");
     if (!includeNoExample) return withoutSentinels;
-    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel }, ...withoutSentinels];
+    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel, icon: "circle-off" as IconName }, ...withoutSentinels];
   }, [includeNoExample, options, noExampleLabel]);
   if (resolvedOptions.length === 0) return null;
   const resolvedValue = !value || value === NAVBAR_NO_EXAMPLE_ID ? NAVBAR_NO_EXAMPLE_ID : value;
+  const selectedOption = resolvedOptions.find((row) => row.id === resolvedValue);
   return (
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
       <Label id={`${id}.label`} label={resolvedLabel} className="sr-only" />
       <Select id={`${id}.select`} value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
         <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
-          <SelectValue placeholder={resolvedLabel} />
+          <span className="flex min-w-0 flex-1 items-center gap-single">
+            {selectedOption ? <Icon icon={selectedOption.icon} size="small" className="shrink-0" /> : null}
+            <SelectValue placeholder={resolvedLabel} />
+          </span>
         </SelectTrigger>
         <SelectContent>
           {resolvedOptions.map((row) => (
             <SelectItem key={row.id} value={row.id}>
-              {row.label}
+              <span className="flex items-center gap-single">
+                <Icon icon={row.icon} size="small" className="shrink-0" />
+                <span className="truncate">{row.label}</span>
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
@@ -19590,193 +19922,6 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ 
 
 // #endregion 🪟️WindowPaneChromeToggle
 
-// #region 🪟️WindowMeasuresChrome
-
-interface WindowMeasuresChromeProps {
-  windowId: string;
-  folded: boolean;
-  expanded: boolean;
-  onFold: () => void;
-  onUnfold: () => void;
-  onExpand: () => void;
-  onCollapseExpand: () => void;
-}
-
-/** @emoji 🪟️ Title bar for the window options rail (span left corner, fold toggle with icon + drag handle right). */
-const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, folded, expanded, onFold, onUnfold, onExpand, onCollapseExpand }) => {
-  const windowOptionsLabel = useLabel("ui.common.windowOptions");
-  const focusLabel = useLabel("ui.common.focus");
-  const unfocusLabel = useLabel("ui.common.unfocus");
-  if (folded) {
-    return (
-      <div data-slot="window-measures-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "measures", "unfold")} icon={WINDOW_PANE_MEASURES_ICON} label={windowOptionsLabel} onClick={onUnfold} />
-      </div>
-    );
-  }
-
-  return (
-    <div data-slot="window-measures-chrome" data-expanded={expanded ? "true" : undefined} className={windowMeasuresChromeClass}>
-      <ActionGroupItem
-        id={childElementId("framework.window", windowId, "measures", "span")}
-        icon={expanded ? "minimize-2" : "maximize-2"}
-        text={expanded ? unfocusLabel : focusLabel}
-        className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
-        onClick={expanded ? onCollapseExpand : onExpand}
-      />
-      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "measures", "fold")} icon={WINDOW_PANE_MEASURES_ICON} label={windowOptionsLabel} className={windowMeasuresChromeCornerRightClass} onClick={onFold} />
-    </div>
-  );
-};
-
-// #endregion 🪟️WindowMeasuresChrome
-
-// #region 🪟️WindowEngagementChrome
-
-interface WindowEngagementChromeProps {
-  windowId: string;
-  expanded: boolean;
-  onToggle: () => void;
-}
-
-/** @emoji ⌨️ Title bar for the merged top-left Actions pane (active engagement plus the categorized ad-hoc actions tree): single fold/unfold toggle with icon + drag handle, same height and surface as {@link WindowMeasuresChrome}. */
-const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowId, expanded, onToggle }) => {
-  const actionLabel = useLabel("ui.common.actions");
-  if (!expanded) {
-    return (
-      <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "engagement", "toggle")} icon={WINDOW_PANE_ACTIONS_ICON} label={actionLabel} onClick={onToggle} />
-      </div>
-    );
-  }
-
-  return (
-    <div data-slot="window-engagement-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "engagement", "toggle")} icon={WINDOW_PANE_ACTIONS_ICON} label={actionLabel} onClick={onToggle} />
-    </div>
-  );
-};
-
-// #endregion 🪟️WindowEngagementChrome
-
-// #region 🪟️WindowSearchChrome
-
-interface WindowSearchChromeProps {
-  windowId: string;
-  expanded: boolean;
-  onToggle: () => void;
-}
-
-/** @emoji 🔎️ Title bar for the top-middle window search pane: single fold/unfold toggle with icon + drag handle, same height and surface as {@link WindowMeasuresChrome}. */
-const WindowSearchChrome: React.FC<WindowSearchChromeProps> = ({ windowId, expanded, onToggle }) => {
-  const searchLabel = useLabel(UI_WINDOW_SEARCH.title);
-  if (!expanded) {
-    return (
-      <div data-slot="window-search-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-center border-b-0")}>
-        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "search", "toggle")} icon={WINDOW_PANE_SEARCH_ICON} label={searchLabel} onClick={onToggle} />
-      </div>
-    );
-  }
-
-  return (
-    <div data-slot="window-search-chrome" data-expanded="true" className={cn(windowMeasuresChromeClass, "justify-center")}>
-      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "search", "toggle")} icon={WINDOW_PANE_SEARCH_ICON} label={searchLabel} onClick={onToggle} />
-    </div>
-  );
-};
-
-// #endregion 🪟️WindowSearchChrome
-
-// #region 🪟️UtilityBarChrome
-
-interface UtilityBarChromeProps {
-  windowId: string;
-  folded: boolean;
-  disabled?: boolean;
-  onFold: () => void;
-  onUnfold: () => void;
-}
-
-/** @emoji 🧰️ Title bar for the window utility bar: single fold/unfold toggle with icon + drag handle, same height and surface as {@link WindowMeasuresChrome}. Always rendered, even with no utilities, so every window carries the bottom-left panel. */
-const UtilityBarChrome: React.FC<UtilityBarChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
-  const utilitiesLabel = useLabel("ui.common.utilities");
-  if (folded) {
-    return (
-      <div data-slot="utility-bar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "utilityBar", "unfold")} icon={WINDOW_PANE_UTILITIES_ICON} label={utilitiesLabel} disabled={disabled} onClick={onUnfold} />
-      </div>
-    );
-  }
-
-  return (
-    <div data-slot="utility-bar-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "utilityBar", "fold")} icon={WINDOW_PANE_UTILITIES_ICON} label={utilitiesLabel} onClick={onFold} />
-    </div>
-  );
-};
-
-// #endregion 🪟️UtilityBarChrome
-
-// #region ↔WindowMeasuresResize
-
-/** @emoji ↔ Mouse resize handle for the unfolded window options rail width (left edge). */
-function WindowMeasuresResizeHandle({
-  size,
-  minSize,
-  maxSize,
-  onSizeChange,
-  onActiveChange,
-  resizeHandleClass,
-}: {
-  size: number;
-  minSize: number;
-  maxSize: number;
-  onSizeChange: (size: number) => void;
-  onActiveChange: (active: boolean) => void;
-  resizeHandleClass: string;
-}) {
-  const [isResizing, setIsResizing] = reactHostPort.useState(false);
-  const resolveMaxSizeRef = reactHostPort.useRef(maxSize);
-  resolveMaxSizeRef.current = maxSize;
-  const handleMouseDown = (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const startPos = event.clientX;
-    const startSize = size;
-    setIsResizing(true);
-    onActiveChange(true);
-    const bindings = createDOMEventBinding();
-    const handleMouseMove = (moveEvent: Event) => {
-      const mouseEvent = moveEvent as MouseEvent;
-      const delta = mouseEvent.clientX - startPos;
-      const nextSize = startSize - delta;
-      const limit = resolveMaxSizeRef.current;
-      if (nextSize >= minSize && nextSize <= limit) {
-        onSizeChange(nextSize);
-      }
-    };
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      onActiveChange(false);
-      bindings.dispose();
-    };
-    bindings.listen(document, "mousemove", handleMouseMove);
-    bindings.listen(document, "mouseup", handleMouseUp);
-  };
-  return (
-    <div
-      data-slot="window-measures-resize-left"
-      data-resizing={isResizing ? "true" : undefined}
-      className={resizeHandleClass}
-      onMouseDown={handleMouseDown}
-      onMouseEnter={() => onActiveChange(true)}
-      onMouseLeave={() => !isResizing && onActiveChange(false)}
-    />
-  );
-}
-
-// #endregion ↔WindowMeasuresResize
-
 // #endregion 📜️Tree
 
 // #endregion 🗼️Aggregation Components
@@ -20378,6 +20523,7 @@ const Panel: React.FC<PanelProps> = ({
   tabBarHost = "panel",
 }) => {
   const dock = usePanelDockContext();
+  const trailingEndWidthPx = useShellNavbarTrailingEndWidthPx();
   const collapseLabel = useLabel("ui.common.collapse");
   const panelRootRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [surfaceActive, surfaceActiveProps] = useSurfaceActive(panelRootRef);
@@ -20419,7 +20565,7 @@ const Panel: React.FC<PanelProps> = ({
         }
       : undefined;
   const chromeHostedTrailingEndReserveStyle =
-    isChromeHosted && visible && horizontal === "right" ? ({ paddingInlineStart: shellNavbarTrailingEndReserveCss } as React.CSSProperties) : undefined;
+    isChromeHosted && visible && horizontal === "right" ? shellNavbarTrailingEndReserveStyle(trailingEndWidthPx) : undefined;
 
   // 🎯️ An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
   // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling
@@ -20612,6 +20758,7 @@ function PaneResizeHandle({
   minSize,
   maxSize,
   onSizeChange,
+  onActiveChange,
   deltaFactor = 1,
 }: {
   readonly side: "left" | "right";
@@ -20619,6 +20766,7 @@ function PaneResizeHandle({
   readonly minSize: number;
   readonly maxSize: number;
   readonly onSizeChange: (size: number) => void;
+  readonly onActiveChange?: (active: boolean) => void;
   readonly deltaFactor?: number;
 }) {
   const startRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
@@ -20626,6 +20774,7 @@ function PaneResizeHandle({
     onStart: (event) => {
       event.preventDefault();
       startRef.current = { pointerX: event.clientX, size };
+      onActiveChange?.(true);
     },
     onMove: (event) => {
       const start = startRef.current;
@@ -20635,9 +20784,11 @@ function PaneResizeHandle({
     },
     onEnd: () => {
       startRef.current = null;
+      onActiveChange?.(false);
     },
     onCancel: () => {
       startRef.current = null;
+      onActiveChange?.(false);
     },
   });
   return <div data-slot="pane-resize-handle" className={`absolute top-0 bottom-0 z-20 ${side === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`} {...pointerProps} />;
@@ -20661,6 +20812,22 @@ export interface PaneProps {
   readonly minSize?: number;
   readonly maxSize?: number;
   readonly resizable?: boolean;
+  readonly enlarge?: WindowChromeControlAction;
+  /** @emoji ⛶️ Fill the {@link PaneHost} (window options focus/unfocus). */
+  readonly expanded?: boolean;
+  readonly overlaySlot?: string;
+  readonly overlayRef?: React.Ref<HTMLDivElement>;
+  readonly stackSlot?: string;
+  readonly bodySlot?: string;
+  readonly bodyClassName?: string;
+  readonly bodyStyle?: React.CSSProperties;
+  readonly stackClassName?: string;
+  readonly stackDataAttrs?: Record<string, string | undefined>;
+  readonly toggleId?: string;
+  readonly foldControlId?: string;
+  readonly toggleDisabled?: boolean;
+  readonly dimWhenOpen?: boolean;
+  readonly onResizeActiveChange?: (active: boolean) => void;
   /** @emoji 🗂️ Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
   readonly order?: number;
   readonly zIndex?: 10 | 20 | 30 | 40;
@@ -20668,6 +20835,7 @@ export interface PaneProps {
   readonly children?: React.ReactNode;
 }
 
+const PANE_DEFAULT_SIZE = 300;
 const PANE_DEFAULT_MIN_SIZE = 200;
 const PANE_DEFAULT_MAX_SIZE = 600;
 
@@ -20685,11 +20853,26 @@ export const Pane: React.FC<PaneProps> = ({
   onFoldToggle,
   icon,
   label,
-  size,
+  size = PANE_DEFAULT_SIZE,
   onSizeChange,
   minSize = PANE_DEFAULT_MIN_SIZE,
   maxSize = PANE_DEFAULT_MAX_SIZE,
-  resizable = false,
+  resizable: resizableProp,
+  enlarge,
+  expanded = false,
+  overlaySlot,
+  overlayRef,
+  stackSlot = "window-chrome-stack",
+  bodySlot = "pane-body",
+  bodyClassName = "overflow-y-auto p-single",
+  bodyStyle,
+  stackClassName,
+  stackDataAttrs,
+  toggleId,
+  foldControlId,
+  toggleDisabled,
+  dimWhenOpen = false,
+  onResizeActiveChange,
   order = 0,
   zIndex,
   className = "",
@@ -20699,6 +20882,14 @@ export const Pane: React.FC<PaneProps> = ({
   const mobile = useUiMobile();
   const collapseLabel = useLabel("ui.common.collapse");
   const paneRootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const setPaneRootRef = reactHostPort.useCallback(
+    (element: HTMLDivElement | null) => {
+      paneRootRef.current = element;
+      if (typeof overlayRef === "function") overlayRef(element);
+      else if (overlayRef) (overlayRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+    },
+    [overlayRef],
+  );
   const [surfaceActive, surfaceActiveProps] = useSurfaceActive(paneRootRef);
   const effectiveFolded = mobile ? false : folded;
   const flow = flowFromAnchor(anchor);
@@ -20706,6 +20897,7 @@ export const Pane: React.FC<PaneProps> = ({
   const [dragging, setDragging] = reactHostPort.useState(false);
   const lastAnchorRef = reactHostPort.useRef(anchor);
   lastAnchorRef.current = anchor;
+  const resizable = resizableProp ?? Boolean(onSizeChange);
 
   const dragPointerProps = usePointerDrag<HTMLSpanElement>({
     onStart: () => {
@@ -20726,17 +20918,19 @@ export const Pane: React.FC<PaneProps> = ({
     onCancel: () => setDragging(false),
   });
 
-  // 📱️ Panes are fixed on mobile — no drag handle, no resize, no fold; width tracks content instead of a persisted size.
-  const positionStyle: React.CSSProperties = {
-    ...anchorPositionStyle(anchor),
-    order,
-    ...(zIndex !== undefined ? { zIndex } : {}),
-    width: !mobile && !effectiveFolded && size ? `${size}px` : undefined,
-  };
+  const positionStyle: React.CSSProperties = expanded
+    ? { position: "absolute", inset: 0, zIndex: zIndex, width: "100%", height: "100%", maxWidth: "100%", maxHeight: "100%" }
+    : {
+        ...anchorPositionStyle(anchor),
+        order,
+        ...(zIndex !== undefined ? { zIndex } : {}),
+        width: !mobile && !effectiveFolded ? `${size}px` : undefined,
+        maxWidth: !mobile && !effectiveFolded ? `min(100% - (var(--spacing-single) * 2), ${size}px)` : undefined,
+      };
   const paneFoldControl =
     !mobile && !effectiveFolded && onFoldToggle
       ? {
-          id: childElementId(id, "pane", "fold-control"),
+          id: foldControlId ?? childElementId(id, "pane", "fold-control"),
           slot: "pane-fold",
           icon: <CloseIcon className="size-small" />,
           label: collapseLabel,
@@ -20745,53 +20939,75 @@ export const Pane: React.FC<PaneProps> = ({
       : undefined;
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
   const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;
+  const chromeToggleId = toggleId ?? childElementId(id, "pane", "fold");
 
   return (
     <LevelProvider level="pane">
       <div
-        ref={paneRootRef}
+        ref={setPaneRootRef}
         {...surfaceActiveProps}
-        data-slot="pane"
+        data-slot={overlaySlot ?? "pane"}
         data-level="pane"
         data-anchor={anchor}
+        data-folded={effectiveFolded ? "true" : undefined}
+        data-expanded={expanded ? "true" : undefined}
         data-dragging={dragging ? "true" : undefined}
+        {...(dimWhenOpen && !effectiveFolded ? { "data-dim": true } : {})}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
           "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-visible",
           getLevelZClass("pane"),
+          expanded && "z-panel",
           flow.block === "up" ? "flex-col-reverse" : "flex-col",
           horizontal === "middle" ? "items-center" : "items-start",
-          !effectiveFolded && "w-fit",
+          effectiveFolded && "w-fit",
+          !effectiveFolded && !expanded && "w-full max-w-full",
+          expanded && "h-full max-h-full",
           className,
         )}
         style={positionStyle}
       >
         <FlowProvider inline={flow.inline} block={flow.block}>
           <WindowChrome
-            stackSlot="window-chrome-stack"
+            stackSlot={stackSlot}
             chipOnly={effectiveFolded}
             active={!effectiveFolded && surfaceActive}
             level="pane"
             capDock={flow.block === "up" ? "bottom" : "top"}
-            stackClassName={cn("bg-transparent", !effectiveFolded && "w-full")}
-            bodyClassName="overflow-y-auto p-single"
-            bodySlot="pane-body"
+            stackClassName={cn("bg-transparent", !effectiveFolded && "w-full min-h-0 flex-1", expanded && "h-full max-h-full min-h-0", stackClassName)}
+            bodyClassName={bodyClassName}
+            bodySlot={bodySlot}
+            bodyStyle={bodyStyle}
+            enlarge={!effectiveFolded ? enlarge : undefined}
             close={paneFoldControl}
+            stackDataAttrs={stackDataAttrs}
             titleChips={
               <WindowPaneChromeToggle
-                id={childElementId(id, "pane", "fold")}
+                id={chromeToggleId}
                 icon={icon}
                 label={label ?? id}
+                disabled={toggleDisabled}
                 onClick={mobile ? undefined : onFoldToggle}
                 dragPointerProps={mobile ? undefined : dragPointerProps}
-                showDragHandle={!mobile}
+                showDragHandle={!mobile && Boolean(onAnchorChange)}
                 emphasized={dragging}
               />
             }
             body={!effectiveFolded ? children : undefined}
           />
-          {resizable && !mobile && !effectiveFolded && onSizeChange
-            ? resizeSides.map((side) => <PaneResizeHandle key={side} side={side} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} deltaFactor={resizeDeltaFactor} />)
+          {resizable && !mobile && !effectiveFolded && !expanded && onSizeChange
+            ? resizeSides.map((side) => (
+                <PaneResizeHandle
+                  key={side}
+                  side={side}
+                  size={size}
+                  minSize={minSize}
+                  maxSize={maxSize}
+                  onSizeChange={onSizeChange}
+                  onActiveChange={onResizeActiveChange}
+                  deltaFactor={resizeDeltaFactor}
+                />
+              ))
             : null}
         </FlowProvider>
       </div>
@@ -21034,6 +21250,7 @@ export interface EngagementRingControl {
 export interface EngagementToggleGroupOption {
   id: string;
   label: string;
+  icon?: IconName;
   disabled?: boolean;
 }
 
@@ -21546,7 +21763,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
               key={option.id}
               id={option.id}
               text={option.label}
-              icon={<span className="hidden" aria-hidden />}
+              icon={option.icon ?? "circle-dot"}
               className={cn(control.value === option.id && interactiveActiveFillClass)}
               disabled={option.disabled || control.disabled}
               onClick={() => control.onSelect?.(option.id)}
@@ -21941,37 +22158,6 @@ const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
 /**
  * Window holds the data fields for a Window record.
  **/
-function useWindowMeasuresReservePx(enabled: boolean, measures: React.ReactNode, bodyRef: React.RefObject<HTMLDivElement | null>, measuresOverlayRef: React.RefObject<HTMLDivElement | null>) {
-  const [measuresReservePx, setMeasuresReservePx] = reactHostPort.useState(0);
-  const hasMeasures = Boolean(measures);
-  reactHostPort.useLayoutEffect(() => {
-    if (!enabled || !hasMeasures) {
-      setMeasuresReservePx(0);
-      return;
-    }
-    const update = () => {
-      const rail = measuresOverlayRef.current;
-      const width = rail ? Math.ceil(rail.getBoundingClientRect().width || rail.offsetWidth) : 0;
-      setMeasuresReservePx((prev) => (prev === width ? prev : width));
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    if (bodyRef.current) observer.observe(bodyRef.current);
-    if (measuresOverlayRef.current) observer.observe(measuresOverlayRef.current);
-    return () => observer.disconnect();
-  }, [bodyRef, enabled, hasMeasures, measuresOverlayRef]);
-  return measuresReservePx;
-}
-
-/**
- * @emoji 📐️ Live px cap for the bottom-left utility bar's content so a tall active-utility options tree (e.g. a
- * fill utility's options tree) grows upward only up to just below the top-anchored chrome (engagement/search/measures)
- * instead of overlapping it — re-measured whenever the window body or any top overlay resizes. A CSS percentage
- * (`max-h-full`) can't do this: it only resolves against an ancestor with an explicitly *specified* height, and the
- * overlay wrapper here only ever has a `max-height`, never a `height` — so the percentage silently fails to resolve
- * and the tree paints past its box uncapped (see {@link measureWindowChromeScrollClearancePx}, which already solves
- * the exact same problem for content scroll-padding — this reuses it as a hard cap instead).
- **/
 function useWindowUtilityBarMaxHeightPx(enabled: boolean, bodyRef: React.RefObject<HTMLDivElement | null>): number {
   const [maxHeightPx, setMaxHeightPx] = reactHostPort.useState(0);
   reactHostPort.useLayoutEffect(() => {
@@ -21995,24 +22181,6 @@ function useWindowUtilityBarMaxHeightPx(enabled: boolean, bodyRef: React.RefObje
     return () => observer.disconnect();
   }, [bodyRef, enabled]);
   return maxHeightPx;
-}
-
-/** @emoji 📐️ Inline width for engagement zone: up to 28rem, minus measured options rail when present. */
-export function windowEngagementZoneMaxWidthStyle(measuresReservePx: number, hasMeasures: boolean): React.CSSProperties {
-  if (!hasMeasures) {
-    return { width: "min(28rem, 100%)" };
-  }
-  const reservePx = measuresReservePx > 0 ? measuresReservePx + 4 : Math.round(14.5 * 16);
-  return { width: `min(28rem, calc(100% - ${reservePx}px))` };
-}
-
-/** @emoji 📐️ Inline width for the centered search zone: up to 28rem, minus measured side chrome reserved on both edges. */
-export function windowSearchZoneMaxWidthStyle(measuresReservePx: number, hasSideChrome: boolean): React.CSSProperties {
-  if (!hasSideChrome) {
-    return { width: "min(28rem, 100%)" };
-  }
-  const reservePx = measuresReservePx > 0 ? measuresReservePx + 4 : Math.round(14.5 * 16);
-  return { width: `min(28rem, calc(100% - ${reservePx * 2}px))` };
 }
 
 const Window: React.FC<WindowProps> = ({
@@ -22051,6 +22219,12 @@ const Window: React.FC<WindowProps> = ({
   const closeLabel = useLabel("ui.common.close");
   const controlsFocusLabel = useLabel("ui.common.focus");
   const controlsUnfocusLabel = useLabel("ui.common.unfocus");
+  const windowOptionsLabel = useLabel("ui.common.windowOptions");
+  const measuresFocusLabel = useLabel("ui.common.focus");
+  const measuresUnfocusLabel = useLabel("ui.common.unfocus");
+  const actionLabel = useLabel("ui.common.actions");
+  const searchLabel = useLabel(UI_WINDOW_SEARCH.title);
+  const utilitiesLabel = useLabel("ui.common.utilities");
   // 📱️ Windows always take the full space on mobile — Focus/Unfocus is meaningless there and is hidden.
   const mobile = useUiMobile();
   const focusControl = !mobile && (onMaximize || onMinimize);
@@ -22082,9 +22256,7 @@ const Window: React.FC<WindowProps> = ({
   };
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
-  const measuresReservePx = useWindowMeasuresReservePx(!!engagement || !!search || !!actionPane, measures, windowBodyRef, measuresOverlayRef);
   const utilityBarMaxHeightPx = useWindowUtilityBarMaxHeightPx(!utilityBarFolded && !!utilityBar, windowBodyRef);
-  const measuresUnfolded = !!measures && !measuresFolded && !measuresExpanded;
   const readMeasuresMaxWidthPx = reactHostPort.useCallback(() => {
     const body = windowBodyRef.current;
     const bodyRect = body?.getBoundingClientRect();
@@ -22092,12 +22264,8 @@ const Window: React.FC<WindowProps> = ({
     return Math.max(windowMeasuresMinWidthPx, Math.min(windowMeasuresMaxWidthPx, Math.round(bodyWidth) - 8));
   }, []);
   const measuresMaxWidthPx = readMeasuresMaxWidthPx();
-  const measuresOverlaySizeStyle = measuresUnfolded ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties) : undefined;
-  const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
-  const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementVisible = !measuresExpanded && !!(engagement || actionPane);
   const engagementExpanded = engagementVisible && !actionsFolded;
-  const searchZoneSizeStyle = windowSearchZoneMaxWidthStyle(measuresReservePx, !!measures || !!engagement || !!actionPane);
   const searchVisible = !measuresExpanded && !!search;
   const searchExpanded = searchVisible && !searchFolded;
 
@@ -22206,134 +22374,110 @@ const Window: React.FC<WindowProps> = ({
           {/* 🪟️ PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
           <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
           {measures ? (
-            <LevelProvider level="pane">
-              <div
-                ref={measuresOverlayRef}
-                data-slot="window-measures-overlay"
-                data-expanded={measuresExpanded ? "true" : undefined}
-                style={measuresOverlaySizeStyle}
-                className={cn(windowMeasuresOverlayClass, measuresFolded ? windowMeasuresOverlayFoldedClass : measuresExpanded ? windowMeasuresOverlayExpandedClass : !measuresOverlaySizeStyle && windowMeasuresRailWidthClass)}
-              >
-                <div
-                  {...(!measuresFolded ? { "data-dim": true } : {})}
-                  data-slot="window-measures-stack"
-                  data-level="pane"
-                  data-folded={measuresFolded ? "true" : undefined}
-                  className={cn(
-                    windowMeasuresStackClass,
-                    measuresUnfolded && "relative",
-                    measuresExpanded && windowMeasuresStackExpandedClass,
-                    measuresFolded && windowMeasuresStackFoldedClass,
-                    panelResizeEdgeAccentClass("left", measuresResizeLeftActive),
-                  )}
-                >
-                  <WindowMeasuresChrome
-                    windowId={id}
-                    folded={measuresFolded}
-                    expanded={measuresExpanded}
-                    onFold={() => {
-                      setMeasuresExpanded(false);
-                      setMeasuresFolded(true);
-                    }}
-                    onUnfold={() => setMeasuresFolded(false)}
-                    onExpand={() => setMeasuresExpanded(true)}
-                    onCollapseExpand={() => setMeasuresExpanded(false)}
-                  />
-                  {!measuresFolded ? (
-                    <div data-slot="window-measures-body" className={windowMeasuresBodyClass}>
-                      {measures}
-                    </div>
-                  ) : null}
-                  {measuresUnfolded ? (
-                    <WindowMeasuresResizeHandle
-                      maxSize={measuresMaxWidthPx}
-                      minSize={windowMeasuresMinWidthPx}
-                      onActiveChange={setMeasuresResizeLeftActive}
-                      onSizeChange={setMeasuresWidthPx}
-                      resizeHandleClass={windowMeasuresResizeHandleLeftClass}
-                      size={measuresWidthPx}
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </LevelProvider>
+            <Pane
+              id={childElementId("framework.window", id, "measures")}
+              overlaySlot="window-measures-overlay"
+              overlayRef={measuresOverlayRef}
+              anchor="top-right"
+              icon={WINDOW_PANE_MEASURES_ICON}
+              label={windowOptionsLabel}
+              folded={measuresFolded}
+              expanded={measuresExpanded}
+              onFoldToggle={() => {
+                if (measuresFolded) setMeasuresFolded(false);
+                else {
+                  setMeasuresExpanded(false);
+                  setMeasuresFolded(true);
+                }
+              }}
+              toggleId={childElementId("framework.window", id, "measures", measuresFolded ? "unfold" : "fold")}
+              foldControlId={childElementId("framework.window", id, "measures", "fold")}
+              enlarge={{
+                id: childElementId("framework.window", id, "measures", "span"),
+                slot: "window-measures-span",
+                icon: measuresExpanded ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />,
+                label: measuresExpanded ? measuresUnfocusLabel : measuresFocusLabel,
+                onClick: () => (measuresExpanded ? setMeasuresExpanded(false) : setMeasuresExpanded(true)),
+              }}
+              size={measuresWidthPx}
+              onSizeChange={setMeasuresWidthPx}
+              minSize={windowMeasuresMinWidthPx}
+              maxSize={measuresMaxWidthPx}
+              onResizeActiveChange={setMeasuresResizeLeftActive}
+              stackSlot="window-measures-stack"
+              bodySlot="window-measures-body"
+              bodyClassName={windowMeasuresBodyClass}
+              stackClassName={cn("relative", panelResizeEdgeAccentClass("left", measuresResizeLeftActive))}
+              stackDataAttrs={{ "data-level": "pane", "data-folded": measuresFolded ? "true" : undefined }}
+              dimWhenOpen
+            >
+              {measures}
+            </Pane>
           ) : null}
           {engagementVisible ? (
-            <LevelProvider level="pane">
-              <div
-                data-slot="window-engagement-overlay"
-                data-expanded={engagementExpanded ? "true" : undefined}
-                style={engagementExpanded ? engagementZoneSizeStyle : undefined}
-                className={cn(windowEngagementOverlayClass, !engagementExpanded && windowEngagementOverlayFoldedClass)}
-              >
-                <div
-                  ref={engagementZoneRef}
-                  {...(engagementExpanded ? { "data-dim": true } : {})}
-                  data-slot="window-engagement-zone"
-                  data-level="pane"
-                  data-folded={engagementExpanded ? undefined : "true"}
-                  className={cn(windowMeasuresStackClass, "flex-row items-start", !engagementExpanded && windowMeasuresStackFoldedClass)}
-                >
-                  <WindowEngagementChrome windowId={id} expanded={engagementExpanded} onToggle={() => setActionsFolded(engagementExpanded)} />
-                  {engagementExpanded ? (
-                    <div data-slot="window-engagement-body" className={windowEngagementBodyClass}>
-                      {engagement ? <Engagement {...engagement} /> : null}
-                      {actionPane}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </LevelProvider>
+            <Pane
+              id={childElementId("framework.window", id, "engagement")}
+              overlaySlot="window-engagement-overlay"
+              anchor="top-left"
+              icon={WINDOW_PANE_ACTIONS_ICON}
+              label={actionLabel}
+              folded={!engagementExpanded}
+              onFoldToggle={() => setActionsFolded(!actionsFolded)}
+              toggleId={childElementId("framework.window", id, "engagement", "toggle")}
+              stackSlot="window-engagement-zone"
+              bodySlot="window-engagement-body"
+              bodyClassName={windowEngagementBodyClass}
+              dimWhenOpen
+            >
+              {engagement ? <Engagement {...engagement} /> : null}
+              {actionPane}
+            </Pane>
           ) : null}
           {search && searchVisible ? (
-            <LevelProvider level="pane">
-              <div
-                data-slot="window-search-overlay"
-                data-expanded={searchExpanded ? "true" : undefined}
-                style={searchExpanded ? searchZoneSizeStyle : undefined}
-                className={cn(windowSearchOverlayClass, !searchExpanded && windowSearchOverlayFoldedClass)}
-              >
-                <div
-                  {...(searchExpanded ? { "data-dim": true } : {})}
-                  data-slot="window-search-zone"
-                  data-level="pane"
-                  data-folded={searchExpanded ? undefined : "true"}
-                  className={cn(windowMeasuresStackClass, "flex-row items-start", !searchExpanded && windowMeasuresStackFoldedClass)}
-                >
-                  <WindowSearchChrome
-                    windowId={id}
-                    expanded={searchExpanded}
-                    onToggle={() => {
-                      if (searchExpanded) {
-                        setSearchFolded(true);
-                        return;
-                      }
-                      setSearchFolded(false);
-                      if (search?.input) queueMicrotask(() => focusActiveSearchInput());
-                    }}
-                  />
-                  {searchExpanded ? (
-                    <div data-slot="window-search-body" className={windowSearchBodyClass}>
-                      <Search {...search} active={searchExpanded} />
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </LevelProvider>
+            <Pane
+              id={childElementId("framework.window", id, "search")}
+              overlaySlot="window-search-overlay"
+              anchor="top-middle"
+              icon={WINDOW_PANE_SEARCH_ICON}
+              label={searchLabel}
+              folded={!searchExpanded}
+              onFoldToggle={() => {
+                if (searchExpanded) {
+                  setSearchFolded(true);
+                  return;
+                }
+                setSearchFolded(false);
+                if (search?.input) queueMicrotask(() => focusActiveSearchInput());
+              }}
+              toggleId={childElementId("framework.window", id, "search", "toggle")}
+              stackSlot="window-search-zone"
+              bodySlot="window-search-body"
+              bodyClassName={windowSearchBodyClass}
+              dimWhenOpen
+            >
+              <Search {...search} active={searchExpanded} />
+            </Pane>
           ) : null}
           {!measuresExpanded ? (
-            <LevelProvider level="pane">
-              <div data-slot="utility-bar-overlay" data-folded={utilityBarFolded ? "true" : undefined} className={utilityBarOverlayClass}>
-                <div {...(!utilityBarFolded ? { "data-dim": true } : {})} data-slot="utility-bar" data-level="pane" data-folded={utilityBarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
-                  <UtilityBarChrome windowId={id} folded={utilityBarFolded} disabled={!utilityBar} onFold={() => setUtilityBarFolded(true)} onUnfold={() => setUtilityBarFolded(false)} />
-                  {!utilityBarFolded && utilityBar ? (
-                    <div data-slot="utility-bar-body" className={utilityBarBodyClass} style={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}>
-                      {utilityBar}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </LevelProvider>
+            <Pane
+              id={childElementId("framework.window", id, "utilityBar")}
+              overlaySlot="utility-bar-overlay"
+              anchor="bottom-left"
+              icon={WINDOW_PANE_UTILITIES_ICON}
+              label={utilitiesLabel}
+              folded={utilityBarFolded}
+              toggleDisabled={!utilityBar}
+              onFoldToggle={() => setUtilityBarFolded(!utilityBarFolded)}
+              toggleId={childElementId("framework.window", id, "utilityBar", utilityBarFolded ? "unfold" : "fold")}
+              stackSlot="utility-bar"
+              bodySlot="utility-bar-body"
+              bodyClassName={utilityBarBodyClass}
+              bodyStyle={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}
+              stackDataAttrs={{ "data-level": "pane", "data-folded": utilityBarFolded ? "true" : undefined }}
+              dimWhenOpen={Boolean(utilityBar)}
+            >
+              {utilityBar}
+            </Pane>
           ) : null}
         </div>
       </GhostRegionShell>
@@ -27241,10 +27385,10 @@ interface ModeDockContextValue {
   draggedInsertTabs: readonly { id: string; title: string; iconId: IconName }[];
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
-  startStackDrag: (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => void;
   clearPendingDrag: (pointerId: number) => void;
   closeWindow: (windowId: string) => void;
   activateWindow: (windowId: string) => void;
+  deactivateActiveWindow: () => void;
   maximizedStackPath: ModeLayoutPath | null;
   /** @emoji ⛶️ False when the canvas has only one window — Focus/Unfocus has nothing to enlarge against. */
   canMaximize: boolean;
@@ -27313,6 +27457,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         data-stack-active={activeId === tab.id ? "true" : undefined}
         data-active={activeWindowId === tab.id ? "true" : undefined}
         className={cn(
+          "pointer-events-auto",
           modeDockTabClassName,
           perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
           perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
@@ -27342,6 +27487,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
       data-window-silhouette-chip
       data-dock="top"
       className={cn(
+        "pointer-events-auto",
         perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass,
         glassClass,
       )}
@@ -27375,16 +27521,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
     <div
       data-slot="mode-dock-tab-gap"
       data-window-silhouette-gap
-      className={cn("relative min-h-medium min-w-0 flex-1 cursor-grab active:cursor-grabbing", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
-      onPointerUp={(event) => {
-        if (event.button !== 0) return;
-        dock?.clearPendingDrag?.(event.pointerId);
-      }}
-      onPointerDownCapture={(event) => {
-        if (!activeId) return;
-        const label = tabs.find((tab) => tab.id === activeId)?.title ?? activeId;
-        dock?.startStackDrag(activeId, stackPath, label, event);
-      }}
+      className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
     />
   );
 
@@ -27503,7 +27640,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
 
   const stackBody = (
     <SurfaceScope level="base" fill="surface">
-      <div ref={bodyRef} data-slot="mode-dock-stack-body" data-level="base" className={cn("relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
+      <div ref={bodyRef} data-slot="mode-dock-stack-body" data-level="base" className={cn("pointer-events-auto relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
         {activeDescriptor
           ? (() => {
               const { children, engagement, ...windowProps } = activeDescriptor;
@@ -27522,7 +27659,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
     <SurfaceScope level="window">
-      <div ref={setStackNode} {...surfaceActiveProps} data-slot="mode-dock-stack" data-window-silhouette data-level="window" data-stack-path={stackPath} data-active={surfaceActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
+      <div ref={setStackNode} {...surfaceActiveProps} data-slot="mode-dock-stack" data-window-silhouette data-level="window" data-stack-path={stackPath} data-active={surfaceActive ? "true" : undefined} className="pointer-events-none relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
         <ModeDockStackSilhouetteBorder stack={stackEl} active={surfaceActive} />
         {chromeGrid ? (
           <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
@@ -27695,6 +27832,22 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     [activeWindowId, onActiveWindowChange],
   );
 
+  const deactivateActiveWindow = reactHostPort.useCallback(() => {
+    setSurfaceActiveRoot(null);
+    if (activeWindowId === null) return;
+    onActiveWindowChange?.(null);
+  }, [activeWindowId, onActiveWindowChange]);
+
+  const handleCanvasBackgroundPointerDown = reactHostPort.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      if (!(event.target instanceof HTMLElement)) return;
+      if (event.target.closest('[data-slot="mode-dock-stack"]')) return;
+      if (event.target !== event.currentTarget && event.target.dataset.slot !== "resizable-panel") return;
+      deactivateActiveWindow();
+    },
+    [deactivateActiveWindow],
+  );
+
   const closeWindow = reactHostPort.useCallback(
     (windowId: string) => {
       onWindowClose?.(windowId);
@@ -27747,20 +27900,6 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       windowId,
       stackPath,
       tabIndex,
-      pointerId: event.pointerId,
-      ghostLabel: label,
-      startX: event.clientX,
-      startY: event.clientY,
-    });
-  }, []);
-
-  const startStackDrag = reactHostPort.useCallback((windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => {
-    if (event.button !== 0) return;
-    setPendingDrag({
-      dragKind: "stack",
-      windowId,
-      stackPath,
-      tabIndex: -1,
       pointerId: event.pointerId,
       ghostLabel: label,
       startX: event.clientX,
@@ -28038,15 +28177,15 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       draggedInsertTabs,
       registerStackDropTargets,
       startTabDrag: mobile ? noopDrag : startTabDrag,
-      startStackDrag: mobile ? noopDrag : startStackDrag,
       clearPendingDrag,
       closeWindow,
       activateWindow,
+      deactivateActiveWindow,
       maximizedStackPath,
       canMaximize,
       toggleMaximize,
     }),
-    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, startStackDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, canMaximize, toggleMaximize],
+    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, clearPendingDrag, closeWindow, activateWindow, deactivateActiveWindow, maximizedStackPath, canMaximize, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(
@@ -28105,6 +28244,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           data-slot="mode-body"
           data-level="base"
           className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden", modeBodyFillClass, MODE_CANVAS_INSET_CLASS)}
+          onPointerDownCapture={handleCanvasBackgroundPointerDown}
           onDragOver={!mobile && onTemplateDrop ? handleExternalTemplateDragOver : undefined}
           onDrop={!mobile && onTemplateDrop ? handleExternalTemplateDrop : undefined}
         >
@@ -31145,7 +31285,7 @@ if (import.meta.vitest) {
       });
     });
 
-    it("anchors the outer window chrome top-left at the pointer coordinates", async () => {
+    it("anchors the menu title chip bottom-left at the pointer coordinates", async () => {
       render(
         <ContextMenu items={[{ id: "demo", label: "Demo action" }]}>
           <button type="button">Target</button>
@@ -31157,7 +31297,8 @@ if (import.meta.vitest) {
       expect(chrome?.parentElement).toBe(document.body);
       expect(chrome?.style.position).toBe("fixed");
       expect(chrome?.style.left).toBe("123px");
-      expect(chrome?.style.top).toBe("87px");
+      expect(chrome?.style.top).toBe("calc(87px - var(--size-medium))");
+      expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon]')).toBeTruthy();
     });
 
     it("wraps context menu rows in window chrome with a title chip and no enlarge control", async () => {
@@ -31170,6 +31311,7 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(document.querySelector('[data-slot="context-menu-content"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="context-menu-title-chip"]')?.textContent).toContain("Actions");
+        expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon]')).toBeTruthy();
         expect(document.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
         expect(document.querySelector('[data-slot="window-chrome-controls"]')).toBeNull();
@@ -31231,7 +31373,10 @@ if (import.meta.vitest) {
       const onHoverEnd = vi.fn();
       render(<ContextMenuController open position={{ x: 12, y: 24 }} items={[{ id: "kind", label: "Capsule", icon: "box", color: "#aabbcc", onHover, onHoverEnd }]} onOpenChange={vi.fn()} />);
       const item = await waitFor(() => screen.getByRole("menuitem", { name: "Capsule" }));
-      const swatch = item.querySelector("[aria-hidden]") as HTMLElement | null;
+      const swatch = Array.from(item.querySelectorAll("[aria-hidden]")).find((node) => {
+        const style = (node as HTMLElement).getAttribute("style") ?? "";
+        return style.includes("background");
+      }) as HTMLElement | undefined;
       expect(swatch?.getAttribute("style") ?? "").toMatch(/#aabbcc|rgb\(170,\s*187,\s*204\)/);
       fireEvent.pointerEnter(item);
       expect(onHover).toHaveBeenCalled();
@@ -31309,7 +31454,7 @@ if (import.meta.vitest) {
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
 
-    it("previews numbered rows on digit keys and accepts the checked row on Enter", async () => {
+    it("previews numbered rows on digit keys and accepts the active row on Enter", async () => {
       const onHover = vi.fn();
       const onSelect = vi.fn();
       const onOpenChange = vi.fn();
@@ -31319,8 +31464,8 @@ if (import.meta.vitest) {
           closeOnSelect={false}
           position={{ x: 8, y: 16 }}
           items={[
-            { id: "suggestion-0", label: "Capsule · port", icon: "box", shortcut: "1", checked: true, onSelect, onHover },
-            { id: "suggestion-1", label: "Box · port", icon: "box", shortcut: "2", checked: false, onSelect, onHover },
+            { id: "suggestion-0", label: "Capsule · port", icon: "box", checked: true, onSelect, onHover },
+            { id: "suggestion-1", label: "Box · port", icon: "box", checked: false, onSelect, onHover },
           ]}
           onOpenChange={onOpenChange}
         />,
@@ -31332,6 +31477,78 @@ if (import.meta.vitest) {
       fireEvent.keyDown(window, { key: "Enter" });
       expect(onSelect).toHaveBeenCalledTimes(1);
       expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it("renders ordinal badges for the first nine enabled rows", async () => {
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 4, y: 4 }}
+          items={[
+            { id: "a", label: "Alpha" },
+            { id: "b", label: "Beta" },
+            { id: "sep", label: "", separator: true },
+            { id: "c", label: "Gamma" },
+          ]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      const alpha = await waitFor(() => screen.getByRole("menuitem", { name: "Alpha" }));
+      expect(alpha.textContent?.trim().startsWith("1")).toBe(true);
+      expect(screen.getByRole("menuitem", { name: "Beta" }).textContent?.trim().startsWith("2")).toBe(true);
+      expect(screen.getByRole("menuitem", { name: "Gamma" }).textContent?.trim().startsWith("3")).toBe(true);
+    });
+
+    it("moves the active row with arrow keys and wasd", async () => {
+      const onHover = vi.fn();
+      const onHoverEnd = vi.fn();
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 4, y: 4 }}
+          items={[
+            { id: "a", label: "Alpha", onHover, onHoverEnd },
+            { id: "b", label: "Beta", onHover, onHoverEnd },
+          ]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      await waitFor(() => screen.getByRole("menuitem", { name: /Alpha/ }));
+      fireEvent.keyDown(window, { key: "ArrowDown" });
+      expect(onHover).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole("menuitem", { name: /Alpha/ }).getAttribute("data-active")).toBe("true");
+      fireEvent.keyDown(window, { key: "ArrowDown" });
+      expect(screen.getByRole("menuitem", { name: /Beta/ }).getAttribute("data-active")).toBe("true");
+      fireEvent.keyDown(window, { key: "w" });
+      expect(onHoverEnd).toHaveBeenCalled();
+      expect(screen.getByRole("menuitem", { name: /Alpha/ }).getAttribute("data-active")).toBe("true");
+    });
+
+    it("opens nested submenus with ArrowRight and closes with ArrowLeft", async () => {
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 4, y: 4 }}
+          items={[
+            {
+              id: "transform",
+              label: "Transform",
+              children: [
+                { id: "move", label: "Move" },
+                { id: "rotate", label: "Rotate" },
+              ],
+            },
+            { id: "delete", label: "Delete" },
+          ]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      await waitFor(() => screen.getByRole("menuitem", { name: "Transform" }));
+      fireEvent.keyDown(window, { key: "ArrowDown" });
+      fireEvent.keyDown(window, { key: "ArrowRight" });
+      await waitFor(() => screen.getByRole("menuitem", { name: "Move" }));
+      fireEvent.keyDown(window, { key: "ArrowLeft" });
+      await waitFor(() => expect(screen.queryByRole("menuitem", { name: "Move" })).toBeNull());
     });
 
     it("does not close on select when closeOnSelect is false", async () => {
@@ -31583,6 +31800,36 @@ if (import.meta.vitest) {
       expect(onVisibleChange).toHaveBeenCalledWith(false);
     });
 
+    it("bottom-right panel tabs preserve declared visual and keyboard order when a folded toggle opens the panel", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [
+        singleTreeLeaf({ id: "general", icon: StubIcon, name: "General", order: 0, tree: { sections: [] } }),
+        singleTreeLeaf({ id: "theme", icon: StubIcon, name: "Theme", order: 1, tree: { sections: [] } }),
+        singleTreeLeaf({ id: "history", icon: StubIcon, name: "History", order: 2, tree: { sections: [] } }),
+      ];
+      const Harness = () => {
+        const [visible, setVisible] = reactHostPort.useState(false);
+        const [activePath, setActivePath] = reactHostPort.useState<readonly string[]>(["general"]);
+        const selection = { tabs, visible, onVisibleChange: setVisible, activeTabPath: activePath, onActiveTabPathChange: setActivePath };
+        return (
+          <>
+            <PanelChromeTabBar anchor="bottom-right" {...selection} />
+            <Panel anchor="bottom-right" tabBarHost="chrome" {...selection} />
+          </>
+        );
+      };
+      const { container } = render(<Harness />);
+      const tabIds = () => [...container.querySelectorAll<HTMLElement>('[data-slot="panel-tab-button"]')].map((tab) => tab.dataset.tabId);
+      expect(container.querySelector('[data-slot="panel-tabs"]')?.getAttribute("dir")).toBe("ltr");
+      expect(tabIds()).toEqual(["general", "theme", "history"]);
+
+      fireEvent.click(container.querySelector('button[id="general"]')!);
+
+      expect(container.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBe("rtl");
+      expect(container.querySelector('[data-slot="panel-tabs"]')?.getAttribute("dir")).toBe("ltr");
+      expect(tabIds()).toEqual(["general", "theme", "history"]);
+    });
+
     it("Panel folds immediately from a root tab while preserving its selected child path", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [{ kind: "branch", id: "root-a", icon: StubIcon, name: "Root A", children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } })] }];
@@ -31666,9 +31913,29 @@ if (import.meta.vitest) {
       const { render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Inspector", tree: { sections: [] } })];
+      publishShellNavbarTrailingEndWidthPx(96);
       const { container } = render(<Panel anchor="top-right" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["tab-a"]} size={360} />);
       const cap = container.querySelector('[data-slot="panel"][data-anchor="top-right"] [data-slot="window-chrome-cap"]') as HTMLElement;
-      expect(cap.style.paddingInlineStart).toBe(shellNavbarTrailingEndReserveCss);
+      expect(cap.style.paddingInlineStart).toBe(`${96 + uiSpacingPx(1)}px`);
+    });
+
+    it("navbar fullscreen toggle parks its width so inline labels do not collapse", async () => {
+      const { render } = await import("@testing-library/react");
+      const rectSpy = vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+        if (this.getAttribute("data-slot") === "navbar-fullscreen-toggle") {
+          return { width: 112, height: 24, top: 0, left: 0, right: 112, bottom: 24, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+        }
+        return { width: 0, height: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+      });
+      const { container } = render(
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+          <Navbar items={[]} showFullscreenToggle />
+        </UiDriverProvider>,
+      );
+      const slot = container.querySelector('[data-slot="navbar-fullscreen-toggle"]') as HTMLElement;
+      expect(slot.style.minWidth).toBe("112px");
+      expect(shellNavbarTrailingEndWidthPx).toBe(112);
+      rectSpy.mockRestore();
     });
 
     it('Panel with tabBarHost="chrome" at top-middle and bottom-middle expands with glass panel level and root chips on the chrome cap', () => {
@@ -32160,7 +32427,7 @@ if (import.meta.vitest) {
       expect(screen.getByTestId("canvas").parentElement?.className).not.toContain("hidden");
     });
 
-    it("computeTabDockDropZone inverts the insert-index fraction test for mirrored (right) anchors, but not for a middle anchor", () => {
+    it("computeTabDockDropZone keeps physical and model insertion order aligned at every anchor", () => {
       const makeRow = (anchor: Anchor, buttonRects: readonly { left: number; right: number }[]): PanelTabRowDropTarget => {
         const rowElement = document.createElement("div");
         rowElement.getBoundingClientRect = () => ({ left: 0, right: 200, top: 0, bottom: 20, width: 200, height: 20 }) as DOMRect;
@@ -32177,9 +32444,9 @@ if (import.meta.vitest) {
       expect(computeTabDockDropZone(25, 10, [ltrRow], new Set())).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 0 });
       expect(computeTabDockDropZone(75, 10, [ltrRow], new Set())).toEqual({ kind: "insert", anchor: "top-left", parentPath: [], index: 1 });
 
-      const rtlRow = makeRow("top-right", [{ left: 0, right: 100 }]);
-      expect(computeTabDockDropZone(25, 10, [rtlRow], new Set())).toEqual({ kind: "insert", anchor: "top-right", parentPath: [], index: 1 });
-      expect(computeTabDockDropZone(75, 10, [rtlRow], new Set())).toEqual({ kind: "insert", anchor: "top-right", parentPath: [], index: 0 });
+      const rightRow = makeRow("top-right", [{ left: 0, right: 100 }]);
+      expect(computeTabDockDropZone(25, 10, [rightRow], new Set())).toEqual({ kind: "insert", anchor: "top-right", parentPath: [], index: 0 });
+      expect(computeTabDockDropZone(75, 10, [rightRow], new Set())).toEqual({ kind: "insert", anchor: "top-right", parentPath: [], index: 1 });
 
       const middleRow = makeRow("top-middle", [{ left: 0, right: 100 }]);
       expect(computeTabDockDropZone(25, 10, [middleRow], new Set())).toEqual({ kind: "insert", anchor: "top-middle", parentPath: [], index: 0 });
@@ -32526,6 +32793,48 @@ if (import.meta.vitest) {
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-emphasized");
+    });
+
+    it("Mode exposes its top cutout to the canvas background from pointer down", async () => {
+      const ControlledMode = () => {
+        const [activeWindowId, setActiveWindowId] = reactHostPort.useState<string | null>("right");
+        return (
+          <Mode
+            windows={[
+              { id: "left", title: "Left", iconId: "app-window", children: <div>Left Body</div> },
+              { id: "right", title: "Right", iconId: "app-window", children: <div>Right Body</div> },
+            ]}
+            layout={{
+              kind: "stack",
+              children: [
+                { kind: "window", id: "left" },
+                { kind: "window", id: "right" },
+              ],
+              activeId: "right",
+            }}
+            activeWindowId={activeWindowId}
+            onActiveWindowChange={setActiveWindowId}
+          />
+        );
+      };
+      const { container } = render(<ControlledMode />);
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-active="true"]')?.getAttribute("data-window-id")).toBe("right");
+      fireEvent.pointerDown(container.querySelector('[data-slot="mode-dock-stack-body"]')!);
+      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active"));
+      const gap = container.querySelector('[data-slot="mode-dock-tab-gap"]')!;
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).toContain("pointer-events-none");
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("pointer-events-auto");
+      expect(container.querySelector('[data-slot="mode-dock-tab"]')?.className).toContain("pointer-events-auto");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("pointer-events-auto");
+      expect(gap.className).toContain("pointer-events-none");
+      expect(gap.className).not.toContain("cursor-grab");
+      fireEvent.pointerDown(gap);
+      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal"));
+      fireEvent.pointerDown(container.querySelector('[data-slot="mode-body"]')!);
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-active="true"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeNull();
+      expect(screen.getByText("Right Body")).toBeTruthy();
+      await waitFor(() => expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal"));
     });
 
     it("Mode dock-stack silhouette stays below Layout panels via z-window stacking context", () => {
@@ -33724,8 +34033,8 @@ if (import.meta.vitest) {
             label: "Utility",
             value: "brush",
             options: [
-              { id: "select", label: "Select" },
-              { id: "brush", label: "Brush" },
+              { id: "select", label: "Select", icon: "mouse-pointer" },
+              { id: "brush", label: "Brush", icon: "paintbrush" },
             ],
           }}
           controls={[
@@ -34063,7 +34372,7 @@ if (import.meta.vitest) {
       expect(aborted).toEqual(["abort"]);
     });
 
-    it("Window shows engagement and search as folded strips by default, same surface as window options", () => {
+    it("Window shows engagement and search as folded strips by default, same U-cutout surface as window options", () => {
       const { container } = render(
         <Window id="engagement-window" active engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }} search={{ sessionActive: true, input: { value: "Box", placeholder: "Action" } }}>
           <div>Body</div>
@@ -34073,23 +34382,18 @@ if (import.meta.vitest) {
       const searchZone = container.querySelector('[data-slot="window-search-zone"]') as HTMLElement;
       expect(engagementZone).toBeTruthy();
       expect(engagementZone.getAttribute("data-level")).toBe("pane");
-      expect(engagementZone.className).toContain("ui-glass");
-      expect(engagementZone.className).toContain("flex-row");
+      expect(engagementZone.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
       expect(searchZone).toBeTruthy();
       expect(searchZone.getAttribute("data-level")).toBe("pane");
-      expect(searchZone.className).toContain("ui-glass");
-      expect(searchZone.className).toContain("flex-row");
+      expect(searchZone.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
       expect(screen.getByText("Idle")).toBeTruthy();
       fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
-      const chrome = container.querySelector('[data-slot="window-engagement-chrome"]');
-      const body = container.querySelector('[data-slot="window-engagement-body"]');
-      expect(chrome?.nextElementSibling).toBe(body);
-      expect(chrome?.className).toContain("border-r");
-      expect(chrome?.className).toContain("border-b-0");
+      expect(container.querySelector('[data-slot="window-engagement-body"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-search-body"]')).toBeTruthy();
     });
 
     it("Window merges the ad-hoc actionPane into the top-left Actions pane below the active engagement, sharing one toggle", () => {
@@ -34108,7 +34412,7 @@ if (import.meta.vitest) {
       expect(actions).toBeTruthy();
       const body = container.querySelector('[data-slot="window-engagement-body"]');
       expect(body?.contains(actions)).toBe(true);
-      fireEvent.click(toggle);
+      fireEvent.click(container.querySelector('[data-slot="pane-fold"]')!);
       expect(container.querySelector('[data-testid="adhoc-actions"]')).toBeNull();
     });
 
@@ -34210,20 +34514,17 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
-      const zone = container.querySelector('[data-slot="window-engagement-zone"]');
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
       const toggleBtn = container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]') as HTMLElement;
       expect(overlay).toBeTruthy();
-      expect(overlay?.className).toContain("pointer-events-none");
-      expect(overlay?.className).toContain("top-0");
-      expect(overlay?.className).toContain("left-0");
-      expect(overlay?.className).toContain("p-0");
-      expect(zone?.className).toContain("pointer-events-auto");
-      expect(zone?.className).toContain("flex-row");
-      expect(overlay?.getAttribute("data-expanded")).toBeNull();
+      expect(overlay.style.top).toBe("var(--spacing-single)");
+      expect(overlay.style.left).toBe("var(--spacing-single)");
+      expect(overlay.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      expect(overlay.getAttribute("data-folded")).toBe("true");
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(toggleBtn);
-      expect(overlay?.getAttribute("data-expanded")).toBe("true");
+      expect(overlay.getAttribute("data-folded")).toBeNull();
+      expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
@@ -34238,7 +34539,7 @@ if (import.meta.vitest) {
       const toggleBtn = container.querySelector('[id="framework.window.engagementWindow.search.toggle"]') as HTMLElement;
       fireEvent.click(toggleBtn);
       expect(zone.className).toContain("w-full");
-      expect(overlay.style.width).toBe("min(28rem, 100%)");
+      expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       const row = container.querySelector('[data-slot="search-row"]');
       const inputRoot = container.querySelector('[data-slot="search-input"] [data-slot="input-root"]');
       expect(row?.className).toContain("w-full");
@@ -34299,7 +34600,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[id="framework.window.mobileWindow.windowControls.close"]')).toBeTruthy();
     });
 
-    it("Window search max width shrinks when measures rail is present", () => {
+    it("Window search pane uses the same default width as panels when unfolded", () => {
       const { container } = render(
         <Window id="layout-window" active search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div data-testid="window-body">Body</div>
@@ -34307,10 +34608,8 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-search-overlay"]') as HTMLElement;
       fireEvent.click(container.querySelector('[id="framework.window.layoutWindow.search.toggle"]')!);
-      expect(overlay.style.width).toContain("calc(100%");
-      expect(overlay.style.width).toContain("min(28rem");
-      expect(windowSearchZoneMaxWidthStyle(200, true).width).toContain("408px");
-      expect(windowSearchZoneMaxWidthStyle(0, false).width).toBe("min(28rem, 100%)");
+      expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
+      expect(windowMeasuresDefaultWidthPx).toBe(300);
     });
 
     it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {
@@ -34369,7 +34668,7 @@ if (import.meta.vitest) {
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
     });
 
-    it("Window pane chrome uses semantic icons and trailing drag handles like panel toggles, never fold chevrons", () => {
+    it("Window pane chrome uses semantic icons in U-cutout chips, never fold chevrons", () => {
       const { container } = render(
         <Window id="pane-chrome-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>} utilityBar={<button type="button">Utility</button>}>
           <div>Body</div>
@@ -34377,28 +34676,28 @@ if (import.meta.vitest) {
       );
       const toggles = Array.from(container.querySelectorAll('[data-slot="window-pane-chrome-toggle"]'));
       expect(toggles.length).toBeGreaterThanOrEqual(4);
-      expect(container.querySelector('[data-slot="window-measures-chrome"] [data-icon="settings-2"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-engagement-chrome"] [data-icon="play"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-search-chrome"] [data-icon="search"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="utility-bar-chrome"] [data-icon="hammer"]')).toBeTruthy();
-      expect(container.querySelectorAll('[data-slot="window-measures-chrome"] [data-slot="drag-handle"]').length).toBe(1);
-      expect(container.querySelectorAll('[data-slot="window-engagement-chrome"] [data-slot="drag-handle"]').length).toBe(1);
-      expect(container.querySelectorAll('[data-slot="window-search-chrome"] [data-slot="drag-handle"]').length).toBe(1);
-      expect(container.querySelectorAll('[data-slot="utility-bar-chrome"] [data-slot="drag-handle"]').length).toBe(1);
-      expect(container.querySelector('[data-slot="window-measures-chrome"] [data-icon="chevron-left"]')).toBeNull();
-      expect(container.querySelector('[data-slot="window-engagement-chrome"] [data-icon="chevron-right"]')).toBeNull();
-      expect(container.querySelector('[data-slot="window-search-chrome"] [data-icon="chevron-down"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-measures-overlay"] [data-icon="settings-2"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-engagement-overlay"] [data-icon="play"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-search-overlay"] [data-icon="search"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="utility-bar-overlay"] [data-icon="hammer"]')).toBeTruthy();
+      expect(container.querySelectorAll('[data-slot="window-chrome-silhouette-border"]').length).toBeGreaterThanOrEqual(4);
+      expect(container.querySelector('[data-slot="window-measures-overlay"] [data-icon="chevron-left"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-engagement-overlay"] [data-icon="chevron-right"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-search-overlay"] [data-icon="chevron-down"]')).toBeNull();
     });
 
-    it("Window panel overlays use the window frame inset without adding a second edge gap", () => {
-      expect(windowMeasuresOverlayClass).toContain("p-0");
-      expect(windowEngagementOverlayClass).toContain("p-0");
-      expect(windowSearchOverlayClass).toContain("p-0");
-      expect(utilityBarOverlayClass).toContain("p-0");
-      expect(windowMeasuresOverlayClass).not.toContain("p-single");
-      expect(windowEngagementOverlayClass).not.toContain("p-single");
-      expect(windowSearchOverlayClass).not.toContain("p-single");
-      expect(utilityBarOverlayClass).not.toContain("p-single");
+    it("Window built-in panes anchor with frame inset via anchorPositionStyle, not extra padding", () => {
+      const { container } = render(
+        <Window id="inset-window" measures={<div>LOD</div>} engagement={{ status: [{ id: "s", content: "Idle" }] }}>
+          <div>Body</div>
+        </Window>,
+      );
+      const measures = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
+      expect(measures.style.right).toBe("var(--spacing-single)");
+      expect(measures.style.top).toBe("var(--spacing-single)");
+      const engagement = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
+      expect(engagement.style.left).toBe("var(--spacing-single)");
+      expect(engagement.style.top).toBe("var(--spacing-single)");
     });
 
     it("Window measures overlay uses a fixed right rail without clipping overflow", () => {
@@ -34410,12 +34709,10 @@ if (import.meta.vitest) {
       fireEvent.click(container.querySelector('[id="framework.window.measuresWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
-      expect(overlay.className).toContain("top-0");
-      expect(overlay.className).not.toContain("inset-y-0");
+      expect(overlay.style.right).toBe("var(--spacing-single)");
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-measures-chrome"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
       expect(screen.getByText("Window Options")).toBeTruthy();
     });
 
@@ -34427,21 +34724,21 @@ if (import.meta.vitest) {
       );
       fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      const span = container.querySelector('[id="framework.window.measuresFoldWindow.measures.span"]') as HTMLElement;
-      const fold = container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]') as HTMLElement;
-      expect(span.compareDocumentPosition(fold) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      const span = container.querySelector('[id="framework.window.measuresFoldWindow.measures.span"]');
+      const fold = container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]');
+      expect(span).toBeTruthy();
+      expect(fold).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
       fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]')!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeNull();
       expect(container.querySelector('[id="framework.window.measuresFoldWindow.measures.span"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBe("true");
-      expect(overlay.className).toContain("w-fit");
+      expect(overlay.getAttribute("data-folded")).toBe("true");
       fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.unfold"]')!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBeNull();
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
-      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-measures-resize-bottom"]')).toBeNull();
+      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
     });
 
     it("Window measures chrome span expands the overlay across the window body", () => {
@@ -34453,15 +34750,15 @@ if (import.meta.vitest) {
       fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.getAttribute("data-expanded")).toBeNull();
-      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
       fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.span"]')!);
       expect(overlay.getAttribute("data-expanded")).toBe("true");
-      expect(overlay.className).toContain("inset-0");
-      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeNull();
+      expect(overlay.style.inset).toBe("0");
+      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
       fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.span"]')!);
       expect(overlay.getAttribute("data-expanded")).toBeNull();
-      expect(overlay.className).toContain("top-0");
-      expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
+      expect(overlay.style.right).toBe("var(--spacing-single)");
+      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
     });
 
     it("Window measures chrome fold collapses span and expanded overlay", () => {
@@ -34477,8 +34774,8 @@ if (import.meta.vitest) {
       fireEvent.click(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.fold"]')!);
       expect(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.span"]')).toBeNull();
       expect(overlay.getAttribute("data-expanded")).toBeNull();
+      expect(overlay.getAttribute("data-folded")).toBe("true");
       expect(overlay.className).toContain("w-fit");
-      expect(overlay.className).not.toContain("inset-0");
     });
 
     it("Window measures rail resizes from the left edge when unfolded", () => {
@@ -34490,12 +34787,12 @@ if (import.meta.vitest) {
       fireEvent.click(container.querySelector('[id="framework.window.measuresResizeWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
-      const leftHandle = container.querySelector('[data-slot="window-measures-resize-left"]') as HTMLElement;
+      const leftHandle = container.querySelector('[data-slot="pane-resize-handle"]') as HTMLElement;
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       expect(stack.style.height).toBe("");
-      fireEvent.mouseDown(leftHandle, { clientX: 300 });
-      fireEvent.mouseMove(document, { clientX: 260 });
-      fireEvent.mouseUp(document);
+      fireEvent.pointerDown(leftHandle, { clientX: 300, pointerId: 1 });
+      fireEvent.pointerMove(leftHandle, { clientX: 260, pointerId: 1 });
+      fireEvent.pointerUp(leftHandle, { pointerId: 1 });
       expect(Number.parseInt(overlay.style.width, 10)).toBeGreaterThan(windowMeasuresDefaultWidthPx);
     });
 
@@ -34518,37 +34815,29 @@ if (import.meta.vitest) {
       );
       fireEvent.click(container.querySelector('[id="framework.window.measuresContentWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
       const body = container.querySelector('[data-slot="window-measures-body"]') as HTMLElement;
-      expect(stack.style.height).toBe("");
-      expect(overlay.style.maxHeight).toBe("100%");
       expect(body.className).toContain("overflow-y-auto");
       expect(body.className).toContain("flex-auto");
       expect(screen.queryByText("Alpha value")).toBeNull();
       fireEvent.click(container.querySelector('[data-slot="window-measures-tree"] button')!);
       expect(screen.getByText("Alpha value")).toBeTruthy();
-      expect(stack.style.height).toBe("");
+      expect(overlay.style.maxWidth).toContain("300px");
     });
 
-    it("Window utility bar folds and unfolds like window options, on the same surface", () => {
+    it("Window utility bar folds and unfolds on WindowChrome, on the same surface as panels", () => {
       const { container, rerender } = render(
         <Window id="utility-bar-window" utilityBar={<button type="button">Utility</button>}>
           <div>Body</div>
         </Window>,
       );
-      const strip = container.querySelector('[data-slot="utility-bar"]') as HTMLElement;
-      expect(strip).toBeTruthy();
-      expect(strip.getAttribute("data-level")).toBe("pane");
-      expect(strip.className).toContain("ui-glass");
-      expect(strip.className).toContain("flex-row");
-      expect(strip.className).toContain("w-fit");
+      const stack = container.querySelector('[data-slot="utility-bar"]') as HTMLElement;
+      expect(stack).toBeTruthy();
+      expect(stack.getAttribute("data-level")).toBe("pane");
+      expect(stack.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
       expect(screen.queryByText("Utility")).toBeNull();
       fireEvent.click(container.querySelector('[id="framework.window.utilityBarWindow.utilityBar.unfold"]')!);
       expect(screen.getByText("Utility")).toBeTruthy();
-      const chrome = container.querySelector('[data-slot="utility-bar-chrome"]');
-      const body = container.querySelector('[data-slot="utility-bar-body"]');
-      expect(chrome?.nextElementSibling).toBe(body);
-      expect(chrome?.className).toContain("border-r");
+      expect(container.querySelector('[data-slot="utility-bar-body"]')).toBeTruthy();
       fireEvent.click(container.querySelector('[id="framework.window.utilityBarWindow.utilityBar.fold"]')!);
       expect(screen.queryByText("Utility")).toBeNull();
       rerender(
@@ -34567,8 +34856,8 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="utility-bar-overlay"]') as HTMLElement;
-      expect(overlay.className).toContain("bottom-0");
-      expect(overlay.className).toContain("left-0");
+      expect(overlay.style.bottom).toBe("var(--spacing-single)");
+      expect(overlay.style.left).toBe("var(--spacing-single)");
       fireEvent.click(container.querySelector('[id="framework.window.utilityBarMeasuresWindow.measures.unfold"]')!);
       fireEvent.click(container.querySelector('[id="framework.window.utilityBarMeasuresWindow.measures.span"]')!);
       expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeNull();
@@ -34612,6 +34901,19 @@ if (import.meta.vitest) {
         expect(nearestAnchor(160, 155, hostRect)).toBe("right-middle");
         // Dead center, nudged slightly toward the horizontal midline -> the nearer top/bottom-middle.
         expect(nearestAnchor(155, 160, hostRect)).toBe("bottom-middle");
+      });
+
+      it("Pane defaults open width to the panel default (300px)", () => {
+        const { container } = render(
+          <PaneHost>
+            <Pane id="default-width-pane" anchor="top-left" icon="box" label="Pane">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        const pane = container.querySelector('[data-slot="pane"]') as HTMLElement;
+        expect(pane.style.width).toBe("300px");
+        expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
       });
 
       it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
@@ -36114,8 +36416,8 @@ if (treeVitest) {
           id="playground.navbar.fixture"
           value="nakagin"
           options={[
-            { id: "nakagin", label: "Nakagin Capsule Tower with an intentionally long label" },
-            { id: "villa", label: "Villa Savoye" },
+            { id: "nakagin", label: "Nakagin Capsule Tower with an intentionally long label", icon: "building-2" },
+            { id: "villa", label: "Villa Savoye", icon: "landmark" },
           ]}
           onValueChange={() => undefined}
           includeNoExample={false}
@@ -37507,8 +37809,13 @@ if (treeVitest) {
       expect(paneMarkup).toContain('data-slot="window-chrome-silhouette-border"');
       expect(paneMarkup).toContain('data-slot="window-chrome-cap"');
       expect(paneMarkup).not.toContain("border-emphasized");
-      const measuresMarkup = renderToStaticMarkup(<div data-slot="window-measures-stack" className={windowMeasuresStackClass} />);
-      expect(measuresMarkup).toContain("border-element/40");
+      const measuresMarkup = renderToStaticMarkup(
+        <Window id="measures-markup-window" measures={<div>LOD</div>}>
+          <div>Body</div>
+        </Window>,
+      );
+      expect(measuresMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+      expect(measuresMarkup).toContain('data-slot="window-chrome-gap"');
       expect(measuresMarkup).not.toContain("border-emphasized");
     });
 

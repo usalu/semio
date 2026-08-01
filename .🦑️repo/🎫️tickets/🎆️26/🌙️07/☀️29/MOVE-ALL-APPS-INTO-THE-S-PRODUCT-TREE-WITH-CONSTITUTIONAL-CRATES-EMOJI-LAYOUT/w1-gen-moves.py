@@ -50,7 +50,7 @@ for suf in math_suffixes:
     newPkg = f"semio-s-kernel-mathematical-{pkg_suffix}"
     moves.append({"oldDir": oldDir, "newDir": newDir, "newPkg": newPkg})
 
-# infinite (except dag/program); cavas -> canvas rename
+# infinite (except dag/program); canvas -> canvas rename
 infinite_suffixes = ["board/normal/directed/rs","board/normal/undirected/rs","board/port/directed/dag/rs",
     "board/port/directed/normal/rs","board/port/directed/rs","board/port/rs","board/port/undirected/rs","board/rs",
     "world/rs"]
@@ -61,8 +61,8 @@ for suf in infinite_suffixes:
     pkg_suffix = tail.replace("/", "-")
     newPkg = f"semio-s-kernel-infinite-{pkg_suffix}"
     moves.append({"oldDir": oldDir, "newDir": newDir, "newPkg": newPkg})
-# cavas -> canvas rename (separate, path segment differs old vs new)
-moves.append({"oldDir": "infinite/cavas/rs", "newDir": "s/kernel/infinite/canvas/rs", "newPkg": "semio-s-kernel-infinite-canvas"})
+# canvas -> canvas rename (separate, path segment differs old vs new)
+moves.append({"oldDir": "infinite/canvas/rs", "newDir": "s/kernel/infinite/canvas/rs", "newPkg": "semio-s-kernel-infinite-canvas"})
 
 # flow: core + all modules (NOT program)
 flow_suffixes = ["core/rs","module/bim/rs","module/brep/rs","module/core/rs","module/dictionary/rs","module/draw/rs",

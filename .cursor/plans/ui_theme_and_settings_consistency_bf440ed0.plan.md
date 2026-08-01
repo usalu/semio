@@ -12,7 +12,7 @@ todos:
    content: Refactor sequence/flow/dag/trinity/writer/puzzle2d react files to use the shared theme-sync helper/hook instead of duplicated inline code
    status: completed
  - id: raster-rust-theme
-   content: Wire RasterHost.theme_clear to infinite_cavas::theme + add set_vello_theme_from_json using a shared merge_color_field moved into infinite/cavas/rs/theme.rs; add WASM setVelloThemeJson binding on RasterSession
+   content: Wire RasterHost.theme_clear to infinite_canvas::theme + add set_vello_theme_from_json using a shared merge_color_field moved into infinite/canvas/rs/theme.rs; add WASM setVelloThemeJson binding on RasterSession
    status: completed
  - id: raster-react-wire
    content: Call the shared theme-sync hook from raster/react/index.tsx (RasterCanvas) and invalidate on change
@@ -62,7 +62,7 @@ theme_clear: Color,
 theme_clear: Color::from_rgba8(32, 32, 36, 255),
 ```
 
-This value matches neither the light nor dark token. Notably, `ui/styling/rs/src/generated.rs` already generates a `CanvasTheme` (`raster_clear`, `icon_fg`, `icon_bg`) and `infinite/cavas/rs/theme.rs` already exposes `canvas_clear_for(ThemeName)` for exactly this purpose — raster is the one canvas host that never wired into it, and `raster/rs/Cargo.toml` already depends on both `ui_styling` and `infinite_cavas`.
+This value matches neither the light nor dark token. Notably, `ui/styling/rs/src/generated.rs` already generates a `CanvasTheme` (`raster_clear`, `icon_fg`, `icon_bg`) and `infinite/canvas/rs/theme.rs` already exposes `canvas_clear_for(ThemeName)` for exactly this purpose — raster is the one canvas host that never wired into it, and `raster/rs/Cargo.toml` already depends on both `ui_styling` and `infinite_canvas`.
 
 Because the sync mechanism is copy-pasted per technology instead of shared, it was possible (and happened) for a new technology to simply omit it. The fix is to delete the duplication and make it structurally the only way to sync theme.
 
@@ -97,8 +97,8 @@ flowchart LR
 3. Refactor `sequence/react/index.tsx`, `flow/react/index.tsx`, `mathematical/graph/port/directed/dag/react/index.tsx`, `trinity/react/index.tsx`, `writer/react/index.tsx`, `puzzle/2d/react/index.tsx` to call `syncSessionVelloTheme(session)` + `useVelloThemeSync(...)` instead of their private inline copies. Removes ~6 duplicated blocks.
 4. `**raster/rs/lib.rs**`:
 
-- Replace the hardcoded `theme_clear: Color::from_rgba8(32, 32, 36, 255)` default with `infinite_cavas::theme::canvas_clear_for(ui_styling::theme::ThemeName::Light)`.
-- Add `RasterHost::set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String>` that merges `rasterClear` into `theme_clear`, using a shared `merge_color_field` helper moved into `infinite/cavas/rs/theme.rs` (currently duplicated verbatim in `writer/rs/lib.rs` and `mathematical/graph/port/directed/lib.rs` — centralize it there and have both delegate to it).
+- Replace the hardcoded `theme_clear: Color::from_rgba8(32, 32, 36, 255)` default with `infinite_canvas::theme::canvas_clear_for(ui_styling::theme::ThemeName::Light)`.
+- Add `RasterHost::set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String>` that merges `rasterClear` into `theme_clear`, using a shared `merge_color_field` helper moved into `infinite/canvas/rs/theme.rs` (currently duplicated verbatim in `writer/rs/lib.rs` and `mathematical/graph/port/directed/lib.rs` — centralize it there and have both delegate to it).
 - Expose `#[wasm_bindgen(js_name = setVelloThemeJson)] pub fn set_vello_theme_json(&mut self, json: &str)` on `RasterSession`, matching `sequence`/`writer`/`dag`.
 - Optionally derive `checkerboard_rgba` shades from the theme (light/dark) instead of fixed `220/180` grays (`raster/rs/lib.rs:306-321`) so transparency checkering also respects theme.
 

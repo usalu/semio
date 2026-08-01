@@ -75,7 +75,7 @@ flowchart TB
 ## Phase 1 — Render truth (blockers)
 
 1. `**point_ratio` in painter** — `[animate/video/rs/renderer.rs](animate/video/rs/renderer.rs)`: trim/stroke paths by ratio when painting (unlocks Create/Write/Uncreate).
-2. **Typst → BezPath** — replace placeholder in `[text.rs](animate/core/rs/src/text.rs)` with SVG path parse (reuse patterns from puzzle/cavas if present; else kurbo/usvg).
+2. **Typst → BezPath** — replace placeholder in `[text.rs](animate/core/rs/src/text.rs)` with SVG path parse (reuse patterns from puzzle/canvas if present; else kurbo/usvg).
 3. **Frame hash correctness** — include transform/opacity/path content (not just id/counts) so static cache cannot skip motion.
 
 ## Phase 2 — Morph foundation + catalog behavior

@@ -14,7 +14,7 @@ pub use infinite_board_port_directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak,
     handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, CanvasPalette, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
 };
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 
 /// 🌳️ DAG board engine alias.
 pub type DagBoardEngine = DirectedPortGraphEngine;
@@ -143,7 +143,7 @@ pub fn io_widget_width(_name: &str) -> f64 {
 
 /// 📐️ IO widget height from vertically rotated title metrics plus a control band.
 pub fn io_widget_height(name: &str) -> f64 {
-    use cavas::text::label_extent;
+    use canvas::text::label_extent;
     let name_px = DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_SCALE_MULT;
     let (label_w, _) = label_extent(name, name_px);
     (label_w + DAG_IO_WIDGET_HEIGHT + DAG_NODE_EDGE_INSET * 2.0).max(40.0)
@@ -410,11 +410,11 @@ fn preview_scalar_text_width(text: &str) -> f64 {
 }
 
 fn preview_media_natural_size(src: &str) -> (f64, f64) {
-    use cavas::icon_codec::{board_resolve_icon_kind, BoardResolvedIcon};
+    use canvas::icon_codec::{board_resolve_icon_kind, BoardResolvedIcon};
     match board_resolve_icon_kind(src, |_| None) {
         BoardResolvedIcon::RasterRgba8 { w, h, .. } => (f64::from(w), f64::from(h)),
         BoardResolvedIcon::SvgPlain(s) | BoardResolvedIcon::SvgThemed(s) => {
-            if let Ok((_, _, bw, bh)) = cavas::svg_icon::svg_icon_content_bounds_from_str(&s) {
+            if let Ok((_, _, bw, bh)) = canvas::svg_icon::svg_icon_content_bounds_from_str(&s) {
                 if bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite() {
                     return (bw, bh);
                 }
@@ -453,7 +453,7 @@ fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
 }
 
 fn truncate_label_to_fit_width(text: &str, max_width: f64, px: f64) -> String {
-    use cavas::text::label_extent;
+    use canvas::text::label_extent;
     let trimmed = text.trim();
     if trimmed.is_empty() || max_width <= 0.0 || px < 4.0 {
         return text.to_string();
@@ -483,7 +483,7 @@ fn note_text_origin_x(node: &DagNodeSpec) -> f64 {
 }
 
 fn hit_byte_in_note_line(line: &str, world_x: f64, line_origin_x: f64, font_px: f64) -> usize {
-    use cavas::text::label_byte_world_x;
+    use canvas::text::label_byte_world_x;
     if line.is_empty() {
         return 0;
     }
@@ -849,7 +849,7 @@ fn slider_track_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
 }
 
 fn slider_value_world_center(node: &DagNodeSpec, value_text: &str, paint_px: f64, zoom: f64) -> (f64, f64) {
-    use cavas::text::label_extent;
+    use canvas::text::label_extent;
     let hw = node.width * 0.5;
     let (value_w, _) = label_extent(value_text, paint_px);
     let z = zoom.max(0.05);
@@ -1002,7 +1002,7 @@ fn computation_io_side_row_divider_indices(side_rows: usize, grid_rows: usize) -
 }
 
 fn computation_name_world_center(node: &DagNodeSpec, label: &str, paint_px: f64, zoom: f64) -> (f64, f64) {
-    use cavas::text::label_extent;
+    use canvas::text::label_extent;
     let hh = node.height * 0.5;
     let (_, label_h) = label_extent(label, paint_px);
     let z = zoom.max(0.05);
@@ -1012,7 +1012,7 @@ fn computation_name_world_center(node: &DagNodeSpec, label: &str, paint_px: f64,
 }
 
 fn io_widget_name_column_bounds(node: &DagNodeSpec, px: f64) -> (f64, f64, f64, f64) {
-    use cavas::text::label_extent;
+    use canvas::text::label_extent;
     let hh = node.height * 0.5;
     let name_px = px * 1.05;
     let (_name_w, name_h) = label_extent(&node.name, name_px);
@@ -1108,7 +1108,7 @@ fn port_angle_on_side(index: usize, count: usize, left: bool) -> f64 {
 
 /// 📐️ Rectangle-layout port angle (north-zero CCW) aligned with painted IO labels.
 pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: usize, count: usize, left: bool) -> f64 {
-    use cavas::Point;
+    use canvas::Point;
     use graph::rectangle_handle_angle_toward;
     let hw = width * 0.5;
     let row_count = computation_io_row_count(count, count, false, false);
@@ -1125,7 +1125,7 @@ pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: u
 }
 
 fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left: bool) -> f64 {
-    use cavas::Point;
+    use canvas::Point;
     use graph::rectangle_handle_angle_toward;
     let hw = node.width * 0.5;
     let count = if left { node.inputs().len() } else { node.outputs().len() };
@@ -1322,7 +1322,7 @@ pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayou
 /// 🧩️ DAG-specific graph extension marker.
 pub struct DagExtension;
 
-impl cavas::CanvasExtension for DagExtension {
+impl canvas::CanvasExtension for DagExtension {
     fn extension_id(&self) -> &str {
         "dag"
     }
@@ -1332,7 +1332,7 @@ impl GraphExtension for DagExtension {}
 // #endregion 🔖️GraphExtension
 
 // #region 🔖️Lod
-use cavas::lod::{Lod, LodScale};
+use canvas::lod::{Lod, LodScale};
 
 const DAG_LODS: &[Lod; 6] = &[
     Lod { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; fill only.", max_zoom: 0.15 },
@@ -1359,7 +1359,7 @@ fn dag_lod_index(zoom: f64) -> usize {
 }
 
 fn dag_lod_band_floor_zoom(lod_index: usize) -> f64 {
-    let floor = cavas::lod::band_floor_zoom(DAG_LOD_BAND_FLOOR_ZOOM, lod_index, 0.05);
+    let floor = canvas::lod::band_floor_zoom(DAG_LOD_BAND_FLOOR_ZOOM, lod_index, 0.05);
     if lod_index == 0 {
         floor
     } else {
@@ -1387,14 +1387,14 @@ fn dag_label_layout_px() -> f64 {
 }
 
 fn dag_label_paint_px(zoom: f64, lod_index: usize) -> f64 {
-    cavas::lod::lod_band_label_screen_px(DAG_LABEL_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
+    canvas::lod::lod_band_label_screen_px(DAG_LABEL_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
 }
 
 fn dag_label_compact_paint_px(zoom: f64, lod_index: usize) -> f64 {
-    cavas::lod::lod_band_label_screen_px(DAG_LABEL_COMPACT_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
+    canvas::lod::lod_band_label_screen_px(DAG_LABEL_COMPACT_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
 }
 
-fn dag_node_body_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+fn dag_node_body_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> canvas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.node_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
@@ -1408,7 +1408,7 @@ fn dag_node_body_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highl
     }
 }
 
-pub(crate) fn dag_node_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_node_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> canvas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.node_stroke, ui_styling::opacities::DIM_STROKE_ALPHA)
     } else if selected {
@@ -1422,7 +1422,7 @@ pub(crate) fn dag_node_body_stroke(theme: &CanvasPalette, dimmed: bool, selected
     }
 }
 
-pub(crate) fn dag_node_label_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_node_label_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> canvas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.label_fill, ui_styling::opacities::DIM_LABEL_ALPHA)
     } else if selected {
@@ -1437,7 +1437,7 @@ pub(crate) fn dag_node_label_fill(theme: &CanvasPalette, dimmed: bool, selected:
 }
 
 /// @emoji 🧱️ Internal column/row chrome inside a node body; selection/hover matches label emphasis.
-pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: cavas::Color, label_fill: cavas::Color, emphasized: bool) -> cavas::Color {
+pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: canvas::Color, label_fill: canvas::Color, emphasized: bool) -> canvas::Color {
     if emphasized {
         label_fill
     } else {
@@ -1445,7 +1445,7 @@ pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: cavas::Color, label_f
     }
 }
 
-pub(crate) fn dag_handle_body_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_handle_body_fill(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> canvas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.handle_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
@@ -1459,7 +1459,7 @@ pub(crate) fn dag_handle_body_fill(theme: &CanvasPalette, dimmed: bool, selected
     }
 }
 
-pub(crate) fn dag_handle_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_handle_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> canvas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.handle_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
@@ -1473,7 +1473,7 @@ pub(crate) fn dag_handle_body_stroke(theme: &CanvasPalette, dimmed: bool, select
     }
 }
 
-pub(crate) fn dag_edge_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
+pub(crate) fn dag_edge_body_stroke(theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> canvas::Color {
     if dimmed {
         canvas_color_with_alpha(theme.edge_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
@@ -1500,7 +1500,7 @@ fn dag_node_stroke_screen_px(dimmed: bool, selected: bool, highlighted: bool, ho
 }
 
 /// @emoji 🎨️ Node body fill when painted; `None` means stroke/text only (puzzle 2d overview+).
-pub(crate) fn dag_node_paint_fill(lod: DagDrawLod, theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> Option<cavas::Color> {
+pub(crate) fn dag_node_paint_fill(lod: DagDrawLod, theme: &CanvasPalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> Option<canvas::Color> {
     if lod == DagDrawLod::Minimap {
         return Some(dag_node_body_stroke(theme, dimmed, selected, highlighted, hovered));
     }
@@ -1773,6 +1773,20 @@ pub struct DagHost {
     editing_note: Option<NoteEditState>,
     caret_visible: bool,
     pan_anchor: Option<(f64, f64, f64, f64)>,
+    minimap_widget_visible: bool,
+    minimap_widget_hovered: bool,
+    minimap_widget_drag: Option<(f64, f64)>,
+}
+
+struct MinimapWidgetLayout {
+    panel: (f64, f64, f64, f64),
+    inner: (f64, f64, f64, f64),
+    world_min_x: f64,
+    world_min_y: f64,
+    scale: f64,
+    map_origin_x: f64,
+    map_origin_y: f64,
+    viewport: (f64, f64, f64, f64),
 }
 
 fn pointer_event_now_ms() -> f64 {
@@ -1797,8 +1811,8 @@ pub fn dag_take_pending_open_instance_id(host: &mut DagHost) -> Option<String> {
     host.pending_open_instance_id.take()
 }
 
-fn canvas_color_with_alpha(color: cavas::Color, alpha: u8) -> cavas::Color {
-    use cavas::Color;
+fn canvas_color_with_alpha(color: canvas::Color, alpha: u8) -> canvas::Color {
+    use canvas::Color;
     let rgba = color.to_rgba8();
     Color::from_rgba8(rgba.r, rgba.g, rgba.b, alpha)
 }
@@ -1981,6 +1995,9 @@ impl DagHost {
             editing_note: None,
             caret_visible: true,
             pan_anchor: None,
+            minimap_widget_visible: false,
+            minimap_widget_hovered: false,
+            minimap_widget_drag: None,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -2074,6 +2091,74 @@ impl DagHost {
     /// 🎯️ Selected fixture node ids from the engine selection snapshot.
     pub fn selected_node_ids(&self) -> Vec<String> {
         self.engine.selection.node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect()
+    }
+
+    /// 🔗️ Selected fixture edge ids (synapse ids) from the engine selection snapshot.
+    pub fn selected_edge_ids(&self) -> Vec<String> {
+        self.engine.selection.edge_ids.iter().filter_map(|&eid| self.edge_id_map.get(&eid).cloned()).collect()
+    }
+
+    /// 🎯️ Nodes, edges, and handles in the current selection as JSON (`nodes`, `edges`, `handles`).
+    pub fn selection_domains_json(&self) -> String {
+        #[derive(serde::Serialize)]
+        struct Domains {
+            nodes: Vec<String>,
+            edges: Vec<String>,
+            handles: Vec<String>,
+        }
+        let handles: Vec<String> = self
+            .selected_channels()
+            .into_iter()
+            .map(|channel| format!("{}@{}", channel.widget_id, channel.port))
+            .collect();
+        serde_json::to_string(&Domains {
+            nodes: self.selected_node_ids(),
+            edges: self.selected_edge_ids(),
+            handles,
+        })
+        .unwrap_or_else(|_| r#"{"nodes":[],"edges":[],"handles":[]}"#.into())
+    }
+
+    fn apply_selection_domains(&mut self, nodes: &[String], edges: &[String], handles: &[String]) {
+        self.engine.selection = Selection::default();
+        for widget_id in nodes {
+            if let Some(nid) = self.node_id_for_widget_id(widget_id) {
+                self.engine.selection.node_ids.insert(nid);
+            }
+        }
+        for edge_id in edges {
+            for (&eid, synapse_id) in &self.edge_id_map {
+                if synapse_id == edge_id {
+                    self.engine.selection.edge_ids.insert(eid);
+                    break;
+                }
+            }
+        }
+        for handle_key in handles {
+            if let Some((node_id, port_id)) = handle_key.split_once('@') {
+                if let Some(hid) = self.handle_id_for_port(node_id, port_id) {
+                    self.engine.selection.handle_ids.insert(hid);
+                }
+            }
+        }
+        self.engine.preselect = Selection::default();
+        self.engine.preselect_removed = Selection::default();
+    }
+
+    /// ✅️ Replaces selection from domain JSON (`{ nodes, edges, handles }`) or a legacy node-id array.
+    pub fn set_selection_domains_json(&mut self, json: &str) {
+        #[derive(serde::Deserialize, Default)]
+        struct Domains {
+            nodes: Vec<String>,
+            edges: Vec<String>,
+            handles: Vec<String>,
+        }
+        if let Ok(domains) = serde_json::from_str::<Domains>(json) {
+            self.apply_selection_domains(&domains.nodes, &domains.edges, &domains.handles);
+            return;
+        }
+        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
+        self.set_selection(&ids);
     }
 
     /// ✅️ Whether the engine has any committed node, edge, or handle selection.
@@ -2214,6 +2299,162 @@ impl DagHost {
         self.engine.cancel_area_select()
     }
 
+    // #region 🔖️MinimapWidget
+    /// 🗺️ Toggles the bottom-right flow minimap navigator.
+    pub fn set_minimap_widget_visible(&mut self, visible: bool) {
+        self.minimap_widget_visible = visible;
+    }
+
+    fn minimap_widget_content_bounds(&self) -> Option<WorldBox> {
+        if self.fixture.nodes.is_empty() {
+            return None;
+        }
+        let pad = ui_styling::metrics::dag::MINIMAP_WIDGET_CONTENT_PAD;
+        let mut union = Self::dag_node_world_bounds(&self.fixture.nodes[0]);
+        for node in self.fixture.nodes.iter().skip(1) {
+            let b = Self::dag_node_world_bounds(node);
+            union.min_x = union.min_x.min(b.min_x);
+            union.min_y = union.min_y.min(b.min_y);
+            union.max_x = union.max_x.max(b.max_x);
+            union.max_y = union.max_y.max(b.max_y);
+        }
+        Some(WorldBox { min_x: union.min_x - pad, min_y: union.min_y - pad, max_x: union.max_x + pad, max_y: union.max_y + pad })
+    }
+
+    fn minimap_camera_fully_shows_content(&self, content: &WorldBox, viewport_w: u32, viewport_h: u32) -> bool {
+        let zoom = self.fixture.camera.zoom.max(1e-9);
+        let half_w = viewport_w as f64 / (2.0 * zoom);
+        let half_h = viewport_h as f64 / (2.0 * zoom);
+        let cam = &self.fixture.camera;
+        let tol = 12.0 / zoom;
+        cam.x - half_w <= content.min_x + tol && cam.x + half_w >= content.max_x - tol && cam.y - half_h <= content.min_y + tol && cam.y + half_h >= content.max_y - tol
+    }
+
+    fn minimap_widget_layout(&self, viewport_w: u32, viewport_h: u32) -> Option<MinimapWidgetLayout> {
+        if !self.minimap_widget_visible {
+            return None;
+        }
+        let content = self.minimap_widget_content_bounds()?;
+        if self.minimap_camera_fully_shows_content(&content, viewport_w, viewport_h) {
+            return None;
+        }
+        let w = ui_styling::metrics::dag::MINIMAP_WIDGET_WIDTH;
+        let h = ui_styling::metrics::dag::MINIMAP_WIDGET_HEIGHT;
+        let margin = ui_styling::metrics::dag::MINIMAP_WIDGET_MARGIN;
+        let ratio = ui_styling::metrics::dag::MINIMAP_WIDGET_MAX_CONTENT_RATIO.clamp(0.5, 0.98);
+        let panel_x0 = viewport_w as f64 - margin - w;
+        let panel_y0 = viewport_h as f64 - margin - h;
+        let panel_x1 = panel_x0 + w;
+        let panel_y1 = panel_y0 + h;
+        let inset_x = w * (1.0 - ratio) * 0.5;
+        let inset_y = h * (1.0 - ratio) * 0.5;
+        let inner = (panel_x0 + inset_x, panel_y0 + inset_y, panel_x1 - inset_x, panel_y1 - inset_y);
+        let inner_w = inner.2 - inner.0;
+        let inner_h = inner.3 - inner.1;
+        let cw = (content.max_x - content.min_x).max(1e-6);
+        let ch = (content.max_y - content.min_y).max(1e-6);
+        let scale = (inner_w / cw).min(inner_h / ch);
+        let graph_w = cw * scale;
+        let graph_h = ch * scale;
+        let offset_x = inner.0 + (inner_w - graph_w) * 0.5;
+        let offset_y = inner.1 + (inner_h - graph_h) * 0.5;
+        let zoom = self.fixture.camera.zoom.max(1e-9);
+        let half_w = viewport_w as f64 / (2.0 * zoom);
+        let half_h = viewport_h as f64 / (2.0 * zoom);
+        let cam = &self.fixture.camera;
+        let view_min_x = cam.x - half_w;
+        let view_min_y = cam.y - half_h;
+        let view_max_x = cam.x + half_w;
+        let view_max_y = cam.y + half_h;
+        let to_mini = |wx: f64, wy: f64| (offset_x + (wx - content.min_x) * scale, offset_y + (wy - content.min_y) * scale);
+        let (vx0, vy0) = to_mini(view_min_x, view_min_y);
+        let (vx1, vy1) = to_mini(view_max_x, view_max_y);
+        let viewport = (vx0.min(vx1), vy0.min(vy1), vx0.max(vx1), vy1.max(vy1));
+        Some(MinimapWidgetLayout { panel: (panel_x0, panel_y0, panel_x1, panel_y1), inner, world_min_x: content.min_x, world_min_y: content.min_y, scale, map_origin_x: offset_x, map_origin_y: offset_y, viewport })
+    }
+
+    fn minimap_widget_screen_to_world(&self, layout: &MinimapWidgetLayout, sx: f64, sy: f64) -> (f64, f64) {
+        let wx = layout.world_min_x + (sx - layout.map_origin_x) / layout.scale;
+        let wy = layout.world_min_y + (sy - layout.map_origin_y) / layout.scale;
+        (wx, wy)
+    }
+
+    fn minimap_widget_point_in_rect((x0, y0, x1, y1): (f64, f64, f64, f64), sx: f64, sy: f64) -> bool {
+        sx >= x0 && sx <= x1 && sy >= y0 && sy <= y1
+    }
+
+    fn minimap_widget_pointer_hit(&self, sx: f64, sy: f64) -> Option<(MinimapWidgetLayout, bool)> {
+        let layout = self.minimap_widget_layout(self.width, self.height)?;
+        if !Self::minimap_widget_point_in_rect(layout.panel, sx, sy) {
+            return None;
+        }
+        let on_viewport = Self::minimap_widget_point_in_rect(layout.viewport, sx, sy);
+        Some((layout, on_viewport))
+    }
+
+    fn minimap_widget_cursor_hint(&self) -> Option<&'static str> {
+        if self.minimap_widget_drag.is_some() {
+            return Some("grabbing");
+        }
+        if let Some((layout, on_viewport)) = self.minimap_widget_pointer_hit(self.last_screen_x, self.last_screen_y) {
+            let _ = layout;
+            return Some(if on_viewport { "grab" } else { "pointer" });
+        }
+        None
+    }
+
+    fn minimap_widget_json(&self) -> Option<serde_json::Value> {
+        let layout = self.minimap_widget_layout(self.width, self.height)?;
+        let (x0, y0, x1, y1) = layout.panel;
+        Some(serde_json::json!({
+            "x": x0,
+            "y": y0,
+            "width": x1 - x0,
+            "height": y1 - y0,
+            "cursor": self.minimap_widget_cursor_hint(),
+        }))
+    }
+
+    fn paint_minimap_widget(&self, scene: &mut canvas::Scene, viewport_w: u32, viewport_h: u32) {
+        let Some(layout) = self.minimap_widget_layout(viewport_w, viewport_h) else {
+            return;
+        };
+        use canvas::{Affine, FillRule, Rect, RoundedRect, RoundedRectRadii, Stroke};
+        use ui_styling::strokes;
+        let theme = &self.canvas_theme;
+        let aff = Affine::IDENTITY;
+        let radius = ui_styling::metrics::dag::MINIMAP_WIDGET_RADIUS;
+        let (px0, py0, px1, py1) = layout.panel;
+        let panel = RoundedRect::new(Rect::new(px0, py0, px1, py1), RoundedRectRadii::new(radius, radius, radius, radius));
+        scene.fill(FillRule::NonZero, aff, theme.minimap_widget_panel_fill, None, &panel);
+        scene.stroke(&Stroke::new(strokes::DAG_MINIMAP_WIDGET_PANEL), aff, theme.minimap_widget_panel_stroke, None, &panel);
+        let node_min = ui_styling::metrics::dag::MINIMAP_WIDGET_NODE_MIN_SIZE;
+        let lod = DagDrawLod::Minimap;
+        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
+            let node = self.node_spec_for_paint(idx, fixture_node);
+            let node = node.as_ref();
+            let engine_nid = self.engine_node_id_for_index(idx);
+            let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
+            let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
+            let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered) else {
+                continue;
+            };
+            let hw = (node.width * layout.scale * 0.5).max(node_min * 0.5);
+            let hh = (node.height * layout.scale * 0.5).max(node_min * 0.5);
+            let cx = layout.map_origin_x + (node.x - layout.world_min_x) * layout.scale;
+            let cy = layout.map_origin_y + (node.y - layout.world_min_y) * layout.scale;
+            let rect = Rect::new(cx - hw, cy - hh, cx + hw, cy + hh);
+            scene.fill(FillRule::NonZero, aff, fill, None, &rect);
+        }
+        let (vx0, vy0, vx1, vy1) = layout.viewport;
+        let view_rect = Rect::new(vx0, vy0, vx1, vy1);
+        let active = self.minimap_widget_hovered || self.minimap_widget_drag.is_some();
+        scene.fill(FillRule::NonZero, aff, theme.minimap_widget_viewport_fill, None, &view_rect);
+        let stroke_c = if active { theme.minimap_widget_viewport_stroke_hovered } else { theme.minimap_widget_viewport_stroke };
+        scene.stroke(&Stroke::new(strokes::DAG_MINIMAP_WIDGET_VIEWPORT), aff, stroke_c, None, &view_rect);
+    }
+    // #endregion 🔖️MinimapWidget
+
     // #region 🔖️SelectionAlign
     fn dag_node_world_bounds(node: &DagNodeSpec) -> WorldBox {
         let hw = node.width * 0.5;
@@ -2232,7 +2473,7 @@ impl DagHost {
             return;
         };
         if let Some(engine_node) = self.engine.nodes.get_mut(&nid) {
-            engine_node.center = cavas::Point::new(node.x, node.y);
+            engine_node.center = canvas::Point::new(node.x, node.y);
         }
     }
 
@@ -2242,8 +2483,8 @@ impl DagHost {
         if selected.is_empty() {
             return "null".into();
         }
-        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::Point;
+        use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
+        use canvas::Point;
         let pad_world = 4.0 / self.fixture.camera.zoom.max(0.05);
         let mut corners = Vec::new();
         for (_, node) in &selected {
@@ -2255,7 +2496,7 @@ impl DagHost {
         let Some(bounds) = world_box_from_points(&corners) else {
             return "null".into();
         };
-        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let cam = CanvasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let tl = world_to_screen(&cam, &viewport, Point::new(bounds.min_x, bounds.min_y));
         let br = world_to_screen(&cam, &viewport, Point::new(bounds.max_x, bounds.max_y));
@@ -2287,10 +2528,10 @@ impl DagHost {
             #[serde(skip_serializing_if = "Option::is_none")]
             polyline: Option<Vec<[f64; 2]>>,
         }
-        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::Point;
+        use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
+        use canvas::Point;
         let unresolved = EntityGeometry { visible: false, x: None, y: None, rect: None, polyline: None };
-        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let cam = CanvasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let viewport_center = (self.width as f64 * 0.5, self.height as f64 * 0.5);
 
@@ -2372,7 +2613,7 @@ impl DagHost {
 
     /// 📐️ Aligns or distributes the current multi-node selection.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), DagError> {
-        use cavas::Point;
+        use canvas::Point;
         let mut selected = self.selected_fixture_nodes();
         if selected.is_empty() {
             return Ok(());
@@ -2502,7 +2743,7 @@ impl DagHost {
             return Ok(());
         };
         if let Some(node) = self.engine.nodes.get_mut(&nid) {
-            node.center = cavas::Point::new(x, y);
+            node.center = canvas::Point::new(x, y);
         }
         Ok(())
     }
@@ -2821,16 +3062,16 @@ impl DagHost {
 
     fn stroke_world_step_grid(
         &self,
-        scene: &mut cavas::Scene,
-        cam: &cavas::camera::Camera,
-        viewport: &cavas::camera::Viewport,
-        color: cavas::Color,
+        scene: &mut canvas::Scene,
+        cam: &canvas::camera::Camera,
+        viewport: &canvas::camera::Viewport,
+        color: canvas::Color,
         stroke_px: f64,
         world_step: f64,
         min_step_screen: f64,
     ) {
-        use cavas::camera::world_to_screen;
-        use cavas::{Affine, Point, Stroke};
+        use canvas::camera::world_to_screen;
+        use canvas::{Affine, Point, Stroke};
         let step = world_step * cam.zoom;
         if step < min_step_screen {
             return;
@@ -2841,7 +3082,7 @@ impl DagHost {
         let origin = world_to_screen(cam, viewport, Point::new(0.0, 0.0));
         let x_off = ((origin.x % step) + step) % step;
         let y_off = ((origin.y % step) + step) % step;
-        let mut path = cavas::BezPath::new();
+        let mut path = canvas::BezPath::new();
         let mut x = x_off;
         while x <= w {
             path.move_to(Point::new(x, 0.0));
@@ -2857,7 +3098,7 @@ impl DagHost {
         scene.stroke(&stroke, Affine::IDENTITY, color, None, &path);
     }
 
-    fn paint_lod_grid(&self, scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, lod: DagDrawLod) {
+    fn paint_lod_grid(&self, scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, lod: DagDrawLod) {
         if !self.grid_visible || self.wheel_zoom_active || lod == DagDrawLod::Minimap {
             return;
         }
@@ -3011,10 +3252,10 @@ impl DagHost {
         format!("{}:{}:{}", node_id, if input { "in" } else { "out" }, port_id)
     }
 
-    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::Point {
-        use cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-        use cavas::Point;
-        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+    fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
+        use canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
+        use canvas::Point;
+        let cam = CanvasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
     }
@@ -3032,7 +3273,7 @@ impl DagHost {
             self.fixture.nodes[idx].y = y;
             if self.grid_snap_enabled {
                 if let Some(engine_node) = self.engine.nodes.get_mut(&nid) {
-                    engine_node.center = cavas::Point::new(x, y);
+                    engine_node.center = canvas::Point::new(x, y);
                 }
             }
         }
@@ -3164,7 +3405,7 @@ impl DagHost {
         if !self.draw_lod_for_frame().allows_connection_hit_picking() {
             return None;
         }
-        use cavas::Point;
+        use canvas::Point;
         let p = Point::new(world_x, world_y);
         for (&hid, handle) in self.engine.handles.iter().rev() {
             let Some(node) = self.engine.nodes.get(&handle.node_id) else {
@@ -3256,7 +3497,7 @@ impl DagHost {
         let Some(node_id) = self.fixture_draggable_node_hit(world_x, world_y) else {
             return false;
         };
-        use cavas::Point;
+        use canvas::Point;
         use graph::pick_merge_mode_for_modifiers;
 
         let point = Point::new(world_x, world_y);
@@ -3579,6 +3820,21 @@ impl DagHost {
 
     #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo (see infinite/board/rs, framework/editor/rs, layout/rs, etc.)")]
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
+        if button == 0 && !shift && !ctrl_or_meta && !alt && !pan {
+            if let Some((layout, on_viewport)) = self.minimap_widget_pointer_hit(sx, sy) {
+                let (wx, wy) = self.minimap_widget_screen_to_world(&layout, sx, sy);
+                let zoom = self.fixture.camera.zoom;
+                if on_viewport {
+                    let cam = &self.fixture.camera;
+                    self.minimap_widget_drag = Some((cam.x - wx, cam.y - wy));
+                } else {
+                    self.set_camera(wx, wy, zoom);
+                    self.minimap_widget_drag = Some((0.0, 0.0));
+                }
+                dag_debug_log(&format!("[DEBUG] minimap widget pointer down sx={sx:.1} sy={sy:.1} on_viewport={on_viewport}"));
+                return;
+            }
+        }
         if pan {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
             return;
@@ -3651,11 +3907,28 @@ impl DagHost {
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        if let Some((ox, oy)) = self.minimap_widget_drag {
+            if let Some(layout) = self.minimap_widget_layout(self.width, self.height) {
+                let (wx, wy) = self.minimap_widget_screen_to_world(&layout, sx, sy);
+                let zoom = self.fixture.camera.zoom;
+                self.set_camera(wx + ox, wy + oy, zoom);
+                self.last_screen_x = sx;
+                self.last_screen_y = sy;
+                return;
+            }
+        }
         if let Some((start_sx, start_sy, cam_x, cam_y)) = self.pan_anchor {
             let zoom = self.fixture.camera.zoom.max(1e-9);
             let dx = (sx - start_sx) / zoom;
             let dy = (sy - start_sy) / zoom;
             self.set_camera(cam_x - dx, cam_y - dy, zoom);
+            self.last_screen_x = sx;
+            self.last_screen_y = sy;
+            return;
+        }
+        let minimap_hovered = self.minimap_widget_pointer_hit(sx, sy).is_some();
+        self.minimap_widget_hovered = minimap_hovered;
+        if minimap_hovered {
             self.last_screen_x = sx;
             self.last_screen_y = sy;
             return;
@@ -3687,6 +3960,7 @@ impl DagHost {
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
         self.pan_anchor = None;
+        self.minimap_widget_drag = None;
         self.sync_connection_hit_picking_for_lod();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
@@ -3709,9 +3983,9 @@ impl DagHost {
 
     /// 🖼️ Screen-node overlay rects in CSS pixel space for DOM media layers.
     pub fn node_overlays_json(&self) -> Result<String, DagError> {
-        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::Point;
-        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
+        use canvas::Point;
+        let cam = CanvasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let mut overlays = Vec::new();
         for node in &self.fixture.nodes {
@@ -3743,28 +4017,28 @@ impl DagHost {
         Ok(serde_json::to_string(&overlays)?)
     }
 
-    fn handle_cap_peak(&self, center: cavas::Point, outward: cavas::Vec2, radius: f64, shape: PortShape) -> cavas::Point {
+    fn handle_cap_peak(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::Point {
         match shape {
             PortShape::Semicircle => handle_exterior_cap_peak(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_peak(center, outward, radius),
         }
     }
 
-    fn handle_cap_fill_path(&self, center: cavas::Point, outward: cavas::Vec2, radius: f64, shape: PortShape) -> cavas::BezPath {
+    fn handle_cap_fill_path(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::BezPath {
         match shape {
             PortShape::Semicircle => handle_exterior_cap_fill_path(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_fill_path(center, outward, radius),
         }
     }
 
-    fn handle_cap_stroke_path(&self, center: cavas::Point, outward: cavas::Vec2, radius: f64, shape: PortShape) -> cavas::BezPath {
+    fn handle_cap_stroke_path(&self, center: canvas::Point, outward: canvas::Vec2, radius: f64, shape: PortShape) -> canvas::BezPath {
         match shape {
             PortShape::Semicircle => handle_exterior_cap_stroke_path(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_stroke_path(center, outward, radius),
         }
     }
 
-    fn edge_sharp_path(&self, eid: EdgeId) -> Option<cavas::BezPath> {
+    fn edge_sharp_path(&self, eid: EdgeId) -> Option<canvas::BezPath> {
         let edge = self.engine.edges.get(&eid)?;
         let source_handle = self.engine.handles.get(&edge.source)?;
         let target_handle = self.engine.handles.get(&edge.target)?;
@@ -3781,10 +4055,10 @@ impl DagHost {
         Some(compute_edge_sharp_sz_path(source_wire, target_wire, source_out, target_out))
     }
 
-    fn paint_node_handles_for_spec(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, cam: &cavas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
-        use cavas::FillRule;
-        use cavas::Stroke;
-        use cavas::{Circle, Point};
+    fn paint_node_handles_for_spec(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, cam: &canvas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
+        use canvas::FillRule;
+        use canvas::Stroke;
+        use canvas::{Circle, Point};
         use graph::{handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
 
         let theme = &self.canvas_theme;
@@ -3794,7 +4068,7 @@ impl DagHost {
         let stroke_c = dag_handle_body_stroke(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
         let handle_chrome = chrome.has_interaction_chrome();
         let center = Point::new(node.x, node.y);
-        let paint_port = |scene: &mut cavas::Scene, port_idx: usize, inputs: bool, port: &IoPortSpec| {
+        let paint_port = |scene: &mut canvas::Scene, port_idx: usize, inputs: bool, port: &IoPortSpec| {
             if !port.visible {
                 return;
             }
@@ -3866,7 +4140,7 @@ impl DagHost {
     }
 
     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
-        use cavas::text::label_extent;
+        use canvas::text::label_extent;
         let hw = node.width * 0.5;
         let handle_inset = 8.0 / zoom.max(0.05);
         let inputs = node.inputs();
@@ -3977,45 +4251,47 @@ impl DagHost {
         if let Some(ghost) = self.ghost_node.as_ref() {
             labels.extend(Self::label_overlay_rows_for_node(ghost, lod, cam.zoom, lod_index, true));
         }
+        let minimap_widget = self.minimap_widget_json();
         serde_json::to_string(&serde_json::json!({
             "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
             "lod": lod.label(),
             "width": self.width,
             "height": self.height,
             "labels": labels,
+            "minimapWidget": minimap_widget,
         }))
         .map_err(DagError::from)
     }
 
-    fn paint_variadic_plus_controls(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, px: f64, fill: cavas::Color, halo: cavas::Color) {
-        use cavas::camera::world_to_screen;
-        use cavas::text::append_label;
+    fn paint_variadic_plus_controls(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, px: f64, fill: canvas::Color, halo: canvas::Color) {
+        use canvas::camera::world_to_screen;
+        use canvas::text::append_label;
         for (_, px_world, py_world) in variadic_input_insert_positions(node) {
-            let screen = world_to_screen(cam, viewport, cavas::Point::new(px_world, py_world));
+            let screen = world_to_screen(cam, viewport, canvas::Point::new(px_world, py_world));
             append_label(scene, "+", screen, px * 0.95, fill, halo);
         }
         for (_, px_world, py_world) in variadic_output_insert_positions(node) {
-            let screen = world_to_screen(cam, viewport, cavas::Point::new(px_world, py_world));
+            let screen = world_to_screen(cam, viewport, canvas::Point::new(px_world, py_world));
             append_label(scene, "+", screen, px * 0.95, fill, halo);
         }
     }
 
-    fn paint_node_name_vertical(scene: &mut cavas::Scene, center_screen: cavas::Point, name: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
-        use cavas::text::{append_label, label_extent};
-        use cavas::{Affine, Point};
+    fn paint_node_name_vertical(scene: &mut canvas::Scene, center_screen: canvas::Point, name: &str, px: f64, label_fill: canvas::Color, label_halo: canvas::Color) {
+        use canvas::text::{append_label, label_extent};
+        use canvas::{Affine, Point};
         let trimmed = name.trim();
         if trimmed.is_empty() {
             return;
         }
         let (w, h) = label_extent(trimmed, px);
-        let mut label_scene = cavas::Scene::new();
+        let mut label_scene = canvas::Scene::new();
         append_label(&mut label_scene, trimmed, Point::new(0.0, 0.0), px, label_fill, label_halo);
         let rot = Affine::IDENTITY.translate((center_screen.x, center_screen.y)) * Affine::IDENTITY.rotate(-std::f64::consts::FRAC_PI_2) * Affine::IDENTITY.translate((-w * 0.5, -h * 0.5));
         scene.append(&label_scene, Some(rot));
     }
 
-    fn paint_computation_column_divider(scene: &mut cavas::Scene, aff: cavas::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: cavas::Color) {
-        use cavas::{Line, Point, Stroke};
+    fn paint_computation_column_divider(scene: &mut canvas::Scene, aff: canvas::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: canvas::Color) {
+        use canvas::{Line, Point, Stroke};
         let Some(divider_x) = computation_column_divider_x(node) else {
             return;
         };
@@ -4026,9 +4302,9 @@ impl DagHost {
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(divider_x, top), Point::new(divider_x, bottom)));
     }
 
-    fn paint_computation_channel_row_highlights(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, node: &DagNodeSpec, theme: &CanvasPalette, is_dimmed: bool) {
-        use cavas::FillRule;
-        use cavas::Rect;
+    fn paint_computation_channel_row_highlights(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, node: &DagNodeSpec, theme: &CanvasPalette, is_dimmed: bool) {
+        use canvas::FillRule;
+        use canvas::Rect;
         let mut paint_bounds = |(x0, y0, x1, y1): (f64, f64, f64, f64), selected: bool, highlighted: bool, hovered: bool| {
             if !selected && !highlighted && !hovered {
                 return;
@@ -4058,7 +4334,7 @@ impl DagHost {
         }
     }
 
-    fn computation_channel_row_divider_stroke(&self, node: &DagNodeSpec, port_id: &str, body_stroke: cavas::Color, label_fill: cavas::Color, default_stroke: cavas::Color) -> cavas::Color {
+    fn computation_channel_row_divider_stroke(&self, node: &DagNodeSpec, port_id: &str, body_stroke: canvas::Color, label_fill: canvas::Color, default_stroke: canvas::Color) -> canvas::Color {
         let Some(hid) = self.handle_id_for_port(&node.id, port_id) else {
             return default_stroke;
         };
@@ -4071,8 +4347,8 @@ impl DagHost {
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_computation_channel_row_dividers(&self, scene: &mut cavas::Scene, aff: cavas::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: cavas::Color, body_stroke: cavas::Color, label_fill: cavas::Color, channel_row_pick: bool) {
-        use cavas::{Line, Point, Stroke};
+    fn paint_computation_channel_row_dividers(&self, scene: &mut canvas::Scene, aff: canvas::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: canvas::Color, body_stroke: canvas::Color, label_fill: canvas::Color, channel_row_pick: bool) {
+        use canvas::{Line, Point, Stroke};
         let grid_rows = computation_channel_row_count(node);
         if grid_rows <= 1 {
             return;
@@ -4107,10 +4383,10 @@ impl DagHost {
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_preview_image_content(&self, scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, src: &str, label_fill: cavas::Color, bg: cavas::Color) {
-        use cavas::camera::world_to_screen;
-        use cavas::text::append_label;
-        use cavas::Point;
+    fn paint_preview_image_content(&self, scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, src: &str, label_fill: canvas::Color, bg: canvas::Color) {
+        use canvas::camera::world_to_screen;
+        use canvas::text::append_label;
+        use canvas::Point;
         if src.is_empty() {
             let (x0, y0, x1, y1) = preview_content_bounds(node);
             let pos = world_to_screen(cam, viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
@@ -4127,20 +4403,20 @@ impl DagHost {
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_preview_content(
         &self,
-        scene: &mut cavas::Scene,
-        cam: &cavas::camera::Camera,
-        viewport: &cavas::camera::Viewport,
+        scene: &mut canvas::Scene,
+        cam: &canvas::camera::Camera,
+        viewport: &canvas::camera::Viewport,
         node: &DagNodeSpec,
         content: &DagPreviewContent,
         expanded: &BTreeSet<String>,
         paint_px: f64,
-        label_fill: cavas::Color,
-        label_halo: cavas::Color,
-        bg: cavas::Color,
+        label_fill: canvas::Color,
+        label_halo: canvas::Color,
+        bg: canvas::Color,
     ) {
-        use cavas::camera::world_to_screen;
-        use cavas::text::append_label;
-        use cavas::Point;
+        use canvas::camera::world_to_screen;
+        use canvas::text::append_label;
+        use canvas::Point;
         match content {
             DagPreviewContent::Empty => {
                 let (x0, y0, x1, y1) = preview_content_bounds(node);
@@ -4179,8 +4455,8 @@ impl DagHost {
         }
     }
 
-    fn paint_io_widget_channel_borders(scene: &mut cavas::Scene, aff: cavas::Affine, node: &DagNodeSpec, px: f64, chrome_stroke: f64, stroke: cavas::Color) {
-        use cavas::{Line, Point, Stroke};
+    fn paint_io_widget_channel_borders(scene: &mut canvas::Scene, aff: canvas::Affine, node: &DagNodeSpec, px: f64, chrome_stroke: f64, stroke: canvas::Color) {
+        use canvas::{Line, Point, Stroke};
         let (name_left, top, name_right, bottom) = io_widget_name_column_bounds(node, px);
         let stroke_style = Stroke::new(chrome_stroke);
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(name_left, top), Point::new(name_left, bottom)));
@@ -4215,7 +4491,7 @@ impl DagHost {
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_node_lod_icon(&self, scene: &mut cavas::Scene, lod: DagDrawLod, center_screen: cavas::Point, node: &DagNodeSpec, zoom: f64, fg: cavas::Color, bg: cavas::Color) {
+    fn paint_node_lod_icon(&self, scene: &mut canvas::Scene, lod: DagDrawLod, center_screen: canvas::Point, node: &DagNodeSpec, zoom: f64, fg: canvas::Color, bg: canvas::Color) {
         if !Self::should_paint_node_lod_icon(node, lod) {
             return;
         }
@@ -4228,10 +4504,10 @@ impl DagHost {
         self.icon_paint_cache.append_icon_at_screen_rect(scene, icon, center_screen, screen_w, screen_h, fg, bg, false);
     }
 
-    fn paint_cluster_affordances(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, paint_px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
-        use cavas::camera::world_to_screen;
-        use cavas::text::append_label;
-        use cavas::Point;
+    fn paint_cluster_affordances(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, paint_px: f64, label_fill: canvas::Color, label_halo: canvas::Color) {
+        use canvas::camera::world_to_screen;
+        use canvas::text::append_label;
+        use canvas::Point;
         let (name_x, name_y) = computation_name_world_center(node, &node.name, paint_px, cam.zoom);
         let glyph_pos = world_to_screen(cam, viewport, Point::new(name_x - paint_px * 0.55, name_y));
         append_label(scene, "🧩️", glyph_pos, paint_px * 0.85, label_fill, label_halo);
@@ -4244,23 +4520,23 @@ impl DagHost {
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_computation_node_name(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
-        use cavas::camera::world_to_screen;
-        use cavas::Point;
+    fn paint_computation_node_name(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: canvas::Color, label_halo: canvas::Color) {
+        use canvas::camera::world_to_screen;
+        use canvas::Point;
         let (label_x, label_y) = computation_name_world_center(node, label, px, cam.zoom);
         let anchor = world_to_screen(cam, viewport, Point::new(label_x, label_y));
         Self::paint_node_name_horizontal(scene, anchor, label, px, label_fill, label_halo);
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_slider_name(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
+    fn paint_slider_name(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: canvas::Color, label_halo: canvas::Color) {
         Self::paint_computation_node_name(scene, cam, viewport, node, label, px, label_fill, label_halo);
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_io_widget_name(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, lod: DagDrawLod, label: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
-        use cavas::camera::world_to_screen;
-        use cavas::Point;
+    fn paint_io_widget_name(scene: &mut canvas::Scene, cam: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, node: &DagNodeSpec, lod: DagDrawLod, label: &str, px: f64, label_fill: canvas::Color, label_halo: canvas::Color) {
+        use canvas::camera::world_to_screen;
+        use canvas::Point;
         if lod.node_label() == DagNodeLabel::None && !lod.shows_controls() {
             return;
         }
@@ -4269,9 +4545,9 @@ impl DagHost {
         Self::paint_node_name_vertical(scene, name_anchor, label, px, label_fill, label_halo);
     }
 
-    fn paint_node_name_horizontal(scene: &mut cavas::Scene, center_screen: cavas::Point, name: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
-        use cavas::text::{append_label, label_extent};
-        use cavas::Point;
+    fn paint_node_name_horizontal(scene: &mut canvas::Scene, center_screen: canvas::Point, name: &str, px: f64, label_fill: canvas::Color, label_halo: canvas::Color) {
+        use canvas::text::{append_label, label_extent};
+        use canvas::Point;
         let trimmed = name.trim();
         if trimmed.is_empty() {
             return;
@@ -4281,8 +4557,8 @@ impl DagHost {
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_computing_border_arc(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, color: cavas::Color, start_t: f64, dashed: bool) {
-        use cavas::{BezPath, Stroke};
+    fn paint_computing_border_arc(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, color: canvas::Color, start_t: f64, dashed: bool) {
+        use canvas::{BezPath, Stroke};
         const SEGMENTS: usize = 40;
         const ARC_FRACTION: f64 = 0.24;
         let mut path = BezPath::new();
@@ -4304,17 +4580,17 @@ impl DagHost {
         scene.stroke(&stroke, *aff, color, None, &path);
     }
 
-    fn paint_computing_active_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
+    fn paint_computing_active_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
         self.paint_computing_border_arc(scene, aff, rect, cam_zoom, theme.node_stroke_selected, self.computing_active_anim_phase.get(), false);
     }
 
-    fn paint_computing_stale_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
+    fn paint_computing_stale_border(&self, scene: &mut canvas::Scene, aff: &canvas::Affine, rect: &canvas::Rect, cam_zoom: f64, theme: &CanvasPalette) {
         let highlight = canvas_color_with_alpha(theme.node_stroke_selected, 220);
         self.paint_computing_border_arc(scene, aff, rect, cam_zoom, highlight, self.computing_stale_anim_phase.get(), true);
     }
 
-    fn rect_perimeter_point(rect: &cavas::Rect, t: f64) -> cavas::Point {
-        use cavas::Point;
+    fn rect_perimeter_point(rect: &canvas::Rect, t: f64) -> canvas::Point {
+        use canvas::Point;
         let t = t.fract();
         let w = rect.width();
         let h = rect.height();
@@ -4336,10 +4612,10 @@ impl DagHost {
     }
 
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
-    fn paint_note_caret_bar(scene: &mut cavas::Scene, aff: &cavas::Affine, node: &DagNodeSpec, caret_byte: usize, text: &str, font_px: f64, fill: cavas::Color, zoom: f64) {
-        use cavas::text::label_byte_world_x;
-        use cavas::FillRule;
-        use cavas::Rect;
+    fn paint_note_caret_bar(scene: &mut canvas::Scene, aff: &canvas::Affine, node: &DagNodeSpec, caret_byte: usize, text: &str, font_px: f64, fill: canvas::Color, zoom: f64) {
+        use canvas::text::label_byte_world_x;
+        use canvas::FillRule;
+        use canvas::Rect;
         let (x0, y0, _x1, y1) = preview_content_bounds(node);
         let origin_x = x0 + DAG_PREVIEW_PAD;
         let caret_x = label_byte_world_x(text, caret_byte.min(text.len()), origin_x, font_px);
@@ -4353,19 +4629,19 @@ impl DagHost {
     #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_node_visual(
         &self,
-        scene: &mut cavas::Scene,
-        aff: &cavas::Affine,
-        cam: &cavas::camera::Camera,
-        viewport: &cavas::camera::Viewport,
+        scene: &mut canvas::Scene,
+        aff: &canvas::Affine,
+        cam: &canvas::camera::Camera,
+        viewport: &canvas::camera::Viewport,
         lod: DagDrawLod,
         lod_index: usize,
         node: &DagNodeSpec,
         chrome: DagNodePaintChrome,
     ) {
-        use cavas::camera::world_to_screen;
-        use cavas::text::append_label;
-        use cavas::FillRule;
-        use cavas::{Point, Rect, Stroke};
+        use canvas::camera::world_to_screen;
+        use canvas::text::append_label;
+        use canvas::FillRule;
+        use canvas::{Point, Rect, Stroke};
 
         let theme = &self.canvas_theme;
         let label_halo = theme.label_halo;
@@ -4573,14 +4849,14 @@ impl DagHost {
         }
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
-        use cavas::camera::{camera_content_affine, Camera as CavasCamera, Viewport};
-        use cavas::FillRule;
-        use cavas::{Circle, Rect, Stroke};
+    pub fn paint_scene(&self, scene: &mut canvas::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
+        use canvas::camera::{camera_content_affine, Camera as CanvasCamera, Viewport};
+        use canvas::FillRule;
+        use canvas::{Circle, Rect, Stroke};
 
         let theme = &self.canvas_theme;
         self.tick_computing_animation();
-        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let cam = CanvasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
         let aff = camera_content_affine(&cam, &viewport);
         let lod = self.draw_lod_for_frame();
@@ -4615,7 +4891,7 @@ impl DagHost {
             scene.stroke(&Stroke::new(edge_stroke), aff, dag_edge_body_stroke(theme, false, true, false, false), None, &preview);
         }
         let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
-        let paint_snap_handle = |scene: &mut cavas::Scene, hid: &HandleId, center: &cavas::Point, shape_filter: Option<PortShape>| {
+        let paint_snap_handle = |scene: &mut canvas::Scene, hid: &HandleId, center: &canvas::Point, shape_filter: Option<PortShape>| {
             if self.handle_port_visible.get(hid) == Some(&false) {
                 return;
             }
@@ -4651,7 +4927,7 @@ impl DagHost {
         for (hid, center, _radius) in &snap.handles {
             paint_snap_handle(scene, hid, center, Some(PortShape::Semicircle));
         }
-        let paint_minimap_node = |scene: &mut cavas::Scene, idx: usize, fixture_node: &DagNodeSpec| {
+        let paint_minimap_node = |scene: &mut canvas::Scene, idx: usize, fixture_node: &DagNodeSpec| {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let node = node.as_ref();
             let hw = node.width * 0.5;
@@ -4685,26 +4961,26 @@ impl DagHost {
                     paint_minimap_node(scene, idx, fixture_node);
                 }
             }
-            return;
-        }
-        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
-            let node = self.node_spec_for_paint(idx, fixture_node);
-            let node = node.as_ref();
-            let engine_nid = self.engine_node_id_for_index(idx);
-            let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
-            let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
-            let is_computing = engine_nid.is_some_and(|nid| self.computing_active == Some(nid));
-            let is_stale = engine_nid.is_some_and(|nid| self.computing_stale.contains(&nid));
-            self.paint_node_visual(
-                scene,
-                &aff,
-                &cam,
-                &viewport,
-                lod,
-                lod_index,
-                node,
-                DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, is_computing, is_stale, body_fill_alpha: 255, ghost_tint: false },
-            );
+        } else {
+            for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
+                let node = self.node_spec_for_paint(idx, fixture_node);
+                let node = node.as_ref();
+                let engine_nid = self.engine_node_id_for_index(idx);
+                let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
+                let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
+                let is_computing = engine_nid.is_some_and(|nid| self.computing_active == Some(nid));
+                let is_stale = engine_nid.is_some_and(|nid| self.computing_stale.contains(&nid));
+                self.paint_node_visual(
+                    scene,
+                    &aff,
+                    &cam,
+                    &viewport,
+                    lod,
+                    lod_index,
+                    node,
+                    DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, is_computing, is_stale, body_fill_alpha: 255, ghost_tint: false },
+                );
+            }
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
             self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, ghost, DagNodePaintChrome::ghost_preview());
@@ -4718,6 +4994,7 @@ impl DagHost {
                 self.paint_node_handles_for_spec(scene, &aff, &cam, ghost, &DagNodePaintChrome::ghost_preview());
             }
         }
+        self.paint_minimap_widget(scene, viewport_w, viewport_h);
     }
 }
 // #endregion 🔖️DagHost
@@ -4734,7 +5011,7 @@ mod wasm_session {
 
     struct DagSessionInner {
         host: DagHost,
-        gpu: cavas::gpu_session::CanvasGpuSession,
+        gpu: canvas::gpu_session::CanvasGpuSession,
         width: u32,
         height: u32,
         dpr: f64,
@@ -4749,7 +5026,7 @@ mod wasm_session {
     impl DagSession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            Self { state: Rc::new(RefCell::new(DagSessionInner { host: DagHost::default_demo(), gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
+            Self { state: Rc::new(RefCell::new(DagSessionInner { host: DagHost::default_demo(), gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
         #[wasm_bindgen(js_name = loadFixtureJson)]
@@ -4783,7 +5060,7 @@ mod wasm_session {
             let pw = ((lw as f64 * dpr).round() as u32).max(1);
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+                let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 g.width = lw;
                 g.height = lh;
@@ -4885,10 +5162,10 @@ mod wasm_session {
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            let mut scene = cavas::Scene::new();
+            let mut scene = canvas::Scene::new();
             let clear = inner.host.canvas_theme.raster_clear;
             inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
-            let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
+            let scene = canvas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
             inner.gpu.render_frame(&scene, clear)
         }
     }
@@ -5135,8 +5412,8 @@ mod tests {
 
     #[test]
     fn idle_pointer_move_updates_hover() {
-        use cavas::camera::{world_to_screen, Camera, Viewport};
-        use cavas::Point;
+        use canvas::camera::{world_to_screen, Camera, Viewport};
+        use canvas::Point;
 
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
@@ -5326,7 +5603,7 @@ mod tests {
         host.set_viewport(800, 600, 1.0);
         let (x0, y0, x1, y1) = slider_track_bounds(&host.fixture.nodes[0]);
         let mid_y = (y0 + y1) * 0.5;
-        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new((x0 + x1) * 0.5, mid_y));
+        let (sx, sy) = world_to_screen_px(&host, canvas::Point::new((x0 + x1) * 0.5, mid_y));
         host.pointer_down(sx, sy, false);
         host.pointer_up(sx, sy);
         let DagNodeKind::Slider { value, .. } = host.fixture.nodes[0].kind else {
@@ -5360,7 +5637,7 @@ mod tests {
         host.set_viewport(800, 600, 1.0);
         let (x0, y0, x1, y1) = slider_track_bounds(&host.fixture.nodes[0]);
         let mid_y = (y0 + y1) * 0.5;
-        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new((x0 + x1) * 0.5, mid_y));
+        let (sx, sy) = world_to_screen_px(&host, canvas::Point::new((x0 + x1) * 0.5, mid_y));
         host.pointer_down(sx, sy, false);
         host.pointer_up(sx, sy);
         let DagNodeKind::Slider { value, .. } = host.fixture.nodes[0].kind else {
@@ -5390,7 +5667,7 @@ mod tests {
         });
         host.set_viewport(800, 600, 1.0);
         let (x0, y0, x1, y1) = select_control_bounds(&host.fixture.nodes[0]);
-        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
+        let (sx, sy) = world_to_screen_px(&host, canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
         host.pointer_down(sx, sy, false);
         let DagNodeKind::Select { selected, .. } = host.fixture.nodes[0].kind else {
             panic!("expected select");
@@ -5577,12 +5854,12 @@ mod tests {
         assert!(overlays[0]["rect"]["w"].as_f64().unwrap_or(0.0) > 10.0);
     }
 
-    fn handle_world(host: &DagHost, port_key: &str) -> cavas::Point {
+    fn handle_world(host: &DagHost, port_key: &str) -> canvas::Point {
         let hid = host.handle_key_map.iter().find(|(_, key)| key.as_str() == port_key).map(|(id, _)| *id).expect("handle");
         host.engine.render_snapshot().handles.iter().find(|(id, _, _)| *id == hid).map(|(_, p, _)| *p).expect("handle pos")
     }
 
-    fn world_to_screen_px(host: &DagHost, p: cavas::Point) -> (f64, f64) {
+    fn world_to_screen_px(host: &DagHost, p: canvas::Point) -> (f64, f64) {
         (p.x + host.width as f64 * 0.5, p.y + host.height as f64 * 0.5)
     }
 
@@ -5711,9 +5988,9 @@ mod tests {
         host.set_selection(&["scale".into(), "combine".into()]);
         let scale_before = host.fixture.nodes.iter().find(|n| n.id == "scale").expect("scale").clone();
         let combine_before = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
-        let gap = cavas::Point::new(0.0, 0.0);
-        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        let cam = CavasCamera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+        let gap = canvas::Point::new(0.0, 0.0);
+        use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
+        let cam = CanvasCamera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let start = world_to_screen(&cam, &viewport, gap);
         host.pointer_down_screen(start.x, start.y, 0, false, false, false, false);
@@ -5735,7 +6012,7 @@ mod tests {
         host.set_viewport(1280, 800, 1.0);
         let mut dragged = false;
         for (nid, node) in host.engine.nodes.clone() {
-            let grab = cavas::Point::new(node.center.x - node.width * 0.4, node.center.y);
+            let grab = canvas::Point::new(node.center.x - node.width * 0.4, node.center.y);
             let (sx, sy) = world_to_screen_px(&host, grab);
             host.pointer_down(sx, sy, false);
             if !matches!(host.engine.interaction, InteractionMode::DragNode { node_id, .. } if node_id == nid) {
@@ -5769,7 +6046,7 @@ mod tests {
         host.set_grid_factor(10.0).expect("grid factor");
         let mut dragged = false;
         for (nid, node) in host.engine.nodes.clone() {
-            let grab = cavas::Point::new(node.center.x - node.width * 0.4, node.center.y);
+            let grab = canvas::Point::new(node.center.x - node.width * 0.4, node.center.y);
             let (sx, sy) = world_to_screen_px(&host, grab);
             host.pointer_down(sx, sy, false);
             if !matches!(host.engine.interaction, InteractionMode::DragNode { node_id, .. } if node_id == nid) {
@@ -5837,7 +6114,7 @@ mod tests {
         host.set_proximity_distance(120.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
-        let src_center = cavas::Point::new(0.0, 0.0);
+        let src_center = canvas::Point::new(0.0, 0.0);
         let (sx, sy) = world_to_screen_px(&host, src_center);
         host.pointer_down_screen(sx, sy, 0, false, false, false, false);
         host.pointer_move_screen(sx + 200.0, sy, false, false, false);
@@ -5869,7 +6146,7 @@ mod tests {
         host.set_proximity_distance(160.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
-        let cut_center = cavas::Point::new(240.0, 0.0);
+        let cut_center = canvas::Point::new(240.0, 0.0);
         let (sx, sy) = world_to_screen_px(&host, cut_center);
         host.pointer_down_screen(sx, sy, 0, false, false, false, false);
         host.pointer_move_screen(sx - 180.0, sy, false, false, false);
@@ -5955,7 +6232,7 @@ mod tests {
         host.set_proximity_distance(0.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
-        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new(0.0, 0.0));
+        let (sx, sy) = world_to_screen_px(&host, canvas::Point::new(0.0, 0.0));
         host.pointer_down_screen(sx, sy, 0, false, false, false, false);
         host.pointer_move_screen(sx + 200.0, sy, false, false, false);
         assert!(host.engine.render_snapshot().pending_edge.is_none());
@@ -5971,7 +6248,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine");
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
-        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "combine@b");
         for lod in ["minimap", "overview", "compact"] {
             host.set_forced_draw_lod_label(lod);
@@ -5996,7 +6273,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine");
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
-        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "combine@b");
         assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
         let (sx, sy) = world_to_screen_px(&host, row_center);
@@ -6038,7 +6315,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_move_screen(sx, sy, false, false, false);
         assert_eq!(host.hovered_channel(), Some(DagChannelRef { widget_id: "combine".into(), port: "b".into(), direction: "in".into() }));
@@ -6053,7 +6330,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_move_screen(sx, sy, false, false, false);
         assert!(host.hovered_node_id().as_deref() == Some("combine"));
@@ -6061,7 +6338,7 @@ mod tests {
         assert!(!host.engine.selection.node_ids.contains(&host.node_id_for_widget_id("combine").expect("combine node id")));
         let divider_x = computation_column_divider_x(&combine).expect("divider");
         let (_, header_top, _, header_bottom) = channel_row_bounds(&combine, 0);
-        let title_probe = cavas::Point::new(divider_x, (header_top + header_bottom) * 0.5);
+        let title_probe = canvas::Point::new(divider_x, (header_top + header_bottom) * 0.5);
         let (body_sx, body_sy) = world_to_screen_px(&host, title_probe);
         host.pointer_move_screen(body_sx, body_sy, false, false, false);
         assert!(host.hovered_node_id().as_deref() == Some("combine"));
@@ -6080,7 +6357,7 @@ mod tests {
         let scale = host.fixture.nodes.iter().find(|n| n.id == "scale").expect("scale");
         let port_idx = scale.outputs().iter().position(|p| p.id == "out").expect("port out");
         let (x0, y0, x1, y1) = output_port_row_hit_bounds(scale, port_idx).expect("row bounds");
-        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "scale@out");
         assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
         let (sx, sy) = world_to_screen_px(&host, row_center);
@@ -6100,7 +6377,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "combine@b");
         assert!((row_center.x - handle.x).abs() > 4.0);
         let (sx, sy) = world_to_screen_px(&host, row_center);
@@ -6118,7 +6395,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "a").expect("port a");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let title_probe = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let title_probe = canvas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let (sx, sy) = world_to_screen_px(&host, title_probe);
         host.pointer_down(sx, sy, false);
         assert!(matches!(host.engine.interaction, InteractionMode::DragNode { .. }));
@@ -6252,7 +6529,7 @@ mod tests {
         let top = node.y - height * 0.5;
         assert!(label_y < top);
         let world_offset = top - label_y;
-        let (_, label_h) = cavas::text::label_extent("Box", paint_px);
+        let (_, label_h) = canvas::text::label_extent("Box", paint_px);
         let screen_offset = world_offset * 1.0;
         assert!((screen_offset - (DAG_LABEL_SCREEN_PX * ui_styling::metrics::label::DAG_LABEL_GAP_COMPACT_RATIO + label_h * 0.5)).abs() < 1e-6);
     }
@@ -6396,7 +6673,7 @@ mod tests {
 
     #[test]
     fn io_node_rect_port_angles_on_edges() {
-        use cavas::Point;
+        use canvas::Point;
         use graph::handle_position_on_rectangle;
         let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into(), ..Default::default() }, IoPortSpec { id: "b".into(), label: "b".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
@@ -6415,7 +6692,7 @@ mod tests {
 
     #[test]
     fn computation_port_handle_caps_bulge_outward() {
-        use cavas::Point;
+        use canvas::Point;
         use graph::{handle_exterior_cap_fill_path, handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
         let inputs = vec![IoPortSpec { id: "0".into(), label: "0".into(), ..Default::default() }, IoPortSpec { id: "1".into(), label: "1".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "dictionary".into(), ..Default::default() }];
@@ -6495,6 +6772,43 @@ mod tests {
     }
 
     #[test]
+    fn minimap_widget_label_overlay_includes_rect_when_visible() {
+        let mut host = DagHost::default_demo();
+        host.set_minimap_widget_visible(true);
+        host.set_viewport(1280, 800, 1.0);
+        host.set_camera(500.0, 400.0, 3.0);
+        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let minimap = raw.get("minimapWidget").and_then(|v| v.as_object()).expect("minimap widget json");
+        assert!(minimap.get("width").and_then(|v| v.as_f64()).unwrap_or(0.0) > 0.0);
+    }
+
+    #[test]
+    fn minimap_widget_click_repositions_camera() {
+        let mut host = DagHost::default_demo();
+        host.set_minimap_widget_visible(true);
+        host.set_viewport(1280, 800, 1.0);
+        host.set_camera(500.0, 400.0, 3.0);
+        let raw: serde_json::Value = serde_json::from_str(&host.label_overlay_paint_state_json().unwrap()).unwrap();
+        let minimap = raw.get("minimapWidget").expect("minimap");
+        let x = minimap["x"].as_f64().unwrap() + minimap["width"].as_f64().unwrap() * 0.5;
+        let y = minimap["y"].as_f64().unwrap() + minimap["height"].as_f64().unwrap() * 0.5;
+        let before_x = host.fixture.camera.x;
+        host.pointer_down_screen(x, y, 0, false, false, false, false);
+        host.pointer_up_screen(x, y, false, false, false);
+        assert!((host.fixture.camera.x - before_x).abs() > 1.0);
+    }
+
+    #[test]
+    fn minimap_widget_paints_without_panic() {
+        let mut host = DagHost::default_demo();
+        host.set_minimap_widget_visible(true);
+        host.set_viewport(1280, 800, 1.0);
+        host.set_camera(120.0, 80.0, 0.75);
+        let mut scene = canvas::Scene::new();
+        host.paint_scene(&mut scene, 1280, 800, 1.0);
+    }
+
+    #[test]
     fn dag_handle_world_radius_is_zoom_invariant() {
         assert_eq!(DAG_HANDLE_WORLD_RADIUS, 5.0);
     }
@@ -6517,21 +6831,21 @@ mod tests {
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("compact");
         host.fixture.camera.zoom = 0.25;
-        let mut scene = cavas::Scene::new();
+        let mut scene = canvas::Scene::new();
         host.paint_scene(&mut scene, 1280, 800, 1.0);
         assert!(scene.path_count() > 12, "compact LOD at low zoom should still paint abbreviation labels");
     }
 
     #[test]
     fn dag_label_colors_use_theme_label_fields() {
-        use cavas::Color;
+        use canvas::Color;
         let theme = CanvasPalette { label_fill: Color::from_rgba8(240, 241, 245, 255), label_halo: Color::from_rgba8(10, 12, 16, 180), node_stroke: Color::from_rgba8(90, 100, 110, 255), ..CanvasPalette::default() };
         assert_ne!(theme.label_fill.to_rgba8(), theme.node_stroke.to_rgba8());
     }
 
     #[test]
     fn dag_node_paint_fill_matches_puzzle2d_lod_chrome() {
-        use cavas::Color;
+        use canvas::Color;
         let theme = CanvasPalette {
             node_fill: Color::from_rgba8(10, 20, 30, 255),
             node_stroke: Color::from_rgba8(200, 210, 220, 255),
@@ -6570,7 +6884,7 @@ mod tests {
 
     #[test]
     fn dag_handle_and_edge_stroke_use_theme_defaults() {
-        use cavas::Color;
+        use canvas::Color;
         let theme = CanvasPalette {
             edge_stroke: Color::from_rgba8(100, 110, 120, 255),
             edge_stroke_hovered: Color::from_rgba8(10, 20, 30, 255),
@@ -6834,9 +7148,9 @@ mod tests {
         let (x0, y0, x1, y1) = row.row_rect;
         let world_x = x0 + (x1 - x0) * 0.75;
         let world_y = (y0 + y1) * 0.5;
-        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::Point;
-        let cam = CavasCamera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
+        use canvas::camera::{world_to_screen, Camera as CanvasCamera, Viewport};
+        use canvas::Point;
+        let cam = CanvasCamera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let screen = world_to_screen(&cam, &viewport, Point::new(world_x, world_y));
         host.pointer_down(screen.x, screen.y, false);
@@ -6852,7 +7166,7 @@ mod tests {
     fn dag_paint_scene_smoke_at_overview_and_micro_zoom() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
-        let mut scene = cavas::Scene::new();
+        let mut scene = canvas::Scene::new();
         host.fixture.camera.zoom = 0.3;
         host.paint_scene(&mut scene, 1280, 800, 1.0);
         host.fixture.camera.zoom = 5.0;

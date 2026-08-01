@@ -411,7 +411,7 @@ warning: `semio-framework-core` (lib) generated 3 warnings
    Compiling hypher v0.1.7
    Compiling typst-realize v0.14.2
    Compiling typst-html v0.14.2
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling errno v0.3.14
    Compiling generic-array v0.14.7
    Compiling vcpkg v0.2.15
@@ -449,14 +449,14 @@ warning: `semio-framework-core` (lib) generated 3 warnings
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification

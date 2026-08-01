@@ -1909,10 +1909,31 @@ export type PluginUiRefreshResponse = {
 //#region 🖱️ContextMenu
 /** @emoji 🖱️ Scene-target info for an on-demand context-menu request — hit-test results from the
  * surface's own picking (hover/selection), not cached across clicks. */
+export type ContextMenuHit = {
+  readonly domain: string;
+  readonly id: string;
+  readonly label?: string;
+};
+
+export type ContextMenuSelectionGroup = {
+  readonly domain: string;
+  readonly ids: readonly string[];
+};
+
+export type ContextMenuTextContext = {
+  readonly caret: number;
+  readonly hasSelection: boolean;
+  readonly word?: string;
+  readonly canRename: boolean;
+  readonly hasCompletions: boolean;
+};
+
 export type PluginContextMenuSurfaceTarget = {
   readonly surfaceId: string;
   readonly kind: string;
-  readonly targetJson?: string;
+  readonly hits?: readonly ContextMenuHit[];
+  readonly selection?: readonly ContextMenuSelectionGroup[];
+  readonly text?: ContextMenuTextContext;
 };
 
 export type PluginContextMenuPoint = { readonly x: number; readonly y: number };

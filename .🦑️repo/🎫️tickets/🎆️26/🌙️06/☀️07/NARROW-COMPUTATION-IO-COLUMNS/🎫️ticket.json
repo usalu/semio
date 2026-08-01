@@ -3,7 +3,7 @@
   "emoji": "📐️",
   "status": "closed",
   "description": "Left and right IO columns on computation nodes are still too wide; tighten to fit port label text.",
-  "summary": "Widened IO columns: clamp range 32–44px (was 20–28), port label metrics aligned with cavas glyph sizing (0.62/0.35). brep.box ~113px total. All 34 DAG tests pass.",
+  "summary": "Widened IO columns: clamp range 32–44px (was 20–28), port label metrics aligned with canvas glyph sizing (0.62/0.35). brep.box ~113px total. All 34 DAG tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1564"
   },

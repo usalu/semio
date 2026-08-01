@@ -22,4 +22,4 @@ inlineMods(join(root, "mathematical/graph/lib.rs"), ["geometry", "scene_json"]);
 inlineMods(join(root, "mathematical/graph/port/directed/lib.rs"), ["scene_json", "types"]);
 inlineMods(join(root, "mathematical/graph/port/directed/normal/lib.rs"), ["board_host"]);
 inlineMods(join(root, "mathematical/graph/normal/undirected/lib.rs"), ["fixture_layout"]);
-inlineMods(join(root, "infinite/cavas/vello/lib.rs"), ["icon_codec", "theme"]);
+inlineMods(join(root, "infinite/canvas/vello/lib.rs"), ["icon_codec", "theme"]);

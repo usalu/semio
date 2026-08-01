@@ -1,10 +1,10 @@
 
-> nx run @semio-tech/infinite-cavas-react-renderer:test-quick
+> nx run @semio-tech/infinite-canvas-react-renderer:test-quick
 
 > bun ./script.ts test quick
 
 
- RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/cavas/react-renderer
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/canvas/react-renderer
 
 
  Test Files  2 passed (2)
@@ -15,6 +15,6 @@
 
 
 
- NX   Successfully ran target test-quick for project @semio-tech/infinite-cavas-react-renderer
+ NX   Successfully ran target test-quick for project @semio-tech/infinite-canvas-react-renderer
 
 

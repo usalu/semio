@@ -1,0 +1,20 @@
+{
+  "title": "Get Shooting Working End to End After Documentapp Configview",
+  "emoji": "📸️",
+  "status": "closed",
+  "description": "Shooting UI fails to compile after DocumentApp ConfigView &self migration: apply_config_bytes wants &self; runtime mutations need RefCell interior mutability (same pattern as procedural 3d).",
+  "goal": "🎯️r2602",
+  "summary": "Fixed shooting end-to-end after DocumentApp ConfigView migration. (1) Wrapped ShootingPlayApp runtime/config in RefCell so &self DocumentApp methods can mutate ephemeral state; fixed typed-channel tests for ConfigView. (2) Synced TS AppChannel codec to Rust CHANNEL_VERSION=3: ConfigCommand/LoadConfig/ReadConfig command tags, Config/ConfigChanged frame tags, shifted ContextMenu/Media/Error tags, updated goldens. (3) handle_typed_command now returns None for non-op-binary frames so legacy {kind,name,args} envelopes (setActiveExample, registerBrushMesh) fall through instead of failing as unsupported op format. Verified: cargo test -p semio-s-app-shooting-ui --lib 28 passed; wasm plugin builds; Playwright against http://127.0.0.1:6019 shows Scene+Icon chrome, 1 canvas, /mesh/🧊️base.glb as glTF, zero console/page errors.",
+  "sessions": [],
+  "files": {
+    "updated": [
+      "✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs",
+      "🧰️framework/🛍️product/💻️os/⚡️implementation/🟦️typescript/📦️index.ts"
+    ],
+    "created": [
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/GET-SHOOTING-WORKING-END-TO-END-AFTER-DOCUMENTAPP-CONFIGVIEW/verify-shooting-e2e.mjs",
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/GET-SHOOTING-WORKING-END-TO-END-AFTER-DOCUMENTAPP-CONFIGVIEW/shooting-viewport.png",
+      ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/GET-SHOOTING-WORKING-END-TO-END-AFTER-DOCUMENTAPP-CONFIGVIEW/verify-result.json"
+    ]
+  }
+}

@@ -82,8 +82,8 @@ const controllerItems: ContextMenuItem[] = [
 ];
 
 const numberedPreviewItems: ContextMenuItem[] = [
-  { id: "suggestion-0", label: "Capsule · port", icon: "box", shortcut: "1", checked: true },
-  { id: "suggestion-1", label: "Box · port", icon: "box", shortcut: "2", checked: false },
+  { id: "suggestion-0", label: "Capsule · port", icon: "box", checked: true },
+  { id: "suggestion-1", label: "Box · port", icon: "box", checked: false },
   { id: "sep", label: "", separator: true },
   { id: "delete", label: "Delete", destructive: true, shortcut: "⌫️" },
 ];
@@ -128,7 +128,7 @@ const NumberedPreviewContextMenuDemo = () => {
   const items = numberedPreviewItems.map((item) => ({
     ...item,
     checked: item.id === checkedId ? true : item.checked === undefined ? undefined : false,
-    onHover: item.shortcut === "1" || item.shortcut === "2" ? () => setCheckedId(item.id) : undefined,
+    onHover: item.id.startsWith("suggestion-") ? () => setCheckedId(item.id) : undefined,
     onSelect: item.id.startsWith("suggestion-") ? () => setOpen(false) : undefined,
   }));
   return (

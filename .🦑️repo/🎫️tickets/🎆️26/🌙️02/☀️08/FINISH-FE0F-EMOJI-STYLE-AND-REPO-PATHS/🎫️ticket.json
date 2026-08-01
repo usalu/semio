@@ -1,9 +1,9 @@
 {
   "title": "Finish Fe0f Emoji Style And Repo Paths",
   "emoji": "📋️",
-  "status": "open",
+  "status": "closed",
   "description": "The emoji system is not consistent. Use plain emojis everywhere. Add a statute to code policy and autofix it by replacing the unicode string with actual plain emojis. Strip things like variation selector (e.g. VS15 / text presentation). Fix the codebase.",
-  "summary": "Switched all emojis from text style (U+FE0E) to emoji style (U+FE0F) end-to-end: renamed 10859 filesystem entries, restyled 7349 text files including .gitignore/launch/mcp/package.json, merged leftover FE0E meta remnants into .🦑️repo, removed text-style script symlinks. Verified 0 FE0E basenames and bun ./📜️script.ts runs.",
+  "summary": "Fixed leftover text-style (U+FE0E) emojis and stale .repo paths. Root cause: emojiText stripped VS16 and recreated bare .🦑repo. Now emojiText keeps/ensures U+FE0F; rebuilt client; converted 70 FE0E cache dirs; aligned bare cache folder names; verified only .🦑️repo remains and FE0E scans are clean.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/444"
   },

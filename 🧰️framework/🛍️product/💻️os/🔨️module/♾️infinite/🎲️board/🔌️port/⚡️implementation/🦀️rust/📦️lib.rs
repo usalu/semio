@@ -37,7 +37,7 @@ pub struct HandleDescJson {
 // #endregion 🔖️HandleDescJson
 
 // #region 🔖️HandleKinds
-use cavas::Color;
+use canvas::Color;
 
 #[derive(Clone, Debug)]
 pub struct HandleKindDef {

@@ -1770,9 +1770,9 @@ fn create_architect_app() -> App {
         App::builder(ARCHITECT_APP_ID, "Architect")
             .document(["semio", "architect"])
             .icon_id("architect")
-            .mode("edit", "Edit")
-            .mode("review", "Review")
-            .mode("report", "Report")
+            .mode("edit", "Edit", "square-pen")
+            .mode("review", "Review", "search-check")
+            .mode("report", "Report", "file-chart-column")
             .default_mode_id("edit")
             .window_kind(ARCHITECT_WINDOW_ADJACENCY, "Adjacency", ARCHITECT_BODY_ADJACENCY, SurfaceKind::Canvas2d, "grid-3x3")
             .window_kind(ARCHITECT_WINDOW_GRAPH, "Graph", ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph, "architect-graph")
@@ -1802,7 +1802,7 @@ fn create_architect_app() -> App {
             .view_action("setSelection", "Set Selection")
             .shell_action("exportProgram", "Export Program")
             .shell_action("exportRegistersCsv", "Export Registers CSV")
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setAdjacencyFilter", "Set Adjacency Filter", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setAdjacencyFilter", "Set Adjacency Filter", ActionKind::View) })
             .action_args("selectRegister", vec![ActionArgDef::select("registerId", "Register", REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, *register)).collect())])
             .action_args(
                 "addRegisterItem",
@@ -1840,8 +1840,8 @@ fn create_architect_app() -> App {
                 Some(&["Adjacency".into(), "Graph".into(), "Register".into(), "Report".into()]),
             )),
     )
-    .example("sample", "Sample Clinic", serde_json::to_string(&sample_plugin()).expect("sample_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"))
-    .example("empty", "Empty Program", serde_json::to_string(&empty_plugin()).expect("empty_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"))
+    .example("sample", "Sample Clinic", serde_json::to_string(&sample_plugin()).expect("sample_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "flask-conical")
+    .example("empty", "Empty Program", serde_json::to_string(&empty_plugin()).expect("empty_plugin is a static hand-built fixture with no non-finite floats or non-UTF8 keys"), "file")
     .workflow("architect", "Architect", "data")
 }
 

@@ -111,6 +111,6 @@ Build + typecheck affected packages via launch.json/nx targets; run existing tes
 
 ## Notes
 
-- Infinite (`infinite/world/r3f`, `infinite/cavas`) is a library, not a product - no layout; its consumers (already listed) own the panels.
+- Infinite (`infinite/world/r3f`, `infinite/canvas`) is a library, not a product - no layout; its consumers (already listed) own the panels.
 - "Catalogue" consolidates prior Kinds/Catalog/Extensions into one tab (multiple sections allowed).
 - No legacy/compat shims; rename in place and fix all fixtures/hosts at once.

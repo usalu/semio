@@ -3,7 +3,7 @@
   "emoji": "🗺️",
   "status": "closed",
   "description": "Extend GIS map with MapLibre demotiles MVT vector rendering (fully styled paths and place labels), dev /vt proxy, and Image/Vector/Combined chooser via window engagement options.",
-  "summary": "Added mapLibreVectorTileProxyVitePlugin for /vt/{z}/{x}/{y}.pbf (demotiles cache). infinite_cavas text module with MapLabelSans and append_label. gis_map vector_tiles MVT decode (prost), MapTileMode, vector tile store/render/labels, wasm uploadVectorTile/setRenderMode/visibleVectorTilesJson. MapCanvas/MapRenderer mode-driven raster+vector fetch. MapPlayController engagement options (Image/Vector/Combined) + snapshot store; MapPlayPaneSurfaceHost passes renderMode. Tests: cargo gis_map (11+1 ignored fixture), vitest react/play. Verified /vt proxy 200 on dev port 6040.",
+  "summary": "Added mapLibreVectorTileProxyVitePlugin for /vt/{z}/{x}/{y}.pbf (demotiles cache). infinite_canvas text module with MapLabelSans and append_label. gis_map vector_tiles MVT decode (prost), MapTileMode, vector tile store/render/labels, wasm uploadVectorTile/setRenderMode/visibleVectorTilesJson. MapCanvas/MapRenderer mode-driven raster+vector fetch. MapPlayController engagement options (Image/Vector/Combined) + snapshot store; MapPlayPaneSurfaceHost passes renderMode. Tests: cargo gis_map (11+1 ignored fixture), vitest react/play. Verified /vt proxy 200 on dev port 6040.",
   "goal": "🎯️R26-03",
   "sessions": []
 }

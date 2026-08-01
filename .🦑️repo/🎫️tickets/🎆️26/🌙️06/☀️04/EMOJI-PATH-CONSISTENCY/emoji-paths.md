@@ -12,7 +12,7 @@ Human-facing labels (launch.json, Storybook sidebar, docs headings) use **concat
 | `puzzle/2d`                          | 🧩️puzzle🩻️2d           |
 | `puzzle/3d`                          | 🧩️puzzle🏙️3d           |
 | `puzzle/5d`                          | 🧩️puzzle👯️5d           |
-| `infinite/cavas`                     | ♾️infinite✈️cavas      |
+| `infinite/canvas`                     | ♾️infinite✈️canvas      |
 | `infinite/world`                     | ♾️infinite🏙️world      |
 | `mathematical/graph`                 | 🧮️mathematical⭕️graphs |
 | `framework/`                         | 🥅️framework            |

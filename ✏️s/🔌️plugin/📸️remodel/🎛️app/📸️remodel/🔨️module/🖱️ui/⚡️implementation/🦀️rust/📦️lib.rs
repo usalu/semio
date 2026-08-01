@@ -1496,9 +1496,9 @@ pub fn create_remodel_app() -> App {
                 import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
             .icon_id("remodel-app")
-            .mode("capture", "Capture")
-            .mode("model", "Model")
-            .mode("analyze", "Analyze")
+            .mode("capture", "Capture", "camera")
+            .mode("model", "Model", "box")
+            .mode("analyze", "Analyze", "microscope")
             .default_mode_id("model")
             .window_kind(REMODEL_PLAY_WINDOW_MAIN, "Model", REMODEL_PLAY_BODY_MAIN, SurfaceKind::World3d, "remodel-model")
             .window_kind(REMODEL_PLAY_WINDOW_FRAMES, "Frames", REMODEL_PLAY_BODY_FRAMES, SurfaceKind::Canvas2d, "layout-grid")
@@ -1550,14 +1550,14 @@ pub fn create_remodel_app() -> App {
                 ],
             )
             .default_value("extracting-features")])
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("advanceReconstruction", "Advance Reconstruction", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("advanceReconstruction", "Advance Reconstruction", ActionKind::Operation) })
             // 📥️ Ingestion.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("importFrames", "Import Frames", ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importFramePayload", "Import Frame Payload", ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("importVideo", "Import Video", ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importVideoFramePayload", "Import Video Frame Payload", ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importVideoDone", "Import Video Done", ActionKind::Operation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importVideoBytesPayload", "Import Video Bytes Payload", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importFrames", "Import Frames", ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importFramePayload", "Import Frame Payload", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importVideo", "Import Video", ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoFramePayload", "Import Video Frame Payload", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoDone", "Import Video Done", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoBytesPayload", "Import Video Bytes Payload", ActionKind::Operation) })
             .operation("addStream", "Add Stream")
             .action_args("addStream", vec![
                 ActionArgDef::text("name", "Name").default_value("Stream"),
@@ -1685,13 +1685,13 @@ pub fn create_remodel_app() -> App {
             .operation("clearGeoProducts", "Clear Geo Products")
             .operation("clearResult", "Clear Result")
             // 👁️ View-only runtime actions.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSelection", "Set Selection", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setCamera", "Set Camera", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setLayerVisibility", "Set Layer Visibility", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFrameCursor", "Set Frame Cursor", ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setReportTable", "Set Report Table", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSelection", "Set Selection", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setCamera", "Set Camera", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setLayerVisibility", "Set Layer Visibility", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFrameCursor", "Set Frame Cursor", ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setReportTable", "Set Report Table", ActionKind::View) })
             // 📤️ Export.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("exportQcReport", "Export QC Report", ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("exportQcReport", "Export QC Report", ActionKind::Shell) })
             // 🧰️ Utility groups — an exclusive per-window set (active utility is host-owned).
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer-2") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", "Sculpt", "paintbrush") })
@@ -1700,7 +1700,7 @@ pub fn create_remodel_app() -> App {
             .window_kind_utilities(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "measure".into(), "sculpt".into()])
             .window_kind_utilities(REMODEL_PLAY_WINDOW_FRAMES, vec!["select".into(), "gcpPlace".into()]),
     )
-    .example("default", "Default", &default_example)
+    .example("default", "Default", &default_example, "file")
     .workflow("remodel", "Remodel", "mesh")
 }
 //#endregion 🔖️Manifest

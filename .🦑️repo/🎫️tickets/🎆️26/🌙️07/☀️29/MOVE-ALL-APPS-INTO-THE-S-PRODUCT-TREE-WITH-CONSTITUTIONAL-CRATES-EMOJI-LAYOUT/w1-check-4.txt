@@ -1135,7 +1135,7 @@ warning: `semio-s-kernel-db-cli` (lib) generated 1 warning
     Checking norm_vdi_3805 v0.1.0 (/Users/ueli/Documents/semio/norm/vdi/3805/rs)
     Checking process_3d v0.1.0 (/Users/ueli/Documents/semio/process/3d/rs)
     Checking remodel_document v0.1.0 (/Users/ueli/Documents/semio/remodel/rs)
-layout/rs/lib.rs:595:33: error: couldn't read `layout/rs/../../infinite/cavas/rs/asset/MapLabelSans.ttf`: No such file or directory (os error 2)
+layout/rs/lib.rs:595:33: error: couldn't read `layout/rs/../../infinite/canvas/rs/asset/MapLabelSans.ttf`: No such file or directory (os error 2)
 layout/rs/lib.rs:849:63: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
 layout/rs/lib.rs:856:73: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
     Checking shooting v0.1.0 (/Users/ueli/Documents/semio/shooting/rs)

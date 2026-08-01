@@ -1,9 +1,9 @@
 //! 🗺️ GIS map on the infinite canvas: Web Mercator tiles, positions, routes, regions.
 
-pub use infinite_cavas::{self as cavas, *};
+pub use infinite_canvas::{self as canvas, *};
 pub use std::sync::Arc;
 
-use cavas::lod::{Lod, LodScale};
+use canvas::lod::{Lod, LodScale};
 
 // #region 🔖️MapPalette
 fn map_color(rgba: [f32; 4]) -> Color {
@@ -100,7 +100,7 @@ pub fn gis_map_lod_scale_json() -> String {
     serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
 }
 
-fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
     let cy = viewport.height as f64 * 0.5;
     let left = map_viewport::screen_to_world(camera, viewport, Point::new(0.0, cy));
     let right = map_viewport::screen_to_world(camera, viewport, Point::new(viewport.width as f64, cy));
@@ -145,12 +145,12 @@ pub fn representative_viewport_span_for_lod(lod_idx: usize) -> f64 {
     }
 }
 
-fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     let idx = resolve_map_lod_index_from_span(viewport_lon_span_degrees(camera, viewport));
     &GIS_MAP_LODS[idx]
 }
 
-fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
     let span = viewport_lon_span_degrees(camera, viewport).max(1e-6);
     let w = viewport.width.max(1) as f64;
     let z = ((360.0 / span) * (w / 256.0)).log2();
@@ -163,7 +163,7 @@ fn forced_lod_tile_z(id: &str) -> Option<u32> {
 }
 
 /// @emoji 🧷️ Pinned LOD is a minimum tile-detail floor; world/continent automatic bands use fixed coarse tile z.
-fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     let ideal = ideal_tile_z_for_viewport(camera, viewport);
     let span = viewport_lon_span_degrees(camera, viewport);
     let lod_idx = resolve_map_lod_index_from_span(span);
@@ -181,7 +181,7 @@ fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::
     ideal.min(vector_tiles::max_tile_z_for_span(span))
 }
 
-fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     if let Some(id) = forced_lod_id {
         if let Some(idx) = GIS_MAP_LOD_SCALE.index_of(id) {
             return &GIS_MAP_LODS[idx];
@@ -196,10 +196,10 @@ pub const MAP_CAMERA_ZOOM_MIN: f64 = 8.0;
 pub const MAP_CAMERA_ZOOM_MAX: f64 = 100_000_000.0;
 
 pub fn gis_map_camera_limits_json() -> String {
-    gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+    gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
 }
 
-pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
     serde_json::json!({
         "min": projection::cover_zoom_for_viewport(viewport).max(MAP_CAMERA_ZOOM_MIN),
         "max": MAP_CAMERA_ZOOM_MAX,
@@ -211,12 +211,12 @@ fn clamp_map_zoom(zoom: f64) -> f64 {
     zoom.clamp(MAP_CAMERA_ZOOM_MIN, MAP_CAMERA_ZOOM_MAX)
 }
 
-fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
     zoom.max(projection::cover_zoom_for_viewport(viewport)).min(MAP_CAMERA_ZOOM_MAX)
 }
 
 /// @emoji 🧷️ Keeps the viewport filled by the world map with no empty margins or outscroll.
-fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
     camera.zoom = clamp_map_zoom_for_viewport(camera.zoom, viewport);
     let half_w = viewport.width as f64 / (2.0 * camera.zoom);
     let half_h = viewport.height as f64 / (2.0 * camera.zoom);
@@ -228,19 +228,19 @@ fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &c
 
 mod map_viewport {
     use super::Point;
-    use crate::cavas::camera::{screen_to_world as cavas_screen_to_world, world_to_screen as cavas_world_to_screen, Camera, Viewport};
+    use crate::canvas::camera::{screen_to_world as canvas_screen_to_world, world_to_screen as canvas_world_to_screen, Camera, Viewport};
 
     pub fn world_to_screen(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
-        cavas_world_to_screen(camera, viewport, Point::new(p.x, -p.y))
+        canvas_world_to_screen(camera, viewport, Point::new(p.x, -p.y))
     }
 
     pub fn screen_to_world(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
-        let w = cavas_screen_to_world(camera, viewport, p);
+        let w = canvas_screen_to_world(camera, viewport, p);
         Point::new(w.x, -w.y)
     }
 }
 
-fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     let zoom_factor = if delta_y < 0.0 {
         1.12
     } else if delta_y > 0.0 {
@@ -287,15 +287,15 @@ pub mod projection {
     pub const WORLD_VISIBLE_SPAN: f64 = WORLD_HALF * 2.0;
 
     /// @emoji 📐️ Minimum zoom so every viewport pixel maps inside the world (cover, no outscroll).
-    pub fn cover_zoom_for_viewport(viewport: &crate::cavas::camera::Viewport) -> f64 {
+    pub fn cover_zoom_for_viewport(viewport: &crate::canvas::camera::Viewport) -> f64 {
         let vw = viewport.width.max(1) as f64;
         let vh = viewport.height.max(1) as f64;
         vw.max(vh) / WORLD_VISIBLE_SPAN
     }
 
-    pub fn default_world_camera(viewport: &crate::cavas::camera::Viewport) -> crate::cavas::camera::Camera {
+    pub fn default_world_camera(viewport: &crate::canvas::camera::Viewport) -> crate::canvas::camera::Camera {
         let zoom = cover_zoom_for_viewport(viewport).max(super::MAP_CAMERA_ZOOM_MIN);
-        crate::cavas::camera::Camera { x: 0.0, y: 0.0, zoom }
+        crate::canvas::camera::Camera { x: 0.0, y: 0.0, zoom }
     }
 
     pub fn tile_world_rect(z: u32, x: u32, y: u32) -> Rect {
@@ -313,7 +313,7 @@ pub mod tiles {
     use super::map_viewport;
     use super::projection::WORLD_HALF;
     use super::{pick_tile_z_target, Point, MAX_VISIBLE_TILE_REQUESTS};
-    use crate::cavas::camera::{Camera, Viewport};
+    use crate::canvas::camera::{Camera, Viewport};
 
     pub fn pick_zoom(camera: &Camera, viewport: &Viewport, forced_lod_id: Option<&str>) -> u32 {
         let mut z = pick_tile_z_target(camera, viewport, forced_lod_id);
@@ -1078,14 +1078,14 @@ pub mod vector_tiles {
 // #endregion 🔖️VectorTiles
 
 // #region 🔖️MapExtension
-pub trait MapExtension: cavas::CanvasExtension {
+pub trait MapExtension: canvas::CanvasExtension {
     fn map_crs(&self) -> &str;
 }
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct DefaultMapExtension;
 
-impl cavas::CanvasExtension for DefaultMapExtension {
+impl canvas::CanvasExtension for DefaultMapExtension {
     fn extension_id(&self) -> &str {
         "gis.map/default"
     }
@@ -1351,8 +1351,8 @@ impl Default for MapLayerVisibility {
 }
 
 pub struct MapHost {
-    pub camera: cavas::camera::Camera,
-    pub viewport: cavas::camera::Viewport,
+    pub camera: canvas::camera::Camera,
+    pub viewport: canvas::camera::Viewport,
     pub positions: std::collections::BTreeMap<String, PositionData>,
     pub routes: std::collections::BTreeMap<String, RouteData>,
     pub regions: std::collections::BTreeMap<String, RegionData>,
@@ -1379,7 +1379,7 @@ enum MapInteraction {
     #[default]
     None,
     Pan {
-        origin: cavas::camera::Camera,
+        origin: canvas::camera::Camera,
         start_screen: Point,
     }
 }
@@ -1498,7 +1498,7 @@ fn map_polyline_intersects_polygon(points: &[Point], polygon: &[Point]) -> bool 
 
 impl Default for MapHost {
     fn default() -> Self {
-        let viewport = cavas::camera::Viewport::default();
+        let viewport = canvas::camera::Viewport::default();
         Self {
             camera: projection::default_world_camera(&viewport),
             viewport,
@@ -1538,7 +1538,7 @@ struct LabelDeclutter {
 }
 
 impl LabelDeclutter {
-    fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+    fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
         let width = viewport.width.max(1) as f64;
         let height = viewport.height.max(1) as f64;
         let cell = cell_px.max(12.0);
@@ -2493,7 +2493,7 @@ impl MapHost {
         let mut declutter = LabelDeclutter::for_viewport(&self.viewport, cell, max_labels);
         for candidate in candidates {
             if declutter.try_place(&candidate.label, candidate.screen, px) {
-                cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+                canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
             }
         }
     }
@@ -2707,7 +2707,7 @@ impl MapHost {
         for (tz, tx, ty, img) in draw {
             let rect = projection::tile_world_rect(tz, tx, ty);
             let aff = self.tile_raster_affine(rect, img.width(), img.height());
-            cavas::raster::draw_image_arc(scene, &img, aff);
+            canvas::raster::draw_image_arc(scene, &img, aff);
         }
     }
 
@@ -2817,7 +2817,7 @@ impl MapHost {
                 let label = pos.name.as_deref().or(pos.label.as_deref()).map(str::trim).filter(|t| !t.is_empty());
                 if let Some(label) = label {
                     let anchor = Point::new(s.x, s.y - r - ui_styling::radii::MAP_LABEL_ANCHOR_OFFSET);
-                    cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+                    canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
                 }
             }
         }
@@ -2852,7 +2852,7 @@ impl MapHost {
     }
 }
 
-impl cavas::canvas_content::CanvasContent for MapHost {
+impl canvas::canvas_content::CanvasContent for MapHost {
     fn build_scene(&self) -> Scene {
         self.build_render_scene()
     }
@@ -2878,7 +2878,7 @@ use web_sys::HtmlCanvasElement;
 #[cfg(target_arch = "wasm32")]
 struct MapSessionInner {
     host: MapHost,
-    gpu: cavas::gpu_session::CanvasGpuSession,
+    gpu: canvas::gpu_session::CanvasGpuSession,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -2891,7 +2891,7 @@ impl MapSessionInner {
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         self.host.prepare_visible_tiles();
         let scene = self.host.build_render_scene();
-        self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+        self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
     }
 }
 
@@ -2906,7 +2906,7 @@ pub struct MapSession {
 impl MapSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+        Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -2927,7 +2927,7 @@ impl MapSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
@@ -3131,7 +3131,7 @@ mod tests {
     use super::projection::{default_world_camera, lonlat_to_world, tile_world_rect, world_to_lonlat, WORLD_HALF};
     use super::tiles::{self, visible_tiles};
     use super::MAX_VISIBLE_TILE_REQUESTS;
-    use crate::cavas::camera::{Camera, Viewport};
+    use crate::canvas::camera::{Camera, Viewport};
 
     fn test_png_1x1() -> Vec<u8> {
         use image::codecs::png::PngEncoder;
@@ -3497,7 +3497,7 @@ mod tests {
 
     #[test]
     fn map_wheel_screen_keeps_world_under_cursor_with_flipped_y() {
-        use crate::cavas::camera::{Camera, Viewport};
+        use crate::canvas::camera::{Camera, Viewport};
         let mut camera = Camera { x: 0.15, y: -0.25, zoom: 320.0 };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let sx = 220.0;

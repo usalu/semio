@@ -1,6 +1,6 @@
     Blocking waiting for file lock on build directory
 warning: unused import: `vello::util`
-  --> infinite/cavas/rs/lib.rs:11:17
+  --> infinite/canvas/rs/lib.rs:11:17
    |
 11 |         pub use vello::util;
    |                 ^^^^^^^^^^^
@@ -8,13 +8,13 @@ warning: unused import: `vello::util`
    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
 
 warning: unused import: `vello::wgpu`
-  --> infinite/cavas/rs/lib.rs:12:17
+  --> infinite/canvas/rs/lib.rs:12:17
    |
 12 |         pub use vello::wgpu;
    |                 ^^^^^^^^^^^
 
 warning: method `into_brush` is never used
-   --> infinite/cavas/rs/lib.rs:158:12
+   --> infinite/canvas/rs/lib.rs:158:12
     |
 157 |     impl Paint {
     |     ---------- method in this implementation
@@ -23,7 +23,7 @@ warning: method `into_brush` is never used
     |
     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
 
-warning: `infinite_cavas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_cavas` to apply 2 suggestions)
+warning: `infinite_canvas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_canvas` to apply 2 suggestions)
 warning: use of deprecated function `brepkit_operations::fillet::fillet_rolling_ball`: Use brepkit_blend::fillet_builder::FilletBuilder (via blend_ops::fillet_v2) instead.
   --> kernel/3d/brep/rs/lib.rs:27:34
    |
@@ -255,13 +255,13 @@ warning: associated functions `node_handle_centers`, `paint_port_labels`, `paint
 1983 | impl DagHost {
      | ------------ associated functions in this implementation
 ...
-3559 |     fn node_handle_centers(node: &DagNodeSpec) -> Vec<cavas::Point> {
+3559 |     fn node_handle_centers(node: &DagNodeSpec) -> Vec<canvas::Point> {
      |        ^^^^^^^^^^^^^^^^^^^
 ...
 3934 |     fn paint_port_labels(
      |        ^^^^^^^^^^^^^^^^^
 ...
-3992 |     fn paint_node_name(scene: &mut cavas::Scene, center_screen: cavas::Point, node: &DagNodeSpec, px: f64, label_fill: cavas::Colo...
+3992 |     fn paint_node_name(scene: &mut canvas::Scene, center_screen: canvas::Point, node: &DagNodeSpec, px: f64, label_fill: canvas::Colo...
      |        ^^^^^^^^^^^^^^^
 ...
 4206 |     fn port_labels_delegated_to_js_overlay(lod: DagDrawLod) -> bool {

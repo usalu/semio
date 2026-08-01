@@ -14,7 +14,7 @@ warning: `pack_cli` (manifest) generated 1 warning
     Checking mathematical_geometry v0.1.0 (/Users/ueli/Documents/semio/mathematical/geometry/rs)
     Checking futures-intrusive v0.5.0
     Checking ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
     Checking pack_format v0.1.0 (/Users/ueli/Documents/semio/pack/format/rs)
     Checking metal v0.32.0
     Checking dsl_schema v0.1.0 (/Users/ueli/Documents/semio/dsl/schema/rs)
@@ -2243,7 +2243,7 @@ warning: `puzzle_5d` (lib) generated 2 warnings (run `cargo clippy --fix --lib -
     Checking vello_svg v0.9.0
     Checking compose v0.1.0 (/Users/ueli/Documents/semio/compose/client/lib/rs)
 warning: method `from_str` can be confused for the standard trait method `std::str::FromStr::from_str`
-   --> infinite/cavas/rs/../../../asset/metabolism/icon/generated/metabolism_icon_name.rs:132:5
+   --> infinite/canvas/rs/../../../asset/metabolism/icon/generated/metabolism_icon_name.rs:132:5
     |
 132 | /     pub fn from_str(s: &str) -> Option<Self> {
 133 | |         match s.trim() {
@@ -2259,7 +2259,7 @@ warning: method `from_str` can be confused for the standard trait method `std::s
     = help: to override `-W clippy::all` add `#[allow(clippy::should_implement_trait)]`
 
 warning: method `from_str` can be confused for the standard trait method `std::str::FromStr::from_str`
-    --> infinite/cavas/rs/../../../ui/asset/icon/generated/icon_name.rs:912:5
+    --> infinite/canvas/rs/../../../ui/asset/icon/generated/icon_name.rs:912:5
      |
  912 | /     pub fn from_str(s: &str) -> Option<Self> {
  913 | |         match s.trim() {
@@ -2272,19 +2272,19 @@ warning: method `from_str` can be confused for the standard trait method `std::s
      = help: consider implementing the trait `std::str::FromStr` or choosing a less ambiguous method name
      = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#should_implement_trait
 
-warning: `infinite_cavas` (lib) generated 2 warnings
+warning: `infinite_canvas` (lib) generated 2 warnings
     Checking infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -11949,7 +11949,7 @@ warning: this function's return value is unnecessarily wrapped by `Option`
 help: remove `Option` from the return type...
     |
 506 -     fn node_rim_point_toward(&self, node: &NodeData, toward: Point) -> Option<Point> {
-506 +     fn node_rim_point_toward(&self, node: &NodeData, toward: Point) -> infinite_cavas::Point {
+506 +     fn node_rim_point_toward(&self, node: &NodeData, toward: Point) -> infinite_canvas::Point {
     |
 help: ...and then remove the surrounding `Some()` from returning expressions
     |

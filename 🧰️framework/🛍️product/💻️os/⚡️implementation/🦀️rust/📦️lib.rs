@@ -1424,7 +1424,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     document: vec!["semio".into(), "draw".into()],
                     icon_id: None,
                     controller_id: "draw-play".into(),
-                    modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                    modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                     default_mode_id: "edit".into(),
                     window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                         id: "composite".into(),
@@ -1480,7 +1480,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
@@ -1523,7 +1523,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 document: vec!["semio".into(), "note".into()],
                 icon_id: None,
                 controller_id: "note-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
@@ -1589,7 +1589,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
-                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
+                modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
                 default_mode_id: "edit".into(),
                 window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
                     id: "composite".into(),
@@ -1718,7 +1718,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                         label: "Draw".into(),
                         document: vec!["semio".into(), "draw".into()],
                         controller_id: "draw-play".into(),
-                        modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
+                        modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
                         default_mode_id: None,
                     }],
                 },
@@ -1738,7 +1738,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     outputs: Vec::new(),
                     source_format: "sink.document".into(),
                     component_kind: "sink".into(),
-                    modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
+                    modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
                     default_mode_id: None,
                     parameter_fields: Vec::new(),
                     config: semio_framework_core::ConfigSpec::empty(),
@@ -1755,7 +1755,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                         label: "Sink".into(),
                         document: vec!["semio".into(), "sink".into()],
                         controller_id: "sink-play".into(),
-                        modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
+                        modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
                         default_mode_id: None,
                     }],
                 },
@@ -4865,7 +4865,7 @@ pub mod workflow {
             let paths = workflow_fixture_dsl_paths();
             for dsl_path in &paths {
                 let file_name = dsl_path.file_name().and_then(|name| name.to_str()).unwrap_or_default();
-                let spk_name = if file_name.starts_with('🗣️') { file_name.replacen('🗣️', "📦️", 1).replace(".dsl", ".spk") } else { file_name.replace(".dsl", ".spk") };
+                let spk_name = if file_name.starts_with("🗣️") { file_name.replacen("🗣️", "📦️", 1).replace(".dsl", ".spk") } else { file_name.replace(".dsl", ".spk") };
                 let spk_path = dsl_path.with_file_name(spk_name);
                 let dsl_text = std::fs::read_to_string(dsl_path).unwrap_or_else(|error| panic!("read {dsl_path:?}: {error}"));
                 let spk_bytes = std::fs::read(&spk_path).unwrap_or_else(|error| panic!("read {spk_path:?}: {error}"));
@@ -5153,7 +5153,7 @@ pub mod registry {
             outputs: vec![os_out_port(artifact_kind, "out", "Out")],
             source_format: source_format.into(),
             component_kind: component_kind.into(),
-            modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
+            modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), icon_id: "square-pen".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
             default_mode_id: None,
             parameter_fields: Vec::new(),
             config: ConfigSpec::empty(),

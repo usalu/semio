@@ -1,5 +1,5 @@
 $ bun ./script.ts nx show projects
-@semio-tech/infinite-cavas-react-renderer
+@semio-tech/infinite-canvas-react-renderer
 @semio-tech/framework-renderer-react
 @semio-tech/repo-coordinator
 @semio-tech/infinite-world-r3f

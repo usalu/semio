@@ -1,0 +1,108 @@
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-framework-os-kernel-pack-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-framework-os-kernel-protocol-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-framework-os-kernel-db-cli` (manifest) generated 1 warning
+warning: profile package spec `semio-s-kernel-store` in profile `release` did not match any packages
+    Checking semio-framework-os-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🫀️core/⚡️implementation/🦀️rust)
+    Checking semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🎮️command/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔗️causal/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔀️crdt/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📜️history/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️value/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📡️wire/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-channel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔌️io/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/💎️materialize/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️index/⚡️implementation/🦀️rust)
+warning: variant `SvgPlain` is never constructed
+ --> /Users/ueli/Documents/semio/target/debug/build/semio-framework-os-kernel-infinite-canvas-7ed2d265278266c9/out/icon_shortcode_match.rs:6:5
+  |
+4 | pub enum ShortcodeResolved {
+  |          ----------------- variant in this enum
+5 |     Emoji(&'static str),
+6 |     SvgPlain(&'static str),
+  |     ^^^^^^^^
+  |
+  = note: `ShortcodeResolved` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+    Checking semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust)
+warning: `semio-framework-os-kernel-infinite-canvas` (lib) generated 1 warning
+    Checking semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:1987:42
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2000:43
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2115:53
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+    Checking semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+warning: unused import: `ConfigFieldShape`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:554:32
+    |
+554 |     use semio_framework_core::{ConfigFieldShape, ConfigFieldSpec, ConfigSpec};
+    |                                ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:3683:6
+     |
+3683 | impl protocol::OpText for SpaceHistoryOperation {
+     |      ^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3683 - impl protocol::OpText for SpaceHistoryOperation {
+3683 + impl OpText for SpaceHistoryOperation {
+     |
+
+warning: `semio-framework-os-kernel-store` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store` to apply 2 suggestions)
+    Checking semio-framework-editor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 4.09s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`

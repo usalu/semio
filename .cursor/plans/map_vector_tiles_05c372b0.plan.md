@@ -9,7 +9,7 @@ todos:
    content: Add mapLibreVectorTileProxyVitePlugin (/vt/{z}/{x}/{y}.pbf) in ui/styling/vite-elements-assets.ts and wire into map play config
    status: completed
  - id: text
-   content: Add sans label font asset + text module (append_label) to infinite/cavas/vello/lib.rs
+   content: Add sans label font asset + text module (append_label) to infinite/canvas/vello/lib.rs
    status: completed
  - id: mvt
    content: Add prost dep + vector_tiles MVT decode interface module in gis/map/rs/lib.rs
@@ -65,7 +65,7 @@ flowchart LR
 
 ### 2. Canvas text/label capability
 
-- In [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs), add a sans label font asset under `infinite/cavas/vello/asset/` (subset, analogous to existing `NotoColorEmoji-subset.ttf`), exposed via `board_icon_assets`-style static bytes.
+- In [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs), add a sans label font asset under `infinite/canvas/vello/asset/` (subset, analogous to existing `NotoColorEmoji-subset.ttf`), exposed via `board_icon_assets`-style static bytes.
 - Add a `text` module (new region) with `append_label(scene, text, origin, px, fill, halo)` that renders glyphs by building an SVG `<text>` and reusing the existing `usvg`/`render_svg_tree_themed` pipeline with a dedicated `usvg::Options` whose `fontdb` loads the sans font (mirrors `usvg_options_board_icons`). Export for map use.
 
 ### 3. MVT decode interface (Rust)
@@ -79,7 +79,7 @@ flowchart LR
   - Add `enum MapTileMode { Image, Vector, Combined }` + `render_mode` field; `set_render_mode(&str)`.
   - Add `vector_tiles: BTreeMap<String, vector_tiles::VectorTile>` + `upload_vector_tile(z,x,y,bytes)` (decode via the interface, store).
   - Add vector tile zoom selection clamped to demotiles maxzoom (<=5) with overzoom (reuse parent tile) + `visible_vector_tiles_json()` for the JS fetch loop.
-  - Add `append_vector_tiles(scene)`: tile-local coords -> world (`tile_world_rect` + `extent`) -> screen; style by layer/geometry: polygon fills, line strokes (`countries`, `geolines`, boundaries), and labels from name properties via the new `cavas::text::append_label`.
+  - Add `append_vector_tiles(scene)`: tile-local coords -> world (`tile_world_rect` + `extent`) -> screen; style by layer/geometry: polygon fills, line strokes (`countries`, `geolines`, boundaries), and labels from name properties via the new `canvas::text::append_label`.
   - Make `build_vector_scene` honor `render_mode`: Image = raster only; Vector = vector only; Combined = raster then vector overlay (labels always on top).
 - Extend `MapSession` (wasm region) with `uploadVectorTile`, `setRenderMode`, `visibleVectorTilesJson`.
 

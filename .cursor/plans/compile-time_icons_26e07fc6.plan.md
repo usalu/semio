@@ -78,7 +78,7 @@ Extend [`ui/asset/script.ts`](ui/asset/script.ts) `generate`:
 Extend [`asset/script.ts`](asset/script.ts) (or ui/asset if metabolism generation already belongs there) to emit:
 
 - `MetabolismIconName` + SVG map for TS.
-- Matching Rust enum/table for board/puzzle consumers (replace string-only match arms generated in [`puzzle/2d/rs/build.rs`](puzzle/2d/rs/build.rs) / [`infinite/cavas/rs/build.rs`](infinite/cavas/rs/build.rs) to use the typed names).
+- Matching Rust enum/table for board/puzzle consumers (replace string-only match arms generated in [`puzzle/2d/rs/build.rs`](puzzle/2d/rs/build.rs) / [`infinite/canvas/rs/build.rs`](infinite/canvas/rs/build.rs) to use the typed names).
 
 ## 2. Theme-aware resolver
 
@@ -117,7 +117,7 @@ with real `IconName` values (`grid-3x3`, `save`, `bold`, `toggle-left`, …). Up
 
 ## 5. Wire codec + board
 
-In [`ui/js/react/index.tsx`](ui/js/react/index.tsx) and [`infinite/cavas/rs/lib.rs`](infinite/cavas/rs/lib.rs):
+In [`ui/js/react/index.tsx`](ui/js/react/index.tsx) and [`infinite/canvas/rs/lib.rs`](infinite/canvas/rs/lib.rs):
 
 - Add `Themed` variant; encode as bare stem (same wire as today for metabolism keys) or explicit prefix if needed for disambiguation — prefer: decode checks metabolism set first, then UI catalog, preserving existing board JSON (`capsule_J`) without fixture churn.
 - Update `board_resolve_icon_kind` / shortcode path to use typed keys + theme overlay.

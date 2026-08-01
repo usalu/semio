@@ -35,4 +35,4 @@ Cold start on `http://127.0.0.1:6047/`:
 
 ### Vite aliases
 
-- `infinite-world-r3f`, `infinite-cavas-react-renderer` → `index.tsx` (not `js/`)
+- `infinite-world-r3f`, `infinite-canvas-react-renderer` → `index.tsx` (not `js/`)

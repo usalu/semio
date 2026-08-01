@@ -3,7 +3,7 @@
   "emoji": "🧩️",
   "status": "closed",
   "description": "Fix puzzle 2d wasm build failures from ambiguous NodeShape types and missing geometry imports in board_host.rs.",
-  "summary": "Resolved puzzle 2d wasm build failures caused by duplicate NodeShape and Camera types. Unified NodeShape on mathematical_graph::NodeShape in directed port types, wired board_host to infinite_cavas::camera::Camera, and added missing geometry imports (rectangle_handle_angle_toward, normalize_or_zero). Verified with cargo build and wasm-pack build.",
+  "summary": "Resolved puzzle 2d wasm build failures caused by duplicate NodeShape and Camera types. Unified NodeShape on mathematical_graph::NodeShape in directed port types, wired board_host to infinite_canvas::camera::Camera, and added missing geometry imports (rectangle_handle_angle_toward, normalize_or_zero). Verified with cargo build and wasm-pack build.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1562"
   },

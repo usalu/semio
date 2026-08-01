@@ -1056,7 +1056,7 @@ pub fn create_gis2d_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("gis2d")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::TiledMap, "globe")
             .default_layout(create_default_layout(
@@ -1142,7 +1142,7 @@ pub fn create_gis2d_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("reuse-map", "Reuse Map", serde_json::to_string(&default_document()).unwrap())
+    .example("reuse-map", "Reuse Map", serde_json::to_string(&default_document()).unwrap(), "file-text")
     .workflow("gis2d", "GIS 2D", "map")
 }
 //#endregion 🔖️Manifest

@@ -56,7 +56,7 @@ if (renderer === "wgpu") {
 - [framework/renderer/wgpu](framework/renderer/wgpu/rs/lib.rs) — the shared boot/shell/scene entry point every app goes through
 - [infinite/world/rs](infinite/world/rs/lib.rs) — 3D world engine consumed by that entry point
 
-`infinite/cavas` stays out of scope (it's vello-based, not raw wgpu).
+`infinite/canvas` stays out of scope (it's vello-based, not raw wgpu).
 
 ## Current state (why winit doesn't just drop in)
 

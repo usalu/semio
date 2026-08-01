@@ -102,7 +102,7 @@ caret_visible: bool,
 
 Add `DagHost` methods (near `try_widget_pointer_down`/`toggle_preview_tree_path`, line ~3091-3160):
 
-- `begin_note_edit(node_id, world_x, world_y)` — hit-tests a byte offset from `world_x` against the note's text (small helper mirroring writer's `hit_byte_in_line`, using the shared `cavas`/`infinite_cavas` text-measuring helpers already imported here, e.g. `port_label_text_width`), sets `editing_note = Some(NoteEditState { node_id, caret: offset, anchor: offset })`.
+- `begin_note_edit(node_id, world_x, world_y)` — hit-tests a byte offset from `world_x` against the note's text (small helper mirroring writer's `hit_byte_in_line`, using the shared `canvas`/`infinite_canvas` text-measuring helpers already imported here, e.g. `port_label_text_width`), sets `editing_note = Some(NoteEditState { node_id, caret: offset, anchor: offset })`.
 - `note_insert_text(chunk)`, `note_backspace()`, `note_delete_forward()`, `note_move_caret(dir, extend)` — mutate the target `DagNodeKind::Note.text` in place and update `caret`/`anchor` (byte offsets).
 - `note_commit_edit()` — clears `editing_note`.
 - `set_note_caret_visible(visible)` — sets `caret_visible` (toggled every frame from JS, like `WriterHost::set_caret_visible`).

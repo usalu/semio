@@ -33,7 +33,7 @@ Mirror the `draw`/`forms` pattern exactly:
 6. **`vcs/play/package.json`**: add `@semio-tech/framework-core`, `@semio-tech/framework-playground-core`, `@semio-tech/framework-playground-renderer-react` workspace deps (mirror `draw/play/package.json`).
 7. Delete the retired `VcsPlayApp` component / `useVcsDemoStore` hook; their logic is absorbed into `VcsPlayController` and the two surface hosts.
 
-This keeps the History content itself a normal scrollable DOM panel (no WASM/WebGPU pan-zoom canvas from `infinite/cavas`) — just hosted inside a real playground window instead of a standalone page, per your answer ("looks like a regular UI, not zoomable/pannable, just window options").
+This keeps the History content itself a normal scrollable DOM panel (no WASM/WebGPU pan-zoom canvas from `infinite/canvas`) — just hosted inside a real playground window instead of a standalone page, per your answer ("looks like a regular UI, not zoomable/pannable, just window options").
 
 ## Part 2 — Flip `HistoryTable` into a vertical commit-graph list
 

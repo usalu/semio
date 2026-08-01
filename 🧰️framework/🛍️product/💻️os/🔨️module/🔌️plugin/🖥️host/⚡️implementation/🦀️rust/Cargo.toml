@@ -19,4 +19,5 @@ wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "22.0.1"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+protocol = { path = "../../../../📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 thiserror = "2.0.12"

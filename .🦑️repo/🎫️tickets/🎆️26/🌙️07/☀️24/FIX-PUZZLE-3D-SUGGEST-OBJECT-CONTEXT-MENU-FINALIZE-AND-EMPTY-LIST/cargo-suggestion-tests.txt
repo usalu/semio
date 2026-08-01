@@ -605,14 +605,14 @@
 [1m[33mwarning[0m[1m: unnecessary qualification[0m
   [1m[94m--> [0minfinite/board/rs/lib.rs:99:44
    [1m[94m|[0m
-[1m[94m99[0m [1m[94m|[0m pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+[1m[94m99[0m [1m[94m|[0m pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    [1m[94m|[0m                                            [1m[33m^^^^^^^^^^^^^^^[0m
    [1m[94m|[0m
    [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
 [1m[96mhelp[0m: remove the unnecessary path segments
    [1m[94m|[0m
-[1m[94m99[0m [91m- [0mpub fn encode_board_stroke_scene(curves: &[[91mcavas::[0mCubicBez], stroke_width: f64) -> cavas::Scene {
-[1m[94m99[0m [92m+ [0mpub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+[1m[94m99[0m [91m- [0mpub fn encode_board_stroke_scene(curves: &[[91mcanvas::[0mCubicBez], stroke_width: f64) -> canvas::Scene {
+[1m[94m99[0m [92m+ [0mpub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    [1m[94m|[0m
 
 [1m[33mwarning[0m[1m: unnecessary qualification[0m

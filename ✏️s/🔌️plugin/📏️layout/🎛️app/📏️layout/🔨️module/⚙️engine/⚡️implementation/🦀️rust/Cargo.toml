@@ -14,7 +14,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📏️layout/🎛️ap
 layout = { path = "../../../../../../../../../✏️s/🔌️plugin/📏️layout/🎛️app/📏️layout/⚡️implementation/🦀️rust", package = "semio-s-app-layout" }
 layout_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/📏️layout/🎛️app/📏️layout/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-layout-dsl" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
-infinite_cavas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_canvas = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }
 serde_json = "1.0.140"
 parley = { version = "0.5.0" }

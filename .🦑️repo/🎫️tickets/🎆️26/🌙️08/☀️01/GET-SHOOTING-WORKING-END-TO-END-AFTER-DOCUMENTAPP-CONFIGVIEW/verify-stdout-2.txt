@@ -1,0 +1,82 @@
+[DEBUG] mesh probes [
+  {
+    "path": "/mesh/🧊️base.glb",
+    "ok": true,
+    "status": 200,
+    "contentType": "model/gltf-binary",
+    "bytes": 284436,
+    "magic": "glTF"
+  },
+  {
+    "path": "/mesh/base.glb",
+    "ok": false,
+    "status": 404,
+    "contentType": null,
+    "bytes": 0,
+    "magic": ""
+  },
+  {
+    "path": "/mesh/placeholder.glb",
+    "ok": false,
+    "status": 404,
+    "contentType": null,
+    "bytes": 0,
+    "magic": ""
+  },
+  {
+    "path": "/mesh/🧊️placeholder.glb",
+    "ok": true,
+    "status": 200,
+    "contentType": "model/gltf-binary",
+    "bytes": 771728,
+    "magic": "glTF"
+  }
+]
+[DEBUG] shooting page {
+  "url": "http://127.0.0.1:6019/",
+  "canvas": 1,
+  "hasRenderError": false,
+  "pageErrors": [],
+  "consoleErrors": [
+    "[DEBUG] action failed setActiveExample {exampleId: base-icon} Error: [DEBUG] action 'setActiveExample' failed (handler): malformed op format at offset 0: unsupported op format 3\n    at performCommand (http://127.0.0.1:6019/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx?t=1785586598092:7544:13)",
+    "[DEBUG] action failed registerBrushMesh {surfaceId: shooting.play.scene, url: /mesh/🧊️base.glb, positions: Array(3120), indices: Array(2184)} Error: [DEBUG] action 'registerBrushMesh' failed (handler): malformed op format at offset 0: unsupported op format 4\n    at performCommand (http://127.0.0.1:6019/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx?t=1785586598092:7544:13)"
+  ],
+  "meshOk": true,
+  "meshes": [
+    {
+      "path": "/mesh/🧊️base.glb",
+      "ok": true,
+      "status": 200,
+      "contentType": "model/gltf-binary",
+      "bytes": 284436,
+      "magic": "glTF"
+    },
+    {
+      "path": "/mesh/base.glb",
+      "ok": false,
+      "status": 404,
+      "contentType": null,
+      "bytes": 0,
+      "magic": ""
+    },
+    {
+      "path": "/mesh/placeholder.glb",
+      "ok": false,
+      "status": 404,
+      "contentType": null,
+      "bytes": 0,
+      "magic": ""
+    },
+    {
+      "path": "/mesh/🧊️placeholder.glb",
+      "ok": true,
+      "status": 200,
+      "contentType": "model/gltf-binary",
+      "bytes": 771728,
+      "magic": "glTF"
+    }
+  ],
+  "bodySnippet": "Document\nCatalogue\nInspection\nFullscreen\nsemio · shooting\nExample\nDefault Base Icon\nScene\nFocus\nClose\n256×256 · rectangle\nProjection\nWindow Options\nActions\nSearch\nUtilities\nIcon\nFocus\nClose\n256×256 · rectangle\nOverview Svg · 256×256 · SVG\nWindow Options\nActions\nSearch\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}
+[DEBUG] screenshot /Users/ueli/Documents/semio/.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/GET-SHOOTING-WORKING-END-TO-END-AFTER-DOCUMENTAPP-CONFIGVIEW/shooting-viewport.png
+[DEBUG] shooting e2e ok

@@ -3178,7 +3178,7 @@ pub fn create_puzzle5d_app() -> App {
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels), "layout-grid")
             .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "puzzle5d-3d")
@@ -3190,7 +3190,7 @@ pub fn create_puzzle5d_app() -> App {
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
             .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE5D_PLAY_BODY_INSPECTOR)
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after document delta).
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
             .operation("setActiveExample", "Set Active Example")
             .operation("addNode", "Add Node")
             .operation("addPartKind", "Add Part")
@@ -3285,8 +3285,8 @@ pub fn create_puzzle5d_app() -> App {
             window_kind.options.measures = puzzle5d_window_measures(window, &envelope, &precompute, manifest_labels);
         }
     }
-    app.example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone())
-        .example(PUZZLE5D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone())
+    app.example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone(), "trees")
+        .example(PUZZLE5D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone(), "building-2")
         .workflow("puzzle5d", "Puzzle 5D", "model")
 }
 

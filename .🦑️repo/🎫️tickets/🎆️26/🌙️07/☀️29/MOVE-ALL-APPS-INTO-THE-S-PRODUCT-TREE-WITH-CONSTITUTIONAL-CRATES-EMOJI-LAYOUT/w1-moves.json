@@ -635,7 +635,7 @@
     "newPkg": "semio-s-kernel-infinite-world"
   },
   {
-    "oldDir": "infinite/cavas/rs",
+    "oldDir": "infinite/canvas/rs",
     "newDir": "s/kernel/infinite/canvas/rs",
     "newPkg": "semio-s-kernel-infinite-canvas"
   },

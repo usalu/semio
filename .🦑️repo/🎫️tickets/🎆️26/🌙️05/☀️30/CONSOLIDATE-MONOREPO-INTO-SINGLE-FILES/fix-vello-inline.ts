@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const root = join(import.meta.dirname, "../../../../../../");
-const libPath = join(root, "infinite/cavas/vello/lib.rs");
+const libPath = join(root, "infinite/canvas/vello/lib.rs");
 const ticket = import.meta.dirname;
 const iconCodec = readFileSync(join(ticket, "icon_codec.rs.recovered"), "utf8").trimEnd();
 const theme = readFileSync(join(ticket, "theme.rs.recovered"), "utf8").trimEnd();

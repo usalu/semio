@@ -1,0 +1,693 @@
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-framework-os-kernel-db-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-framework-os-kernel-protocol-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-framework-os-kernel-pack-cli` (manifest) generated 1 warning
+    Blocking waiting for file lock on package cache
+warning: profile package spec `semio-s-kernel-store` in profile `release` did not match any packages
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:1987:42
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2000:43
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2115:53
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+warning: unused import: `ConfigFieldShape`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:554:32
+    |
+554 |     use semio_framework_core::{ConfigFieldShape, ConfigFieldSpec, ConfigSpec};
+    |                                ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:3683:6
+     |
+3683 | impl protocol::OpText for SpaceHistoryOperation {
+     |      ^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3683 - impl protocol::OpText for SpaceHistoryOperation {
+3683 + impl OpText for SpaceHistoryOperation {
+     |
+
+warning: `semio-framework-os-kernel-store` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store` to apply 2 suggestions)
+warning: unused import: `DocumentEnvelope`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:104:116
+    |
+104 | ...create_document_envelope, ConfigStore, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, SpaceConflict};
+    |                                                            ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4758:65
+     |
+4758 |             let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5007:61
+     |
+5007 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4083:13
+     |
+4083 |         let mut config_store = ConfigStore::new(config_envelope);
+     |             ----^^^^^^^^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5021:61
+     |
+5021 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_manifest_cabi` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: requested on the command line with `-W unsafe-op-in-unsafe-fn`
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_migrate_document_cabi` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_manifest` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_instantiate_app_cabi` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_instantiate_app` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_exchange_cabi` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_exchange` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_migrate_document` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_clear_instance_guard_cabi` is unsafe and requires unsafe block
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^ call to unsafe function
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   |
+   = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:10:5
+   |
+10 | /     generate!({
+11 | |         world: "plugin-world",
+12 | |         path: "📜️wit",
+13 | |     });
+   | |______^
+...
+45 |       export!(ComponentGuest);
+   |       ----------------------- in this macro invocation
+   = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+   = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0133`.
+warning: `semio-framework-plugin` (lib) generated 14 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 14 suggestions)
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:5861:28
+     |
+5861 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+5861 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+5861 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:5864:28
+     |
+5864 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5864 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+5864 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7007:28
+     |
+7007 |         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7007:106
+     |
+7007 |         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7050:28
+     |
+7050 |         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7050:106
+     |
+7050 |         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: `semio-framework-os-kernel-3d-brep` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-os-kernel-3d-brep` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:516:50
+    |
+516 |     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::w...
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+516 -     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+516 +     fn sync_workflow_node_parameter_ports(node: &OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:516:124
+    |
+516 | ...wNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+516 -     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+516 +     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> OsWorkflowNode {
+    |
+
+warning: unused import: `DocumentDsl`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:2089:17
+     |
+2089 |     use store::{DocumentDsl, MemoryBackbonePort};
+     |                 ^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3081:41
+     |
+3081 |     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3081 -     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+3081 +     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3597:30
+     |
+3597 | ...   let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown ...
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3597 -                 let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+3597 +                 let format = OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:21
+     |
+4467 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:72
+     |
+4467 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:127
+     |
+4467 | ...tance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:177
+     |
+4467 | ...e::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:29
+     |
+4476 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:82
+     |
+4476 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:139
+     |
+4476 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:191
+     |
+4476 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:33
+     |
+4490 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:86
+     |
+4490 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:143
+     |
+4490 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:195
+     |
+4490 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4498:30
+     |
+4498 |             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4498 -             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+4498 +             let descriptor = os_artifact_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4516:30
+     |
+4516 |             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4516 -             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+4516 +             let descriptor = os_artifact_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:5308:36
+     |
+5308 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5308 -             terminology_documents: std::collections::HashMap::new(),
+5308 +             terminology_documents: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:5314:21
+     |
+5314 |             config: semio_framework_core::ConfigSpec::empty(),
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5314 -             config: semio_framework_core::ConfigSpec::empty(),
+5314 +             config: ConfigSpec::empty(),
+     |
+
+warning: `semio-framework-os` (lib) generated 21 warnings (run `cargo fix --lib -p semio-framework-os` to apply 21 suggestions)
+   Compiling semio-s-app-shooting-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unused doc comment
+   --> ✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:301:1
+    |
+301 | /// 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination compile-checked.
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-shooting-ui` (lib) generated 1 warning
+   Compiling semio-s-plugin-shooting v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust)
+    Finished `release` profile [optimized] target(s) in 2.38s

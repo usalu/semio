@@ -23,7 +23,7 @@ const files = [
   "compose/dev/algorithm/js/vitest.config.ts",
   "framework/core/js/vitest.config.ts",
   "framework/product/os/core/js/vitest.config.ts",
-  "infinite/cavas/react-renderer/vitest.config.ts",
+  "infinite/canvas/react-renderer/vitest.config.ts",
   "infinite/world/r3f/vitest.config.ts",
   "kernel/2d/js/vitest.config.ts",
   "kernel/3d/brep/js/vitest.config.ts",

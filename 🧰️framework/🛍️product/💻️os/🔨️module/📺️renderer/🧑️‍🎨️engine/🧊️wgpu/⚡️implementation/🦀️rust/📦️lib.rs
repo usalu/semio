@@ -1901,6 +1901,7 @@ mod tests {
             modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
+                icon_id: "square-pen".into(),
                 tools: vec![],
                 layout_id: None,
                 commands: vec![],
@@ -2502,7 +2503,7 @@ mod tests {
             },
         ];
         app.actions = vec![
-            ActionDefinition::new("zeroArg", "Zero Arg", ActionKind::View),
+            ActionDefinition::new_catalog("zeroArg", "Zero Arg", ActionKind::View),
             ActionDefinition {
                 args: vec![
                     ActionArgDef::text("name", "Name").required(),
@@ -2512,7 +2513,7 @@ mod tests {
                     },
                 ],
                 keys: Some("mod+e".into()),
-                ..ActionDefinition::new("withArgs", "With Args", ActionKind::View)
+                ..ActionDefinition::new_catalog("withArgs", "With Args", ActionKind::View)
             },
         ];
         // Scope utility.a + both actions to `main`; leave utility.b an orphan referenced by no window.
@@ -2702,7 +2703,7 @@ use crate::interpreter::FrameworkWidgetContext;
 use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::GraphHost;
-use infinite_cavas as cavas;
+use infinite_canvas as canvas;
 use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -3070,7 +3071,7 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgp
 fn render_vello_scene(
     gpu: &mut GpuContext,
     surface_id: &str,
-    scene: &cavas::Scene,
+    scene: &canvas::Scene,
     clear: Color,
 ) -> Result<(), String> {
     ENGINE_SURFACES.with(|cell| {
@@ -3141,7 +3142,7 @@ pub fn paint_node_graph(
     let clear = vello_clear(ctx.theme);
     let scene_json = graph_scene_json(graph);
     let dark = theme_is_dark(ctx.theme);
-    let mut cavas_scene = cavas::Scene::new();
+    let mut canvas_scene = canvas::Scene::new();
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
@@ -3160,7 +3161,7 @@ pub fn paint_node_graph(
             sync_flow_host(engine, graph, &mut entry.sync_cache);
             sync_canvas_theme_dark(&mut entry.sync_cache, dark, engine);
             engine.set_viewport(pw, ph, dpr);
-            engine.paint_scene(&mut cavas_scene, pw, ph, dpr);
+            engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
         } else {
             let engine = match entry.node_graph.as_mut() {
                 Some(NodeGraphEngine::Dag(host)) => host,
@@ -3178,10 +3179,10 @@ pub fn paint_node_graph(
             }
             sync_graph_canvas_theme_dark(&mut entry.sync_cache, dark, engine);
             engine.set_viewport(pw, ph, dpr);
-            engine.paint_scene(&mut cavas_scene, pw, ph, dpr);
+            engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
         }
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(
@@ -4309,7 +4310,7 @@ pub fn paint_tiled_map(
     }
     let theme_json = map_theme_json_from_ui_theme(ctx.theme);
     let clear = vello_clear(ctx.theme);
-    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+    let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.map_host.is_none() {
@@ -4321,7 +4322,7 @@ pub fn paint_tiled_map(
         queue_map_tile_fetches(&scene.surface_id, map_scene, host);
         host.build_render_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(
@@ -4682,7 +4683,7 @@ pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext
         return;
     }
     let clear = vello_clear(ctx.theme);
-    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+    let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.board_host.is_none() {
@@ -4693,7 +4694,7 @@ pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext
         sync_board_host(host, board_scene, &mut entry.board_sync_cache, pw, ph, dpr);
         host.build_vector_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(
@@ -4993,7 +4994,7 @@ pub fn paint_text_editor(
     }
     let clear = vello_clear(ctx.theme);
     let scene_json = editor_scene_json(editor);
-    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+    let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.editor.is_none() {
@@ -5004,7 +5005,7 @@ pub fn paint_text_editor(
         host.set_size(pw, ph, dpr);
         host.build_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(
@@ -7608,6 +7609,16 @@ impl ProgramBridgeEntry {
         }
     }
 
+    /// 🖱️ On-demand context menu rows for the given surface hit and selection snapshot.
+    pub async fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::ContextMenuItemSpec>, String> {
+        match &self.backend {
+            #[cfg(target_arch = "wasm32")]
+            ProgramBridgeBackend::Js(handle) => context_menu_js(handle, instance_id, &request).await,
+            #[cfg(not(target_arch = "wasm32"))]
+            ProgramBridgeBackend::Wasm(runtime) => runtime.context_menu(instance_id, request).map_err(|error| error.to_string()),
+        }
+    }
+
     pub fn load_app_document_pack(&self, instance_id: u32, pack: &[u8], spr: &[u8]) -> Result<(), String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
@@ -7762,6 +7773,33 @@ async fn handle_action_js(
     let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
     serde_json::from_str::<semio_framework_core::kernel::InvocationResult>(&text)
         .map_err(|error| format!("handle_action result parse failed: {error}"))
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn context_menu_js(handle: &Rc<JsValue>, instance_id: u32, request: &serde_json::Value) -> Result<Vec<ui_wgpu::ContextMenuItemSpec>, String> {
+    let menu_fn = Reflect::get(handle.as_ref(), &JsValue::from_str("contextMenu"))
+        .ok()
+        .and_then(|v| v.dyn_into::<Function>().ok());
+    let Some(menu_fn) = menu_fn else {
+        return Ok(Vec::new());
+    };
+    let request_json = serde_json::to_string(request).map_err(|error| error.to_string())?;
+    let result = menu_fn
+        .call2(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(&request_json))
+        .map_err(|_| "contextMenu failed")?;
+    let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+        JsFuture::from(promise.clone())
+            .await
+            .map_err(|_| "contextMenu promise failed")?
+    } else {
+        result
+    };
+    let text = resolved.as_string().ok_or_else(|| "contextMenu result not string".to_string())?;
+    let value: serde_json::Value = serde_json::from_str(&text).map_err(|error| error.to_string())?;
+    if let Some(items) = value.get("items") {
+        return serde_json::from_value(items.clone()).map_err(|error| error.to_string());
+    }
+    serde_json::from_str(&text).map_err(|error| error.to_string())
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -9638,8 +9676,7 @@ mod table_tests {
             event_feed: None,
             block_list: None,
             menu: None,
-        },
-        menu: None,
+        }
     }
 
     /// 🧪️ Renders `node` and returns the `InputState` so tests can inspect registered hit targets.
@@ -10036,8 +10073,7 @@ mod block_list_tests {
             event_feed: None,
             block_list: Some(block_list),
             menu: None,
-        },
-        menu: None,
+        }
     }
 
     fn step_json(id: &str, blocks: &[(&str, &str, &str)]) -> Value {
@@ -12011,8 +12047,7 @@ mod canvas2d_tests {
             event_feed: None,
             block_list: None,
             menu: None,
-        },
-        menu: None,
+        }
     }
 
     /// 🖊️ A shape-selection ring should be tinted amber (matching `drawBoundsLayer`'s hardcoded
@@ -13600,9 +13635,42 @@ struct GraphContextMenuItem {
     #[serde(default)]
     separator: bool,
     #[serde(default)]
+    disabled: bool,
+    #[serde(default)]
     action: Option<String>,
     #[serde(default)]
     args: Option<Value>,
+    #[serde(default)]
+    children: Vec<GraphContextMenuItem>,
+}
+
+fn map_graph_context_menu_item(scene: &UiComponentSceneNode, item: GraphContextMenuItem) -> Option<ContextMenuItem> {
+    if item.separator {
+        return None;
+    }
+    let children = item
+        .children
+        .into_iter()
+        .filter_map(|child| map_graph_context_menu_item(scene, child))
+        .collect::<Vec<_>>();
+    let action = item.action.map(|action| ActionDescriptor {
+        controller_id: scene.controller_id.clone(),
+        action,
+        args: item.args,
+    });
+    if action.is_none() && children.is_empty() {
+        return None;
+    }
+    Some(ContextMenuItem {
+        id: format!("{}.context.{}", scene.surface_id, item.id),
+        label: item.label,
+        icon: item.icon,
+        destructive: item.destructive,
+        action,
+        children,
+        disabled: item.disabled,
+        ..Default::default()
+    })
 }
 
 fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &ui_wgpu::NodeGraphScene) {
@@ -13611,23 +13679,9 @@ fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &ui_wgpu::NodeGr
     };
     let items: Vec<GraphContextMenuItem> = serde_json::from_str(raw).unwrap_or_default();
     for item in items {
-        if item.separator {
-            continue;
+        if let Some(shell_item) = map_graph_context_menu_item(scene, item) {
+            push_context_menu_item(shell_item);
         }
-        let Some(action) = item.action else {
-            continue;
-        };
-        push_context_menu_item(ContextMenuItem {
-            id: format!("{}.context.{}", scene.surface_id, item.id),
-            label: item.label,
-            icon: item.icon,
-            destructive: item.destructive,
-            action: Some(ActionDescriptor {
-                controller_id: scene.controller_id.clone(),
-                action,
-                args: item.args,
-            }),
-        });
     }
 }
 
@@ -15777,8 +15831,7 @@ mod text_editor_tests {
             event_feed: None,
             block_list: None,
             menu: None,
-        },
-        menu: None,
+        }
     }
 
     fn text_editor_scene_payload(
@@ -15814,8 +15867,7 @@ mod text_editor_tests {
     ) -> UiComponentSceneNode {
         let mut scene = test_scene(surface_id, SurfaceKind::TextEditor);
         scene.text_editor = Some(text_editor_scene_payload(buffer, completions_json, rename_json));
-        scene,
-        menu: None,
+        scene
     }
 
     /// 🧰️ GPU-free `FrameworkWidgetContext` fixture, same construction as `render_entry_tests::Fixture`
@@ -16386,6 +16438,9 @@ pub struct ContextMenuItem {
     pub icon: Option<String>,
     pub destructive: bool,
     pub action: Option<ActionDescriptor>,
+    pub children: Vec<ContextMenuItem>,
+    pub disabled: bool,
+    pub separator: bool,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -16393,6 +16448,150 @@ pub struct ContextMenuState {
     pub x: f32,
     pub y: f32,
     pub items: Vec<ContextMenuItem>,
+    pub active: Vec<usize>,
+    pub submenu_collapsed_at: Option<Vec<usize>>,
+}
+
+/** @emoji ⌨️ Result of routing a key while the shell context menu is open. */
+pub enum ContextMenuKeyOutcome {
+    Ignored,
+    Consumed,
+    Activate(ActionDescriptor),
+    CloseMenu,
+}
+
+fn context_menu_enabled_indices(items: &[ContextMenuItem]) -> Vec<usize> {
+    items
+        .iter()
+        .enumerate()
+        .filter(|(_, item)| !item.separator && !item.disabled)
+        .map(|(index, _)| index)
+        .collect()
+}
+
+fn context_menu_items_at_level<'a>(root: &'a [ContextMenuItem], path_prefix: &[usize]) -> &'a [ContextMenuItem] {
+    let mut level = root;
+    for &index in path_prefix {
+        let Some(row) = level.get(index) else {
+            return level;
+        };
+        if row.children.is_empty() {
+            return level;
+        }
+        level = &row.children;
+    }
+    level
+}
+
+fn context_menu_item_at_path<'a>(root: &'a [ContextMenuItem], path: &[usize]) -> Option<&'a ContextMenuItem> {
+    if path.is_empty() {
+        return None;
+    }
+    let mut level = root;
+    let mut item = None;
+    for (depth, &index) in path.iter().enumerate() {
+        item = level.get(index);
+        let row = item?;
+        if depth + 1 < path.len() {
+            level = &row.children;
+        }
+    }
+    item
+}
+
+fn context_menu_path_for_item_id(root: &[ContextMenuItem], item_id: &str, prefix: &mut Vec<usize>) -> Option<Vec<usize>> {
+    for (index, item) in root.iter().enumerate() {
+        if item.separator || item.disabled {
+            continue;
+        }
+        prefix.push(index);
+        if item.id == item_id {
+            return Some(prefix.clone());
+        }
+        if !item.children.is_empty() {
+            if let Some(path) = context_menu_path_for_item_id(&item.children, item_id, prefix) {
+                return Some(path);
+            }
+        }
+        prefix.pop();
+    }
+    None
+}
+
+fn context_menu_move_active(root: &[ContextMenuItem], path: &[usize], down: bool) -> Vec<usize> {
+    let level_prefix = if path.is_empty() { &[][..] } else { &path[..path.len() - 1] };
+    let level = context_menu_items_at_level(root, level_prefix);
+    let enabled = context_menu_enabled_indices(level);
+    if enabled.is_empty() {
+        return path.to_vec();
+    }
+    let current = path.last().copied().unwrap_or(usize::MAX);
+    let position = enabled.iter().position(|index| *index == current);
+    let next_position = match position {
+        None => {
+            if down {
+                0
+            } else {
+                enabled.len() - 1
+            }
+        }
+        Some(pos) => {
+            if down {
+                (pos + 1) % enabled.len()
+            } else {
+                (pos + enabled.len() - 1) % enabled.len()
+            }
+        }
+    };
+    let mut next = level_prefix.to_vec();
+    next.push(enabled[next_position]);
+    next
+}
+
+fn context_menu_path_for_ordinal(root: &[ContextMenuItem], path: &[usize], ordinal: usize) -> Option<Vec<usize>> {
+    let level_prefix = if path.is_empty() { &[][..] } else { &path[..path.len() - 1] };
+    let level = context_menu_items_at_level(root, level_prefix);
+    let mut seen = 0usize;
+    for (index, item) in level.iter().enumerate() {
+        if item.separator || item.disabled {
+            continue;
+        }
+        seen += 1;
+        if seen == ordinal {
+            let mut next = level_prefix.to_vec();
+            next.push(index);
+            return Some(next);
+        }
+    }
+    None
+}
+
+fn context_menu_open_submenu_path(root: &[ContextMenuItem], path: &[usize]) -> Option<Vec<usize>> {
+    let item = context_menu_item_at_path(root, path)?;
+    if item.children.is_empty() {
+        return None;
+    }
+    let enabled = context_menu_enabled_indices(&item.children);
+    if enabled.is_empty() {
+        return Some(path.to_vec());
+    }
+    let mut next = path.to_vec();
+    next.push(enabled[0]);
+    Some(next)
+}
+
+fn context_menu_paths_equal(a: &[usize], b: &[usize]) -> bool {
+    a.len() == b.len() && a.iter().zip(b.iter()).all(|(left, right)| left == right)
+}
+
+fn context_menu_submenu_open(active: &[usize], row_path: &[usize], is_active: bool, has_children: bool) -> bool {
+    if !has_children {
+        return false;
+    }
+    if is_active && active.len() == row_path.len() {
+        return true;
+    }
+    active.len() > row_path.len() && row_path.iter().enumerate().all(|(index, value)| active.get(index) == Some(value))
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -19185,6 +19384,7 @@ impl ShellState {
         input.pointer_y = y;
         input.pointer_down = down;
         input.update_hover(x, y);
+        self.sync_context_menu_hover(input);
         self.update_tree_hover(input);
         if let Some((ref item_id, ref drag_data)) = self.pending_tree_drag {
             if down {
@@ -20191,8 +20391,123 @@ impl ShellState {
                 }),
             });
         }
-        self.context_menu = Some(ContextMenuState { x, y, items });
+        self.context_menu = Some(ContextMenuState {
+            x,
+            y,
+            items,
+            active: Vec::new(),
+            submenu_collapsed_at: None,
+        });
         self.overlay_state = OverlayState::None;
+    }
+
+    fn sync_context_menu_hover(&mut self, input: &InputState<ActionDescriptor>) {
+        let Some(menu) = self.context_menu.as_mut() else {
+            return;
+        };
+        let Some(item_id) = input.hovered_id.as_deref() else {
+            return;
+        };
+        let mut prefix = Vec::new();
+        if let Some(path) = context_menu_path_for_item_id(&menu.items, item_id, &mut prefix) {
+            menu.active = path;
+            menu.submenu_collapsed_at = None;
+        }
+    }
+
+    /** @emoji ⌨️ Routes keyboard input to the open shell context menu. */
+    pub fn context_menu_handle_key(&mut self, action: ui_wgpu::KeyAction) -> ContextMenuKeyOutcome {
+        let Some(menu) = self.context_menu.as_mut() else {
+            return ContextMenuKeyOutcome::Ignored;
+        };
+        let root = menu.items.clone();
+        let path = menu.active.clone();
+        match action {
+            ui_wgpu::KeyAction::Escape => {
+                if menu.active.len() > 1 {
+                    menu.active.pop();
+                    return ContextMenuKeyOutcome::Consumed;
+                }
+                self.context_menu = None;
+                return ContextMenuKeyOutcome::CloseMenu;
+            }
+            ui_wgpu::KeyAction::Char(ref key)
+                if key.len() == 1 && key.chars().next().is_some_and(|ch| ch.is_ascii_digit() && ch != '0') =>
+            {
+                let ordinal = key.parse::<usize>().ok();
+                let Some(ordinal) = ordinal else {
+                    return ContextMenuKeyOutcome::Ignored;
+                };
+                if let Some(next) = context_menu_path_for_ordinal(&root, &path, ordinal) {
+                    menu.active = next;
+                    return ContextMenuKeyOutcome::Consumed;
+                }
+                return ContextMenuKeyOutcome::Ignored;
+            }
+            ui_wgpu::KeyAction::ArrowUp => {
+                menu.active = context_menu_move_active(&root, &path, false);
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            ui_wgpu::KeyAction::ArrowDown => {
+                menu.active = context_menu_move_active(&root, &path, true);
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            ui_wgpu::KeyAction::ArrowLeft => {
+                if menu.active.len() > 1 {
+                    let parent = menu.active[..menu.active.len() - 1].to_vec();
+                    menu.active = parent.clone();
+                    menu.submenu_collapsed_at = Some(parent);
+                }
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            ui_wgpu::KeyAction::ArrowRight => {
+                if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
+                    menu.active = next;
+                }
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::Space(true) => {
+                let active = menu.active.clone();
+                let Some(item) = context_menu_item_at_path(&root, &active) else {
+                    return ContextMenuKeyOutcome::Ignored;
+                };
+                if item.disabled {
+                    return ContextMenuKeyOutcome::Ignored;
+                }
+                if !item.children.is_empty() {
+                    if let Some(next) = context_menu_open_submenu_path(&root, &active) {
+                        menu.active = next;
+                    }
+                    return ContextMenuKeyOutcome::Consumed;
+                }
+                if let Some(action) = item.action.clone() {
+                    self.context_menu = None;
+                    return ContextMenuKeyOutcome::Activate(action);
+                }
+                return ContextMenuKeyOutcome::Ignored;
+            }
+            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "w" | "W") => {
+                menu.active = context_menu_move_active(&root, &path, false);
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "s" | "S") => {
+                menu.active = context_menu_move_active(&root, &path, true);
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "a" | "A") => {
+                if menu.active.len() > 1 {
+                    menu.active.pop();
+                }
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            ui_wgpu::KeyAction::Char(ref key) if matches!(key.as_str(), "d" | "D") => {
+                if let Some(next) = context_menu_open_submenu_path(&root, &menu.active) {
+                    menu.active = next;
+                }
+                return ContextMenuKeyOutcome::Consumed;
+            }
+            _ => ContextMenuKeyOutcome::Ignored,
+        }
     }
 
     fn build_search_items(&self) -> Vec<SearchPaletteItem> {
@@ -20415,8 +20730,12 @@ impl ShellState {
                 }
                 return;
             }
-            if self.context_menu.take().is_some() {
-                return;
+            if self.context_menu.is_some() {
+                match self.context_menu_handle_key(ui_wgpu::KeyAction::Escape) {
+                    ContextMenuKeyOutcome::Activate(_) => return,
+                    ContextMenuKeyOutcome::Ignored => {}
+                    ContextMenuKeyOutcome::Consumed | ContextMenuKeyOutcome::CloseMenu => return,
+                }
             }
         }
         // 🎓️ Tour keys take precedence over every other chord below (mirrors Escape closing the topmost
@@ -20624,6 +20943,16 @@ impl ShellState {
         modifiers: &ui_wgpu::PointerModifiers,
         input: &mut InputState<ActionDescriptor>,
     ) -> Result<(), String> {
+        if self.context_menu.is_some() {
+            match self.context_menu_handle_key(action.clone()) {
+                ContextMenuKeyOutcome::Ignored => {}
+                ContextMenuKeyOutcome::Consumed | ContextMenuKeyOutcome::CloseMenu => return Ok(()),
+                ContextMenuKeyOutcome::Activate(descriptor) => {
+                    self.dispatch_action(descriptor).await?;
+                    return Ok(());
+                }
+            }
+        }
         if matches!(self.overlay_state, OverlayState::Search) && action == ui_wgpu::KeyAction::Enter {
             self.activate_search_item(self.search_selected).await?;
             return Ok(());
@@ -22094,7 +22423,7 @@ impl ShellState {
             })
             .collect();
         vec![
-            CommandDefinition::new("os.setAppearance", "Set Appearance", CommandScope::Os, "appearance").with_args([
+            CommandDefinition::new_catalog("os.setAppearance", "Set Appearance", CommandScope::Os, "appearance").with_args([
                 ActionArgDef::select(
                     "value",
                     "Appearance",
@@ -22106,7 +22435,7 @@ impl ShellState {
                 )
                 .required(),
             ]),
-            CommandDefinition::new("os.setDriver", "Set Driver", CommandScope::Os, "layout").with_args([
+            CommandDefinition::new_catalog("os.setDriver", "Set Driver", CommandScope::Os, "layout").with_args([
                 ActionArgDef::select(
                     "value",
                     "Driver",
@@ -22117,7 +22446,7 @@ impl ShellState {
                 )
                 .required(),
             ]),
-            CommandDefinition::new("os.setLocale", "Set Locale", CommandScope::Os, "language").with_args([
+            CommandDefinition::new_catalog("os.setLocale", "Set Locale", CommandScope::Os, "language").with_args([
                 ActionArgDef::select(
                     "value",
                     "Locale",
@@ -22128,9 +22457,9 @@ impl ShellState {
                 )
                 .required(),
             ]),
-            CommandDefinition::new("os.setTerminology", "Set Terminology", CommandScope::Os, "language")
+            CommandDefinition::new_catalog("os.setTerminology", "Set Terminology", CommandScope::Os, "language")
                 .with_args([ActionArgDef::select("value", "Terminology", terminology_options).required()]),
-            CommandDefinition::new("os.setThemeId", "Set Theme", CommandScope::Os, "appearance").with_args([
+            CommandDefinition::new_catalog("os.setThemeId", "Set Theme", CommandScope::Os, "appearance").with_args([
                 ActionArgDef::select(
                     "value",
                     "Theme",
@@ -22144,7 +22473,7 @@ impl ShellState {
                 )
                 .required(),
             ]),
-            CommandDefinition::new("os.resetDock", "Reset Dock Layout", CommandScope::Os, "layout"),
+            CommandDefinition::new_catalog("os.resetDock", "Reset Dock Layout", CommandScope::Os, "layout"),
         ]
     }
 
@@ -22638,6 +22967,7 @@ mod command_registry_tests {
             modes: Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
+                icon_id: "square-pen".into(),
                 tools: vec![],
                 layout_id: None,
                 commands: mode_commands,
@@ -22731,11 +23061,11 @@ mod command_registry_tests {
 
     #[test]
     fn resolve_commands_tags_every_source() {
-        let os_commands = vec![CommandDefinition::new("os.setLocale", "Set Locale", CommandScope::Os, "language")];
-        let app_command = CommandDefinition::new("app.export", "Export", CommandScope::App, "app");
-        let mode_command = CommandDefinition::new("mode.focus", "Focus Mode", CommandScope::Mode, "mode");
+        let os_commands = vec![CommandDefinition::new_catalog("os.setLocale", "Set Locale", CommandScope::Os, "language")];
+        let app_command = CommandDefinition::new_catalog("app.export", "Export", CommandScope::App, "app");
+        let mode_command = CommandDefinition::new_catalog("mode.focus", "Focus Mode", CommandScope::Mode, "mode");
         let unreferenced_mode_command =
-            CommandDefinition::new("mode.other", "Other Mode Command", CommandScope::Mode, "mode");
+            CommandDefinition::new_catalog("mode.other", "Other Mode Command", CommandScope::Mode, "mode");
         let app = test_app(
             vec![app_command.clone(), mode_command.clone(), unreferenced_mode_command],
             vec![semio_framework_core::CommandRef::new("mode.focus")],
@@ -22749,7 +23079,7 @@ mod command_registry_tests {
             examples: vec![],
             capabilities: vec![],
             contributions: vec![],
-            commands: vec![CommandDefinition::new("plugin.doThing", "Do Thing", CommandScope::Plugin, "plugin")],
+            commands: vec![CommandDefinition::new_catalog("plugin.doThing", "Do Thing", CommandScope::Plugin, "plugin")],
         };
         let resolved = resolve_commands(os_commands, Some(&plugin_manifest), &app, "default");
         let sources: Vec<(&str, CommandSource)> = resolved
@@ -22771,15 +23101,15 @@ mod command_registry_tests {
     fn command_categories_orders_by_first_appearance_and_dedupes() {
         let resolved = vec![
             ResolvedCommand {
-                definition: CommandDefinition::new("a", "A", CommandScope::Os, "appearance"),
+                definition: CommandDefinition::new_catalog("a", "A", CommandScope::Os, "appearance"),
                 source: CommandSource::Os,
             },
             ResolvedCommand {
-                definition: CommandDefinition::new("b", "B", CommandScope::Os, "layout"),
+                definition: CommandDefinition::new_catalog("b", "B", CommandScope::Os, "layout"),
                 source: CommandSource::Os,
             },
             ResolvedCommand {
-                definition: CommandDefinition::new("c", "C", CommandScope::Os, "appearance"),
+                definition: CommandDefinition::new_catalog("c", "C", CommandScope::Os, "appearance"),
                 source: CommandSource::Os,
             },
         ];
@@ -24661,7 +24991,7 @@ impl ShellState {
             self.render_footer(chrome, atlas, icons, input, theme, w, h);
         });
         if let Some(overlay) = overlay_slot.as_deref_mut() {
-            self.render_overlay(overlay, atlas, input, theme, w, h);
+            self.render_overlay(overlay, atlas, icons, input, theme, w, h);
             self.render_tree_drag_overlay(overlay, input, theme);
             render_tutorial_gesture_overlay(self, overlay, theme);
         }
@@ -24947,11 +25277,15 @@ impl ShellState {
         x += atlas.measure_text(&title, theme.font_size_body).0 + theme.gap_standard * 2.0;
         let examples = self.active_plugin_examples();
         if !examples.is_empty() && !self.space_mode {
-            let active_label = examples
+            let active_example = examples
                 .iter()
-                .find(|ex| Some(&ex.id) == self.active_example_id.as_ref())
+                .find(|ex| Some(&ex.id) == self.active_example_id.as_ref());
+            let active_label = active_example
                 .map(|ex| ex.label.as_str())
                 .unwrap_or("Example");
+            let active_example_icon = active_example
+                .map(|ex| ex.icon_id.as_str())
+                .unwrap_or("file-text");
             let fixture_w = atlas.measure_text(active_label, theme.font_size_small).0
                 + theme.padding_standard * 2.0
                 + theme.gap_standard;
@@ -24966,7 +25300,7 @@ impl ShellState {
                 fixture_rect,
                 &[ChromeGroupItem {
                     control_id: "playground.navbar.fixture",
-                    icon_id: None,
+                    icon_id: Some(active_example_icon),
                     label: Some(active_label),
                     active: self.overlay_state == OverlayState::Dropdown("example".to_string()),
                     disabled: false,
@@ -25128,7 +25462,7 @@ impl ShellState {
                             .unwrap_or(session.app.default_mode_id.as_str());
                         ChromeGroupItem {
                             control_id: control_id.as_str(),
-                            icon_id: None,
+                            icon_id: Some(mode.icon_id.as_str()),
                             label: Some(mode.label.as_str()),
                             active: active_mode == mode.id,
                             disabled: false,
@@ -25765,6 +26099,7 @@ impl ShellState {
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
+        icons: &IconAtlas,
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         width: f32,
@@ -26002,7 +26337,7 @@ impl ShellState {
         }
         // render_palette removed
         if let Some(menu) = &self.context_menu {
-            self.render_context_menu(overlay, atlas, input, theme, menu);
+            self.render_context_menu(overlay, atlas, icons, input, theme, menu);
         }
         self.render_chrome_tooltip(overlay, atlas, input, theme, width, height);
         self.render_chrome_dialog(overlay, atlas, input, theme, width, height);
@@ -27826,7 +28161,7 @@ impl ShellState {
                 let has_args = !action.args.is_empty();
                 let row = Rect::new(body_x, y, body_w, row_h);
                 let icon = if !has_args {
-                    action.icon_id.map(|i| i.as_str())
+                    Some(action.icon_id.as_str())
                 } else if is_expanded {
                     Some("chevron-down")
                 } else {
@@ -28203,31 +28538,121 @@ impl ShellState {
         &self,
         overlay: &mut DrawList,
         atlas: &mut FontAtlas,
+        icons: &IconAtlas,
         input: &mut InputState<ActionDescriptor>,
         theme: &Theme,
         menu: &ContextMenuState,
     ) {
+        Self::render_context_menu_level(overlay, atlas, icons, input, theme, menu, &menu.items, &[], menu.x, menu.y);
+    }
+
+    fn render_context_menu_level(
+        overlay: &mut DrawList,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        menu: &ContextMenuState,
+        items: &[ContextMenuItem],
+        path_prefix: &[usize],
+        origin_x: f32,
+        origin_y: f32,
+    ) {
         let row_h = theme.control_height;
         let w = 180.0;
-        let h = menu.items.len() as f32 * row_h + 8.0;
-        let rect = Rect::new(menu.x, menu.y, w, h);
+        let row_count = items.iter().filter(|item| !item.separator).count();
+        let h = row_count as f32 * row_h + 8.0;
+        let rect = Rect::new(origin_x, origin_y, w, h);
         overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
-        for (index, item) in menu.items.iter().enumerate() {
-            let row = Rect::new(rect.x + 4.0, rect.y + 4.0 + index as f32 * row_h, w - 8.0, row_h);
-            overlay.push_rounded([row.x, row.y, row.w, row.h], theme.button, theme.border_radius);
-            chrome_text(overlay, atlas, input, theme, &item.label,
-                row.x + 8.0,
+        let icon_size = theme.font_size_body;
+        let ordinal_gap = theme.font_size_small * 0.85;
+        let mut visual_row = 0usize;
+        let mut ordinal = 0usize;
+        for (index, item) in items.iter().enumerate() {
+            if item.separator {
+                continue;
+            }
+            ordinal += 1;
+            let row_path: Vec<usize> = path_prefix.iter().copied().chain(std::iter::once(index)).collect();
+            let is_active = context_menu_paths_equal(&menu.active, &row_path);
+            let has_children = !item.children.is_empty();
+            let submenu_collapsed = menu
+                .submenu_collapsed_at
+                .as_deref()
+                .is_some_and(|collapsed| context_menu_paths_equal(collapsed, &row_path));
+            let submenu_open = (context_menu_submenu_open(&menu.active, &row_path, is_active, has_children)
+                || (is_active && has_children))
+                && !submenu_collapsed;
+            let row = Rect::new(rect.x + 4.0, rect.y + 4.0 + visual_row as f32 * row_h, w - 8.0, row_h);
+            visual_row += 1;
+            let (bg, fg) = if is_active {
+                (theme.accent, theme.active_foreground)
+            } else {
+                (theme.button, theme.text)
+            };
+            overlay.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius);
+            let mut text_x = row.x + 8.0;
+            if ordinal <= 9 {
+                let badge = format!("{ordinal}");
+                chrome_text(
+                    overlay,
+                    atlas,
+                    input,
+                    theme,
+                    &badge,
+                    text_x,
+                    row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
+                    theme.font_size_small,
+                    theme.text_muted,
+                );
+                text_x += ordinal_gap;
+            }
+            let icon_id = item.icon.as_deref().unwrap_or("circle-dot");
+            chrome_icon(
+                overlay,
+                icons,
+                icon_id,
+                text_x,
+                row.y + (row.h - icon_size) * 0.5,
+                icon_size,
+                if item.disabled { theme.text_muted } else { fg },
+            );
+            text_x += icon_size + theme.gap_standard;
+            chrome_text(
+                overlay,
+                atlas,
+                input,
+                theme,
+                &item.label,
+                text_x,
                 row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
                 theme.font_size_small,
-                theme.text);
-            input.register_hit(HitTarget {
-                rect: row,
-                event: item.action.clone(),
-                control_id: Some(item.id.clone()),
-                kind: HitKind::ContextMenu,
-                drag_axis: None,
-            drag_data: None,
-            });
+                if item.disabled { theme.text_muted } else { fg },
+            );
+            if !item.disabled {
+                input.register_hit(HitTarget {
+                    rect: row,
+                    event: item.action.clone(),
+                    control_id: Some(item.id.clone()),
+                    kind: HitKind::ContextMenu,
+                    drag_axis: None,
+                    drag_data: None,
+                });
+            }
+            if submenu_open {
+                Self::render_context_menu_level(
+                    overlay,
+                    atlas,
+                    icons,
+                    input,
+                    theme,
+                    menu,
+                    &item.children,
+                    &row_path,
+                    row.x + row.w + 4.0,
+                    row.y,
+                );
+            }
         }
     }
 
@@ -30086,6 +30511,35 @@ fn toggle_fullscreen() {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn toggle_fullscreen() {}
+
+#[cfg(test)]
+mod context_menu_keyboard_tests {
+    use super::*;
+
+    #[test]
+    fn context_menu_path_for_ordinal_selects_enabled_rows() {
+        let items = vec![
+            ContextMenuItem {
+                id: "a".into(),
+                label: "A".into(),
+                ..Default::default()
+            },
+            ContextMenuItem {
+                id: "b".into(),
+                label: "B".into(),
+                ..Default::default()
+            },
+        ];
+        assert_eq!(context_menu_path_for_ordinal(&items, &[], 2), Some(vec![1]));
+    }
+
+    #[test]
+    fn context_menu_submenu_open_follows_active_path() {
+        assert!(context_menu_submenu_open(&[0, 0], &[0], false, true));
+        assert!(context_menu_submenu_open(&[0], &[0], true, true));
+        assert!(!context_menu_submenu_open(&[1], &[0], false, true));
+    }
+}
 // #endregion shell
 }
 
@@ -30776,8 +31230,26 @@ impl AppRuntime {
     }
 
     fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
-        if let KeyAction::Space(pressed) = action {
-            self.space_pressed = pressed;
+        if let KeyAction::Space(pressed) = &action {
+            if self.shell.context_menu.is_some() && *pressed {
+                let runtime = self.self_weak.clone();
+                spawn_app_task(async move {
+                    if let Some(runtime) = runtime.upgrade() {
+                        if let Ok(mut app) = runtime.try_borrow_mut() {
+                            let app = &mut *app;
+                            if let Err(err) = app
+                                .shell
+                                .handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut app.input)
+                                .await
+                            {
+                                log_debug(&format!("[DEBUG] keyboard failed: {err}"));
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+            self.space_pressed = *pressed;
             return;
         }
         if engine_canvas::node_graph_apply_note_edit_key(action.clone(), &modifiers) {

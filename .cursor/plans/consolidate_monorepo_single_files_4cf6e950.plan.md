@@ -36,7 +36,7 @@ isProject: false
 
 ## Context
 
-This request maps directly onto an **already-open** ticket: [`.repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json`](.repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json) under goal `🎯️aioptimizedrepo🎯️singlefilerepo`. Its description: _"Consolidate monorepo source into single files where frameworks allow. Keep required separate entry points... Update imports and package exports. Run tests."_ Prior sessions already merged `geometry-brep-js`, `repo/lib/js` (internal files only, not the `src/` wrapper itself), `repo/client/vscode` codegen, `mathematical/graph` Rust modules, `infinite/cavas` vello, and `compose/client/lib/py` tests. Per the repo workflow rule, this work continues by **reopening that ticket** rather than creating a new one.
+This request maps directly onto an **already-open** ticket: [`.repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json`](.repo/🎫️/26/05/30/CONSOLIDATE-MONOREPO-INTO-SINGLE-FILES/ticket.json) under goal `🎯️aioptimizedrepo🎯️singlefilerepo`. Its description: _"Consolidate monorepo source into single files where frameworks allow. Keep required separate entry points... Update imports and package exports. Run tests."_ Prior sessions already merged `geometry-brep-js`, `repo/lib/js` (internal files only, not the `src/` wrapper itself), `repo/client/vscode` codegen, `mathematical/graph` Rust modules, `infinite/canvas` vello, and `compose/client/lib/py` tests. Per the repo workflow rule, this work continues by **reopening that ticket** rather than creating a new one.
 
 Only **2** real `src/` folders exist in the whole repo (`repo/lib/js/src/`, `ui/styling/rs/src/`) — both are documented as not-yet-flattened follow-ups in the ticket's own history.
 
@@ -73,7 +73,7 @@ Continuing the ticket's established pattern (fold sibling files into the bundle'
 - `semios/core/rust-studio.ts` → `index.ts`
 - `vcs/play/demo.ts` → `index.ts`
 - `framework/product/presentation/renderer/react/json.tsx` → `index.tsx`
-- `infinite/cavas/rs/{icon_codec.rs,theme.rs}` → `lib.rs` (leave `build.rs`, required by cargo)
+- `infinite/canvas/rs/{icon_codec.rs,theme.rs}` → `lib.rs` (leave `build.rs`, required by cargo)
 - `kernel/2d/rs/{booleans.rs,trace.rs}` → `lib.rs`
 - `kernel/2d/engine/compute.rs` → `lib.rs`
 - `kernel/3d/engine/compute.rs` → `lib.rs`

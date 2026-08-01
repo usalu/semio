@@ -1397,7 +1397,7 @@ export type SectionProbe = { readonly kind: number; readonly key: string; readon
 
 export type AppCommandValue =
   | { readonly Hello: { readonly channel_version: number; readonly app_id: string; readonly actor: string; readonly config: readonly number[] } }
-  | { readonly Configure: { readonly seq: number; readonly config: readonly number[] } }
+  | { readonly ConfigCommand: { readonly seq: number; readonly command: readonly number[] } }
   | { readonly Command: { readonly seq: number; readonly command: readonly number[]; readonly view_state: readonly number[] } }
   | { readonly CommandText: { readonly seq: number; readonly line: string } }
   | { readonly RefreshUi: { readonly seq: number; readonly sections: readonly SectionProbe[]; readonly view_state: readonly number[] } }
@@ -1406,6 +1406,8 @@ export type AppCommandValue =
   | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly (readonly number[])[] } }
   | { readonly LoadDocument: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadDocument: { readonly seq: number } }
+  | { readonly LoadConfig: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
+  | { readonly ReadConfig: { readonly seq: number } }
   | { readonly AttachBackbone: { readonly seq: number; readonly uri: string } }
   | { readonly DetachBackbone: { readonly seq: number } }
   | { readonly MediaIn: { readonly seq: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
@@ -1422,6 +1424,8 @@ export type AppFrameValue =
   | { readonly Events: { readonly in_reply_to: number | null; readonly events: readonly (readonly number[])[] } }
   | { readonly DocumentChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
   | { readonly Document: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
+  | { readonly Config: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
+  | { readonly ConfigChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
   | { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }
   | { readonly Media: { readonly in_reply_to: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
   | { readonly MediaFingerprint: { readonly in_reply_to: number; readonly port: string; readonly fingerprint: readonly number[] } }
@@ -1464,12 +1468,13 @@ function readVecSectionProbe(bytes: Uint8Array, pos: [number]): SectionProbe[] {
 
 //#region 🔖️Codec
 const APP_COMMAND_TAGS = {
-  Hello: 0, Configure: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, DocumentCommand: 6, ApplyEnvelopes: 7,
-  LoadDocument: 8, ReadDocument: 9, AttachBackbone: 10, DetachBackbone: 11, MediaIn: 12, MediaOut: 13, MediaFingerprint: 14, Bye: 15,
+  Hello: 0, ConfigCommand: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, DocumentCommand: 6, ApplyEnvelopes: 7,
+  LoadDocument: 8, ReadDocument: 9, LoadConfig: 10, ReadConfig: 11, AttachBackbone: 12, DetachBackbone: 13, MediaIn: 14, MediaOut: 15,
+  MediaFingerprint: 16, Bye: 17,
 } as const;
 const APP_FRAME_TAGS = {
   Welcome: 0, Done: 1, Invocation: 2, UiSection: 3, Effects: 4, Events: 5, DocumentChanged: 6, Document: 7,
-  ContextMenu: 8, Media: 9, MediaFingerprint: 10, Error: 11,
+  Config: 8, ConfigChanged: 9, ContextMenu: 10, Media: 11, MediaFingerprint: 12, Error: 13,
 } as const;
 
 /** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
@@ -1485,10 +1490,10 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     writeStr(out, cmd.Hello.app_id);
     writeStr(out, cmd.Hello.actor);
     writeBytes(out, cmd.Hello.config);
-  } else if ("Configure" in cmd) {
-    out.push(APP_COMMAND_TAGS.Configure);
-    writeVarintU64(out, cmd.Configure.seq);
-    writeBytes(out, cmd.Configure.config);
+  } else if ("ConfigCommand" in cmd) {
+    out.push(APP_COMMAND_TAGS.ConfigCommand);
+    writeVarintU64(out, cmd.ConfigCommand.seq);
+    writeBytes(out, cmd.ConfigCommand.command);
   } else if ("Command" in cmd) {
     out.push(APP_COMMAND_TAGS.Command);
     writeVarintU64(out, cmd.Command.seq);
@@ -1523,6 +1528,14 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("ReadDocument" in cmd) {
     out.push(APP_COMMAND_TAGS.ReadDocument);
     writeVarintU64(out, cmd.ReadDocument.seq);
+  } else if ("LoadConfig" in cmd) {
+    out.push(APP_COMMAND_TAGS.LoadConfig);
+    writeVarintU64(out, cmd.LoadConfig.seq);
+    writeBytes(out, cmd.LoadConfig.pack);
+    writeBytes(out, cmd.LoadConfig.spr);
+  } else if ("ReadConfig" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadConfig);
+    writeVarintU64(out, cmd.ReadConfig.seq);
   } else if ("AttachBackbone" in cmd) {
     out.push(APP_COMMAND_TAGS.AttachBackbone);
     writeVarintU64(out, cmd.AttachBackbone.seq);
@@ -1563,8 +1576,8 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       const config = readBytes(bytes, pos);
       return { Hello: { channel_version, app_id, actor, config } };
     }
-    case APP_COMMAND_TAGS.Configure:
-      return { Configure: { seq: readVarintU64(bytes, pos), config: readBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.ConfigCommand:
+      return { ConfigCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos) } };
     case APP_COMMAND_TAGS.Command: {
       const seq = readVarintU64(bytes, pos);
       const command = readBytes(bytes, pos);
@@ -1593,6 +1606,14 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     }
     case APP_COMMAND_TAGS.ReadDocument:
       return { ReadDocument: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.LoadConfig: {
+      const seq = readVarintU64(bytes, pos);
+      const pack = readBytes(bytes, pos);
+      const spr = readBytes(bytes, pos);
+      return { LoadConfig: { seq, pack, spr } };
+    }
+    case APP_COMMAND_TAGS.ReadConfig:
+      return { ReadConfig: { seq: readVarintU64(bytes, pos) } };
     case APP_COMMAND_TAGS.AttachBackbone:
       return { AttachBackbone: { seq: readVarintU64(bytes, pos), uri: readStr(bytes, pos) } };
     case APP_COMMAND_TAGS.DetachBackbone:
@@ -1660,6 +1681,16 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Document.pack);
     writeBytes(out, frame.Document.spr);
     writeStr(out, frame.Document.ops);
+  } else if ("Config" in frame) {
+    out.push(APP_FRAME_TAGS.Config);
+    writeVarintU64(out, frame.Config.in_reply_to);
+    writeBytes(out, frame.Config.pack);
+    writeBytes(out, frame.Config.spr);
+    writeStr(out, frame.Config.ops);
+  } else if ("ConfigChanged" in frame) {
+    out.push(APP_FRAME_TAGS.ConfigChanged);
+    writeVecBytes(out, frame.ConfigChanged.envelopes);
+    writeStr(out, frame.ConfigChanged.origin);
   } else if ("ContextMenu" in frame) {
     out.push(APP_FRAME_TAGS.ContextMenu);
     writeVarintU64(out, frame.ContextMenu.in_reply_to);
@@ -1730,6 +1761,18 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const ops = readStr(bytes, pos);
       return { Document: { in_reply_to, pack, spr, ops } };
     }
+    case APP_FRAME_TAGS.Config: {
+      const in_reply_to = readVarintU64(bytes, pos);
+      const pack = readBytes(bytes, pos);
+      const spr = readBytes(bytes, pos);
+      const ops = readStr(bytes, pos);
+      return { Config: { in_reply_to, pack, spr, ops } };
+    }
+    case APP_FRAME_TAGS.ConfigChanged: {
+      const envelopes = readVecBytes(bytes, pos);
+      const origin = readStr(bytes, pos);
+      return { ConfigChanged: { envelopes, origin } };
+    }
     case APP_FRAME_TAGS.ContextMenu:
       return { ContextMenu: { in_reply_to: readVarintU64(bytes, pos), items: readBytes(bytes, pos) } };
     case APP_FRAME_TAGS.Media: {
@@ -1763,7 +1806,7 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
  * 📡️ TS twin of `protocol_channel::CHANNEL_VERSION` (`🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs`)
  * — bump both sides together on a wire-incompatible frame change.
  */
-const APP_CHANNEL_VERSION = 1;
+const APP_CHANNEL_VERSION = 3;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
@@ -1777,7 +1820,7 @@ export type AppChannelHandle = Pick<PluginWasmHandle, "exchange">;
  * happens on the host side; callers (a React renderer's dispatch/refresh loop, a headless workflow
  * runner) work with decoded frames and plain JS values, never raw bytes or wire tags. `seq` is a
  * per-client monotonic counter — the host has no other way to correlate a `Command`/`RefreshUi`/
- * `Configure`/`LoadDocument`/`ReadDocument` with the `Invocation`/`UiSection`/`Effects`/`Events`/
+ * `ConfigCommand`/`LoadDocument`/`ReadDocument`/`LoadConfig`/`ReadConfig` with the `Invocation`/`UiSection`/`Effects`/`Events`/
  * `Document` frame(s) it produced (`AppFrame.*.in_reply_to`).
  */
 export class AppChannelClient {
@@ -1833,7 +1876,7 @@ export class AppChannelClient {
   }
 
   async configure(config: unknown): Promise<AppFrameValue[]> {
-    return this.exchangeOne({ Configure: { seq: this.nextSeq(), config: Array.from(encodePackValue(config)) } });
+    return this.exchangeOne({ ConfigCommand: { seq: this.nextSeq(), command: Array.from(encodePackValue(config)) } });
   }
 
   async readDocument(): Promise<AppFrameValue[]> {
@@ -1853,6 +1896,26 @@ export class AppChannelClient {
   /** 🔗️ Detaches this instance's backbone, if any. */
   async detachBackbone(): Promise<AppFrameValue[]> {
     return this.exchangeOne({ DetachBackbone: { seq: this.nextSeq() } });
+  }
+
+  /** 🖱️ On-demand context menu — one `ContextMenu` reply whose `in_reply_to` matches this call's `seq`. */
+  async contextMenu(request: unknown): Promise<unknown> {
+    const seq = this.nextSeq();
+    const frames = await this.exchangeOne({
+      ContextMenu: { seq, request: Array.from(encodePackValue(request)) },
+    });
+    const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    if (errorFrame) {
+      throw new Error(`AppChannelClient.contextMenu(${this.appId}): ${errorFrame.Error.code}: ${errorFrame.Error.message}`);
+    }
+    const menuFrame = frames.find(
+      (frame): frame is Extract<AppFrameValue, { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }> =>
+        "ContextMenu" in frame && frame.ContextMenu.in_reply_to === seq,
+    );
+    if (!menuFrame) {
+      throw new Error(`AppChannelClient.contextMenu(${this.appId}): missing ContextMenu frame for seq ${seq}`);
+    }
+    return decodePackValue(new Uint8Array(menuFrame.ContextMenu.items));
   }
 
   /** 💓️ The heartbeat — a pure drain (`exchange(id, [])`) for pending effects/events/backbone-ingested
@@ -2095,8 +2158,8 @@ if (import.meta.vitest) {
 
   describe("@semio-tech/framework-os-core AppChannelCodec", () => {
     const sampleCommands: readonly AppCommandValue[] = [
-      { Hello: { channel_version: 1, app_id: "app.demo", actor: "actor-1", config: [1, 2, 3] } },
-      { Configure: { seq: 1, config: [4, 5] } },
+      { Hello: { channel_version: 3, app_id: "app.demo", actor: "actor-1", config: [1, 2, 3] } },
+      { ConfigCommand: { seq: 1, command: [4, 5] } },
       { Command: { seq: 2, command: [1], view_state: [2, 3] } },
       { CommandText: { seq: 3, line: "move 1 2" } },
       { RefreshUi: { seq: 4, sections: [{ kind: 1, key: "panel-a", hash: 42 }, { kind: 2, key: "panel-b", hash: null }], view_state: [] } },
@@ -2105,16 +2168,18 @@ if (import.meta.vitest) {
       { ApplyEnvelopes: { seq: 7, envelopes: [[1, 2], [3, 4, 5], []] } },
       { LoadDocument: { seq: 8, pack: [1, 2, 3], spr: [4, 5, 6] } },
       { ReadDocument: { seq: 9 } },
-      { AttachBackbone: { seq: 10, uri: "file:///tmp/a.json" } },
-      { DetachBackbone: { seq: 11 } },
-      { MediaIn: { seq: 12, port: "in-1", descriptor: [1], data: [2, 3] } },
-      { MediaOut: { seq: 13, port: "out-1", request: [4] } },
-      { MediaFingerprint: { seq: 14, port: "fp-1" } },
+      { LoadConfig: { seq: 10, pack: [1], spr: [2] } },
+      { ReadConfig: { seq: 11 } },
+      { AttachBackbone: { seq: 12, uri: "file:///tmp/a.json" } },
+      { DetachBackbone: { seq: 13 } },
+      { MediaIn: { seq: 14, port: "in-1", descriptor: [1], data: [2, 3] } },
+      { MediaOut: { seq: 15, port: "out-1", request: [4] } },
+      { MediaFingerprint: { seq: 16, port: "fp-1" } },
       "Bye",
     ];
 
     const sampleFrames: readonly AppFrameValue[] = [
-      { Welcome: { channel_version: 1, instance: 7, manifest: [1, 2, 3] } },
+      { Welcome: { channel_version: 3, instance: 7, manifest: [1, 2, 3] } },
       { Done: { in_reply_to: 1 } },
       { Invocation: { in_reply_to: 2, output: [1], diagnostics: [] } },
       { UiSection: { in_reply_to: 3, kind: 1, key: "panel-a", hash: 42, body: [1, 2] } },
@@ -2141,7 +2206,7 @@ if (import.meta.vitest) {
 
     it("tags every AppCommand variant per the agreed contract order (Hello=0 ... Bye=15)", () => {
       expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
-      expect(encodeAppCommand({ Configure: { seq: 0, config: [] } })[0]).toBe(1);
+      expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(1);
       expect(encodeAppCommand("Bye")[0]).toBe(15);
     });
 
@@ -2161,10 +2226,10 @@ if (import.meta.vitest) {
      * golden hex in the same change.
      */
     it("matches protocol_channel's own golden hex fixture corpus, byte-for-byte", () => {
-      const commandFixtures: readonly (readonly [string, AppCommandValue])[] = [
-        ["Hello", { Hello: { channel_version: 1, app_id: "app", actor: "actor", config: [1, 2] } }],
-        ["Configure", { Configure: { seq: 1, config: [9] } }],
-        ["Command", { Command: { seq: 1, command: [1], view_state: [2] } }],
+            const commandFixtures: readonly (readonly [string, AppCommandValue])[] = [
+        ["Hello", { Hello: { channel_version: 3, app_id: "app", actor: "actor", config: [1, 2] } }],
+        ["ConfigCommand", { ConfigCommand: { seq: 1, command: [9] } }],
+        ["Command", { Command: { seq: 1, command: [1], view_state: [] } }],
         ["CommandText", { CommandText: { seq: 1, line: "go" } }],
         ["RefreshUi", { RefreshUi: { seq: 1, sections: [{ kind: 1, key: "a", hash: 1 }], view_state: [] } }],
         ["ContextMenu", { ContextMenu: { seq: 1, request: [1] } }],
@@ -2172,6 +2237,8 @@ if (import.meta.vitest) {
         ["ApplyEnvelopes", { ApplyEnvelopes: { seq: 1, envelopes: [] } }],
         ["LoadDocument", { LoadDocument: { seq: 1, pack: [1], spr: [2] } }],
         ["ReadDocument", { ReadDocument: { seq: 1 } }],
+        ["LoadConfig", { LoadConfig: { seq: 1, pack: [1], spr: [2] } }],
+        ["ReadConfig", { ReadConfig: { seq: 1 } }],
         ["AttachBackbone", { AttachBackbone: { seq: 1, uri: "u" } }],
         ["DetachBackbone", { DetachBackbone: { seq: 1 } }],
         ["MediaIn", { MediaIn: { seq: 1, port: "p", descriptor: [1], data: [2] } }],
@@ -2179,10 +2246,10 @@ if (import.meta.vitest) {
         ["MediaFingerprint", { MediaFingerprint: { seq: 1, port: "p" } }],
         ["Bye", "Bye"],
       ];
-      const commandGoldenHex: Readonly<Record<string, string>> = {
-        Hello: "000103617070056163746f72020102",
-        Configure: "01010109",
-        Command: "020101010102",
+            const commandGoldenHex: Readonly<Record<string, string>> = {
+        Hello: "000303617070056163746f72020102",
+        ConfigCommand: "01010109",
+        Command: "0201010100",
         CommandText: "030102676f",
         RefreshUi: "040101010161010100",
         ContextMenu: "05010101",
@@ -2190,15 +2257,17 @@ if (import.meta.vitest) {
         ApplyEnvelopes: "070100",
         LoadDocument: "080101010102",
         ReadDocument: "0901",
-        AttachBackbone: "0a010175",
-        DetachBackbone: "0b01",
-        MediaIn: "0c01017001010102",
-        MediaOut: "0d0101700101",
-        MediaFingerprint: "0e010170",
-        Bye: "0f",
+        LoadConfig: "0a0101010102",
+        ReadConfig: "0b01",
+        AttachBackbone: "0c010175",
+        DetachBackbone: "0d01",
+        MediaIn: "0e01017001010102",
+        MediaOut: "0f0101700101",
+        MediaFingerprint: "10010170",
+        Bye: "11",
       };
-      const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
-        ["Welcome", { Welcome: { channel_version: 1, instance: 1, manifest: [1] } }],
+            const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
+        ["Welcome", { Welcome: { channel_version: 3, instance: 1, manifest: [1] } }],
         ["Done", { Done: { in_reply_to: 1 } }],
         ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [] } }],
         ["UiSection", { UiSection: { in_reply_to: 1, kind: 1, key: "k", hash: 1, body: null } }],
@@ -2206,13 +2275,15 @@ if (import.meta.vitest) {
         ["Events", { Events: { in_reply_to: null, events: [] } }],
         ["DocumentChanged", { DocumentChanged: { envelopes: [], origin: "o" } }],
         ["Document", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
+        ["Config", { Config: { in_reply_to: 1, pack: [1], spr: [2], ops: "c" } }],
+        ["ConfigChanged", { ConfigChanged: { envelopes: [], origin: "o" } }],
         ["ContextMenu", { ContextMenu: { in_reply_to: 1, items: [1] } }],
         ["Media", { Media: { in_reply_to: 1, port: "p", descriptor: [1], data: [2] } }],
         ["MediaFingerprint", { MediaFingerprint: { in_reply_to: 1, port: "p", fingerprint: [1] } }],
         ["Error", { Error: { in_reply_to: null, code: "c", message: "m" } }],
       ];
-      const frameGoldenHex: Readonly<Record<string, string>> = {
-        Welcome: "0001010101",
+            const frameGoldenHex: Readonly<Record<string, string>> = {
+        Welcome: "0003010101",
         Done: "0101",
         Invocation: "0201010100",
         UiSection: "03010101016b0100",
@@ -2220,10 +2291,12 @@ if (import.meta.vitest) {
         Events: "050000",
         DocumentChanged: "0600016f",
         Document: "070101010102016f",
-        ContextMenu: "08010101",
-        Media: "0901017001010102",
-        MediaFingerprint: "0a0101700101",
-        Error: "0b000163016d",
+        Config: "0801010101020163",
+        ConfigChanged: "0900016f",
+        ContextMenu: "0a010101",
+        Media: "0b01017001010102",
+        MediaFingerprint: "0c0101700101",
+        Error: "0d000163016d",
       };
       const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
       for (const [label, value] of commandFixtures) expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandGoldenHex[label]);
@@ -2249,12 +2322,12 @@ if (import.meta.vitest) {
       const handle = fakeHandle((instanceId, commands) => {
         seen = commands;
         expect(instanceId).toBe(7);
-        return [{ Welcome: { channel_version: 1, instance: 7, manifest: [9, 9] } }];
+        return [{ Welcome: { channel_version: 3, instance: 7, manifest: [9, 9] } }];
       });
       const client = new AppChannelClient(handle, 7, "app.demo", "actor-1");
       const frame = await client.hello({ mode: "edit" });
-      expect(seen).toEqual([{ Hello: { channel_version: 1, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
-      expect(frame).toEqual({ Welcome: { channel_version: 1, instance: 7, manifest: [9, 9] } });
+      expect(seen).toEqual([{ Hello: { channel_version: 3, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
+      expect(frame).toEqual({ Welcome: { channel_version: 3, instance: 7, manifest: [9, 9] } });
     });
 
     it("hello() throws when the exchange returns no frame", async () => {
@@ -2292,7 +2365,7 @@ if (import.meta.vitest) {
       await client.readDocument();
       await client.loadDocument(new Uint8Array([1]), new Uint8Array([2]));
       expect(seen[0]).toEqual({ RefreshUi: { seq: 1, sections: [{ kind: 1, key: "panel-a", hash: null }], view_state: [] } });
-      expect(seen[1]).toEqual({ Configure: { seq: 2, config: Array.from(encodePackValue({ locale: "en" })) } });
+      expect(seen[1]).toEqual({ ConfigCommand: { seq: 2, command: Array.from(encodePackValue({ locale: "en" })) } });
       expect(seen[2]).toEqual({ ReadDocument: { seq: 3 } });
       expect(seen[3]).toEqual({ LoadDocument: { seq: 4, pack: [1], spr: [2] } });
     });

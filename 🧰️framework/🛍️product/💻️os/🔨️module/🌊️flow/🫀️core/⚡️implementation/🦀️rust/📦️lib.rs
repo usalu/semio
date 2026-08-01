@@ -1,7 +1,7 @@
 //! 🌊️ Flow core: widgets, neural evaluation, and DAG canvas host.
 
 pub use infinite_board_port_directed_dag as dag;
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -2378,7 +2378,7 @@ impl FlowHost {
     }
 
     pub fn set_selection_options(&mut self, method: &str, mode: &str) {
-        self.dag.set_selection_options(method, mode, true, false, false);
+        self.dag.set_selection_options(method, mode, true, true, true);
     }
 
     pub fn selection_preview_points_json(&self) -> String {
@@ -2641,6 +2641,7 @@ impl FlowHost {
             self.dag.set_forced_draw_lod_label(&label);
         }
         self.dag.set_ghost_node(ghost);
+        self.dag.set_minimap_widget_visible(true);
         self.sync_preview_dimmed();
         self.sync_from_dag();
     }
@@ -2650,9 +2651,14 @@ impl FlowHost {
         self.dag.set_dimmed(&off);
     }
 
-    /// 🎯️ Selected widget ids as JSON array.
+    /// 🎯️ Selected widget ids as JSON array (legacy — prefer {@link selection_domains_json}).
     pub fn selected_widget_ids_json(&self) -> String {
         serde_json::to_string(&self.dag.selected_node_ids()).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// 🎯️ Full selection snapshot as JSON (`nodes`, `edges`, `handles`).
+    pub fn selection_domains_json(&self) -> String {
+        self.dag.selection_domains_json()
     }
 
     /// 🖱️ Hovered widget id when the pointer is over a node or port handle.
@@ -2681,10 +2687,9 @@ impl FlowHost {
         self.dag.selected_channels_json()
     }
 
-    /// ✅️ Replaces selection from a JSON array of widget ids.
+    /// ✅️ Replaces selection from domain JSON or a legacy widget-id array.
     pub fn set_selection_json(&mut self, json: &str) {
-        let ids: Vec<String> = serde_json::from_str(json).unwrap_or_default();
-        self.dag.set_selection(&ids);
+        self.dag.set_selection_domains_json(json);
     }
 
     /// 📦️ Screen-space union bounds of the current selection for DOM overlays.
@@ -2813,9 +2818,9 @@ impl FlowHost {
         DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
 
-    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::Point {
-        use cavas::camera::{screen_to_world, Camera, Viewport};
-        use cavas::Point;
+    fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
+        use canvas::camera::{screen_to_world, Camera, Viewport};
+        use canvas::Point;
         let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.viewport_w, height: self.viewport_h, dpr: self.viewport_dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
@@ -2993,7 +2998,7 @@ impl FlowHost {
         self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark { &ui_styling::BOARD_DARK } else { &ui_styling::BOARD_LIGHT });
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::Scene, width: u32, height: u32, dpr: f64) {
+    pub fn paint_scene(&self, scene: &mut canvas::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
     }
 
@@ -3513,7 +3518,7 @@ use web_sys::HtmlCanvasElement;
 #[cfg(target_arch = "wasm32")]
 struct FlowSessionInner {
     host: FlowHost,
-    gpu: cavas::gpu_session::CanvasGpuSession,
+    gpu: canvas::gpu_session::CanvasGpuSession,
     width: u32,
     height: u32,
     dpr: f64,
@@ -3531,10 +3536,10 @@ impl FlowSessionInner {
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         self.host.sync_dag_ghost();
-        let mut scene = cavas::Scene::new();
+        let mut scene = canvas::Scene::new();
         let clear = self.host.dag.canvas_theme.raster_clear;
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
-        let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, self.dpr);
+        let scene = canvas::render::scale_scene_for_device_pixel_ratio(scene, self.dpr);
         self.gpu.render_frame(&scene, clear)
     }
 }
@@ -3550,7 +3555,7 @@ pub struct FlowSession {
 impl FlowSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
+        Self { state: Rc::new(RefCell::new(FlowSessionInner { host: FlowHost::default(), gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
     }
 
     #[wasm_bindgen(js_name = loadFixtureJson)]
@@ -3645,6 +3650,20 @@ impl FlowSession {
     #[wasm_bindgen(js_name = selectedWidgetIds)]
     pub fn selected_widget_ids(&self) -> String {
         self.state.borrow().host.selected_widget_ids_json()
+    }
+
+    #[wasm_bindgen(js_name = selectedEdgeIds)]
+    pub fn selected_edge_ids(&self) -> String {
+        let domains: serde_json::Value = serde_json::from_str(&self.state.borrow().host.selection_domains_json()).unwrap_or_default();
+        domains
+            .get("edges")
+            .and_then(|value| serde_json::to_string(value).ok())
+            .unwrap_or_else(|| "[]".into())
+    }
+
+    #[wasm_bindgen(js_name = selectionDomainsJson)]
+    pub fn selection_domains_json(&self) -> String {
+        self.state.borrow().host.selection_domains_json()
     }
 
     #[wasm_bindgen(js_name = hoveredWidgetId)]
@@ -3932,7 +3951,7 @@ impl FlowSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));
@@ -5240,8 +5259,8 @@ mod flow_vcs_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cavas::camera::{world_to_screen, Camera, Viewport};
-    use cavas::Point;
+    use canvas::camera::{world_to_screen, Camera, Viewport};
+    use canvas::Point;
     use dag::HandleRole;
     use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
     use std::sync::{Mutex, OnceLock};
@@ -5845,7 +5864,7 @@ mod tests {
 
     #[test]
     fn rebuild_dag_preserves_canvas_theme() {
-        use cavas::Color;
+        use canvas::Color;
         let mut host = FlowHost::default();
         host.dag.canvas_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
         host.rebuild_dag();
@@ -5868,9 +5887,18 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_viewport(1280, 800, 1.0);
         host.set_canvas_theme_dark(true);
-        let mut scene = cavas::Scene::new();
+        let mut scene = canvas::Scene::new();
         host.paint_scene(&mut scene, 1280, 800, 1.0);
         assert!(scene.path_count() > 8, "populated fixture should paint edges, handles, and node bodies under dark board theme");
+    }
+
+    #[test]
+    fn flow_host_enables_minimap_widget_on_dag() {
+        let mut host = host_with_test_bridge();
+        host.set_viewport(1280, 800, 1.0);
+        host.dag.set_camera(200.0, 120.0, 0.65);
+        let raw: serde_json::Value = serde_json::from_str(&host.dag.label_overlay_paint_state_json().unwrap()).unwrap();
+        assert!(raw.get("minimapWidget").is_some());
     }
 
     #[test]
@@ -5946,7 +5974,7 @@ mod tests {
         let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         assert_eq!(add.inputs().len(), 2);
         assert_eq!(add.outputs().len(), 1);
-        let mut scene = cavas::Scene::new();
+        let mut scene = canvas::Scene::new();
         host.set_canvas_theme_dark(true);
         host.paint_scene(&mut scene, 1280, 800, 1.0);
         assert!(scene.path_count() > 8, "rich flow graph should paint edges and handles");
@@ -6354,7 +6382,7 @@ mod tests {
             assert_eq!(ghost_row["layout"], placed_row["layout"]);
             assert_eq!(ghost_row["align"], placed_row["align"]);
         }
-        let mut scene = cavas::Scene::new();
+        let mut scene = canvas::Scene::new();
         host.paint_scene(&mut scene, 1280, 800, 1.0);
     }
 
@@ -6392,7 +6420,7 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_viewport(800, 600, 1.0);
         host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 10.0, 20.0).unwrap();
-        let mut scene = cavas::Scene::new();
+        let mut scene = canvas::Scene::new();
         host.paint_scene(&mut scene, 800, 600, 1.0);
     }
 
@@ -6486,8 +6514,8 @@ mod tests {
 
     #[test]
     fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
-        use cavas::camera::{world_to_screen, Camera, Viewport};
-        use cavas::Point;
+        use canvas::camera::{world_to_screen, Camera, Viewport};
+        use canvas::Point;
         let mut host = FlowHost::default();
         host.set_viewport(1280, 800, 1.0);
         host.fixture.widgets = vec![

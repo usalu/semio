@@ -108,6 +108,8 @@
     "dagNodeHovered": 2.0,
     "dagEdge": 2.0,
     "dagEdgeMinimap": 1.0,
+    "dagMinimapWidgetPanel": 1.25,
+    "dagMinimapWidgetViewport": 1.5,
     "dagChrome": 1.25,
     "mapRouteDefault": 2.0,
     "mapRegionMult": 2.0,
@@ -276,7 +278,14 @@
       "previewMinSize": 20.0,
       "variadicPlusZoomThreshold": 1.5,
       "lodZoomShift": 0.25,
-      "lodBandFloorZoom": [0.05, 0.15, 0.35, 0.55, 1.25, 2.5]
+      "lodBandFloorZoom": [0.05, 0.15, 0.35, 0.55, 1.25, 2.5],
+      "minimapWidgetWidth": 160.0,
+      "minimapWidgetHeight": 120.0,
+      "minimapWidgetMargin": 12.0,
+      "minimapWidgetRadius": 6.0,
+      "minimapWidgetNodeMinSize": 2.0,
+      "minimapWidgetMaxContentRatio": 0.82,
+      "minimapWidgetContentPad": 32.0
     },
     "map": {
       "labelPxBands": [26, 26, 20, 14, 12.5, 12, 10.5, 10.5],
@@ -343,7 +352,7 @@
       "controlValueColumnUiSpacing": 50.0,
       "windowMeasureValueColumnUiSpacing": 32.5,
       "resizableCornerGrabUiSpacing": 7.5,
-      "layoutPanelRailUiSpacing": 70.0,
+      "layoutPanelRailUiSpacing": 93.75,
       "layoutPanelMinUiSpacing": 46.875,
       "layoutPanelMaxUiSpacing": 150.0,
       "layoutEngagementMaxUiSpacing": 140.0,
@@ -403,7 +412,12 @@
         "selectionPreviewStroke": { "token": "primary", "alpha": 0.7 },
         "labelFill": { "token": "gray" },
         "labelFillHovered": { "token": "dark" },
-        "labelHalo": { "token": "light-8-9", "alpha": 0.78 }
+        "labelHalo": { "token": "light-8-9", "alpha": 0.78 },
+        "minimapWidgetPanelFill": { "mix": ["light-8-9", "gray", 0.12], "alpha": 0.92 },
+        "minimapWidgetPanelStroke": { "token": "gray", "alpha": 0.65 },
+        "minimapWidgetViewportFill": { "mix": ["primary", "transparent", 0.08], "alpha": 0.08 },
+        "minimapWidgetViewportStroke": { "token": "primary", "alpha": 0.85 },
+        "minimapWidgetViewportStrokeHovered": { "token": "primary" }
       },
       "map": {
         "surfaceClear": { "token": "dark-6-7" },
@@ -479,7 +493,12 @@
         "selectionPreviewStroke": { "token": "primary", "alpha": 0.7 },
         "labelFill": { "token": "light-gray" },
         "labelFillHovered": { "token": "light" },
-        "labelHalo": { "token": "dark-6-7", "alpha": 0.78 }
+        "labelHalo": { "token": "dark-6-7", "alpha": 0.78 },
+        "minimapWidgetPanelFill": { "mix": ["dark-6-7", "gray-400", 0.18], "alpha": 0.94 },
+        "minimapWidgetPanelStroke": { "token": "gray-600", "alpha": 0.75 },
+        "minimapWidgetViewportFill": { "mix": ["primary", "transparent", 0.1], "alpha": 0.1 },
+        "minimapWidgetViewportStroke": { "token": "primary", "alpha": 0.9 },
+        "minimapWidgetViewportStrokeHovered": { "token": "primary" }
       },
       "map": {
         "surfaceClear": { "token": "gray-100" },

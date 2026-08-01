@@ -37,7 +37,7 @@ isProject: false
 
 # Flow Language: End-to-End Vertical Slice
 
-Build the three parts of `flow` following the established repo triple pattern (`rs` Rust+wasm crate, `react` renderer, `play` playground app) seen in `puzzle/2d`, reusing `DirectedPortGraphEngine` and the `infinite_cavas` Vello scene/React canvas. Almost all target files are currently empty stubs; only the `AGENTS.md` concept docs are filled in (and must NOT be edited).
+Build the three parts of `flow` following the established repo triple pattern (`rs` Rust+wasm crate, `react` renderer, `play` playground app) seen in `puzzle/2d`, reusing `DirectedPortGraphEngine` and the `infinite_canvas` Vello scene/React canvas. Almost all target files are currently empty stubs; only the `AGENTS.md` concept docs are filled in (and must NOT be edited).
 
 ## Target architecture
 
@@ -51,7 +51,7 @@ flowchart TD
       DAG["mathematical/graph/port/directed/dag<br/>(mathematical_graph_port_directed_dag, rlib)<br/>rect IO node (inputs|name|outputs), layered layout, fixture"]
     end
     subgraph p3 [3. Flow UI - specific]
-      CORE["flow/core (flow_core, cdylib wasm -> @semio-tech/flow-core)<br/>FlowSession: widgets, eval, cavas scene"]
+      CORE["flow/core (flow_core, cdylib wasm -> @semio-tech/flow-core)<br/>FlowSession: widgets, eval, canvas scene"]
       REACT["flow/react (@semio-tech/flow-react) FlowCanvas"]
       PLAY["flow/play (@semio-tech/flow-play) PlaygroundFlow + default fixture"]
     end
@@ -88,7 +88,7 @@ Repo MCP is not connected in this session. At execution start: read `repo://goal
 
 ## Part 2 - General-purpose DAG UI (Rust)
 
-- `mathematical/graph/port/directed/dag/lib.rs` + new `mathematical/graph/port/directed/dag/Cargo.toml` (`name = "mathematical_graph_port_directed_dag"`, rlib; deps mirror sibling `normal`: `mathematical_graph_port_directed = { path = "../normal" }`, `mathematical_graph = { path = "../../.." }`, `mathematical_core = { path = "../../../core" }`, `infinite_cavas = { path = "../../../../infinite/cavas/vello" }`, `serde`, `serde_json`).
+- `mathematical/graph/port/directed/dag/lib.rs` + new `mathematical/graph/port/directed/dag/Cargo.toml` (`name = "mathematical_graph_port_directed_dag"`, rlib; deps mirror sibling `normal`: `mathematical_graph_port_directed = { path = "../normal" }`, `mathematical_graph = { path = "../../.." }`, `mathematical_core = { path = "../../../core" }`, `infinite_canvas = { path = "../../../../infinite/canvas/vello" }`, `serde`, `serde_json`).
   - `pub type DagBoardEngine = DirectedPortGraphEngine;` plus a rectangle IO-node model: left input handles, vertical center name, right output handles (per `dag/AGENTS.md`).
   - Region `Layout`: layered (rank-by-longest-path) DAG layout writing node `x/y` into a `dag.fixture/v1` value (reuse Buchheim/`mathematical_core::tree_layout` where natural).
   - Region `GraphExtension`: `impl`/marker for DAG semantics; acyclicity guard on edge insert.
@@ -97,9 +97,9 @@ Repo MCP is not connected in this session. At execution start: read `repo://goal
 
 ## Part 3 - Flow core (Rust cdylib -> wasm)
 
-- `flow/core/lib.rs` + new `flow/core/Cargo.toml` (`name = "flow_core"`, `crate-type = ["rlib","cdylib"]`; deps: `neural_engine`, `flow_module_math`, `mathematical_graph_port_directed_dag`, `infinite_cavas`, `serde`, `serde_json`; `[target.'cfg(target_arch="wasm32")'.dependencies]` `wasm-bindgen`, `serde-wasm-bindgen`, `js-sys`, `web-sys` like [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)).
+- `flow/core/lib.rs` + new `flow/core/Cargo.toml` (`name = "flow_core"`, `crate-type = ["rlib","cdylib"]`; deps: `neural_engine`, `flow_module_math`, `mathematical_graph_port_directed_dag`, `infinite_canvas`, `serde`, `serde_json`; `[target.'cfg(target_arch="wasm32")'.dependencies]` `wasm-bindgen`, `serde-wasm-bindgen`, `js-sys`, `web-sys` like [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml)).
   - Region `Widget`: `Widget = Neuron | Input(Slider|Note) | Output(Preview|Action)` (per [flow/AGENTS.md](flow/AGENTS.md)); maps each widget to a DAG rect node + neural tree node.
-  - Region `FlowSession` (`#[wasm_bindgen]`, like `BoardSession`): load/serialize a `flow.fixture/v1`, build the DAG board scene (cavas `SceneDescriptorJson`), `attach_canvas`/`renderFrame`, pointer/camera input, and `evaluate()` running the neural engine (math registered) to fill `Preview` outputs.
+  - Region `FlowSession` (`#[wasm_bindgen]`, like `BoardSession`): load/serialize a `flow.fixture/v1`, build the DAG board scene (canvas `SceneDescriptorJson`), `attach_canvas`/`renderFrame`, pointer/camera input, and `evaluate()` running the neural engine (math registered) to fill `Preview` outputs.
   - `flow/core/script.ts` (new): `runWasmPackWebBuild({ wasmBaseName: "flow_core", pkg.name: "@semio-tech/flow-core", skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD" })` mirroring [puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts).
   - Add `"flow/core"` to root [Cargo.toml](Cargo.toml) `members`.
   - Region `Tests`: end-to-end native eval of slider->add->preview fixture.

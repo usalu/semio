@@ -1101,7 +1101,7 @@ index f624398e8..de9759729 100644
 +  root,
 +  resolve: {
 +    alias: [
-+      { find: "@infinite/cavas/react-renderer", replacement: resolve(root, "../../infinite/cavas/react-renderer/index.tsx") },
++      { find: "@infinite/canvas/react-renderer", replacement: resolve(root, "../../infinite/canvas/react-renderer/index.tsx") },
 +      { find: "@flow/core", replacement: resolve(root, "../core/pkg/flow_core.js") },
 +    ],
 +  },

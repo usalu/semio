@@ -59,7 +59,7 @@ isProject: false
 ## 4. Icon rendering in the DAG host
 
 - Extract the board host icon pipeline into a shared, reusable unit in the `directed` crate so there is a single source of truth: move `get_or_build_icon_paint` + `icon_vector_cache` + `themed_icon_lookup` (currently `BoardHost` fields/methods in [normal/board_host.rs](mathematical/graph/port/directed/normal/board_host.rs) lines 294-660, 2460-2570) into a shared `IconPaintCache` struct (place in `types.rs` under a new `#region Icons`). `BoardHost` and `DagHost` both hold one.
-- Add `icon_paint_cache` + `themed_icon_lookup` to `DagHost` (lines 989-1009) and a `paint_node_icon` helper mirroring the board host's icon paint call, resolving icons via `infinite_cavas::icon_codec` (self-contained `emoji:`/`svg`/`data:` strings; `themed_icon_lookup = |_| None` default).
+- Add `icon_paint_cache` + `themed_icon_lookup` to `DagHost` (lines 989-1009) and a `paint_node_icon` helper mirroring the board host's icon paint call, resolving icons via `infinite_canvas::icon_codec` (self-contained `emoji:`/`svg`/`data:` strings; `themed_icon_lookup = |_| None` default).
 
 ## 5. Rewrite LOD content selection + paint
 

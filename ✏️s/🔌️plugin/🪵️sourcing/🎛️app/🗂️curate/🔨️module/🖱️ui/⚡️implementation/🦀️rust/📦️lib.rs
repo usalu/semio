@@ -516,7 +516,7 @@ fn sourcing_three_column_layout() -> WindowLayout {
 /// 🙈️ An internal document operation kept out of the command palette — the filter/sort/selection/DnD
 /// arms that mutate the persisted `CurateDocument` but are only ever dispatched from window chrome.
 fn hidden_operation(id: &str, label: &str) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Operation) }
 }
 
 pub fn create_sourcing_curate_app() -> App {
@@ -548,7 +548,7 @@ pub fn create_sourcing_curate_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("library")
-            .mode("curate", "Curate")
+            .mode("curate", "Curate", "folder-open")
             .default_mode_id("curate")
             .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table, "library")
             .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table, "tags")
@@ -584,8 +584,8 @@ pub fn create_sourcing_curate_app() -> App {
     )
     // 📄️ `AppDefinition::example` still wants document JSON (the manifest-wide example wire format);
     // the `.curate` text above is only the on-disk source of truth, re-serialized here once.
-    .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", serde_json::to_string(&sourcing_engine::default_document()).unwrap_or_default())
-    .example(EMPTY_EXAMPLE_ID, "Empty Curation", serde_json::to_string(&sourcing_engine::empty_document()).unwrap_or_default())
+    .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", serde_json::to_string(&sourcing_engine::default_document()).unwrap_or_default(), "file-text")
+    .example(EMPTY_EXAMPLE_ID, "Empty Curation", serde_json::to_string(&sourcing_engine::empty_document()).unwrap_or_default(), "file-text")
 }
 //#endregion 🔖️Manifest
 

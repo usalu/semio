@@ -261269,8 +261269,8 @@ var require_constants = __commonJS((exports, module) => {
   }
 });
 
-// infinite/cavas/react-renderer/index.tsx
-class CavasEventBindingController {
+// infinite/canvas/react-renderer/index.tsx
+class CanvasEventBindingController {
   cleanups = [];
   listen(target2, kind, listener, options2) {
     if (!target2)
@@ -261431,9 +261431,9 @@ var init_react_renderer = __esm(async () => {
   jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
   if (import.meta.vitest) {
     const { describe: describe2, expect, it: it2 } = import.meta.vitest;
-    describe2("CavasEventBindingController", () => {
+    describe2("CanvasEventBindingController", () => {
       it2("disposes registered listeners", () => {
-        const ctrl = new CavasEventBindingController;
+        const ctrl = new CanvasEventBindingController;
         let count5 = 0;
         const target2 = {
           addEventListener: () => {

@@ -228,10 +228,10 @@ impl SequenceHost {
     }
 
     pub fn pick_step_id_at_screen(&self, sx: f64, sy: f64, width: u32, height: u32, dpr: f64) -> Option<String> {
-        use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-        use infinite_cavas::Point;
+        use infinite_canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
+        use infinite_canvas::Point;
         let viewport = Viewport { width: width.max(1), height: height.max(1), dpr: dpr.max(1.0) };
-        let camera = CavasCamera { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
+        let camera = CanvasCamera { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
         let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
         for node in self.dag.fixture.nodes.iter().rev() {
             let hw = node.width * 0.5;

@@ -298,6 +298,31 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
+    /// 🖱️ On-demand context menu via `AppCommand::ContextMenu` on the plugin exchange channel.
+    pub fn context_menu(&self, instance_id: u32, request: serde_json::Value) -> Result<Vec<ui_wgpu::ContextMenuItemSpec>, PluginHostError> {
+        use protocol::{decode_app_frame, encode_app_command, AppCommand, AppFrame};
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static SEQ: AtomicU64 = AtomicU64::new(1);
+        let seq = SEQ.fetch_add(1, Ordering::Relaxed);
+        let request_bytes = store::pack_rt::encode_wire_value(&request);
+        let command = AppCommand::ContextMenu { seq, request: request_bytes };
+        let frames = self.exchange(instance_id, vec![encode_app_command(&command)])?;
+        for bytes in frames {
+            let frame = decode_app_frame(&bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+            match frame {
+                AppFrame::ContextMenu { in_reply_to, items } if in_reply_to == seq => {
+                    let value = store::pack_rt::decode_wire_value(&items).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+                    return serde_json::from_value(value).map_err(PluginHostError::Json);
+                }
+                AppFrame::Error { in_reply_to, code, message } if in_reply_to == Some(seq) => {
+                    return Err(PluginHostError::Plugin(format!("{code}: {message}")));
+                }
+                _ => {}
+            }
+        }
+        Ok(Vec::new())
+    }
+
     /// @emoji 🩹️ Mirrors the WIT `migrate-document` call unchanged — `input`/output `data` is
     /// pack-container bytes (see `document-pack-files`).
     pub fn migrate_document(&self, from_version: &str, to_version: &str, data: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {

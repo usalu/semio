@@ -1953,8 +1953,9 @@ describe("framework renderer hosts", () => {
       },
       2,
     );
-    expect(items[0]).toMatchObject({ shortcut: "1", checked: true });
-    expect(items[1]).toMatchObject({ shortcut: "2", checked: false });
+    expect(items[0]).toMatchObject({ checked: true });
+    expect(items[1]).toMatchObject({ checked: false });
+    expect(items[0]?.shortcut).toBeUndefined();
   });
 
   it("enriches node-graph context menu rows for the effective right-click selection", () => {

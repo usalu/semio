@@ -3,7 +3,7 @@ name: Layout Canvas Pan Zoom Drag
 overview: Add real pan/zoom to both layout canvases, make catalogue drag-and-drop show a live preview and commit at the drop point on the canvas, and get panel-hide-on-interaction "for free" by switching the catalogue drag to the same pointer-driven palette-drag mechanism used by puzzle 2d / puzzle 3d / window-template.
 todos:
  - id: rust-camera
-   content: Add camera + viewport + pan/zoom wasm-bindgen API to layout/rs/wasm_session.rs, reusing infinite_cavas::camera
+   content: Add camera + viewport + pan/zoom wasm-bindgen API to layout/rs/wasm_session.rs, reusing infinite_canvas::camera
    status: completed
  - id: rust-engine-camera
    content: Make layout/rs/engine.rs scene transform and hit-test camera-aware (fix hit-test/zoom mismatch)
@@ -15,7 +15,7 @@ todos:
    content: Wire pan (middle-drag)/zoom (wheel) through LayoutEngineSession in layout/react/index.tsx, seed camera once from document, enable pointer/wheel on preview pane too
    status: completed
  - id: graphwasmcanvas-wheel
-   content: Add wheel listener and button-aware pointerDown to GraphWasmCanvas in infinite/cavas/react-renderer/index.tsx
+   content: Add wheel listener and button-aware pointerDown to GraphWasmCanvas in infinite/canvas/react-renderer/index.tsx
    status: completed
  - id: catalogue-pointer-drag
    content: Replace native-only catalogue drag with pointerPaletteDrag-based controller + drag-session refs in layout/react/index.tsx
@@ -39,7 +39,7 @@ isProject: false
 
 ## Root cause analysis
 
-- **No camera interactivity.** `LayoutDocument.camera` / `previewCamera` (`x,y,zoom`) exist only as static fields baked into the document JSON. [layout/rs/engine.rs](layout/rs/engine.rs) reads them once per `render_frame` and applies `Affine::translate((-x,-y)) * Affine::scale(zoom)` (lines 259-261, 385-391). Nothing ever mutates them: [layout/react/index.tsx](layout/react/index.tsx) has no `wheel` handler and [infinite/cavas/react-renderer/index.tsx](infinite/cavas/react-renderer/index.tsx)'s `GraphWasmCanvas` has no `wheel` listener at all (only `pointerdown/move/up`, and it never forwards `event.button`). The preview pane also has `enablePointer={chromeMode === "blueprint"}` in `LayoutCanvas`, so it receives **no pointer events whatsoever** today.
+- **No camera interactivity.** `LayoutDocument.camera` / `previewCamera` (`x,y,zoom`) exist only as static fields baked into the document JSON. [layout/rs/engine.rs](layout/rs/engine.rs) reads them once per `render_frame` and applies `Affine::translate((-x,-y)) * Affine::scale(zoom)` (lines 259-261, 385-391). Nothing ever mutates them: [layout/react/index.tsx](layout/react/index.tsx) has no `wheel` handler and [infinite/canvas/react-renderer/index.tsx](infinite/canvas/react-renderer/index.tsx)'s `GraphWasmCanvas` has no `wheel` listener at all (only `pointerdown/move/up`, and it never forwards `event.button`). The preview pane also has `enablePointer={chromeMode === "blueprint"}` in `LayoutCanvas`, so it receives **no pointer events whatsoever** today.
 - **Hit-testing ignores the camera.** `hit_test_document_json` (`layout/rs/engine.rs:394`) compares raw screen `(x,y)` against untransformed page-space bounds. Since the default camera zoom is `0.5` ([layout/core/js/internal.ts:236](layout/core/js/internal.ts)), selection is already subtly wrong today and will get worse once pan/zoom is interactive — must be fixed together.
 - **Drag-and-drop is native-HTML5-only and one-directional.** The catalogue tree (`buildLayoutPlayCatalogueTree`, [layout/core/js/index.ts:337](layout/core/js/index.ts)) marks items `draggable: true` with `dragData`. The only consumer is `createLayoutPlayDocumentTreeDragController` ([layout/core/js/index.ts:365](layout/core/js/index.ts)), wired solely onto the **document** panel ([framework/product/playground/renderer/react/index.tsx:7814](framework/product/playground/renderer/react/index.tsx)) — you can only drop a catalogue item onto a document row, never onto the canvas. Native HTML5 DnD can't expose `dataTransfer` payload during `dragover`, so there is no way to render a live ghost preview with this mechanism, and — critically — **native drag suppresses the ordinary `pointermove`/`pointerup` events that the global ghost/dim controller relies on**, which is exactly why the side panel does not hide while dragging.
 - **The fix for "preview" and "panel hides on interaction" is the same fix.** Every other technology that needs a canvas-drop preview (puzzle 2d, puzzle 3d, flow, compose window templates) uses `TreeDragAndDropController.pointerPaletteDrag` (`ui/react/index.tsx:10013`) instead of relying on native DnD. The `Tree` component's own pointer-drag plumbing ([ui/react/index.tsx:12291-12309](ui/react/index.tsx)) already calls `panelGhost.begin()` / `panelGhost.end()` for us — so adding `pointerPaletteDrag` to the catalogue's drag controller fixes panel-hiding with **zero extra code**, and also gives us continuous `pointermove` client coordinates we can turn into a canvas-space ghost (mirrors `puzzle2dFixturePaletteTreeDragController`, [puzzle/2d/react/index.tsx:2820](puzzle/2d/react/index.tsx), and its `Puzzle2dFixtureDropPointerBridge`, [puzzle/2d/react/index.tsx:13199](puzzle/2d/react/index.tsx)).
@@ -59,17 +59,17 @@ flowchart TD
 
 ## 1. Camera: real pan (middle-drag) + zoom (wheel), matching gis/2d & puzzle/2d conventions
 
-Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout/rs/Cargo.toml:15](layout/rs/Cargo.toml)) instead of inventing new math — same primitives `gis/2d/rs/lib.rs` and other 2D apps already use: `Camera{x,y,zoom}`, `Viewport{width,height,dpr}`, `camera_content_affine`, `screen_to_world`, `wheel_screen`.
+Reuse `infinite_canvas::camera` (already a dependency of `layout_rs`, see [layout/rs/Cargo.toml:15](layout/rs/Cargo.toml)) instead of inventing new math — same primitives `gis/2d/rs/lib.rs` and other 2D apps already use: `Camera{x,y,zoom}`, `Viewport{width,height,dpr}`, `camera_content_affine`, `screen_to_world`, `wheel_screen`.
 
-- **[layout/rs/wasm_session.rs](layout/rs/wasm_session.rs)**: add `camera: infinite_cavas::camera::Camera`, `viewport: infinite_cavas::camera::Viewport`, and a small `LayoutInteraction { Idle, Pan { origin, start_screen } }` to `LayoutSessionInner`. Add:
+- **[layout/rs/wasm_session.rs](layout/rs/wasm_session.rs)**: add `camera: infinite_canvas::camera::Camera`, `viewport: infinite_canvas::camera::Viewport`, and a small `LayoutInteraction { Idle, Pan { origin, start_screen } }` to `LayoutSessionInner`. Add:
   - `setCamera(x, y, zoom)` — seeds camera once (called by JS right after session creation).
   - `setSize` extended to also call `viewport.set_size(width, height, dpr)` (logical px, matching the existing gis/2d/puzzle2d convention).
   - `pointerDownScreen(sx, sy, button)` — button `1` (middle) starts `Interaction::Pan`; other buttons no-operation (left-button hit test stays on the existing button-less `pointerDown`/`pointerMove` pair).
   - `pointerMoveScreen(sx, sy)` — updates `camera.x/y` while panning.
   - `pointerUpScreen(sx, sy)` — ends the pan.
-  - `wheelScreen(sx, sy, deltaY)` — delegates to `infinite_cavas::camera::wheel_screen` (cursor-anchored zoom, same feel as gis/2d).
+  - `wheelScreen(sx, sy, deltaY)` — delegates to `infinite_canvas::camera::wheel_screen` (cursor-anchored zoom, same feel as gis/2d).
   - `screenToWorld(sx, sy) -> JsValue` (`{x,y}`) — needed by the drop-preview bridge (section 2).
-- **[layout/rs/engine.rs](layout/rs/engine.rs)**: `display_list_to_scene`/`build_scene_from_document_json` stop reading `doc.camera`/`doc.preview_camera`; they take the session's live `(camera, viewport)` and use `infinite_cavas::camera::camera_content_affine` instead of the current ad-hoc `Affine::translate * Affine::scale`. `hit_test_document_json` gains a `camera`/`viewport` param and converts screen → world via `screen_to_world` before hit-testing, fixing the current camera/hit-test mismatch.
+- **[layout/rs/engine.rs](layout/rs/engine.rs)**: `display_list_to_scene`/`build_scene_from_document_json` stop reading `doc.camera`/`doc.preview_camera`; they take the session's live `(camera, viewport)` and use `infinite_canvas::camera::camera_content_affine` instead of the current ad-hoc `Affine::translate * Affine::scale`. `hit_test_document_json` gains a `camera`/`viewport` param and converts screen → world via `screen_to_world` before hit-testing, fixing the current camera/hit-test mismatch.
 - `LayoutDocument.camera` / `previewCamera` stay in the schema purely as the **persisted initial viewport** (unchanged shape) — `LayoutEngineSession` reads the right one (based on chrome mode) once and calls `setCamera`, but never again on subsequent `setDocumentJson` calls (so panning survives edits/undo/selection changes).
 - **[layout/react/index.tsx](layout/react/index.tsx)** (`LayoutEngineSession`):
   - `ensureSession()`: after constructing `LayoutSession`, seed the camera once from the pending document JSON's `camera`/`previewCamera` field (picked by `chromeBlueprint`).
@@ -79,7 +79,7 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
   - New `wheel(x, y, deltaY)` → `session.wheelScreen(...)`.
   - New `screenToWorld(x, y)` → thin wrapper over the wasm call, used by the drop bridge.
   - `LayoutCanvas`: change `enablePointer={chromeMode === "blueprint"}` to always-on (`enablePointer` default `true`) so the **preview** pane can also pan/zoom — selection/hover stay blueprint-only because `onHit`/`onHover` are already `undefined` for preview at the call site ([framework/product/playground/renderer/react/index.tsx:7778](framework/product/playground/renderer/react/index.tsx)).
-- **[infinite/cavas/react-renderer/index.tsx](infinite/cavas/react-renderer/index.tsx)** (`GraphWasmCanvas`, only real consumer is layout, safe to change directly — no back-compat shims):
+- **[infinite/canvas/react-renderer/index.tsx](infinite/canvas/react-renderer/index.tsx)** (`GraphWasmCanvas`, only real consumer is layout, safe to change directly — no back-compat shims):
   - `GraphWasmSession.pointerDown` gains a `button: number` param; add optional `wheel?(x, y, deltaY): void`.
   - Add a non-passive `wheel` listener (`preventDefault()` so the page doesn't scroll) calling `session.wheel?.(...)`; forward `ev.button` into `pointerDown`.
 
@@ -105,7 +105,7 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
 - [layout/rs/wasm_session.rs](layout/rs/wasm_session.rs) — camera + pan/zoom + drop-preview WASM API
 - [layout/rs/engine.rs](layout/rs/engine.rs) — camera-aware scene transform, camera-aware hit test, ghost rendering
 - [layout/react/index.tsx](layout/react/index.tsx) — `LayoutEngineSession` pan/zoom/drop-preview wiring, catalogue drag-session refs/controller, `LayoutCatalogueDropBridge`, always-on pointer/wheel
-- [infinite/cavas/react-renderer/index.tsx](infinite/cavas/react-renderer/index.tsx) — generic `wheel` support + `button` on `pointerDown`
+- [infinite/canvas/react-renderer/index.tsx](infinite/canvas/react-renderer/index.tsx) — generic `wheel` support + `button` on `pointerDown`
 - [layout/core/js/index.ts](layout/core/js/index.ts) — `addFrame` x/y passthrough, `createDefaultFrame` position override, removal of the dead document drag controller
 - [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) — wire catalogue drag controller + canvas drop callback, drop dead document wiring
 

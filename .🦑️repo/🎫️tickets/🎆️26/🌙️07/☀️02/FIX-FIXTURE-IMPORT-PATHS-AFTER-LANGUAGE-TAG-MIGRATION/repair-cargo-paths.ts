@@ -45,7 +45,7 @@ function repairPath(fromFile: string, rel: string): string {
   const segments = relFromRepo.split("/");
   for (let up = 0; up <= segments.length; up++) {
     const prefix = "../".repeat(up);
-    for (const tail of ["neural/engine/rs", "neural/dag/rs", "mathematical/core/rs", "mathematical/graph/manifest/rs", "mathematical/graph/dsl/rs", "ui/styling/rs", "infinite/cavas/rs", "vcs/rs", "reasoning/mindmap/rs"]) {
+    for (const tail of ["neural/engine/rs", "neural/dag/rs", "mathematical/core/rs", "mathematical/graph/manifest/rs", "mathematical/graph/dsl/rs", "ui/styling/rs", "infinite/canvas/rs", "vcs/rs", "reasoning/mindmap/rs"]) {
       candidates.push(`${prefix}${tail}`);
     }
   }

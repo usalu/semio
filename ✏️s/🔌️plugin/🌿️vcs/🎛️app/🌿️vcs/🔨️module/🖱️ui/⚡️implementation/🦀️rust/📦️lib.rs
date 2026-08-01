@@ -653,7 +653,7 @@ pub fn create_vcs_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("git-branch")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR, SurfaceKind::Canvas2d, "pen-tool")
             .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY, SurfaceKind::GraphTimeline, "git-branch")

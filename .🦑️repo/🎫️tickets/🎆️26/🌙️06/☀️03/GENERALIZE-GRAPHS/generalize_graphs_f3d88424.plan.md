@@ -9,7 +9,7 @@ todos:
    content: "Implement mathematical/core (Cargo.toml + lib.rs): NodeId/EdgeId/HandleId, Directedness (Directed/Undirected) and PortModel (Normal/Ported) marker traits/types, generic Edge<Endpoint>, and geometry-free force + tree layout math; in-file tests."
    status: completed
  - id: base
-   content: "Create base crate mathematical/graph (Cargo.toml + lib.rs): generalize current Engine into GraphEngine<P,D> with P::HandleStore/P::Endpoint, hit-test/drag/selection/render snapshot, Camera/Node/Handle/RenderSnapshot/BoardEvent/InteractionMode, and GraphExtension; depend on mathematical_core + infinite_cavas; in-file tests."
+   content: "Create base crate mathematical/graph (Cargo.toml + lib.rs): generalize current Engine into GraphEngine<P,D> with P::HandleStore/P::Endpoint, hit-test/drag/selection/render snapshot, Camera/Node/Handle/RenderSnapshot/BoardEvent/InteractionMode, and GraphExtension; depend on mathematical_core + infinite_canvas; in-file tests."
    status: completed
  - id: quadrants
    content: Implement the four quadrant crates (normal/undirected, normal/directed, port/undirected, port/directed) as thin specializations with concrete type aliases; keep puzzle.2d fixture layouts (force/hierarchical/redraw) in port/directed; add per-crate tests.
@@ -40,7 +40,7 @@ Today everything lives in one crate `mathematical_graph` at [mathematical/graph/
 
 ```mermaid
 flowchart TD
-  cavas["infinite_cavas (geometry + CanvasExtension)"]
+  canvas["infinite_canvas (geometry + CanvasExtension)"]
   core["mathematical_core (ids, axis marker types, generic Edge, pure layout math)"]
   base["mathematical_graph (GraphEngine<P,D>, Node/Handle, hit-test, render, GraphExtension)"]
   nu["mathematical_graph_normal_undirected"]
@@ -51,7 +51,7 @@ flowchart TD
   wires["reasoning_mindmap_wires (Owns/Is/References/Has)"]
   puzzle["puzzle_2d (= port directed)"]
   core --> base
-  cavas --> base
+  canvas --> base
   base --> nu
   base --> nd
   base --> pu
@@ -69,7 +69,7 @@ In `mathematical_core` define marker types + traits (no runtime branching):
 - Port model: `trait PortModel { type Endpoint: Copy + Ord; type HandleStore: Default; ... }` with `struct Normal` (`Endpoint = NodeId`, no handles) and `struct Ported` (`Endpoint = HandleId`, handles owned by nodes). Generic `Edge<E> { id, source: E, target: E }`.
 - Pure layout math (force vectors on abstract `(f64,f64)` positions + adjacency, Buchheim tree math) lives here, geometry-free.
 
-In `mathematical_graph` (NEW base at `mathematical/graph/lib.rs`) generalize the current engine into `GraphEngine<P: PortModel, D: Directedness>` holding the existing `camera/nodes/edges/selection/hover/interaction`, plus `P::HandleStore` for handles. `PortModel` carries the methods that differ between normal/port: `endpoint_anchor` (port = `handle_position`, normal = node center), endpoint hit-testing, and dependent cleanup on node removal. Re-export `Camera`, `NodeId`/`HandleId`/`EdgeId`, `Node`, `RenderSnapshot`, `BoardEvent`, `Selection`, `InteractionMode`, `handle_position`, and `pub trait GraphExtension: cavas::CanvasExtension {}`. This is the current [Engine region](mathematical/graph/port/directed/lib.rs) lifted up with `P::Endpoint`/`P::HandleStore` substituted for the hard-coded `HandleId`/`handles` map.
+In `mathematical_graph` (NEW base at `mathematical/graph/lib.rs`) generalize the current engine into `GraphEngine<P: PortModel, D: Directedness>` holding the existing `camera/nodes/edges/selection/hover/interaction`, plus `P::HandleStore` for handles. `PortModel` carries the methods that differ between normal/port: `endpoint_anchor` (port = `handle_position`, normal = node center), endpoint hit-testing, and dependent cleanup on node removal. Re-export `Camera`, `NodeId`/`HandleId`/`EdgeId`, `Node`, `RenderSnapshot`, `BoardEvent`, `Selection`, `InteractionMode`, `handle_position`, and `pub trait GraphExtension: canvas::CanvasExtension {}`. This is the current [Engine region](mathematical/graph/port/directed/lib.rs) lifted up with `P::Endpoint`/`P::HandleStore` substituted for the hard-coded `HandleId`/`handles` map.
 
 ### Quadrant crates (thin, each "holds exactly what it says")
 

@@ -19995,7 +19995,7 @@ $ bun ./script.ts nx run-many -t test-exhaustive --all --exclude workspace
 - @semio-tech/framework-surface-tiled-map-rs
 - @semio-tech/math-graph-isomorphism
 - coda-programming-go
-- @semio-tech/infinite-cavas-react-renderer
+- @semio-tech/infinite-canvas-react-renderer
 - @semio-tech/math-graph-centrality
 - @semio-tech/math-graph-clustering
 - @semio-tech/math-graph-components
@@ -32990,7 +32990,7 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
    Compiling typst-svg v0.14.2
    Compiling hypher v0.1.7
    Compiling imagesize v0.14.0
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling typst-realize v0.14.2
    Compiling typst-eval v0.14.2
    Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
@@ -33018,14 +33018,14 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -33608,7 +33608,7 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
    Compiling typst-svg v0.14.2
    Compiling hypher v0.1.7
    Compiling imagesize v0.14.0
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling typst-realize v0.14.2
    Compiling typst-eval v0.14.2
    Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
@@ -33636,14 +33636,14 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -33947,257 +33947,257 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
    Compiling typst-realize v0.14.2
    Compiling typst-html v0.14.2
    Compiling typst v0.14.2
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:103:39
     |
-103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
     |                                       ^^^^^^^^^^^^^^^^^^^^^
     |
     = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
     |
-103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
-103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:103:73
     |
-103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
-103 + fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> f64 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:148:29
     |
-148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                             ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-148 + fn current_map_lod(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:148:63
     |
-148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                                                               ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-148 + fn current_map_lod(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:153:39
     |
-153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
     |                                       ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
-153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:153:73
     |
-153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
-153 + fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:166:32
     |
-166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |                                ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
-166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:166:66
     |
-166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
-166 + fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:184:57
     |
-184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                                                         ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:184:91
     |
-184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:199:46
     |
-199 |     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 |     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-199 -     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 -     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
 199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:202:59
     |
-202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
     |                                                           ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
 202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:214:54
     |
-214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
     |                                                      ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
 214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:219:46
     |
-219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
     |                                              ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
-219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport) {
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport) {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:219:80
     |
-219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
     |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
-219 + fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport) {
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport) {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:243:34
     |
-243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |                                  ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
-243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:243:68
     |
-243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
-243 + fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1081:25
      |
-1081 | pub trait MapExtension: cavas::CanvasExtension {
+1081 | pub trait MapExtension: canvas::CanvasExtension {
      |                         ^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1081 - pub trait MapExtension: cavas::CanvasExtension {
+1081 - pub trait MapExtension: canvas::CanvasExtension {
 1081 + pub trait MapExtension: CanvasExtension {
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1088:6
      |
-1088 | impl cavas::CanvasExtension for DefaultMapExtension {
+1088 | impl canvas::CanvasExtension for DefaultMapExtension {
      |      ^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1088 - impl cavas::CanvasExtension for DefaultMapExtension {
+1088 - impl canvas::CanvasExtension for DefaultMapExtension {
 1088 + impl CanvasExtension for DefaultMapExtension {
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1354:17
      |
-1354 |     pub camera: cavas::camera::Camera,
+1354 |     pub camera: canvas::camera::Camera,
      |                 ^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1354 -     pub camera: cavas::camera::Camera,
+1354 -     pub camera: canvas::camera::Camera,
 1354 +     pub camera: camera::Camera,
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1355:19
      |
-1355 |     pub viewport: cavas::camera::Viewport,
+1355 |     pub viewport: canvas::camera::Viewport,
      |                   ^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1355 -     pub viewport: cavas::camera::Viewport,
+1355 -     pub viewport: canvas::camera::Viewport,
 1355 +     pub viewport: camera::Viewport,
      |
 
@@ -34216,36 +34216,36 @@ help: remove the unnecessary path segments
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1382:17
      |
-1382 |         origin: cavas::camera::Camera,
+1382 |         origin: canvas::camera::Camera,
      |                 ^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1382 -         origin: cavas::camera::Camera,
+1382 -         origin: canvas::camera::Camera,
 1382 +         origin: camera::Camera,
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1501:24
      |
-1501 |         let viewport = cavas::camera::Viewport::default();
+1501 |         let viewport = canvas::camera::Viewport::default();
      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1501 -         let viewport = cavas::camera::Viewport::default();
+1501 -         let viewport = canvas::camera::Viewport::default();
 1501 +         let viewport = camera::Viewport::default();
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1541:32
      |
-1541 |     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 |     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
      |                                ^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1541 -     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 -     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
 1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
      |
 
@@ -34264,12 +34264,12 @@ help: remove the unnecessary path segments
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2496:17
      |
-2496 |                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 |                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2496 -                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 -                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
 2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
      |
 
@@ -34288,36 +34288,36 @@ help: remove the unnecessary path segments
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2710:13
      |
-2710 |             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 |             canvas::raster::draw_image_arc(scene, &img, aff);
      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2710 -             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 -             canvas::raster::draw_image_arc(scene, &img, aff);
 2710 +             raster::draw_image_arc(scene, &img, aff);
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2820:21
      |
-2820 |                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 |                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2820 -                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 -                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
 2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2855:6
      |
-2855 | impl cavas::canvas_content::CanvasContent for MapHost {
+2855 | impl canvas::canvas_content::CanvasContent for MapHost {
      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2855 - impl cavas::canvas_content::CanvasContent for MapHost {
+2855 - impl canvas::canvas_content::CanvasContent for MapHost {
 2855 + impl canvas_content::CanvasContent for MapHost {
      |
 
@@ -34463,277 +34463,277 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:312:13
     |
-312 |     images: cavas::raster::RasterImageCache,
+312 |     images: canvas::raster::RasterImageCache,
     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
     = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
     |
-312 -     images: cavas::raster::RasterImageCache,
+312 -     images: canvas::raster::RasterImageCache,
 312 +     images: raster::RasterImageCache,
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:338:27
     |
-338 |         let theme_clear = cavas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
+338 |         let theme_clear = canvas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-338 -         let theme_clear = cavas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
+338 -         let theme_clear = canvas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
 338 +         let theme_clear = theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:339:65
     |
-339 |         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(theme_clear);
+339 |         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(theme_clear);
     |                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-339 -         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(theme_clear);
+339 -         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(theme_clear);
 339 +         let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(theme_clear);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:344:21
     |
-344 |             images: cavas::raster::RasterImageCache::default(),
+344 |             images: canvas::raster::RasterImageCache::default(),
     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-344 -             images: cavas::raster::RasterImageCache::default(),
+344 -             images: canvas::raster::RasterImageCache::default(),
 344 +             images: raster::RasterImageCache::default(),
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:365:9
     |
-365 |         cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
+365 |         canvas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-365 -         cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
+365 -         canvas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
 365 +         theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:366:65
     |
-366 |         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
+366 |         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(self.theme_clear);
     |                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-366 -         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
+366 -         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(self.theme_clear);
 366 +         let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(self.theme_clear);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:385:28
     |
-385 |         self.camera.zoom = cavas::camera::clamp_zoom(zoom);
+385 |         self.camera.zoom = canvas::camera::clamp_zoom(zoom);
     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-385 -         self.camera.zoom = cavas::camera::clamp_zoom(zoom);
+385 -         self.camera.zoom = canvas::camera::clamp_zoom(zoom);
 385 +         self.camera.zoom = camera::clamp_zoom(zoom);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:389:9
     |
-389 |         cavas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+389 |         canvas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-389 -         cavas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+389 -         canvas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
 389 +         camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:393:9
     |
-393 |         cavas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
+393 |         canvas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-393 -         cavas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
+393 -         canvas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
 393 +         camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:594:25
     |
-594 |                         cavas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
+594 |                         canvas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-594 -                         cavas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
+594 -                         canvas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
 594 +                         raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:597:17
     |
-597 |                 cavas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
+597 |                 canvas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-597 -                 cavas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
+597 -                 canvas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
 597 +                 raster::draw_image_arc(scene, &img, Affine::IDENTITY);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:647:19
     |
-647 |         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+647 |         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-647 -         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+647 -         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
 647 +         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:651:9
     |
-651 |         cavas::raster::draw_image_arc(&mut scene, &img, cam);
+651 |         canvas::raster::draw_image_arc(&mut scene, &img, cam);
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-651 -         cavas::raster::draw_image_arc(&mut scene, &img, cam);
+651 -         canvas::raster::draw_image_arc(&mut scene, &img, cam);
 651 +         raster::draw_image_arc(&mut scene, &img, cam);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:657:19
     |
-657 |         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+657 |         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-657 -         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+657 -         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
 657 +         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:666:9
     |
-666 |         cavas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
+666 |         canvas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-666 -         cavas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
+666 -         canvas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
 666 +         render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:670:6
     |
-670 | impl cavas::canvas_content::CanvasContent for RasterHost {
+670 | impl canvas::canvas_content::CanvasContent for RasterHost {
     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-670 - impl cavas::canvas_content::CanvasContent for RasterHost {
+670 - impl canvas::canvas_content::CanvasContent for RasterHost {
 670 + impl canvas_content::CanvasContent for RasterHost {
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:767:21
     |
-767 |         let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
+767 |         let world = canvas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-767 -         let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
+767 -         let world = canvas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
 767 +         let world = camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:928:28
     |
-928 |                 let zoom = cavas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
+928 |                 let zoom = canvas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-928 -                 let zoom = cavas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
+928 -                 let zoom = canvas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
 928 +                 let zoom = camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:939:75
     |
-939 |         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: cavas::camera::clamp_zoom(content_camera.zoom) };
+939 |         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: canvas::camera::clamp_zoom(content_camera.zoom) };
     |                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-939 -         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: cavas::camera::clamp_zoom(content_camera.zoom) };
+939 -         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: canvas::camera::clamp_zoom(content_camera.zoom) };
 939 +         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: camera::clamp_zoom(content_camera.zoom) };
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:941:30
     |
-941 |         let top_left_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+941 |         let top_left_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-941 -         let top_left_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+941 -         let top_left_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
 941 +         let top_left_world = camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:942:34
     |
-942 |         let bottom_right_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+942 |         let bottom_right_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-942 -         let bottom_right_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+942 -         let bottom_right_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
 942 +         let bottom_right_world = camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:943:24
     |
-943 |         let top_left = cavas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+943 |         let top_left = canvas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-943 -         let top_left = cavas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+943 -         let top_left = canvas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
 943 +         let top_left = camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:944:28
     |
-944 |         let bottom_right = cavas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+944 |         let bottom_right = canvas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-944 -         let bottom_right = cavas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+944 -         let bottom_right = canvas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
 944 +         let bottom_right = camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
     |
 
@@ -34898,12 +34898,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; fini
 
     Finished report saved to /Users/ueli/Documents/semio/.repo/coverage/rust/_Users_ueli_Documents_semio.lcov
 
-> nx run @semio-tech/infinite-cavas-react-renderer:test-exhaustive
+> nx run @semio-tech/infinite-canvas-react-renderer:test-exhaustive
 
 > bun ./script.ts test exhaustive
 
 
- RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/cavas/react-renderer
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/canvas/react-renderer
       Coverage enabled with v8
 
 
@@ -35016,14 +35016,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -35708,25 +35708,25 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> framework/editor/rs/lib.rs:52:9
    |
-52 |         cavas::theme::merge_color_field(next, v, key);
+52 |         canvas::theme::merge_color_field(next, v, key);
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-52 -         cavas::theme::merge_color_field(next, v, key);
+52 -         canvas::theme::merge_color_field(next, v, key);
 52 +         theme::merge_color_field(next, v, key);
    |
 
 warning: unnecessary qualification
     --> framework/editor/rs/lib.rs:1090:9
      |
-1090 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 |         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1090 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 -         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
 1090 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |
 
@@ -99493,9 +99493,9 @@ Warning: command "bun ./script.ts test exhaustive" exited with non-zero status c
                 "root": "infinite/board"
               },
               {
-                "id": "♾️infinite✈️cavas",
-                "name": "infinite/cavas",
-                "root": "infinite/cavas"
+                "id": "♾️infinite✈️canvas",
+                "name": "infinite/canvas",
+                "root": "infinite/canvas"
               },
               {
                 "id": "♾️infinite📚️fixture",
@@ -100136,9 +100136,9 @@ FAIL
                 "root": "infinite/board"
               },
               {
-                "id": "♾️infinite✈️cavas",
-                "name": "infinite/cavas",
-                "root": "infinite/cavas"
+                "id": "♾️infinite✈️canvas",
+                "name": "infinite/canvas",
+                "root": "infinite/canvas"
               },
               {
                 "id": "♾️infinite📚️fixture",
@@ -100988,25 +100988,25 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> framework/editor/rs/lib.rs:52:9
    |
-52 |         cavas::theme::merge_color_field(next, v, key);
+52 |         canvas::theme::merge_color_field(next, v, key);
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-52 -         cavas::theme::merge_color_field(next, v, key);
+52 -         canvas::theme::merge_color_field(next, v, key);
 52 +         theme::merge_color_field(next, v, key);
    |
 
 warning: unnecessary qualification
     --> framework/editor/rs/lib.rs:1090:9
      |
-1090 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 |         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1090 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 -         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
 1090 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |
 
@@ -101118,25 +101118,25 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> framework/editor/rs/lib.rs:52:9
    |
-52 |         cavas::theme::merge_color_field(next, v, key);
+52 |         canvas::theme::merge_color_field(next, v, key);
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-52 -         cavas::theme::merge_color_field(next, v, key);
+52 -         canvas::theme::merge_color_field(next, v, key);
 52 +         theme::merge_color_field(next, v, key);
    |
 
 warning: unnecessary qualification
     --> framework/editor/rs/lib.rs:1090:9
      |
-1090 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 |         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1090 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 -         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
 1090 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |
 
@@ -106812,7 +106812,7 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
    Compiling vello v0.7.0
    Compiling typst v0.14.2
    Compiling vello_svg v0.9.0
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling layout_rs v0.1.0 (/Users/ueli/Documents/semio/layout/rs)
 warning: hidden lifetime parameters in types are deprecated
    --> layout/rs/lib.rs:723:63
@@ -118023,14 +118023,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -118895,7 +118895,7 @@ warning: `semio-framework-core` (lib) generated 3 warnings
    Compiling font-types v0.11.3
    Compiling wgpu-types v27.0.1
    Compiling vello_shaders v0.7.0
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
    Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
    Compiling i_shape v1.6.0
@@ -119066,14 +119066,14 @@ warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -119983,14 +119983,14 @@ warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -121004,14 +121004,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -121883,14 +121883,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification

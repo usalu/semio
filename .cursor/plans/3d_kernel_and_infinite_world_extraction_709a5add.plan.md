@@ -1,6 +1,6 @@
 ---
 name: 3D Kernel and Infinite World Extraction
-overview: Fix the two WebGPU validation errors breaking the frame, then re-layer the 3D rendering stack so generic 3D math/draw-descriptors live in a new `kernel/3d/scene` crate and the 3D scene/canvas engine (orbit sync, picking, gumball, GLB/texture loading) lives in a new `infinite/world/rs` crate, mirroring how `infinite/cavas` already hosts the 2D canvas engine on top of `ui/wgpu`.
+overview: Fix the two WebGPU validation errors breaking the frame, then re-layer the 3D rendering stack so generic 3D math/draw-descriptors live in a new `kernel/3d/scene` crate and the 3D scene/canvas engine (orbit sync, picking, gumball, GLB/texture loading) lives in a new `infinite/world/rs` crate, mirroring how `infinite/canvas` already hosts the 2D canvas engine on top of `ui/wgpu`.
 todos: []
 isProject: false
 ---
@@ -27,7 +27,7 @@ Create a new sibling kernel crate next to `kernel_3d_mesh`/`kernel_3d_brepkit`, 
 
 ## 3. Extract `infinite/world/rs` - the 3D canvas/world engine
 
-Create a new Rust crate under `infinite/world/`, mirroring `infinite/cavas/rs` (which has no separate script.ts/project.json of its own - it's a pure path-dependency consumed by `framework/renderer/wgpu`):
+Create a new Rust crate under `infinite/world/`, mirroring `infinite/canvas/rs` (which has no separate script.ts/project.json of its own - it's a pure path-dependency consumed by `framework/renderer/wgpu`):
 
 - `infinite/world/rs/Cargo.toml` (crate `infinite_world`), deps: `kernel_3d_scene = { path = "../../../kernel/3d/scene/rs" }`, `ui_wgpu = { path = "../../../ui/wgpu/rs" }`, `semio-framework-core = { path = "../../../framework/core/rs" }`, `serde`, `serde_json`, plus the wasm32 `web-sys`/`wasm-bindgen`/`js-sys` fetch deps that the GLB/reference-image loading code needs (mirroring current `framework/renderer/wgpu/rs/Cargo.toml` wasm32 deps).
 - `infinite/world/rs/lib.rs` - move the **entire current contents** of [framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs) except the pure-math gumball helpers moved to step 2: `World3dState` + impl, all `World*Record` JSON structs, `GumballHandle`, `sync_world3d_state`, `store_mesh`, `parse_color`, `preview_scale`, `mesh_id_from_url`, `ingest_glb_mesh`, `apply_glb_bytes`, `apply_reference_image_bytes`, `collect_pending_glb_fetches`, `fetch_pending_glb_meshes`, `fetch_pending_reference_images`, `fetch_url_bytes`, all picking/selection/gumball-interaction functions (`pick_gumball_handle_at`, `pick_instance_at`, `pick_vortex_at`, `pick_hover_command`, `pick_select_command`, `marquee_select_command`, `ground_plane_pick`, `object_world_position`, `update_dragged_instance_position`, `selection_centroid`, `start_gumball_drag`, `gumball_drag_update`, `apply_gumball_preview`, `reset_gumball_preview`), `handle_world3d_pointer_move/button/drag`, `handle_world3d_wheel`, `world3d_hit_target`, `render_world_3d`, `append_gumball_geometry`, `append_box_wireframe`, `orbit_camera_command`, `gumball_commit_command`, `PendingGlbFetch`.
@@ -37,7 +37,7 @@ Create a new Rust crate under `infinite/world/`, mirroring `infinite/cavas/rs` (
 
 ## 4. Rewire `framework/renderer/wgpu` to consume `infinite_world`
 
-- [framework/renderer/wgpu/rs/Cargo.toml](framework/renderer/wgpu/rs/Cargo.toml): remove nothing from `ui_wgpu`/`infinite_cavas` (still used elsewhere), add `infinite_world = { path = "../../../../infinite/world/rs" }`.
+- [framework/renderer/wgpu/rs/Cargo.toml](framework/renderer/wgpu/rs/Cargo.toml): remove nothing from `ui_wgpu`/`infinite_canvas` (still used elsewhere), add `infinite_world = { path = "../../../../infinite/world/rs" }`.
 - [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs): remove `pub mod world3d;` (line 9); update all `world3d::...` call sites (pointer wheel/button/drag/move handling, `collect_pending_glb_fetches`, `fetch_url_bytes`, `apply_glb_bytes`) to `infinite_world::...`.
 - [framework/renderer/wgpu/rs/shell.rs](framework/renderer/wgpu/rs/shell.rs): change `use crate::world3d::{...}` to `use infinite_world::{...}`.
 - [framework/renderer/wgpu/rs/scenes.rs](framework/renderer/wgpu/rs/scenes.rs): change `use crate::world3d::{render_world_3d, World3dState};` to `use infinite_world::{render_world_3d, World3dState};`.

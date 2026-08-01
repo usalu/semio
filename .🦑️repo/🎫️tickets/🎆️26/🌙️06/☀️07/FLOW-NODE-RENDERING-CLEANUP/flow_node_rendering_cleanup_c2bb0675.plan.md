@@ -15,7 +15,7 @@ todos:
    content: Sync slider/select/note values from dag.fixture.nodes back into fixture.widgets in sync_from_dag
    status: completed
  - id: label-extent
-   content: Add label_extent helper in cavas text module and fix paint_node_name_vertical centering
+   content: Add label_extent helper in canvas text module and fix paint_node_name_vertical centering
    status: completed
  - id: port-overlap
    content: Inset/right-align port labels in paint_port_labels so channel names clear the handles
@@ -75,7 +75,7 @@ In `sync_from_dag`, read mutated values out of `self.dag.fixture.nodes` into `se
 
 ### 5. Fix vertical label centering — `mathematical/.../dag/lib.rs`
 
-Add a shared text-extent helper `label_extent(text, px) -> (w, h)` in the cavas text module ([infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs)) mirroring the box math already inside `append_label`. Use it in both name painters. For vertical, center the box on the origin before rotating:
+Add a shared text-extent helper `label_extent(text, px) -> (w, h)` in the canvas text module ([infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs)) mirroring the box math already inside `append_label`. Use it in both name painters. For vertical, center the box on the origin before rotating:
 
 ```rust
 let (w, h) = label_extent(name, px * 1.05);

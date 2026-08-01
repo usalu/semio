@@ -28,13 +28,13 @@ export {
 };
 
 // #region 🔖️EventBinding
-export type CavasListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
+export type CanvasListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 /** @emoji 🎧️ Tracks DOM listeners for deterministic teardown on canvas unmount. */
-export class CavasEventBindingController {
+export class CanvasEventBindingController {
   private readonly cleanups: Array<() => void> = [];
 
-  listen(target: CavasListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
+  listen(target: CanvasListenerTarget | null | undefined, kind: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void {
     if (!target) return;
     target.addEventListener(kind, listener, options);
     this.cleanups.push(() => target.removeEventListener(kind, listener, options));
@@ -234,9 +234,9 @@ export type RenderMode = "main-thread" | "worker-offscreen" | "headless-test";
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  describe("CavasEventBindingController", () => {
+  describe("CanvasEventBindingController", () => {
     it("disposes registered listeners", () => {
-      const ctrl = new CavasEventBindingController();
+      const ctrl = new CanvasEventBindingController();
       let count = 0;
       const target = {
         addEventListener: () => {

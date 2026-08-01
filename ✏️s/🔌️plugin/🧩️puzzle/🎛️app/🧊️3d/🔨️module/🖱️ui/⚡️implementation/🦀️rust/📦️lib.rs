@@ -5183,7 +5183,7 @@ pub fn create_puzzle3d_app() -> App {
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &PUZZLE3D_LABELS_NATIVE_EN), "puzzle")
             .default_layout(puzzle3d_default_layout())
@@ -5200,7 +5200,7 @@ pub fn create_puzzle3d_app() -> App {
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .keybinding("f", "focusSelection")
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after fixture delta).
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
             .operation("setActiveExample", "Set Active Example")
             .operation("addObjectKind", "Add Object")
             .operation("deleteSelection", "Delete Selection")
@@ -5336,8 +5336,8 @@ pub fn create_puzzle3d_app() -> App {
                     .submit_label("Add"),
             ),
     )
-    .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone())
-    .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone())
+    .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone(), "trees")
+    .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone(), "building-2")
     .workflow("puzzle3d", "Puzzle 3D", "model")
 }
 

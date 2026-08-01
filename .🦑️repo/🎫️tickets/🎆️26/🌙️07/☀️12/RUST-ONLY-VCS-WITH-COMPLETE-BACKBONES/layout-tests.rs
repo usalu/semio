@@ -29,9 +29,9 @@ mod tests {
     }
 
     fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
-        let camera = layout_rs::cavas::camera::Camera { x: camera_x, y: camera_y, zoom };
-        let viewport = layout_rs::cavas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
-        let screen = layout_rs::cavas::camera::world_to_screen(&camera, &viewport, layout_rs::cavas::Point::new(world_x, world_y));
+        let camera = layout_rs::canvas::camera::Camera { x: camera_x, y: camera_y, zoom };
+        let viewport = layout_rs::canvas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
+        let screen = layout_rs::canvas::camera::world_to_screen(&camera, &viewport, layout_rs::canvas::Point::new(world_x, world_y));
         (screen.x, screen.y)
     }
 

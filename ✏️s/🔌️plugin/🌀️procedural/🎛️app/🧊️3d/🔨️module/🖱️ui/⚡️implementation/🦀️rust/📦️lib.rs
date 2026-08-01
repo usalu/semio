@@ -961,8 +961,8 @@ pub fn create_procedural3d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("workflow")
-            .mode("edit", "Edit")
-            .mode("generate", "Generate")
+            .mode("edit", "Edit", "square-pen")
+            .mode("generate", "Generate", "sparkles")
             .default_mode_id("edit")
             .mode_layout("generate", "procedural3d-generate")
             .window_kind(
@@ -1101,9 +1101,9 @@ pub fn create_procedural3d_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_HEX_COLUMN))
-    .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECT_EXTRUDE))
-    .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_TORUS))
+    .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_HEX_COLUMN), "hexagon")
+    .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECT_EXTRUDE), "box")
+    .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_TORUS), "circle")
     .workflow("procedural3d", "Procedural 3D", "brep")
 }
 //#endregion 🔖️Manifest

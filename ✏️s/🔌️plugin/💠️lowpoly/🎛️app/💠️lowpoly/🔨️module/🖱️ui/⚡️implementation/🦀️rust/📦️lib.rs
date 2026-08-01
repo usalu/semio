@@ -2311,8 +2311,8 @@ pub fn create_lowpoly_app() -> App {
                 import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
             .icon_id("shapes")
-            .mode("edit", "Edit")
-            .mode("paint", "Paint")
+            .mode("edit", "Edit", "square-pen")
+            .mode("paint", "Paint", "paintbrush")
             .mode_layout("paint", "lowpoly-paint")
             .default_mode_id("edit")
             .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone(), "lowpoly-model")
@@ -2453,7 +2453,7 @@ pub fn create_lowpoly_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("default", "Default", &default_example)
+    .example("default", "Default", &default_example, "file")
     .workflow("lowpoly", "Lowpoly", "mesh")
 }
 //#endregion 🔖️Manifest

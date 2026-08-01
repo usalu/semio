@@ -316,7 +316,7 @@ pub fn create_gis3d_app() -> App {
         App::builder(GIS3D_PLAY_APP_ID, "GIS 3D")
             .document(["semio", "gis", "3d"])
             .icon_id("gis3d")
-            .mode("view", "View")
+            .mode("view", "View", "eye")
             .default_mode_id("view")
             .window_kind(GIS3D_PLAY_WINDOW_MAIN, "Terrain", GIS3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, "terrain-3d")
             .default_layout(create_default_layout(&[GIS3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Terrain".into()])))
@@ -327,7 +327,7 @@ pub fn create_gis3d_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("reuse-terrain", "Reuse Terrain", serde_json::to_string(&default_terrain_document()).unwrap())
+    .example("reuse-terrain", "Reuse Terrain", serde_json::to_string(&default_terrain_document()).unwrap(), "file-text")
     .workflow("gis3d", "GIS 3D", "terrain")
 }
 //#endregion 🔖️Manifest

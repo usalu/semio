@@ -136,9 +136,9 @@ pub mod types {
 
     use std::collections::{BTreeMap, BTreeSet};
 
-    use crate::cavas::camera::Camera;
-    use crate::cavas::{Point, Vec2};
-    use crate::cavas::Color;
+    use crate::canvas::camera::Camera;
+    use crate::canvas::{Point, Vec2};
+    use crate::canvas::Color;
     use crate::NodeKindHandleTemplate;
 
     // #region 🔖️GraphPortMode
@@ -409,6 +409,11 @@ pub mod types {
         pub label_fill: Color,
         pub label_fill_hovered: Color,
         pub label_halo: Color,
+        pub minimap_widget_panel_fill: Color,
+        pub minimap_widget_panel_stroke: Color,
+        pub minimap_widget_viewport_fill: Color,
+        pub minimap_widget_viewport_stroke: Color,
+        pub minimap_widget_viewport_stroke_hovered: Color,
     }
 
     impl CanvasPalette {
@@ -454,11 +459,16 @@ pub mod types {
                 label_fill: Color::new(t.label_fill),
                 label_fill_hovered: Color::new(t.label_fill_hovered),
                 label_halo: Color::new(t.label_halo),
+                minimap_widget_panel_fill: Color::new(t.minimap_widget_panel_fill),
+                minimap_widget_panel_stroke: Color::new(t.minimap_widget_panel_stroke),
+                minimap_widget_viewport_fill: Color::new(t.minimap_widget_viewport_fill),
+                minimap_widget_viewport_stroke: Color::new(t.minimap_widget_viewport_stroke),
+                minimap_widget_viewport_stroke_hovered: Color::new(t.minimap_widget_viewport_stroke_hovered),
             }
         }
 
         fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
-            infinite_cavas::theme::merge_color_field(next, v, key);
+            infinite_canvas::theme::merge_color_field(next, v, key);
         }
 
         /// @emoji 🎨️ Replaces this palette from the React host UI theme JSON payload.
@@ -504,6 +514,11 @@ pub mod types {
             Self::merge_color_field(&mut next.label_fill, &v, "labelFill");
             Self::merge_color_field(&mut next.label_fill_hovered, &v, "labelFillHovered");
             Self::merge_color_field(&mut next.label_halo, &v, "labelHalo");
+            Self::merge_color_field(&mut next.minimap_widget_panel_fill, &v, "minimapWidgetPanelFill");
+            Self::merge_color_field(&mut next.minimap_widget_panel_stroke, &v, "minimapWidgetPanelStroke");
+            Self::merge_color_field(&mut next.minimap_widget_viewport_fill, &v, "minimapWidgetViewportFill");
+            Self::merge_color_field(&mut next.minimap_widget_viewport_stroke, &v, "minimapWidgetViewportStroke");
+            Self::merge_color_field(&mut next.minimap_widget_viewport_stroke_hovered, &v, "minimapWidgetViewportStrokeHovered");
             *self = next;
             Ok(())
         }
@@ -515,7 +530,7 @@ pub mod types {
     use std::hash::{Hash, Hasher};
     use std::sync::Arc;
 
-    use crate::cavas::{append_svg_document, Affine, FillRule, RasterImage, Rect, Scene, SvgDocument};
+    use crate::canvas::{append_svg_document, Affine, FillRule, RasterImage, Rect, Scene, SvgDocument};
 
     #[derive(Clone)]
     pub enum CachedIconBody {
@@ -535,7 +550,7 @@ pub mod types {
     /// 🖼️ Shared SVG/raster icon decode cache for board and DAG hosts.
     pub struct IconPaintCache {
         cache: RefCell<HashMap<String, CachedIconPaint>>,
-        pub themed_icon_lookup: infinite_cavas::icon_codec::ThemedSvgLookup,
+        pub themed_icon_lookup: infinite_canvas::icon_codec::ThemedSvgLookup,
     }
 
     impl Default for IconPaintCache {
@@ -576,11 +591,11 @@ pub mod types {
         }
 
         pub fn get_or_build(&self, encoded: &str, fg: Color, bg: Color, preserve_original_style: bool) -> Option<(f64, f64, f64, f64, CachedIconBody)> {
-            let resolved = infinite_cavas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
+            let resolved = infinite_canvas::icon_codec::board_resolve_icon_kind(encoded, self.themed_icon_lookup);
             let key = match &resolved {
-                infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
-                infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
-                infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
+                infinite_canvas::icon_codec::BoardResolvedIcon::None => return None,
+                infinite_canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) | infinite_canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => Self::icon_vector_cache_key(if preserve_original_style { "p" } else { "t" }, s.as_str(), fg, bg),
+                infinite_canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => Self::icon_raster_cache_key(rgba, *w, *h),
             };
             {
                 let g = self.cache.borrow();
@@ -589,8 +604,8 @@ pub mod types {
                 }
             }
             let (bx, by, bw, bh, body) = match resolved {
-                infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
-                infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+                infinite_canvas::icon_codec::BoardResolvedIcon::None => return None,
+                infinite_canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
                     let doc = SvgDocument::parse_icons(s.trim()).ok()?;
                     let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
@@ -604,7 +619,7 @@ pub mod types {
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
+                infinite_canvas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
                     let doc = SvgDocument::parse_icons(s.trim()).ok()?;
                     let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
@@ -618,7 +633,7 @@ pub mod types {
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
-                infinite_cavas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
+                infinite_canvas::icon_codec::BoardResolvedIcon::RasterRgba8 { rgba, w, h } => {
                     let bx = 0.0_f64;
                     let by = 0.0_f64;
                     let bw = f64::from(w);
@@ -681,7 +696,7 @@ pub mod types {
     // #endregion types
 }
 
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 pub use infinite_board::{
     area_preselect_ids, merge_ids_into_selection, merge_pick_into_selection, normalize_selection_mode, pick_merge_mode_for_modifiers, selection_contains_edge_curve, selection_contains_handle_point, selection_contains_node_bounds,
     selection_drag_enclosing, selection_drag_enclosing_rectangle, selection_drag_shape, selection_screen_overlay_points, SELECTION_CLICK_MAX_DISTANCE_PX, SELECTION_DRAG_DIRECTION_THRESHOLD_PX, SELECTION_LASSO_MIN_POINT_DISTANCE_PX,
@@ -1332,7 +1347,7 @@ pub mod hierarchical_tree {
 
 // #region 🔁️RedrawLayout
 pub mod redraw_layout {
-    use crate::cavas::Point;
+    use crate::canvas::Point;
     use serde::Deserialize;
     use serde_json::Value;
     use std::collections::HashMap;
@@ -1546,7 +1561,7 @@ pub mod redraw_layout {
 
 // #region 🔖️GraphExtension
 /// 🧩️ Extension hook for domain-specific graph behavior.
-pub trait GraphExtension: cavas::CanvasExtension {}
+pub trait GraphExtension: canvas::CanvasExtension {}
 
 pub use force_graph::{apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions};
 pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_layout_to_fixture_v1_json};
@@ -1556,7 +1571,7 @@ pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_
 #[cfg(test)]
 mod quadrant_tests {
     use super::*;
-    use crate::cavas::Color;
+    use crate::canvas::Color;
 
     #[test]
     fn canvas_theme_default_uses_centralized_board_light_tokens() {

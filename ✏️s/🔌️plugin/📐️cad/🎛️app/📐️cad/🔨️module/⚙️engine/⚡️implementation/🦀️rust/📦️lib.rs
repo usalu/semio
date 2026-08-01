@@ -2380,6 +2380,8 @@ pub const CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX: f64 = 692.0;
 
 const CAD_FOREST_REFERENCE_BASE_ORIGIN_XY: [f64; 2] = [-24.0, -18.0];
 
+pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.3;
+
 static CAD_BREP_KERNEL: OnceLock<Mutex<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
 
 /// @emoji 📦️ Universal fallback extent for typologies with no authored geometry to measure.
@@ -2487,12 +2489,12 @@ fn forest_reference_plane_z(source_json: &str) -> f64 {
     0.01
 }
 
-/// @emoji 🖼️ Centers the concrete-forest reference after a +½-width right / +½-depth front nudge from the authored base corner.
+/// @emoji 🖼️ Centers the concrete-forest reference and moves it forward from the authored base corner.
 fn forest_reference_origin(reference_z: f64) -> [f64; 3] {
     let height_world = CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX;
     [
         CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[0] + CAD_FOREST_REFERENCE_WIDTH_WORLD * 0.5,
-        CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[1] + height_world * 0.5,
+        CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[1] + height_world * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO),
         reference_z,
     ]
 }

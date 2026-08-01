@@ -57,7 +57,7 @@ flowchart LR
   Core --> WgpuR
 ```
 
-Generic shared render libs stay (not app code): `@semio-tech/ui-react` ([ui/js/react](ui/js/react)), `infinite/cavas/react-renderer`, `infinite/world/r3f`, `ui/wgpu/rs`.
+Generic shared render libs stay (not app code): `@semio-tech/ui-react` ([ui/js/react](ui/js/react)), `infinite/canvas/react-renderer`, `infinite/world/r3f`, `ui/wgpu/rs`.
 
 ## Phase 1: Generalize the Scene Contract (framework/core/rs/ui.rs)
 

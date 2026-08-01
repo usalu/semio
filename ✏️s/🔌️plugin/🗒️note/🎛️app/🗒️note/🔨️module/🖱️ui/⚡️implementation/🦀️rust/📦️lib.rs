@@ -838,7 +838,7 @@ fn note_utility(id: &str, label: &str, icon: &str, group: &str, category: Utilit
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
 /// dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
 fn note_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 //#endregion 🔖️Shell
 //#endregion 🔖️Render
@@ -1350,7 +1350,7 @@ pub fn create_note_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("note")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind_with_engagement(NOTE_PLAY_WINDOW_COMPOSITE, "Canvas", NOTE_PLAY_BODY_COMPOSITE, SurfaceKind::InkCanvas, note_canvas_engagement(&document, &NoteCamera::default(), &[], ""), "pen-tool")
             .window_kind_with_engagement(NOTE_PLAY_WINDOW_NAVIGATOR, "Navigator", NOTE_PLAY_BODY_NAVIGATOR, SurfaceKind::InkCanvas, note_navigator_engagement("selectDirect"), "focus")
@@ -1483,7 +1483,7 @@ pub fn create_note_app() -> App {
             window.options.measures = note_navigator_measures(&document, &NoteCamera::default(), &NotePlayLabels::EN);
         }
     }
-    app.example("semio", "Semio", semio_example_json())
+    app.example("semio", "Semio", semio_example_json(), "sparkles")
         .workflow("note", "Note", "document")
 }
 //#endregion 🔖️Manifest

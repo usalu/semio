@@ -1,7 +1,7 @@
 //! 🕸️ Generic node-graph engine for framework renderers.
 
 pub use infinite_board_port_directed_dag as dag;
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 
 use dag::{dag_screen_to_world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec};
 use serde::Deserialize;
@@ -299,7 +299,7 @@ impl GraphHost {
         self.sync_from_payload(&NodeGraphScenePayload::from_json(&value))
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::Scene, width: u32, height: u32, dpr: f64) {
+    pub fn paint_scene(&self, scene: &mut canvas::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
     }
 
@@ -399,7 +399,7 @@ mod wasm_session {
 
     struct GraphSessionInner {
         host: GraphHost,
-        gpu: cavas::gpu_session::CanvasGpuSession,
+        gpu: canvas::gpu_session::CanvasGpuSession,
         width: u32,
         height: u32,
         dpr: f64,
@@ -414,7 +414,7 @@ mod wasm_session {
     impl GraphSession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            Self { state: Rc::new(RefCell::new(GraphSessionInner { host: GraphHost::default(), gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
+            Self { state: Rc::new(RefCell::new(GraphSessionInner { host: GraphHost::default(), gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
         #[wasm_bindgen(js_name = syncFromSceneJson)]
@@ -431,7 +431,7 @@ mod wasm_session {
             let pw = ((lw as f64 * dpr).round() as u32).max(1);
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+                let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 g.width = lw;
                 g.height = lh;
@@ -468,10 +468,10 @@ mod wasm_session {
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            let mut scene = cavas::Scene::new();
+            let mut scene = canvas::Scene::new();
             let clear = inner.host.dag.canvas_theme.raster_clear;
             inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
-            let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
+            let scene = canvas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
             inner.gpu.render_frame(&scene, clear)
         }
 

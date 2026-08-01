@@ -306,7 +306,7 @@
    Compiling biblatex v0.11.0
    Compiling neural_engine v0.1.0 (/Users/ueli/Documents/semio/neural/engine/rs)
    Compiling hayagriva v0.9.1
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling wgpu-core-deps-apple v27.0.0
    Compiling hayro v0.4.0
    Compiling hayro-svg v0.2.0
@@ -329,14 +329,14 @@
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification

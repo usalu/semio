@@ -8456,6 +8456,7 @@ name = "semio-framework-plugin-host"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-framework-os-kernel-vcs",
  "semio-framework-ui-wgpu",

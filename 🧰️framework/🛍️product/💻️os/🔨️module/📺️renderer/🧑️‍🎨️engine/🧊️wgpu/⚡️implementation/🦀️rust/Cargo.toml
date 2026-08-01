@@ -17,7 +17,7 @@ path = "../../../../🧑️‍🎨️engine/🧊️wgpu/⚡️implementation/�
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 framework_surface_node_graph = { path = "../../../../../../../../🔨️module/🗺️surface/🕸️node-graph/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-surface-node-graph" }
 framework_editor = { path = "../../../../../../../../../🧰️framework/🔨️module/✍️editor/⚡️implementation/🦀️rust", package = "semio-framework-editor" }
-infinite_cavas = { path = "../../../../../♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_canvas = { path = "../../../../../♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 infinite_world = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/♾️infinite/⚡️implementation/🦀️rust/🌍️world", package = "semio-framework-kernel-infinite-world" }
 # 🎬️ Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see

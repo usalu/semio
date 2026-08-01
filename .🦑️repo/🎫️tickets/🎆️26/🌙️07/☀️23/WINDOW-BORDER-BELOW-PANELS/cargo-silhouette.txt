@@ -6,7 +6,7 @@ sccache: warning: The server looks like it shut down unexpectedly, compiling loc
 sccache: warning: The server looks like it shut down unexpectedly, compiling locally instead
 sccache: warning: The server looks like it shut down unexpectedly, compiling locally instead
 sccache: warning: The server looks like it shut down unexpectedly, compiling locally instead
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
 sccache: warning: The server looks like it shut down unexpectedly, compiling locally instead
 sccache: warning: The server looks like it shut down unexpectedly, compiling locally instead
 sccache: warning: The server looks like it shut down unexpectedly, compiling locally instead

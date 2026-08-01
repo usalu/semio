@@ -32,7 +32,7 @@ isProject: false
 
 Render DAG nodes (used by the flow canvas) at six camera-zoom LOD tiers like puzzle 2d, so far zoom collapses a node to a horizontal name and near zoom expands it into the three-section input/name/output layout with port labels.
 
-## LOD scheme (reuse `infinite_cavas::lod`)
+## LOD scheme (reuse `infinite_canvas::lod`)
 
 Declare the same six bands puzzle 2d uses, with identical thresholds, in the DAG crate. Node appearance per tier (zoom increasing):
 
@@ -49,7 +49,7 @@ Handle dots (`snap.handles` loop) and per-kind controls (slider track, select co
 
 In [mathematical/graph/port/directed/dag/lib.rs](mathematical/graph/port/directed/dag/lib.rs), add a new `// #region 🔖️Lod`:
 
-- `use infinite_cavas::lod::{Lod, LodScale};`
+- `use infinite_canvas::lod::{Lod, LodScale};`
 - `const DAG_LODS: &[Lod; 6]` (minimap/overview/compact/normal/detail/micro) with `max_zoom` `0.15 / 0.35 / 0.55 / 1.25 / 2.5 / f64::INFINITY` and id/name/description, plus `const DAG_LOD_SCALE: LodScale`.
 - `pub enum DagDrawLod { Minimap, Overview, Compact, Normal, Detail, Micro }` with `from_scale_index(usize)` and helper predicates (`shows_sections`, `shows_port_labels`, `shows_handles`, `shows_name`, `name_is_vertical`).
 - `pub fn dag_draw_lod(zoom: f64) -> DagDrawLod` calling `DAG_LOD_SCALE.resolve_index(zoom)`.

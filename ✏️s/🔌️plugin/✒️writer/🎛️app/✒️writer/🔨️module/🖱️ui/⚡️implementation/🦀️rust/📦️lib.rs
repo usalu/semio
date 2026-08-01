@@ -823,13 +823,13 @@ impl DocumentApp for WriterPlayApp {
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
 fn writer_hidden_operation(id: &str, label: &str) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Operation) }
 }
 
 /// 🙈️ An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
 /// that mutate only runtime scratch and emit no document operations.
 fn writer_hidden_view(id: &str, label: &str) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::View) }
 }
 
 pub fn create_writer_app() -> App {
@@ -848,7 +848,7 @@ pub fn create_writer_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("writer")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor, "document-jack")
             .default_layout(create_default_layout(
@@ -917,8 +917,8 @@ pub fn create_writer_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("jack", "Jack", jack_example_json())
-    .example("dag.jack", "Dag Jack", dag_jack_example_json())
+    .example("jack", "Jack", jack_example_json(), "file-text")
+    .example("dag.jack", "Dag Jack", dag_jack_example_json(), "file-text")
     .workflow("writer", "Writer", "text.document")
 }
 //#endregion 🔖️Manifest

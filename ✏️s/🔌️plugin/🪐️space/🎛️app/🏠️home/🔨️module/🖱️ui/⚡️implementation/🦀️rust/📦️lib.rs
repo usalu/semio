@@ -469,7 +469,7 @@ pub fn create_home_app() -> App {
     let mut app = App::from_builder(
         App::builder(S_HOME_APP_ID, "Home").document(["semio", "s", "home"])
             .icon_id("home")
-            .mode("explore", "Explore")
+            .mode("explore", "Explore", "compass")
             .default_mode_id("explore")
             .window_kind(S_HOME_WINDOW, "Studios", S_HOME_BODY, SurfaceKind::Canvas2d, "home")
             .default_layout(create_tab_stack_layout(

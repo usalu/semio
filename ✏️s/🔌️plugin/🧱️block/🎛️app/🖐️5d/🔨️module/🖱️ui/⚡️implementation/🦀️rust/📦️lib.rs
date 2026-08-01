@@ -271,7 +271,7 @@ pub fn create_block5d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("layers")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(BLOCK5D_WINDOW_BOARD, "Board", BLOCK5D_BODY_BOARD, SurfaceKind::Board2d, "layout-grid")
             .window_kind(BLOCK5D_WINDOW_WORLD, "World", BLOCK5D_BODY_WORLD, SurfaceKind::World3d, "box")
@@ -287,8 +287,8 @@ pub fn create_block5d_app() -> App {
             .view_action("setSelection", "Set Selection")
             .default_layout(create_default_layout(&[BLOCK5D_WINDOW_BOARD.into(), BLOCK5D_WINDOW_WORLD.into()], "row", Some(&[50.0, 50.0]), Some(&["Board".into(), "World".into()]))),
     )
-    .example(BLOCK5D_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default())
-    .example(BLOCK5D_EXAMPLE_CAPSULE, "Nakagin Capsule", serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default())
+    .example(BLOCK5D_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left", serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "trees")
+    .example(BLOCK5D_EXAMPLE_CAPSULE, "Nakagin Capsule", serde_json::to_string(&block_5d_dsl::parse_dsl(block_5d_dsl::BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT).unwrap_or_default()).unwrap_or_default(), "building-2")
     .workflow("block5d", "Block 5D", "model")
 }
 //#endregion 🔖️Manifest

@@ -689,7 +689,7 @@ pub fn create_wires_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("reasoning-wires")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, "git-branch")
             .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_DOCUMENT)
@@ -719,6 +719,7 @@ pub fn create_wires_app() -> App {
         WIRES_PLAY_EXAMPLE_METABOLISM_ID,
         "Metabolism",
         serde_json::to_string(&metabolism_wires_example_document()).unwrap(),
+        "network",
     )
     .workflow("reasoning-wires", "Mindmap Wires", "graph")
 }

@@ -1198,7 +1198,7 @@ pub mod gpu_session {
                     }
                 };
                 let view = surface_tex.texture.create_view(&wgpu::TextureViewDescriptor::default());
-                let mut encoder = dh.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("infinite_cavas_surface_blit") });
+                let mut encoder = dh.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("infinite_canvas_surface_blit") });
                 surface.blitter.copy(&dh.device, &mut encoder, &surface.target_view, &view);
                 dh.queue.submit(std::iter::once(encoder.finish()));
                 surface_tex.present();

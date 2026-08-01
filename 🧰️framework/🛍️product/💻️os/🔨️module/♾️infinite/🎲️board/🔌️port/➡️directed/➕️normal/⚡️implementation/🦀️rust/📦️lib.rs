@@ -7,7 +7,7 @@ pub mod board_host {
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
 #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure call sites more than it clarifies.")]
 
-use infinite_cavas::{Affine, Circle, CubicBez, Color, FillRule, Point, Rect, Scene, Stroke, Vec2};
+use infinite_canvas::{Affine, Circle, CubicBez, Color, FillRule, Point, Rect, Scene, Stroke, Vec2};
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
@@ -19,9 +19,9 @@ use crate::{
     EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
     NodeShape, SceneDescriptorJson, SelectionOptions, CanvasPalette, WireData, WireKindDef,
 };
-use infinite_cavas::camera::Camera;
+use infinite_canvas::camera::Camera;
 use mathematical_graph_manifest::manifest_by_id;
-use infinite_cavas::geom_sel::{
+use infinite_canvas::geom_sel::{
     cubic_bezier_axis_bounds, cubic_bezier_point, inflate_world_box, point_in_polygon, polygon_contains_world_box, polygon_intersects_world_box, segment_intersects_polygon, segment_intersects_world_box, world_box_contains_box,
     world_box_contains_point, world_box_from_points, world_boxes_overlap, WorldBox,
 };
@@ -29,9 +29,9 @@ use infinite_cavas::geom_sel::{
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-pub use infinite_cavas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX, CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN};
+pub use infinite_canvas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX, CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN};
 
-use infinite_cavas::lod::{Lod, LodScale};
+use infinite_canvas::lod::{Lod, LodScale};
 
 //#region ⚠️ Errors
 /// ⚠️ Errors from board host theme/catalog/layout JSON mutators and manifest validation.
@@ -465,12 +465,12 @@ impl BoardHost {
         self.content_scene_generation
     }
 
-    fn viewport(&self) -> infinite_cavas::camera::Viewport {
-        infinite_cavas::camera::Viewport { width: self.width, height: self.height, dpr: self.dpr }
+    fn viewport(&self) -> infinite_canvas::camera::Viewport {
+        infinite_canvas::camera::Viewport { width: self.width, height: self.height, dpr: self.dpr }
     }
 
     fn camera_content_affine(&self) -> Affine {
-        infinite_cavas::camera::camera_content_affine(&self.camera, &self.viewport())
+        infinite_canvas::camera::camera_content_affine(&self.camera, &self.viewport())
     }
 }
 
@@ -640,7 +640,7 @@ impl BoardHost {
     }
 
     fn set_camera_internal(&mut self, x: f64, y: f64, zoom: f64, emit_event: bool) {
-        let zoom = infinite_cavas::camera::clamp_zoom(zoom);
+        let zoom = infinite_canvas::camera::clamp_zoom(zoom);
         if (self.camera.x - x).abs() < 1e-9 && (self.camera.y - y).abs() < 1e-9 && (self.camera.zoom - zoom).abs() < 1e-9 {
             return;
         }
@@ -1320,7 +1320,7 @@ impl BoardHost {
     }
 
     fn edge_stroke_for_kind_pattern(pattern: EdgeStrokePattern, width: f64) -> Stroke {
-        use infinite_cavas::Cap;
+        use infinite_canvas::Cap;
         let mut stroke = Stroke::new(width);
         match pattern {
             EdgeStrokePattern::Solid => {}
@@ -1373,7 +1373,7 @@ impl BoardHost {
     }
 
     fn append_edge_tip(scene: &mut Scene, tip: Point, dir: Vec2, color: Color, stroke_width: f64, tip_def: &EdgeTipDef) {
-        use infinite_cavas::BezPath;
+        use infinite_canvas::BezPath;
         let len = dir.hypot();
         if len < 1e-9 {
             return;
@@ -2912,11 +2912,11 @@ impl BoardHost {
     }
 
     pub fn world_to_screen(&self, p: Point) -> Point {
-        infinite_cavas::camera::world_to_screen(&self.camera, &self.viewport(), p)
+        infinite_canvas::camera::world_to_screen(&self.camera, &self.viewport(), p)
     }
 
     pub fn screen_to_world(&self, p: Point) -> Point {
-        infinite_cavas::camera::screen_to_world(&self.camera, &self.viewport(), p)
+        infinite_canvas::camera::screen_to_world(&self.camera, &self.viewport(), p)
     }
 
     fn node_kind_scale(&self, node_kind: &str) -> f64 {
@@ -4181,7 +4181,7 @@ impl BoardHost {
         let origin = self.world_to_screen(Point::new(0.0, 0.0));
         let x_off = ((origin.x % step) + step) % step;
         let y_off = ((origin.y % step) + step) % step;
-        let mut p = infinite_cavas::BezPath::new();
+        let mut p = infinite_canvas::BezPath::new();
         let mut x = x_off;
         while x <= w {
             p.move_to(Point::new(x, 0.0));
@@ -4701,7 +4701,7 @@ impl BoardHost {
         }
         if let Some(ref pts) = self.selection_screen_preview {
             if pts.len() >= 2 {
-                let mut path = infinite_cavas::BezPath::new();
+                let mut path = infinite_canvas::BezPath::new();
                 path.move_to(pts[0]);
                 for p in pts.iter().skip(1) {
                     path.line_to(*p);
@@ -4804,7 +4804,7 @@ impl BoardHost {
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         let viewport = self.viewport();
-        infinite_cavas::camera::wheel_screen(&mut self.camera, &viewport, sx, sy, delta_y);
+        infinite_canvas::camera::wheel_screen(&mut self.camera, &viewport, sx, sy, delta_y);
         self.set_camera_silent(self.camera.x, self.camera.y, self.camera.zoom);
     }
 
@@ -5664,7 +5664,7 @@ impl BoardHost {
     }
 }
 
-impl infinite_cavas::canvas_content::CanvasContent for BoardHost {
+impl infinite_canvas::canvas_content::CanvasContent for BoardHost {
     fn build_scene(&self) -> Scene {
         self.build_vector_scene()
     }
@@ -5677,7 +5677,7 @@ impl infinite_cavas::canvas_content::CanvasContent for BoardHost {
 }
 
 pub use board_host::*;
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 pub use infinite_board_normal_undirected::{
 apply_force_graph_layout_to_fixture_v1_json as apply_undirected_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value as apply_undirected_force_graph_layout_to_fixture_v1_value,
 apply_redraw_layout_to_fixture_v1_json as apply_normal_undirected_redraw_layout_to_fixture_v1_json, ForceGraphLayoutOptions as UndirectedForceGraphLayoutOptions,

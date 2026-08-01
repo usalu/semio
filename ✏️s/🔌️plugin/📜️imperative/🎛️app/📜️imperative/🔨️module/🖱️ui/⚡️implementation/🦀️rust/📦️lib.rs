@@ -354,7 +354,7 @@ pub fn create_imperative_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("imperative")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(IMPERATIVE_PLAY_WINDOW_MAIN, "Imperative", IMPERATIVE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "code")
             .window_kind(IMPERATIVE_PLAY_WINDOW_SCRIPT, "Script", IMPERATIVE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
@@ -406,7 +406,7 @@ pub fn create_imperative_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_document()).expect("default_document is a static, hand-built value with no non-finite floats or non-UTF8 keys"))
+    .example("demo", "Demo", serde_json::to_string(&default_document()).expect("default_document is a static, hand-built value with no non-finite floats or non-UTF8 keys"), "flask-conical")
     .workflow("imperative", "Imperative", "graph")
 }
 //#endregion 🔖️Manifest

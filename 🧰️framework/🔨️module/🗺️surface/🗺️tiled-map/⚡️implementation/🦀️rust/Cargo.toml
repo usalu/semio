@@ -16,7 +16,7 @@ path = "../../../🗺️tiled-map/⚡️implementation/🦀️rust/📦️lib.rs
 
 [dependencies]
 ui_styling = { path = "../../../../🖱️ui/🎨️styling/⚡️implementation/🦀️rust", package = "semio-framework-ui-styling" }
-infinite_cavas = { path = "../../../../../🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_canvas = { path = "../../../../../🛍️product/💻️os/🔨️module/♾️infinite/🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 image = { version = "0.25", default-features = false, features = ["png"] }

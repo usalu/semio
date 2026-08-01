@@ -103,7 +103,7 @@ NPM_RENAMES: dict[str, str] = {
     '"name": "compose"': '"name": "workspace"',
     '"name": "compose-vscode"': '"name": "@semio-tech/compose-vscode"',
     '"name": "repo-vscode"': '"name": "@semio-tech/repo-vscode"',
-    "@semio-tech/infinite-cavas-react-renderer": "@semio-tech/infinite-canvas-react-renderer",
+    "@semio-tech/infinite-canvas-react-renderer": "@semio-tech/infinite-canvas-react-renderer",
     "@semio-tech/semio-asset": "@semio-tech/asset",
     "@semio-tech/semio-icon": "@semio-tech/icon",
     "@semio-tech/semio-image": "@semio-tech/image",

@@ -1,0 +1,10 @@
+Hello 000303617070056163746f72020102 true
+Error 0d000163016d true
+Config 0801010101020163 true
+round {
+  Error: {
+    in_reply_to: null,
+    code: "c",
+    message: "m",
+  },
+}

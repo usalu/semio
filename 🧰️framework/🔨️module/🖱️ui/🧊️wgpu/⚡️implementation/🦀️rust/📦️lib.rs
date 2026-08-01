@@ -230,12 +230,48 @@ pub struct ContextMenuItemSpec {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
+pub struct ContextMenuHit {
+    pub domain: String,
+    pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub label: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextMenuSelectionGroup {
+    pub domain: String,
+    pub ids: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ContextMenuTextContext {
+    pub caret: usize,
+    pub has_selection: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub word: Option<String>,
+    pub can_rename: bool,
+    pub has_completions: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ContextMenuSurfaceTarget {
     pub surface_id: String,
     pub kind: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub hits: Vec<ContextMenuHit>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub selection: Vec<ContextMenuSelectionGroup>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub target_json: Option<String>,
+    pub text: Option<ContextMenuTextContext>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

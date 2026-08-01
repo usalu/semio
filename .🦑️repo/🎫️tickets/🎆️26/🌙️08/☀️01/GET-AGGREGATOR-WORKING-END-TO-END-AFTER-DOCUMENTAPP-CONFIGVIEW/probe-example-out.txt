@@ -1,5 +1,0 @@
-beispiel count 1
-has Abbau false
-has Betonwald false
-has Concrete true
-options [ "Vollbild", "Kein Beispiel", "Concrete Forest", "Nakagin Capsule Tower" ]

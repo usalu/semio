@@ -2,10 +2,10 @@
    --> vcs/rs/lib.rs:405:27
    --> vcs/rs/lib.rs:415:5
 warning: `vcs` (lib) generated 2 warnings (run `cargo fix --lib -p vcs` to apply 2 suggestions)
-  --> infinite/cavas/rs/lib.rs:11:17
-  --> infinite/cavas/rs/lib.rs:12:17
-   --> infinite/cavas/rs/lib.rs:158:12
-warning: `infinite_cavas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_cavas` to apply 2 suggestions)
+  --> infinite/canvas/rs/lib.rs:11:17
+  --> infinite/canvas/rs/lib.rs:12:17
+   --> infinite/canvas/rs/lib.rs:158:12
+warning: `infinite_canvas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_canvas` to apply 2 suggestions)
 warning: `protocol` (lib) generated 1 warning (run `cargo fix --lib -p protocol` to apply 1 suggestion)
 warning: `semio-framework-plugin` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-plugin` to apply 1 suggestion)
 warning: `kernel_3d_brepkit` (lib) generated 5 warnings

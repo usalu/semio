@@ -24,7 +24,7 @@ const areaPath: Record<string, string> = {
   "gis/terrain": "🌐️gis⛰️terrain",
   "puzzle/3d": "🧩️puzzle🏙️3d",
   "puzzle/5d": "🧩️puzzle👯️5d",
-  "infinite/cavas": "♾️infinite✈️cavas",
+  "infinite/canvas": "♾️infinite✈️canvas",
   "infinite/world": "♾️infinite🏙️world",
   "reasoning/mindmap": "🧠️reasoning🗺️mindmap",
   "reasoning/mindmap/wires": "🧠️reasoning🔗️wires",
@@ -44,7 +44,7 @@ const subBundleEmoji: Record<string, { name: string; emoji: string }> = {
   "gis/terrain": { name: "terrain", emoji: "⛰️" },
   "puzzle/3d": { name: "3d", emoji: "📷️" },
   "puzzle/5d": { name: "5d", emoji: "👯️" },
-  "infinite/cavas": { name: "cavas", emoji: "✈️" },
+  "infinite/canvas": { name: "canvas", emoji: "✈️" },
   "infinite/world": { name: "world", emoji: "🏙️" },
   "ui/react": { name: "react", emoji: "⚛️" },
 };

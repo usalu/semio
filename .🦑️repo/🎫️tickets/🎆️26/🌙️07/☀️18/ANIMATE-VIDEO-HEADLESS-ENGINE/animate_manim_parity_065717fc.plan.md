@@ -33,8 +33,8 @@ isProject: false
 - **Scope:** Full Manim feature tree in this ticket (not a skeleton).
 - **Present:** `animate/present` **replaces** `[framework/product/presentation](framework/product/presentation)`; delete that tree after cutover.
 - **Shared core:** Add `[animate/core/rs](animate/core/rs)` for Scene / Sobject / Animation / composites / rate funcs / updaters / camera / config. Both engines depend on it (clean long-term split; avoids duplicating the Manim scene graph).
-- **Math:** Typst-backed `Text` / `MathText` (repo already uses Typst in `[puzzle/2d/rs](puzzle/2d/rs)` and `[infinite/cavas/rs](infinite/cavas/rs)`) — no LaTeX runtime.
-- **Raster path:** Vello (+ wgpu) as the primary frame renderer (Cairo analogue), reusing patterns from `[infinite/cavas/rs](infinite/cavas/rs)` and `[mathematical/geometry/rs](mathematical/geometry/rs)` (kurbo Béziers).
+- **Math:** Typst-backed `Text` / `MathText` (repo already uses Typst in `[puzzle/2d/rs](puzzle/2d/rs)` and `[infinite/canvas/rs](infinite/canvas/rs)`) — no LaTeX runtime.
+- **Raster path:** Vello (+ wgpu) as the primary frame renderer (Cairo analogue), reusing patterns from `[infinite/canvas/rs](infinite/canvas/rs)` and `[mathematical/geometry/rs](mathematical/geometry/rs)` (kurbo Béziers).
 - **Encode:** FFmpeg via a thin Rust interface (partial movies → concat), mirroring Manim’s SceneFileWriter; extend existing encode helpers in `[repo/lib/js/index.ts](repo/lib/js/index.ts)` only where the CLI/JS side must shell out.
 - **Goal:** No `animate` goal exists. **Before `ticket_open`:** you must authorize opening goal `animate` (rules forbid opening goals without explicit instruction). Ticket binds to that goal.
 
@@ -158,11 +158,11 @@ Work top-down so each layer is testable before the next catalog expands:
 ## Key reuse (do not reinvent)
 
 - Geometry: `[mathematical/geometry/rs](mathematical/geometry/rs)`
-- Vello scene: `[infinite/cavas/rs](infinite/cavas/rs)`
+- Vello scene: `[infinite/canvas/rs](infinite/canvas/rs)`
 - Hashing: `[framework/hash/rs](framework/hash/rs)`
 - Headless trait style: `[kernel/2d/engine/rs](kernel/2d/engine/rs)`
 - Document/VCS if present decks are editable: `[vcs/rs](vcs/rs)`
-- Typst pipeline: puzzle/cavas patterns
+- Typst pipeline: puzzle/canvas patterns
 
 ## Completeness gate
 

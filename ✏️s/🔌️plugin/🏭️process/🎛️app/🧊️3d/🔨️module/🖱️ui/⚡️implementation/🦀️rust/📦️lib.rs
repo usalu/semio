@@ -109,7 +109,7 @@ fn set_active_utility_effect(utility: &str) -> HostEffect {
 /// 📇️ A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
 /// command palette) with the given execution kind.
 fn internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
@@ -1094,7 +1094,7 @@ pub fn create_process3d_app() -> App {
                 import_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl],
             })
             .icon_id("hammer")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind_with_engagement(
                 PROCESS_3D_PLAY_WINDOW_MAIN,
@@ -1189,8 +1189,8 @@ pub fn create_process3d_app() -> App {
             .keybinding("delete", "removeSelectedStep")
             .keybinding("backspace", "removeSelectedStep"),
     )
-    .example(PROCESS3D_EXAMPLE_TIMBER, "Timber Beam Joinery", process_3d_engine::TIMBER_EXAMPLE_DSL)
-    .example(PROCESS3D_EXAMPLE_PLATE, "Drilled Plate", process_3d_engine::PLATE_EXAMPLE_DSL)
+    .example(PROCESS3D_EXAMPLE_TIMBER, "Timber Beam Joinery", process_3d_engine::TIMBER_EXAMPLE_DSL, "file-text")
+    .example(PROCESS3D_EXAMPLE_PLATE, "Drilled Plate", process_3d_engine::PLATE_EXAMPLE_DSL, "file-text")
     .workflow("process3d", "Process 3D", "brep")
 }
 //#endregion 🔖️Manifest

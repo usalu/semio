@@ -1,4 +1,4 @@
-warning: `infinite_cavas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_cavas` to apply 2 suggestions)
+warning: `infinite_canvas` (lib) generated 3 warnings (run `cargo fix --lib -p infinite_canvas` to apply 2 suggestions)
 warning: use of deprecated function `brepkit_operations::fillet::fillet_rolling_ball`: Use brepkit_blend::fillet_builder::FilletBuilder (via blend_ops::fillet_v2) instead.
   --> kernel/3d/brep/rs/lib.rs:27:34
 warning: `kernel_3d_brepkit` (lib) generated 5 warnings

@@ -163,9 +163,9 @@ imperative/module/text/rs/Cargo.toml
 imperative/react/js/index.tsx
 imperative/react/package.json
 imperative/react/script.ts
-infinite/cavas/react-renderer/package.json
-infinite/cavas/react-renderer/script.ts
-infinite/cavas/rs/build.rs
+infinite/canvas/react-renderer/package.json
+infinite/canvas/react-renderer/script.ts
+infinite/canvas/rs/build.rs
 infinite/world/r3f/package.json
 infinite/world/r3f/script.ts
 kernel/2d/engine/script.ts

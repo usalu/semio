@@ -7,7 +7,7 @@ use infinite_board_port_directed::{
     BoardEngine, CanvasPalette, HandleRole,
 };
 use infinite_board_port_directed_normal::BoardHost;
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::collections::{BTreeMap, HashMap};
@@ -251,7 +251,7 @@ struct RuleQueryResult {
 }
 // #endregion 🔖️Rewrite
 // #region 🔖️Lod
-use cavas::lod::{Lod, LodScale};
+use canvas::lod::{Lod, LodScale};
 
 const TRINITY_LODS: &[Lod; 6] = &[
     Lod { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; edges and node fills only.", max_zoom: 0.15 },
@@ -710,9 +710,9 @@ impl TrinityHost {
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-        use cavas::camera::{wheel_screen, Camera as CavasCamera, Viewport};
+        use canvas::camera::{wheel_screen, Camera as CanvasCamera, Viewport};
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
-        let mut cam = CavasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
+        let mut cam = CanvasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
         wheel_screen(&mut cam, &viewport, sx, sy, delta_y);
         self.set_camera(cam.x, cam.y, cam.zoom);
     }
@@ -742,10 +742,10 @@ impl TrinityHost {
         Ok(())
     }
 
-    fn screen_to_world(&self, sx: f64, sy: f64) -> cavas::Point {
-        use cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-        use cavas::Point;
-        let cam = CavasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
+    fn screen_to_world(&self, sx: f64, sy: f64) -> canvas::Point {
+        use canvas::camera::{screen_to_world, Camera as CanvasCamera, Viewport};
+        use canvas::Point;
+        let cam = CanvasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
     }
@@ -858,7 +858,7 @@ impl TrinityHost {
         self.sync_board_from_graph();
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::Scene, _viewport_w: u32, _viewport_h: u32, _dpr: f64) {
+    pub fn paint_scene(&self, scene: &mut canvas::Scene, _viewport_w: u32, _viewport_h: u32, _dpr: f64) {
         let lod_index = trinity_lod_index(self.graph.camera.zoom) as i8;
         if self.last_logged_lod.get() != lod_index {
             self.last_logged_lod.set(lod_index);
@@ -955,7 +955,7 @@ mod wasm_session {
 
     struct TrinitySessionInner {
         host: TrinityHost,
-        gpu: cavas::gpu_session::CanvasGpuSession,
+        gpu: canvas::gpu_session::CanvasGpuSession,
         width: u32,
         height: u32,
         dpr: f64,
@@ -980,7 +980,7 @@ mod wasm_session {
                         GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
                     TrinityHost::from_graph(Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
                 });
-            Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
+            Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: canvas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
         #[wasm_bindgen(js_name = loadFixtureJson)]
@@ -1009,7 +1009,7 @@ mod wasm_session {
             let pw = ((lw as f64 * dpr).round() as u32).max(1);
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+                let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 g.width = lw;
                 g.height = lh;

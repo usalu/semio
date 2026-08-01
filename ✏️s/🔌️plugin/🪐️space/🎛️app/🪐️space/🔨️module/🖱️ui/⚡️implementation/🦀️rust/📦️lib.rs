@@ -2047,7 +2047,7 @@ pub fn create_space_app() -> App {
     let measures = workflow_measures(&runtime, &projection.app_instances, resolve_labels::<SStudioLabels>(&ViewState::default()));
     let builder = App::builder(S_PLAY_APP_ID, "Space").document(["semio", "s", "studio"])
         .icon_id("s")
-        .mode("main", "Space")
+        .mode("main", "Space", "globe")
         .default_mode_id("main")
         .window_kind(S_PLAY_WINDOW_WORKFLOW, "Workflow", S_PLAY_BODY_WORKFLOW, SurfaceKind::NodeGraph, "graph-media")
         .window_kind(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS, SurfaceKind::VirtualFileSystem, "folder")
@@ -2113,11 +2113,11 @@ pub fn create_space_app() -> App {
         .shell_action("setActiveExample", "Set Active Example")
         .shell_action("exportMedia", "Export Media")
         .shell_action("importMedia", "Import Media")
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importMediaPayload", "Import Media Payload", ActionKind::Shell) })
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importMediaPayload", "Import Media Payload", ActionKind::Shell) })
         .shell_action("exportStudioPack", "Export Studio Pack")
         .shell_action("exportStudioDsl", "Export Studio DSL")
         .shell_action("importSpacePack", "Import Studio Pack")
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importSpacePackPayload", "Import Studio Pack Payload", ActionKind::Shell) })
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importSpacePackPayload", "Import Studio Pack Payload", ActionKind::Shell) })
         .shell_action("openSpace", "Open Studio")
         .shell_action("openInstance", "Open Instance")
         .shell_action("closeFocusedInstance", "Close Focused Instance")
@@ -2184,7 +2184,7 @@ pub fn create_space_app() -> App {
     let mut app = app.workflow("s", "S Studio", "studio");
     for (id, label) in S_STUDIO_EXAMPLES {
         let json = os_document_to_json(&parse_demo_space_document()).expect("serialize demo studio document");
-        app = app.example(*id, *label, json);
+        app = app.example(*id, *label, json, "file-text");
     }
     app
 }
@@ -2329,6 +2329,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
+                icon_id: "square-pen".into(),
                         tools: vec![],
                         layout_id: None,
                         commands: vec![],
@@ -2807,6 +2808,7 @@ mod tests {
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
+                icon_id: "square-pen".into(),
                     tools: vec![],
                     layout_id: None,
                     commands: vec![],
@@ -2830,6 +2832,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
+                icon_id: "square-pen".into(),
                         tools: vec![],
                         layout_id: None,
                         commands: vec![],
@@ -2852,6 +2855,7 @@ mod tests {
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
+                icon_id: "square-pen".into(),
                     tools: vec![],
                     layout_id: None,
                     commands: vec![],
@@ -2875,6 +2879,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
+                icon_id: "square-pen".into(),
                         tools: vec![],
                         layout_id: None,
                         commands: vec![],

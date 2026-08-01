@@ -1,9 +1,9 @@
 //! 🖼️ Non-destructive raster compositor on the infinite canvas (Vello/WebGPU).
 
-pub use infinite_cavas::{self as cavas, *};
+pub use infinite_canvas::{self as canvas, *};
 pub use std::sync::Arc;
 
-use cavas::camera::{Camera, Viewport};
+use canvas::camera::{Camera, Viewport};
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -309,7 +309,7 @@ pub struct RasterHost {
     camera: Camera,
     viewport: Viewport,
     document: RasterDocument,
-    images: cavas::raster::RasterImageCache,
+    images: canvas::raster::RasterImageCache,
     paint_buffers: HashMap<String, Vec<u8>>,
     mask_buffers: HashMap<String, Vec<u8>>,
     active_utility: String,
@@ -335,13 +335,13 @@ impl Default for RasterHost {
 
 impl RasterHost {
     pub fn new() -> Self {
-        let theme_clear = cavas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
-        let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(theme_clear);
+        let theme_clear = canvas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
+        let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(theme_clear);
         Self {
             camera: Camera { x: 0.0, y: 0.0, zoom: 1.0 },
             viewport: Viewport { width: 800, height: 600, dpr: 1.0 },
             document: RasterDocument { layers: vec![] },
-            images: cavas::raster::RasterImageCache::default(),
+            images: canvas::raster::RasterImageCache::default(),
             paint_buffers: HashMap::new(),
             mask_buffers: HashMap::new(),
             active_utility: "selectMarquee".into(),
@@ -362,8 +362,8 @@ impl RasterHost {
 
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
         let v: serde_json::Value = serde_json::from_str(json)?;
-        cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
-        let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
+        canvas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
+        let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(self.theme_clear);
         self.checkerboard_light_cell = checkerboard_light_cell;
         self.checkerboard_dark_cell = checkerboard_dark_cell;
         Ok(())
@@ -382,15 +382,15 @@ impl RasterHost {
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
         self.camera.x = x;
         self.camera.y = y;
-        self.camera.zoom = cavas::camera::clamp_zoom(zoom);
+        self.camera.zoom = canvas::camera::clamp_zoom(zoom);
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-        cavas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+        canvas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     }
 
     fn screen_to_world(&self, sx: f64, sy: f64) -> Point {
-        cavas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
+        canvas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
     }
 
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
@@ -591,10 +591,10 @@ impl RasterHost {
                             }
                         }
                         let mask_img = self.images.insert(mask_key, image_from_rgba(mask_state.width, mask_state.height, mask_rgba));
-                        cavas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
+                        canvas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
                     }
                 }
-                cavas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
+                canvas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
                 scene.pop_layer();
                 if self.show_selection_chrome && (self.hovered_id.as_deref() == Some(id.as_str()) || self.selected_ids.iter().any(|s| s == id)) {
                     let stroke = Rect::new(0.0, 0.0, *width as f64, *height as f64);
@@ -644,17 +644,17 @@ impl RasterHost {
 
     pub fn build_mask_scene(&mut self, layer_id: &str) -> Scene {
         let mut scene = Scene::new();
-        let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+        let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
         let key = format!("mask:{layer_id}");
         let rgba = self.mask_buffers.entry(key.clone()).or_insert_with(|| vec![255u8; 512 * 512 * 4]).clone();
         let img = self.images.insert(key, image_from_rgba(512, 512, rgba));
-        cavas::raster::draw_image_arc(&mut scene, &img, cam);
+        canvas::raster::draw_image_arc(&mut scene, &img, cam);
         scene
     }
 
     fn build_scene_for_layer(&mut self, isolated: Option<&str>) -> Scene {
         let mut scene = Scene::new();
-        let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+        let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
         for layer in self.document.layers.clone() {
             self.append_layer_node(&mut scene, cam, &layer, isolated);
         }
@@ -663,11 +663,11 @@ impl RasterHost {
 
     pub fn build_render_scene(&mut self) -> Scene {
         let inner = self.build_vector_scene();
-        cavas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
+        canvas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     }
 }
 
-impl cavas::canvas_content::CanvasContent for RasterHost {
+impl canvas::canvas_content::CanvasContent for RasterHost {
     fn build_scene(&self) -> Scene {
         Scene::new()
     }
@@ -764,7 +764,7 @@ enum PickEntry {
 
 impl RasterHost {
     fn pixel_screen_bounds(&self, parent: Affine, transform: &Affine, width: u32, height: u32) -> ScreenRect {
-        let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
+        let world = canvas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
         let hw = width as f64 * 0.5;
         let hh = height as f64 * 0.5;
         let corners = [world * Point::new(-hw, -hh), world * Point::new(hw, -hh), world * Point::new(hw, hh), world * Point::new(-hw, hh)];
@@ -925,7 +925,7 @@ impl RasterHost {
                 let content_h = bounds.height.max(1.0);
                 let inner_w = (viewport_w.max(1.0) - padding * 2.0).max(1.0);
                 let inner_h = (viewport_h.max(1.0) - padding * 2.0).max(1.0);
-                let zoom = cavas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
+                let zoom = canvas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
                 (bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5, zoom)
             }
         };
@@ -936,12 +936,12 @@ impl RasterHost {
     pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, FrameworkSurfacePaintError> {
         let content_camera: CameraJsonIn = serde_json::from_str(content_camera_json)?;
         let content_viewport: ViewportJsonIn = serde_json::from_str(content_viewport_json)?;
-        let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: cavas::camera::clamp_zoom(content_camera.zoom) };
+        let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: canvas::camera::clamp_zoom(content_camera.zoom) };
         let cv = Viewport { width: (content_viewport.width.max(1.0)) as u32, height: (content_viewport.height.max(1.0)) as u32, dpr: 1.0 };
-        let top_left_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
-        let bottom_right_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
-        let top_left = cavas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
-        let bottom_right = cavas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+        let top_left_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+        let bottom_right_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+        let top_left = canvas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+        let bottom_right = canvas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
         let rect = ScreenRect::from_points(&[top_left, bottom_right]);
         Ok(serde_json::json!({ "x": rect.x, "y": rect.y, "width": rect.width, "height": rect.height }).to_string())
     }
@@ -963,7 +963,7 @@ use web_sys::HtmlCanvasElement;
 #[cfg(target_arch = "wasm32")]
 struct RasterSessionInner {
     host: RasterHost,
-    gpu: cavas::gpu_session::CanvasGpuSession,
+    gpu: canvas::gpu_session::CanvasGpuSession,
     isolated_view: Option<String>,
     view_mode: String,
 }
@@ -979,15 +979,15 @@ impl RasterSessionInner {
         let scene = match self.view_mode.as_str() {
             "layer" => {
                 let id = self.isolated_view.clone().unwrap_or_default();
-                cavas::render::scale_scene_for_device_pixel_ratio(self.host.build_layer_scene(&id), self.host.viewport.dpr)
+                canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_layer_scene(&id), self.host.viewport.dpr)
             }
             "mask" => {
                 let id = self.isolated_view.clone().unwrap_or_default();
-                cavas::render::scale_scene_for_device_pixel_ratio(self.host.build_mask_scene(&id), self.host.viewport.dpr)
+                canvas::render::scale_scene_for_device_pixel_ratio(self.host.build_mask_scene(&id), self.host.viewport.dpr)
             }
             _ => self.host.build_render_scene(),
         };
-        self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+        self.gpu.render_frame(&scene, canvas::canvas_content::CanvasContent::clear_color(&self.host))
     }
 }
 
@@ -1002,7 +1002,7 @@ pub struct RasterSession {
 impl RasterSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
+        Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: canvas::gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -1024,7 +1024,7 @@ impl RasterSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 g.set_logical_size(lw, lh, dpr, pw, ph);

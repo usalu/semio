@@ -10,6 +10,6 @@ members = [
     "/Users/ueli/Documents/semio/layout/rs",
     "/Users/ueli/Documents/semio/layout/plugin/rs",
     "/Users/ueli/Documents/semio/ui/styling/rs",
-    "/Users/ueli/Documents/semio/infinite/cavas/rs",
+    "/Users/ueli/Documents/semio/infinite/canvas/rs",
 ]
 resolver = "2"

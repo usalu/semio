@@ -45,7 +45,7 @@ Requirement: every app keeps the same behavior and near-identical UI; every dele
 
 ## Architecture
 
-Two framework-owned generic Rust engines, each with a plain-Rust host (embedded by the wgpu renderer) and a wasm-bindgen session (used by the React renderer via `infinite/cavas` GPU canvas). Engines expose a renderer-agnostic display list so both renderers draw the same pixels.
+Two framework-owned generic Rust engines, each with a plain-Rust host (embedded by the wgpu renderer) and a wasm-bindgen session (used by the React renderer via `infinite/canvas` GPU canvas). Engines expose a renderer-agnostic display list so both renderers draw the same pixels.
 
 ```mermaid
 flowchart LR
@@ -66,7 +66,7 @@ flowchart LR
   end
   subgraph renderers [Renderers]
     wgpuHost["wgpu scenes.rs: embeds plain-Rust hosts, translates display list to ui/wgpu draw"]
-    reactHost["React hosts: wasm sessions + cavas GPU canvas + DOM overlays"]
+    reactHost["React hosts: wasm sessions + canvas GPU canvas + DOM overlays"]
   end
   plugins --> contract --> engines
   engines --> wgpuHost
@@ -97,7 +97,7 @@ Standardize the renderer-to-plugin command vocabulary (mirroring the world-3d `w
 
 ## Phase 3 — React renderer hosts ([framework/renderer/react](framework/renderer/react))
 
-Rewrite [node-graph-host.tsx](framework/renderer/react/components/node-graph-host.tsx) around the `framework_graph` wasm session + cavas GPU canvas, porting the deleted overlay/interaction code from git HEAD (`flow/react/index.tsx`, `dag/react/index.tsx`) in payload-driven generic form: label overlay (font clamping, hover/selected/preselect/dimmed fills), param/variable/stepper DOM overlays, selection-bounds + align chrome with capture-phase hit regions, marquee overlay, spotlight (LOD-adaptive, keyboard nav, ghost preview), palette drag-drop (HTML5 + pointer fallback + catalogue MIME), pick menu, context menu built from `context_menu_json` via `ContextMenuController` (replacing the current fire-first-item stub), keyboard (undo/redo/select-all/delete/escape), note editing keys, theme sync, caret blink, wheel-zoom quality hint. All interactions dispatch the Phase 1 commands.
+Rewrite [node-graph-host.tsx](framework/renderer/react/components/node-graph-host.tsx) around the `framework_graph` wasm session + canvas GPU canvas, porting the deleted overlay/interaction code from git HEAD (`flow/react/index.tsx`, `dag/react/index.tsx`) in payload-driven generic form: label overlay (font clamping, hover/selected/preselect/dimmed fills), param/variable/stepper DOM overlays, selection-bounds + align chrome with capture-phase hit regions, marquee overlay, spotlight (LOD-adaptive, keyboard nav, ghost preview), palette drag-drop (HTML5 + pointer fallback + catalogue MIME), pick menu, context menu built from `context_menu_json` via `ContextMenuController` (replacing the current fire-first-item stub), keyboard (undo/redo/select-all/delete/escape), note editing keys, theme sync, caret blink, wheel-zoom quality hint. All interactions dispatch the Phase 1 commands.
 
 Rewrite [text-editor-host.tsx](framework/renderer/react/components/text-editor-host.tsx) around the `framework_editor` wasm session, porting the deleted `writer/react/index.tsx` behavior: token coloring, diagnostics + badge, hover/selection occurrences + extra carets, selectable spans, completion popup at caret, inline rename with live preview (rename mapping computed by the plugin via `commitRename` round-trip), format shortcut, context menu, cut/copy/paste, hidden textarea mirror, dead-line chrome integration, vertical scroll camera. Update [index.test.ts](framework/renderer/react/index.test.ts) in place.
 

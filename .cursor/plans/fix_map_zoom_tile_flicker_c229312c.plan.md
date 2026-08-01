@@ -33,7 +33,7 @@ All changes are in [gis/map/rs/lib.rs](gis/map/rs/lib.rs). No JS or tile-pipelin
 Replace the exact-`z`-only loop with a pyramid pass:
 
 - Iterate all entries in `self.tile_images`, parse `z/x/y` from the key, compute `projection::tile_world_rect` and cull tiles whose projected screen bbox does not intersect `[0,w] x [0,h]`.
-- Collect survivors, sort ascending by tile-`z` (coarse first), then draw each via the existing `tile_raster_affine` + `cavas::raster::draw_image_arc`.
+- Collect survivors, sort ascending by tile-`z` (coarse first), then draw each via the existing `tile_raster_affine` + `canvas::raster::draw_image_arc`.
 
 Coarse ancestors paint first and finer tiles (including the exact zoom) paint on top, so every pixel is always covered. No clipping is required: finer tiles overwrite coarser ones and the GPU surface clips overdraw.
 

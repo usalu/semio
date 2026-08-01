@@ -2,11 +2,11 @@
   "id": "26/07/01/UI-THEME-AND-SETTINGS-CONSISTENCY",
   "title": "UI Theme and Settings Consistency",
   "status": "closed",
-  "summary": "Enforced single Vello/WASM theme-sync mechanism (syncSessionVelloTheme + useVelloThemeSync) across canvas hosts including raster; fixed settings/display tab labels by resolving i18n through uiI18n.t(); added missing ui.settings schema keys; centralized Rust merge_color_field in infinite_cavas theme module.",
+  "summary": "Enforced single Vello/WASM theme-sync mechanism (syncSessionVelloTheme + useVelloThemeSync) across canvas hosts including raster; fixed settings/display tab labels by resolving i18n through uiI18n.t(); added missing ui.settings schema keys; centralized Rust merge_color_field in infinite_canvas theme module.",
   "files": [
     "ui/styling/js/index.ts",
     "ui/react/index.tsx",
-    "infinite/cavas/rs/lib.rs",
+    "infinite/canvas/rs/lib.rs",
     "raster/rs/lib.rs",
     "raster/react/index.tsx",
     "raster/react/package.json",

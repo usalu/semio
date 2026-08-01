@@ -9,7 +9,7 @@ todos:
    content: Fix camera translate sign + dpr mixing in canvas-2d-host.tsx JsonLayersCanvasSession, add pure transform helpers + tests
    status: completed
  - id: part-a-wheel
-   content: Implement cursor-anchored wheel zoom matching infinite_cavas::camera::wheel_screen
+   content: Implement cursor-anchored wheel zoom matching infinite_canvas::camera::wheel_screen
    status: completed
  - id: part-b-sync
    content: Sync BoardHost camera/size to the render camera before handling canvasPointerDown/Move/Up/Wheel in d2/mod.rs
@@ -54,11 +54,11 @@ i.e. `screenX = width/2 + zoom·dpr·(camera.x + worldX)` — it **adds** `camer
 
 ```2872:2878:mathematical/graph/port/directed/normal/rs/lib.rs
 pub fn world_to_screen(&self, p: Point) -> Point {
-    infinite_cavas::camera::world_to_screen(&self.camera, &self.viewport(), p)
+    infinite_canvas::camera::world_to_screen(&self.camera, &self.viewport(), p)
 }
 ```
 
-```1551:1557:infinite/cavas/rs/lib.rs
+```1551:1557:infinite/canvas/rs/lib.rs
 pub fn world_to_screen(camera: &Camera, viewport: &Viewport, p: Point) -> Point {
     Point::new((p.x - camera.x) * camera.zoom + viewport.width as f64 / 2.0, ...)
 }
@@ -72,7 +72,7 @@ A secondary, currently-latent bug: `renderFrame`/`toCanvasCoords` mix CSS-pixel 
 
 - Rewrite the camera math in [canvas-2d-host.tsx](framework/renderer/react/components/canvas-2d-host.tsx) to work entirely in logical/CSS pixel space (`this.logicalWidth/logicalHeight`), applying `dpr` once via a leading `ctx.setTransform(dpr,0,0,dpr,0,0)`, then `translate(logicalWidth/2 - camera.x*zoom, logicalHeight/2 - camera.y*zoom)` + `scale(zoom,zoom)` — matching the canonical formula exactly.
 - Fix `toCanvasCoords` to the matching inverse, and flip the pan-drag sign in `pointerMove` so dragging still feels natural under the corrected transform.
-- Implement cursor-anchored wheel-zoom, matching `infinite_cavas::camera::wheel_screen` (`camera.x = world_before.x - (sx - width/2)/next_zoom`), instead of the current zoom-in-place.
+- Implement cursor-anchored wheel-zoom, matching `infinite_canvas::camera::wheel_screen` (`camera.x = world_before.x - (sx - width/2)/next_zoom`), instead of the current zoom-in-place.
 - Extract the point transforms into small pure exported functions and add cases to the existing `Canvas2dHost` test in [framework/renderer/react/index.test.ts](framework/renderer/react/index.test.ts) (do not add a new test file) asserting a node centered under the camera maps inside the viewport.
 
 ## Part B — Overview-pane clicks/drag target the wrong world position

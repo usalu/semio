@@ -33,7 +33,7 @@ At the `premigration` git tag, "flow" was rendered by [flow/react/index.tsx](flo
 Critically, the actual drawing logic is **shared and unchanged**:
 
 - [flow/core/rs/lib.rs](flow/core/rs/lib.rs) `FlowHost::paint_scene` just delegates to `dag.paint_scene`.
-- [mathematical/graph/port/directed/dag/rs/lib.rs](mathematical/graph/port/directed/dag/rs/lib.rs) `paint_scene` (6905 lines) is **byte-identical** to `premigration` (`git diff --stat premigration -- mathematical/graph/port/directed/dag/rs/lib.rs` is empty) — this already draws node bodies, edges, port handles, and LOD-tiered content as vector paths into a `cavas::Scene`.
+- [mathematical/graph/port/directed/dag/rs/lib.rs](mathematical/graph/port/directed/dag/rs/lib.rs) `paint_scene` (6905 lines) is **byte-identical** to `premigration` (`git diff --stat premigration -- mathematical/graph/port/directed/dag/rs/lib.rs` is empty) — this already draws node bodies, edges, port handles, and LOD-tiered content as vector paths into a `canvas::Scene`.
 
 So the regression is in the **wiring** around this engine inside [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs) `//#region NodeGraph` (`paint_node_graph`, `render_node_graph`, `paint_node_graph_labels`, `sync_flow_host`), not in the paint algorithm itself.
 
@@ -57,7 +57,7 @@ Local cargo builds are currently lock-contended by many concurrent WIP sessions,
 
 1. Rebuild wgpu WASM and boot the `flow` program (`SEMIO_RENDERER=wgpu SEMIO_PLUGIN=flow`), screenshot at default zoom, zoomed-in (higher LOD), with a node selected, and mid area-select drag.
 2. Compare against the `premigration` tag's behavior. Since `flow/react/index.tsx` no longer exists, use a `git worktree`/`git show` checkout of `premigration` (read-only reference, not touching the working tree) or fall back to a still-working DAG-based playground (e.g. puzzle board) under the current wgpu renderer as a cross-check for whether the bug is Flow-specific or shared-engine-wide.
-3. Pinpoint exactly which stage breaks by instrumenting/inspecting in order: `NodeGraphScene` JSON population (is `fixture_json` non-empty and does it actually contain widgets/synapses?) → `sync_flow_host` field sync (`fixture_json`, `selection_json`, `lod_json`, `viewport_json`, catalogue/operators) → `theme_is_dark`/`sync_canvas_theme_dark` correctness → `dag.paint_scene` output (path/fill/stroke count via `cavas::Scene::path_count()`) → Vello texture render → `push_raster_quad`/`register_engine_texture` compositing → `paint_node_graph_labels` overlay pass → pointer hit-testing for selection rectangle (`node_graph_pointer_down/move/up`, marquee drawing inside `paint_scene`).
+3. Pinpoint exactly which stage breaks by instrumenting/inspecting in order: `NodeGraphScene` JSON population (is `fixture_json` non-empty and does it actually contain widgets/synapses?) → `sync_flow_host` field sync (`fixture_json`, `selection_json`, `lod_json`, `viewport_json`, catalogue/operators) → `theme_is_dark`/`sync_canvas_theme_dark` correctness → `dag.paint_scene` output (path/fill/stroke count via `canvas::Scene::path_count()`) → Vello texture render → `push_raster_quad`/`register_engine_texture` compositing → `paint_node_graph_labels` overlay pass → pointer hit-testing for selection rectangle (`node_graph_pointer_down/move/up`, marquee drawing inside `paint_scene`).
 
 ## Likely fix areas (confirm before editing)
 

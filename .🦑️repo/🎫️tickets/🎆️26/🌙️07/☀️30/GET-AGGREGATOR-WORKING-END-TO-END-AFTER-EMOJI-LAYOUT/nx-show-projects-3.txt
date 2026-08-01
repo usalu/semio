@@ -1,4 +1,4 @@
-@semio-tech/infinite-cavas-react-renderer
+@semio-tech/infinite-canvas-react-renderer
 @semio-tech/animate-present-renderer-react
 compose-grasshopper-tests
 @semio-tech/math-graph-port-directed-normal

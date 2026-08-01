@@ -641,7 +641,7 @@ pub fn create_sequence_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("sequence")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, "Sequence", SEQUENCE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "list-ordered")
             .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, "Script", SEQUENCE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
@@ -716,7 +716,7 @@ pub fn create_sequence_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", sequence_example_json())
+    .example("demo", "Demo", sequence_example_json(), "flask-conical")
     .workflow("sequence", "Sequence", "graph")
 }
 //#endregion 🔖️Manifest

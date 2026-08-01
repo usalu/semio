@@ -777,7 +777,7 @@ pub fn create_fem2d_app() -> App {
         App::builder(FEM2D_APP_ID, "FEM 2D")
             .document(["semio", "fem", "fem2d"])
             .icon_id("fem-app")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(FEM2D_WINDOW_MODEL, "Model", FEM2D_BODY_MODEL, SurfaceKind::Canvas2d, "fem-model")
             .window_kind(FEM2D_WINDOW_RESULTS, "Results", FEM2D_BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")
@@ -833,7 +833,7 @@ pub fn create_fem2d_app() -> App {
             .view_action("setResultDisplay", "Set Result Display")
             .action_args("setResultDisplay", result_display_action_args()),
     )
-    .example("default", "Family House", FEM2D_EXAMPLE_DSL)
+    .example("default", "Family House", FEM2D_EXAMPLE_DSL, "file")
     .workflow("fem2d", "FEM 2D", "structure")
 }
 //#endregion 🔖️Manifest

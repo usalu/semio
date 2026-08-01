@@ -1,7 +1,7 @@
 //! 🧩️ Puzzle 2d app — `DocumentApp` impl, render, manifest (constitutional: ui).
 
 use puzzle_2d::Puzzle2dProjection;
-use puzzle_2d_engine::{handle_position_on_circle, handle_position_on_rectangle, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+use puzzle_2d_engine::{puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
 use puzzle_2d_op::{puzzle2d_document_delta_operations, Puzzle2dOperation, Puzzle2dPlayProjection};
 use semio_framework_plugin::{
     build_board2d_scene, create_default_layout,
@@ -2185,7 +2185,7 @@ fn puzzle2d_utility_labels(labels: &Puzzle2dLabels) -> HashMap<String, String> {
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound
 /// vocabulary dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
 fn puzzle2d_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (host-owned active utility). Select/brush/fill are this window's entire
@@ -2218,7 +2218,7 @@ pub fn create_puzzle2d_app() -> App {
             .icon_id("puzzle")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW, labels), "layout-grid")
             .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL, labels), "focus")
@@ -2295,8 +2295,8 @@ pub fn create_puzzle2d_app() -> App {
             window.options.measures = puzzle2d_window_measures(pane, &envelope, labels);
         }
     }
-    app.example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON.as_str())).unwrap())
-        .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower", serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON.as_str())).unwrap())
+    app.example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON.as_str())).unwrap(), "trees")
+        .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower", serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON.as_str())).unwrap(), "building-2")
         .workflow("puzzle2d", "Puzzle 2D", "layout")
 }
 

@@ -230,4 +230,9 @@ export const PanelChromeHostedBottomMiddle: Story = {
   render: () => <ChromeHostedPanelDemo anchor="bottom-middle" />,
 };
 
+export const PanelChromeHostedBottomRight: Story = {
+  name: "Panel — Chrome Hosted Bottom Right",
+  render: () => <ChromeHostedPanelDemo anchor="bottom-right" />,
+};
+
 // #endregion 🧭️Panel

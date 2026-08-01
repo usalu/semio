@@ -13,7 +13,7 @@ crate-type = ["rlib"]
 path = "../../../../../🎲️board/➕️normal/↔undirected/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-infinite_cavas = { path = "../../../../../🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_canvas = { path = "../../../../../🖼️canvas/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-canvas" }
 infinite_board = { path = "../../../../../🎲️board/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-infinite-board" }
 mathematical_graph = { path = "../../../../../../../../../🔨️module/🧮️math/🕸️graph/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph" }
 mathematical_graph_drawing = { path = "../../../../../../../../../🔨️module/🧮️math/🕸️graph/🖊️drawing/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-drawing" }

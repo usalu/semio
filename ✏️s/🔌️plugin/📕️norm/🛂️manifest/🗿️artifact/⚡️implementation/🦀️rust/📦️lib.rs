@@ -121,7 +121,7 @@ macro_rules! define_norm_family_app {
                             export_formats: vec![],
                             import_formats: vec![],
                         })
-                        .mode("edit", "Edit")
+                        .mode("edit", "Edit", "square-pen")
                         .default_mode_id("edit")
                         .window_kind(WINDOW_INPUTS, "Inputs", BODY_INPUTS, SurfaceKind::Canvas2d, "download")
                         .window_kind(WINDOW_RESULTS, "Results", BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")
@@ -134,7 +134,7 @@ macro_rules! define_norm_family_app {
                         .keybinding("mod+z", "undo")
                         .keybinding("mod+shift+z", "redo"),
                 )
-                .example("default", "Default", serde_json::to_string(&Document::default()).expect("default document serializes"))
+                .example("default", "Default", serde_json::to_string(&Document::default()).expect("default document serializes"), "file")
                 .workflow($variant, $label, "compliance")
             }
         }

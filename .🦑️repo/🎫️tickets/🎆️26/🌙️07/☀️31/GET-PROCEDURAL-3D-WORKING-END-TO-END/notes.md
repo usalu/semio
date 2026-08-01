@@ -50,3 +50,9 @@ Chain:
 
 ### Verify
 `bun e2e-verify.mts` on http://127.0.0.1:6018 → ok.
+
+## 2026-08-01 FE0F char literal compile break
+- Cause: emoji + U+FE0F inside Rust `char` literals (`'🗣️'`, etc.) — rustc rejects multi-scalar char lits.
+- Bad prior fix: naive `'`…`'` regex matched English possessives and corrupted `ui_wgpu` 📦️lib.rs (~6k lines lost). Restored from HEAD.
+- Real fixes: OS `starts_with`/`replacen` use `"🗣️"`; testkit adversarial unicode stays as single-scalar chars; editor test uses `"😀️".len()`.
+- Verified: `bun run "dev:procedural:3d"` → http://127.0.0.1:6018/ ; e2e-verify.mts ok=true (3 canvases, Flow+Preview, no render error).

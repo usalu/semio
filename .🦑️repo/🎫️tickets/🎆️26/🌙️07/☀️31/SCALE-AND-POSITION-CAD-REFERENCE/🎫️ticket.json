@@ -1,0 +1,16 @@
+{
+  "title": "Scale And Position Cad Reference",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Increase the scale of the CAD reference visual slightly, preserving its existing behavior and verifying the relevant rendering path.",
+  "summary": "Moved the 28.6-world-unit concrete-forest CAD reference in positive Y by 30% of its own rendered height. Added an explicit 0.3 Y-offset ratio to the derived origin, preserving scale and X placement; the center moves from -11.08 to -6.928. Updated the existing placement assertions and ticket-local verifier. Focused verification passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2407"
+  },
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [
+    "⚪️fd06372de85d4b81a3750386b4ec9523",
+    "⚪️652ad075992d4213aa82cc2c1ac91faa",
+    "⚪3fa49ffbc8b54db2aa543fbc2339abae"
+  ]
+}

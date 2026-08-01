@@ -1,8 +1,8 @@
 //! ✍️ Text editor engine on the infinite canvas.
 
-use cavas::camera::{Camera, Viewport};
-use cavas::text as canvas_text;
-pub use infinite_cavas::{self as cavas, *};
+use canvas::camera::{Camera, Viewport};
+use canvas::text as canvas_text;
+pub use infinite_canvas::{self as canvas, *};
 use serde::Deserialize;
 
 // #region ⚠️ Errors
@@ -49,7 +49,7 @@ impl EditorCanvasTheme {
     }
 
     fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
-        cavas::theme::merge_color_field(next, v, key);
+        theme::merge_color_field(next, v, key);
     }
 
     fn merge_from_json(&mut self, json: &str) -> Result<(), EditorError> {
@@ -1092,7 +1092,7 @@ impl EditorHost {
         let aff = editor_content_affine(&self.camera);
         let mut scene = Scene::new();
         scene.append(&world_scene, Some(aff));
-        cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+        render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
     }
 
     fn render_colored_line(&self, scene: &mut Scene, line: &str, line_index: usize, y: f64) {
@@ -1270,7 +1270,7 @@ use web_sys::HtmlCanvasElement;
 #[cfg(target_arch = "wasm32")]
 struct EditorSessionInner {
     host: EditorHost,
-    gpu: cavas::gpu_session::CanvasGpuSession,
+    gpu: gpu_session::CanvasGpuSession,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1297,7 +1297,7 @@ pub struct EditorSession {
 impl EditorSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(EditorSessionInner { host: EditorHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+        Self { state: Rc::new(RefCell::new(EditorSessionInner { host: EditorHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -1324,7 +1324,7 @@ impl EditorSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             g.set_logical_size(lw, lh, dpr, pw, ph);
             g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
@@ -2445,7 +2445,7 @@ mod tests {
     fn char_boundary_helpers_handle_multibyte() {
         let text = "a😀️b";
         let emoji_start = 1;
-        let emoji_end = 1 + '😀️'.len_utf8();
+        let emoji_end = 1 + "😀️".len();
         assert_eq!(next_char_boundary(text, emoji_start), emoji_end);
         assert_eq!(prev_char_boundary(text, emoji_end), emoji_start);
         assert_eq!(prev_char_boundary(text, 0), 0);

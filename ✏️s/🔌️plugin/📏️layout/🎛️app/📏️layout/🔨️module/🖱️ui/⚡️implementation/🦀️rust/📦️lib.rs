@@ -339,9 +339,9 @@ fn surface_is_blueprint(args: Option<&Value>) -> bool {
 
 fn screen_to_world_for_surface(runtime: &LayoutPlayRuntime, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
     let camera_runtime = if blueprint { &runtime.camera } else { &runtime.preview_camera };
-    let camera = infinite_cavas::camera::Camera { x: camera_runtime.x, y: camera_runtime.y, zoom: camera_runtime.zoom.max(0.0001) };
-    let viewport = infinite_cavas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
-    let world = infinite_cavas::camera::screen_to_world(&camera, &viewport, infinite_cavas::Point::new(sx, sy));
+    let camera = infinite_canvas::camera::Camera { x: camera_runtime.x, y: camera_runtime.y, zoom: camera_runtime.zoom.max(0.0001) };
+    let viewport = infinite_canvas::camera::Viewport { width: width.max(1.0) as u32, height: height.max(1.0) as u32, dpr: 1.0 };
+    let world = infinite_canvas::camera::screen_to_world(&camera, &viewport, infinite_canvas::Point::new(sx, sy));
     (world.x, world.y)
 }
 
@@ -1770,7 +1770,7 @@ impl DocumentApp for LayoutPlayApp {
 /// 🛠️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
 fn layout_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 pub fn create_layout_app() -> App {
@@ -1789,7 +1789,7 @@ pub fn create_layout_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("layout")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d, "layout")
             .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
@@ -1862,7 +1862,7 @@ pub fn create_layout_app() -> App {
                 "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(),
             ]),
     )
-    .example("sample", "Sample", layout_engine::layout_sample_document_json())
+    .example("sample", "Sample", layout_engine::layout_sample_document_json(), "flask-conical")
     .workflow("layout", "Layout", "layout")
 }
 //#endregion 🔖️Manifest
@@ -1874,8 +1874,8 @@ mod wasm_session {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    use infinite_cavas::camera::{self, Camera, Viewport};
-    use infinite_cavas::Point;
+    use infinite_canvas::camera::{self, Camera, Viewport};
+    use infinite_canvas::Point;
     use js_sys::Promise;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen_futures::future_to_promise;
@@ -1900,7 +1900,7 @@ mod wasm_session {
         viewport: Viewport,
         interaction: LayoutInteraction,
         drop_preview: Option<LayoutDropPreview>,
-        gpu: infinite_cavas::gpu_session::CanvasGpuSession,
+        gpu: infinite_canvas::gpu_session::CanvasGpuSession,
     }
 
     #[wasm_bindgen]
@@ -1923,7 +1923,7 @@ mod wasm_session {
                     viewport: Viewport::default(),
                     interaction: LayoutInteraction::None,
                     drop_preview: None,
-                    gpu: infinite_cavas::gpu_session::CanvasGpuSession::default(),
+                    gpu: infinite_canvas::gpu_session::CanvasGpuSession::default(),
                 })),
             }
         }
@@ -1946,7 +1946,7 @@ mod wasm_session {
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             let canvas = canvas.clone();
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = infinite_cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+                let (render_ctx, renderer, surface) = infinite_canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 if g.gpu.gpu_ready() {
                     return Err(JsValue::from_str("canvas surface already attached"));
@@ -2062,7 +2062,7 @@ mod wasm_session {
             let drop_preview = inner.drop_preview.clone();
             let query = SceneQuery { page_id: &inner.page_id, selected_ids: &inner.selected_ids, hovered_id: hovered, chrome_blueprint: inner.chrome_blueprint, camera: &inner.camera, viewport: &inner.viewport };
             let scene = build_scene_from_document_json(&inner.document_json, &query, drop_preview.as_ref()).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            let clear = infinite_cavas::theme::default_raster_clear();
+            let clear = infinite_canvas::theme::default_raster_clear();
             inner.gpu.render_frame(&scene, clear).map_err(|e| e)
         }
 
@@ -2132,9 +2132,9 @@ mod tests {
     }
 
     fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
-        let camera = infinite_cavas::camera::Camera { x: camera_x, y: camera_y, zoom };
-        let viewport = infinite_cavas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
-        let screen = infinite_cavas::camera::world_to_screen(&camera, &viewport, infinite_cavas::Point::new(world_x, world_y));
+        let camera = infinite_canvas::camera::Camera { x: camera_x, y: camera_y, zoom };
+        let viewport = infinite_canvas::camera::Viewport { width: width as u32, height: height as u32, dpr: 1.0 };
+        let screen = infinite_canvas::camera::world_to_screen(&camera, &viewport, infinite_canvas::Point::new(world_x, world_y));
         (screen.x, screen.y)
     }
 

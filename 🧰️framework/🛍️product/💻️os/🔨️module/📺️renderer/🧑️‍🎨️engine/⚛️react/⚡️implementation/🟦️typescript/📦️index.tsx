@@ -365,6 +365,7 @@ import {
   type PluginUiRefreshRequest,
   type PluginUiRefreshResponse,
   type PluginUiRefreshSectionResponse,
+  type PluginContextMenuRequest,
   type PluginViewState,
   type PluginWasmHandle as CorePluginWasmHandle,
   type PresencePeer,
@@ -5322,6 +5323,12 @@ export function FrameworkOsShell({
   const layoutSeedKeyRef = useRef<string | null>(null);
   const noExampleResetInstanceIdRef = useRef<number | null>(null);
   const extraWindowCounterRef = useRef(0);
+  // 🖱️ Shell-level context-menu fallback: opens for any right-click the shell hasn't already claimed
+  // (every existing per-surface `onContextMenu` now calls `stopPropagation()` once it decides to show
+  // its own menu — see `ShellContextMenuHost` below). No plugin/scene-target resolution yet (that's
+  // the on-demand WIT `context-menu` round trip, still to come); this covers window-level declared
+  // actions plus the OS command palette, so every window/background always shows *something*.
+  const [shellContextMenu, setShellContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly ContextMenuItem[] } | null>(null);
   // 🪟️ Live extra-window list, updated synchronously on every seed/split/drop — `refreshUi` reads this
   // instead of the render-closure `extraWindowInstances` so a concurrent action refresh (e.g. boot
   // `setActiveExample`) that starts after the session-switch refresh wrote extras but before React
@@ -7706,7 +7713,11 @@ export function FrameworkOsShell({
         seen.add(example.id);
         return true;
       })
-      .map((example) => ({ id: example.id, label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label) }));
+      .map((example) => ({
+        id: example.id,
+        label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label),
+        icon: example.iconId,
+      }));
   }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
@@ -7740,7 +7751,7 @@ export function FrameworkOsShell({
               className={cn(isActive && interactiveActiveFillClass)}
               data-state={isActive ? "on" : undefined}
               onClick={() => applyModeChange(mode.id)}
-              icon={<span className="hidden" />}
+              icon={mode.iconId}
               text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label)}
             />
           );
@@ -8827,6 +8838,59 @@ export function FrameworkOsShell({
 
   const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
 
+  //#region 🖱️ShellContextMenu
+  /** 🖱️ Builds the shell-level fallback menu: the active window's declared actions (undo/redo, view
+   * actions, ...) plus a command-palette opener — shown for any right-click no inner surface claimed
+   * (window background, empty panel/navbar/footer space, an app with no scene at all). Arg-carrying
+   * actions redirect to the window's action pane, mirroring the command palette's own redirect. */
+  const buildShellContextMenuItems = useCallback((): ContextMenuItem[] => {
+    if (!session) return [];
+    const windowKind = session.app.windowKinds.find((kind) => kind.id === activeWindowId) ?? session.app.windowKinds[0];
+    const items: ContextMenuItem[] = [];
+    if (windowKind) {
+      for (const action of resolveWindowActions(session.app, windowKind)) {
+        const argCarrying = actionRequiresStagedForm(action);
+        items.push({
+          id: `shell-menu.action.${action.id}`,
+          label: resolveAppLabel(appLabelsOverlay, "action", action.id, action.label) + (argCarrying ? "…" : ""),
+          icon: action.iconId,
+          shortcut: action.keys ?? keysByActionId.get(action.id),
+          destructive: action.kind === "operation" && action.id.toLowerCase().includes("delete"),
+          onSelect: () => {
+            if (argCarrying) {
+              dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowKind.id });
+              dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId: windowKind.id, value: false });
+              dispatch({ type: "SET_ACTION_PANE_EXPANDED", windowId: windowKind.id, value: action.id });
+              return;
+            }
+            onAction({ controllerId: session.app.controllerId, action: action.id });
+          },
+        });
+      }
+    }
+    if (items.length > 0) items.push({ id: "shell-menu.separator", separator: true });
+    items.push({
+      id: "shell-menu.commandPalette",
+      label: shellLabel("ui.search.toggle"),
+      icon: "search",
+      onSelect: () => dispatch({ type: "SET_SEARCH_OPEN", value: true }),
+    });
+    return items;
+  }, [session, activeWindowId, appLabelsOverlay, keysByActionId, onAction, dispatch]);
+
+  useEffect(() => {
+    const handleContextMenu = (event: MouseEvent) => {
+      if (isContextMenuPointerTarget(event.target)) return;
+      const items = buildShellContextMenuItems();
+      if (items.length === 0) return;
+      event.preventDefault();
+      setShellContextMenu({ x: event.clientX, y: event.clientY, items });
+    };
+    window.addEventListener("contextmenu", handleContextMenu);
+    return () => window.removeEventListener("contextmenu", handleContextMenu);
+  }, [buildShellContextMenuItems]);
+  //#endregion 🖱️ShellContextMenu
+
   return (
     <SetWindowTitleContext.Provider value={setWindowTitle}>
     <SetWindowIconContext.Provider value={setWindowIcon}>
@@ -8929,6 +8993,7 @@ export type PluginWasmHandle = {
   /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands. */
   readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<InvocationResponse>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
+  readonly contextMenu: (instanceId: number, request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every program has migrated onto it yet (WS-F).
    * 🚧️ Wave 1 gap (documented, not silently dropped): `protocol_channel::AppCommand` only carries
    * binary `pack`/`spr` document-container bytes (`LoadDocument`/`ReadDocument`, backed by
@@ -9101,6 +9166,11 @@ async function performRefreshUi(client: AppChannelClient, request: PluginUiRefre
   return { windows, panels, engagements, measures, tools, labels };
 }
 
+async function performContextMenu(client: AppChannelClient, request: PluginContextMenuRequest): Promise<readonly ContextMenuItemSpec[]> {
+  const items = await client.contextMenu(request);
+  return Array.isArray(items) ? (items as ContextMenuItemSpec[]) : [];
+}
+
 /** 📡️ Wraps the framework-core `PluginWasmHandle` (the 5-function binary `exchange` ABI) behind the
  * SAME method surface the rest of this file already calls — the compatibility adapter for
  * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
@@ -9139,6 +9209,7 @@ export async function adaptPluginHandle(pluginId: string, handle: CorePluginWasm
       return performCommand(requireChannel(instanceId), { kind: "command", name: parsed.command, args: parsed.args }, viewState);
     },
     refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
+    contextMenu: (instanceId, request) => performContextMenu(requireChannel(instanceId), request),
     // 🚧️ Wave 1 gap — see this method's doc comment on `PluginWasmHandle` above.
     applyOperations: undefined,
     readAppDocument: undefined,
@@ -11210,7 +11281,7 @@ export function clampCanvasZoom(zoom: number): number {
   return Math.min(CANVAS_CAMERA_ZOOM_MAX, Math.max(CANVAS_CAMERA_ZOOM_MIN, zoom));
 }
 
-/** 🧭️ Maps world coordinates to logical (CSS-pixel) screen space — matches `infinite_cavas::camera::world_to_screen`. */
+/** 🧭️ Maps world coordinates to logical (CSS-pixel) screen space — matches `infinite_canvas::camera::world_to_screen`. */
 export function worldToScreenLogical(worldX: number, worldY: number, camera: CanvasCamera, viewportWidth: number, viewportHeight: number): { readonly x: number; readonly y: number } {
   const zoom = camera.zoom || 1;
   return {
@@ -11219,7 +11290,7 @@ export function worldToScreenLogical(worldX: number, worldY: number, camera: Can
   };
 }
 
-/** 🧭️ Maps logical (CSS-pixel) screen space to world coordinates — matches `infinite_cavas::camera::screen_to_world`. */
+/** 🧭️ Maps logical (CSS-pixel) screen space to world coordinates — matches `infinite_canvas::camera::screen_to_world`. */
 export function screenToWorldLogical(screenX: number, screenY: number, camera: CanvasCamera, viewportWidth: number, viewportHeight: number): { readonly x: number; readonly y: number } {
   const zoom = camera.zoom || 1;
   return {
@@ -11228,7 +11299,7 @@ export function screenToWorldLogical(screenX: number, screenY: number, camera: C
   };
 }
 
-/** 🔍️ Cursor-anchored wheel zoom — matches `infinite_cavas::camera::wheel_screen`. */
+/** 🔍️ Cursor-anchored wheel zoom — matches `infinite_canvas::camera::wheel_screen`. */
 export function wheelCameraAtScreen(camera: CanvasCamera, screenX: number, screenY: number, deltaY: number, viewportWidth: number, viewportHeight: number): CanvasCamera {
   const zoomFactor = deltaY < 0 ? WHEEL_ZOOM_IN_FACTOR : WHEEL_ZOOM_OUT_FACTOR;
   const nextZoom = clampCanvasZoom((camera.zoom || 1) * zoomFactor);
@@ -14718,11 +14789,10 @@ export function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex
   if (menu.candidates.length === 0) {
     return [{ id: "empty", label: "No placement", disabled: true }];
   }
-  return menu.candidates.map((candidate, position) => ({
+  return menu.candidates.map((candidate) => ({
     id: `suggestion-${candidate.index}`,
     label: `${candidate.objectLabel} · ${candidate.vortexLabel}`,
     icon: candidate.icon ?? "box",
-    shortcut: position < 9 ? String(position + 1) : undefined,
     checked: candidate.index === activeIndex,
     action: "acceptSuggestion",
     args: { index: candidate.index, ...(menu.vortexFullId ? { fullId: menu.vortexFullId } : {}) },
@@ -16565,6 +16635,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         const target = resolveWorldContextMenuTarget(interaction, selection);
         if (!target) return;
         event.preventDefault();
+        event.stopPropagation();
         dispatch("contextMenuAt", { kind: target.kind, id: target.id });
         setContextMenu({ x: event.clientX, y: event.clientY });
       }}
@@ -17472,6 +17543,7 @@ function WasmGraphSurface({
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
         event.preventDefault();
+        event.stopPropagation();
         setContextMenu({ x: event.clientX, y: event.clientY });
       }}
       onPointerUp={emitInteractionState}
@@ -17631,6 +17703,7 @@ function DiagramGraphFallback({
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
         event.preventDefault();
+        event.stopPropagation();
         setContextMenu({ x: event.clientX, y: event.clientY });
       }}
     >
@@ -18087,6 +18160,27 @@ export function dagOverlayLabelFillHex(nodeId: string, ghost: boolean, hoveredId
   return resolveColorHex(expression, appearanceFallback);
 }
 
+export function parseDagMinimapWidgetOccluder(stateJson: string): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null {
+  try {
+    const parsed = JSON.parse(stateJson) as { readonly minimapWidget?: { readonly x?: number; readonly y?: number; readonly width?: number; readonly height?: number } };
+    const rect = parsed.minimapWidget;
+    if (rect?.x == null || rect?.y == null || rect?.width == null || rect?.height == null) return null;
+    return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+  } catch {
+    return null;
+  }
+}
+
+export function parseDagMinimapWidgetCursor(stateJson: string): string | undefined {
+  try {
+    const parsed = JSON.parse(stateJson) as { readonly minimapWidget?: { readonly cursor?: string | null } };
+    const cursor = parsed.minimapWidget?.cursor;
+    return typeof cursor === "string" && cursor.length > 0 ? cursor : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number, interaction: DagLabelOverlayInteraction): void {
   let state: { readonly camera?: DagCameraState; readonly width?: number; readonly height?: number; readonly labels?: readonly DagLabelOverlayRow[] };
   try {
@@ -18117,9 +18211,13 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
   const chrome = dagElementInteractionChrome(interaction.selectedIds, interaction.preselect);
   const dimmedIds = interaction.dimmedIds ?? [];
   const rows = state.labels ?? parseDagLabelRows(stateJson);
+  const occluder = parseDagMinimapWidgetOccluder(stateJson);
   const inset = 0.88;
   for (const row of rows) {
     const anchor = dagWorldToScreen(camera, viewportW, viewportH, row.x, row.y);
+    if (occluder && anchor.x >= occluder.x && anchor.x <= occluder.x + occluder.width && anchor.y >= occluder.y && anchor.y <= occluder.y + occluder.height) {
+      continue;
+    }
     const isPort = row.kind === "port" || row.align === "left" || row.align === "right";
     const maxW = Math.max(4, Number(row.nodeW) * zoom * inset);
     const maxH = Math.max(4, isPort && Number.isFinite(Number(row.maxScreenH)) && Number(row.maxScreenH) > 0 ? Number(row.maxScreenH) : Number(row.nodeH) * zoom * inset);
@@ -18217,6 +18315,7 @@ export function GraphSliderOverlays({
   onSliderChange,
   onSliderPointerDown,
   onSliderPointerUp,
+  occluderRect = null,
 }: {
   readonly stateJson: string;
   readonly logicalW: number;
@@ -18225,6 +18324,7 @@ export function GraphSliderOverlays({
   readonly onSliderChange: (widgetId: string, value: number) => void;
   readonly onSliderPointerDown?: () => void;
   readonly onSliderPointerUp?: () => void;
+  readonly occluderRect?: { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;
 }) {
   const camera = parseDagOverlayCamera(stateJson);
   const sliders = parseDagSliderOverlays(stateJson);
@@ -18234,6 +18334,9 @@ export function GraphSliderOverlays({
     <div className="pointer-events-none absolute inset-0 z-45">
       {sliders.map((slider) => {
         const screen = dagWorldToScreen(camera, logicalW, logicalH, slider.x, slider.y);
+        if (occluderRect && screen.x >= occluderRect.x && screen.x <= occluderRect.x + occluderRect.width && screen.y >= occluderRect.y && screen.y <= occluderRect.y + occluderRect.height) {
+          return null;
+        }
         // 🎚️ Lay out in world units and scale the whole control (track + knob tokens) with zoom —
         // multiplying only the box left the CSS thumb (`size-small`) and track (`h-single`) fixed.
         const w = slider.w;
@@ -18505,6 +18608,10 @@ export function FlowGraphCanvasHost({
     try {
       const labelJson = session.labelOverlayPaintStateJson();
       setLabelStateJson((prev) => (prev === labelJson ? prev : labelJson));
+      const minimapCursor = parseDagMinimapWidgetCursor(labelJson);
+      if (gpuCanvasRef.current) {
+        gpuCanvasRef.current.style.cursor = minimapCursor ?? "";
+      }
       const selectedIds = parseDagNodeIdArray(session.selectedWidgetIds());
       const preselect = parseDagPreselectJson(session.preselectWidgetIdsJson());
       const dimmedIds = parseDagNodeIdArray(session.previewOffWidgetIds());
@@ -18908,6 +19015,7 @@ export function FlowGraphCanvasHost({
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
         event.preventDefault();
+        event.stopPropagation();
         const session = sessionRef.current;
         const container = containerRef.current;
         let widgetId: string | undefined;
@@ -18962,6 +19070,7 @@ export function FlowGraphCanvasHost({
         logicalW={containerSize.w}
         logicalH={containerSize.h}
         editable={editable}
+        occluderRect={parseDagMinimapWidgetOccluder(labelStateJson)}
         onSliderChange={(widgetId, value) => {
           sessionRef.current?.setSliderValue(widgetId, value);
           commitFixtureThrottled();
@@ -19463,6 +19572,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
         }}
         onContextMenu={(event) => {
           event.preventDefault();
+          event.stopPropagation();
           const session = sessionRef.current;
           if (!session) return;
           dismissContextMenu();
@@ -22526,6 +22636,7 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
       const session = sessionRef.current;
       if (!session?.pickTargetsAtScreenJson) return;
       event.preventDefault();
+      event.stopPropagation();
       const rect = event.currentTarget.getBoundingClientRect();
       const sx = event.clientX - rect.left;
       const sy = event.clientY - rect.top;

@@ -8,5 +8,5 @@
 @source "../framework/renderer/react";
 @source "../cad/renderer/js";
 @source "../infinite/world/r3f";
-@source "../infinite/cavas/react-renderer";
+@source "../infinite/canvas/react-renderer";
 @source "../animate/present/renderer/react";

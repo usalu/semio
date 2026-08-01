@@ -91,7 +91,7 @@ pub fn metabolism_wires_example_document() -> MindmapWiresDocument {
 
 //#region 🔖️WiresExtension
 pub use infinite_board_normal_undirected as graph;
-pub use infinite_cavas as cavas;
+pub use infinite_canvas as canvas;
 pub use reasoning_mindmap as mindmap;
 
 //#region ⚠️ Errors
@@ -154,7 +154,7 @@ pub struct DefaultWiresExtension {
     pub allowed_identities: std::collections::BTreeSet<mindmap::TopicId>,
 }
 
-impl cavas::CanvasExtension for DefaultWiresExtension {
+impl canvas::CanvasExtension for DefaultWiresExtension {
     fn extension_id(&self) -> &str {
         "reasoning.mindmap/wires"
     }

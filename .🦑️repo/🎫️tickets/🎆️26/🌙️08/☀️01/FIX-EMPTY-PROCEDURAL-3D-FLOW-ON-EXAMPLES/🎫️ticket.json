@@ -1,0 +1,11 @@
+{
+  "title": "Fix Empty Procedural 3D Flow On Examples",
+  "emoji": "🧊",
+  "status": "closed",
+  "description": "Procedural 3d shows preview but the flow is wrongly empty on all the examples",
+  "summary": "Duplicate of GET-PROCEDURAL-3D-WORKING-END-TO-END",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪1fde348086a048be995dd869ac7ace05"
+  ]
+}

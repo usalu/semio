@@ -27,7 +27,7 @@ use cad_document_engine::{
 use cad_document_op::{CadObjectPatch, CadOperation, CadReferencePatch};
 use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene,
-    merge_world_selection_ids, SelectionSet, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    merge_world_selection_ids, SelectionSet, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_inspector_stepper_field,
     ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json,
     world3d_environment_json, world3d_mesh_id_from_url, world3d_projection_action_moves_pose,
@@ -37,6 +37,7 @@ use semio_framework_plugin::{
     OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, IconName, SET_ACTIVE_UTILITY_ACTION_ID,
     UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
     UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement,
+    AppActionRegistry, ContextMenuItemSpec, ContextMenuRequest, Menu,
     WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, WindowLayout, WindowLayoutAxisNode,
     WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
     WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -84,6 +85,8 @@ const CAD_PLAY_WINDOW_BUILDING: &str = "cad-play-building";
 const CAD_PLAY_WINDOW_ENERGY: &str = "cad-play-energy";
 
 const CAD_PLAY_WINDOW_STRUCTURE_CLASSIC: &str = "cad-play-structure-classic";
+
+const CAD_DISLOCATE_UTILITY_ID: &str = "dislocate";
 
 const CAD_FALLBACK_MESH_KIND: &str = "box";
 
@@ -228,6 +231,22 @@ struct CadComponentSelection {
     ids: Vec<u32>,
 }
 
+//#region 🔖️Dislocate
+/// 🎛️ Per-window handle groups exposed by the Dislocate gumball utility.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CadDislocateOptions {
+    move_enabled: bool,
+    rotate_enabled: bool,
+}
+
+impl Default for CadDislocateOptions {
+    fn default() -> Self {
+        Self { move_enabled: true, rotate_enabled: true }
+    }
+}
+//#endregion 🔖️Dislocate
+
 fn default_component_selection_mode() -> String {
     "mesh".into()
 }
@@ -291,15 +310,13 @@ struct CadPlayRuntime {
     camera_energy: CadCamera,
     #[serde(default)]
     camera_structure_classic: CadCamera,
+    #[serde(default)]
+    dislocate_options_by_window_id: HashMap<String, CadDislocateOptions>,
 }
 
 fn default_selection_method() -> String {
     "rectangle".into()
 }
-
-/// @emoji 🕹️ The default active transform utility when the host has not yet set one — mirrors the
-/// framework utility bar's first-declared utility (`move`), read from `ViewState::active_utility_id`.
-const CAD_DEFAULT_UTILITY_ID: &str = "move";
 
 impl Default for CadPlayRuntime {
     fn default() -> Self {
@@ -326,8 +343,37 @@ impl Default for CadPlayRuntime {
             camera_building: CadCamera::default(),
             camera_energy: CadCamera::default(),
             camera_structure_classic: CadCamera::default(),
+            dislocate_options_by_window_id: HashMap::new(),
         }
     }
+}
+
+impl CadPlayRuntime {
+    /// 🪟️ Reads the Dislocate handle configuration for one window instance without sharing it with siblings.
+    fn dislocate_options(&self, window_id: &str) -> CadDislocateOptions {
+        self.dislocate_options_by_window_id.get(window_id).copied().unwrap_or_default()
+    }
+}
+
+/// 🪟️ Resolves the utility owned by one window instance; a populated per-window map is authoritative.
+fn cad_window_active_utility<'a>(view_state: &'a ViewState, window_id: Option<&str>) -> Option<&'a str> {
+    if let Some(window_id) = window_id {
+        if !view_state.active_utility_by_window_id.is_empty() {
+            return view_state.active_utility_by_window_id.get(window_id).map(String::as_str);
+        }
+    }
+    view_state.active_utility_id.as_deref()
+}
+
+/// 🪟️ Lists live instances of one window kind, with the kind id as the headless fallback.
+fn cad_window_instance_ids(view_state: &ViewState, window_kind_id: &str) -> Vec<String> {
+    let ids: Vec<String> = view_state
+        .window_instances
+        .iter()
+        .filter(|instance| instance.window_kind_id == window_kind_id)
+        .map(|instance| instance.id.clone())
+        .collect();
+    if ids.is_empty() { vec![window_kind_id.to_string()] } else { ids }
 }
 
 /// 🎥️ Reads the runtime-owned camera for `pane` — the session-only replacement for the old
@@ -377,15 +423,6 @@ fn camera_json(camera: &CadCamera) -> String {
 fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
     let ids = selection_ids(args);
     if ids.is_empty() { fallback.to_vec() } else { ids }
-}
-
-fn cad_pane_lists(document: &CadScene) -> [&Vec<CadObject>; 4] {
-    [
-        &document.objects,
-        &document.building_objects,
-        &document.energy_objects,
-        &document.structure_classic_objects,
-    ]
 }
 
 fn cad_pane_id_from_suffix(id_suffix: &str) -> CadPaneId {
@@ -692,10 +729,11 @@ fn instance_is_component_hovered(runtime: &CadPlayRuntime, object_id: &str) -> b
         .unwrap_or_else(|| runtime.hovered_object_id.as_deref() == Some(object_id))
 }
 
-/// @emoji 🕹️ Whether a visible gumball engagement should render for the current selection.
-fn gumball_active(runtime: &CadPlayRuntime) -> bool {
-    !runtime.selected_object_ids.is_empty()
-        || !runtime.component_selection.ids.is_empty()
+/// @emoji 🕹️ Whether this window's active Dislocate utility has a visible handle for the selection.
+fn gumball_active(runtime: &CadPlayRuntime, active_utility: Option<&str>, options: CadDislocateOptions) -> bool {
+    active_utility == Some(CAD_DISLOCATE_UTILITY_ID)
+        && (options.move_enabled || options.rotate_enabled)
+        && (!runtime.selected_object_ids.is_empty() || !runtime.component_selection.ids.is_empty())
 }
 
 /// @emoji 🎯️ World-space pivot for the gumball: centroid of selected objects across all panes.
@@ -768,7 +806,12 @@ fn world_meshes_json(objects: &[CadObject], geometry: Option<&CadGeometry>) -> S
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_utility: &str) -> String {
+fn world_selection_json(
+    document: &CadScene,
+    runtime: &CadPlayRuntime,
+    active_utility: Option<&str>,
+    options: CadDislocateOptions,
+) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         runtime.selected_object_ids.as_slice(),
@@ -776,8 +819,22 @@ fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_ut
     ))
     .unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformMode".into(), json!(active_utility));
-        object.insert("gumballActive".into(), json!(gumball_active(runtime)));
+        let active = gumball_active(runtime, active_utility, options);
+        if active_utility == Some(CAD_DISLOCATE_UTILITY_ID) {
+            object.insert("transformMode".into(), json!("transform"));
+            object.insert(
+                "gumballConfig".into(),
+                json!({
+                    "moveAxes": options.move_enabled,
+                    "movePlanes": options.move_enabled,
+                    "rotate": options.rotate_enabled,
+                    "scaleAxes": false,
+                    "scalePlanes": false,
+                    "scaleUniform": false,
+                }),
+            );
+        }
+        object.insert("gumballActive".into(), json!(active));
         object.insert(
             "engagementSessionActive".into(),
             json!(runtime.engagement_session.is_some()),
@@ -796,8 +853,10 @@ fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_ut
         if let Some(reference_id) = runtime.selected_reference_id.as_deref() {
             object.insert("referenceSelectedId".into(), json!(reference_id));
         }
-        if let Some(target) = gumball_target_for(document, runtime.selected_object_ids.as_slice()) {
+        if active {
+            if let Some(target) = gumball_target_for(document, runtime.selected_object_ids.as_slice()) {
             object.insert("gumballTarget".into(), json!(target));
+            }
         }
     }
     value.to_string()
@@ -828,7 +887,13 @@ fn world_references_json(document: &CadScene, pane: CadPaneId) -> Option<String>
     Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
 }
 
-fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: &str) -> UiNode {
+fn build_world_scene_for_pane(
+    envelope: &CadPlayView,
+    pane: CadPaneId,
+    surface_id: &str,
+    active_utility: Option<&str>,
+    options: CadDislocateOptions,
+) -> UiNode {
     let objects = cad_pane_objects(&envelope.document, pane);
     let preview = envelope
         .runtime
@@ -845,7 +910,7 @@ fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_i
             camera_json(cad_pane_camera_runtime(&envelope.runtime, pane)),
             world_meshes_json(objects, cad_pane_geometry(&envelope.document, pane)),
             world_instances_json(objects, &envelope.runtime),
-            world_selection_json(&envelope.document, &envelope.runtime, active_utility),
+            world_selection_json(&envelope.document, &envelope.runtime, active_utility, options),
             None,
             None,
             None,
@@ -1098,6 +1163,7 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
         ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
         ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
+        ("setDislocateOption", "Set Dislocate Option", "Versetzen-Option festlegen"),
         ("saveSelected", "Save Selected", "Auswahl speichern"),
         ("saveInPlay", "Save In Play", "Im Play speichern"),
         ("saveCurrent", "Save Current", "Aktuelles speichern"),
@@ -1108,15 +1174,49 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
 /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_cad_app`.
 fn cad_utility_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
-        ("move", "Move", "Verschieben"),
-        ("rotate", "Rotate", "Drehen"),
-        ("scale", "Scale", "Skalieren"),
+        (CAD_DISLOCATE_UTILITY_ID, "Dislocate", "Versetzen"),
     ])
 }
 
 //#endregion 🔖️Terminology
 
 //#region 🔖️Panels
+/// 🎛️ Move and Rotate handle groups shown only while this window owns the Dislocate utility.
+fn cad_dislocate_utility_options(options: CadDislocateOptions, is_de: bool) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: "cad-play-utility-options-dislocate".into(),
+        label: String::new(),
+        default_open: Some(true),
+        active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()),
+        value: None,
+        min: None,
+        max: None,
+        step: None,
+        ready: None,
+        loading: None,
+        waiting: None,
+        on_change: None,
+        children: vec![
+            WindowMeasure::Toggle {
+                id: "cad-dislocate-move".into(),
+                icon_id: "move-3d".into(),
+                label: Some(if is_de { "Verschieben" } else { "Move" }.into()),
+                pressed: options.move_enabled,
+                text: None,
+                on_change: cad_action("setDislocateOption", Some(json!({ "option": "move" }))),
+            },
+            WindowMeasure::Toggle {
+                id: "cad-dislocate-rotate".into(),
+                icon_id: "rotate-cw".into(),
+                label: Some(if is_de { "Drehen" } else { "Rotate" }.into()),
+                pressed: options.rotate_enabled,
+                text: None,
+                on_change: cad_action("setDislocateOption", Some(json!({ "option": "rotate" }))),
+            },
+        ],
+    }
+}
+
 fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
     let primitive_items: Vec<UiTreeItemNode> = object
         .primitives
@@ -1393,7 +1493,7 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
                 format!("cad-play-catalogue.{}", entry.typology),
                 typology_label(entry.typology, labels),
                 Some(entry.icon),
-                cad_action("addObject", Some(json!({ "typology": entry.typology }))),
+                cad_action("addObject", Some(json!({ "typology": entry.typology, "modelDefinitionId": entry.model_definition_id }))),
             )
         })
         .collect();
@@ -1402,7 +1502,7 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
         .build()
 }
 
-fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: &str) -> UiNode {
+fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: Option<&str>) -> UiNode {
     if let (Some(object_id), Some(primitive_id)) = (
         envelope.runtime.selected_object_ids.first(),
         envelope.runtime.selected_primitive_id.as_deref(),
@@ -1467,50 +1567,11 @@ fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_uti
     }
     ui_stack_vertical(vec![
         ui_text(format!("{}: {}", labels.schema, envelope.document.schema)),
-        ui_text(format!("{}: {active_utility}", labels.utility)),
+        ui_text(format!("{}: {}", labels.utility, active_utility.unwrap_or(labels.none_placeholder))),
         ui_text(format!("{}: {}", labels.objects, envelope.document.objects.len())),
     ])
 }
 
-fn inspector_number_field(
-    id: &str,
-    label: &str,
-    values: &[f64],
-    object_ids: &[String],
-    field: &str,
-) -> UiNode {
-    let mixed = ui_inspector_mixed_number(values);
-    UiNode::Field(UiFieldNode {
-        id: id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: format!("{id}.input"),
-            input_kind: "number".into(),
-            value: if mixed.uniform {
-                mixed.value.to_string()
-            } else {
-                String::new()
-            },
-            placeholder: if mixed.uniform { None } else { Some("—".into()) },
-            commit: None,
-            on_change: cad_action(
-                "patchSelection",
-                Some(json!({ "objectIds": object_ids, "field": field })),
-            ),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-            presence: UiPresence::default(),
-            menu: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-        presence: UiPresence::default(),
-        menu: None,
-    })
-}
 
 /// @emoji 🌀️ Builds an editable 4-component quaternion group (`X`/`Y`/`Z`/`W` steppers) — orientation
 /// fields have no shared helper (quaternions aren't `ui_inspector_vec3_group`'s 3-wide shape), so
@@ -2166,7 +2227,7 @@ impl DocumentApp for CadPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, CadScene>,
         _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
-        _view_state: &ViewState,
+        view_state: &ViewState,
     ) -> ActionEmit<CadOperation> {
         let document = doc.projection;
         let mut runtime = self.runtime.borrow_mut();
@@ -2206,6 +2267,21 @@ impl DocumentApp for CadPlayApp {
                 runtime.engagement_step = "Idle".into();
                 runtime.hovered_object_id = None;
                 runtime.hovered_target = None;
+                ActionEmit::default()
+            }
+            "setDislocateOption" => {
+                let window_id = view_state
+                    .window_id
+                    .as_deref()
+                    .or(view_state.active_window_kind_id.as_deref())
+                    .unwrap_or(CAD_PLAY_WINDOW_SHAPE);
+                let options = runtime.dislocate_options_by_window_id.entry(window_id.into()).or_default();
+                let pressed = args.and_then(|value| value.get("pressed")).and_then(Value::as_bool);
+                match args.and_then(|value| value.get("option")).and_then(Value::as_str) {
+                    Some("move") => options.move_enabled = pressed.unwrap_or(!options.move_enabled),
+                    Some("rotate") => options.rotate_enabled = pressed.unwrap_or(!options.rotate_enabled),
+                    _ => {}
+                }
                 ActionEmit::default()
             }
             "setSelection" => {
@@ -2832,18 +2908,28 @@ impl DocumentApp for CadPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, CadScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let view = CadPlayView { document: doc.projection.clone(), runtime: self.runtime.borrow().clone() };
         let labels = cad_labels(view_state);
-        let active_utility = view_state.active_utility_id.as_deref().unwrap_or(CAD_DEFAULT_UTILITY_ID);
+        let window_kind_id = match body_key {
+            CAD_PLAY_BODY_SHAPE => Some(CAD_PLAY_WINDOW_SHAPE),
+            CAD_PLAY_BODY_BUILDING => Some(CAD_PLAY_WINDOW_BUILDING),
+            CAD_PLAY_BODY_ENERGY => Some(CAD_PLAY_WINDOW_ENERGY),
+            CAD_PLAY_BODY_STRUCTURE_CLASSIC => Some(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC),
+            _ => None,
+        };
+        let window_id = view_state.window_id.as_deref().or(window_kind_id);
+        let active_utility = cad_window_active_utility(view_state, window_id);
+        let options = view.runtime.dislocate_options(window_id.unwrap_or(CAD_PLAY_WINDOW_SHAPE));
         match body_key {
-            CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE, active_utility),
+            CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&view, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE, active_utility, options),
             CAD_PLAY_BODY_BUILDING => {
-                build_world_scene_for_pane(&view, CadPaneId::Building, CAD_PLAY_SURFACE_BUILDING, active_utility)
+                build_world_scene_for_pane(&view, CadPaneId::Building, CAD_PLAY_SURFACE_BUILDING, active_utility, options)
             }
-            CAD_PLAY_BODY_ENERGY => build_world_scene_for_pane(&view, CadPaneId::Energy, CAD_PLAY_SURFACE_ENERGY, active_utility),
+            CAD_PLAY_BODY_ENERGY => build_world_scene_for_pane(&view, CadPaneId::Energy, CAD_PLAY_SURFACE_ENERGY, active_utility, options),
             CAD_PLAY_BODY_STRUCTURE_CLASSIC => build_world_scene_for_pane(
                 &view,
                 CadPaneId::StructureClassic,
                 CAD_PLAY_SURFACE_STRUCTURE_CLASSIC,
                 active_utility,
+                options,
             ),
             CAD_PLAY_BODY_DOCUMENT => build_document_tree(&view, labels),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
@@ -2875,20 +2961,32 @@ impl DocumentApp for CadPlayApp {
         ])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, CadScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+    fn window_measures(&self, _doc: &DocumentView<'_, CadScene>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         let runtime = self.runtime.borrow();
-        let pane_measures = |pane: CadPaneId| {
+        let pane_measures = |pane: CadPaneId, window_id: &str| {
             vec![
                 world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera_runtime(&runtime, pane)), cad_action),
                 world3d_sun_measures("cad", &runtime.sun, cad_action),
+                cad_dislocate_utility_options(runtime.dislocate_options(window_id), is_de_locale(view_state)),
             ]
         };
-        HashMap::from([
-            (CAD_PLAY_WINDOW_SHAPE.to_string(), pane_measures(CadPaneId::Shape)),
-            (CAD_PLAY_WINDOW_BUILDING.to_string(), pane_measures(CadPaneId::Building)),
-            (CAD_PLAY_WINDOW_ENERGY.to_string(), pane_measures(CadPaneId::Energy)),
-            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), pane_measures(CadPaneId::StructureClassic)),
-        ])
+        [
+            (CAD_PLAY_WINDOW_SHAPE, CadPaneId::Shape),
+            (CAD_PLAY_WINDOW_BUILDING, CadPaneId::Building),
+            (CAD_PLAY_WINDOW_ENERGY, CadPaneId::Energy),
+            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, CadPaneId::StructureClassic),
+        ]
+        .into_iter()
+        .flat_map(|(window_kind_id, pane)| {
+            cad_window_instance_ids(view_state, window_kind_id)
+                .into_iter()
+                .map(|window_id| {
+                    let measures = pane_measures(pane, &window_id);
+                    (window_id, measures)
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
     }
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
@@ -2905,6 +3003,30 @@ impl DocumentApp for CadPlayApp {
             .example_labels(HashMap::from([
                 (CAD_EXAMPLE_FOREST_LEFT.to_string(), (if is_de { "Sechseckig geschnittener Betonwald links" } else { "Hexagonal Cut Concrete Forest Left" }).to_string()),
             ]))
+    }
+
+    /// 🖱️ Selection-gated menu: transform/duplicate/delete only once something is selected — a bare
+    /// right-click on empty World3d background (nothing selected) falls through to the shell's
+    /// window-level menu (undo/redo/view actions) instead of showing an empty CAD-specific section.
+    fn context_menu(
+        &self,
+        _request: &ContextMenuRequest,
+        _doc: &DocumentView<'_, CadScene>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        _view_state: &ViewState,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        if self.runtime.borrow().selected_object_ids.is_empty() {
+            return Vec::new();
+        }
+        Menu::of(registry)
+            .action("translateSelection")
+            .action("rotateSelection")
+            .action("scaleSelection")
+            .separator()
+            .action("duplicateObject")
+            .destructive("deleteObject")
+            .build()
     }
 }
 
@@ -2955,21 +3077,17 @@ fn cad_quad_layout() -> WindowLayout {
     }
 }
 
-/// @emoji 🧰️ A cad transform-gumball utility: an exclusive member of the `transform` group rendered in
-/// the framework utility bar (`UtilityCategory::Utilities`). Switching it is a pure `setActiveUtility` View action
-/// (`ViewState::active_utility_id`) — it gates the action panel while active (the default), since a
-/// transform mode is a content-editing mode, not a passive viewing aid.
-fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition {
+/// @emoji 🧰️ The window-scoped CAD Dislocate utility, whose Move and Rotate handles are utility options.
+fn cad_dislocate_utility() -> UtilityDefinition {
     UtilityDefinition {
-        group: Some("transform".into()),
         category: Some(UtilityCategory::Utilities),
-        ..UtilityDefinition::new(id, label, icon)
+        ..UtilityDefinition::new(CAD_DISLOCATE_UTILITY_ID, "Dislocate", "move-3d")
     }
 }
 
-/// @emoji 🧰️ The transform-utility refs scoping the gumball to every world-3d pane uniformly.
-fn cad_transform_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
-    vec!["move".into(), "rotate".into(), "scale".into()]
+/// @emoji 🧰️ The single Dislocate utility ref exposed independently by each world-3d window.
+fn cad_dislocate_utility_refs() -> Vec<semio_framework_plugin::UtilityRef> {
+    vec![CAD_DISLOCATE_UTILITY_ID.into()]
 }
 
 pub fn create_cad_app() -> App {
@@ -2990,7 +3108,7 @@ pub fn create_cad_app() -> App {
             .icon_id("box")
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "cad"])
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d, "cad-shape")
             .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING, SurfaceKind::World3d, "landmark")
@@ -3037,6 +3155,7 @@ pub fn create_cad_app() -> App {
             .view_action("setSunAzimuth", "Set Sun Azimuth")
             .view_action("setSunElevation", "Set Sun Elevation")
             .view_action("setSunIntensity", "Set Sun Intensity")
+            .view_action("setDislocateOption", "Set Dislocate Option")
             .shell_action("saveSelected", "Save Selected")
             .shell_action("saveInPlay", "Save In Play")
             .shell_action("saveCurrent", "Save Current")
@@ -3055,13 +3174,11 @@ pub fn create_cad_app() -> App {
             .action_args("setActiveExample", vec![ActionArgDef::select("exampleId", "Example", vec![
                 ActionArgOption::new(CAD_EXAMPLE_FOREST_LEFT, "Hexagonal Cut Concrete Forest Left"),
             ]).required()])
-            .utility(cad_transform_utility("move", "Move", "move"))
-            .utility(cad_transform_utility("rotate", "Rotate", "rotate-cw"))
-            .utility(cad_transform_utility("scale", "Scale", "maximize-2"))
-            .window_kind_utilities(CAD_PLAY_WINDOW_SHAPE, cad_transform_utility_refs())
-            .window_kind_utilities(CAD_PLAY_WINDOW_BUILDING, cad_transform_utility_refs())
-            .window_kind_utilities(CAD_PLAY_WINDOW_ENERGY, cad_transform_utility_refs())
-            .window_kind_utilities(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, cad_transform_utility_refs())
+            .utility(cad_dislocate_utility())
+            .window_kind_utilities(CAD_PLAY_WINDOW_SHAPE, cad_dislocate_utility_refs())
+            .window_kind_utilities(CAD_PLAY_WINDOW_BUILDING, cad_dislocate_utility_refs())
+            .window_kind_utilities(CAD_PLAY_WINDOW_ENERGY, cad_dislocate_utility_refs())
+            .window_kind_utilities(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, cad_dislocate_utility_refs())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -3085,6 +3202,7 @@ pub fn create_cad_app() -> App {
         CAD_EXAMPLE_FOREST_LEFT,
         "Hexagonal Cut Concrete Forest Left",
         &serde_json::to_string(&forest_play_scene()).unwrap(),
+        "trees",
     )
     .workflow("cad", "CAD", "model")
 }
@@ -3099,6 +3217,7 @@ mod tests {
     use cad_document_engine::{
         align_mesh_to_fixture_centroid, cad_document_from_dwg, CAD_DEFAULT_TYPOLOGY_EXTENT,
         CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_WIDTH_WORLD,
+        CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
     };
     use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, VcsDocumentApp};
     use protocol::{Operation, OperationDiff};
@@ -3120,11 +3239,21 @@ mod tests {
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped) so tests can inspect ephemeral
     /// runtime view-state and the emitted operations directly.
     fn drive(app: &CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>) -> ActionEmit<CadOperation> {
+        drive_with_view(app, scene, action, args, &ViewState::default())
+    }
+
+    fn drive_with_view(
+        app: &CadPlayApp,
+        scene: &CadScene,
+        action: &str,
+        args: Option<Value>,
+        view_state: &ViewState,
+    ) -> ActionEmit<CadOperation> {
         let history = empty_history();
         let doc = DocumentView { projection: scene, history: &history };
         let config = semio_framework_plugin::NoConfig::default();
         let cfg = semio_framework_plugin::ConfigView { projection: &config };
-        app.handle_action(action, args.as_ref(), &doc, &cfg, &ViewState::default())
+        app.handle_action(action, args.as_ref(), &doc, &cfg, view_state)
     }
 
     /// 🧮️ Folds a list of `CadOperation`s onto a scene via the core `Operation`/`OperationDiff` impls —
@@ -3237,12 +3366,15 @@ mod tests {
             "reference x {} should be base + 50% width (right)",
             reference.origin[0]
         );
-        let expected_y = -18.0 + CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX * 0.5;
+        let expected_y = -18.0
+            + CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX
+                * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO);
         assert!(
             (reference.origin[1] - expected_y).abs() < 1e-9,
-            "reference y {} should be base + 50% depth (front)",
+            "reference y {} should be centered then moved +30% of its height",
             reference.origin[1]
         );
+        assert_eq!(CAD_FOREST_REFERENCE_Y_OFFSET_RATIO, 0.3);
         assert!(reference.locked, "example references default locked like puzzle 3d");
         assert_eq!(reference.width_world, 28.6);
     }
@@ -3388,12 +3520,10 @@ mod tests {
     }
 
     #[test]
-    fn app_definition_declares_transform_utilities_and_no_actions_variant() {
+    fn app_definition_declares_one_window_scoped_dislocate_utility() {
         let definition = create_cad_app().definition;
         let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
-        assert!(utility_ids.contains(&"move"));
-        assert!(utility_ids.contains(&"rotate"));
-        assert!(utility_ids.contains(&"scale"));
+        assert_eq!(utility_ids, vec![CAD_DISLOCATE_UTILITY_ID]);
         // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
         // cad must NOT also declare it as an Operation.
         let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
@@ -3401,10 +3531,10 @@ mod tests {
         // 🚦️ Transform utilities gate the action panel while active (the default) — cad declares no
         // passive `allows_actions_while_active` view utilities.
         assert!(definition.utilities.iter().all(|utility| !utility.allows_actions_while_active));
-        // 🧭️ Every world-3d pane scopes the three transform utilities.
+        // 🧭️ Every world-3d pane owns its own Dislocate utility activation.
         for window in &definition.window_kinds {
             let refs: Vec<&str> = window.utilities.iter().map(|utility_ref| utility_ref.as_str()).collect();
-            assert_eq!(refs, vec!["move", "rotate", "scale"], "window {} utilities", window.id);
+            assert_eq!(refs, vec![CAD_DISLOCATE_UTILITY_ID], "window {} utilities", window.id);
         }
     }
 
@@ -3458,8 +3588,16 @@ mod tests {
         let mut app = CadPlayApp::default();
         let scene = default_document();
         drive(&mut app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
-        let selection = world_selection_json(&scene, &*app.runtime.borrow(), "rotate");
-        assert!(selection.contains("\"transformMode\":\"rotate\""), "gumball utility sourced from ViewState::active_utility_id");
+        let selection = world_selection_json(
+            &scene,
+            &*app.runtime.borrow(),
+            Some(CAD_DISLOCATE_UTILITY_ID),
+            CadDislocateOptions::default(),
+        );
+        assert!(selection.contains("\"transformMode\":\"transform\""));
+        assert!(selection.contains("\"moveAxes\":true"));
+        assert!(selection.contains("\"rotate\":true"));
+        assert!(selection.contains("\"scaleAxes\":false"));
         assert!(selection.contains("\"gumballActive\":true"));
         assert!(selection.contains("\"gumballTarget\""));
     }
@@ -3484,7 +3622,12 @@ mod tests {
 
     #[test]
     fn gumball_inactive_without_selection() {
-        let selection = world_selection_json(&default_document(), &CadPlayRuntime::default(), CAD_DEFAULT_UTILITY_ID);
+        let selection = world_selection_json(
+            &default_document(),
+            &CadPlayRuntime::default(),
+            Some(CAD_DISLOCATE_UTILITY_ID),
+            CadDislocateOptions::default(),
+        );
         assert!(selection.contains("\"gumballActive\":false"));
         assert!(!selection.contains("\"gumballTarget\""));
     }
@@ -3495,11 +3638,80 @@ mod tests {
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let view_state = ViewState { active_utility_id: Some("scale".into()), ..ViewState::default() };
+        let view_state = ViewState { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewState::default() };
         let node = app.render(CAD_PLAY_BODY_SHAPE, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         // The world selection blob is embedded as an escaped JSON string inside the scene node.
-        assert!(json.contains(r#"transformMode\":\"scale"#), "render sources gumball utility from ViewState::active_utility_id");
+        assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from ViewState::active_utility_id");
+    }
+
+    #[test]
+    fn dislocate_gumball_is_visible_only_in_its_active_window() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let history = empty_history();
+        let doc = DocumentView { projection: &scene, history: &history };
+        let window_instances = vec![
+            semio_framework_plugin::ViewWindowInstance { id: CAD_PLAY_WINDOW_SHAPE.into(), window_kind_id: CAD_PLAY_WINDOW_SHAPE.into() },
+            semio_framework_plugin::ViewWindowInstance { id: CAD_PLAY_WINDOW_BUILDING.into(), window_kind_id: CAD_PLAY_WINDOW_BUILDING.into() },
+        ];
+        let mut active_utility_by_window_id = HashMap::new();
+        active_utility_by_window_id.insert(CAD_PLAY_WINDOW_SHAPE.into(), CAD_DISLOCATE_UTILITY_ID.into());
+        let shared = ViewState { window_instances, active_utility_by_window_id, ..ViewState::default() };
+        let shape = app.render(
+            CAD_PLAY_BODY_SHAPE,
+            &doc,
+            &ViewState { window_id: Some(CAD_PLAY_WINDOW_SHAPE.into()), ..shared.clone() },
+        );
+        let building = app.render(
+            CAD_PLAY_BODY_BUILDING,
+            &doc,
+            &ViewState { window_id: Some(CAD_PLAY_WINDOW_BUILDING.into()), ..shared },
+        );
+        let shape_json = serde_json::to_string(&shape).unwrap();
+        let building_json = serde_json::to_string(&building).unwrap();
+        assert!(shape_json.contains(r#"gumballActive\":true"#));
+        assert!(shape_json.contains(r#"transformMode\":\"transform"#));
+        assert!(building_json.contains(r#"gumballActive\":false"#));
+        assert!(!building_json.contains(r#"transformMode\":"#));
+    }
+
+    #[test]
+    fn dislocate_move_and_rotate_options_are_per_window() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let second_window = "cad-play-shape-2";
+        let window_instances = vec![
+            semio_framework_plugin::ViewWindowInstance { id: CAD_PLAY_WINDOW_SHAPE.into(), window_kind_id: CAD_PLAY_WINDOW_SHAPE.into() },
+            semio_framework_plugin::ViewWindowInstance { id: second_window.into(), window_kind_id: CAD_PLAY_WINDOW_SHAPE.into() },
+        ];
+        let second_view = ViewState { window_id: Some(second_window.into()), window_instances: window_instances.clone(), ..ViewState::default() };
+        drive_with_view(
+            &app,
+            &scene,
+            "setDislocateOption",
+            Some(json!({ "option": "rotate", "pressed": false })),
+            &second_view,
+        );
+        let history = empty_history();
+        let doc = DocumentView { projection: &scene, history: &history };
+        let measures = app.window_measures(&doc, &ViewState { window_instances, ..ViewState::default() });
+        let rotate_pressed = |window_id: &str| {
+            measures
+                .get(window_id)
+                .and_then(|items| items.iter().find_map(|measure| match measure {
+                    WindowMeasure::Group { id, children, .. } if id == "cad-play-utility-options-dislocate" => {
+                        children.iter().find_map(|child| match child {
+                            WindowMeasure::Toggle { id, pressed, .. } if id == "cad-dislocate-rotate" => Some(*pressed),
+                            _ => None,
+                        })
+                    }
+                    _ => None,
+                }))
+        };
+        assert_eq!(rotate_pressed(CAD_PLAY_WINDOW_SHAPE), Some(true));
+        assert_eq!(rotate_pressed(second_window), Some(false));
     }
 
     #[test]
@@ -3522,9 +3734,9 @@ mod tests {
         app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
             .expect("add object");
         let projection_after_add = serde_json::to_string(&app.projection().expect("projection")).unwrap();
-        let view_state = ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() };
+        let view_state = ViewState { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewState::default() };
         let result = app
-            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &view_state, &meta("local"))
+            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": CAD_DISLOCATE_UTILITY_ID })), &view_state, &meta("local"))
             .expect("set active utility");
         assert!(result.operations.is_empty(), "utility switch must emit zero operations");
         let projection_after_switch = serde_json::to_string(&app.projection().expect("projection")).unwrap();
@@ -3587,7 +3799,7 @@ mod tests {
             "setHover",
             Some(json!({ "objectId": object_id, "mode": "edge", "id": 3 })),
         );
-        let selection = world_selection_json(&scene, &*app.runtime.borrow(), CAD_DEFAULT_UTILITY_ID);
+        let selection = world_selection_json(&scene, &*app.runtime.borrow(), None, CadDislocateOptions::default());
         assert!(selection.contains("\"hoveredComponent\""));
         assert!(selection.contains("\"mode\":\"edge\""));
         assert!(selection.contains("\"id\":3"));
@@ -3619,7 +3831,7 @@ mod tests {
         assert_eq!(app.runtime.borrow().component_selection.ids, vec![7]);
         assert_eq!(app.runtime.borrow().active_object_id.as_deref(), Some(object_id.as_str()));
         assert!(app.runtime.borrow().selected_object_ids.contains(&object_id));
-        let selection = world_selection_json(&scene, &*app.runtime.borrow(), CAD_DEFAULT_UTILITY_ID);
+        let selection = world_selection_json(&scene, &*app.runtime.borrow(), None, CadDislocateOptions::default());
         assert!(selection.contains("\"selectionMode\":\"edge\""));
         assert!(selection.contains("\"componentIds\":[7]"));
         assert!(selection.contains(&format!("\"activeObjectId\":\"{object_id}\"")));
@@ -3699,7 +3911,7 @@ mod tests {
             selected_object_ids: SelectionSet::from(vec!["object-box-1".into(), second_id]),
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&ViewState::default()), CAD_DEFAULT_UTILITY_ID);
+        let panel = build_properties_panel(&view(scene, runtime), cad_labels(&ViewState::default()), None);
         let json = serde_json::to_string(&panel).unwrap();
         assert!(json.contains("Mixed"));
         assert!(json.contains("cad-play-inspector.object.orientation"));
@@ -3710,7 +3922,7 @@ mod tests {
             selected_object_ids: SelectionSet::from(vec!["object-box-1".into()]),
             ..CadPlayRuntime::default()
         };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state), CAD_DEFAULT_UTILITY_ID);
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(view_state), None);
         serde_json::to_string(&panel).unwrap()
     }
 
@@ -3749,7 +3961,7 @@ mod tests {
             ..CadPlayRuntime::default()
         };
         let view_state = ViewState { terminology: Some("reuse".into()), locale: Some("de".into()), ..ViewState::default() };
-        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&view_state), CAD_DEFAULT_UTILITY_ID);
+        let panel = build_properties_panel(&view(default_document(), runtime), cad_labels(&view_state), None);
         assert!(serde_json::to_string(&panel).unwrap().contains("Bauteil"));
     }
 

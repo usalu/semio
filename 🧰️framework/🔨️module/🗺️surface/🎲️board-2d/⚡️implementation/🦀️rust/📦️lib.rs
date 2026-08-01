@@ -7,7 +7,7 @@
 
 use puzzle_2d::Puzzle2dProjection;
 use puzzle_2d_engine::{
-    apply_edge_handle_snap_to_fixture_v1_json, cavas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json, puzzle_board_host,
+    apply_edge_handle_snap_to_fixture_v1_json, canvas, compute_edge_bezier_points, distance_point_to_cubic_bezier, handle_position_on_circle, handle_position_on_rectangle, normalize_board_descriptor_hidden_to_visible, puzzle_2d_lod_scale_json, puzzle_board_host,
     puzzle_board_host_normal, redraw_layout_fixture_json, BoardHost, CubicBez, Point, SceneDescriptorJson,
 };
 
@@ -90,7 +90,7 @@ pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
 #[cfg(target_arch = "wasm32")]
 struct BoardSessionInner {
     host: BoardHost,
-    gpu: cavas::gpu_session::CanvasGpuSession,
+    gpu: canvas::gpu_session::CanvasGpuSession,
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -118,13 +118,13 @@ pub struct BoardSession {
 impl BoardSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { state: Rc::new(RefCell::new(BoardSessionInner { host: puzzle_board_host(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+        Self { state: Rc::new(RefCell::new(BoardSessionInner { host: puzzle_board_host(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
     }
 
     /// 🧠️ Construct a normal-graph session (no handles; edges connect node ids).
     #[wasm_bindgen(js_name = newNormal)]
     pub fn new_normal() -> Self {
-        Self { state: Rc::new(RefCell::new(BoardSessionInner { host: puzzle_board_host_normal(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+        Self { state: Rc::new(RefCell::new(BoardSessionInner { host: puzzle_board_host_normal(), gpu: canvas::gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -156,7 +156,7 @@ impl BoardSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
+            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));

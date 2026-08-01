@@ -1968,7 +1968,7 @@ pub fn create_forms_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("forms")
-            .mode("blueprint", "Blueprint")
+            .mode("blueprint", "Blueprint", "drafting-compass")
             .default_mode_id("blueprint")
             .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::BlockList, "clipboard-list")
             .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY, SurfaceKind::Canvas2d, "play")
@@ -1994,7 +1994,7 @@ pub fn create_forms_app() -> App {
             .operation("dropQuestionKind", "Drop Question Kind")
             .operation("setActiveExample", "Set Active Example")
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setSpecJson", "Set Spec JSON", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSpecJson", "Set Spec JSON", ActionKind::Operation) })
             .view_action("setSelection", "Set Selection")
             .view_action("setTryValue", "Set Try Value")
             .view_action("setTryValues", "Set Try Values")
@@ -2031,9 +2031,9 @@ pub fn create_forms_app() -> App {
                 Some(&["Blueprint".into(), "Try".into()]),
             )),
     )
-    .example("default", "Contact", forms_engine::default_example_json())
-    .example("onboarding", "Onboarding", forms_engine::onboarding_example_json())
-    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_TEXT)
+    .example("default", "Contact", forms_engine::default_example_json(), "file")
+    .example("onboarding", "Onboarding", forms_engine::onboarding_example_json(), "user-plus")
+    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_TEXT, "building-2")
     .workflow("forms", "Forms", "data")
 }
 

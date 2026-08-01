@@ -86,7 +86,7 @@ An existing ticket already covers exactly this task: [`.repo/🎫️/26/05/30/CO
 
 ## Explicit exclusions (kept split — not "possible" without breaking behavior)
 
-- Rust `build.rs` companions (`infinite/cavas/rs`, `puzzle/2d/rs`, `mathematical/graph/manifest/rs`, `gis/2d/rs`) — Cargo requires build scripts as a separate file.
+- Rust `build.rs` companions (`infinite/canvas/rs`, `puzzle/2d/rs`, `mathematical/graph/manifest/rs`, `gis/2d/rs`) — Cargo requires build scripts as a separate file.
 - Codegen outputs: `ui/styling/rs/generated.rs`, `mathematical/graph/manifest/rs/../generated/*` — same precedent as the prior ticket ("left ... generated as codegen output").
 - TS `*.worker.ts` entry points (`compose/client/lib/js/kit-store.worker.ts`, `kernel/3d/brep/js/tessellate.worker.ts`, `repo/server/lib/worker.ts`) — separate execution context/thread, can't be merged into the main module.
 - Electron/VS Code multi-entry bundles (`compose/client/ui/desktop`, `coda/client/ui/desktop`, `compose/client/ui/vscode`) — distinct build targets (main/preload/renderer, extension/webview).

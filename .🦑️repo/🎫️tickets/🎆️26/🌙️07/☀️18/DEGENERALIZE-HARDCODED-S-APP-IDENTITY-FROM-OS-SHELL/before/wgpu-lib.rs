@@ -2594,7 +2594,7 @@ use crate::interpreter::FrameworkWidgetContext;
 use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use semio_framework_editor::EditorHost;
 use semio_framework_os_kernel_surface_node_graph::GraphHost;
-use infinite_cavas as cavas;
+use infinite_canvas as canvas;
 use semio_framework_ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -2953,7 +2953,7 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgp
 fn render_vello_scene(
     gpu: &mut GpuContext,
     surface_id: &str,
-    scene: &cavas::Scene,
+    scene: &canvas::Scene,
     clear: Color,
 ) -> Result<(), String> {
     ENGINE_SURFACES.with(|cell| {
@@ -3024,7 +3024,7 @@ pub fn paint_node_graph(
     let clear = vello_clear(ctx.theme);
     let scene_json = graph_scene_json(graph);
     let dark = theme_is_dark(ctx.theme);
-    let mut cavas_scene = cavas::Scene::new();
+    let mut canvas_scene = canvas::Scene::new();
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
@@ -3043,7 +3043,7 @@ pub fn paint_node_graph(
             sync_flow_host(engine, graph, &mut entry.sync_cache);
             sync_canvas_theme_dark(&mut entry.sync_cache, dark, engine);
             engine.set_viewport(pw, ph, dpr);
-            engine.paint_scene(&mut cavas_scene, pw, ph, dpr);
+            engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
         } else {
             let engine = match entry.node_graph.as_mut() {
                 Some(NodeGraphEngine::Dag(host)) => host,
@@ -3061,10 +3061,10 @@ pub fn paint_node_graph(
             }
             sync_graph_canvas_theme_dark(&mut entry.sync_cache, dark, engine);
             engine.set_viewport(pw, ph, dpr);
-            engine.paint_scene(&mut cavas_scene, pw, ph, dpr);
+            engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
         }
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(
@@ -4002,7 +4002,7 @@ pub fn paint_tiled_map(
     }
     let theme_json = map_theme_json_from_ui_theme(ctx.theme);
     let clear = vello_clear(ctx.theme);
-    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+    let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.map_host.is_none() {
@@ -4014,7 +4014,7 @@ pub fn paint_tiled_map(
         queue_map_tile_fetches(&scene.surface_id, map_scene, host);
         host.build_render_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(
@@ -4375,7 +4375,7 @@ pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext
         return;
     }
     let clear = vello_clear(ctx.theme);
-    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+    let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.board_host.is_none() {
@@ -4386,7 +4386,7 @@ pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext
         sync_board_host(host, board_scene, &mut entry.board_sync_cache, pw, ph, dpr);
         host.build_vector_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(
@@ -4686,7 +4686,7 @@ pub fn paint_text_editor(
     }
     let clear = vello_clear(ctx.theme);
     let scene_json = editor_scene_json(editor);
-    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+    let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
         if entry.editor.is_none() {
@@ -4697,7 +4697,7 @@ pub fn paint_text_editor(
         host.set_size(pw, ph, dpr);
         host.build_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
         return;
     }
     ctx.draw.push_raster_quad(

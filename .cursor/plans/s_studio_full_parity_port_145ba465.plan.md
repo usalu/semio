@@ -87,7 +87,7 @@ Rewrite [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shel
 Replace the stub hosts in [framework/renderer/react/components/](framework/renderer/react/components/) (e.g. `node-graph-host.tsx` currently renders `<pre>{json}</pre>`):
 
 - node-graph: xyflow via ui-react graph components (media graph nodes with typed ports, edges, viewport)
-- canvas-2d: `@semio-tech/infinite-cavas-react-renderer`
+- canvas-2d: `@semio-tech/infinite-canvas-react-renderer`
 - world-3d: `@semio-tech/infinite-world-r3f`
 - text-editor, table, raster, virtual-file-system tree hosts — ported from the old platform renderer surface bindings
 

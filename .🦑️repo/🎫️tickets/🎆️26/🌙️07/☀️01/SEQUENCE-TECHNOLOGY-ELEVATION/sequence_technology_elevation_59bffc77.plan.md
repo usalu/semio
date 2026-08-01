@@ -115,7 +115,7 @@ flowchart TB
 
 ## 3. Catalogue drag-and-drop
 
-- `**sequence/core/lib.rs**`: add a `worldFromScreen(sx, sy) -> String` WASM export on `SequenceSession` (JSON `{x, y}`), mirroring the coordinate math already used in `wheelScreen` ([sequence/core/lib.rs:487-506](sequence/core/lib.rs)) via `infinite_cavas::camera::screen_to_world`.
+- `**sequence/core/lib.rs**`: add a `worldFromScreen(sx, sy) -> String` WASM export on `SequenceSession` (JSON `{x, y}`), mirroring the coordinate math already used in `wheelScreen` ([sequence/core/lib.rs:487-506](sequence/core/lib.rs)) via `infinite_canvas::camera::screen_to_world`.
 - `**sequence/react/index.tsx**`: add `fixtureDragDrop` prop + `onDragEnter/onDragOver/onDrop` handlers on the canvas container (mirroring Flow's `commitWidgetDropAtClient`, [flow/react/index.tsx:4319](flow/react/index.tsx)): decode the drag payload, convert screen→world via the new WASM method, call `session.addStep(kind, world.x, world.y)` directly, then `emitFixtureChange()` + `syncCompiledText()` + `renderFrame()`.
 - **New drag data encoding**: `SEQUENCE_STEP_DRAG_V1_MIME` + `sequenceStepCatalogueItemDragData(item)` in `sequence/react/index.tsx` (or `sequence/core/index.ts`), analogous to `flowPlayCatalogueItemDragData`.
 - `**sequence/play/index.ts**`: `buildSequencePlayCatalogueTree()` items get `draggable: true, dragData: sequenceStepCatalogueItemDragData(item)` in addition to the existing click `command: addStep` (keep click-to-add as an accessible fallback, matching how Flow keeps both).

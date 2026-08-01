@@ -92,7 +92,7 @@ function extractBodyFromMessage(raw: string): string {
 const remainderBody = `
 🌐️workspace🧩️other
 🎆️26🌙️06☀️04
-🌐️Framework hosts, UI assets, infinite cavas, agents skills, and monorepo paths outside named bundles
+🌐️Framework hosts, UI assets, infinite canvas, agents skills, and monorepo paths outside named bundles
 🎆️26🌙️06☀️03
 🌐️Mathematical graph crates, CAD JSON, reasoning notes, and compose core outside fixtures
 🎆️26🌙️06☀️02

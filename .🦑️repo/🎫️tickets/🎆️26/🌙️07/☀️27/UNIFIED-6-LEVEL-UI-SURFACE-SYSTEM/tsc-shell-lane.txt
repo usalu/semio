@@ -2626,9 +2626,9 @@ framework/sync/worker/script.ts(3,86): error TS5097: An import path can only end
 fsm/rs/script.ts(3,126): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
 imperative/core/script.ts(3,126): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
 infinite/board/port/directed/dag/script.ts(3,86): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
-infinite/cavas/react-renderer/index.tsx(9,92): error TS2724: '"react-reconciler/constants"' has no exported member named 'NoEventPriority'. Did you mean 'IdleEventPriority'?
-infinite/cavas/react-renderer/script.ts(3,94): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
-infinite/cavas/react-renderer/vitest.config.ts(17,5): error TS2769: No overload matches this call.
+infinite/canvas/react-renderer/index.tsx(9,92): error TS2724: '"react-reconciler/constants"' has no exported member named 'NoEventPriority'. Did you mean 'IdleEventPriority'?
+infinite/canvas/react-renderer/script.ts(3,94): error TS5097: An import path can only end with a '.ts' extension when 'allowImportingTsExtensions' is enabled.
+infinite/canvas/react-renderer/vitest.config.ts(17,5): error TS2769: No overload matches this call.
   The last overload gave the following error.
     Object literal may only specify known properties, and 'mode' does not exist in type 'InlineConfig'.
 infinite/world/r3f/index.tsx(23,8): error TS2305: Module '"@semio-tech/ui-react"' has no exported member 'ReactNode'.

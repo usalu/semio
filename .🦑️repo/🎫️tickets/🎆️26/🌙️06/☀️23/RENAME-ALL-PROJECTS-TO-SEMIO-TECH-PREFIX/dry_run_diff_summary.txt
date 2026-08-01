@@ -3025,19 +3025,19 @@ File: gis/map/react/vitest.config.ts
 File: gis/map/rs/script.ts
   Changed. Length: 841
 
-File: infinite/cavas/react-renderer/index.tsx
+File: infinite/canvas/react-renderer/index.tsx
   Changed. Length: 7123
 
-File: infinite/cavas/react-renderer/package.json
+File: infinite/canvas/react-renderer/package.json
   Changed. Length: 767
 
-File: infinite/cavas/react-renderer/project.json
+File: infinite/canvas/react-renderer/project.json
   Changed. Length: 353
 
-File: infinite/cavas/react-renderer/script.ts
+File: infinite/canvas/react-renderer/script.ts
   Changed. Length: 496
 
-File: infinite/cavas/react-renderer/vitest.config.ts
+File: infinite/canvas/react-renderer/vitest.config.ts
   Changed. Length: 624
 
 File: infinite/world/AGENTS.md

@@ -39,7 +39,7 @@ For every directory that is a "bundle" (identified by owning a `package.json`, `
 ## Bundles already compliant — do not touch
 
 Own directory name is already the language tag; leave exactly as-is:
-`cad/rs`, `draw/rs`, `forms/rs`, `gis/2d/rs`, `layout/rs`, `procedural/2d/rs`, `procedural/3d/rs`, `puzzle/2d/rs`, `puzzle/3d/rs`, `puzzle/5d/rs`, `raster/rs`, `s/rs`, `shooting/rs`, `vcs/rs`, `writer/rs`, `reasoning/mindmap/rs`, `infinite/cavas/rs`, `framework/product/presentation/rs`, `kernel/2d/rs`, `kernel/2d/js`, `kernel/3d/brep/rs`, `kernel/3d/brep/js`, `ui/styling/js`, `ui/styling/rs`, `ui/styling/py`, `repo/lib/js`, `repo/lib/go`, `compose/client/lib/js`, `compose/client/lib/rs`, `compose/client/lib/go`, `compose/client/lib/py`, `compose/client/lib/sketchpad/js`, `coda/client/lib/blnbo/go`, `coda/client/lib/programming/go`.
+`cad/rs`, `draw/rs`, `forms/rs`, `gis/2d/rs`, `layout/rs`, `procedural/2d/rs`, `procedural/3d/rs`, `puzzle/2d/rs`, `puzzle/3d/rs`, `puzzle/5d/rs`, `raster/rs`, `s/rs`, `shooting/rs`, `vcs/rs`, `writer/rs`, `reasoning/mindmap/rs`, `infinite/canvas/rs`, `framework/product/presentation/rs`, `kernel/2d/rs`, `kernel/2d/js`, `kernel/3d/brep/rs`, `kernel/3d/brep/js`, `ui/styling/js`, `ui/styling/rs`, `ui/styling/py`, `repo/lib/js`, `repo/lib/go`, `compose/client/lib/js`, `compose/client/lib/rs`, `compose/client/lib/go`, `compose/client/lib/py`, `compose/client/lib/sketchpad/js`, `coda/client/lib/blnbo/go`, `coda/client/lib/programming/go`.
 
 ## Dismantling the `cad/js/` umbrella (special case)
 

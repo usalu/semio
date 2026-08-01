@@ -64,7 +64,7 @@ trinity/react         — TrinityCanvas + Jack bridge types/helpers
 trinity/jack/play     — PlayController, fixture catalog, window layout
 framework/playground  — Surface hosts only (thin wiring)
 mathematical/graph/port/directed — BoardEngine interaction geometry (already used)
-infinite/cavas/lod    — Lod / LodScale primitives (shared 6-band scale)
+infinite/canvas/lod    — Lod / LodScale primitives (shared 6-band scale)
 ```
 
 **Do not** embed puzzle 2d `BoardHost` directly (fixture schema differs). **Do** reuse `Lod`/`LodScale`, `wheel_screen`, and `BoardEngine` pointer/camera APIs from mathematical/infinite.
@@ -152,7 +152,7 @@ Remove `[DEBUG]` console logs in Jack surface hosts once verified.
 
 ### 2b. Wheel + camera sync
 
-- Add `TrinityHost::wheel_screen(sx, sy, delta_y)` using `infinite_cavas::camera::wheel_screen` on `engine.camera`, sync back to `graph.camera`.
+- Add `TrinityHost::wheel_screen(sx, sy, delta_y)` using `infinite_canvas::camera::wheel_screen` on `engine.camera`, sync back to `graph.camera`.
 - WASM: `wheelScreen` binding on `TrinitySession`.
 - [trinity/react/index.tsx](trinity/react/index.tsx): `wheel` listener on canvas (passive: false, `preventDefault`), call session, `onFixtureChange(session.fixtureJson())`, `renderFrame()`.
 

@@ -1993,7 +1993,7 @@ impl DocumentApp for DrawPlayApp {
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
 fn draw_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
@@ -2038,7 +2038,7 @@ pub fn create_draw_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("draw")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, "Canvas", DRAW_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, engagement, "pen-tool")
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, DRAW_PLAY_BODY_LAYERS)
@@ -2110,6 +2110,7 @@ pub fn create_draw_app() -> App {
         DRAW_PLAY_EXAMPLE_DEFAULT_ID,
         "Semio",
         semio_draw_example_json(),
+        "sparkles",
     )
     .workflow("draw", "Draw", "2d.drawing")
 }

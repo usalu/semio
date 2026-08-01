@@ -3264,6 +3264,7 @@ mod tests {
             modes: crate::ui::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
+                icon_id: "square-pen".into(),
                 tools: Vec::new(),
                 layout_id: None,
                 commands: Vec::new(),
@@ -3317,6 +3318,7 @@ mod tests {
             modes: crate::ui::Modes::one(ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
+                icon_id: "square-pen".into(),
                 tools: Vec::new(),
                 layout_id: None,
                 commands: Vec::new(),
@@ -3577,6 +3579,117 @@ impl ActionArgDef {
 }
 //#endregion 🔖️ActionArgs
 
+/// @emoji 🎛️ Canonical catalog icon for a declared app mode id.
+pub fn catalog_mode_icon_id(id: &str) -> IconName {
+    match id {
+        "edit" | "main" => "square-pen".into(),
+        "paint" => "paintbrush".into(),
+        "generate" => "sparkles".into(),
+        "explore" => "compass".into(),
+        "builder" => "blocks".into(),
+        "curate" => "folder-open".into(),
+        "blueprint" => "drafting-compass".into(),
+        "review" => "search-check".into(),
+        "report" => "file-chart-column".into(),
+        "view" => "eye".into(),
+        "capture" => "camera".into(),
+        "model" => "box".into(),
+        "analyze" => "microscope".into(),
+        _ => "layers".into(),
+    }
+}
+
+/// @emoji 🧪️ Canonical catalog icon for a playground example id (content-specific ids override at declaration).
+pub fn catalog_example_icon_id(id: &str) -> IconName {
+    match id {
+        "empty" | "default" => "file".into(),
+        "demo" => "flask-conical".into(),
+        "semio" => "sparkles".into(),
+        _ if id.contains("capsule") || id.contains("nakagin") => "building-2".into(),
+        _ if id.contains("forest") || id.contains("concrete") => "trees".into(),
+        _ if id.contains("hex") => "hexagon".into(),
+        _ => "file-text".into(),
+    }
+}
+
+/// @emoji 🎯️ Canonical catalog icon for a declared action id (view/shell/operation/history/clipboard).
+pub fn catalog_action_icon_id(id: &str, kind: ActionKind) -> IconName {
+    match id {
+        "undo" => "undo-2".into(),
+        "redo" => "redo-2".into(),
+        "commitCheckpoint" => "git-commit".into(),
+        "createAlternative" => "git-branch-plus".into(),
+        "switchAlternative" => "git-branch".into(),
+        "checkoutCheckpoint" => "git-compare".into(),
+        "revertToCommand" => "history".into(),
+        "copy" => "copy".into(),
+        "cut" => "scissors".into(),
+        "paste" => "clipboard-paste".into(),
+        "setHistoryCommandFilter" => "list-filter".into(),
+        "noteShellCommand" => "notebook-pen".into(),
+        "setActiveUtility" => "wrench".into(),
+        "setActiveTool" => "hammer".into(),
+        "startIntroduction" => "graduation-cap".into(),
+        "setSelection" | "documentSelect" | "selectNode" | "nodeGraphSelect" | "setNodeSelection" | "setFeatureSelection"
+        | "setReferenceSelection" | "setMediaNodeSelection" | "setAppInstanceSelection" | "selectRegister"
+        | "selectInstance" | "selectSameKind" | "selectSameKindSelection" | "worldSelect" | "worldVortexSelect" => {
+            "mouse-pointer".into()
+        }
+        "clearSelection" | "deselect" => "mouse-pointer-2".into(),
+        "selectAll" => "square-dashed-mouse-pointer".into(),
+        "setCamera" | "setCamera2d" | "setCamera3d" | "nodeGraphViewport" => "video".into(),
+        "setProjection" | "setProjectionParam" => "scan".into(),
+        "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "graphPointerDown" | "worldPointerDown" => {
+            "pointer".into()
+        }
+        "worldHover" | "setHover" | "nodeGraphHover" | "textHover" | "referenceHover" => "scan-eye".into(),
+        "worldPick" => "crosshair".into(),
+        "engagementInput" | "engagementAbort" | "engagementControlSelect" | "editorEngagementInput"
+        | "graphEngagementInput" | "resultsEngagementInput" | "workflowEngagementInput"
+        | "compiledDagEngagementInput" => "hand".into(),
+        "setLodMode" => "layers".into(),
+        "toggleGrid" | "setGridSnapEnabled" | "setGridFactor" => "grid-3x3".into(),
+        "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => "sun".into(),
+        "run" | "stop" => "play".into(),
+        "search" => "search".into(),
+        "exportProgram" | "exportRegistersCsv" | "exportMedia" | "exportStudioPack" | "exportStudioDsl"
+        | "exportVideoFromDeck" => "download".into(),
+        "importMedia" | "importSpacePack" | "importFrames" | "importVideo" | "openSource" => "upload".into(),
+        "goHome" => "house".into(),
+        "openSpace" | "openInstance" => "folder-open".into(),
+        "navigateVirtualFileSystemNode" => "folder-tree".into(),
+        "setActiveExample" | "setActivePanelTab" => "layout-panel-left".into(),
+        "copyPrompt" => "clipboard-copy".into(),
+        "evaluate" => "calculator".into(),
+        "recomputeRewrite" | "reorganize" => "refresh-cw".into(),
+        "textEdit" | "formatDocument" | "requestCompletions" => "text-cursor-input".into(),
+        "textSelect" => "text-cursor".into(),
+        "paintStrokeBegin" | "paintStroke" | "paintAt" | "paintSample" => "paintbrush".into(),
+        "transformBegin" => "move".into(),
+        "incrementViaCommand" | "setLabelViaCommand" => "plus".into(),
+        _ => match kind {
+            ActionKind::View => "eye".into(),
+            ActionKind::Shell => "terminal".into(),
+            ActionKind::Operation => "zap".into(),
+            ActionKind::History => "history".into(),
+            ActionKind::Clipboard => "clipboard".into(),
+        },
+    }
+}
+
+/// @emoji 🎛️ Canonical catalog icon for a footer command id.
+pub fn catalog_command_icon_id(id: &str) -> IconName {
+    match id {
+        id if id.starts_with("os.set") => "settings".into(),
+        "os.resetDock" => "panel-left".into(),
+        "os.toggleCompact" => "minimize-2".into(),
+        "app.export" | "incrementViaCommand" | "setLabelViaCommand" => "download".into(),
+        "mode.focus" => "focus".into(),
+        "animate.resetGrid" => "grid-3x3".into(),
+        _ => "terminal".into(),
+    }
+}
+
 /// @emoji 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -3585,9 +3698,7 @@ pub struct ActionDefinition {
     pub id: String,
     pub label: String,
     pub kind: ActionKind,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<IconName>,
+    pub icon_id: IconName,
     /// 📝️ Typed argument declarations. Empty (the common case) = a no-argument action.
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3601,17 +3712,23 @@ pub struct ActionDefinition {
 }
 
 impl ActionDefinition {
-    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: ActionKind) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
             kind,
-            icon_id: None,
+            icon_id: icon_id.into(),
             args: Vec::new(),
             keys: None,
             in_palette: true,
             category: None,
         }
+    }
+
+    /// @emoji 🎯️ Declares an action whose icon is resolved from {@link catalog_action_icon_id}.
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<String>, kind: ActionKind) -> Self {
+        let id = id.into();
+        Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this action.
@@ -3631,19 +3748,19 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition {
             keys: Some("mod+z".into()),
-            ..ActionDefinition::new("undo", "Undo", ActionKind::History)
+            ..ActionDefinition::new_catalog("undo", "Undo", ActionKind::History)
         },
         ActionDefinition {
             keys: Some("mod+shift+z".into()),
-            ..ActionDefinition::new("redo", "Redo", ActionKind::History)
+            ..ActionDefinition::new_catalog("redo", "Redo", ActionKind::History)
         },
-        ActionDefinition::new("commitCheckpoint", "Commit Checkpoint", ActionKind::History),
-        ActionDefinition::new("createAlternative", "Create Alternative", ActionKind::History),
-        ActionDefinition::new("switchAlternative", "Switch Alternative", ActionKind::History),
-        ActionDefinition::new("checkoutCheckpoint", "Checkout Checkpoint", ActionKind::History),
+        ActionDefinition::new_catalog("commitCheckpoint", "Commit Checkpoint", ActionKind::History),
+        ActionDefinition::new_catalog("createAlternative", "Create Alternative", ActionKind::History),
+        ActionDefinition::new_catalog("switchAlternative", "Switch Alternative", ActionKind::History),
+        ActionDefinition::new_catalog("checkoutCheckpoint", "Checkout Checkpoint", ActionKind::History),
         ActionDefinition {
             in_palette: false,
-            ..ActionDefinition::new(REVERT_TO_COMMAND_ACTION_ID, "Revert to Command", ActionKind::History)
+            ..ActionDefinition::new_catalog(REVERT_TO_COMMAND_ACTION_ID, "Revert to Command", ActionKind::History)
         }
         .with_args([ActionArgDef::number("entrySeq", "Entry").required()]),
     ]
@@ -3666,7 +3783,7 @@ pub fn set_history_command_filter_action_definition() -> ActionDefinition {
     ];
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(SET_HISTORY_COMMAND_FILTER_ACTION_ID, "Set History Filter", ActionKind::View)
+        ..ActionDefinition::new_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, "Set History Filter", ActionKind::View)
     }
     .with_args([ActionArgDef::select("value", "Filter", options).default_value(serde_json::json!("all"))])
 }
@@ -3683,7 +3800,7 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 pub fn note_shell_command_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(NOTE_SHELL_COMMAND_ACTION_ID, "Note Shell Command", ActionKind::Shell)
+        ..ActionDefinition::new_catalog(NOTE_SHELL_COMMAND_ACTION_ID, "Note Shell Command", ActionKind::Shell)
     }
     .with_args([
         ActionArgDef::text("commandId", "Command").required(),
@@ -3709,15 +3826,15 @@ pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
     vec![
         ActionDefinition {
             keys: Some("mod+c".into()),
-            ..ActionDefinition::new("copy", "Copy", ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("copy", "Copy", ActionKind::Clipboard)
         },
         ActionDefinition {
             keys: Some("mod+x".into()),
-            ..ActionDefinition::new("cut", "Cut", ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("cut", "Cut", ActionKind::Clipboard)
         },
         ActionDefinition {
             keys: Some("mod+v".into()),
-            ..ActionDefinition::new("paste", "Paste", ActionKind::Clipboard)
+            ..ActionDefinition::new_catalog("paste", "Paste", ActionKind::Clipboard)
         }
         .with_args([
             ActionArgDef::select("anchor", "Anchoring", anchoring_options).default_value(serde_json::json!("original")),
@@ -3737,7 +3854,7 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 pub fn set_active_utility_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(SET_ACTIVE_UTILITY_ACTION_ID, "Set Active Utility", ActionKind::View)
+        ..ActionDefinition::new_catalog(SET_ACTIVE_UTILITY_ACTION_ID, "Set Active Utility", ActionKind::View)
     }
     .with_args([
         ActionArgDef::text("utilityId", "Utility").required(),
@@ -3755,7 +3872,7 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 pub fn set_active_tool_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(SET_ACTIVE_TOOL_ACTION_ID, "Set Active Tool", ActionKind::View)
+        ..ActionDefinition::new_catalog(SET_ACTIVE_TOOL_ACTION_ID, "Set Active Tool", ActionKind::View)
     }
     .with_args([ActionArgDef::text("toolId", "Tool").required()])
 }
@@ -3772,7 +3889,7 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 pub fn start_introduction_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(START_INTRODUCTION_ACTION_ID, "Introduce App", ActionKind::View)
+        ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, "Introduce App", ActionKind::View)
     }
 }
 
@@ -3910,9 +4027,7 @@ pub struct CommandDefinition {
     pub scope: CommandScope,
     /// 🗂️ Footer category tab this command groups under (an open id, e.g. "document", "appearance").
     pub category: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<IconName>,
+    pub icon_id: IconName,
     /// 📝️ Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3923,17 +4038,29 @@ pub struct CommandDefinition {
 }
 
 impl CommandDefinition {
-    pub fn new(id: impl Into<String>, label: impl Into<String>, scope: CommandScope, category: impl Into<String>) -> Self {
+    pub fn new(
+        id: impl Into<String>,
+        label: impl Into<String>,
+        scope: CommandScope,
+        category: impl Into<String>,
+        icon_id: impl Into<IconName>,
+    ) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
             scope,
             category: category.into(),
-            icon_id: None,
+            icon_id: icon_id.into(),
             args: Vec::new(),
             keys: None,
             in_palette: true,
         }
+    }
+
+    /// @emoji 🎛️ Declares a command whose icon is resolved from {@link catalog_command_icon_id}.
+    pub fn new_catalog(id: impl Into<String>, label: impl Into<String>, scope: CommandScope, category: impl Into<String>) -> Self {
+        let id = id.into();
+        Self::new(id.clone(), label, scope, category, catalog_command_icon_id(&id))
     }
 
     /// @emoji 📝️ Attaches typed argument declarations to this command.
@@ -5059,7 +5186,7 @@ pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> Act
     let options = tutorials.iter().map(|t| ActionArgOption::new(t.id.clone(), t.title.clone())).collect();
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(START_TUTORIAL_ACTION_ID, "Play Tutorial", ActionKind::View)
+        ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, "Play Tutorial", ActionKind::View)
     }
     .with_args([ActionArgDef::select("tutorialId", "Tutorial", options).required()])
 }
@@ -5073,7 +5200,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 pub fn record_tutorial_action_definition() -> ActionDefinition {
     ActionDefinition {
         in_palette: false,
-        ..ActionDefinition::new(RECORD_TUTORIAL_ACTION_ID, "Record Tutorial", ActionKind::View)
+        ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, "Record Tutorial", ActionKind::View)
     }
 }
 
@@ -5405,6 +5532,7 @@ impl DialogDefinition {
 pub struct ModeDefinition {
     pub id: String,
     pub label: String,
+    pub icon_id: IconName,
     /// 🛠️ Tools available while this mode is active — references `AppDefinition.tools` ids.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<ToolRef>,
@@ -5872,6 +6000,7 @@ pub fn app_window_document_label(app: &AppDefinition, terminology: &str, window_
 pub struct ExampleDefinition {
     pub id: String,
     pub label: String,
+    pub icon_id: IconName,
     pub document_json: String,
     pub app_id: String,
 }
@@ -6994,6 +7123,7 @@ mod app_document_tests {
             modes: Modes::one(crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
+                icon_id: "square-pen".into(),
                 tools: Vec::new(),
                 layout_id: None,
                 commands: Vec::new(),
@@ -7040,8 +7170,8 @@ mod app_document_tests {
     fn resolve_window_actions_explicit_scoping() {
         let app = app_with(
             vec![
-                ActionDefinition::new("add", "Add", ActionKind::Operation),
-                ActionDefinition::new("remove", "Remove", ActionKind::Operation),
+                ActionDefinition::new_catalog("add", "Add", ActionKind::Operation),
+                ActionDefinition::new_catalog("remove", "Remove", ActionKind::Operation),
             ],
             vec![ActionRef::new("add")],
         );
@@ -7055,9 +7185,9 @@ mod app_document_tests {
     fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
         let app = app_with(
             vec![
-                ActionDefinition::new("undo", "Undo", ActionKind::History),
+                ActionDefinition::new_catalog("undo", "Undo", ActionKind::History),
                 crate::ui::set_active_utility_action_definition(),
-                ActionDefinition::new("add", "Add", ActionKind::Operation),
+                ActionDefinition::new_catalog("add", "Add", ActionKind::Operation),
             ],
             vec![],
         );
@@ -7081,6 +7211,7 @@ mod app_document_tests {
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
+                icon_id: "square-pen".into(),
                 tools: vec![ToolRef::new("fill"), ToolRef::new("brush")],
                 layout_id: None,
                 commands: Vec::new(),
@@ -7101,6 +7232,7 @@ mod app_document_tests {
                 crate::ui::ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
+                icon_id: "square-pen".into(),
                     tools: vec![ToolRef::new("fill")],
                     layout_id: None,
                     commands: Vec::new(),
@@ -7108,6 +7240,7 @@ mod app_document_tests {
                 crate::ui::ModeDefinition {
                     id: "view".into(),
                     label: "View".into(),
+                icon_id: "square-pen".into(),
                     tools: Vec::new(),
                     layout_id: None,
                     commands: Vec::new(),
@@ -7126,6 +7259,7 @@ mod app_document_tests {
             vec![crate::ui::ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
+                icon_id: "square-pen".into(),
                 tools: vec![ToolRef::new("fill"), ToolRef::new("ghost")],
                 layout_id: None,
                 commands: Vec::new(),
@@ -7243,7 +7377,7 @@ mod app_document_tests {
 
     #[test]
     fn action_definition_requires_and_serializes_args_field() {
-        let action = ActionDefinition::new("x", "X", ActionKind::Operation);
+        let action = ActionDefinition::new_catalog("x", "X", ActionKind::Operation);
         let json = serde_json::to_value(&action).unwrap();
         assert_eq!(json["args"], json!([]));
         assert!(serde_json::from_value::<ActionDefinition>(json!({
@@ -7857,13 +7991,13 @@ mod app_document_tests {
 
     #[test]
     fn command_definition_round_trips_camel_case_with_defaults() {
-        let command = CommandDefinition::new("os.setThemeId", "Set Theme", CommandScope::Os, "appearance");
+        let command = CommandDefinition::new_catalog("os.setThemeId", "Set Theme", CommandScope::Os, "appearance");
         let json = serde_json::to_string(&command).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"scope\":\"os\""), "{json}");
         assert!(json.contains("\"category\":\"appearance\""), "{json}");
         assert!(json.contains("\"inPalette\":true"), "{json}");
-        assert!(!json.contains("iconId"), "omitted when unset: {json}");
+        assert!(json.contains("\"iconId\":\"settings\""), "{json}");
         assert!(!json.contains("keys"), "omitted when unset: {json}");
         let round: CommandDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, command);

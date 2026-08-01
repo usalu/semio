@@ -110,7 +110,7 @@ use writer::{WriterProjection, WRITER_DOCUMENT_SCHEMA};
 
 //#region 🔖️Examples
 /// 📄️ The `jack` example, parsed once from {@link writer_dsl::JACK_EXAMPLE_TEXT} — the source of truth
-/// for every call site below (`setActiveExample`, `.example("jack", ...)`, tests); never re-embed the
+/// for every call site below (`setActiveExample`, `.example("jack", ...)`, tests, "file-text"); never re-embed the
 /// raw text.
 pub fn jack_example_document() -> WriterProjection {
     <WriterProjection as store::DocumentDsl>::parse_dsl(writer_dsl::JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())

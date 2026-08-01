@@ -793,7 +793,7 @@ pub fn create_dag_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("dag")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(DAG_PLAY_WINDOW_MAIN, "DAG", DAG_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "graph-dag")
             .window_kind(DAG_PLAY_WINDOW_COMPILED, "DSL", DAG_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
@@ -851,7 +851,7 @@ pub fn create_dag_app() -> App {
                 ]).default_value("computation"),
             ]),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_dag_document()).expect("default DAG document has no non-string map keys or non-finite floats, so JSON serialization is infallible"))
+    .example("demo", "Demo", serde_json::to_string(&default_dag_document()).expect("default DAG document has no non-string map keys or non-finite floats, so JSON serialization is infallible"), "flask-conical")
     .workflow("dag", "DAG", "graph")
 }
 //#endregion 🔖️Manifest

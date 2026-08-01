@@ -19995,7 +19995,7 @@ $ bun ./script.ts nx run-many -t test-exhaustive --all --exclude workspace
 - @semio-tech/framework-surface-tiled-map-rs
 - @semio-tech/math-graph-isomorphism
 - coda-programming-go
-- @semio-tech/infinite-cavas-react-renderer
+- @semio-tech/infinite-canvas-react-renderer
 - @semio-tech/math-graph-centrality
 - @semio-tech/math-graph-clustering
 - @semio-tech/math-graph-components
@@ -32542,14 +32542,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -32835,14 +32835,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -33053,253 +33053,253 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:103:39
     |
-103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
     |                                       ^^^^^^^^^^^^^^^^^^^^^
     |
     = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
     |
-103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
-103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:103:73
     |
-103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 | fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
-103 + fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+103 - fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> f64 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:148:29
     |
-148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                             ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-148 + fn current_map_lod(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:148:63
     |
-148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 | fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                                                               ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-148 + fn current_map_lod(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+148 - fn current_map_lod(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:153:39
     |
-153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
     |                                       ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
-153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:153:73
     |
-153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 | fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
     |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
-153 + fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+153 - fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:166:32
     |
-166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |                                ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
-166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:166:66
     |
-166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 | fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
-166 + fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 - fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &canvas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:184:57
     |
-184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                                                         ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:184:91
     |
-184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
     |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
-184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &canvas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &canvas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:199:46
     |
-199 |     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 |     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
     |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-199 -     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 -     gis_map_camera_limits_json_for_viewport(&canvas::camera::Viewport::default())
 199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:202:59
     |
-202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
     |                                                           ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &canvas::camera::Viewport) -> String {
 202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:214:54
     |
-214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
     |                                                      ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &canvas::camera::Viewport) -> f64 {
 214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:219:46
     |
-219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
     |                                              ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
-219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport) {
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport) {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:219:80
     |
-219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 | fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
     |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
-219 + fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport) {
+219 - fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport) {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:243:34
     |
-243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |                                  ^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
-243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |
 
 warning: unnecessary qualification
    --> framework/surface/tiled-map/rs/lib.rs:243:68
     |
-243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 | fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
-243 + fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 - fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &canvas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut canvas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
     |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1081:25
      |
-1081 | pub trait MapExtension: cavas::CanvasExtension {
+1081 | pub trait MapExtension: canvas::CanvasExtension {
      |                         ^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1081 - pub trait MapExtension: cavas::CanvasExtension {
+1081 - pub trait MapExtension: canvas::CanvasExtension {
 1081 + pub trait MapExtension: CanvasExtension {
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1088:6
      |
-1088 | impl cavas::CanvasExtension for DefaultMapExtension {
+1088 | impl canvas::CanvasExtension for DefaultMapExtension {
      |      ^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1088 - impl cavas::CanvasExtension for DefaultMapExtension {
+1088 - impl canvas::CanvasExtension for DefaultMapExtension {
 1088 + impl CanvasExtension for DefaultMapExtension {
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1354:17
      |
-1354 |     pub camera: cavas::camera::Camera,
+1354 |     pub camera: canvas::camera::Camera,
      |                 ^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1354 -     pub camera: cavas::camera::Camera,
+1354 -     pub camera: canvas::camera::Camera,
 1354 +     pub camera: camera::Camera,
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1355:19
      |
-1355 |     pub viewport: cavas::camera::Viewport,
+1355 |     pub viewport: canvas::camera::Viewport,
      |                   ^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1355 -     pub viewport: cavas::camera::Viewport,
+1355 -     pub viewport: canvas::camera::Viewport,
 1355 +     pub viewport: camera::Viewport,
      |
 
@@ -33318,36 +33318,36 @@ help: remove the unnecessary path segments
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1382:17
      |
-1382 |         origin: cavas::camera::Camera,
+1382 |         origin: canvas::camera::Camera,
      |                 ^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1382 -         origin: cavas::camera::Camera,
+1382 -         origin: canvas::camera::Camera,
 1382 +         origin: camera::Camera,
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1501:24
      |
-1501 |         let viewport = cavas::camera::Viewport::default();
+1501 |         let viewport = canvas::camera::Viewport::default();
      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1501 -         let viewport = cavas::camera::Viewport::default();
+1501 -         let viewport = canvas::camera::Viewport::default();
 1501 +         let viewport = camera::Viewport::default();
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:1541:32
      |
-1541 |     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 |     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
      |                                ^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1541 -     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 -     fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
 1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
      |
 
@@ -33366,12 +33366,12 @@ help: remove the unnecessary path segments
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2496:17
      |
-2496 |                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 |                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2496 -                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 -                 canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
 2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
      |
 
@@ -33390,36 +33390,36 @@ help: remove the unnecessary path segments
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2710:13
      |
-2710 |             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 |             canvas::raster::draw_image_arc(scene, &img, aff);
      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2710 -             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 -             canvas::raster::draw_image_arc(scene, &img, aff);
 2710 +             raster::draw_image_arc(scene, &img, aff);
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2820:21
      |
-2820 |                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 |                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2820 -                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 -                     canvas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
 2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
      |
 
 warning: unnecessary qualification
     --> framework/surface/tiled-map/rs/lib.rs:2855:6
      |
-2855 | impl cavas::canvas_content::CanvasContent for MapHost {
+2855 | impl canvas::canvas_content::CanvasContent for MapHost {
      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-2855 - impl cavas::canvas_content::CanvasContent for MapHost {
+2855 - impl canvas::canvas_content::CanvasContent for MapHost {
 2855 + impl canvas_content::CanvasContent for MapHost {
      |
 
@@ -33555,277 +33555,277 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:312:13
     |
-312 |     images: cavas::raster::RasterImageCache,
+312 |     images: canvas::raster::RasterImageCache,
     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
     = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
     |
-312 -     images: cavas::raster::RasterImageCache,
+312 -     images: canvas::raster::RasterImageCache,
 312 +     images: raster::RasterImageCache,
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:338:27
     |
-338 |         let theme_clear = cavas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
+338 |         let theme_clear = canvas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-338 -         let theme_clear = cavas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
+338 -         let theme_clear = canvas::theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
 338 +         let theme_clear = theme::canvas_clear_for(ui_styling::appearance::AppearanceName::Light);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:339:65
     |
-339 |         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(theme_clear);
+339 |         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(theme_clear);
     |                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-339 -         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(theme_clear);
+339 -         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(theme_clear);
 339 +         let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(theme_clear);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:344:21
     |
-344 |             images: cavas::raster::RasterImageCache::default(),
+344 |             images: canvas::raster::RasterImageCache::default(),
     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-344 -             images: cavas::raster::RasterImageCache::default(),
+344 -             images: canvas::raster::RasterImageCache::default(),
 344 +             images: raster::RasterImageCache::default(),
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:365:9
     |
-365 |         cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
+365 |         canvas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-365 -         cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
+365 -         canvas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
 365 +         theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:366:65
     |
-366 |         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
+366 |         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(self.theme_clear);
     |                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-366 -         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
+366 -         let (checkerboard_light_cell, checkerboard_dark_cell) = canvas::theme::checkerboard_shades_for_clear(self.theme_clear);
 366 +         let (checkerboard_light_cell, checkerboard_dark_cell) = theme::checkerboard_shades_for_clear(self.theme_clear);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:385:28
     |
-385 |         self.camera.zoom = cavas::camera::clamp_zoom(zoom);
+385 |         self.camera.zoom = canvas::camera::clamp_zoom(zoom);
     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-385 -         self.camera.zoom = cavas::camera::clamp_zoom(zoom);
+385 -         self.camera.zoom = canvas::camera::clamp_zoom(zoom);
 385 +         self.camera.zoom = camera::clamp_zoom(zoom);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:389:9
     |
-389 |         cavas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+389 |         canvas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-389 -         cavas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
+389 -         canvas::camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
 389 +         camera::wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:393:9
     |
-393 |         cavas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
+393 |         canvas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-393 -         cavas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
+393 -         canvas::camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
 393 +         camera::screen_to_world(&self.camera, &self.viewport, Point::new(sx, sy))
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:594:25
     |
-594 |                         cavas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
+594 |                         canvas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-594 -                         cavas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
+594 -                         canvas::raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
 594 +                         raster::draw_image_arc(scene, &mask_img, Affine::IDENTITY);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:597:17
     |
-597 |                 cavas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
+597 |                 canvas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-597 -                 cavas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
+597 -                 canvas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
 597 +                 raster::draw_image_arc(scene, &img, Affine::IDENTITY);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:647:19
     |
-647 |         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+647 |         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-647 -         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+647 -         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
 647 +         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:651:9
     |
-651 |         cavas::raster::draw_image_arc(&mut scene, &img, cam);
+651 |         canvas::raster::draw_image_arc(&mut scene, &img, cam);
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-651 -         cavas::raster::draw_image_arc(&mut scene, &img, cam);
+651 -         canvas::raster::draw_image_arc(&mut scene, &img, cam);
 651 +         raster::draw_image_arc(&mut scene, &img, cam);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:657:19
     |
-657 |         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+657 |         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
     |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-657 -         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
+657 -         let cam = canvas::camera::camera_content_affine(&self.camera, &self.viewport);
 657 +         let cam = camera::camera_content_affine(&self.camera, &self.viewport);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:666:9
     |
-666 |         cavas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
+666 |         canvas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-666 -         cavas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
+666 -         canvas::render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
 666 +         render::scale_scene_for_device_pixel_ratio(inner, self.viewport.dpr)
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:670:6
     |
-670 | impl cavas::canvas_content::CanvasContent for RasterHost {
+670 | impl canvas::canvas_content::CanvasContent for RasterHost {
     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-670 - impl cavas::canvas_content::CanvasContent for RasterHost {
+670 - impl canvas::canvas_content::CanvasContent for RasterHost {
 670 + impl canvas_content::CanvasContent for RasterHost {
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:767:21
     |
-767 |         let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
+767 |         let world = canvas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-767 -         let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
+767 -         let world = canvas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
 767 +         let world = camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:928:28
     |
-928 |                 let zoom = cavas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
+928 |                 let zoom = canvas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-928 -                 let zoom = cavas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
+928 -                 let zoom = canvas::camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
 928 +                 let zoom = camera::clamp_zoom((inner_w / content_w).min(inner_h / content_h));
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:939:75
     |
-939 |         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: cavas::camera::clamp_zoom(content_camera.zoom) };
+939 |         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: canvas::camera::clamp_zoom(content_camera.zoom) };
     |                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-939 -         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: cavas::camera::clamp_zoom(content_camera.zoom) };
+939 -         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: canvas::camera::clamp_zoom(content_camera.zoom) };
 939 +         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: camera::clamp_zoom(content_camera.zoom) };
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:941:30
     |
-941 |         let top_left_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+941 |         let top_left_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-941 -         let top_left_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
+941 -         let top_left_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
 941 +         let top_left_world = camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:942:34
     |
-942 |         let bottom_right_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+942 |         let bottom_right_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-942 -         let bottom_right_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
+942 -         let bottom_right_world = canvas::camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
 942 +         let bottom_right_world = camera::screen_to_world(&cc, &cv, Point::new(cv.width as f64, cv.height as f64));
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:943:24
     |
-943 |         let top_left = cavas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+943 |         let top_left = canvas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-943 -         let top_left = cavas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
+943 -         let top_left = canvas::camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
 943 +         let top_left = camera::world_to_screen(&self.camera, &self.viewport, top_left_world);
     |
 
 warning: unnecessary qualification
    --> framework/surface/paint/rs/lib.rs:944:28
     |
-944 |         let bottom_right = cavas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+944 |         let bottom_right = canvas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
 help: remove the unnecessary path segments
     |
-944 -         let bottom_right = cavas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
+944 -         let bottom_right = canvas::camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
 944 +         let bottom_right = camera::world_to_screen(&self.camera, &self.viewport, bottom_right_world);
     |
 
@@ -34076,14 +34076,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -34768,25 +34768,25 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> framework/editor/rs/lib.rs:52:9
    |
-52 |         cavas::theme::merge_color_field(next, v, key);
+52 |         canvas::theme::merge_color_field(next, v, key);
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-52 -         cavas::theme::merge_color_field(next, v, key);
+52 -         canvas::theme::merge_color_field(next, v, key);
 52 +         theme::merge_color_field(next, v, key);
    |
 
 warning: unnecessary qualification
     --> framework/editor/rs/lib.rs:1090:9
      |
-1090 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 |         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1090 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 -         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
 1090 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |
 
@@ -34837,12 +34837,12 @@ include: index.ts
 exclude:  **/node_modules/**, **/.git/**
 
 
-> nx run @semio-tech/infinite-cavas-react-renderer:test-exhaustive
+> nx run @semio-tech/infinite-canvas-react-renderer:test-exhaustive
 
 > bun ./script.ts test exhaustive
 
 
- RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/cavas/react-renderer
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/canvas/react-renderer
       Coverage enabled with v8
 
 
@@ -34863,7 +34863,7 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
    Compiling typst-layout v0.14.2
    Compiling vello v0.7.0
    Compiling usvg v0.46.0
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling libsqlite3-sys v0.36.0
    Compiling hashbrown v0.14.5
    Compiling cranelift-isle v0.109.1
@@ -35132,7 +35132,7 @@ info: cargo-llvm-cov currently setting cfg(coverage) and cfg(coverage_nightly); 
    Compiling typst-layout v0.14.2
    Compiling vello v0.7.0
    Compiling usvg v0.46.0
-   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling infinite_canvas v0.1.0 (/Users/ueli/Documents/semio/infinite/canvas/rs)
    Compiling libsqlite3-sys v0.36.0
    Compiling hashbrown v0.14.5
    Compiling cranelift-isle v0.109.1
@@ -103739,9 +103739,9 @@ Warning: command "bun ./script.ts test exhaustive" exited with non-zero status c
                 "root": "infinite/board"
               },
               {
-                "id": "♾️infinite✈️cavas",
-                "name": "infinite/cavas",
-                "root": "infinite/cavas"
+                "id": "♾️infinite✈️canvas",
+                "name": "infinite/canvas",
+                "root": "infinite/canvas"
               },
               {
                 "id": "♾️infinite📚️fixture",
@@ -104382,9 +104382,9 @@ FAIL
                 "root": "infinite/board"
               },
               {
-                "id": "♾️infinite✈️cavas",
-                "name": "infinite/cavas",
-                "root": "infinite/cavas"
+                "id": "♾️infinite✈️canvas",
+                "name": "infinite/canvas",
+                "root": "infinite/canvas"
               },
               {
                 "id": "♾️infinite📚️fixture",
@@ -105249,25 +105249,25 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> framework/editor/rs/lib.rs:52:9
    |
-52 |         cavas::theme::merge_color_field(next, v, key);
+52 |         canvas::theme::merge_color_field(next, v, key);
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-52 -         cavas::theme::merge_color_field(next, v, key);
+52 -         canvas::theme::merge_color_field(next, v, key);
 52 +         theme::merge_color_field(next, v, key);
    |
 
 warning: unnecessary qualification
     --> framework/editor/rs/lib.rs:1090:9
      |
-1090 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 |         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1090 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 -         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
 1090 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |
 
@@ -105379,25 +105379,25 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> framework/editor/rs/lib.rs:52:9
    |
-52 |         cavas::theme::merge_color_field(next, v, key);
+52 |         canvas::theme::merge_color_field(next, v, key);
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-52 -         cavas::theme::merge_color_field(next, v, key);
+52 -         canvas::theme::merge_color_field(next, v, key);
 52 +         theme::merge_color_field(next, v, key);
    |
 
 warning: unnecessary qualification
     --> framework/editor/rs/lib.rs:1090:9
      |
-1090 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 |         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1090 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 -         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
 1090 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |
 
@@ -121302,14 +121302,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -122295,14 +122295,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -123231,14 +123231,14 @@ warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -124113,14 +124113,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -124974,14 +124974,14 @@ warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -127288,7 +127288,7 @@ test elements3d::solid_tests::hex8_meshed_cantilever_deflection_is_right_order_o
 
 test result: ok. 92 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
-error: failed to generate report: process didn't exit successfully: `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/llvm-cov export -format=lcov -instr-profile=/private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/semio.profdata -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5b2daf250e5fec85 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5fbef6b646d66059 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_plugin-d7972b206a6a698f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_present-35460b706342f945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/architect_program-941c8b42fa6a02c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose-13fce55bca042598 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose_store-4c4609b8aaf2aa39 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/energy_engine-bb55ac09f4a12919 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_2d-9352854d66491df5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_3d-7e50a46d4c1bb835 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_core-ff9a4ca2234c32c3 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_plugin-5a5743f1cc90f813 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/flow_module_draw-2d4265c8aab51467 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_editor-2af58aa348446271 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_node_graph-a1b1d19096ad94c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_paint-3879f0e5bcfd4b73 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_terrain-65802247f7563716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_tiled_map-7403f7646faf0ef1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm-ffcc10392157de9f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm_macros-2f012a55cd6d6abc -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/imperative_core-ec2da9540a9a7a59 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_engine-3aa2ccedf5a11311 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_rs-be3ee865657c145e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_brepkit-1f3621dc19201810 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_engine-653a554af614c16c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_mesh-88bf5d04c83b8e09 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_scene-1e505ea79167a275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/layout_rs-2b08c0eb48dc29a0 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libanimate_present.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_document.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_plugin.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcompose.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_2d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_bim.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_brep.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_dictionary.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_draw.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_list.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_logic.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_math.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_text.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libframework_editor.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfsm_macros-f41347a93963ab2f.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libinfinite_board_port_directed_dag.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libmathematical_graph_dsl.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libprotocol.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libpuzzle_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libreasoning_mindmap.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libtrinity_ram.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libvcs.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/lowpoly_core-25a8633dd3672c03 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_algebra-ea1ee0c4e13268e1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_causal-e92af248a9eb4548 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_entropy-00445589a853263d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_fuzzy-5547d4b5bdacc804 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph-a9ddecbbf8ef794f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_approximation-a5dfc2a197ab47d7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_bipartite-1aac1072d1f95d06 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_centrality-76e5d72657fa1af8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cliques-2250934df81e00df -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_clustering-5b9c7ca3216f3624 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_coloring-05623e7754a5a52a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_community-718902036e671b14 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_components-3196e45ed7b5cfeb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_connectivity-6856fa62fa87d2da -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cycles-51b5132df84fa88e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dag-80cc6deb7ae5cd9a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dsl-77ca32e92be35cdb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_flow-ea871b8182cc435a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate-f261462c99febfae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate_random-9ef6c622dcc16a15 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_io-94b8e7624ec6e253 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_isomorphism-c9000292aa1081c9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_manifest-7821ebb289106ebf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_matching-a28b0cc1b63de77d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_directed-2db22da536033781 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_undirected-b17d5d1c84878131 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_operators-da4fcb3f410031cf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_paths-8ec6776d5c91767a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_planarity-7e6afa85e4e82e6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_directed_normal-c6dcdbc0d5467fb7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_undirected-2d5b48a4d6c52236 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_similarity-4c0b813a475454d8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_spectral-adab2cee47a6a69e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_structure-312781859cb89593 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_traversal-a0c7862b20fa2478 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_trees-54f346c2538cfd35 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_lie-240d540425a33c29 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_number-01f532cbf34a4cec -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_optimize-120692e853e0adbd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_polynomial-517685f8ad8dd945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_probability-75b7db466b13ed12 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_random-e4b2b7401d682ca7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_sampling-c61079c3159bbe6f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_signal-03971510223fe543 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_spatial-f368d384d97bc5e7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_statistics-fb03a0f78b0bec2a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_tabular-b7fd42bd65c3aa66 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_4108-0dc3aef9111ec994 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_en_16798-e7034f52f81cb5ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_v_18599-4fb4ea2af4f4dc82 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_iso_16757-2cc08f34ebc2f115 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_vdi_3805-311f8d7869c1bbae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/os_hub-11955ec78b02ed83 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_2d-ebafc6f95a325275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_3d-e221453fcacd9716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/puzzle_5d-cc1fb9a768d9b4a7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/reasoning_mindmap-b8701b2b351087e8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_camera-39af5be97bcf5932 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_dense-2ec7ef37664a47a2 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_engine-427c10bf64b2822c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_feature-bedaca4748b589b9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_geo-347c4adb25e00d6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_image-b0b8050e4ffb80ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_mesh-be1582d35391b214 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_motion-7ccc20d31867fb60 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_sfm-9b23cfd85466fc18 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_video-47d10a686905fa71 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/repo_cli-d0ce1d91776edb00 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/s_studio-4bc60f7e52e25507 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio-48aa221183e97c3c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio_framework_core-81b9feedfbcf3b5b -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sequence_core-69b1807e5ac1c2e4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sourcing_curate-82818d0df7491bb4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_jack_lsp-dd6cf27c80491a1c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_ram-17a58dc6bc8752aa -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_rewrite-0d61813e783f60d5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_styling-4f1edf67c8f282bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_tui-dcc6ba6d51b4f137 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_wgpu-05d4442bafa904bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/vcs-0ec9d209c3d95a27 -ignore-filename-regex '/rustc/([0-9a-f]+|[0-9]+\.[0-9]+\.[0-9]+)/|^/Users/ueli/Documents/semio(/.*)?/(tests|examples|benches)/|^/Users/ueli/Documents/semio(/.*)?/(tests\.rs|[0-9a-zA-Z_-]+[_-]tests\.rs)$|^/private/tmp/claude\-501\-coverage\-baseline\-cargo\-target/llvm\-cov\-target($|/)|^/Users/ueli/\.cargo/(registry|git)/|^/Users/ueli/\.rustup/toolchains($|/)|^/Users/ueli/Documents/semio/framework/core/rs($|/)|^/Users/ueli/Documents/semio/framework/hash/rs($|/)|^/Users/ueli/Documents/semio/ui/wgpu/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/scene/rs($|/)|^/Users/ueli/Documents/semio/mathematical/algebra/rs($|/)|^/Users/ueli/Documents/semio/mathematical/number/rs($|/)|^/Users/ueli/Documents/semio/ui/styling/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/rs($|/)|^/Users/ueli/Documents/semio/vcs/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/core/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/engine/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/run/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/host/rs($|/)|^/Users/ueli/Documents/semio/puzzle/plugin/rs($|/)|^/Users/ueli/Documents/semio/puzzle/2d/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/rs($|/)|^/Users/ueli/Documents/semio/infinite/cavas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/geometry/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/manifest/rs($|/)|^/Users/ueli/Documents/semio/neural/engine/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/drawing/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/puzzle/3d/rs($|/)|^/Users/ueli/Documents/semio/puzzle/5d/rs($|/)|^/Users/ueli/Documents/semio/protocol/rs($|/)|^/Users/ueli/Documents/semio/protocol/plugin/rs($|/)|^/Users/ueli/Documents/semio/protocol/module/procedural/rs($|/)|^/Users/ueli/Documents/semio/flow/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/bim/rs($|/)|^/Users/ueli/Documents/semio/flow/module/wasm/rs($|/)|^/Users/ueli/Documents/semio/flow/module/brep/rs($|/)|^/Users/ueli/Documents/semio/flow/module/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/dictionary/rs($|/)|^/Users/ueli/Documents/semio/flow/module/draw/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/engine/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/rs($|/)|^/Users/ueli/Documents/semio/flow/module/list/rs($|/)|^/Users/ueli/Documents/semio/flow/module/logic/rs($|/)|^/Users/ueli/Documents/semio/flow/module/math/rs($|/)|^/Users/ueli/Documents/semio/flow/module/text/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dsl/rs($|/)|^/Users/ueli/Documents/semio/neural/dag/rs($|/)|^/Users/ueli/Documents/semio/remodel/rs($|/)|^/Users/ueli/Documents/semio/remodel/plugin/rs($|/)|^/Users/ueli/Documents/semio/remodel/camera/rs($|/)|^/Users/ueli/Documents/semio/mathematical/lie/rs($|/)|^/Users/ueli/Documents/semio/mathematical/optimize/rs($|/)|^/Users/ueli/Documents/semio/mathematical/random/rs($|/)|^/Users/ueli/Documents/semio/remodel/dense/rs($|/)|^/Users/ueli/Documents/semio/mathematical/spatial/rs($|/)|^/Users/ueli/Documents/semio/remodel/image/rs($|/)|^/Users/ueli/Documents/semio/remodel/engine/rs($|/)|^/Users/ueli/Documents/semio/remodel/feature/rs($|/)|^/Users/ueli/Documents/semio/remodel/geo/rs($|/)|^/Users/ueli/Documents/semio/remodel/mesh/rs($|/)|^/Users/ueli/Documents/semio/remodel/sfm/rs($|/)|^/Users/ueli/Documents/semio/remodel/motion/rs($|/)|^/Users/ueli/Documents/semio/mathematical/signal/rs($|/)|^/Users/ueli/Documents/semio/remodel/video/rs($|/)|^/Users/ueli/Documents/semio/forms/rs($|/)|^/Users/ueli/Documents/semio/forms/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/polynomial/rs($|/)|^/Users/ueli/Documents/semio/mathematical/cas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/tabular/rs($|/)|^/Users/ueli/Documents/semio/mathematical/probability/rs($|/)|^/Users/ueli/Documents/semio/mathematical/statistics/rs($|/)|^/Users/ueli/Documents/semio/mathematical/causal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/fuzzy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/sampling/rs($|/)|^/Users/ueli/Documents/semio/mathematical/entropy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/traversal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/components/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cycles/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/paths/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/operators/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/coloring/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/random/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/structure/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/io/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cliques/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/clustering/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/matching/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/bipartite/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/trees/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/planarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/flow/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/centrality/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/distance/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/similarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/isomorphism/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/connectivity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/community/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/approximation/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/spectral/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/plugin/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/mesh/rs($|/)|^/Users/ueli/Documents/semio/ui/tui/rs($|/)|^/Users/ueli/Documents/semio/repo/cli/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/tiled\-map/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/terrain/rs($|/)|^/Users/ueli/Documents/semio/gis/plugin/rs($|/)|^/Users/ueli/Documents/semio/flow/plugin/rs($|/)|^/Users/ueli/Documents/semio/process/3d/rs($|/)|^/Users/ueli/Documents/semio/process/plugin/rs($|/)|^/Users/ueli/Documents/semio/sourcing/curate/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/beams/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/windows/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/slabs/rs($|/)|^/Users/ueli/Documents/semio/sourcing/plugin/rs($|/)|^/Users/ueli/Documents/semio/sequence/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/engine/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/control/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/logic/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/math/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/text/rs($|/)|^/Users/ueli/Documents/semio/sequence/plugin/rs($|/)|^/Users/ueli/Documents/semio/procedural/2d/rs($|/)|^/Users/ueli/Documents/semio/procedural/3d/rs($|/)|^/Users/ueli/Documents/semio/procedural/plugin/rs($|/)|^/Users/ueli/Documents/semio/fem/2d/rs($|/)|^/Users/ueli/Documents/semio/fem/3d/rs($|/)|^/Users/ueli/Documents/semio/fem/plugin/rs($|/)|^/Users/ueli/Documents/semio/trinity/rewrite/engine/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/core/rs($|/)|^/Users/ueli/Documents/semio/trinity/ram/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/shell/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/lsp/rs($|/)|^/Users/ueli/Documents/semio/trinity/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/node\-graph/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/wires/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/worker/rs($|/)|^/Users/ueli/Documents/semio/framework/renderer/wgpu/rs($|/)|^/Users/ueli/Documents/semio/framework/editor/rs($|/)|^/Users/ueli/Documents/semio/infinite/world/rs($|/)|^/Users/ueli/Documents/semio/shooting/rs($|/)|^/Users/ueli/Documents/semio/shooting/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/paint/rs($|/)|^/Users/ueli/Documents/semio/raster/plugin/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/core/rs($|/)|^/Users/ueli/Documents/semio/cad/plugin/rs($|/)|^/Users/ueli/Documents/semio/cad/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/plugin/rs($|/)|^/Users/ueli/Documents/semio/draw/rs($|/)|^/Users/ueli/Documents/semio/draw/plugin/rs($|/)|^/Users/ueli/Documents/semio/fsm/rs($|/)|^/Users/ueli/Documents/semio/fsm/macros/rs($|/)|^/Users/ueli/Documents/semio/vcs/plugin/rs($|/)|^/Users/ueli/Documents/semio/writer/rs($|/)|^/Users/ueli/Documents/semio/writer/plugin/rs($|/)|^/Users/ueli/Documents/semio/note/plugin/rs($|/)|^/Users/ueli/Documents/semio/layout/rs($|/)|^/Users/ueli/Documents/semio/layout/plugin/rs($|/)|^/Users/ueli/Documents/semio/imperative/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/hlc/rs($|/)|^/Users/ueli/Documents/semio/framework/schema/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/spatial/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/postgres/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/sqlite/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/neo4j/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/query/rs($|/)|^/Users/ueli/Documents/semio/compose/client/bin/store/rs($|/)|^/Users/ueli/Documents/semio/animate/core/rs($|/)|^/Users/ueli/Documents/semio/animate/video/rs($|/)|^/Users/ueli/Documents/semio/animate/present/rs($|/)|^/Users/ueli/Documents/semio/animate/plugin/rs($|/)|^/Users/ueli/Documents/semio/norm/core/rs($|/)|^/Users/ueli/Documents/semio/norm/din/4108/rs($|/)|^/Users/ueli/Documents/semio/norm/din/en/16798/rs($|/)|^/Users/ueli/Documents/semio/norm/din/v/18599/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1990/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1991/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1992/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1993/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1994/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1995/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1996/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1997/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1998/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1999/rs($|/)|^/Users/ueli/Documents/semio/norm/iso/16757/rs($|/)|^/Users/ueli/Documents/semio/norm/vdi/3805/rs($|/)|^/Users/ueli/Documents/semio/norm/plugin/rs($|/)|^/Users/ueli/Documents/semio/energy/engine/rs($|/)|^/Users/ueli/Documents/semio/architect/program/rs($|/)|^/Users/ueli/Documents/semio/architect/plugin/rs($|/)'` (exit status: 1)
+error: failed to generate report: process didn't exit successfully: `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/llvm-cov export -format=lcov -instr-profile=/private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/semio.profdata -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5b2daf250e5fec85 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5fbef6b646d66059 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_plugin-d7972b206a6a698f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_present-35460b706342f945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/architect_program-941c8b42fa6a02c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose-13fce55bca042598 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose_store-4c4609b8aaf2aa39 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/energy_engine-bb55ac09f4a12919 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_2d-9352854d66491df5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_3d-7e50a46d4c1bb835 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_core-ff9a4ca2234c32c3 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_plugin-5a5743f1cc90f813 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/flow_module_draw-2d4265c8aab51467 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_editor-2af58aa348446271 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_node_graph-a1b1d19096ad94c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_paint-3879f0e5bcfd4b73 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_terrain-65802247f7563716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_tiled_map-7403f7646faf0ef1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm-ffcc10392157de9f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm_macros-2f012a55cd6d6abc -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/imperative_core-ec2da9540a9a7a59 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_engine-3aa2ccedf5a11311 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_rs-be3ee865657c145e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_brepkit-1f3621dc19201810 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_engine-653a554af614c16c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_mesh-88bf5d04c83b8e09 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_scene-1e505ea79167a275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/layout_rs-2b08c0eb48dc29a0 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libanimate_present.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_document.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_plugin.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcompose.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_2d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_bim.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_brep.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_dictionary.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_draw.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_list.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_logic.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_math.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_text.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libframework_editor.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfsm_macros-f41347a93963ab2f.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libinfinite_board_port_directed_dag.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libmathematical_graph_dsl.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libprotocol.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libpuzzle_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libreasoning_mindmap.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libtrinity_ram.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libvcs.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/lowpoly_core-25a8633dd3672c03 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_algebra-ea1ee0c4e13268e1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_causal-e92af248a9eb4548 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_entropy-00445589a853263d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_fuzzy-5547d4b5bdacc804 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph-a9ddecbbf8ef794f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_approximation-a5dfc2a197ab47d7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_bipartite-1aac1072d1f95d06 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_centrality-76e5d72657fa1af8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cliques-2250934df81e00df -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_clustering-5b9c7ca3216f3624 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_coloring-05623e7754a5a52a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_community-718902036e671b14 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_components-3196e45ed7b5cfeb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_connectivity-6856fa62fa87d2da -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cycles-51b5132df84fa88e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dag-80cc6deb7ae5cd9a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dsl-77ca32e92be35cdb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_flow-ea871b8182cc435a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate-f261462c99febfae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate_random-9ef6c622dcc16a15 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_io-94b8e7624ec6e253 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_isomorphism-c9000292aa1081c9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_manifest-7821ebb289106ebf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_matching-a28b0cc1b63de77d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_directed-2db22da536033781 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_undirected-b17d5d1c84878131 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_operators-da4fcb3f410031cf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_paths-8ec6776d5c91767a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_planarity-7e6afa85e4e82e6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_directed_normal-c6dcdbc0d5467fb7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_undirected-2d5b48a4d6c52236 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_similarity-4c0b813a475454d8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_spectral-adab2cee47a6a69e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_structure-312781859cb89593 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_traversal-a0c7862b20fa2478 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_trees-54f346c2538cfd35 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_lie-240d540425a33c29 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_number-01f532cbf34a4cec -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_optimize-120692e853e0adbd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_polynomial-517685f8ad8dd945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_probability-75b7db466b13ed12 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_random-e4b2b7401d682ca7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_sampling-c61079c3159bbe6f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_signal-03971510223fe543 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_spatial-f368d384d97bc5e7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_statistics-fb03a0f78b0bec2a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_tabular-b7fd42bd65c3aa66 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_4108-0dc3aef9111ec994 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_en_16798-e7034f52f81cb5ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_v_18599-4fb4ea2af4f4dc82 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_iso_16757-2cc08f34ebc2f115 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_vdi_3805-311f8d7869c1bbae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/os_hub-11955ec78b02ed83 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_2d-ebafc6f95a325275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_3d-e221453fcacd9716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/puzzle_5d-cc1fb9a768d9b4a7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/reasoning_mindmap-b8701b2b351087e8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_camera-39af5be97bcf5932 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_dense-2ec7ef37664a47a2 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_engine-427c10bf64b2822c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_feature-bedaca4748b589b9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_geo-347c4adb25e00d6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_image-b0b8050e4ffb80ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_mesh-be1582d35391b214 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_motion-7ccc20d31867fb60 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_sfm-9b23cfd85466fc18 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_video-47d10a686905fa71 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/repo_cli-d0ce1d91776edb00 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/s_studio-4bc60f7e52e25507 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio-48aa221183e97c3c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio_framework_core-81b9feedfbcf3b5b -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sequence_core-69b1807e5ac1c2e4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sourcing_curate-82818d0df7491bb4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_jack_lsp-dd6cf27c80491a1c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_ram-17a58dc6bc8752aa -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_rewrite-0d61813e783f60d5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_styling-4f1edf67c8f282bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_tui-dcc6ba6d51b4f137 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_wgpu-05d4442bafa904bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/vcs-0ec9d209c3d95a27 -ignore-filename-regex '/rustc/([0-9a-f]+|[0-9]+\.[0-9]+\.[0-9]+)/|^/Users/ueli/Documents/semio(/.*)?/(tests|examples|benches)/|^/Users/ueli/Documents/semio(/.*)?/(tests\.rs|[0-9a-zA-Z_-]+[_-]tests\.rs)$|^/private/tmp/claude\-501\-coverage\-baseline\-cargo\-target/llvm\-cov\-target($|/)|^/Users/ueli/\.cargo/(registry|git)/|^/Users/ueli/\.rustup/toolchains($|/)|^/Users/ueli/Documents/semio/framework/core/rs($|/)|^/Users/ueli/Documents/semio/framework/hash/rs($|/)|^/Users/ueli/Documents/semio/ui/wgpu/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/scene/rs($|/)|^/Users/ueli/Documents/semio/mathematical/algebra/rs($|/)|^/Users/ueli/Documents/semio/mathematical/number/rs($|/)|^/Users/ueli/Documents/semio/ui/styling/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/rs($|/)|^/Users/ueli/Documents/semio/vcs/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/core/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/engine/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/run/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/host/rs($|/)|^/Users/ueli/Documents/semio/puzzle/plugin/rs($|/)|^/Users/ueli/Documents/semio/puzzle/2d/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/rs($|/)|^/Users/ueli/Documents/semio/infinite/canvas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/geometry/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/manifest/rs($|/)|^/Users/ueli/Documents/semio/neural/engine/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/drawing/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/puzzle/3d/rs($|/)|^/Users/ueli/Documents/semio/puzzle/5d/rs($|/)|^/Users/ueli/Documents/semio/protocol/rs($|/)|^/Users/ueli/Documents/semio/protocol/plugin/rs($|/)|^/Users/ueli/Documents/semio/protocol/module/procedural/rs($|/)|^/Users/ueli/Documents/semio/flow/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/bim/rs($|/)|^/Users/ueli/Documents/semio/flow/module/wasm/rs($|/)|^/Users/ueli/Documents/semio/flow/module/brep/rs($|/)|^/Users/ueli/Documents/semio/flow/module/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/dictionary/rs($|/)|^/Users/ueli/Documents/semio/flow/module/draw/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/engine/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/rs($|/)|^/Users/ueli/Documents/semio/flow/module/list/rs($|/)|^/Users/ueli/Documents/semio/flow/module/logic/rs($|/)|^/Users/ueli/Documents/semio/flow/module/math/rs($|/)|^/Users/ueli/Documents/semio/flow/module/text/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dsl/rs($|/)|^/Users/ueli/Documents/semio/neural/dag/rs($|/)|^/Users/ueli/Documents/semio/remodel/rs($|/)|^/Users/ueli/Documents/semio/remodel/plugin/rs($|/)|^/Users/ueli/Documents/semio/remodel/camera/rs($|/)|^/Users/ueli/Documents/semio/mathematical/lie/rs($|/)|^/Users/ueli/Documents/semio/mathematical/optimize/rs($|/)|^/Users/ueli/Documents/semio/mathematical/random/rs($|/)|^/Users/ueli/Documents/semio/remodel/dense/rs($|/)|^/Users/ueli/Documents/semio/mathematical/spatial/rs($|/)|^/Users/ueli/Documents/semio/remodel/image/rs($|/)|^/Users/ueli/Documents/semio/remodel/engine/rs($|/)|^/Users/ueli/Documents/semio/remodel/feature/rs($|/)|^/Users/ueli/Documents/semio/remodel/geo/rs($|/)|^/Users/ueli/Documents/semio/remodel/mesh/rs($|/)|^/Users/ueli/Documents/semio/remodel/sfm/rs($|/)|^/Users/ueli/Documents/semio/remodel/motion/rs($|/)|^/Users/ueli/Documents/semio/mathematical/signal/rs($|/)|^/Users/ueli/Documents/semio/remodel/video/rs($|/)|^/Users/ueli/Documents/semio/forms/rs($|/)|^/Users/ueli/Documents/semio/forms/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/polynomial/rs($|/)|^/Users/ueli/Documents/semio/mathematical/cas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/tabular/rs($|/)|^/Users/ueli/Documents/semio/mathematical/probability/rs($|/)|^/Users/ueli/Documents/semio/mathematical/statistics/rs($|/)|^/Users/ueli/Documents/semio/mathematical/causal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/fuzzy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/sampling/rs($|/)|^/Users/ueli/Documents/semio/mathematical/entropy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/traversal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/components/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cycles/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/paths/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/operators/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/coloring/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/random/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/structure/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/io/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cliques/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/clustering/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/matching/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/bipartite/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/trees/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/planarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/flow/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/centrality/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/distance/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/similarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/isomorphism/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/connectivity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/community/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/approximation/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/spectral/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/plugin/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/mesh/rs($|/)|^/Users/ueli/Documents/semio/ui/tui/rs($|/)|^/Users/ueli/Documents/semio/repo/cli/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/tiled\-map/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/terrain/rs($|/)|^/Users/ueli/Documents/semio/gis/plugin/rs($|/)|^/Users/ueli/Documents/semio/flow/plugin/rs($|/)|^/Users/ueli/Documents/semio/process/3d/rs($|/)|^/Users/ueli/Documents/semio/process/plugin/rs($|/)|^/Users/ueli/Documents/semio/sourcing/curate/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/beams/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/windows/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/slabs/rs($|/)|^/Users/ueli/Documents/semio/sourcing/plugin/rs($|/)|^/Users/ueli/Documents/semio/sequence/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/engine/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/control/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/logic/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/math/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/text/rs($|/)|^/Users/ueli/Documents/semio/sequence/plugin/rs($|/)|^/Users/ueli/Documents/semio/procedural/2d/rs($|/)|^/Users/ueli/Documents/semio/procedural/3d/rs($|/)|^/Users/ueli/Documents/semio/procedural/plugin/rs($|/)|^/Users/ueli/Documents/semio/fem/2d/rs($|/)|^/Users/ueli/Documents/semio/fem/3d/rs($|/)|^/Users/ueli/Documents/semio/fem/plugin/rs($|/)|^/Users/ueli/Documents/semio/trinity/rewrite/engine/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/core/rs($|/)|^/Users/ueli/Documents/semio/trinity/ram/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/shell/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/lsp/rs($|/)|^/Users/ueli/Documents/semio/trinity/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/node\-graph/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/wires/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/worker/rs($|/)|^/Users/ueli/Documents/semio/framework/renderer/wgpu/rs($|/)|^/Users/ueli/Documents/semio/framework/editor/rs($|/)|^/Users/ueli/Documents/semio/infinite/world/rs($|/)|^/Users/ueli/Documents/semio/shooting/rs($|/)|^/Users/ueli/Documents/semio/shooting/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/paint/rs($|/)|^/Users/ueli/Documents/semio/raster/plugin/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/core/rs($|/)|^/Users/ueli/Documents/semio/cad/plugin/rs($|/)|^/Users/ueli/Documents/semio/cad/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/plugin/rs($|/)|^/Users/ueli/Documents/semio/draw/rs($|/)|^/Users/ueli/Documents/semio/draw/plugin/rs($|/)|^/Users/ueli/Documents/semio/fsm/rs($|/)|^/Users/ueli/Documents/semio/fsm/macros/rs($|/)|^/Users/ueli/Documents/semio/vcs/plugin/rs($|/)|^/Users/ueli/Documents/semio/writer/rs($|/)|^/Users/ueli/Documents/semio/writer/plugin/rs($|/)|^/Users/ueli/Documents/semio/note/plugin/rs($|/)|^/Users/ueli/Documents/semio/layout/rs($|/)|^/Users/ueli/Documents/semio/layout/plugin/rs($|/)|^/Users/ueli/Documents/semio/imperative/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/hlc/rs($|/)|^/Users/ueli/Documents/semio/framework/schema/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/spatial/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/postgres/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/sqlite/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/neo4j/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/query/rs($|/)|^/Users/ueli/Documents/semio/compose/client/bin/store/rs($|/)|^/Users/ueli/Documents/semio/animate/core/rs($|/)|^/Users/ueli/Documents/semio/animate/video/rs($|/)|^/Users/ueli/Documents/semio/animate/present/rs($|/)|^/Users/ueli/Documents/semio/animate/plugin/rs($|/)|^/Users/ueli/Documents/semio/norm/core/rs($|/)|^/Users/ueli/Documents/semio/norm/din/4108/rs($|/)|^/Users/ueli/Documents/semio/norm/din/en/16798/rs($|/)|^/Users/ueli/Documents/semio/norm/din/v/18599/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1990/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1991/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1992/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1993/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1994/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1995/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1996/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1997/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1998/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1999/rs($|/)|^/Users/ueli/Documents/semio/norm/iso/16757/rs($|/)|^/Users/ueli/Documents/semio/norm/vdi/3805/rs($|/)|^/Users/ueli/Documents/semio/norm/plugin/rs($|/)|^/Users/ueli/Documents/semio/energy/engine/rs($|/)|^/Users/ueli/Documents/semio/architect/program/rs($|/)|^/Users/ueli/Documents/semio/architect/plugin/rs($|/)'` (exit status: 1)
 --- stderr
 error: failed to load coverage: '/private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/semio.profdata': invalid instrumentation profile data (bad magic)
 error: could not load coverage information
@@ -127396,7 +127396,7 @@ test elements3d::solid_tests::hex8_meshed_cantilever_deflection_is_right_order_o
 
 test result: ok. 92 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
-error: failed to generate report: process didn't exit successfully: `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/llvm-cov export -format=lcov -instr-profile=/private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/semio.profdata -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5b2daf250e5fec85 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5fbef6b646d66059 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_plugin-d7972b206a6a698f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_present-35460b706342f945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/architect_program-941c8b42fa6a02c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose-13fce55bca042598 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose_store-4c4609b8aaf2aa39 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/energy_engine-bb55ac09f4a12919 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_2d-9352854d66491df5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_3d-7e50a46d4c1bb835 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_core-ff9a4ca2234c32c3 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_plugin-5a5743f1cc90f813 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/flow_module_draw-2d4265c8aab51467 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_editor-2af58aa348446271 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_node_graph-a1b1d19096ad94c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_paint-3879f0e5bcfd4b73 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_terrain-65802247f7563716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_tiled_map-7403f7646faf0ef1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm-ffcc10392157de9f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm_macros-2f012a55cd6d6abc -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/imperative_core-ec2da9540a9a7a59 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_engine-3aa2ccedf5a11311 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_rs-be3ee865657c145e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_brepkit-1f3621dc19201810 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_engine-653a554af614c16c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_mesh-88bf5d04c83b8e09 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_scene-1e505ea79167a275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/layout_rs-2b08c0eb48dc29a0 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libanimate_present.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_document.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_plugin.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcompose.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_2d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_bim.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_brep.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_dictionary.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_draw.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_list.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_logic.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_math.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_text.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libframework_editor.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfsm_macros-f41347a93963ab2f.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libinfinite_board_port_directed_dag.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libmathematical_graph_dsl.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libprotocol.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libpuzzle_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libreasoning_mindmap.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libtrinity_ram.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libvcs.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/lowpoly_core-25a8633dd3672c03 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_algebra-ea1ee0c4e13268e1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_causal-e92af248a9eb4548 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_entropy-00445589a853263d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_fuzzy-5547d4b5bdacc804 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph-a9ddecbbf8ef794f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_approximation-a5dfc2a197ab47d7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_bipartite-1aac1072d1f95d06 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_centrality-76e5d72657fa1af8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cliques-2250934df81e00df -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_clustering-5b9c7ca3216f3624 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_coloring-05623e7754a5a52a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_community-718902036e671b14 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_components-3196e45ed7b5cfeb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_connectivity-6856fa62fa87d2da -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cycles-51b5132df84fa88e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dag-80cc6deb7ae5cd9a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dsl-77ca32e92be35cdb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_flow-ea871b8182cc435a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate-f261462c99febfae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate_random-9ef6c622dcc16a15 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_io-94b8e7624ec6e253 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_isomorphism-c9000292aa1081c9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_manifest-7821ebb289106ebf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_matching-a28b0cc1b63de77d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_directed-2db22da536033781 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_undirected-b17d5d1c84878131 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_operators-da4fcb3f410031cf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_paths-8ec6776d5c91767a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_planarity-7e6afa85e4e82e6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_directed_normal-c6dcdbc0d5467fb7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_undirected-2d5b48a4d6c52236 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_similarity-4c0b813a475454d8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_spectral-adab2cee47a6a69e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_structure-312781859cb89593 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_traversal-a0c7862b20fa2478 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_trees-54f346c2538cfd35 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_lie-240d540425a33c29 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_number-01f532cbf34a4cec -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_optimize-120692e853e0adbd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_polynomial-517685f8ad8dd945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_probability-75b7db466b13ed12 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_random-e4b2b7401d682ca7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_sampling-c61079c3159bbe6f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_signal-03971510223fe543 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_spatial-f368d384d97bc5e7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_statistics-fb03a0f78b0bec2a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_tabular-b7fd42bd65c3aa66 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_4108-0dc3aef9111ec994 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_en_16798-e7034f52f81cb5ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_v_18599-4fb4ea2af4f4dc82 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_iso_16757-2cc08f34ebc2f115 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_vdi_3805-311f8d7869c1bbae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/os_hub-11955ec78b02ed83 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_2d-ebafc6f95a325275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_3d-e221453fcacd9716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/puzzle_5d-cc1fb9a768d9b4a7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/reasoning_mindmap-b8701b2b351087e8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_camera-39af5be97bcf5932 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_dense-2ec7ef37664a47a2 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_engine-427c10bf64b2822c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_feature-bedaca4748b589b9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_geo-347c4adb25e00d6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_image-b0b8050e4ffb80ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_mesh-be1582d35391b214 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_motion-7ccc20d31867fb60 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_sfm-9b23cfd85466fc18 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_video-47d10a686905fa71 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/repo_cli-d0ce1d91776edb00 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/s_studio-4bc60f7e52e25507 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio-48aa221183e97c3c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio_framework_core-81b9feedfbcf3b5b -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sequence_core-69b1807e5ac1c2e4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sourcing_curate-82818d0df7491bb4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_jack_lsp-dd6cf27c80491a1c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_ram-17a58dc6bc8752aa -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_rewrite-0d61813e783f60d5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_styling-4f1edf67c8f282bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_tui-dcc6ba6d51b4f137 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_wgpu-05d4442bafa904bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/vcs-0ec9d209c3d95a27 -ignore-filename-regex '/rustc/([0-9a-f]+|[0-9]+\.[0-9]+\.[0-9]+)/|^/Users/ueli/Documents/semio(/.*)?/(tests|examples|benches)/|^/Users/ueli/Documents/semio(/.*)?/(tests\.rs|[0-9a-zA-Z_-]+[_-]tests\.rs)$|^/private/tmp/claude\-501\-coverage\-baseline\-cargo\-target/llvm\-cov\-target($|/)|^/Users/ueli/\.cargo/(registry|git)/|^/Users/ueli/\.rustup/toolchains($|/)|^/Users/ueli/Documents/semio/framework/core/rs($|/)|^/Users/ueli/Documents/semio/framework/hash/rs($|/)|^/Users/ueli/Documents/semio/ui/wgpu/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/scene/rs($|/)|^/Users/ueli/Documents/semio/mathematical/algebra/rs($|/)|^/Users/ueli/Documents/semio/mathematical/number/rs($|/)|^/Users/ueli/Documents/semio/ui/styling/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/rs($|/)|^/Users/ueli/Documents/semio/vcs/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/core/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/engine/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/run/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/host/rs($|/)|^/Users/ueli/Documents/semio/puzzle/plugin/rs($|/)|^/Users/ueli/Documents/semio/puzzle/2d/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/rs($|/)|^/Users/ueli/Documents/semio/infinite/cavas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/geometry/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/manifest/rs($|/)|^/Users/ueli/Documents/semio/neural/engine/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/drawing/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/puzzle/3d/rs($|/)|^/Users/ueli/Documents/semio/puzzle/5d/rs($|/)|^/Users/ueli/Documents/semio/protocol/rs($|/)|^/Users/ueli/Documents/semio/protocol/plugin/rs($|/)|^/Users/ueli/Documents/semio/protocol/module/procedural/rs($|/)|^/Users/ueli/Documents/semio/flow/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/bim/rs($|/)|^/Users/ueli/Documents/semio/flow/module/wasm/rs($|/)|^/Users/ueli/Documents/semio/flow/module/brep/rs($|/)|^/Users/ueli/Documents/semio/flow/module/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/dictionary/rs($|/)|^/Users/ueli/Documents/semio/flow/module/draw/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/engine/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/rs($|/)|^/Users/ueli/Documents/semio/flow/module/list/rs($|/)|^/Users/ueli/Documents/semio/flow/module/logic/rs($|/)|^/Users/ueli/Documents/semio/flow/module/math/rs($|/)|^/Users/ueli/Documents/semio/flow/module/text/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dsl/rs($|/)|^/Users/ueli/Documents/semio/neural/dag/rs($|/)|^/Users/ueli/Documents/semio/remodel/rs($|/)|^/Users/ueli/Documents/semio/remodel/plugin/rs($|/)|^/Users/ueli/Documents/semio/remodel/camera/rs($|/)|^/Users/ueli/Documents/semio/mathematical/lie/rs($|/)|^/Users/ueli/Documents/semio/mathematical/optimize/rs($|/)|^/Users/ueli/Documents/semio/mathematical/random/rs($|/)|^/Users/ueli/Documents/semio/remodel/dense/rs($|/)|^/Users/ueli/Documents/semio/mathematical/spatial/rs($|/)|^/Users/ueli/Documents/semio/remodel/image/rs($|/)|^/Users/ueli/Documents/semio/remodel/engine/rs($|/)|^/Users/ueli/Documents/semio/remodel/feature/rs($|/)|^/Users/ueli/Documents/semio/remodel/geo/rs($|/)|^/Users/ueli/Documents/semio/remodel/mesh/rs($|/)|^/Users/ueli/Documents/semio/remodel/sfm/rs($|/)|^/Users/ueli/Documents/semio/remodel/motion/rs($|/)|^/Users/ueli/Documents/semio/mathematical/signal/rs($|/)|^/Users/ueli/Documents/semio/remodel/video/rs($|/)|^/Users/ueli/Documents/semio/forms/rs($|/)|^/Users/ueli/Documents/semio/forms/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/polynomial/rs($|/)|^/Users/ueli/Documents/semio/mathematical/cas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/tabular/rs($|/)|^/Users/ueli/Documents/semio/mathematical/probability/rs($|/)|^/Users/ueli/Documents/semio/mathematical/statistics/rs($|/)|^/Users/ueli/Documents/semio/mathematical/causal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/fuzzy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/sampling/rs($|/)|^/Users/ueli/Documents/semio/mathematical/entropy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/traversal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/components/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cycles/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/paths/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/operators/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/coloring/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/random/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/structure/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/io/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cliques/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/clustering/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/matching/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/bipartite/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/trees/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/planarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/flow/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/centrality/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/distance/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/similarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/isomorphism/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/connectivity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/community/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/approximation/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/spectral/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/plugin/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/mesh/rs($|/)|^/Users/ueli/Documents/semio/ui/tui/rs($|/)|^/Users/ueli/Documents/semio/repo/cli/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/tiled\-map/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/terrain/rs($|/)|^/Users/ueli/Documents/semio/gis/plugin/rs($|/)|^/Users/ueli/Documents/semio/flow/plugin/rs($|/)|^/Users/ueli/Documents/semio/process/3d/rs($|/)|^/Users/ueli/Documents/semio/process/plugin/rs($|/)|^/Users/ueli/Documents/semio/sourcing/curate/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/beams/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/windows/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/slabs/rs($|/)|^/Users/ueli/Documents/semio/sourcing/plugin/rs($|/)|^/Users/ueli/Documents/semio/sequence/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/engine/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/control/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/logic/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/math/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/text/rs($|/)|^/Users/ueli/Documents/semio/sequence/plugin/rs($|/)|^/Users/ueli/Documents/semio/procedural/2d/rs($|/)|^/Users/ueli/Documents/semio/procedural/3d/rs($|/)|^/Users/ueli/Documents/semio/procedural/plugin/rs($|/)|^/Users/ueli/Documents/semio/fem/2d/rs($|/)|^/Users/ueli/Documents/semio/fem/3d/rs($|/)|^/Users/ueli/Documents/semio/fem/plugin/rs($|/)|^/Users/ueli/Documents/semio/trinity/rewrite/engine/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/core/rs($|/)|^/Users/ueli/Documents/semio/trinity/ram/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/shell/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/lsp/rs($|/)|^/Users/ueli/Documents/semio/trinity/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/node\-graph/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/wires/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/worker/rs($|/)|^/Users/ueli/Documents/semio/framework/renderer/wgpu/rs($|/)|^/Users/ueli/Documents/semio/framework/editor/rs($|/)|^/Users/ueli/Documents/semio/infinite/world/rs($|/)|^/Users/ueli/Documents/semio/shooting/rs($|/)|^/Users/ueli/Documents/semio/shooting/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/paint/rs($|/)|^/Users/ueli/Documents/semio/raster/plugin/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/core/rs($|/)|^/Users/ueli/Documents/semio/cad/plugin/rs($|/)|^/Users/ueli/Documents/semio/cad/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/plugin/rs($|/)|^/Users/ueli/Documents/semio/draw/rs($|/)|^/Users/ueli/Documents/semio/draw/plugin/rs($|/)|^/Users/ueli/Documents/semio/fsm/rs($|/)|^/Users/ueli/Documents/semio/fsm/macros/rs($|/)|^/Users/ueli/Documents/semio/vcs/plugin/rs($|/)|^/Users/ueli/Documents/semio/writer/rs($|/)|^/Users/ueli/Documents/semio/writer/plugin/rs($|/)|^/Users/ueli/Documents/semio/note/plugin/rs($|/)|^/Users/ueli/Documents/semio/layout/rs($|/)|^/Users/ueli/Documents/semio/layout/plugin/rs($|/)|^/Users/ueli/Documents/semio/imperative/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/hlc/rs($|/)|^/Users/ueli/Documents/semio/framework/schema/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/spatial/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/postgres/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/sqlite/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/neo4j/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/query/rs($|/)|^/Users/ueli/Documents/semio/compose/client/bin/store/rs($|/)|^/Users/ueli/Documents/semio/animate/core/rs($|/)|^/Users/ueli/Documents/semio/animate/video/rs($|/)|^/Users/ueli/Documents/semio/animate/present/rs($|/)|^/Users/ueli/Documents/semio/animate/plugin/rs($|/)|^/Users/ueli/Documents/semio/norm/core/rs($|/)|^/Users/ueli/Documents/semio/norm/din/4108/rs($|/)|^/Users/ueli/Documents/semio/norm/din/en/16798/rs($|/)|^/Users/ueli/Documents/semio/norm/din/v/18599/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1990/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1991/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1992/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1993/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1994/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1995/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1996/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1997/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1998/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1999/rs($|/)|^/Users/ueli/Documents/semio/norm/iso/16757/rs($|/)|^/Users/ueli/Documents/semio/norm/vdi/3805/rs($|/)|^/Users/ueli/Documents/semio/norm/plugin/rs($|/)|^/Users/ueli/Documents/semio/energy/engine/rs($|/)|^/Users/ueli/Documents/semio/architect/program/rs($|/)|^/Users/ueli/Documents/semio/architect/plugin/rs($|/)'` (exit status: 1)
+error: failed to generate report: process didn't exit successfully: `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/lib/rustlib/aarch64-apple-darwin/bin/llvm-cov export -format=lcov -instr-profile=/private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/semio.profdata -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5b2daf250e5fec85 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_core-5fbef6b646d66059 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_plugin-d7972b206a6a698f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/animate_present-35460b706342f945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/architect_program-941c8b42fa6a02c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose-13fce55bca042598 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/compose_store-4c4609b8aaf2aa39 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/energy_engine-bb55ac09f4a12919 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_2d-9352854d66491df5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_3d-7e50a46d4c1bb835 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_core-ff9a4ca2234c32c3 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fem_plugin-5a5743f1cc90f813 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/flow_module_draw-2d4265c8aab51467 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_editor-2af58aa348446271 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_node_graph-a1b1d19096ad94c5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_paint-3879f0e5bcfd4b73 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_terrain-65802247f7563716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/framework_surface_tiled_map-7403f7646faf0ef1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm-ffcc10392157de9f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/fsm_macros-2f012a55cd6d6abc -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/imperative_core-ec2da9540a9a7a59 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_engine-3aa2ccedf5a11311 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_2d_rs-be3ee865657c145e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_brepkit-1f3621dc19201810 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_engine-653a554af614c16c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_mesh-88bf5d04c83b8e09 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/kernel_3d_scene-1e505ea79167a275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/layout_rs-2b08c0eb48dc29a0 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libanimate_present.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_document.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcad_plugin.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libcompose.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_2d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfem_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_bim.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_brep.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_core.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_dictionary.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_draw.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_list.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_logic.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_math.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libflow_module_text.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libframework_editor.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libfsm_macros-f41347a93963ab2f.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libinfinite_board_port_directed_dag.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libmathematical_graph_dsl.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libprotocol.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libpuzzle_3d.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libreasoning_mindmap.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libtrinity_ram.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/libvcs.dylib -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/lowpoly_core-25a8633dd3672c03 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_algebra-ea1ee0c4e13268e1 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_causal-e92af248a9eb4548 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_entropy-00445589a853263d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_fuzzy-5547d4b5bdacc804 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph-a9ddecbbf8ef794f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_approximation-a5dfc2a197ab47d7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_bipartite-1aac1072d1f95d06 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_centrality-76e5d72657fa1af8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cliques-2250934df81e00df -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_clustering-5b9c7ca3216f3624 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_coloring-05623e7754a5a52a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_community-718902036e671b14 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_components-3196e45ed7b5cfeb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_connectivity-6856fa62fa87d2da -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_cycles-51b5132df84fa88e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dag-80cc6deb7ae5cd9a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_dsl-77ca32e92be35cdb -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_flow-ea871b8182cc435a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate-f261462c99febfae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_generate_random-9ef6c622dcc16a15 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_io-94b8e7624ec6e253 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_isomorphism-c9000292aa1081c9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_manifest-7821ebb289106ebf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_matching-a28b0cc1b63de77d -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_directed-2db22da536033781 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_normal_undirected-b17d5d1c84878131 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_operators-da4fcb3f410031cf -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_paths-8ec6776d5c91767a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_planarity-7e6afa85e4e82e6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_directed_normal-c6dcdbc0d5467fb7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_port_undirected-2d5b48a4d6c52236 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_similarity-4c0b813a475454d8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_spectral-adab2cee47a6a69e -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_structure-312781859cb89593 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_traversal-a0c7862b20fa2478 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_graph_trees-54f346c2538cfd35 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_lie-240d540425a33c29 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_number-01f532cbf34a4cec -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_optimize-120692e853e0adbd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_polynomial-517685f8ad8dd945 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_probability-75b7db466b13ed12 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_random-e4b2b7401d682ca7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_sampling-c61079c3159bbe6f -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_signal-03971510223fe543 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_spatial-f368d384d97bc5e7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_statistics-fb03a0f78b0bec2a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/mathematical_tabular-b7fd42bd65c3aa66 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_4108-0dc3aef9111ec994 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_en_16798-e7034f52f81cb5ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_din_v_18599-4fb4ea2af4f4dc82 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_iso_16757-2cc08f34ebc2f115 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/norm_vdi_3805-311f8d7869c1bbae -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/os_hub-11955ec78b02ed83 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_2d-ebafc6f95a325275 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/procedural_3d-e221453fcacd9716 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/puzzle_5d-cc1fb9a768d9b4a7 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/reasoning_mindmap-b8701b2b351087e8 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_camera-39af5be97bcf5932 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_dense-2ec7ef37664a47a2 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_engine-427c10bf64b2822c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_feature-bedaca4748b589b9 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_geo-347c4adb25e00d6a -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_image-b0b8050e4ffb80ff -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_mesh-be1582d35391b214 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_motion-7ccc20d31867fb60 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_sfm-9b23cfd85466fc18 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/remodel_video-47d10a686905fa71 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/repo_cli-d0ce1d91776edb00 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/s_studio-4bc60f7e52e25507 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio-48aa221183e97c3c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/semio_framework_core-81b9feedfbcf3b5b -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sequence_core-69b1807e5ac1c2e4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/sourcing_curate-82818d0df7491bb4 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_jack_lsp-dd6cf27c80491a1c -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_ram-17a58dc6bc8752aa -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/trinity_rewrite-0d61813e783f60d5 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_styling-4f1edf67c8f282bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_tui-dcc6ba6d51b4f137 -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/ui_wgpu-05d4442bafa904bd -object /private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/debug/deps/vcs-0ec9d209c3d95a27 -ignore-filename-regex '/rustc/([0-9a-f]+|[0-9]+\.[0-9]+\.[0-9]+)/|^/Users/ueli/Documents/semio(/.*)?/(tests|examples|benches)/|^/Users/ueli/Documents/semio(/.*)?/(tests\.rs|[0-9a-zA-Z_-]+[_-]tests\.rs)$|^/private/tmp/claude\-501\-coverage\-baseline\-cargo\-target/llvm\-cov\-target($|/)|^/Users/ueli/\.cargo/(registry|git)/|^/Users/ueli/\.rustup/toolchains($|/)|^/Users/ueli/Documents/semio/framework/core/rs($|/)|^/Users/ueli/Documents/semio/framework/hash/rs($|/)|^/Users/ueli/Documents/semio/ui/wgpu/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/scene/rs($|/)|^/Users/ueli/Documents/semio/mathematical/algebra/rs($|/)|^/Users/ueli/Documents/semio/mathematical/number/rs($|/)|^/Users/ueli/Documents/semio/ui/styling/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/rs($|/)|^/Users/ueli/Documents/semio/vcs/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/core/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/brep/engine/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/run/rs($|/)|^/Users/ueli/Documents/semio/framework/plugin/host/rs($|/)|^/Users/ueli/Documents/semio/puzzle/plugin/rs($|/)|^/Users/ueli/Documents/semio/puzzle/2d/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/rs($|/)|^/Users/ueli/Documents/semio/infinite/canvas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/geometry/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/manifest/rs($|/)|^/Users/ueli/Documents/semio/neural/engine/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/drawing/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/puzzle/3d/rs($|/)|^/Users/ueli/Documents/semio/puzzle/5d/rs($|/)|^/Users/ueli/Documents/semio/protocol/rs($|/)|^/Users/ueli/Documents/semio/protocol/plugin/rs($|/)|^/Users/ueli/Documents/semio/protocol/module/procedural/rs($|/)|^/Users/ueli/Documents/semio/flow/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/bim/rs($|/)|^/Users/ueli/Documents/semio/flow/module/wasm/rs($|/)|^/Users/ueli/Documents/semio/flow/module/brep/rs($|/)|^/Users/ueli/Documents/semio/flow/module/core/rs($|/)|^/Users/ueli/Documents/semio/flow/module/dictionary/rs($|/)|^/Users/ueli/Documents/semio/flow/module/draw/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/engine/rs($|/)|^/Users/ueli/Documents/semio/kernel/2d/rs($|/)|^/Users/ueli/Documents/semio/flow/module/list/rs($|/)|^/Users/ueli/Documents/semio/flow/module/logic/rs($|/)|^/Users/ueli/Documents/semio/flow/module/math/rs($|/)|^/Users/ueli/Documents/semio/flow/module/text/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dsl/rs($|/)|^/Users/ueli/Documents/semio/neural/dag/rs($|/)|^/Users/ueli/Documents/semio/remodel/rs($|/)|^/Users/ueli/Documents/semio/remodel/plugin/rs($|/)|^/Users/ueli/Documents/semio/remodel/camera/rs($|/)|^/Users/ueli/Documents/semio/mathematical/lie/rs($|/)|^/Users/ueli/Documents/semio/mathematical/optimize/rs($|/)|^/Users/ueli/Documents/semio/mathematical/random/rs($|/)|^/Users/ueli/Documents/semio/remodel/dense/rs($|/)|^/Users/ueli/Documents/semio/mathematical/spatial/rs($|/)|^/Users/ueli/Documents/semio/remodel/image/rs($|/)|^/Users/ueli/Documents/semio/remodel/engine/rs($|/)|^/Users/ueli/Documents/semio/remodel/feature/rs($|/)|^/Users/ueli/Documents/semio/remodel/geo/rs($|/)|^/Users/ueli/Documents/semio/remodel/mesh/rs($|/)|^/Users/ueli/Documents/semio/remodel/sfm/rs($|/)|^/Users/ueli/Documents/semio/remodel/motion/rs($|/)|^/Users/ueli/Documents/semio/mathematical/signal/rs($|/)|^/Users/ueli/Documents/semio/remodel/video/rs($|/)|^/Users/ueli/Documents/semio/forms/rs($|/)|^/Users/ueli/Documents/semio/forms/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/directed/dag/plugin/rs($|/)|^/Users/ueli/Documents/semio/infinite/board/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/polynomial/rs($|/)|^/Users/ueli/Documents/semio/mathematical/cas/rs($|/)|^/Users/ueli/Documents/semio/mathematical/tabular/rs($|/)|^/Users/ueli/Documents/semio/mathematical/probability/rs($|/)|^/Users/ueli/Documents/semio/mathematical/statistics/rs($|/)|^/Users/ueli/Documents/semio/mathematical/causal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/fuzzy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/sampling/rs($|/)|^/Users/ueli/Documents/semio/mathematical/entropy/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/traversal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/components/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/dag/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cycles/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/paths/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/operators/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/coloring/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/generate/random/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/structure/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/io/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/cliques/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/clustering/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/matching/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/bipartite/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/trees/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/planarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/flow/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/centrality/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/distance/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/similarity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/isomorphism/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/connectivity/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/community/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/approximation/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/spectral/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/normal/directed/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/undirected/rs($|/)|^/Users/ueli/Documents/semio/mathematical/graph/port/directed/normal/rs($|/)|^/Users/ueli/Documents/semio/mathematical/plugin/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/mesh/rs($|/)|^/Users/ueli/Documents/semio/ui/tui/rs($|/)|^/Users/ueli/Documents/semio/repo/cli/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/tiled\-map/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/terrain/rs($|/)|^/Users/ueli/Documents/semio/gis/plugin/rs($|/)|^/Users/ueli/Documents/semio/flow/plugin/rs($|/)|^/Users/ueli/Documents/semio/process/3d/rs($|/)|^/Users/ueli/Documents/semio/process/plugin/rs($|/)|^/Users/ueli/Documents/semio/sourcing/curate/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/beams/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/windows/rs($|/)|^/Users/ueli/Documents/semio/sourcing/module/slabs/rs($|/)|^/Users/ueli/Documents/semio/sourcing/plugin/rs($|/)|^/Users/ueli/Documents/semio/sequence/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/engine/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/control/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/logic/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/math/rs($|/)|^/Users/ueli/Documents/semio/imperative/module/text/rs($|/)|^/Users/ueli/Documents/semio/sequence/plugin/rs($|/)|^/Users/ueli/Documents/semio/procedural/2d/rs($|/)|^/Users/ueli/Documents/semio/procedural/3d/rs($|/)|^/Users/ueli/Documents/semio/procedural/plugin/rs($|/)|^/Users/ueli/Documents/semio/fem/2d/rs($|/)|^/Users/ueli/Documents/semio/fem/3d/rs($|/)|^/Users/ueli/Documents/semio/fem/plugin/rs($|/)|^/Users/ueli/Documents/semio/trinity/rewrite/engine/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/core/rs($|/)|^/Users/ueli/Documents/semio/trinity/ram/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/shell/rs($|/)|^/Users/ueli/Documents/semio/trinity/jack/lsp/rs($|/)|^/Users/ueli/Documents/semio/trinity/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/node\-graph/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/wires/rs($|/)|^/Users/ueli/Documents/semio/reasoning/mindmap/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/plugin/rs($|/)|^/Users/ueli/Documents/semio/s/rs($|/)|^/Users/ueli/Documents/semio/framework/sync/worker/rs($|/)|^/Users/ueli/Documents/semio/framework/renderer/wgpu/rs($|/)|^/Users/ueli/Documents/semio/framework/editor/rs($|/)|^/Users/ueli/Documents/semio/infinite/world/rs($|/)|^/Users/ueli/Documents/semio/shooting/rs($|/)|^/Users/ueli/Documents/semio/shooting/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/surface/paint/rs($|/)|^/Users/ueli/Documents/semio/raster/plugin/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/core/rs($|/)|^/Users/ueli/Documents/semio/cad/plugin/rs($|/)|^/Users/ueli/Documents/semio/cad/rs($|/)|^/Users/ueli/Documents/semio/lowpoly/plugin/rs($|/)|^/Users/ueli/Documents/semio/draw/rs($|/)|^/Users/ueli/Documents/semio/draw/plugin/rs($|/)|^/Users/ueli/Documents/semio/fsm/rs($|/)|^/Users/ueli/Documents/semio/fsm/macros/rs($|/)|^/Users/ueli/Documents/semio/vcs/plugin/rs($|/)|^/Users/ueli/Documents/semio/writer/rs($|/)|^/Users/ueli/Documents/semio/writer/plugin/rs($|/)|^/Users/ueli/Documents/semio/note/plugin/rs($|/)|^/Users/ueli/Documents/semio/layout/rs($|/)|^/Users/ueli/Documents/semio/layout/plugin/rs($|/)|^/Users/ueli/Documents/semio/imperative/core/rs($|/)|^/Users/ueli/Documents/semio/imperative/plugin/rs($|/)|^/Users/ueli/Documents/semio/framework/hlc/rs($|/)|^/Users/ueli/Documents/semio/framework/schema/rs($|/)|^/Users/ueli/Documents/semio/kernel/3d/spatial/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/postgres/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/sqlite/rs($|/)|^/Users/ueli/Documents/semio/framework/product/os/hub/storage/neo4j/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/rs($|/)|^/Users/ueli/Documents/semio/compose/client/lib/query/rs($|/)|^/Users/ueli/Documents/semio/compose/client/bin/store/rs($|/)|^/Users/ueli/Documents/semio/animate/core/rs($|/)|^/Users/ueli/Documents/semio/animate/video/rs($|/)|^/Users/ueli/Documents/semio/animate/present/rs($|/)|^/Users/ueli/Documents/semio/animate/plugin/rs($|/)|^/Users/ueli/Documents/semio/norm/core/rs($|/)|^/Users/ueli/Documents/semio/norm/din/4108/rs($|/)|^/Users/ueli/Documents/semio/norm/din/en/16798/rs($|/)|^/Users/ueli/Documents/semio/norm/din/v/18599/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1990/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1991/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1992/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1993/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1994/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1995/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1996/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1997/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1998/rs($|/)|^/Users/ueli/Documents/semio/norm/en/1999/rs($|/)|^/Users/ueli/Documents/semio/norm/iso/16757/rs($|/)|^/Users/ueli/Documents/semio/norm/vdi/3805/rs($|/)|^/Users/ueli/Documents/semio/norm/plugin/rs($|/)|^/Users/ueli/Documents/semio/energy/engine/rs($|/)|^/Users/ueli/Documents/semio/architect/program/rs($|/)|^/Users/ueli/Documents/semio/architect/plugin/rs($|/)'` (exit status: 1)
 --- stderr
 error: failed to load coverage: '/private/tmp/claude-501-coverage-baseline-cargo-target/llvm-cov-target/semio.profdata': invalid instrumentation profile data (bad magic)
 error: could not load coverage information

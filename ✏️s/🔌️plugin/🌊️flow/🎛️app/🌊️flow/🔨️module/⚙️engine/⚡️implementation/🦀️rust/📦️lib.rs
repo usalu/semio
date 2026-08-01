@@ -68,11 +68,16 @@ pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
 }
 
 pub fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
-    if selected.is_empty() {
+    sync_host_selection_domains(host, selected, &[], &[]);
+}
+
+pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges: &[String], handles: &[String]) {
+    if nodes.is_empty() && edges.is_empty() && handles.is_empty() {
         let _ = host.dag.cancel_area_select();
-    } else {
-        host.dag.set_selection(selected);
+        return;
     }
+    let json = serde_json::json!({ "nodes": nodes, "edges": edges, "handles": handles });
+    host.dag.set_selection_domains_json(&json.to_string());
 }
 
 pub fn split_endpoint(endpoint: &str) -> (String, String) {

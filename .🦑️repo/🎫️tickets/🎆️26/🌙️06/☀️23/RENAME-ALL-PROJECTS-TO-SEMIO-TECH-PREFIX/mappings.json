@@ -91,8 +91,8 @@
     "path": "repo/server/coordinator/package.json",
     "newName": "@semio-tech/repo-coordinator"
   },
-  "@infinite/cavas/react-renderer": {
-    "path": "infinite/cavas/react-renderer/package.json",
+  "@infinite/canvas/react-renderer": {
+    "path": "infinite/canvas/react-renderer/package.json",
     "newName": "@semio-tech/infinite-canvas-react-renderer"
   },
   "@infinite/world/r3f": {

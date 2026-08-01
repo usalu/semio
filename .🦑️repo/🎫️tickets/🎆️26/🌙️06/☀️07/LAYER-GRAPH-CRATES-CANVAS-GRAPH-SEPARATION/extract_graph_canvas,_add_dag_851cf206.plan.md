@@ -1,18 +1,18 @@
 ---
 name: Extract Graph Canvas, Add Dag
-overview: Extract the generic graph-canvas engine out of puzzle/2d into infinite/cavas (canvas concerns) and the mathematical/graph bundles (graph engine), leaving puzzle/2d with only puzzle tooling (brush/fill/palette), then build DAG's own Rust-rendered IO-node canvas with a playground dev harness and fixture.
+overview: Extract the generic graph-canvas engine out of puzzle/2d into infinite/canvas (canvas concerns) and the mathematical/graph bundles (graph engine), leaving puzzle/2d with only puzzle tooling (brush/fill/palette), then build DAG's own Rust-rendered IO-node canvas with a playground dev harness and fixture.
 todos:
  - id: ticket-baseline
    content: Read repo://goals, open a repo MCP ticket for the extraction + dag; capture cargo/vitest/dev baseline; route temp files into the ticket folder.
    status: completed
- - id: phase1-cavas
-   content: "Phase 1: Expand CanvasExtension into a real paint/hit-test trait and move generic canvas concerns (VelloThemePalette, generic icon codec sans metabolism, world-raster tiling, scene cache, grid, node/handle/edge/wire/label paint primitives) from BoardHost into infinite/cavas; keep infinite_cavas + dependents compiling."
+ - id: phase1-canvas
+   content: "Phase 1: Expand CanvasExtension into a real paint/hit-test trait and move generic canvas concerns (VelloThemePalette, generic icon codec sans metabolism, world-raster tiling, scene cache, grid, node/handle/edge/wire/label paint primitives) from BoardHost into infinite/canvas; keep infinite_canvas + dependents compiling."
    status: completed
  - id: phase2-graph-engine
    content: "Phase 2: Grow mathematical/graph into the rich generic board engine by absorbing BoardHost graph logic (stores, kind catalogs, LinkCompatRule, sync_descriptor, parse_fixture_v1, selection, hit-testing, edge curves/tips, link gestures, pointer, drain_events, GraphPortMode); repoint port/directed/normal layouts; cargo tests green."
    status: completed
  - id: phase3-session-react
-   content: "Phase 3: Provide a generic board BoardSession (engine + extension hook) and move the generic Puzzle2dRenderer/reconciler/text-overlay/CanvasWasmBridge mount into infinite/cavas/react-renderer as a generic GraphCanvas + hooks + fixture/scene builders."
+   content: "Phase 3: Provide a generic board BoardSession (engine + extension hook) and move the generic Puzzle2dRenderer/reconciler/text-overlay/CanvasWasmBridge mount into infinite/canvas/react-renderer as a generic GraphCanvas + hooks + fixture/scene builders."
    status: completed
  - id: phase4-slim-puzzle
    content: "Phase 4: Slim puzzle/2d/rs + puzzle/2d/react to generic-engine + Puzzle2dExtension (brush/fill/palette/metabolism/original-style) only; repoint all consumers (puzzle/5d, platform + playground renderers, mindmap, wires, sketchpad, storybook); full cargo + vitest + dev boots green."
@@ -36,12 +36,12 @@ isProject: false
 
 ## Goal
 
-Per the directive: puzzle/2d must keep ONLY puzzle-specific tooling (brush, fill, palette, metabolism icons). Everything generic (graph engine, node/handle/edge/wire model, kind catalogs, selection, hit-testing, link gestures, fixture parsing, rendering, camera/LOD/GPU) moves to the infinite canvas ([infinite/cavas](/Users/ueli/Documents/compose/infinite/cavas)) and the graph bundles ([mathematical/graph](/Users/ueli/Documents/compose/mathematical/graph)). DAG, being flow-agnostic, then gets its own Rust/vello renderer for the Node spec (rectangle: horizontal input labels left, vertical name middle, horizontal output labels right) on a single infinite canvas, with a playground dev harness and a fixture.
+Per the directive: puzzle/2d must keep ONLY puzzle-specific tooling (brush, fill, palette, metabolism icons). Everything generic (graph engine, node/handle/edge/wire model, kind catalogs, selection, hit-testing, link gestures, fixture parsing, rendering, camera/LOD/GPU) moves to the infinite canvas ([infinite/canvas](/Users/ueli/Documents/compose/infinite/canvas)) and the graph bundles ([mathematical/graph](/Users/ueli/Documents/compose/mathematical/graph)). DAG, being flow-agnostic, then gets its own Rust/vello renderer for the Node spec (rectangle: horizontal input labels left, vertical name middle, horizontal output labels right) on a single infinite canvas, with a playground dev harness and a fixture.
 
 ## Target architecture
 
-- `infinite/cavas/vello` (`infinite_cavas`): owns ALL canvas concerns. Promote `CanvasExtension` from a marker into a real trait with paint + hit-test + interaction hooks. Move generic canvas pieces out of `BoardHost`: vello theme palette, generic icon codec (typst/emoji/raster/inline-SVG; not metabolism), world-raster tiling, scene cache, grid, plus reusable node/handle/edge/wire/label PAINT primitives. Camera, LOD, GPU session, text, geometry already live here.
-- `infinite/cavas/react-renderer`: becomes the real r3f-like host it claims to be. Move the generic `Puzzle2dRenderer`/reconciler/text-overlay/`CanvasWasmBridge` mount from [puzzle/2d/react/index.tsx](/Users/ueli/Documents/compose/puzzle/2d/react/index.tsx) here as a generic `GraphCanvas` + session bridge.
+- `infinite/canvas/vello` (`infinite_canvas`): owns ALL canvas concerns. Promote `CanvasExtension` from a marker into a real trait with paint + hit-test + interaction hooks. Move generic canvas pieces out of `BoardHost`: vello theme palette, generic icon codec (typst/emoji/raster/inline-SVG; not metabolism), world-raster tiling, scene cache, grid, plus reusable node/handle/edge/wire/label PAINT primitives. Camera, LOD, GPU session, text, geometry already live here.
+- `infinite/canvas/react-renderer`: becomes the real r3f-like host it claims to be. Move the generic `Puzzle2dRenderer`/reconciler/text-overlay/`CanvasWasmBridge` mount from [puzzle/2d/react/index.tsx](/Users/ueli/Documents/compose/puzzle/2d/react/index.tsx) here as a generic `GraphCanvas` + session bridge.
 - `mathematical/graph` (`mathematical_graph`): the thin `GraphEngine` is replaced/grown into the rich generic board engine absorbed from `BoardHost`: node/handle/edge/wire stores, kind catalogs (`NodeKindDef`/`HandleKindDef`/`EdgeKindDef`/`WireKindDef`/`EdgeTipDef`), `LinkCompatRule`, selection (rect/lasso/modes), hit-testing, `edge_curve`/tips, link gestures, pointer/drag, `drain_events`, `GraphPortMode`, `sync_descriptor`, `parse_fixture_v1`. Generic interaction stays free of brush.
 - `puzzle/2d/rs` (`puzzle_2d`): slimmed cdylib = generic engine (rlib deps) + `Puzzle2dExtension` providing brush/fill/fixture-drop/palette/metabolism/original-element-style + the puzzle `BoardSession` exposing the brush/fill wasm methods. ~1,400 lines of brush/fill stay; ~5,800 lines leave.
 - `puzzle/2d/react`: slimmed to the generic `GraphCanvas` + puzzle-only React (palette, brush UI, metabolism enrichment).
@@ -49,19 +49,19 @@ Per the directive: puzzle/2d must keep ONLY puzzle-specific tooling (brush, fill
 
 ```mermaid
 graph TD
-  cavas["infinite/cavas (canvas: camera, LOD, GPU, text, icons, theme, paint primitives, CanvasExtension)"]
-  reactrenderer["infinite/cavas/react-renderer (generic GraphCanvas + session bridge)"]
+  canvas["infinite/canvas (canvas: camera, LOD, GPU, text, icons, theme, paint primitives, CanvasExtension)"]
+  reactrenderer["infinite/canvas/react-renderer (generic GraphCanvas + session bridge)"]
   graph["mathematical/graph (generic board engine: nodes/handles/edges/wires, kinds, selection, hit-test, fixtures)"]
   normal["graph/port/directed/normal (DirectedPortGraphEngine, layouts)"]
   dag["graph/port/directed/dag (DagExtension + dag cdylib + react + play + fixture)"]
   puzzle["puzzle/2d (Puzzle2dExtension: brush/fill/palette/metabolism only)"]
-  cavas --> graph
-  cavas --> reactrenderer
+  canvas --> graph
+  canvas --> reactrenderer
   graph --> normal
   normal --> dag
   graph --> puzzle
-  cavas --> dag
-  cavas --> puzzle
+  canvas --> dag
+  canvas --> puzzle
 ```
 
 ## Guiding constraints
@@ -76,11 +76,11 @@ graph TD
 - Read `repo://goals`, open a repo MCP ticket (e.g. `Extract Generic Graph Canvas From Puzzle 2D And Add Dag`); route temp logs/scripts into its folder.
 - Record baseline: `cargo test -p puzzle_2d -p mathematical_graph -p mathematical_graph_port_directed -p mathematical_graph_port_directed_dag` and the puzzle/2d + wires + flow dev boots.
 
-### Phase 1 - Canvas extraction into infinite/cavas
+### Phase 1 - Canvas extraction into infinite/canvas
 
-- Expand `CanvasExtension` ([infinite/cavas/vello/lib.rs](/Users/ueli/Documents/compose/infinite/cavas/vello/lib.rs) ~1114) into a real extension trait (node/scene paint hook + optional hit-test/interaction overrides) consumed by the generic engine.
-- Move from `BoardHost`: `VelloThemePalette` (783-820), generic `board_icon_codec` minus metabolism (64-241), `world_raster_tiling`, scene cache, grid, and node/handle/edge/wire/label paint helpers into `infinite_cavas` modules.
-- Verify `cargo test -p infinite_cavas` + dependents compile.
+- Expand `CanvasExtension` ([infinite/canvas/vello/lib.rs](/Users/ueli/Documents/compose/infinite/canvas/vello/lib.rs) ~1114) into a real extension trait (node/scene paint hook + optional hit-test/interaction overrides) consumed by the generic engine.
+- Move from `BoardHost`: `VelloThemePalette` (783-820), generic `board_icon_codec` minus metabolism (64-241), `world_raster_tiling`, scene cache, grid, and node/handle/edge/wire/label paint helpers into `infinite_canvas` modules.
+- Verify `cargo test -p infinite_canvas` + dependents compile.
 
 ### Phase 2 - Generic graph engine into mathematical/graph
 
@@ -92,7 +92,7 @@ graph TD
 ### Phase 3 - Generic WASM session + React renderer
 
 - Provide a generic board `BoardSession` (generic engine + extension hook). Decide host crate: keep one shared generic cdylib reused by puzzle/dag/wires/mindmap (preferred, mirrors how wires/mindmap already rebuild puzzle wasm), each domain adding a thin cdylib + extension.
-- Move generic `Puzzle2dRenderer`/reconciler/text-overlay/`CanvasWasmBridge` mount from [puzzle/2d/react/index.tsx](/Users/ueli/Documents/compose/puzzle/2d/react/index.tsx) (12448+, 13005+, 6623+) into [infinite/cavas/react-renderer/index.tsx](/Users/ueli/Documents/compose/infinite/cavas/react-renderer/index.tsx) as a generic `GraphCanvas` + hooks; keep fixture/scene-descriptor builders generic.
+- Move generic `Puzzle2dRenderer`/reconciler/text-overlay/`CanvasWasmBridge` mount from [puzzle/2d/react/index.tsx](/Users/ueli/Documents/compose/puzzle/2d/react/index.tsx) (12448+, 13005+, 6623+) into [infinite/canvas/react-renderer/index.tsx](/Users/ueli/Documents/compose/infinite/canvas/react-renderer/index.tsx) as a generic `GraphCanvas` + hooks; keep fixture/scene-descriptor builders generic.
 
 ### Phase 4 - Slim puzzle/2d + repoint consumers
 

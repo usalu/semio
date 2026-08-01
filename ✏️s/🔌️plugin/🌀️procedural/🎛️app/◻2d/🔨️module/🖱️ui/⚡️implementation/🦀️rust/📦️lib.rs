@@ -738,8 +738,8 @@ pub fn create_procedural2d_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("procedural2d")
-            .mode("edit", "Edit")
-            .mode("generate", "Generate")
+            .mode("edit", "Edit", "square-pen")
+            .mode("generate", "Generate", "sparkles")
             .default_mode_id("edit")
             .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
             .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
@@ -837,7 +837,7 @@ pub fn create_procedural2d_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("default", "Default", serde_json::to_string(&default_projection()).unwrap())
+    .example("default", "Default", serde_json::to_string(&default_projection()).unwrap(), "file")
     .workflow("procedural2d", "Procedural 2D", "layout")
 }
 //#endregion 🔖️Manifest

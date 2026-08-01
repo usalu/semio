@@ -1215,7 +1215,7 @@ index 081ee203a..3bf4768fb 100644
 +        fn handle_slot_center_world(&self, node_id: &str, hw: Point, flush_distance: f64) -> Option<Point> {
 +            let n = self.nodes.get(node_id)?;
              let nc = Point::new(n.x, n.y);
-             let normal = crate::cavas::vcompute::normalize_or_zero(hw - nc);
+             let normal = crate::canvas::vcompute::normalize_or_zero(hw - nc);
 -            Some(hw + normal * self.brush_flush_distance)
 +            Some(hw + normal * flush_distance)
 +        }

@@ -6897,8 +6897,18 @@
   :has([data-slot="pane-body"]:hover),
   :has([data-slot="window-chrome-gap"]:hover),
   :has([data-slot="window-chrome-controls"]:hover),
-  :has([data-slot$="-tab-button"][data-active="true"]:hover)
-) [data-slot$="-tab-button"][data-active="true"]:not([data-handle-hovered="true"]) {
+  :has([data-slot$="-tab-button"][data-active="true"]:hover),
+  :has([data-slot="window-pane-chrome-toggle"]:hover)
+) [data-slot$="-tab-button"][data-active="true"]:not([data-handle-hovered="true"]),
+[data-slot="window-chrome-stack"]:is(
+  :has([data-slot="window-chrome-body"]:hover),
+  :has([data-slot="panel-content"]:hover),
+  :has([data-slot="pane-body"]:hover),
+  :has([data-slot="window-chrome-gap"]:hover),
+  :has([data-slot="window-chrome-controls"]:hover),
+  :has([data-slot$="-tab-button"][data-active="true"]:hover),
+  :has([data-slot="window-pane-chrome-toggle"]:hover)
+) [data-slot="window-pane-chrome-toggle"]:not([data-handle-hovered="true"]) {
   color: var(--border-emphasized-color);
   transition: color 120ms ease;
 }
@@ -6909,8 +6919,18 @@
   :has([data-slot="pane-body"]:hover),
   :has([data-slot="window-chrome-gap"]:hover),
   :has([data-slot="window-chrome-controls"]:hover),
-  :has([data-slot$="-tab-button"][data-active="true"]:hover)
-) [data-slot$="-tab-button"][data-active="true"] [data-slot="drag-handle"] {
+  :has([data-slot$="-tab-button"][data-active="true"]:hover),
+  :has([data-slot="window-pane-chrome-toggle"]:hover)
+) [data-slot$="-tab-button"][data-active="true"] [data-slot="drag-handle"],
+[data-slot="window-chrome-stack"]:is(
+  :has([data-slot="window-chrome-body"]:hover),
+  :has([data-slot="panel-content"]:hover),
+  :has([data-slot="pane-body"]:hover),
+  :has([data-slot="window-chrome-gap"]:hover),
+  :has([data-slot="window-chrome-controls"]:hover),
+  :has([data-slot$="-tab-button"][data-active="true"]:hover),
+  :has([data-slot="window-pane-chrome-toggle"]:hover)
+) [data-slot="window-pane-chrome-toggle"] [data-slot="drag-handle"] {
   color: var(--border-emphasized-color);
 }
 

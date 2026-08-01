@@ -1,2 +1,0 @@
-{"title":"semio · cad","canvases":4,"bodySnippet":"Document\nCatalogue\nInspection\nFullscreen\nsemio · cad\nExample\nHexagonal Cut Concrete Forest Left\nShape\nFocus\nClose\nProjection\nWindow Options\nActions\nSearch\nUtilities\nBuilding\nFocus\nClose\nProjection\nWin","errors":[]}
-

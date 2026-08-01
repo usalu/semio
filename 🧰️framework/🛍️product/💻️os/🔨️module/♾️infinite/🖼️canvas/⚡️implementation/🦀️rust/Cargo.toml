@@ -14,7 +14,7 @@ workspace = true
 # mirror for `IconName` is exported from `ui_wgpu`, not from here.
 typegen = []
 [lib]
-name = "infinite_cavas"
+name = "infinite_canvas"
 crate-type = ["rlib"]
 path = "../../../🖼️canvas/⚡️implementation/🦀️rust/📦️lib.rs"
 

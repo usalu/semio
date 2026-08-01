@@ -3,8 +3,8 @@
 
 use puzzle_2d::Puzzle2dProjection;
 
-pub use cavas::{CubicBez, Point, Vec2};
-pub use graph::cavas;
+pub use canvas::{CubicBez, Point, Vec2};
+pub use graph::canvas;
 pub use graph::{
     apply_edge_handle_snap_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_normal_undirected_redraw_layout_to_fixture_v1_json,
     apply_redraw_layout_to_fixture_v1_json as apply_ported_redraw_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_json, apply_undirected_force_graph_layout_to_fixture_v1_value, GraphExtension,
@@ -55,7 +55,7 @@ pub fn puzzle_board_host_normal() -> BoardHost {
 #[derive(Clone, Debug, Default)]
 pub struct Puzzle2dExtension;
 
-impl cavas::CanvasExtension for Puzzle2dExtension {
+impl canvas::CanvasExtension for Puzzle2dExtension {
     fn extension_id(&self) -> &str {
         "puzzle.2d"
     }
@@ -75,7 +75,7 @@ pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cavas::Point;
+    use crate::canvas::Point;
 
     #[test]
     fn computes_handle_positions_and_edge_curves() {
@@ -187,8 +187,8 @@ mod host_tests {
         compute_edge_bezier_points, distance_between, handle_position_on_circle, handle_position_on_rectangle, BoardElementStyleKind, BoardHost, EdgeDescJson, EdgeStrokePattern, EdgeTipGeometry, GraphPortMode, HandleDescJson, Interaction,
         NodeDescJson, NodeShape, SceneDescriptorJson, WireDescJson,
     };
-    use crate::cavas::geom_sel::cubic_bezier_point;
-    use crate::cavas::Point;
+    use crate::canvas::geom_sel::cubic_bezier_point;
+    use crate::canvas::Point;
     use serde_json::json;
 
     fn set_detail_lod(h: &mut BoardHost) {
@@ -418,10 +418,10 @@ mod host_tests {
 			}"#,
         )
         .unwrap();
-        assert_eq!(h.canvas_theme.node_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
-        assert_eq!(h.canvas_theme.edge_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
-        assert_eq!(h.canvas_theme.handle_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
-        assert_eq!(h.canvas_theme.wire_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.node_stroke_hovered.to_rgba8(), crate::canvas::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.edge_stroke_hovered.to_rgba8(), crate::canvas::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.handle_stroke_hovered.to_rgba8(), crate::canvas::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.wire_stroke_hovered.to_rgba8(), crate::canvas::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
     }
 
     #[test]
@@ -3875,20 +3875,20 @@ mod force_graph_tests {
 
     #[test]
     fn svg_icon_append_smoke() {
-        let mut scene = crate::cavas::Scene::new();
+        let mut scene = crate::canvas::Scene::new();
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#ffffff"/><path d="M0 0 L10 10" stroke="#000000" stroke-width="1"/></svg>"##;
-        crate::cavas::svg_icon::append_svg_str(&mut scene, svg).expect("parse svg");
-        let fg = crate::cavas::Color::from_rgba8(200, 10, 10, 255);
-        let bg = crate::cavas::Color::from_rgba8(10, 200, 10, 255);
-        let mut scene2 = crate::cavas::Scene::new();
-        crate::cavas::svg_icon::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
+        crate::canvas::svg_icon::append_svg_str(&mut scene, svg).expect("parse svg");
+        let fg = crate::canvas::Color::from_rgba8(200, 10, 10, 255);
+        let bg = crate::canvas::Color::from_rgba8(10, 200, 10, 255);
+        let mut scene2 = crate::canvas::Scene::new();
+        crate::canvas::svg_icon::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
     }
 
     #[test]
     fn board_icon_codec_resolves_catalog_key_via_themed_lookup() {
         let r = super::board_icon_codec::board_resolve_icon_kind("capsule_J");
         match r {
-            crate::cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
+            crate::canvas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
                 assert!(s.contains("<svg"), "catalog metabolism key should resolve via themed lookup");
             }
             other => panic!("unexpected resolution for catalog capsule_J: {other:?}"),
@@ -3921,7 +3921,7 @@ mod force_graph_tests {
     #[test]
     fn svg_icon_content_bounds_follows_nested_group_translate() {
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><g transform="translate(72 88)"><rect width="12" height="12" fill="rgb(8,8,8)"/></g></svg>"#;
-        let (x, y, w, h) = crate::cavas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
+        let (x, y, w, h) = crate::canvas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
         assert!(x >= 70.0 && x <= 74.0, "expected translated art near x≈72, got {x}");
         assert!(y >= 86.0 && y <= 90.0, "expected translated art near y≈88, got {y}");
         assert!(w > 10.0 && w < 14.0 && h > 10.0 && h < 14.0, "expected ~12×12 bbox, got {w}×{h}");
@@ -3930,7 +3930,7 @@ mod force_graph_tests {
     #[test]
     fn svg_icon_content_bounds_includes_visible_image_abs_box() {
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" x="30" y="40" width="50" height="50"/></svg>"##;
-        let (x, y, w, h) = crate::cavas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
+        let (x, y, w, h) = crate::canvas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
         assert!((x - 30.0).abs() < 2.0, "expected image bbox near x=30, got {x}");
         assert!((y - 40.0).abs() < 2.0, "expected image bbox near y=40, got {y}");
         assert!((w - 50.0).abs() < 2.0 && (h - 50.0).abs() < 2.0, "expected ~50×50 bbox, got {w}×{h}");

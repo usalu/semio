@@ -69,7 +69,7 @@ Concrete examples of expected renames:
 - `compose_query` → `semio-compose-query`
 - `hub` / `hub-directory-*` → `semio-hub` / `semio-hub-directory-*`
 - `compose-vscode` / `repo-vscode` → `@semio-tech/compose-vscode` / `@semio-tech/repo-vscode`
-- `@semio-tech/infinite-cavas-react-renderer` → `@semio-tech/infinite-canvas-react-renderer`
+- `@semio-tech/infinite-canvas-react-renderer` → `@semio-tech/infinite-canvas-react-renderer`
 - `@semio-tech/semio-asset` (and icon/image/logo) → `@semio-tech/asset` (drop doubled `semio-`)
 - Python `compose` → `semio-compose`; `ui-styling` → `semio-framework-ui-styling`
 - .NET `Elements.Styling` → location-aligned `Semio.Framework.Ui.Styling` (both framework and compose copies)

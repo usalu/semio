@@ -86,7 +86,7 @@ Mirror `[raster/core/index.ts](raster/core/index.ts)` structure (regions: Header
 
 Mirror `[raster/react/index.tsx](raster/react/index.tsx)` contract (`DrawCanvas` props: `document`, `camera`, `selectedIds`, `hoveredId`, `activeTool`, `onCameraChange`, `onHover`, `onSelect`, `onDocumentChange`).
 
-- SVG infinite canvas: root `<g transform=...>` from camera; wheel zoom + drag/middle pan (reuse camera conventions from `[infinite/cavas/react-renderer/index.tsx](infinite/cavas/react-renderer/index.tsx)`).
+- SVG infinite canvas: root `<g transform=...>` from camera; wheel zoom + drag/middle pan (reuse camera conventions from `[infinite/canvas/react-renderer/index.tsx](infinite/canvas/react-renderer/index.tsx)`).
 - Render flattened scene as SVG paths/shapes; visibility/opacity/blend/attributes applied per node.
 - Non-destructive resolution: `ensureDrawingWasmLoaded` + bridge to compute boolean/trace geometry, memoized by a node fingerprint; trace decodes the image asset to a luma/alpha buffer and calls `traceBitmap`.
 - Selection: reuse `@semio-tech/ui-react` `SelectionMarquee`, `selectionMergeIds`, `marqueeCoverageFromGesture` + core hit-testing; emit `onSelect`/`onHover`.

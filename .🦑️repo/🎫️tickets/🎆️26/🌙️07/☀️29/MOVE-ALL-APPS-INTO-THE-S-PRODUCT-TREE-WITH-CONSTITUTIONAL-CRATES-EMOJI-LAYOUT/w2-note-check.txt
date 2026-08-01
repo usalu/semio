@@ -533,25 +533,25 @@ warning: `semio-framework-os` (lib) generated 19 warnings (run `cargo fix --lib 
 warning: unnecessary qualification
   --> framework/editor/rs/lib.rs:52:9
    |
-52 |         cavas::theme::merge_color_field(next, v, key);
+52 |         canvas::theme::merge_color_field(next, v, key);
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-52 -         cavas::theme::merge_color_field(next, v, key);
+52 -         canvas::theme::merge_color_field(next, v, key);
 52 +         theme::merge_color_field(next, v, key);
    |
 
 warning: unnecessary qualification
     --> framework/editor/rs/lib.rs:1095:9
      |
-1095 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1095 |         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
      |
 help: remove the unnecessary path segments
      |
-1095 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1095 -         canvas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
 1095 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
      |
 

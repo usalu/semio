@@ -1,6 +1,6 @@
 ---
 name: Raster Technology
-overview: Introduce a new top-level "raster" technology for non-destructive, multi-windowed image editing on an infinite canvas, built on the existing infinite_cavas Rust/WASM/Vello engine and fully integrated with the shared hover/selection, side-panel-tree, ribbon-tool-tree, and multi-window shell.
+overview: Introduce a new top-level "raster" technology for non-destructive, multi-windowed image editing on an infinite canvas, built on the existing infinite_canvas Rust/WASM/Vello engine and fully integrated with the shared hover/selection, side-panel-tree, ribbon-tool-tree, and multi-window shell.
 todos:
  - id: ticket
    content: Open repo MCP ticket 'Raster Technology' associated with goal r2603; confirm next free PLAYGROUND_PORTS pair.
@@ -9,7 +9,7 @@ todos:
    content: "Create raster/core (TS): RasterDocument schema raster.document/v1, layer/group/adjustment/mask types, BlendMode enum, parse/serialize, RasterEditOp + applyRasterEditOp, id factories, hover/selection tree-id mapping + transitive RasterKindHover helpers; copy package.json/project.json/script.ts/vitest.config.ts from forms/core; co-located tests."
    status: completed
  - id: rs
-   content: "Create raster/rs Rust crate 'raster' (rlib+cdylib) depending on infinite_cavas: RasterHost (layer-tree compositing via Vello push_layer blend/opacity/clip-mask, paint buffers, adjustment/filter eval, hit-test) impl CanvasContent; RasterSession wasm_bindgen (attach/size/render, camera/wheel, syncDocumentJson, uploadLayerImage, pointer paint, setActiveTool, hover/selection, renderLayerFrame/renderMaskFrame). script.ts via runWasmPackWebBuild; add to Cargo workspace."
+   content: "Create raster/rs Rust crate 'raster' (rlib+cdylib) depending on infinite_canvas: RasterHost (layer-tree compositing via Vello push_layer blend/opacity/clip-mask, paint buffers, adjustment/filter eval, hit-test) impl CanvasContent; RasterSession wasm_bindgen (attach/size/render, camera/wheel, syncDocumentJson, uploadLayerImage, pointer paint, setActiveTool, hover/selection, renderLayerFrame/renderMaskFrame). script.ts via runWasmPackWebBuild; add to Cargo workspace."
    status: completed
  - id: react
    content: "Create raster/react: load rs/pkg/raster.js, RasterRenderer (one session + JSON sync + RAF + event drain), RasterCanvas (controlled camera/selection/hover/tool props + callbacks), isolated RasterLayerView/RasterMaskView for per-window rendering."
@@ -40,7 +40,7 @@ isProject: false
 
 # Raster Technology
 
-A new top-level technology `raster/` for GIMP-style non-destructive image editing: a layer/group tree with blend modes, opacity, layer masks, adjustment layers, painting, and filters, rendered on an infinite canvas via the existing `infinite_cavas` Rust/WASM/Vello engine, with each layer/mask viewable in its own shell window and full bidirectional/transitive hover + selection across canvas, windows, and side-panel trees.
+A new top-level technology `raster/` for GIMP-style non-destructive image editing: a layer/group tree with blend modes, opacity, layer masks, adjustment layers, painting, and filters, rendered on an infinite canvas via the existing `infinite_canvas` Rust/WASM/Vello engine, with each layer/mask viewable in its own shell window and full bidirectional/transitive hover + selection across canvas, windows, and side-panel trees.
 
 ## Architecture
 
@@ -50,7 +50,7 @@ flowchart TB
     Host["RasterHost\nlayer tree, blend, masks,\nadjustments, paint buffers"]
     Sess["RasterSession (wasm_bindgen)\nattachCanvas/setSize/renderFrame\nsyncDocumentJson/uploadLayerImage\npointer paint + camera + per-layer view"]
   end
-  IC["infinite_cavas (rlib)\ncamera · gpu_session · raster::draw_image\npush_layer blend/opacity/clip"]
+  IC["infinite_canvas (rlib)\ncamera · gpu_session · raster::draw_image\npush_layer blend/opacity/clip"]
   Core["raster/core (TS)\nRasterDocument schema, edit ops,\nhover/selection tree mapping"]
   React["raster/react (TSX)\nRasterRenderer + RasterCanvas\nlayer/mask window views + panels"]
   Play["raster/play (TS)\nPlaygroundRaster, controller,\nwindow layout, tools, fixtures"]
@@ -66,14 +66,14 @@ flowchart TB
 
 The JSON `RasterDocument` (parsed/edited in `raster/core`) is the single source of truth; it is synced into `RasterSession` (`syncDocumentJson`) which composites the layer stack each frame. Pixel buffers (imported images, paint strokes, adjustment/filter outputs) live in the Rust host and are uploaded as Vello `ImageData`.
 
-## Layering on infinite_cavas (key insight)
+## Layering on infinite_canvas (key insight)
 
-Vello natively supports per-layer compositing via `scene.push_layer(BlendMode, alpha, transform, clip_shape)` / `pop_layer`. The compositor walks the layer tree depth-first and, per node, pushes a layer with its blend `Mix` mode + opacity, draws its bitmap (`cavas::raster::draw_image`) or child group, applies its mask as an alpha clip layer, then pops. This reuses `infinite_cavas` as-is for camera, `gpu_session`, and `raster::draw_image`/`RasterImageCache`. Adjustment layers and filters that Vello can't express as blend modes are computed as derived RGBA buffers in Rust (CPU via the `image` crate behind an interface, or a custom wgpu pass) and drawn like any other layer.
+Vello natively supports per-layer compositing via `scene.push_layer(BlendMode, alpha, transform, clip_shape)` / `pop_layer`. The compositor walks the layer tree depth-first and, per node, pushes a layer with its blend `Mix` mode + opacity, draws its bitmap (`canvas::raster::draw_image`) or child group, applies its mask as an alpha clip layer, then pops. This reuses `infinite_canvas` as-is for camera, `gpu_session`, and `raster::draw_image`/`RasterImageCache`. Adjustment layers and filters that Vello can't express as blend modes are computed as derived RGBA buffers in Rust (CPU via the `image` crate behind an interface, or a custom wgpu pass) and drawn like any other layer.
 
 ## New packages (mirror forms/ + gis/map/ conventions)
 
 - `[raster/core](raster/core)` (TS, `@semio-tech/raster-core`): `RasterDocument` schema `raster.document/v1` (layer tree: `RasterLayer` | `GroupLayer` | `AdjustmentLayer` with `LayerMask`, `BlendMode`, opacity, visibility, transform/anchor on infinite canvas), `parseRasterDocument`/`rasterDocumentToJson`, `RasterEditOp` union + `applyRasterEditOp`, id factories, and hover/selection mapping helpers (stable row ids + transitive `RasterKindHover`). Single `index.ts` with `#region` blocks + co-located `🧪️Tests`; `package.json`/`project.json`/`script.ts`/`vitest.config.ts` copied from `[forms/core](forms/core)`.
-- `[raster/rs](raster/rs)` (Rust crate `raster`, `crate-type = ["rlib","cdylib"]`, path-dep on `infinite_cavas`): `RasterHost` (document state, layer compositing into a Vello `Scene`, paint buffers, adjustment/filter evaluation, hit-testing) implementing `cavas::canvas_content::CanvasContent`; `RasterSession` wasm_bindgen mirroring `MapSession`: `attach_canvas`, `setSize`, `renderFrame`, `setCamera`/`wheelScreen`/`cameraJson`, `syncDocumentJson`, `uploadLayerImage`, `pointerDownScreen`/`Move`/`Up` (paint/transform/marquee), `setActiveTool`, `setHoveredIdSilent`/`setHoveredKindSilent`, `setSelectionIdsJson`, `renderLayerFrame(layerId)`/`renderMaskFrame(maskId)` for isolated per-window views. Built via `runWasmPackWebBuild` in `script.ts` (copy `[puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts)`); add crate to the root Cargo workspace members.
+- `[raster/rs](raster/rs)` (Rust crate `raster`, `crate-type = ["rlib","cdylib"]`, path-dep on `infinite_canvas`): `RasterHost` (document state, layer compositing into a Vello `Scene`, paint buffers, adjustment/filter evaluation, hit-testing) implementing `canvas::canvas_content::CanvasContent`; `RasterSession` wasm_bindgen mirroring `MapSession`: `attach_canvas`, `setSize`, `renderFrame`, `setCamera`/`wheelScreen`/`cameraJson`, `syncDocumentJson`, `uploadLayerImage`, `pointerDownScreen`/`Move`/`Up` (paint/transform/marquee), `setActiveTool`, `setHoveredIdSilent`/`setHoveredKindSilent`, `setSelectionIdsJson`, `renderLayerFrame(layerId)`/`renderMaskFrame(maskId)` for isolated per-window views. Built via `runWasmPackWebBuild` in `script.ts` (copy `[puzzle/2d/rs/script.ts](puzzle/2d/rs/script.ts)`); add crate to the root Cargo workspace members.
 - `[raster/react](raster/react)` (TSX, `@semio-tech/raster-react`): loads `../rs/pkg/raster.js`, exports `RasterSession`; `RasterRenderer` (owns one session, JSON document sync, RAF + `renderFrame`, event drain) + `RasterCanvas` (controlled props: camera, `selectedIds`, `hoveredId`, `kindHover`, `activeTool`, callbacks `onHover`/`onSelect`/`onPaint`); plus isolated `RasterLayerView`/`RasterMaskView` canvases for per-layer/mask windows. Deps `@semio-tech/raster-core`, `@semio-tech/ui-react`, `@semio-tech/infinite-canvas-react-renderer`.
 - `[raster/play](raster/play)` (TS, `@semio-tech/raster-play`): `PlaygroundRaster` + `RasterPlayController` (extends `Controller`, implements `PlaygroundFixtureHost`); multi-window `WindowLayout` (main canvas + Layers/Mask/Navigator windows, with dynamic per-layer/per-mask window kinds parameterized by id); ribbon tool tree via `toolCollection` (Selection: marquee/lasso/wand · Paint: brush/eraser/clone · Transform: move/scale/rotate · Adjust: brightness/levels/hue/curves · Filter: blur/sharpen); side panels (Layers tree, Channels/Masks, Properties/Inspection) registered via `registerSidePanelBody` returning `UiTreeNode` with `onPointerEnter`/`onPointerLeave` + `command`; fixtures via `import.meta.glob("../fixture/*.raster.json")` + `fixture-slugs.ts`. Copy structure from `[procedural/2d/play/index.ts](procedural/2d/play/index.ts)` and `[gis/map/play/index.ts](gis/map/play/index.ts)`.
 - `[raster/fixture](raster/fixture)`: `default.raster.json` (a few layers + a mask + one adjustment), `photo-edit.raster.json` (richer, groups + blend modes), `paint.raster.json` (empty paintable layers).

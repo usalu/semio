@@ -733,7 +733,7 @@ impl DocumentApp for RasterPlayApp {
 /// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary
 /// dispatched by the layer tree, catalogue drops and inspector, never a palette command.
 fn raster_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
 
 /// 🧰️ One composite-window utility declaration; ids must stay host-compatible (`paint*` prefix paints,
@@ -758,7 +758,7 @@ pub fn create_raster_app() -> App {
                 import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("raster")
-            .mode("edit", "Edit")
+            .mode("edit", "Edit", "square-pen")
             .default_mode_id("edit")
             .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Paint2d, "image")
             .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Paint2d, "focus")
@@ -830,7 +830,7 @@ pub fn create_raster_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("semio", "Semio", semio_example_json())
+    .example("semio", "Semio", semio_example_json(), "sparkles")
     .workflow("raster", "Raster", "2d.raster")
 }
 //#endregion 🔖️Manifest

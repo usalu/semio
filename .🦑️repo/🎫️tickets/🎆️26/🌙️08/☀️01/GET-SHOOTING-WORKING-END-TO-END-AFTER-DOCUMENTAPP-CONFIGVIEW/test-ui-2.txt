@@ -1,0 +1,624 @@
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-framework-os-kernel-protocol-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-framework-os-kernel-db-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-framework-os-kernel-pack-cli` (manifest) generated 1 warning
+warning: profile package spec `semio-s-kernel-store` in profile `release` did not match any packages
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:1987:42
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2000:43
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2115:53
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+warning: unused import: `ConfigFieldShape`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:554:32
+    |
+554 |     use semio_framework_core::{ConfigFieldShape, ConfigFieldSpec, ConfigSpec};
+    |                                ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:3683:6
+     |
+3683 | impl protocol::OpText for SpaceHistoryOperation {
+     |      ^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3683 - impl protocol::OpText for SpaceHistoryOperation {
+3683 + impl OpText for SpaceHistoryOperation {
+     |
+
+warning: `semio-framework-os-kernel-store` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store` to apply 2 suggestions)
+warning: unused import: `DocumentEnvelope`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:104:116
+    |
+104 | ...create_document_envelope, ConfigStore, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, SpaceConflict};
+    |                                                            ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5007:61
+     |
+5007 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4758:65
+     |
+4758 |             let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5021:61
+     |
+5021 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4083:13
+     |
+4083 |         let mut config_store = ConfigStore::new(config_envelope);
+     |             ----^^^^^^^^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin` (lib) generated 5 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 5 suggestions)
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:5861:28
+     |
+5861 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+5861 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+5861 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:5864:28
+     |
+5864 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5864 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+5864 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7007:28
+     |
+7007 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7007:106
+     |
+7007 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7050:28
+     |
+7050 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔨️module/🧊️3d/📐️brep/⚡️implementation/🦀️rust/../../../📐️brep/⚡️implementation/🦀️rust/📦️lib.rs:7050:106
+     |
+7050 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unused import: `serde_json::Value`
+  --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:19:5
+   |
+19 | use serde_json::Value;
+   |     ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:349:16
+    |
+349 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+349 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+349 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:350:24
+    |
+350 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+350 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+350 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:360:16
+    |
+360 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+360 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+360 +     P: Clone + Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:361:24
+    |
+361 |     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpT...
+    |                        ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+361 -     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+361 +     Operation: Clone + Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:421:41
+    |
+421 |     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+421 -     pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
+421 +     pub fn receive(&mut self, envelope: OperationEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:603:42
+    |
+603 |                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+603 -                         let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+603 +                         let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:607:38
+    |
+607 |                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+607 -                     let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+607 +                     let pack_files = DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1075:37
+     |
+1075 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1075 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1075 +             let wire_envelopes: Vec<OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1075:100
+     |
+1075 | ...   let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timesta...
+     |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1075 -             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+1075 +             let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:1142:37
+     |
+1142 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |                                     ^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1142 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+1142 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+     |
+
+warning: structure field `pendingOperations` should have a snake case name
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/../../../🔄️sync/⚡️implementation/🦀️rust/📦️lib.rs:100:9
+    |
+100 |     pub pendingOperations: usize,
+    |         ^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `pending_operations`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: `semio-framework-os-kernel-3d-brep` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-os-kernel-3d-brep` to apply 6 suggestions)
+warning: `semio-framework-os-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store-sync` to apply 11 suggestions)
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:516:50
+    |
+516 |     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::w...
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+516 -     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+516 +     fn sync_workflow_node_parameter_ports(node: &OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:516:124
+    |
+516 | ...wNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+516 -     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+516 +     fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> OsWorkflowNode {
+    |
+
+warning: unused import: `OsEnvelope`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:2085:17
+     |
+2085 |     use crate::{OsEnvelope, OsOperation, OsProjection};
+     |                 ^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `DocumentDsl`
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:2089:17
+     |
+2089 |     use store::{DocumentDsl, MemoryBackbonePort};
+     |                 ^^^^^^^^^^^
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3081:41
+     |
+3081 |     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3081 -     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+3081 +     pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:3597:30
+     |
+3597 | ...   let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown ...
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3597 -                 let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+3597 +                 let format = OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:21
+     |
+4467 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:72
+     |
+4467 | ...   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O...
+     |                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:127
+     |
+4467 | ...tance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4467:177
+     |
+4467 | ...e::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4467 -                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+4467 +                     crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:29
+     |
+4476 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:82
+     |
+4476 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:139
+     |
+4476 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4476:191
+     |
+4476 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4476 -                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4476 +                             crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:33
+     |
+4490 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:86
+     |
+4490 | ...   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc...
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:143
+     |
+4490 | ...nce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::...
+     |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4490:195
+     |
+4490 | ...:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4490 -                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+4490 +                                 crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4498:30
+     |
+4498 |             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4498 -             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+4498 +             let descriptor = os_artifact_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:4516:30
+     |
+4516 |             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4516 -             let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+4516 +             let descriptor = os_artifact_descriptor(&instance.yields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:5308:36
+     |
+5308 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5308 -             terminology_documents: std::collections::HashMap::new(),
+5308 +             terminology_documents: HashMap::new(),
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust/📦️lib.rs:5314:21
+     |
+5314 |             config: semio_framework_core::ConfigSpec::empty(),
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5314 -             config: semio_framework_core::ConfigSpec::empty(),
+5314 +             config: ConfigSpec::empty(),
+     |
+
+warning: `semio-framework-os` (lib) generated 22 warnings (run `cargo fix --lib -p semio-framework-os` to apply 22 suggestions)
+   Compiling semio-s-app-shooting-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+warning: unused doc comment
+   --> ✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs:301:1
+    |
+301 | /// 🗣️ Complete UI label set for the shooting app; one field per label makes every locale combination compile-checked.
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-app-shooting-ui` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized] target(s) in 3.44s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (target/debug/deps/semio_s_app_shooting_ui-bdad461a0a7b1e71)
+
+running 28 tests
+test tests::handle_typed_command_falls_through_non_op_frames_and_errors_on_truncated_ops ... ok
+test tests::document_lists_shots_and_assets ... ok
+test tests::model_scene_uses_asset_mesh_urls ... ok
+test tests::export_import_and_download_operations ... ok
+test tests::add_shot_action_appends_shot ... ok
+test tests::camera_drag_never_creates_an_undo_step ... ok
+test tests::center_model_and_asset_activation_bump_fit_revision ... ok
+test tests::add_shot_and_add_asset_materialize_declared_defaults ... ok
+test tests::renders_icon_render_scene_with_real_request ... ok
+test tests::scene_setters_mutate_lighting_and_measures_reflect_them ... ok
+test tests::save_and_load_camera_round_trip ... ok
+test tests::ingest_operations_is_idempotent_for_shooting ... ok
+test tests::shooting_labels_resolve_native_english_by_default ... ok
+test tests::renders_world_model_scene ... ok
+test tests::set_active_shot_updates_fixture ... ok
+test tests::set_active_utility_clears_scratch_and_emits_no_history_entry ... ok
+test tests::gumball_transform_drag_coalesces_into_one_edit ... ok
+test tests::set_active_shot_label_patches_active_shot ... ok
+test tests::typed_set_selection_method_matches_string_dispatch_and_runtime_state ... ok
+test tests::shooting_labels_resolve_native_german ... ok
+test tests::typed_set_sun_azimuth_matches_string_dispatch_action_emit ... ok
+test tests::reset_fixture_restores_default_fixture ... ok
+test tests::toggle_sun_round_trips_through_ops_and_defaults_off ... ok
+test tests::undo_redo_round_trip_through_the_wrapper ... ok
+test tests::world_pick_and_hover_drive_selection_protocol ... ok
+test tests::utility_registry_scopes_transform_gumball_and_actions_are_declared ... ok
+test tests::world_pick_requires_no_args_and_emits_no_operations ... ok
+test tests::two_instances_converge_disjoint_edits_via_backbone ... ok
+
+test result: ok. 28 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+

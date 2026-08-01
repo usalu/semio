@@ -152,7 +152,7 @@ CORE (sequential):     ui/styling/tokens.json, ui/styling/script.ts (+ regenerat
 SHELL:                 framework/renderer/react/index.tsx
 CODA:                  coda/client/ui/desktop/js/renderer.tsx, coda/client/bin/assistant/js/mcp-app.tsx
 SATELLITES:            cad/renderer/js/index.tsx, infinite/world/r3f/index.tsx,
-                        infinite/cavas/react-renderer/index.tsx, animate/present/renderer/react/index.tsx
+                        infinite/canvas/react-renderer/index.tsx, animate/present/renderer/react/index.tsx
 COMPOSE:                compose/client/ui/desktop/js/renderer.tsx, compose/client/ui/3dm/ui/js/index.tsx,
                         compose/client/ui/vscode/js/webview.tsx, compose/client/lib/sketchpad/{js,play,doc}/*
                         NOTE: a separate ticket 26/07/27/FIX-SKETCHPAD-STALE-FRAMEWORK-PLATFORM-PACKAGE-REFERENCES

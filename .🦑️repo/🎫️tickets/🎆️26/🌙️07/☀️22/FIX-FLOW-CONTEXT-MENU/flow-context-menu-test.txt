@@ -229,14 +229,14 @@ warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --l
 warning: unnecessary qualification
   --> infinite/board/rs/lib.rs:99:44
    |
-99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 | pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
    |                                            ^^^^^^^^^^^^^^^
    |
    = note: requested on the command line with `-W unused-qualifications`
 help: remove the unnecessary path segments
    |
-99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
-99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+99 - pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
    |
 
 warning: unnecessary qualification
@@ -598,7 +598,7 @@ help: remove the unnecessary path segments
 warning: unused imports: `Circle` and `Line`
     --> infinite/board/port/directed/dag/rs/lib.rs:4261:21
      |
-4261 |         use cavas::{Circle, Line, Point, Rect, Stroke};
+4261 |         use canvas::{Circle, Line, Point, Rect, Stroke};
      |                     ^^^^^^  ^^^^
      |
      = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default

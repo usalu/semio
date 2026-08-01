@@ -21,7 +21,7 @@ todos:
    content: Extend tokens.generated.ts and rewrite serializeGraphVelloThemePaletteJson()/ui.css to derive from token themes
    status: completed
  - id: migrate-vello
-   content: Migrate infinite/cavas/vello (clear color, camera limits, label metrics, Typst sizes, insets, fonts, BLACK/WHITE) to ui_styling
+   content: Migrate infinite/canvas/vello (clear color, camera limits, label metrics, Typst sizes, insets, fonts, BLACK/WHITE) to ui_styling
    status: completed
  - id: migrate-graph
    content: Migrate mathematical/graph port/directed (VelloThemePalette->Theme), normal, dag, and graph lib stroke/radius/opacity constants to ui_styling
@@ -56,7 +56,7 @@ Extend [ui/styling/tokens.json](ui/styling/tokens.json) (currently only `colors`
 - `themes`: `{ "light": {...}, "dark": {...} }`. Each theme maps every **semantic paint** to a `{ token | hex, alpha }` ref. The semantic set is the union of:
   - `VelloThemePalette` fields (38 paints) from [mathematical/graph/port/directed/lib.rs](mathematical/graph/port/directed/lib.rs) lines 400-440 / 696-739.
   - Map paints (`SURFACE_CLEAR`, `LAND_FILL`, `LABEL_FILL`, ...) from [ui/styling/rs/map_vello_build.inc.rs](ui/styling/rs/map_vello_build.inc.rs).
-  - Canvas paints: `rasterClear`, icon `fg`/`bg` defaults, label fill/halo from [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) + [infinite/cavas/vello/theme.rs](infinite/cavas/vello/theme.rs).
+  - Canvas paints: `rasterClear`, icon `fg`/`bg` defaults, label fill/halo from [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs) + [infinite/canvas/vello/theme.rs](infinite/canvas/vello/theme.rs).
 - `strokes`: named widths/mults/dash patterns (edge base `2.0`, selected `1.35`, hovered `1.2`, dashes, grid px bands, handle, wire highlight `2.85`, arrow, selection preview, map road/boundary/coastline/route scales).
 - `radii`: node radius, handle radius, position-marker radius.
 - `opacities`: dim/disabled alphas (`110/120/140`), grid alpha, fill alphas.
@@ -95,7 +95,7 @@ Rewrite `serializeGraphVelloThemePaletteJson()` in [ui/styling/js/resolve.ts](ui
 
 ## 6. Migrate Rust render libraries (remove all hardcoded values)
 
-- [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) + [theme.rs](infinite/cavas/vello/theme.rs): add `ui_styling` dep; replace `default_raster_clear`, camera zoom limits (`camera` mod), label-layout multipliers + clamps (`text` mod), Typst page/margin/font sizes (`icon_codec`), icon insets, `Color::BLACK/WHITE` icon defaults, and font families with token lookups.
+- [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs) + [theme.rs](infinite/canvas/vello/theme.rs): add `ui_styling` dep; replace `default_raster_clear`, camera zoom limits (`camera` mod), label-layout multipliers + clamps (`text` mod), Typst page/margin/font sizes (`icon_codec`), icon insets, `Color::BLACK/WHITE` icon defaults, and font families with token lookups.
 - [mathematical/graph/port/directed/lib.rs](mathematical/graph/port/directed/lib.rs): replace `VelloThemePalette::default()` (lines 696-739) with `ui_styling::theme::LIGHT`/`DARK`; keep `merge_from_json` for runtime override.
 - [mathematical/graph/port/directed/normal/lib.rs](mathematical/graph/port/directed/normal/lib.rs) and [.../dag/lib.rs](mathematical/graph/port/directed/dag/lib.rs): replace stroke widths, radii, opacity alphas, grid px bands, hit tolerances, layout defaults with `ui_styling` consts.
 - [mathematical/graph/lib.rs](mathematical/graph/lib.rs): replace handle/proximity/selection px + `Color::WHITE` debug.

@@ -17822,7 +17822,7 @@ index 13e39caf5..5d7978cb8 100644
 +}
 +
 +impl LabelDeclutter {
-+    fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
++    fn for_viewport(viewport: &canvas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
 +        let width = viewport.width.max(1) as f64;
 +        let height = viewport.height.max(1) as f64;
 +        let cell = cell_px.max(12.0);
@@ -17926,7 +17926,7 @@ index 13e39caf5..5d7978cb8 100644
 -                                .copied()
 -                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
 -                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
--                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
+-                            canvas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
 +                            (
 +                                vector_tiles::transportation_name_rank(class),
 +                                vector_tiles::transportation_name_visible(class, span),
@@ -17949,7 +17949,7 @@ index 13e39caf5..5d7978cb8 100644
 -                                .copied()
 -                                .unwrap_or((extent as f64 / 2.0, extent as f64 / 2.0));
 -                            let s = self.tile_local_to_screen(*tz, *tx, *ty, extent, anchor.0, anchor.1);
--                            cavas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
+-                            canvas::text::append_label(scene, &label, s, zoom_px, label_fill, label_halo);
 +                            (
 +                                vector_tiles::place_label_rank(class, lname),
 +                                vector_tiles::place_label_visible(class, span),
@@ -17986,7 +17986,7 @@ index 13e39caf5..5d7978cb8 100644
 +        let mut declutter = LabelDeclutter::for_viewport(&self.viewport, cell, max_labels);
 +        for candidate in candidates {
 +            if declutter.try_place(&candidate.label, candidate.screen, px) {
-+                cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
++                canvas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
 +            }
 +        }
      }

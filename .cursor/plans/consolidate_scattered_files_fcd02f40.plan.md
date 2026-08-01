@@ -18,7 +18,7 @@ todos:
    content: Inline-fold mathematical/graph siblings (geometry, scene_json, types, board_host, fixture_layout) into respective lib.rs
    status: completed
  - id: rust-vello
-   content: Inline-fold infinite/cavas/vello icon_codec.rs (preserve include!) and theme.rs into lib.rs
+   content: Inline-fold infinite/canvas/vello icon_codec.rs (preserve include!) and theme.rs into lib.rs
    status: completed
  - id: py-test
    content: Embed compose/client/lib/py store_test.py into main.py; delete store_test.py
@@ -58,7 +58,7 @@ Convert `pub mod X;` + sibling file into inline `pub mod X { ... }` `// #region`
 - [mathematical/graph/port/directed/lib.rs](mathematical/graph/port/directed/lib.rs) <- `types.rs`, `scene_json.rs`
 - [mathematical/graph/port/directed/normal/lib.rs](mathematical/graph/port/directed/normal/lib.rs) <- `board_host.rs` (~5.6k lines - large fold, do carefully)
 - [mathematical/graph/normal/undirected/lib.rs](mathematical/graph/normal/undirected/lib.rs) <- `fixture_layout.rs`
-- [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) <- `icon_codec.rs` (preserve its `include!(concat!(env!("OUT_DIR"), ...))`), `theme.rs`
+- [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs) <- `icon_codec.rs` (preserve its `include!(concat!(env!("OUT_DIR"), ...))`), `theme.rs`
 
 ## Workstream 3 - Python test embed
 

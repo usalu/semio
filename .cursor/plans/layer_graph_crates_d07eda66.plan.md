@@ -1,9 +1,9 @@
 ---
 name: Layer Graph Crates
-overview: Purge all graph logic from infinite_cavas, build a composable graph crate chain that mirrors the folder structure (graph -> port -> port/directed -> {normal, dag}) by splitting the board monolith down by layer, and make puzzle/2d depend only on the directed-port-normal leaf.
+overview: Purge all graph logic from infinite_canvas, build a composable graph crate chain that mirrors the folder structure (graph -> port -> port/directed -> {normal, dag}) by splitting the board monolith down by layer, and make puzzle/2d depend only on the directed-port-normal leaf.
 todos:
- - id: cavas-purge
-   content: "Phase A: remove vcompute, scene_json, board_json_*, normalize_board_descriptor, CanvasNodePaint from infinite_cavas; rename board_icon_* to icon_*; keep camera/lod/text/raster/gpu/CanvasExtension/geom_sel; verify gis/map + mindmap + wires compile."
+ - id: canvas-purge
+   content: "Phase A: remove vcompute, scene_json, board_json_*, normalize_board_descriptor, CanvasNodePaint from infinite_canvas; rename board_icon_* to icon_*; keep camera/lod/text/raster/gpu/CanvasExtension/geom_sel; verify gis/map + mindmap + wires compile."
    status: completed
  - id: graph-geometry
    content: "Phase B: move graph geometry + generic CameraJson/NodeDescJson into mathematical_graph; drop pub mod board_host re-export; keep generic GraphEngine/GraphExtension."
@@ -33,7 +33,7 @@ isProject: false
 
 ## Goal (three directives)
 
-1. `infinite_cavas` carries zero graph logic (no nodes/handles/edges/board/scene-descriptors).
+1. `infinite_canvas` carries zero graph logic (no nodes/handles/edges/board/scene-descriptors).
 2. `puzzle/2d` imports only the directed-port-normal leaf crate.
 3. Graph crates compose along the folder tree: `graph -> port -> port/directed -> {normal, dag}`, with the board monolith split down by layer.
 
@@ -41,7 +41,7 @@ isProject: false
 
 ```mermaid
 graph TD
-  cavas[infinite_cavas: canvas only]
+  canvas[infinite_canvas: canvas only]
   graph[mathematical_graph: generic GraphEngine + graph geometry]
   port[mathematical_graph_port: handles/ports - NEW]
   portUndir[mathematical_graph_port_undirected]
@@ -52,7 +52,7 @@ graph TD
   normalDir[mathematical_graph_normal_directed]
   puzzle[puzzle_2d]
 
-  graph --> cavas
+  graph --> canvas
   port --> graph
   portUndir --> port
   portDir --> port
@@ -66,9 +66,9 @@ graph TD
 
 Key rename: the crate name `mathematical_graph_port_directed` moves from the leaf `port/directed/normal` to a NEW intermediate crate at `port/directed/`. The leaf is renamed to `mathematical_graph_port_directed_normal`. Because `dag` already imports `mathematical_graph_port_directed` for the engine/types, that import keeps working against the new base.
 
-## Phase A - Purge graph logic from infinite_cavas
+## Phase A - Purge graph logic from infinite_canvas
 
-In [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) remove and relocate (to Phase B/D):
+In [infinite/canvas/vello/lib.rs](infinite/canvas/vello/lib.rs) remove and relocate (to Phase B/D):
 
 - `pub mod vcompute` (handle/edge geometry: `handle_position_on_circle`, `circle_handle_angle_toward`, `rectangle_handle_angle_toward`, `compute_edge_bezier_points`, `distance_point_to_cubic_bezier`, `distance_between`, `encode_board_stroke_scene`).
 - `pub mod scene_json` + its re-export line (`CameraJson`, `NodeDescJson`, `HandleDescJson`, `EdgeDescJson`, `WireDescJson`, `SceneDescriptorJson`, `FixtureJson`, `fixture_edge_handle_ids_from_object`).
@@ -83,10 +83,10 @@ Verify [gis/map/rs/lib.rs](gis/map/rs/lib.rs), [reasoning/mindmap/lib.rs](reason
 
 [mathematical/graph/lib.rs](mathematical/graph/lib.rs):
 
-- Add a `geometry` region with the functions moved from cavas; repoint internal refs (currently `cavas::vcompute::*`, `cavas::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_stroke_scene}`) to local.
+- Add a `geometry` region with the functions moved from canvas; repoint internal refs (currently `canvas::vcompute::*`, `canvas::{compute_edge_bezier_points, distance_point_to_cubic_bezier, encode_board_stroke_scene}`) to local.
 - Add generic `CameraJson` + `NodeDescJson` (port/edge-agnostic scene base).
 - Remove `pub mod board_host;` and `pub use board_host::*;` (the monolith leaves this crate).
-- Keep `GraphEngine<P,D>`, `Node`, `Handle`, `Camera`, `Selection`, `RenderSnapshot`, `BoardEvent`, `GraphPortModel`, and `GraphExtension` (it bounds `cavas::CanvasExtension`).
+- Keep `GraphEngine<P,D>`, `Node`, `Handle`, `Camera`, `Selection`, `RenderSnapshot`, `BoardEvent`, `GraphPortModel`, and `GraphExtension` (it bounds `canvas::CanvasExtension`).
 
 ## Phase C - NEW crate mathematical_graph_port at graph/port/
 
@@ -108,8 +108,8 @@ Create `mathematical/graph/port/directed/Cargo.toml` (name `mathematical_graph_p
 
 ## Phase F - Repoint puzzle/2d to the leaf only
 
-- [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml): drop `mathematical_graph`, `infinite_cavas`, `mathematical_graph_normal_undirected`; the lone graph dep is `mathematical_graph_port_directed_normal` (keep `gis_map`, `reasoning_mindmap`).
-- [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs): replace the three direct imports with re-exports from `mathematical_graph_port_directed_normal` (which transitively re-exports `cavas`, the engine, layouts). The leaf must re-export the undirected layout fns puzzle uses for mindmap/wires fixtures (`apply_undirected_*`) so puzzle needs no direct undirected dep.
+- [puzzle/2d/rs/Cargo.toml](puzzle/2d/rs/Cargo.toml): drop `mathematical_graph`, `infinite_canvas`, `mathematical_graph_normal_undirected`; the lone graph dep is `mathematical_graph_port_directed_normal` (keep `gis_map`, `reasoning_mindmap`).
+- [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs): replace the three direct imports with re-exports from `mathematical_graph_port_directed_normal` (which transitively re-exports `canvas`, the engine, layouts). The leaf must re-export the undirected layout fns puzzle uses for mindmap/wires fixtures (`apply_undirected_*`) so puzzle needs no direct undirected dep.
 
 ## Phase G - dag against the base
 

@@ -7,13 +7,13 @@ use flow_core::{
     CameraJson, FlowEvalDriver, FlowHost, Widget, FLOW_LOD_MODE_AUTOMATIC,
 };
 use flow_core::{flow_backed_node_graph_extras, flow_fixture_operations};
-use flow_engine::{flow_play_neural_cache, flow_widget_descriptor, flow_widget_drag_json, fixture_to_workflow, seed_host_catalogue, sync_host_selection, widget_id, widget_kind_label, widget_tree_label};
+use flow_engine::{flow_play_neural_cache, flow_widget_descriptor, flow_widget_drag_json, fixture_to_workflow, seed_host_catalogue, sync_host_selection, sync_host_selection_domains, widget_id, widget_kind_label, widget_tree_label};
 use flow_op::FlowOperation;
 use playbook::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation, GenerationPlayState};
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, is_de_locale, localized_label_map, resolve_labels, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
+    App, AppLabelsOverlay, AppLabelsOverlayExt, AppActionRegistry, ContextMenuRequest, ContextMenuItemSpec, DocumentApp, DocumentView, HostEffect, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
     UiTreeItemNode, UiTreeSectionNode, ViewState, WindowMeasure, MeasureSelectItem, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -55,6 +55,10 @@ const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] =
 #[serde(rename_all = "camelCase", default)]
 struct FlowPlayRuntime {
     selected_node_ids: Vec<String>,
+    #[serde(default)]
+    selected_edge_ids: Vec<String>,
+    #[serde(default)]
+    selected_handle_ids: Vec<String>,
     #[serde(default)]
     preview_off_node_ids: Vec<String>,
     camera: CameraJson,
@@ -98,6 +102,8 @@ impl Default for FlowPlayRuntime {
     fn default() -> Self {
         Self {
             selected_node_ids: Vec::new(),
+            selected_edge_ids: Vec::new(),
+            selected_handle_ids: Vec::new(),
             preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             eval_driver: FlowEvalDriver::default(),
@@ -150,66 +156,90 @@ fn host_operations(fixture: &FlowFixture, runtime: &FlowPlayRuntime, mutate: imp
     flow_fixture_operations(fixture, &host.fixture)
 }
 
-/// 🖱️ Selection-aware graph context menu shared by flow-backed node-graph apps.
-/// Always emits the full item set (preview / zoom / clear / delete) so hosts can open the menu
-/// immediately on right-click; selection-scoped rows are `disabled` when nothing is selected.
-fn build_node_graph_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowFixture, labels: &FlowPlayLabels) -> String {
-    let selected = &runtime.selected_node_ids;
-    let has_selection = !selected.is_empty();
-    let all_preview_off = has_selection && selected.iter().all(|id| runtime.preview_off_node_ids.contains(id));
-    let is_image = selected.len() == 1
+/// 🖱️ On-demand flow node-graph context menu from surface hit-test and selection snapshot.
+fn flow_context_menu_items(
+    registry: &semio_framework_plugin::AppActionRegistry,
+    fixture: &FlowFixture,
+    runtime: &FlowPlayRuntime,
+    labels: &FlowPlayLabels,
+    is_de: bool,
+    surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
+) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
+
+    let hits = surface.map(|target| target.hits.as_slice()).unwrap_or(&[]);
+    let groups = surface.map(|target| target.selection.as_slice()).unwrap_or(&[]);
+    let mut nodes: Vec<String> = groups.iter().filter(|group| group.domain == "node").flat_map(|group| group.ids.iter().cloned()).collect();
+    let mut edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
+    if nodes.is_empty() && edges.is_empty() {
+        nodes = runtime.selected_node_ids.clone();
+        edges = runtime.selected_edge_ids.clone();
+    }
+    let has_selection = !nodes.is_empty() || !edges.is_empty();
+    let all_preview_off = !nodes.is_empty() && nodes.iter().all(|id| runtime.preview_off_node_ids.contains(id));
+    let is_image = nodes.len() == 1
         && fixture.widgets.iter().any(|widget| match widget {
-            Widget::InputImage { id, .. } => id == &selected[0],
+            Widget::InputImage { id, .. } => id == &nodes[0],
             _ => false,
         });
-    let mut items = vec![
-        json!({ "id": "add-node", "label": labels.add_node, "icon": "plus", "action": "openSpotlight" }),
-        json!({ "id": "select-all", "label": labels.select_all, "icon": "maximize-2", "action": "selectAll" }),
-        json!({ "id": "reorganize", "label": labels.reorganize, "icon": "layout-grid", "action": "reorganize" }),
-        json!({ "id": "sep-selection", "separator": true }),
-        {
-            let mut toggle = json!({
-                "id": "toggle-preview",
-                "label": if all_preview_off { labels.show_preview } else { labels.hide_preview },
-                "icon": if all_preview_off { "eye" } else { "eye-off" },
-                "disabled": !has_selection,
-                "action": "setPreviewOff",
-                "args": { "ids": selected, "value": !all_preview_off },
-            });
-            if has_selection {
-                toggle["checked"] = json!(!all_preview_off);
-            }
-            toggle
-        },
-        json!({
-            "id": "zoom-to-selection",
-            "label": labels.zoom_to_selection,
-            "icon": "crosshair",
-            "disabled": !has_selection,
-            "action": "focusSelection",
-        }),
-        json!({
-            "id": "clear-selection",
-            "label": labels.clear_selection,
-            "icon": "square-dashed",
-            "disabled": !has_selection,
-            "action": "clearSelection",
-        }),
-    ];
-    if is_image {
-        items.push(json!({ "id": "replace-image", "label": labels.replace_image, "icon": "image", "action": "replaceImage", "args": { "id": &selected[0] } }));
+    let primary = hits.first();
+    let hit_node = primary.filter(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
+
+    let mut menu = Menu::of(registry);
+    if hits.is_empty() {
+        menu = menu
+            .item(ContextMenuItemSpec {
+                id: "add-node".into(),
+                label: Some(labels.add_node.into()),
+                icon: Some("plus".into()),
+                action: Some("openSpotlight".into()),
+                ..Default::default()
+            })
+            .action("selectAll")
+            .action("reorganize");
     }
-    items.push(json!({ "id": "sep-delete", "separator": true }));
-    items.push(json!({
-        "id": "delete-selection",
-        "label": labels.delete_selection,
-        "icon": "trash",
-        "action": "nodeGraphEdit",
-        "args": { "operations": [{ "operation": "deleteSelection" }] },
-        "destructive": true,
-        "disabled": !has_selection,
-    }));
-    serde_json::to_string(&items).unwrap_or_else(|_| "[]".into())
+    if let Some(node_id) = hit_node {
+        if is_image {
+            menu = menu.item(ContextMenuItemSpec {
+                id: "replace-image".into(),
+                label: Some(labels.replace_image.into()),
+                icon: Some("image".into()),
+                action: Some("replaceImage".into()),
+                args: Some(json!({ "id": node_id })),
+                ..Default::default()
+            });
+        }
+    }
+    if has_selection {
+        menu = menu.separator().item(ContextMenuItemSpec {
+            id: "toggle-preview".into(),
+            label: Some(if all_preview_off { labels.show_preview.into() } else { labels.hide_preview.into() }),
+            icon: Some(if all_preview_off { "eye".into() } else { "eye-off".into() }),
+            checked: Some(!all_preview_off),
+            action: Some("setPreviewOff".into()),
+            args: Some(json!({ "ids": nodes, "value": !all_preview_off })),
+            ..Default::default()
+        });
+        menu = menu.action("focusSelection").action("clearSelection");
+        let phrase = selection_count_phrase(
+            is_de,
+            &[
+                (nodes.len(), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }),
+                (edges.len(), if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" }),
+            ],
+        );
+        if !phrase.is_empty() {
+            menu = menu.separator().item(ContextMenuItemSpec {
+                id: "delete-selection".into(),
+                label: Some(format!("{} ({phrase})", labels.delete_selection)),
+                icon: Some("trash".into()),
+                destructive: Some(true),
+                action: Some("deleteSelection".into()),
+                ..Default::default()
+            });
+        }
+    }
+    menu.build()
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -557,13 +587,8 @@ fn flow_window_measures(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> V
 
 //#region 🔖️Actions
 fn flow_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
 }
-
-fn flow_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowFixture, labels: &FlowPlayLabels) -> String {
-    build_node_graph_context_menu_json(runtime, fixture, labels)
-}
-
 fn focus_selection_camera(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> Option<CameraJson> {
     if runtime.selected_node_ids.is_empty() {
         return None;
@@ -724,7 +749,6 @@ fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &
         runtime.grid_factor,
         Some(&runtime.eval_driver),
     );
-    let context_menu_json = flow_context_menu_json(runtime, fixture, labels);
     let preview_off_json = if runtime.preview_off_node_ids.is_empty() {
         None
     } else {
@@ -736,7 +760,6 @@ fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &
         NodeGraphScene {
             editable: Some(true),
             operators_json: flow_extras.operators_json,
-            context_menu_json: Some(context_menu_json),
             find_items_json: None,
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
@@ -903,6 +926,14 @@ impl DocumentApp for FlowPlayApp {
             // 👁️ View/config actions — mutate runtime, emit no operations (never pollute undo).
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 runtime.selected_node_ids = Self::parse_selection(args);
+                runtime.selected_edge_ids = args
+                    .and_then(|value| value.get("edgeIds"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                runtime.selected_handle_ids = args
+                    .and_then(|value| value.get("handleIds"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
                 ActionEmit::default()
             }
             "nodeGraphHover" => ActionEmit::default(),
@@ -973,6 +1004,8 @@ impl DocumentApp for FlowPlayApp {
             }
             "clearSelection" => {
                 runtime.selected_node_ids.clear();
+                runtime.selected_edge_ids.clear();
+                runtime.selected_handle_ids.clear();
                 ActionEmit::default()
             }
             "contextMenuAt" => {
@@ -1071,13 +1104,17 @@ impl DocumentApp for FlowPlayApp {
                 ActionEmit::operations(operations)
             }
             "deleteSelection" => {
-                let selected = runtime.selected_node_ids.clone();
+                let nodes = runtime.selected_node_ids.clone();
+                let edges = runtime.selected_edge_ids.clone();
+                let handles = runtime.selected_handle_ids.clone();
                 let operations = host_operations(fixture, &*runtime, |host| {
-                    sync_host_selection(host, &selected);
+                    sync_host_selection_domains(host, &nodes, &edges, &handles);
                     host.delete_selection().is_ok()
                 });
                 if !operations.is_empty() {
                     runtime.selected_node_ids.clear();
+                    runtime.selected_edge_ids.clear();
+                    runtime.selected_handle_ids.clear();
                 }
                 ActionEmit::operations(operations)
             }
@@ -1283,8 +1320,8 @@ pub fn create_flow_app() -> App {
                 import_formats: vec![],
             })
             .icon_id("flow")
-            .mode("edit", "Edit")
-            .mode("generate", "Generate")
+            .mode("edit", "Edit", "square-pen")
+            .mode("generate", "Generate", "sparkles")
             .default_mode_id("edit")
             .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
             .window_kind(FLOW_PLAY_WINDOW_COMPILED, "DSL", FLOW_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
@@ -1351,7 +1388,7 @@ pub fn create_flow_app() -> App {
             .operation("nodeGraphEdit", "Node Graph Edit")
             .operation("spotlightCommit", "Spotlight Commit")
             // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
             // 👁️ Ephemeral view/config actions — mutate runtime, emit no operations.
             .view_action("evaluate", "Evaluate")
             .view_action("selectAll", "Select All")
@@ -1390,7 +1427,7 @@ pub fn create_flow_app() -> App {
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+a", "selectAll"),
     )
-    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"))
+    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "flask-conical")
     .workflow("flow", "Flow", "graph")
 }
 //#endregion 🔖️Manifest

@@ -46,7 +46,7 @@ isProject: false
 
 ### 2. DagHost wiring — [mathematical/graph/port/directed/dag/lib.rs](mathematical/graph/port/directed/dag/lib.rs)
 
-- Store viewport (`width,height,dpr`); add `set_viewport(...)`. Convert pointer coords with `cavas::camera::screen_to_world` inside `pointer_down/move/up` (treat incoming args as screen px).
+- Store viewport (`width,height,dpr`); add `set_viewport(...)`. Convert pointer coords with `canvas::camera::screen_to_world` inside `pointer_down/move/up` (treat incoming args as screen px).
 - In `rebuild_engine`: use `create_rect_node(... node.width, node.height ...)`, set `enforce_acyclic = true`, assign handle roles (inputs=`Target`, outputs=`Source`). Add a **rectangle-convention** port-angle helper (new fn, leave `io_node_handle_angles` untouched so flow keeps working) so port dots land exactly on the left/right edges at the label rows.
 - Keep maps: `engine NodeId -> fixture index` and `HandleId -> "nodeId:portId"`. After `pointer_move`/`pointer_up`, sync engine node centers back into `fixture.nodes[i].x/y`, and rebuild `fixture.edges` from `engine.edges` so `fixture_json()` reflects drags + reconnects.
 - Paint: draw port dots at rect-edge positions, color source/target, draw the in-progress `pending_edge` preview during a wire drag.
