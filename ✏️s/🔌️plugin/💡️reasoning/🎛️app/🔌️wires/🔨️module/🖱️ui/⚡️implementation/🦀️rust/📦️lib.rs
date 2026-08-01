@@ -11,7 +11,10 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
+use serde_json::{json, Value};
+use dsl::{from_dsl_value, to_dsl_value, DslValue};
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 
 //#region 🔖️Constants
 const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
@@ -73,7 +76,15 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn fixture_camera(fixture: &Value) -> (f64, f64, f64) {
+fn dsl_to_json(value: &DslValue) -> Value {
+    from_dsl_value(value.clone()).unwrap_or(Value::Null)
+}
+
+fn fixture_json_string(fixture: &DslValue) -> String {
+    serde_json::to_string(&dsl_to_json(fixture)).unwrap_or_else(|_| "{}".into())
+}
+
+fn fixture_camera(fixture: &DslValue) -> (f64, f64, f64) {
     let camera = fixture.get("camera");
     (
         camera.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0),
@@ -82,35 +93,31 @@ fn fixture_camera(fixture: &Value) -> (f64, f64, f64) {
     )
 }
 
-fn fixture_nodes(fixture: &Value) -> &[Value] {
+fn fixture_nodes(fixture: &DslValue) -> &[DslValue] {
     fixture
         .get("nodes")
         .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
         .unwrap_or(&[])
 }
 
-fn fixture_edges(fixture: &Value) -> &[Value] {
+fn fixture_edges(fixture: &DslValue) -> &[DslValue] {
     fixture
         .get("edges")
         .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
         .unwrap_or(&[])
 }
 
-fn wires_identities(wires: &Value) -> &[Value] {
+fn wires_identities(wires: &DslValue) -> &[DslValue] {
     wires
         .get("identities")
         .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
         .unwrap_or(&[])
 }
 
-fn wires_relationships(wires: &Value) -> &[Value] {
+fn wires_relationships(wires: &DslValue) -> &[DslValue] {
     wires
         .get("relationships")
         .and_then(|value| value.as_array())
-        .map(|values| values.as_slice())
         .unwrap_or(&[])
 }
 
@@ -121,14 +128,14 @@ fn wires_relationships(wires: &Value) -> &[Value] {
 /// round-tripped through the `.wires` DSL text arrive here as exact JSON integers (`Number(1)`); this
 /// fallback stays for documents built or patched outside that DSL path, where nothing enforces the
 /// integer representation.
-fn json_id(value: Option<&Value>) -> Option<u64> {
-    value.and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|float| float as u64)))
+fn dsl_id(value: Option<&DslValue>) -> Option<u64> {
+    value.and_then(|value| value.as_f64().map(|float| float as u64))
 }
 
-fn identity_label(wires: &Value, identity_id: u64) -> Option<String> {
+fn identity_label(wires: &DslValue, identity_id: u64) -> Option<String> {
     wires_identities(wires)
         .iter()
-        .find(|identity| json_id(identity.get("identityId")) == Some(identity_id))
+        .find(|identity| dsl_id(identity.get("identityId")) == Some(identity_id))
         .and_then(|identity| identity.get("label").and_then(|value| value.as_str()))
         .map(str::to_string)
 }
@@ -143,13 +150,13 @@ fn relationship_kind_display_name<'a>(kind: &'a str, labels: &WiresLabels) -> &'
     }
 }
 
-fn wires_relationship_document_label(wires: &Value, edge_id: &str, labels: &WiresLabels) -> Option<String> {
+fn wires_relationship_document_label(wires: &DslValue, edge_id: &str, labels: &WiresLabels) -> Option<String> {
     let relationship = wires_relationships(wires).iter().find(|row| {
         row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id)
     })?;
     let kind = relationship.get("kind")?.as_str()?;
-    let source_id = json_id(relationship.get("sourceIdentityId"))?;
-    let target_id = json_id(relationship.get("targetIdentityId"))?;
+    let source_id = dsl_id(relationship.get("sourceIdentityId"))?;
+    let target_id = dsl_id(relationship.get("targetIdentityId"))?;
     let source = identity_label(wires, source_id)?;
     let target = identity_label(wires, target_id)?;
     Some(format!(
@@ -158,7 +165,7 @@ fn wires_relationship_document_label(wires: &Value, edge_id: &str, labels: &Wire
     ))
 }
 
-fn wires_identity_kind_name(wires: &Value, identity_kind_id: &str) -> Option<String> {
+fn wires_identity_kind_name(wires: &DslValue, identity_kind_id: &str) -> Option<String> {
     wires
         .get("kindCatalogs")
         .and_then(|value| value.get("identityKinds"))
@@ -180,12 +187,12 @@ fn wires_identity_kind_name(wires: &Value, identity_kind_id: &str) -> Option<Str
         .map(str::to_string)
 }
 
-fn wires_kind_catalog_entries(wires: &Value, key: &str) -> Vec<Value> {
+fn wires_kind_catalog_entries(wires: &DslValue, key: &str) -> Vec<DslValue> {
     wires
         .get("kindCatalogs")
         .and_then(|value| value.get(key))
         .and_then(|value| value.as_array())
-        .cloned()
+        .map(|values| values.to_vec())
         .or_else(|| {
             wires
                 .get("board")
@@ -193,12 +200,12 @@ fn wires_kind_catalog_entries(wires: &Value, key: &str) -> Vec<Value> {
                 .and_then(|value| value.get("kindCatalogs"))
                 .and_then(|value| value.get(key))
                 .and_then(|value| value.as_array())
-                .cloned()
+                .map(|values| values.to_vec())
         })
         .unwrap_or_default()
 }
 
-fn document_tree_selected_ids(board: &Value, selected: &[String]) -> Vec<String> {
+fn document_tree_selected_ids(board: &DslValue, selected: &[String]) -> Vec<String> {
     let namespace = PanelTreeBuilder::new(WIRES_PLAY_DOCUMENT_NAMESPACE);
     selected
         .iter()
@@ -220,7 +227,7 @@ fn document_tree_selected_ids(board: &Value, selected: &[String]) -> Vec<String>
         .collect()
 }
 
-fn relationship_edge_layers(wires: &Value, board: &Value) -> Vec<Value> {
+fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
     let mut layers = Vec::new();
     for relationship in wires_relationships(wires) {
         let edge_id = relationship.get("edgeId").and_then(|value| value.as_str()).unwrap_or("");
@@ -229,14 +236,14 @@ fn relationship_edge_layers(wires: &Value, board: &Value) -> Vec<Value> {
         }
         let edge = fixture_edges(board).iter().find(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(edge_id));
         if let Some(edge) = edge {
-            layers.push(edge.clone());
+            layers.push(dsl_to_json(edge));
         } else {
             layers.push(json!({
                 "id": edge_id,
                 "kind": "edge",
-                "edgeKind": relationship.get("kind").cloned().unwrap_or_else(|| json!("relationship")),
-                "source": relationship.get("sourceIdentityId").map(|value| value.to_string()).unwrap_or_default(),
-                "target": relationship.get("targetIdentityId").map(|value| value.to_string()).unwrap_or_default(),
+                "edgeKind": relationship.get("kind").map(dsl_to_json).unwrap_or_else(|| json!("relationship")),
+                "source": relationship.get("sourceIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default(),
+                "target": relationship.get("targetIdentityId").map(|value| value.as_f64().map(|n| n.to_string()).unwrap_or_default()).unwrap_or_default(),
             }));
         }
     }
@@ -246,17 +253,17 @@ fn relationship_edge_layers(wires: &Value, board: &Value) -> Vec<Value> {
 /// 🕸️ Re-lays out the board with the neutral `infinite_board_port_directed` force-graph solver —
 /// the same shared mechanism `puzzle/2d`'s `forceLayout`/`reorganize` uses, depended on directly
 /// rather than through puzzle's app program (mindmap's board schema is on its allowlist).
-fn force_layout_board(board: &mut Value) {
-    let Ok(layout_json) = infinite_board_port_directed::apply_force_graph_layout_to_fixture_v1_json(&board.to_string(), r#"{"mode":"force-graph"}"#) else {
+fn force_layout_board(board: &mut DslValue) {
+    let Ok(layout_json) = infinite_board_port_directed::apply_force_graph_layout_to_fixture_v1_json(&fixture_json_string(board), r#"{"mode":"force-graph"}"#) else {
         return;
     };
-    if let Ok(parsed) = serde_json::from_str(&layout_json) {
-        *board = parsed;
+    if let Ok(parsed) = serde_json::from_str::<Value>(&layout_json) {
+        *board = to_dsl_value(&parsed).unwrap_or(DslValue::Null);
     }
 }
 
 /// 📐️ A JSON node's position, defaulting missing coordinates to the origin.
-fn node_position(node: &Value) -> (f64, f64) {
+fn node_position(node: &DslValue) -> (f64, f64) {
     (
         node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0),
         node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0),
@@ -347,7 +354,7 @@ fn render_document_panel(document: &MindmapWiresDocument, selected: &[String], l
         .build()
 }
 
-fn catalog_kind_label(entry: &Value) -> String {
+fn catalog_kind_label(entry: &DslValue) -> String {
     entry
         .get("name")
         .and_then(|value| value.as_str())
@@ -357,7 +364,7 @@ fn catalog_kind_label(entry: &Value) -> String {
         .into()
 }
 
-fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[Value]) -> Vec<UiTreeItemNode> {
+fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslValue]) -> Vec<UiTreeItemNode> {
     entries
         .iter()
         .enumerate()
@@ -378,7 +385,7 @@ fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[Value
         .collect()
 }
 
-fn render_catalogue_panel(wires: &Value, labels: &WiresLabels) -> UiNode {
+fn render_catalogue_panel(wires: &DslValue, labels: &WiresLabels) -> UiNode {
     let namespace = PanelTreeBuilder::new("wires-play-kinds");
     let identity_entries = wires_kind_catalog_entries(wires, "identityKinds");
     let relationship_entries = wires_kind_catalog_entries(wires, "relationshipKinds");
@@ -391,7 +398,7 @@ fn render_catalogue_panel(wires: &Value, labels: &WiresLabels) -> UiNode {
 }
 
 fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String]) -> UiNode {
-    let selected_nodes: Vec<&Value> = selected
+    let selected_nodes: Vec<&DslValue> = selected
         .iter()
         .filter_map(|id| {
             fixture_nodes(&document.board_fixture)
@@ -400,7 +407,7 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
         })
         .collect();
     if selected_nodes.is_empty() {
-        let extension = DefaultWiresExtension::from_fixture_json(&document.wires_fixture.to_string()).ok();
+        let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
         return ui_stack_vertical(vec![
             ui_text(format!("Schema: {WIRES_FIXTURE_SCHEMA}")),
             ui_text(format!(
@@ -465,10 +472,10 @@ fn render_properties_panel(document: &MindmapWiresDocument, selected: &[String])
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-fn render_canvas(board: &Value, wires: &Value) -> UiNode {
+fn render_canvas(board: &DslValue, wires: &DslValue) -> UiNode {
     let (camera_x, camera_y, zoom) = fixture_camera(board);
-    let mut layers: Vec<Value> = fixture_nodes(board).iter().cloned().collect();
-    layers.extend(fixture_edges(board).iter().cloned());
+    let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
+    layers.extend(fixture_edges(board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, board));
     build_canvas_2d_scene(
         WIRES_PLAY_SURFACE_ID,
@@ -484,9 +491,14 @@ fn render_canvas(board: &Value, wires: &Value) -> UiNode {
 //#endregion 🔖️Render
 
 //#region 🔖️ReasoningWiresPlayApp
-#[derive(Default)]
 pub struct ReasoningWiresPlayApp {
-    runtime: WiresPlayRuntime,
+    runtime: RefCell<WiresPlayRuntime>,
+}
+
+impl Default for ReasoningWiresPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(WiresPlayRuntime::default()) }
+    }
 }
 
 impl DocumentApp for ReasoningWiresPlayApp {
@@ -516,10 +528,11 @@ impl DocumentApp for ReasoningWiresPlayApp {
         _view_state: &ViewState,
     ) -> ActionEmit<MindmapWiresOperation> {
         let document = doc.projection;
+        let mut runtime = self.runtime.borrow_mut();
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setSelection" | "documentSelect" => {
-                self.runtime.selected_ids = selection_ids(args);
+                runtime.selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "canvasPointerDown" => {
@@ -527,13 +540,13 @@ impl DocumentApp for ReasoningWiresPlayApp {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 if let Some(id) = id.filter(|id| find_board_node(document, id).is_some()) {
-                    self.runtime.selected_ids = vec![id.to_string()];
-                    self.runtime.drag = Some(WiresDragState { node_id: id.to_string(), last_x: x, last_y: y });
+                    runtime.selected_ids = vec![id.to_string()];
+                    runtime.drag = Some(WiresDragState { node_id: id.to_string(), last_x: x, last_y: y });
                 }
                 ActionEmit::default()
             }
             "canvasPointerUp" => {
-                self.runtime.drag = None;
+                runtime.drag = None;
                 ActionEmit::default()
             }
             // ✏️ Operations — dispatched as VCS operations with a true inverse.
@@ -544,8 +557,8 @@ impl DocumentApp for ReasoningWiresPlayApp {
                 } else {
                     empty_mindmap_wires_document()
                 };
-                self.runtime.selected_ids.clear();
-                self.runtime.drag = None;
+                runtime.selected_ids.clear();
+                runtime.drag = None;
                 ActionEmit::operations(vec![MindmapWiresOperation::ReplaceDocument {
                     wires_fixture: next.wires_fixture,
                     board_fixture: next.board_fixture,
@@ -554,7 +567,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
             "addNode" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("identity");
                 let id = format!("node-{}", fixture_nodes(&document.board_fixture).len() + 1);
-                let node = json!({
+                let node = to_dsl_value(&json!({
                     "id": id,
                     "nodeKind": kind,
                     "shape": "circle",
@@ -563,31 +576,34 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "radius": 24.0,
                     "text": id,
                     "handles": []
-                });
-                self.runtime.selected_ids = vec![id];
+                }))
+                .expect("node serializes");
+                runtime.selected_ids = vec![id];
                 ActionEmit::operations(vec![MindmapWiresOperation::AddNode { node }])
             }
             "addRelationship" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("owns");
                 let edge_id = format!("edge-{}", fixture_edges(&document.board_fixture).len() + 1);
-                let edge = json!({
+                let edge = to_dsl_value(&json!({
                     "id": edge_id,
                     "edgeKind": format!("wires.{kind}"),
                     "source": "node-1",
                     "target": "node-2"
-                });
-                let relationship = json!({
+                }))
+                .expect("edge serializes");
+                let relationship = to_dsl_value(&json!({
                     "edgeId": edge_id,
                     "kind": kind,
                     "sourceIdentityId": 1,
                     "targetIdentityId": 2
-                });
-                self.runtime.selected_ids = vec![edge_id];
+                }))
+                .expect("relationship serializes");
+                runtime.selected_ids = vec![edge_id];
                 ActionEmit::operations(vec![MindmapWiresOperation::AddRelationship { edge, relationship }])
             }
             "deleteSelection" => {
                 let mut operations = Vec::new();
-                for id in &self.runtime.selected_ids {
+                for id in &runtime.selected_ids {
                     if find_board_node(document, id).is_some() {
                         operations.push(MindmapWiresOperation::RemoveNode { node_id: id.clone() });
                     } else if fixture_edges(&document.board_fixture)
@@ -598,7 +614,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     }
                 }
                 if !operations.is_empty() {
-                    self.runtime.selected_ids.clear();
+                    runtime.selected_ids.clear();
                 }
                 ActionEmit::operations(operations)
             }
@@ -614,9 +630,9 @@ impl DocumentApp for ReasoningWiresPlayApp {
                         if nx == ox && ny == oy {
                             return None;
                         }
-                        let mut patch = Map::new();
-                        patch.insert("x".into(), json!(nx));
-                        patch.insert("y".into(), json!(ny));
+                        let mut patch = BTreeMap::new();
+                        patch.insert("x".into(), to_dsl_value(&nx).unwrap_or(DslValue::Null));
+                        patch.insert("y".into(), to_dsl_value(&ny).unwrap_or(DslValue::Null));
                         Some(MindmapWiresOperation::PatchNode { node_id: id.to_string(), patch })
                     })
                     .collect();
@@ -625,15 +641,15 @@ impl DocumentApp for ReasoningWiresPlayApp {
             "canvasPointerMove" => {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let Some(drag) = self.runtime.drag.clone() else { return ActionEmit::default() };
+                let Some(drag) = runtime.drag.clone() else { return ActionEmit::default() };
                 let Some(node) = find_board_node(document, &drag.node_id) else { return ActionEmit::default() };
                 let zoom = fixture_camera(&document.board_fixture).2.max(1e-6);
                 let (cur_x, cur_y) = node_position(node);
                 let (dx, dy) = ((x - drag.last_x) / zoom, (y - drag.last_y) / zoom);
-                let mut patch = Map::new();
-                patch.insert("x".into(), json!(cur_x + dx));
-                patch.insert("y".into(), json!(cur_y + dy));
-                self.runtime.drag = Some(WiresDragState { node_id: drag.node_id.clone(), last_x: x, last_y: y });
+                let mut patch = BTreeMap::new();
+                patch.insert("x".into(), to_dsl_value(&(cur_x + dx)).unwrap_or(DslValue::Null));
+                patch.insert("y".into(), to_dsl_value(&(cur_y + dy)).unwrap_or(DslValue::Null));
+                runtime.drag = Some(WiresDragState { node_id: drag.node_id.clone(), last_x: x, last_y: y });
                 ActionEmit::amend(
                     vec![MindmapWiresOperation::PatchNode { node_id: drag.node_id.clone(), patch }],
                     format!("drag:{}", drag.node_id),
@@ -646,11 +662,12 @@ impl DocumentApp for ReasoningWiresPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, MindmapWiresDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<WiresLabels>(view_state);
+        let runtime = self.runtime.borrow();
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => render_canvas(&document.board_fixture, &document.wires_fixture),
-            WIRES_PLAY_BODY_DOCUMENT => render_document_panel(document, &self.runtime.selected_ids, labels),
+            WIRES_PLAY_BODY_DOCUMENT => render_document_panel(document, &runtime.selected_ids, labels),
             WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&document.wires_fixture, labels),
-            WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(document, &self.runtime.selected_ids),
+            WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(document, &runtime.selected_ids),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -787,7 +804,7 @@ mod tests {
     #[test]
     fn metabolism_fixture_hydrates_extension() {
         let document = metabolism_wires_example_document();
-        let ext = DefaultWiresExtension::from_fixture_json(&document.wires_fixture.to_string()).expect("metabolism fixture");
+        let ext = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).expect("metabolism fixture");
         assert_eq!(ext.mindmap.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);
     }
@@ -874,7 +891,10 @@ mod tests {
         let mut instance_b = new_app();
         // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
-        let seed_node = |id: &str| json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] });
+        let seed_node = |id: &str| {
+            to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] }))
+                .expect("seed node")
+        };
         let mut base = empty_mindmap_wires_document();
         base = store::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-1") });
         base = store::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-2") });

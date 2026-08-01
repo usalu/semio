@@ -4,8 +4,8 @@ use block_2d::{Block2dDefinition, Block2dHandleKind, Block2dHandleTemplate, BLOC
 use block_2d_op::Block2dOperation;
 use block_shared::BlockCompatibilityRule;
 use semio_framework_plugin::{
-    is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, ActionEmit, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode,
+    is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, ActionEmit, App,
+    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInspectorFieldGroup,
     UiInputNode, UiNode, UiPresence, UiTreeItemNode, ViewState,
 };
 use serde_json::{json, Value};
@@ -119,13 +119,19 @@ fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
 }
 
 fn build_inspection_tree(definition: &Block2dDefinition, labels: &Block2dLabels) -> UiNode {
-    ui_stack_vertical(vec![
-        text_field("block2d-play-inspector.name", labels.name, &definition.node_kind.name, "name"),
-        text_field("block2d-play-inspector.label", labels.label, &definition.node_kind.label, "label"),
-        text_field("block2d-play-inspector.variant", labels.variant, definition.node_kind.variant.as_deref().unwrap_or(""), "variant"),
-        text_field("block2d-play-inspector.description", labels.description, &definition.node_kind.description, "description"),
-        ui_inspector_readonly_field("block2d-play-inspector.handle-count", labels.handles, definition.handles.len().to_string()),
-    ])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        id: "block2d-play-inspector".into(),
+        label: labels.summary.into(),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        fields: vec![
+            text_field("block2d-play-inspector.name", labels.name, &definition.node_kind.name, "name"),
+            text_field("block2d-play-inspector.label", labels.label, &definition.node_kind.label, "label"),
+            text_field("block2d-play-inspector.variant", labels.variant, definition.node_kind.variant.as_deref().unwrap_or(""), "variant"),
+            text_field("block2d-play-inspector.description", labels.description, &definition.node_kind.description, "description"),
+            ui_inspector_readonly_field("block2d-play-inspector.handle-count", labels.handles, definition.handles.len().to_string()),
+        ],
+    }])
 }
 
 fn render_board(definition: &Block2dDefinition, labels: &Block2dLabels) -> UiNode {
@@ -329,7 +335,9 @@ mod tests {
         assert!(json.contains("Handle Kinds"));
         let inspector = app.render(BLOCK2D_BODY_INSPECTOR, None, &ViewState::default()).expect("render");
         let inspector_json = serde_json::to_string(&inspector).unwrap();
+        assert!(inspector_json.contains("\"type\":\"tree\""), "inspection body must be a tree like document");
         assert!(inspector_json.contains("Name"));
+        assert!(!inspector_json.contains("\"type\":\"stack\""), "inspection body must not be a free-form stack");
     }
 
     #[test]

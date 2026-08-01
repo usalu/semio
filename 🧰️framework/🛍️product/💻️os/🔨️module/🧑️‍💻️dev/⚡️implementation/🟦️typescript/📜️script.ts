@@ -28,7 +28,7 @@ import {
   frameworkOsLockedPrefsEnv,
   resolveTestLevel,
 } from "../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts";
-import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
+import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri, decodeDocumentPackBytes, encodeDocumentPackBytes } from "@semio-tech/framework-os-core";
 import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/📜️script.ts";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
@@ -82,12 +82,12 @@ async function backboneDatabaseCtorLazy(): Promise<typeof import("bun:sqlite").D
  * pass one — app documents (per `OsDocumentRef`) always pass their own id explicitly. */
 const SPACE_FOLDER_DOCUMENT_ID = "studio";
 
-async function readBackbonePayload(uri: string, documentId: string | null): Promise<string | null> {
+async function readBackbonePayload(uri: string, documentId: string | null): Promise<Uint8Array | null> {
   const kind = backboneKindFromUri(uri);
   if (kind === "file") {
     const path = uri.slice("file://".length);
     if (!existsSync(path)) return null;
-    return readFileSync(path, "utf8");
+    return new Uint8Array(readFileSync(path));
   }
   if (kind === "folder") {
     const folder = uri.slice("folder://".length);
@@ -95,15 +95,21 @@ async function readBackbonePayload(uri: string, documentId: string | null): Prom
     if (!existsSync(dbPath)) return null;
     const Database = await backboneDatabaseCtorLazy();
     const db = new Database(dbPath);
-    db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
-    const row = db.query("SELECT json FROM document WHERE id = ?1").get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { json?: string } | null;
-    return row?.json ?? null;
+    db.run(
+      "CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)",
+    );
+    const row = db.query("SELECT pack, spr FROM document WHERE id = ?1").get(documentId ?? SPACE_FOLDER_DOCUMENT_ID) as { pack?: Uint8Array; spr?: Uint8Array } | null;
+    if (!row?.pack) return null;
+    const pack = row.pack instanceof Uint8Array ? row.pack : new Uint8Array(row.pack as ArrayBuffer);
+    const spr = row.spr instanceof Uint8Array ? row.spr : new Uint8Array((row.spr ?? []) as ArrayBuffer);
+    return encodeDocumentPackBytes(pack, spr);
   }
   return null;
 }
 
-async function writeBackbonePayload(uri: string, documentId: string | null, schema: string | null, payload: string): Promise<void> {
+async function writeBackbonePayload(uri: string, documentId: string | null, schema: string | null, payload: Uint8Array): Promise<void> {
   const kind = backboneKindFromUri(uri);
+  const { pack, spr } = decodeDocumentPackBytes(payload);
   if (kind === "file") {
     const path = uri.slice("file://".length);
     mkdirSync(dirname(path), { recursive: true });
@@ -116,13 +122,13 @@ async function writeBackbonePayload(uri: string, documentId: string | null, sche
     mkdirSync(dirname(dbPath), { recursive: true });
     const Database = await backboneDatabaseCtorLazy();
     const db = new Database(dbPath);
-    db.run("CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, json TEXT NOT NULL, updated_at INTEGER NOT NULL)");
-    db.run("INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at", [
-      documentId ?? SPACE_FOLDER_DOCUMENT_ID,
-      schema ?? "",
-      payload,
-      Date.now(),
-    ]);
+    db.run(
+      "CREATE TABLE IF NOT EXISTS document (id TEXT PRIMARY KEY, schema TEXT, pack BLOB NOT NULL, spr BLOB NOT NULL, updated_at INTEGER NOT NULL)",
+    );
+    db.run(
+      "INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at",
+      [documentId ?? SPACE_FOLDER_DOCUMENT_ID, schema ?? "", pack, spr, Date.now()],
+    );
     return;
   }
   throw new Error(`unsupported backbone uri: ${uri}`);
@@ -162,7 +168,7 @@ function subscribeFolderWatch(uri: string, subscriber: { write: (chunk: string) 
 }
 
 type BackboneServerRequest = { method?: string; url?: string; on: (event: string, handler: (chunk?: unknown) => void) => void };
-type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string) => void };
+type BackboneServerResponse = { statusCode: number; setHeader: (name: string, value: string) => void; write: (chunk: string) => void; end: (body?: string | Uint8Array) => void };
 
 /** @emoji 💾️ Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
  * for read/write, plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
@@ -206,8 +212,8 @@ export function semioBackboneVitePlugin() {
                 return;
               }
               res.statusCode = 200;
-              res.setHeader("content-type", "application/json");
-              res.end(payload);
+              res.setHeader("content-type", "application/octet-stream");
+              res.end(Buffer.from(payload));
             })
             .catch((error) => {
               res.statusCode = 500;
@@ -216,16 +222,17 @@ export function semioBackboneVitePlugin() {
           return;
         }
         if (req.method === "PUT") {
-          let body = "";
+          const chunks: Buffer[] = [];
           req.on("data", (chunk) => {
-            body += String(chunk);
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
           });
           req.on("end", () => {
-            writeBackbonePayload(uri, documentId, schema, body)
+            const body = Buffer.concat(chunks);
+            writeBackbonePayload(uri, documentId, schema, new Uint8Array(body))
               .then(() => {
                 res.statusCode = 200;
-                res.setHeader("content-type", "application/json");
-                res.end("{}");
+                res.setHeader("content-type", "application/octet-stream");
+                res.end(new Uint8Array());
               })
               .catch((error) => {
                 res.statusCode = 500;

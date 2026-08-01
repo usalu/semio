@@ -15,6 +15,7 @@ semio-framework-core = { path = "../../../../../../../../🧰️framework/⚡️
 ui_wgpu = { path = "../../../../../../../🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust", package = "semio-framework-ui-wgpu" }
 vcs = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "22.0.1"
 serde = { version = "1.0.219", features = ["derive"] }

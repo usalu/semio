@@ -362,10 +362,11 @@ import {
   type ProgramHotSwapEvent,
   type PanelTabKind,
   type PluginRegistryEntry,
+  type PluginContextMenuRequest,
+  type PluginContextMenuSurfaceTarget,
   type PluginUiRefreshRequest,
   type PluginUiRefreshResponse,
   type PluginUiRefreshSectionResponse,
-  type PluginContextMenuRequest,
   type PluginViewState,
   type PluginWasmHandle as CorePluginWasmHandle,
   type PresencePeer,
@@ -458,6 +459,12 @@ import {
   type DocumentActorMsg,
   type DocumentSyncStatus,
   type FrameworkSyncUtilityLeaf,
+  decodeBackboneMessage,
+  encodeBackboneMessage,
+  decodeBackboneWorkerResponse,
+  encodeBackboneWorkerRequest,
+  operationEnvelopeFromWire,
+  operationEnvelopeToWire,
   type PersistenceBinding,
 } from "@semio-tech/framework-os-core";
 import {
@@ -568,7 +575,11 @@ function ComponentSceneFallback() {
   );
 }
 
-function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene" }>, onAction: (action: ActionDescriptor) => void): ReactNode {
+function renderComponentSceneHost(
+  node: Extract<UiNode, { type: "componentScene" }>,
+  onAction: (action: ActionDescriptor) => void,
+  requestContextMenu?: UiInterpreterContext["requestContextMenu"],
+): ReactNode {
   if (node.componentKind === "virtualFileSystem") {
     return <VirtualFileSystemHost node={node} onAction={onAction} />;
   }
@@ -582,7 +593,7 @@ function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene"
   }
   return (
     <Suspense fallback={<ComponentSceneFallback />}>
-      <Host node={node} onAction={onAction} />
+      <Host node={node} onAction={onAction} requestContextMenu={requestContextMenu} />
     </Suspense>
   );
 }
@@ -590,8 +601,16 @@ function renderComponentSceneHost(node: Extract<UiNode, { type: "componentScene"
 //#region UiInterpreterContext
 export type UiInterpreterContext = {
   readonly onAction: (action: ActionDescriptor) => void;
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
 };
 //#endregion UiInterpreterContext
+
+const PluginSurfaceActionsContext = createContext<UiInterpreterContext["requestContextMenu"]>(undefined);
+
+/** @emoji 🖱️ On-demand context menu from the active document app instance. */
+export function usePluginSurfaceActions(): UiInterpreterContext["requestContextMenu"] {
+  return useContext(PluginSurfaceActionsContext);
+}
 
 //#region ActionDispatch
 function dispatchUiAction(onAction: UiInterpreterContext["onAction"], descriptor: ActionDescriptor, patch: Record<string, unknown>): void {
@@ -1163,7 +1182,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
       // 🧭️ Dispatches through `<Suspense>` into one of 14 lazily-loaded host components (or
       // `VirtualFileSystemHost`) — no DOM element of index.tsx's own to attach to — best-effort only, via a
       // parent stack/section/group's wrapper.
-      return renderComponentSceneHost(node, context.onAction);
+      return renderComponentSceneHost(node, context.onAction, context.requestContextMenu);
     case "externalSlot":
       return (
         <p className="text-muted-foreground text-xs" data-ui-path={path}>
@@ -1182,7 +1201,8 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
  * `onAction` are fresh every render and this degenerates to the unmemoized call.
  */
 export const InterpretedUiNode = memo(function InterpretedUiNode({ node, onAction }: { readonly node: UiNode; readonly onAction: UiInterpreterContext["onAction"] }): ReactNode {
-  return interpretUiNode(node, { onAction });
+  const requestContextMenu = usePluginSurfaceActions();
+  return interpretUiNode(node, { onAction, requestContextMenu });
 });
 //#endregion InterpretUiNode
 //#endregion 🔖️UiInterpreter
@@ -5368,8 +5388,8 @@ export function FrameworkOsShell({
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
     const worker = new Worker(new URL("../../product/os/core/js/🟦️backbone-🟦️worker.ts", import.meta.url), { type: "module" });
-    worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse>) => {
-      const message = messageEvent.data;
+    worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse | { readonly wire: Uint8Array }>) => {
+      const message = "wire" in messageEvent.data ? decodeBackboneWorkerResponse(messageEvent.data.wire) : messageEvent.data;
       if (message.kind !== "event") return;
       const entry = openDocumentSessionsRef.current.get(message.documentId);
       if (!entry) return;
@@ -5385,11 +5405,27 @@ export function FrameworkOsShell({
       } else if (event.kind === "remoteOperations" && entry.plugin.applyOperations) {
         void entry.plugin.applyOperations(entry.session.instanceId, JSON.stringify(event.envelopes));
         const actorUri = `actor://${message.documentId}`;
-        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "operations", envelopes: event.envelopes })]);
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [
+          encodeBackboneMessage({
+            kind: "operations",
+            envelopes: event.envelopes.map((envelope, index) =>
+              operationEnvelopeToWire(envelope, { actor: 0, physical_ms: Date.now(), logical: index + 1 }),
+            ),
+          }),
+        ]);
       } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocument) {
-        void entry.plugin.loadAppDocument(entry.session.instanceId, event.envelopeJson);
+        const packBytes = new Uint8Array(event.pack);
+        let documentJson: string;
+        try {
+          documentJson = JSON.stringify(decodePackValue(packBytes));
+        } catch {
+          documentJson = JSON.stringify({ pack: Array.from(event.pack), spr: Array.from(event.spr) });
+        }
+        void entry.plugin.loadAppDocument(entry.session.instanceId, documentJson);
         const actorUri = `actor://${message.documentId}`;
-        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "snapshot", envelopeJson: event.envelopeJson })]);
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [
+          encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: new Uint8Array(event.spr) }),
+        ]);
       } else if (event.kind === "conflict") {
         console.warn("[os-shell] sync conflict", message.documentId, event.message);
       }
@@ -5606,18 +5642,21 @@ export function FrameworkOsShell({
   }, [panel?.activeSpawnedId, session, studioMode]);
 
   useEffect(() => {
-    setPluginBackboneOutboundRelay((uri, messageJson) => {
+    setPluginBackboneOutboundRelay((uri, messageBytes) => {
       const documentId = uri.startsWith("actor://") ? uri.slice("actor://".length) : null;
       if (!documentId) return;
       const worker = backboneWorkerRef.current;
       if (!worker) return;
       let actorMessage: DocumentActorMsg;
       try {
-        const parsed = JSON.parse(messageJson) as { kind?: string; envelopes?: unknown; envelopeJson?: string };
+        const parsed = decodeBackboneMessage(messageBytes);
         if (parsed.kind === "operations") {
-          actorMessage = { kind: "localOperations", envelopes: (parsed.envelopes ?? []) as DocumentActorMsg extends { kind: "localOperations"; envelopes: infer E } ? E : never };
+          actorMessage = {
+            kind: "localOperations",
+            envelopes: parsed.envelopes.map((envelope) => operationEnvelopeFromWire(envelope)),
+          };
         } else if (parsed.kind === "snapshot") {
-          actorMessage = { kind: "localSnapshot", envelopeJson: parsed.envelopeJson ?? "{}" };
+          actorMessage = { kind: "localSnapshot", pack: Array.from(parsed.pack), spr: Array.from(parsed.spr) };
         } else {
           return;
         }
@@ -5625,7 +5664,7 @@ export function FrameworkOsShell({
         return;
       }
       const request: BackboneWorkerRequest = { kind: "send", documentId, message: actorMessage };
-      worker.postMessage(request);
+      worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
     });
     return () => setPluginBackboneOutboundRelay(null);
   }, []);
@@ -5734,6 +5773,27 @@ export function FrameworkOsShell({
       return loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId);
     },
     [loadedPlugins, session?.pluginId],
+  );
+
+  const requestContextMenu = useCallback(
+    async (request: PluginContextMenuRequest): Promise<readonly ContextMenuItemSpec[]> => {
+      if (!session) return [];
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      if (!plugin?.contextMenu) return [];
+      const dispatchViewState = injectActiveUtility(
+        {
+          ...session.viewState,
+          windowId: activeWindowIdRef.current ?? undefined,
+          windowInstances: sessionWindowInstances(session.app, extraWindowInstancesRef.current).map((instance) => ({
+            id: instance.id,
+            windowKindId: instance.windowKindId,
+          })),
+        },
+        activeWindowIdRef.current ?? undefined,
+      );
+      return plugin.contextMenu(session.instanceId, { ...request, viewState: dispatchViewState });
+    },
+    [loadedPlugins, session],
   );
 
   const refreshUi = useCallback(
@@ -6158,7 +6218,7 @@ export function FrameworkOsShell({
         }
         if ("requestFileOpen" in effect) {
           const { accept, readAs, importAction, multiple } = effect.requestFileOpen;
-          const opened = await requestFileOpen(accept || ".json,.spatial.json", readAs, multiple);
+          const opened = await requestFileOpen(accept || ".spk,.dsl,.ops,application/octet-stream", readAs, multiple);
           if (opened.length > 0) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
@@ -6989,7 +7049,7 @@ export function FrameworkOsShell({
       if (validationError) console.error("[DEBUG] tutorial recording validation failed", validationError);
       const json = JSON.stringify(def, null, 2);
       console.log("[DEBUG] tutorial recording", json);
-      downloadMediaExport(`tutorial-${session.app.id}-${Date.now()}.json`, "application/json", json);
+      downloadMediaExport(`tutorial-${session.app.id}-${Date.now()}.ops`, "text/plain", json);
       dispatch({ type: "SET_TUTORIAL_RECORDING", value: false });
       return;
     }
@@ -7354,11 +7414,11 @@ export function FrameworkOsShell({
   }, []);
 
   const exportTheme = useCallback(() => {
-    downloadMediaExport(`${uiThemeBase.id}.theme.json`, "application/json", serializeUiTheme(uiThemeBase));
+    downloadMediaExport(`${uiThemeBase.id}.theme.dsl`, "text/plain", serializeUiTheme(uiThemeBase));
   }, [uiThemeBase]);
 
   const importTheme = useCallback(async () => {
-    const opened = (await requestFileOpen(".theme.json,application/json"))[0];
+    const opened = (await requestFileOpen(".theme.dsl,.dsl,text/plain"))[0];
     if (!opened) return;
     try {
       const parsed = parseUiTheme(JSON.parse(opened.contents));
@@ -8713,7 +8773,7 @@ export function FrameworkOsShell({
           // (`semio_framework_os::import_os_space_from_pack`, wave 2 s+shome+sstudio family) —
           // read as a dataUrl, same shape as the generic `RequestFileOpen`/`readAs: "dataUrl"` path
           // below. Anything else keeps reading as text and dispatching the JSON-envelope "importSpace".
-          accept="application/json,.json,.pack"
+          accept=".spk,.dsl,.ops,application/octet-stream"
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0];
@@ -8849,6 +8909,10 @@ export function FrameworkOsShell({
     const items: ContextMenuItem[] = [];
     if (windowKind) {
       for (const action of resolveWindowActions(session.app, windowKind)) {
+        // 🧹️ Same curation as the command palette (`if (!action.inPalette) continue`) — most apps
+        // declare internal/pointer-tracking view actions (worldHover, engagementInput, ...) as window
+        // actions purely for dispatch plumbing; only palette-worthy ones belong in a user-facing menu.
+        if (!action.inPalette) continue;
         const argCarrying = actionRequiresStagedForm(action);
         items.push({
           id: `shell-menu.action.${action.id}`,
@@ -8895,6 +8959,7 @@ export function FrameworkOsShell({
     <SetWindowTitleContext.Provider value={setWindowTitle}>
     <SetWindowIconContext.Provider value={setWindowIcon}>
     <AppKeybindingsContext.Provider value={keysByActionId}>
+    <PluginSurfaceActionsContext.Provider value={requestContextMenu}>
     <UIFindProvider>
       <LevelProvider level="base">
         <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
@@ -8936,6 +9001,14 @@ export function FrameworkOsShell({
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
         <TextSelectionContextMenuHost />
+        <ContextMenuController
+          open={shellContextMenu != null}
+          position={shellContextMenu}
+          items={shellContextMenu?.items ?? []}
+          onOpenChange={(open) => {
+            if (!open) setShellContextMenu(null);
+          }}
+        />
         {session && activeIntroduction && introductionStepIndex != null && (
           <UIIntroduction
             introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay)}
@@ -8975,6 +9048,7 @@ export function FrameworkOsShell({
           })()}
       </LevelProvider>
     </UIFindProvider>
+    </PluginSurfaceActionsContext.Provider>
     </AppKeybindingsContext.Provider>
     </SetWindowIconContext.Provider>
     </SetWindowTitleContext.Provider>
@@ -12923,6 +12997,34 @@ function parseJsonArray<T>(json: string | undefined): readonly T[] {
   }
 }
 
+function parseSelectionDomainsFromSession(json: string): { readonly nodes: string[]; readonly edges: string[]; readonly handles: string[] } {
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    if (Array.isArray(parsed)) {
+      return { nodes: parsed as string[], edges: [], handles: [] };
+    }
+    if (parsed && typeof parsed === "object") {
+      const record = parsed as { nodes?: unknown; edges?: unknown; handles?: unknown; edgeIds?: unknown; handleIds?: unknown };
+      return {
+        nodes: Array.isArray(record.nodes) ? (record.nodes as string[]) : [],
+        edges: Array.isArray(record.edges) ? (record.edges as string[]) : Array.isArray(record.edgeIds) ? (record.edgeIds as string[]) : [],
+        handles: Array.isArray(record.handles) ? (record.handles as string[]) : Array.isArray(record.handleIds) ? (record.handleIds as string[]) : [],
+      };
+    }
+  } catch {
+    /* invalid json */
+  }
+  return { nodes: [], edges: [], handles: [] };
+}
+
+function selectionGroupsFromDomains(domains: { readonly nodes: string[]; readonly edges: string[]; readonly handles: string[] }): NonNullable<PluginContextMenuSurfaceTarget["selection"]> {
+  const groups: NonNullable<PluginContextMenuSurfaceTarget["selection"]> = [];
+  if (domains.nodes.length > 0) groups.push({ domain: "node", ids: domains.nodes });
+  if (domains.edges.length > 0) groups.push({ domain: "edge", ids: domains.edges });
+  if (domains.handles.length > 0) groups.push({ domain: "handle", ids: domains.handles });
+  return groups;
+}
+
 /** @emoji 🧪️ Temporary menu-open trace — item ids/icons for end-to-end rich-menu validation. */
 function logContextMenuOpen(source: string, specs: readonly ContextMenuItemSpec[]): void {
   console.log(
@@ -15551,7 +15653,7 @@ function clearPendingWorldProjection(windowId: string | null): void {
 //#endregion WorldWindowInstance
 
 //#region World3dHost
-export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
+export function World3dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.world3d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const setWindowTitle = useContext(SetWindowTitleContext);
@@ -17337,21 +17439,21 @@ function WasmGraphSurface({
   surfaceId,
   controllerId,
   editable,
-  contextMenuItems,
+  requestContextMenu,
   onAction,
 }: {
   readonly scene: NodeGraphScene;
   readonly surfaceId: string;
   readonly controllerId: string;
   readonly editable: boolean;
-  readonly contextMenuItems: readonly GraphContextMenuItem[];
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const sessionRef = useRef<FrameworkGraphSession | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
@@ -17541,10 +17643,40 @@ function WasmGraphSurface({
       className={cn("relative h-full w-full", surfaceClass)}
       data-level="base"
       onContextMenu={(event) => {
-        if (!editable || contextMenuItems.length === 0) return;
+        if (!editable || !requestContextMenu) return;
         event.preventDefault();
         event.stopPropagation();
-        setContextMenu({ x: event.clientX, y: event.clientY });
+        void (async () => {
+          const session = sessionRef.current;
+          const container = containerRef.current;
+          let hits: NonNullable<PluginContextMenuSurfaceTarget["hits"]> = [];
+          let domains = { nodes: [] as string[], edges: [] as string[], handles: [] as string[] };
+          if (session && container) {
+            const rect = container.getBoundingClientRect();
+            const sx = event.clientX - rect.left;
+            const sy = event.clientY - rect.top;
+            try {
+              const targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
+              hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
+            } catch {
+              hits = [];
+            }
+            try {
+              domains = parseSelectionDomainsFromSession(session.selectionDomainsJson?.() ?? session.selectedNodeIdsJson());
+            } catch {
+              domains = { nodes: [], edges: [], handles: [] };
+            }
+          }
+          const specs = await requestContextMenu({
+            viewState: {},
+            menu: { id: "nodeGraph" },
+            surface: { surfaceId, kind: "nodeGraph", hits, selection: selectionGroupsFromDomains(domains) },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          });
+          console.log("[DEBUG] wasm graph context menu open", { itemIds: specs.map((item) => item.id), domains });
+          setContextMenu({ x: event.clientX, y: event.clientY, specs });
+        })();
       }}
       onPointerUp={emitInteractionState}
     >
@@ -17622,7 +17754,7 @@ function WasmGraphSurface({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenu(contextMenuItems)}
+        items={mapContextMenu(contextMenu?.specs ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -17802,7 +17934,7 @@ function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer
 //#endregion Helpers
 
 //#region Component
-export function NodeGraphHost({ node, onAction }: ComponentSceneHostProps) {
+export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.nodeGraph;
   const editable = scene?.editable ?? true;
   const parsedNodes = useMemo(() => parseJsonArray<WorkflowNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
@@ -17848,9 +17980,9 @@ export function NodeGraphHost({ node, onAction }: ComponentSceneHostProps) {
     <div className="semio-node-graph-host relative h-full min-h-[24rem] w-full" data-surface-id={node.surfaceId} tabIndex={editable ? 0 : undefined} onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}>
       {isClient ? (
         useFlowEngine ? (
-          <FlowGraphCanvasHost scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} contextMenuItems={contextMenuItems} onAction={onAction} />
+          <FlowGraphCanvasHost scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} />
         ) : (
-          <WasmGraphSurface scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} contextMenuItems={contextMenuItems} onAction={onAction} />
+          <WasmGraphSurface scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} />
         )
       ) : (
         <DiagramGraphFallback scene={scene} node={node} editable={editable} parsedNodes={parsedNodes} parsedEdges={parsedEdges} findItems={findItems} contextMenuItems={contextMenuItems} onAction={onAction} />
@@ -18482,14 +18614,14 @@ export function FlowGraphCanvasHost({
   surfaceId,
   controllerId,
   editable,
-  contextMenuItems,
+  requestContextMenu,
   onAction,
 }: {
   readonly scene: NodeGraphScene;
   readonly surfaceId: string;
   readonly controllerId: string;
   readonly editable: boolean;
-  readonly contextMenuItems: readonly GraphContextMenuItem[];
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const windowInstanceId = useContext(WindowInstanceIdContext);
@@ -18501,7 +18633,7 @@ export function FlowGraphCanvasHost({
     readonly x: number;
     readonly y: number;
     readonly widgetId?: string;
-    readonly items: readonly GraphContextMenuItem[];
+    readonly specs: readonly ContextMenuItemSpec[];
   } | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
@@ -18516,8 +18648,8 @@ export function FlowGraphCanvasHost({
   sceneRef.current = scene;
 
   useEffect(() => {
-    if (contextMenu == null || contextMenu.items.length === 0) return;
-    logContextMenuOpen("flow-graph", contextMenu.items);
+    if (contextMenu == null || contextMenu.specs.length === 0) return;
+    logContextMenuOpen("flow-graph", contextMenu.specs);
   }, [contextMenu]);
 
   useEffect(() => {
@@ -18654,8 +18786,8 @@ export function FlowGraphCanvasHost({
     const session = sessionRef.current;
     if (!session) return;
     try {
-      const nodeIds = JSON.parse(session.selectedWidgetIds()) as string[];
-      dispatch(nodeGraphActions.select, { nodeIds });
+      const domains = parseSelectionDomainsFromSession(session.selectionDomainsJson?.() ?? session.selectedWidgetIds());
+      dispatch(nodeGraphActions.select, { nodeIds: domains.nodes, edgeIds: domains.edges, handleIds: domains.handles });
       const hovered = session.hoveredWidgetId();
       const channelJson = session.hoveredChannelJson();
       dispatch(nodeGraphActions.hover, { hoverJson: hovered ? channelJson : null });
@@ -18791,45 +18923,6 @@ export function FlowGraphCanvasHost({
       emitInteractionState();
     },
   });
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const session = sessionRef.current;
-      if (!session || !editable) return;
-      const mod = event.metaKey || event.ctrlKey;
-      if (mod && event.key === "z" && !event.shiftKey) {
-        event.preventDefault();
-        if (session.undo()) {
-          commitFixture();
-          emitInteractionState();
-        }
-        return;
-      }
-      if (mod && (event.key === "Z" || (event.key === "z" && event.shiftKey))) {
-        event.preventDefault();
-        if (session.redo()) {
-          commitFixture();
-          emitInteractionState();
-        }
-        return;
-      }
-      if (mod && event.key === "a") {
-        event.preventDefault();
-        session.selectAll();
-        emitInteractionState();
-        return;
-      }
-      if (event.key === "Delete" || event.key === "Backspace") {
-        if ((event.target as HTMLElement).tagName === "INPUT" || (event.target as HTMLElement).tagName === "TEXTAREA") return;
-        event.preventDefault();
-        session.deleteSelection();
-        commitFixture();
-        emitInteractionState();
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [commitFixture, editable, emitInteractionState]);
 
   const clearGhostPreview = useCallback(() => {
     const session = sessionRef.current;
@@ -19013,54 +19106,65 @@ export function FlowGraphCanvasHost({
       }}
       onDrop={onDrop}
       onContextMenu={(event) => {
-        if (!editable || contextMenuItems.length === 0) return;
+        if (!editable || !requestContextMenu) return;
         event.preventDefault();
         event.stopPropagation();
-        const session = sessionRef.current;
-        const container = containerRef.current;
-        let widgetId: string | undefined;
-        let selectedIds: string[] = [];
-        let previewOffIds: string[] = [];
-        try {
-          selectedIds = session ? (JSON.parse(session.selectedWidgetIds()) as string[]) : [];
-        } catch {
-          selectedIds = [];
-        }
-        try {
-          previewOffIds = session ? parseDagNodeIdArray(session.previewOffWidgetIds()) : [];
-        } catch {
-          previewOffIds = [];
-        }
-        if (session && container) {
-          const rect = container.getBoundingClientRect();
-          const sx = event.clientX - rect.left;
-          const sy = event.clientY - rect.top;
-          try {
-            const targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
-            widgetId = pickMostSpecificCanvasTarget(targets)?.id;
-          } catch {
-            widgetId = undefined;
+        void (async () => {
+          const session = sessionRef.current;
+          const container = containerRef.current;
+          let widgetId: string | undefined;
+          let hits: NonNullable<PluginContextMenuSurfaceTarget["hits"]> = [];
+          let domains = { nodes: [] as string[], edges: [] as string[], handles: [] as string[] };
+          if (session) {
+            try {
+              domains = parseSelectionDomainsFromSession(session.selectionDomainsJson?.() ?? session.selectedWidgetIds());
+            } catch {
+              domains = { nodes: [], edges: [], handles: [] };
+            }
           }
-        }
-        if (!widgetId) {
-          widgetId = session?.hoveredWidgetId() ?? undefined;
-        }
-        if (widgetId && !selectedIds.includes(widgetId)) {
-          selectedIds = [widgetId];
-          try {
-            session?.setSelection?.(JSON.stringify(selectedIds));
-            session?.renderFrame();
-          } catch {
-            /* session not ready */
+          if (session && container) {
+            const rect = container.getBoundingClientRect();
+            const sx = event.clientX - rect.left;
+            const sy = event.clientY - rect.top;
+            try {
+              const targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
+              hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
+              widgetId = pickMostSpecificCanvasTarget(targets)?.id;
+            } catch {
+              widgetId = undefined;
+            }
           }
-          dispatch("contextMenuAt", { id: widgetId });
-        } else if (widgetId) {
-          dispatch("contextMenuAt", { id: widgetId });
-        }
-        const items = enrichNodeGraphContextMenuItems(contextMenuItems, { selectedIds, previewOffIds });
-        console.log("[DEBUG] flow context menu open", { widgetId, selectedIds, itemIds: items.map((item) => item.id) });
-        setContextMenu({ x: event.clientX, y: event.clientY, widgetId, items });
-        paintOverlays();
+          if (!widgetId) {
+            widgetId = session?.hoveredWidgetId() ?? undefined;
+          }
+          if (widgetId && !domains.nodes.includes(widgetId)) {
+            domains = { nodes: [widgetId], edges: [], handles: [] };
+            try {
+              session?.setSelection?.(JSON.stringify(domains));
+              session?.renderFrame();
+            } catch {
+              /* session not ready */
+            }
+            dispatch("contextMenuAt", { id: widgetId });
+          } else if (widgetId) {
+            dispatch("contextMenuAt", { id: widgetId });
+          }
+          const specs = await requestContextMenu({
+            viewState: {},
+            menu: { id: "nodeGraph" },
+            surface: {
+              surfaceId,
+              kind: "nodeGraph",
+              hits,
+              selection: selectionGroupsFromDomains(domains),
+            },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          });
+          console.log("[DEBUG] flow context menu open", { widgetId, domains, itemIds: specs.map((item) => item.id) });
+          setContextMenu({ x: event.clientX, y: event.clientY, widgetId, specs });
+          paintOverlays();
+        })();
       }}
     >
       <canvas ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
@@ -19160,7 +19264,7 @@ export function FlowGraphCanvasHost({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapFlowContextMenu(contextMenu?.items ?? [])}
+        items={mapFlowContextMenu(contextMenu?.specs ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}

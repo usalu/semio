@@ -3,9 +3,9 @@
 use block_5d::{Block5dDefinition, Block5dGripKind, Block5dGripTemplate, BLOCK_5D_SCHEMA};
 use block_5d_op::Block5dOperation;
 use semio_framework_plugin::{
-    create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor,
+    create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor,
     ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
-    SurfaceKind, UiFieldNode, UiInputNode, UiNode, UiPresence, UiTreeItemNode, ViewState,
+    SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiInputNode, UiNode, UiPresence, UiTreeItemNode, ViewState,
 };
 use serde_json::{json, Value};
 
@@ -106,11 +106,17 @@ fn text_field(id: &str, label: &str, value: &str, field: &str) -> UiNode {
 }
 
 fn build_inspection_tree(definition: &Block5dDefinition, labels: &Block5dLabels) -> UiNode {
-    ui_stack_vertical(vec![
-        text_field("block5d-play-inspector.name", labels.name, &definition.part_kind.name, "name"),
-        text_field("block5d-play-inspector.label", labels.label, &definition.part_kind.label, "label"),
-        ui_inspector_readonly_field("block5d-play-inspector.grip-count", labels.grips, definition.grips.len().to_string()),
-    ])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        id: "block5d-play-inspector".into(),
+        label: labels.summary.into(),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        fields: vec![
+            text_field("block5d-play-inspector.name", labels.name, &definition.part_kind.name, "name"),
+            text_field("block5d-play-inspector.label", labels.label, &definition.part_kind.label, "label"),
+            ui_inspector_readonly_field("block5d-play-inspector.grip-count", labels.grips, definition.grips.len().to_string()),
+        ],
+    }])
 }
 
 fn render_board(definition: &Block5dDefinition, labels: &Block5dLabels) -> UiNode {

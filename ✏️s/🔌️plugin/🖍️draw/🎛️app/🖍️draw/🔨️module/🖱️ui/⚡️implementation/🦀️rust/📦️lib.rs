@@ -22,6 +22,7 @@ use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKi
 use semio_framework_plugin::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -915,8 +916,7 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
                 format!("{} {operation}", labels.kind_boolean),
                 None,
                 draw_play_action("combineBoolean", Some(json!({ "operation": operation, "ids": interaction.selected_ids }))),
-            ),
-            menu: None,
+            )
         });
     }
     PanelTreeBuilder::new("draw-play-catalogue")
@@ -1596,17 +1596,21 @@ fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, ge
 
 //#region 🔖️DrawPlayApp
 pub struct DrawPlayApp {
-    interaction: DrawInteractionState,
+    interaction: RefCell<DrawInteractionState>,
     /// 🎭️ Live `fsm` snapshot driving pointer gestures — see `//#region 🔖️GestureMachine`.
-    gesture: draw_gesture::Snapshot,
+    gesture: RefCell<draw_gesture::Snapshot>,
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
-    preview_seq: u64,
+    preview_seq: RefCell<u64>,
 }
 
 impl Default for DrawPlayApp {
     fn default() -> Self {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
-        Self { interaction: DrawInteractionState::default(), gesture: fsm::init::<draw_gesture::DrawGesture>((), &mut sink), preview_seq: 0 }
+        Self {
+            interaction: RefCell::new(DrawInteractionState::default()),
+            gesture: RefCell::new(fsm::init::<draw_gesture::DrawGesture>((), &mut sink)),
+            preview_seq: RefCell::new(0),
+        }
     }
 }
 
@@ -1614,10 +1618,11 @@ impl DrawPlayApp {
     /// 🎭️ Feeds one gesture event through the shared `fsm` statechart, then drains and executes any
     /// requested `GestureEffect`s against the live document — the only place gesture control-flow
     /// (owned by `fsm`) meets document-mutating logic (owned by `draw`, unchanged from before the migration).
-    fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument) -> ActionEmit<DrawOperation> {
+    fn step_gesture(&self, event: draw_gesture::Event, document: &DrawDocument) -> ActionEmit<DrawOperation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
-        fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
-        self.preview_seq = self.preview_seq.wrapping_add(1);
+        fsm::macrostep(&mut *self.gesture.borrow_mut(), event, &mut sink, &mut fsm::NullInspector);
+        *self.preview_seq.borrow_mut() = self.preview_seq.borrow().wrapping_add(1);
+        let mut interaction = self.interaction.borrow_mut();
         let mut operations = Vec::new();
         let mut commit_description: Option<&'static str> = None;
         for command in sink {
@@ -1627,25 +1632,25 @@ impl DrawPlayApp {
                     if active {
                         let crossing = end[0] < start[0];
                         let hits = marquee_layer_hits(document, start, end, crossing);
-                        self.interaction.selected_ids = merge_selection(&merge, &self.interaction.selected_ids, &hits);
+                        interaction.selected_ids = merge_selection(&merge, &interaction.selected_ids, &hits);
                     } else {
-                        apply_point_pick(&mut self.interaction, document, end, shift, ctrl, meta, false);
+                        apply_point_pick(&mut interaction, document, end, shift, ctrl, meta, false);
                     }
                 }
                 GestureEffect::CommitShape { utility, start, end } => {
-                    operations.extend(commit_shape_drag(&mut self.interaction, document, &utility, start, end));
+                    operations.extend(commit_shape_drag(&mut interaction, document, &utility, start, end));
                     commit_description = Some("Add shape");
                 }
                 GestureEffect::CommitDraft { utility, points } => {
-                    operations.extend(commit_draft(&mut self.interaction, document, &utility, &points));
+                    operations.extend(commit_draft(&mut interaction, document, &utility, &points));
                     commit_description = Some("Commit draft");
                 }
                 GestureEffect::CommitTrace { world } => {
-                    operations.extend(commit_trace_at(&mut self.interaction, document, world));
+                    operations.extend(commit_trace_at(&mut interaction, document, world));
                     commit_description = Some("Trace image");
                 }
                 GestureEffect::PickPoint { world, shift, ctrl, meta } => {
-                    apply_point_pick(&mut self.interaction, document, world, shift, ctrl, meta, true);
+                    apply_point_pick(&mut interaction, document, world, shift, ctrl, meta, true);
                 }
             }
         }
@@ -1661,8 +1666,9 @@ impl DrawPlayApp {
     /// doc on `draw_gesture_preview_payload`); exercised by `🧪️Tests` only until that bridge lands.
     #[allow(dead_code)]
     fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
-        let payload = draw_gesture_preview_payload(&self.gesture.context, self.gesture.matches("idle"))?;
-        Some(("gesture", self.preview_seq, serde_json::to_vec(&payload).ok()?))
+        let gesture = self.gesture.borrow();
+        let payload = draw_gesture_preview_payload(&gesture.context, gesture.matches("idle"))?;
+        Some(("gesture", *self.preview_seq.borrow(), serde_json::to_vec(&payload).ok()?))
     }
 }
 
@@ -1693,6 +1699,7 @@ impl DocumentApp for DrawPlayApp {
         view_state: &ViewState,
     ) -> ActionEmit<DrawOperation> {
         let document = doc.projection;
+        let mut interaction = self.interaction.borrow_mut();
         let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| DRAW_DEFAULT_UTILITY.into());
         match action {
             //#region 🔖️ContentOperations
@@ -1712,19 +1719,18 @@ impl DocumentApp for DrawPlayApp {
             // 📷️ Camera — session-only runtime pose, never a document operation (`ActionKind::View`).
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value::<draw::DrawCamera>(value.clone()).ok()) {
-                    self.interaction.camera = camera;
+                    interaction.camera = camera;
                 }
                 ActionEmit::default()
             }
             "setCameraZoom" => {
-                let zoom = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(self.interaction.camera.zoom);
-                self.interaction.camera.zoom = zoom;
+                let zoom = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(interaction.camera.zoom);
+                interaction.camera.zoom = zoom;
                 ActionEmit::default()
             }
             "setSelectedOpacity" => {
                 let opacity = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let operations: Vec<DrawOperation> = self
-                    .interaction
+                let operations: Vec<DrawOperation> = interaction
                     .selected_ids
                     .iter()
                     .filter(|id| find_draw_layer(document, id).is_some())
@@ -1740,12 +1746,12 @@ impl DocumentApp for DrawPlayApp {
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .unwrap_or_else(|| self.interaction.engagement_input.clone());
+                    .unwrap_or_else(|| interaction.engagement_input.clone());
                 let value = value.trim();
-                if value.is_empty() || self.interaction.selected_ids.len() != 1 {
+                if value.is_empty() || interaction.selected_ids.len() != 1 {
                     return ActionEmit::default();
                 }
-                ActionEmit::operations(vec![DrawOperation::SetLayerName { layer_id: self.interaction.selected_ids[0].clone(), name: value.into() }])
+                ActionEmit::operations(vec![DrawOperation::SetLayerName { layer_id: interaction.selected_ids[0].clone(), name: value.into() }])
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1758,7 +1764,7 @@ impl DocumentApp for DrawPlayApp {
                 };
                 match next {
                     Some(document) => {
-                        self.interaction.selected_ids.clear();
+                        interaction.selected_ids.clear();
                         ActionEmit::operations(vec![DrawOperation::SetDocument { document }])
                     }
                     None => ActionEmit::default(),
@@ -1776,7 +1782,7 @@ impl DocumentApp for DrawPlayApp {
             "addLayer" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("path");
                 let layer = create_layer_by_kind(kind);
-                self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
+                interaction.selected_ids = vec![layer_id(&layer).to_string()];
                 ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
             }
             "dropLayerKind" | "moveLayer" => {
@@ -1794,7 +1800,7 @@ impl DocumentApp for DrawPlayApp {
                     if let Some(kind) = kind {
                         let layer = create_layer_by_kind(kind);
                         let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
-                        self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
+                        interaction.selected_ids = vec![layer_id(&layer).to_string()];
                         return ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }]);
                     }
                 } else if let Some(layer_id) = layer_id_arg {
@@ -1808,7 +1814,7 @@ impl DocumentApp for DrawPlayApp {
                 if layer_id.is_empty() {
                     return ActionEmit::default();
                 }
-                self.interaction.selected_ids.retain(|id| id != layer_id);
+                interaction.selected_ids.retain(|id| id != layer_id);
                 ActionEmit::operations(vec![DrawOperation::RemoveLayer { layer_id: layer_id.into() }])
             }
             "duplicateLayer" => {
@@ -1835,12 +1841,12 @@ impl DocumentApp for DrawPlayApp {
                     .and_then(|value| value.as_array())
                     .map(|values| values.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>())
                     .filter(|values: &Vec<String>| !values.is_empty())
-                    .unwrap_or_else(|| self.interaction.selected_ids.clone());
+                    .unwrap_or_else(|| interaction.selected_ids.clone());
                 if ids.len() < 2 {
                     return ActionEmit::default();
                 }
                 let layer = create_draw_boolean_layer("Boolean", operation, ids);
-                self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
+                interaction.selected_ids = vec![layer_id(&layer).to_string()];
                 ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
             }
             "patchLayer" => {
@@ -1880,30 +1886,30 @@ impl DocumentApp for DrawPlayApp {
             //#endregion 🔖️ContentOperations
             //#region 🔖️ViewState
             "setSelection" => {
-                self.interaction.selected_ids = selection_ids(args);
+                interaction.selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "setHover" => {
-                self.interaction.hovered_id = args
+                interaction.hovered_id = args
                     .and_then(|value| value.get("id"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
                 ActionEmit::default()
             }
             "selectAll" => {
-                self.interaction.selected_ids = flatten_draw_layers(&document.layers)
+                interaction.selected_ids = flatten_draw_layers(&document.layers)
                     .into_iter()
                     .map(|layer| layer_id(layer).to_string())
                     .collect();
                 ActionEmit::default()
             }
             "clearSelection" => {
-                self.interaction.selected_ids.clear();
+                interaction.selected_ids.clear();
                 ActionEmit::default()
             }
             "engagementInput" => {
                 if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                    self.interaction.engagement_input = value.to_string();
+                    interaction.engagement_input = value.to_string();
                 }
                 ActionEmit::default()
             }
@@ -1918,7 +1924,7 @@ impl DocumentApp for DrawPlayApp {
                 let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&self.interaction.camera, x, y, viewport_w, viewport_h);
+                let (world_x, world_y) = canvas_point_to_world(&interaction.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
                 self.step_gesture(draw_gesture::Event::PointerDown { utility: active_utility.clone(), world, shift, ctrl, meta }, document)
             }
@@ -1928,16 +1934,16 @@ impl DocumentApp for DrawPlayApp {
                 let viewport_w = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()).unwrap_or(800.0);
                 let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
                 let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&self.interaction.camera, x, y, viewport_w, viewport_h);
+                let (world_x, world_y) = canvas_point_to_world(&interaction.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
-                if self.gesture.matches("idle") {
+                if self.gesture.borrow().matches("idle") {
                     let utility = active_utility.clone();
                     let include_control_points = utility == "selectDirect";
-                    let tolerance = DRAW_PICK_TOLERANCE_PX / self.interaction.camera.zoom.max(1e-6);
-                    self.interaction.hovered_id = best_pick_layer_id(&resolve_pick_targets_at(document, world, tolerance, include_control_points));
+                    let tolerance = DRAW_PICK_TOLERANCE_PX / interaction.camera.zoom.max(1e-6);
+                    interaction.hovered_id = best_pick_layer_id(&resolve_pick_targets_at(document, world, tolerance, include_control_points));
                     return ActionEmit::default();
                 }
-                let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / self.interaction.camera.zoom.max(1e-6);
+                let marquee_threshold_world = DRAW_MARQUEE_THRESHOLD_PX / interaction.camera.zoom.max(1e-6);
                 self.step_gesture(draw_gesture::Event::PointerMove { world, marquee_threshold_world }, document)
             }
             "canvasPointerUp" => {
@@ -1949,7 +1955,7 @@ impl DocumentApp for DrawPlayApp {
                 let ctrl = args.and_then(|value| value.get("ctrl")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let meta = args.and_then(|value| value.get("meta")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let (Some(x), Some(y)) = (x, y) else { return ActionEmit::default() };
-                let (world_x, world_y) = canvas_point_to_world(&self.interaction.camera, x, y, viewport_w, viewport_h);
+                let (world_x, world_y) = canvas_point_to_world(&interaction.camera, x, y, viewport_w, viewport_h);
                 let world = [world_x, world_y];
                 self.step_gesture(draw_gesture::Event::PointerUp { utility: active_utility.clone(), world, shift, ctrl, meta }, document)
             }
@@ -1962,14 +1968,15 @@ impl DocumentApp for DrawPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, DrawDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
-        let interaction = &self.interaction;
+        let interaction = self.interaction.borrow();
+        let gesture = self.gesture.borrow();
         let labels = resolve_labels::<DrawPlayLabels>(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(DRAW_DEFAULT_UTILITY);
         match body_key {
-            DRAW_PLAY_BODY_COMPOSITE => render_canvas(document, interaction, &self.gesture, active_utility),
-            DRAW_PLAY_BODY_LAYERS => render_layers_panel(document, interaction, labels),
-            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(document, interaction, labels),
-            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(document, interaction, labels, active_utility),
+            DRAW_PLAY_BODY_COMPOSITE => render_canvas(document, &interaction, &gesture, active_utility),
+            DRAW_PLAY_BODY_LAYERS => render_layers_panel(document, &interaction, labels),
+            DRAW_PLAY_BODY_CATALOGUE => render_catalogue_panel(document, &interaction, labels),
+            DRAW_PLAY_BODY_PROPERTIES => render_properties_panel(document, &interaction, labels, active_utility),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

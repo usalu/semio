@@ -14,6 +14,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use trinity_jack::{complete, execute, format as jack_format, lint, parse, semantic_tokens, QueryResult, QueryResultKind};
 use trinity_ram::{Camera, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TRINITY_GRAPH_SCHEMA};
@@ -735,12 +736,12 @@ fn render_results(runtime: &TrinityJackRuntime) -> UiNode {
 /// 🔱️ Trinity Jack play app — a jack-query editor over a live {@link GraphFixture} projection; all
 /// document mutation flows through {@link TrinityGraphOperation}, all editor/selection/LOD state is runtime.
 pub struct TrinityJackPlayApp {
-    runtime: TrinityJackRuntime,
+    runtime: RefCell<TrinityJackRuntime>,
 }
 
 impl Default for TrinityJackPlayApp {
     fn default() -> Self {
-        Self { runtime: seeded_jack_runtime() }
+        Self { runtime: RefCell::new(seeded_jack_runtime()) }
     }
 }
 
@@ -771,16 +772,17 @@ impl DocumentApp for TrinityJackPlayApp {
         _view_state: &ViewState,
     ) -> ActionEmit<TrinityGraphOperation> {
         let fixture = doc.projection;
+        let mut runtime = self.runtime.borrow_mut();
         match action {
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.selected_node_ids = selection_ids(args);
+                runtime.selected_node_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "nodeGraphHover" | "textHover" => ActionEmit::default(),
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                     if let Ok(camera) = serde_json::from_str::<Camera>(viewport_json) {
-                        self.runtime.camera = camera;
+                        runtime.camera = camera;
                     }
                 }
                 ActionEmit::default()
@@ -802,15 +804,14 @@ impl DocumentApp for TrinityJackPlayApp {
                             }
                         }
                         "deleteSelection" => {
-                            let deletes: Vec<TrinityGraphOperation> = self
-                                .runtime
+                            let deletes: Vec<TrinityGraphOperation> = runtime
                                 .selected_node_ids
                                 .iter()
                                 .filter(|id| fixture.nodes.iter().any(|node| &node.id == *id))
                                 .map(|id| TrinityGraphOperation::DeleteNode { id: id.clone() })
                                 .collect();
                             if !deletes.is_empty() {
-                                self.runtime.selected_node_ids.clear();
+                                runtime.selected_node_ids.clear();
                                 emitted.extend(deletes);
                             }
                         }
@@ -827,23 +828,23 @@ impl DocumentApp for TrinityJackPlayApp {
             }
             "textEdit" => {
                 if let Some(text) = args.and_then(|v| v.get("text")).and_then(|v| v.as_str()) {
-                    self.runtime.jack_query = text.into();
+                    runtime.jack_query = text.into();
                 }
                 ActionEmit::default()
             }
             "textSelect" => {
                 let start = args.and_then(|v| v.get("start")).and_then(|v| v.as_u64()).unwrap_or(0);
                 let end = args.and_then(|v| v.get("end")).and_then(|v| v.as_u64()).unwrap_or(start);
-                self.runtime.editor_selection = Some(TrinityEditorSelection { start: start as usize, end: end as usize });
+                runtime.editor_selection = Some(TrinityEditorSelection { start: start as usize, end: end as usize });
                 ActionEmit::default()
             }
             "requestCompletions" => {
-                self.runtime.revision += 1;
+                runtime.revision += 1;
                 ActionEmit::default()
             }
             "formatDocument" => {
-                if let Ok(formatted) = jack_format(&self.runtime.jack_query) {
-                    self.runtime.jack_query = formatted;
+                if let Ok(formatted) = jack_format(&runtime.jack_query) {
+                    runtime.jack_query = formatted;
                 }
                 ActionEmit::default()
             }
@@ -852,15 +853,15 @@ impl DocumentApp for TrinityJackPlayApp {
                     args.and_then(|v| v.get("windowId")).and_then(|v| v.as_str()),
                     args.and_then(|v| v.get("value")).and_then(|v| v.as_str()),
                 ) {
-                    self.runtime.lod_mode_by_window.insert(window_id.into(), value.into());
+                    runtime.lod_mode_by_window.insert(window_id.into(), value.into());
                 }
                 ActionEmit::default()
             }
             "loadExampleQuery" => {
                 if let Some(query) = args.and_then(|v| v.get("query")).and_then(|v| v.as_str()) {
-                    self.runtime.jack_query = query.into();
+                    runtime.jack_query = query.into();
                     let (result_json, operations) = run_jack_query(fixture, query);
-                    self.runtime.jack_result_json = result_json;
+                    runtime.jack_result_json = result_json;
                     return ActionEmit::operations(operations);
                 }
                 ActionEmit::default()
@@ -871,21 +872,21 @@ impl DocumentApp for TrinityJackPlayApp {
                     .and_then(|v| v.as_str())
                     .filter(|value| !value.trim().is_empty())
                     .map(str::to_string)
-                    .unwrap_or_else(|| self.runtime.jack_query.clone());
-                self.runtime.jack_query = query.clone();
+                    .unwrap_or_else(|| runtime.jack_query.clone());
+                runtime.jack_query = query.clone();
                 let (result_json, operations) = run_jack_query(fixture, &query);
-                self.runtime.jack_result_json = result_json;
-                self.runtime.results_engagement_input.clear();
+                runtime.jack_result_json = result_json;
+                runtime.results_engagement_input.clear();
                 ActionEmit::operations(operations)
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("");
                 if let Some(next) = fixture_dsl_for_preset(example_id).and_then(|dsl| GraphFixture::parse_dsl(dsl).ok()) {
-                    self.runtime.active_fixture_id = example_id.into();
-                    self.runtime.camera = next.camera.clone();
-                    self.runtime.jack_query = preset_query(example_id).into();
-                    let (result_json, _) = run_jack_query(&next, &self.runtime.jack_query);
-                    self.runtime.jack_result_json = result_json;
+                    runtime.active_fixture_id = example_id.into();
+                    runtime.camera = next.camera.clone();
+                    runtime.jack_query = preset_query(example_id).into();
+                    let (result_json, _) = run_jack_query(&next, &runtime.jack_query);
+                    runtime.jack_result_json = result_json;
                     return ActionEmit::operations(vec![TrinityGraphOperation::SetFixture { fixture: next }]);
                 }
                 ActionEmit::default()
@@ -908,7 +909,7 @@ impl DocumentApp for TrinityJackPlayApp {
                 ActionEmit::default()
             }
             "reorganize" => {
-                self.runtime.reorganize_epoch += 1;
+                runtime.reorganize_epoch += 1;
                 match force_layout_fixture(fixture) {
                     Some(after) => ActionEmit::operations(reposition_operations(fixture, &after)),
                     None => ActionEmit::default(),
@@ -916,25 +917,25 @@ impl DocumentApp for TrinityJackPlayApp {
             }
             "editorEngagementInput" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    self.runtime.editor_engagement_input = value.into();
+                    runtime.editor_engagement_input = value.into();
                 }
                 ActionEmit::default()
             }
             "graphEngagementInput" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    self.runtime.graph_engagement_input = value.into();
+                    runtime.graph_engagement_input = value.into();
                 }
                 ActionEmit::default()
             }
             "resultsEngagementInput" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
-                    self.runtime.results_engagement_input = value.into();
+                    runtime.results_engagement_input = value.into();
                 }
                 ActionEmit::default()
             }
             "graphPointerDown" => {
                 if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(|v| v.as_str()) {
-                    self.runtime.selected_node_ids = vec![node_id.into()];
+                    runtime.selected_node_ids = vec![node_id.into()];
                 }
                 ActionEmit::default()
             }
@@ -946,19 +947,19 @@ impl DocumentApp for TrinityJackPlayApp {
         let fixture = doc.projection;
         let labels = resolve_labels::<TrinityJackLabels>(view_state);
         match body_key {
-            TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(fixture, &self.runtime),
-            TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(fixture, &self.runtime),
-            TRINITY_JACK_PLAY_BODY_RESULTS => render_results(&self.runtime),
-            TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &self.runtime, labels),
-            TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(&self.runtime, labels),
-            TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, &self.runtime, labels),
+            TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(fixture, &*self.runtime.borrow()),
+            TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(fixture, &*self.runtime.borrow()),
+            TRINITY_JACK_PLAY_BODY_RESULTS => render_results(&*self.runtime.borrow()),
+            TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(fixture, &*self.runtime.borrow(), labels),
+            TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(&*self.runtime.borrow(), labels),
+            TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(fixture, &*self.runtime.borrow(), labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, GraphFixture>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let mode = self
-            .runtime
+        let runtime = self.runtime.borrow();
+        let mode = runtime
             .lod_mode_by_window
             .get(TRINITY_JACK_PLAY_WINDOW_GRAPH)
             .map(String::as_str)

@@ -53,8 +53,8 @@ fn default_control_slot(kind: &str) -> &'static str {
     }
 }
 
-fn neural_value_to_json_value(value: &Value) -> serde_json::Value {
-    serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+fn neural_value_to_dsl_value(value: &Value) -> dsl::DslValue {
+    dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
 }
 
 fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
@@ -69,17 +69,17 @@ fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
     port.value_type = channel_spec_value_type(spec);
-    port.default = spec.default.as_ref().map(neural_value_to_json_value);
+    port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.cardinality = spec.cardinality.symbol();
     port
 }
 
 fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary) -> IoPortSpec {
-    let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_json_value);
+    let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_dsl_value);
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
     port.value_type = channel_spec_value_type(spec);
-    port.default = spec.default.as_ref().map(neural_value_to_json_value);
+    port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.value = value;
     port.connected = Some(false);
     port.cardinality = spec.cardinality.symbol();

@@ -5,13 +5,14 @@ use imperative_engine::{default_document, ImperativeHost};
 use imperative_op::ImperativeOperation;
 use protocol::CollectionOperation;
 use semio_framework_plugin::{
-    build_table_scene, build_text_editor_scene, create_stack_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
+    build_table_scene, build_text_editor_scene, create_stack_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TableScene, TextEditorScene,
-    UiNode, UiPresence, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Constants
@@ -166,13 +167,26 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labe
     }
     let steps: Vec<&Step> = selected.iter().filter_map(|id| document.path.steps.iter().find(|step| &step.id == id)).collect();
     if steps.is_empty() {
-        return ui_stack_vertical(vec![ui_text(labels.inspector_step_not_found)]);
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "imperative-play-inspector.missing".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![ui_text(labels.inspector_step_not_found)],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     }
-    ui_stack_vertical(vec![
-        ui_inspector_readonly_field("imperative-play-inspector.id", labels.inspector_id, steps[0].id.clone()),
-        ui_inspector_readonly_field("imperative-play-inspector.kind", labels.inspector_kind, steps[0].kind.clone()),
-        ui_inspector_readonly_field("imperative-play-inspector.params", labels.inspector_params, serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into())),
-    ])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        id: "imperative-play-inspector.step".into(),
+        label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into(),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        fields: vec![
+            ui_inspector_readonly_field("imperative-play-inspector.id", labels.inspector_id, steps[0].id.clone()),
+            ui_inspector_readonly_field("imperative-play-inspector.kind", labels.inspector_kind, steps[0].kind.clone()),
+            ui_inspector_readonly_field("imperative-play-inspector.params", labels.inspector_params, serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into())),
+        ],
+    }])
 }
 //#endregion 🔖️Panels
 
@@ -220,7 +234,7 @@ fn render_script(document: &ImperativeDocument) -> UiNode {
 //#region 🔖️ImperativePlayApp
 #[derive(Default)]
 pub struct ImperativePlayApp {
-    runtime: ImperativePlayRuntime,
+    runtime: RefCell<ImperativePlayRuntime>,
 }
 
 impl DocumentApp for ImperativePlayApp {
@@ -243,9 +257,10 @@ impl DocumentApp for ImperativePlayApp {
 
     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<ImperativeOperation> {
         let document = doc.projection;
+        let mut runtime = self.runtime.borrow_mut();
         match action {
             "setSelection" => {
-                self.runtime.selected_step_ids = selection_ids(args);
+                runtime.selected_step_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "addStep" | "addStepAt" => {
@@ -254,14 +269,14 @@ impl DocumentApp for ImperativePlayApp {
                 let path_ref = path_ref_from_args(args, document);
                 let id = next_step_id(document);
                 let step = Step { id: id.clone(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() };
-                self.runtime.selected_step_ids = vec![id];
+                runtime.selected_step_ids = vec![id];
                 ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { id: step.id.clone(), at: index, item: step } }])
             }
             "removeStep" | "removeStepAt" => {
                 if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
                     if resolve_contains(document, args, id) {
                         let path_ref = path_ref_from_args(args, document);
-                        self.runtime.selected_step_ids.retain(|step_id| step_id != id);
+                        runtime.selected_step_ids.retain(|step_id| step_id != id);
                         return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Remove { id: id.into() } }]);
                     }
                 }
@@ -294,7 +309,7 @@ impl DocumentApp for ImperativePlayApp {
             "run" => {
                 let host = ImperativeHost::from_document(document.clone());
                 let result = host.run();
-                self.runtime.run_output_json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
+                runtime.run_output_json = serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
                 ActionEmit::default()
             }
             _ => ActionEmit::default(),
@@ -304,12 +319,13 @@ impl DocumentApp for ImperativePlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ImperativeDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<ImperativeLabels>(view_state);
+        let runtime = self.runtime.borrow();
         match body_key {
-            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(document, &self.runtime.run_output_json, labels),
+            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(document, &runtime.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => render_script(document),
-            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(document, &self.runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(document, &runtime.selected_step_ids, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(document, &self.runtime.selected_step_ids, labels),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(document, &runtime.selected_step_ids, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

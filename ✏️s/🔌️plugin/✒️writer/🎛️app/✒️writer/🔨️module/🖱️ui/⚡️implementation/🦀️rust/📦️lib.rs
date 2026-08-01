@@ -23,6 +23,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
 use semio_framework_plugin::{WindowEngagementPossible, WindowEngagementStatus};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -140,9 +141,8 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         control: None,
         dimmed: None,
         menu: None,
-    },
-        menu: None,
     }
+}
 
 /// 🐁️ Resolves tree/editor hover cross-highlighting: (highlighted AST id, tree-hover span, hover occurrences).
 fn editor_hover_context(document: &WriterProjection, runtime: &WriterPlayRuntime) -> (Option<String>, Option<(usize, usize)>, Vec<(usize, usize)>) {
@@ -453,11 +453,16 @@ fn apply_engagement(runtime: &mut WriterPlayRuntime, current_text: &str, languag
 //#endregion 🔖️Engagement
 
 //#region 🔖️WriterPlayApp
-#[derive(Default)]
 pub struct WriterPlayApp {
     /// 🎛️ Ephemeral view state (selection, hover, editor settings, signals, engagement draft) that
     /// lives on the app struct — never in the document projection, so it emits no history entries.
-    runtime: WriterPlayRuntime,
+    runtime: RefCell<WriterPlayRuntime>,
+}
+
+impl Default for WriterPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(WriterPlayRuntime::default()) }
+    }
 }
 
 impl DocumentApp for WriterPlayApp {
@@ -538,13 +543,13 @@ impl DocumentApp for WriterPlayApp {
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value::<WriterCamera>(camera.clone()) {
-                        self.runtime.camera = parsed;
+                        self.runtime.borrow_mut().camera = parsed;
                     }
                 }
                 ActionEmit::default()
             }
             "formatDocument" => {
-                self.runtime.format_signal += 1;
+                self.runtime.borrow_mut().format_signal += 1;
                 let formatted = format_writer_text(&document.text, &document.language_id);
                 if formatted != document.text {
                     return ActionEmit::operations(vec![WriterOperation::SetText { text: formatted }]);
@@ -583,36 +588,36 @@ impl DocumentApp for WriterPlayApp {
                 ActionEmit::default()
             }
             "requestCompletions" => {
-                self.runtime.revision += 1;
+                self.runtime.borrow_mut().revision += 1;
                 ActionEmit::default()
             }
             "lintDocument" => {
-                self.runtime.lint_signal += 1;
-                self.runtime.revision += 1;
+                self.runtime.borrow_mut().lint_signal += 1;
+                self.runtime.borrow_mut().revision += 1;
                 ActionEmit::default()
             }
             "textSelect" | "setEditorSelection" => {
                 let start = usize_arg("start").unwrap_or(0);
                 let end = usize_arg("end").unwrap_or(start);
-                self.runtime.editor_selection = Some(WriterEditorSelection { start, end });
+                self.runtime.borrow_mut().editor_selection = Some(WriterEditorSelection { start, end });
                 if document.language_id == "jack" {
                     let root = parse_jack_ast(&document.text);
-                    self.runtime.selected_ast_ids = jack_ast_node_for_selection(&root, start.min(end), start.max(end))
+                    self.runtime.borrow_mut().selected_ast_ids = jack_ast_node_for_selection(&root, start.min(end), start.max(end))
                         .map(|node| vec![node.id.clone()])
                         .unwrap_or_default();
                 } else {
-                    self.runtime.selected_ast_ids.clear();
+                    self.runtime.borrow_mut().selected_ast_ids.clear();
                 }
-                self.runtime.revision += 1;
+                self.runtime.borrow_mut().revision += 1;
                 ActionEmit::default()
             }
             "selectAstNode" => {
                 let id = str_arg("id").unwrap_or("");
                 let start = usize_arg("start").unwrap_or(0);
                 let end = usize_arg("end").unwrap_or(0);
-                self.runtime.selected_ast_ids = if id.is_empty() { Vec::new() } else { vec![id.into()] };
-                self.runtime.editor_selection = Some(WriterEditorSelection { start, end });
-                self.runtime.revision += 1;
+                self.runtime.borrow_mut().selected_ast_ids = if id.is_empty() { Vec::new() } else { vec![id.into()] };
+                self.runtime.borrow_mut().editor_selection = Some(WriterEditorSelection { start, end });
+                self.runtime.borrow_mut().revision += 1;
                 ActionEmit::default()
             }
             "setAstSelection" => {
@@ -621,21 +626,21 @@ impl DocumentApp for WriterPlayApp {
                     .and_then(|value| value.as_array())
                     .map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
                     .unwrap_or_default();
-                self.runtime.selected_ast_ids = ids.clone();
+                self.runtime.borrow_mut().selected_ast_ids = ids.clone();
                 if let Some(id) = ids.first() {
                     if document.language_id == "jack" {
                         let root = parse_jack_ast(&document.text);
-                        self.runtime.editor_selection = jack_ast_node_by_id(&root, id).map(|node| WriterEditorSelection { start: node.start, end: node.end });
+                        self.runtime.borrow_mut().editor_selection = jack_ast_node_by_id(&root, id).map(|node| WriterEditorSelection { start: node.start, end: node.end });
                     }
                 }
-                self.runtime.revision += 1;
+                self.runtime.borrow_mut().revision += 1;
                 ActionEmit::default()
             }
             "setAstHover" => {
                 let id = str_arg("id").map(str::to_string);
-                if id != self.runtime.tree_hovered_ast_id {
-                    self.runtime.tree_hovered_ast_id = id;
-                    self.runtime.revision += 1;
+                if id != self.runtime.borrow_mut().tree_hovered_ast_id {
+                    self.runtime.borrow_mut().tree_hovered_ast_id = id;
+                    self.runtime.borrow_mut().revision += 1;
                 }
                 ActionEmit::default()
             }
@@ -646,15 +651,15 @@ impl DocumentApp for WriterPlayApp {
                     (Some(s), Some(e)) => Some(s + e.saturating_sub(s) / 2),
                     _ => None,
                 };
-                if offset != self.runtime.editor_hover_offset {
-                    self.runtime.editor_hover_offset = offset;
-                    self.runtime.revision += 1;
+                if offset != self.runtime.borrow_mut().editor_hover_offset {
+                    self.runtime.borrow_mut().editor_hover_offset = offset;
+                    self.runtime.borrow_mut().revision += 1;
                 }
                 ActionEmit::default()
             }
             "toggleLineNumbers" => {
-                self.runtime.editor_settings.show_line_numbers = !self.runtime.editor_settings.show_line_numbers;
-                self.runtime.revision += 1;
+                self.runtime.borrow_mut().editor_settings.show_line_numbers = !self.runtime.borrow_mut().editor_settings.show_line_numbers;
+                self.runtime.borrow_mut().revision += 1;
                 ActionEmit::default()
             }
             "setEditorSetting" => {
@@ -663,35 +668,35 @@ impl DocumentApp for WriterPlayApp {
                 match field {
                     "fontPx" => {
                         if let Some(px) = value.and_then(Value::as_u64) {
-                            self.runtime.editor_settings.font_px = px as u32;
+                            self.runtime.borrow_mut().editor_settings.font_px = px as u32;
                         }
                     }
                     "lineHeight" => {
                         if let Some(px) = value.and_then(Value::as_u64) {
-                            self.runtime.editor_settings.line_height = px as u32;
+                            self.runtime.borrow_mut().editor_settings.line_height = px as u32;
                         }
                     }
                     "tabSize" => {
                         if let Some(px) = value.and_then(Value::as_u64) {
-                            self.runtime.editor_settings.tab_size = px.max(1) as u32;
+                            self.runtime.borrow_mut().editor_settings.tab_size = px.max(1) as u32;
                         }
                     }
                     _ => return ActionEmit::default(),
                 }
-                self.runtime.revision += 1;
+                self.runtime.borrow_mut().revision += 1;
                 ActionEmit::default()
             }
             "engagementInput" => {
                 let value = str_arg("value").unwrap_or("").to_string();
-                if value != self.runtime.engagement_input {
-                    self.runtime.engagement_input = value;
-                    self.runtime.revision += 1;
+                if value != self.runtime.borrow_mut().engagement_input {
+                    self.runtime.borrow_mut().engagement_input = value;
+                    self.runtime.borrow_mut().revision += 1;
                 }
                 ActionEmit::default()
             }
             "engagementSubmit" => {
-                let value = str_arg("value").map(str::to_string).unwrap_or_else(|| self.runtime.engagement_input.clone());
-                match apply_engagement(&mut self.runtime, &document.text, &document.language_id, &value) {
+                let value = str_arg("value").map(str::to_string).unwrap_or_else(|| self.runtime.borrow_mut().engagement_input.clone());
+                match apply_engagement(&mut *self.runtime.borrow_mut(), &document.text, &document.language_id, &value) {
                     Some(text) => ActionEmit::operations(vec![WriterOperation::SetText { text }]),
                     None => ActionEmit::default(),
                 }
@@ -704,16 +709,16 @@ impl DocumentApp for WriterPlayApp {
         let document = doc.projection;
         let labels = resolve_labels::<WriterPlayLabels>(view_state);
         match body_key {
-            WRITER_PLAY_BODY_MAIN => render_main_scene(document, &self.runtime),
-            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, &self.runtime, labels),
+            WRITER_PLAY_BODY_MAIN => render_main_scene(document, &*self.runtime.borrow()),
+            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(document, &*self.runtime.borrow(), labels),
             WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
-            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, &self.runtime, labels),
+            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(document, &*self.runtime.borrow(), labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
     fn window_engagements(&self, _doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let settings = &self.runtime.editor_settings;
+        let settings = &self.runtime.borrow().editor_settings;
         let labels = resolve_labels::<WriterPlayLabels>(view_state);
         let engagement = WindowEngagement {
             session_active: Some(false),
@@ -727,7 +732,7 @@ impl DocumentApp for WriterPlayApp {
             }]),
             input: Some(WindowEngagementInput {
                 id: Some("writer-engagement-input".into()),
-                value: Some(self.runtime.engagement_input.clone()),
+                value: Some(self.runtime.borrow_mut().engagement_input.clone()),
                 placeholder: Some(labels.engagement_placeholder.into()),
                 disabled: None,
                 on_change: Some(play_action(WRITER_PLAY_CONTROLLER_ID, "engagementInput", None)),
@@ -748,7 +753,7 @@ impl DocumentApp for WriterPlayApp {
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, WriterProjection>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let settings = &self.runtime.editor_settings;
+        let settings = &self.runtime.borrow().editor_settings;
         let labels = resolve_labels::<WriterPlayLabels>(view_state);
         let measures = vec![
             WindowMeasure::Slider {

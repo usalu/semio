@@ -397,7 +397,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         SetAppInstanceConfig {
             instance_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
-            config: Option<Value>,
+            config: Option<dsl::DslValue>,
         },
     }
 
@@ -581,7 +581,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         SetAppInstanceConfig {
             instance_id: String,
             #[serde(skip_serializing_if = "Option::is_none")]
-            config: Option<Value>,
+            config: Option<dsl::DslValue>,
         },
     }
 
@@ -952,7 +952,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         SetAppInstanceConfig {
             #[dsl(key = "id")]
             instance_id: String,
-            config: Option<Value>,
+            config: Option<dsl::DslValue>,
         },
     }
 
@@ -2054,7 +2054,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         #[test]
         fn op_text_round_trips_set_app_instance_config() {
-            store::test_support::assert_op_line_round_trip(&OsOperation::SetAppInstanceConfig { instance_id: "app-1".into(), config: Some(serde_json::json!({ "zoom": 2.0, "label": "Roof Beam \"B12\"" })) });
+            store::test_support::assert_op_line_round_trip(&OsOperation::SetAppInstanceConfig { instance_id: "app-1".into(), config: Some(dsl::to_dsl_value(&serde_json::json!({ "zoom": 2.0, "label": "Roof Beam \"B12\"" })).expect("config")) });
             store::test_support::assert_op_line_round_trip(&OsOperation::SetAppInstanceConfig { instance_id: "app-1".into(), config: None });
         }
 
@@ -2406,7 +2406,7 @@ pub mod instance {
         /// field-id-by-declaration-order convention (field ids are never renumbered) — see
         /// `dsl_derive::plan_fields`.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub config: Option<Value>,
+        pub config: Option<dsl::DslValue>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2790,13 +2790,20 @@ pub mod instance {
     /// diverge). Callers (the renderer/headless-runner drivers dispatching `AppCommand::Configure`,
     /// both out of this crate's scope) `store::pack_rt::encode_wire_value` the result themselves —
     /// this function only builds the value, it never sends anything over a channel.
-    pub fn build_configure_config(instance: &OsAppInstance, parameters: &[OsParameter], bindings: &[OsParameterFieldBinding], config_spec: &ConfigSpec) -> Value {
-        let mut config = instance.config.clone().unwrap_or_else(|| config_spec_default_value(config_spec));
-        if !config.is_object() {
-            config = Value::Object(serde_json::Map::new());
-        }
-        // infallible: forced to `Value::Object(_)` immediately above.
-        let object = config.as_object_mut().expect("config is always an object here");
+    pub fn build_configure_config(instance: &OsAppInstance, parameters: &[OsParameter], bindings: &[OsParameterFieldBinding], config_spec: &ConfigSpec) -> dsl::DslValue {
+        let mut config = instance.config.clone().unwrap_or_else(|| {
+            dsl::to_dsl_value(&config_spec_default_value(config_spec)).unwrap_or(dsl::DslValue::Object(vec![]))
+        });
+        let entries = match &mut config {
+            dsl::DslValue::Object(entries) => entries,
+            _ => {
+                config = dsl::DslValue::Object(vec![]);
+                match &mut config {
+                    dsl::DslValue::Object(entries) => entries,
+                    _ => unreachable!("config object branch"),
+                }
+            }
+        };
         for binding in bindings.iter().filter(|binding| binding.instance_id == instance.id) {
             let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
                 continue;
@@ -2804,7 +2811,12 @@ pub mod instance {
             let Some(parameter) = parameters.iter().find(|entry| entry.id() == binding.parameter_id) else {
                 continue;
             };
-            object.insert(field.key.clone(), os_parameter_value(parameter));
+            let value = dsl::to_dsl_value(&os_parameter_value(parameter)).unwrap_or(dsl::DslValue::Null);
+            if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == &field.key) {
+                *slot = value;
+            } else {
+                entries.push((field.key.clone(), value));
+            }
         }
         config
     }
@@ -2928,6 +2940,7 @@ pub mod instance {
             let config_spec = sample_config_spec();
             let instance = OsAppInstance { id: "i1".into(), plugin_id: "p".into(), app_id: "a".into(), label: "A".into(), yields: "a.document".into(), document: OsDocumentRef { document_id: "d1".into(), schema: "a.document".into() }, config: None };
             let config = build_configure_config(&instance, &[], &[], &config_spec);
+            let config: Value = dsl::from_dsl_value(config).expect("config json");
             assert_eq!(config["zoom"], 1.0);
             assert_eq!(config["mode"], "A");
         }
@@ -2935,10 +2948,11 @@ pub mod instance {
         #[test]
         fn build_configure_config_overlays_bound_parameter_values() {
             let config_spec = sample_config_spec();
-            let instance = OsAppInstance { id: "i1".into(), plugin_id: "p".into(), app_id: "a".into(), label: "A".into(), yields: "a.document".into(), document: OsDocumentRef { document_id: "d1".into(), schema: "a.document".into() }, config: Some(serde_json::json!({ "zoom": 1.0, "mode": "A" })) };
+            let instance = OsAppInstance { id: "i1".into(), plugin_id: "p".into(), app_id: "a".into(), label: "A".into(), yields: "a.document".into(), document: OsDocumentRef { document_id: "d1".into(), schema: "a.document".into() }, config: Some(dsl::to_dsl_value(&serde_json::json!({ "zoom": 1.0, "mode": "A" })).expect("config")) };
             let parameters = vec![OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 42.0, min: None, max: None, step: None }];
             let bindings = vec![OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "i1".into(), field_path: "zoom".into() }];
             let config = build_configure_config(&instance, &parameters, &bindings, &config_spec);
+            let config: Value = dsl::from_dsl_value(config).expect("config json");
             assert_eq!(config["zoom"], 42.0);
             assert_eq!(config["mode"], "A");
         }

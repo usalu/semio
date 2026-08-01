@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_icon_render_scene, build_world_3d_scene, create_default_layout, is_de_locale,
     localized_label_map, merge_world_selection_ids, resolve_labels,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, tree_item_with_action, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
+    ui_declarative_sections_to_tree, ui_text, tree_item_with_action, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind,
     App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
     DocumentView, HostEffect, IconRenderExportItem, IconRenderScene, MeasureSelectItem, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
@@ -489,11 +489,18 @@ fn build_inspector_tree(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime
     if let Some(shot) = active_shot(fixture) {
         return ui_inspector_groups_to_tree(&[shot_inspector_group(shot, labels)]);
     }
-    ui_stack_vertical(vec![
-        ui_text(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}")),
-        ui_text(format!("Shots: {}", fixture.shots.len())),
-        ui_text(format!("Assets: {}", fixture.assets.len())),
-    ])
+    ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+        id: "shooting-play-inspector.empty".into(),
+        label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+        default_open: Some(true),
+        children: vec![
+            ui_text(format!("Schema: {SHOOTING_FIXTURE_SCHEMA}")),
+            ui_text(format!("Shots: {}", fixture.shots.len())),
+            ui_text(format!("Assets: {}", fixture.assets.len())),
+        ],
+        presence: UiPresence::default(),
+        menu: None,
+    }])
 }
 
 fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspectorFieldGroup {
@@ -1113,16 +1120,16 @@ impl DocumentApp for ShootingPlayApp {
             }
             "resetFixture" => ActionEmit::operations(vec![ShootingOperation::SetFixture { fixture: default_fixture() }]),
             "saveDownload" => match serde_json::to_string_pretty(fixture) {
-                Ok(fixture_json) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                    filename: "shooting.🔣️fixture.json".into(),
-                    mime_type: "application/json".into(),
-                    data: fixture_json,
+                Ok(fixture_text) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                    filename: "shooting.fixture.ops".into(),
+                    mime_type: "text/plain".into(),
+                    data: fixture_text,
                     encoding: None,
                 }),
                 Err(_) => ActionEmit::default(),
             },
             "loadRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
-                accept: ".json,application/json".into(),
+                accept: ".ops,.dsl,.spk,application/octet-stream,text/plain".into(),
                 read_as: None,
                 import_action: "setFixtureJson".into(),
                 multiple: false,
@@ -1495,7 +1502,7 @@ impl DocumentApp for ShootingPlayApp {
     /// wholesale — not a document operation, not undoable, not routed through the `DocumentStore`.
     fn apply_config_bytes(&self, config_bytes: &[u8]) -> Result<(), String> {
         let value = store::pack_rt::decode_wire_value(config_bytes).map_err(|error| error.to_string())?;
-        let config: shooting_engine::ShootingConfig = serde_json::from_value(value).map_err(|error| error.to_string())?;
+        let config: shooting_engine::ShootingConfig = dsl::from_dsl_value(value).map_err(|error| error.to_string())?;
         *self.config.borrow_mut() = config;
         Ok(())
     }
@@ -1827,7 +1834,7 @@ mod tests {
         let result = app.handle_action("saveDownload", None, &ViewState::default(), &testkit::meta("local")).expect("save download");
         match &result.requested_effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
-                assert_eq!(filename, "shooting.🔣️fixture.json");
+                assert_eq!(filename, "shooting.fixture.ops");
                 let round_trip: ShootingFixture = serde_json::from_str(data).unwrap();
                 assert_eq!(round_trip.schema, SHOOTING_FIXTURE_SCHEMA);
             }

@@ -1,51 +1,42 @@
 //! ⚙️ Reasoning wires app — headless compute (constitutional: engine).
 
+use dsl::DslValue;
 use reasoning_wires::MindmapWiresDocument;
 use serde_json::Value;
 
+pub use reasoning_wires::{empty_board_fixture, empty_mindmap_wires_document, empty_wires_fixture};
+
 //#region 🔖️DocumentHelpers
-pub fn empty_board_fixture() -> Value {
-    serde_json::json!({
-        "schema": reasoning_wires::MINDMAP_BOARD_SCHEMA,
-        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
-        "nodes": [],
-        "edges": [],
-        "wires": []
-    })
+pub fn array_mut<'a>(fixture: &'a mut DslValue, key: &str) -> &'a mut Vec<DslValue> {
+    if !matches!(fixture, DslValue::Object(_)) {
+        *fixture = DslValue::Object(vec![]);
+    }
+    let DslValue::Object(entries) = fixture else {
+        unreachable!("fixture coerced to object above");
+    };
+    if let Some(idx) = entries.iter().position(|(entry_key, _)| entry_key == key) {
+        let value = &mut entries[idx].1;
+        if !matches!(value, DslValue::Array(_)) {
+            *value = DslValue::Array(vec![]);
+        }
+        match value {
+            DslValue::Array(items) => items,
+            _ => unreachable!("array coerced above"),
+        }
+    } else {
+        entries.push((key.to_string(), DslValue::Array(vec![])));
+        match &mut entries.last_mut().expect("just pushed").1 {
+            DslValue::Array(items) => items,
+            _ => unreachable!("just pushed array"),
+        }
+    }
 }
 
-pub fn empty_wires_fixture() -> Value {
-    serde_json::json!({
-        "schema": reasoning_wires::MINDMAP_WIRES_SCHEMA,
-        "identities": [],
-        "relationships": [],
-        "board": empty_board_fixture()
-    })
-}
-
-pub fn empty_mindmap_wires_document() -> MindmapWiresDocument {
-    MindmapWiresDocument { wires_fixture: empty_wires_fixture(), board_fixture: empty_board_fixture() }
-}
-
-pub fn array_mut<'a>(fixture: &'a mut Value, key: &str) -> &'a mut Vec<Value> {
-    let object = fixture.as_object_mut().expect("mindmap fixture must be a JSON object");
-    object.entry(key.to_string()).or_insert_with(|| Value::Array(Vec::new()));
-    object
-        .get_mut(key)
-        .and_then(|value| {
-            if !value.is_array() {
-                *value = Value::Array(Vec::new());
-            }
-            value.as_array_mut()
-        })
-        .expect("array coerced above")
-}
-
-pub fn entity_id<'a>(entity: &'a Value, key: &str) -> Option<&'a str> {
+pub fn entity_id<'a>(entity: &'a DslValue, key: &str) -> Option<&'a str> {
     entity.get(key).and_then(|value| value.as_str())
 }
 
-pub fn find_board_node<'a>(document: &'a MindmapWiresDocument, node_id: &str) -> Option<&'a Value> {
+pub fn find_board_node<'a>(document: &'a MindmapWiresDocument, node_id: &str) -> Option<&'a DslValue> {
     document
         .board_fixture
         .get("nodes")
@@ -55,7 +46,7 @@ pub fn find_board_node<'a>(document: &'a MindmapWiresDocument, node_id: &str) ->
         .find(|node| entity_id(node, "id") == Some(node_id))
 }
 
-pub fn find_board_edge<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a Value> {
+pub fn find_board_edge<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a DslValue> {
     document
         .board_fixture
         .get("edges")
@@ -65,7 +56,7 @@ pub fn find_board_edge<'a>(document: &'a MindmapWiresDocument, edge_id: &str) ->
         .find(|edge| entity_id(edge, "id") == Some(edge_id))
 }
 
-pub fn find_relationship<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a Value> {
+pub fn find_relationship<'a>(document: &'a MindmapWiresDocument, edge_id: &str) -> Option<&'a DslValue> {
     document
         .wires_fixture
         .get("relationships")
@@ -170,7 +161,7 @@ impl mindmap::MindmapExtension for DefaultWiresExtension {
 
 /// 🔢️ `identityId`/`relationshipId` read as a whole `u64` regardless of whether the source JSON
 /// number is an integer or a float literal. `MindmapWiresDocument`'s `wires_fixture`/`board_fixture`
-/// are opaque `serde_json::Value` at rest (see `reasoning_wires::MindmapWiresDocument`'s doc), but
+/// are opaque `dsl::DslValue` at rest (see `reasoning_wires::MindmapWiresDocument`'s doc), but
 /// the `.wires` DSL's own `IdentityDsl::identity_id`/`RelationshipDsl::relationship_id` type these as
 /// plain `u64` (see `reasoning_wires`'s `🔖️DslMirror` region), so ids round-tripped through the
 /// `.wires` DSL text now arrive here as exact JSON integers (`Number(1)`); this fallback stays for
@@ -281,7 +272,8 @@ mod tests {
         // hydrate this crate's JSON-facing extension from its `wires_fixture` value, the same shape
         // `from_fixture_json` has always expected.
         let document = metabolism_wires_example_document();
-        let ext = DefaultWiresExtension::from_fixture_json(&document.wires_fixture.to_string()).expect("metabolism fixture");
+        let json = serde_json::to_string(&dsl::from_dsl_value(document.wires_fixture.clone()).expect("wires fixture")).expect("json");
+        let ext = DefaultWiresExtension::from_fixture_json(&json).expect("metabolism fixture");
         assert_eq!(ext.mindmap.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);
         assert_eq!(ext.relationship_kind_label(8), Some("is"));

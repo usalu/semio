@@ -17,6 +17,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
 use semio_framework_plugin::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use dsl::DslValue;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use protocol::CollectionOperation;
@@ -968,7 +969,9 @@ impl DocumentApp for Gis2dPlayApp {
                     args.and_then(|value| value.get("routeIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
                 };
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str());
-                let value = args.and_then(|value| value.get("value"));
+                let value = args
+                    .and_then(|value| value.get("value"))
+                    .map(|value| dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null));
                 let (false, Some(field), Some(value)) = (route_ids.is_empty(), field, value) else {
                     return ActionEmit::default();
                 };
@@ -978,8 +981,14 @@ impl DocumentApp for Gis2dPlayApp {
                     .filter(|route| route_ids.iter().any(|id| id == &route.id))
                     .filter_map(|route| {
                         let mut data = route.data.clone();
-                        let object = data.as_object_mut()?;
-                        object.insert(field.into(), value.clone());
+                        let DslValue::Object(entries) = &mut data else {
+                            return None;
+                        };
+                        if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == field) {
+                            *slot = value.clone();
+                        } else {
+                            entries.push((field.to_string(), value.clone()));
+                        }
                         Some(GisMapOperation::Routes(CollectionOperation::Patch { id: route.id.clone(), patch: MapFeaturePatch { data: Some(data) } }))
                     })
                     .collect();

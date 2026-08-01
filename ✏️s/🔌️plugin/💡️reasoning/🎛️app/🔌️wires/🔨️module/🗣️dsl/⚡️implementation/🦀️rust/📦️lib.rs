@@ -42,36 +42,16 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_empty_document() {
-        let document = MindmapWiresDocument {
-            wires_fixture: serde_json::json!({
-                "schema": reasoning_wires::MINDMAP_WIRES_SCHEMA,
-                "identities": [],
-                "relationships": [],
-                "board": {
-                    "schema": reasoning_wires::MINDMAP_BOARD_SCHEMA,
-                    "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
-                    "nodes": [],
-                    "edges": [],
-                    "wires": []
-                }
-            }),
-            board_fixture: serde_json::json!({
-                "schema": reasoning_wires::MINDMAP_BOARD_SCHEMA,
-                "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
-                "nodes": [],
-                "edges": [],
-                "wires": []
-            }),
-        };
+        let document = reasoning_wires::empty_mindmap_wires_document();
         store::test_support::assert_dsl_round_trip(&document);
     }
 
     #[test]
     fn dsl_round_trip_metabolism_fixture() {
         let document = parse_dsl(REASONING_WIRES_EXAMPLE_METABOLISM_TEXT).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
-        assert_eq!(document.wires_fixture["identities"].as_array().unwrap().len(), 7);
-        assert_eq!(document.wires_fixture["relationships"].as_array().unwrap().len(), 9);
-        assert_eq!(document.board_fixture["nodes"].as_array().unwrap().len(), 7);
+        assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
+        assert_eq!(document.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(9));
+        assert_eq!(document.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         store::test_support::assert_dsl_round_trip(&document);
     }
 }

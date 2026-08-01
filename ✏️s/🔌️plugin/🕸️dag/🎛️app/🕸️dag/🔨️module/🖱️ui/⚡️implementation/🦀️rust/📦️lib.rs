@@ -499,16 +499,7 @@ fn render_main_graph(document: &DagDocument, camera: &DagCamera, selected: &[Str
     let (nodes_json, edges_json) = document_to_workflow(document);
     let viewport_json = serde_json::to_string(camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let selection_json = if selected.is_empty() { None } else { serde_json::to_string(selected).ok() };
-    let context_menu_json = json!([{
-        "id": "delete-selection",
-        "label": labels.delete_selection,
-        "icon": "trash",
-        "action": "nodeGraphEdit",
-        "args": { "operations": [{ "operation": "deleteSelection" }] },
-        "destructive": true,
-    }])
-    .to_string();
-    build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection_json, context_menu_json: Some(context_menu_json), ..NodeGraphScene::base(nodes_json, edges_json, viewport_json) })
+    build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection_json, ..NodeGraphScene::base(nodes_json, edges_json, viewport_json) })
 }
 
 fn render_compiled_dag(document: &DagDocument, camera: &DagCamera) -> UiNode {
@@ -773,6 +764,27 @@ impl DocumentApp for DagPlayApp {
             group_labels: HashMap::new(),
         }
     }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &DocumentView<'_, DagDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+
+        let labels = dag_play_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        let selected = self.runtime.borrow().selected_node_ids.clone();
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        let mut menu = Menu::of(registry);
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+            menu = menu.item(spec);
+        }
+        menu.build()
+    }
 }
 //#endregion 🔖️DagPlayApp
 
@@ -839,6 +851,7 @@ pub fn create_dag_app() -> App {
             .view_action("nodeGraphHover", "Node Graph Hover")
             .view_action("nodeGraphViewport", "Node Graph Viewport")
             .view_action("graphPointerDown", "Graph Pointer Down")
+            .keybinding("delete,backspace", "deleteSelection")
             // 📝️ Staged argument form for the panel-visible create action.
             .action_args("addNode", vec![
                 ActionArgDef::select("kind", "Kind", vec![

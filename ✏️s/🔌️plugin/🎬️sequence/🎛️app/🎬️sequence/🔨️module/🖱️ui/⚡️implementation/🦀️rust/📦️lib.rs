@@ -3,7 +3,7 @@
 use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use semio_framework_plugin::{
     app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids as sdk_selection_ids, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppActionRegistry, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
     PanelTreeBuilder, ArtifactKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -331,7 +331,6 @@ fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -
         NodeGraphScene {
             editable: Some(true),
             selection_json,
-            context_menu_json: Some(r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"operations":[{"operation":"deleteSelection"}]},"destructive":true}]"#.into()),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
@@ -606,6 +605,26 @@ impl DocumentApp for SequencePlayApp {
             .window_kind_label(SEQUENCE_PLAY_WINDOW_COMPILED, labels.window_compiled)
             .action_labels(sequence_action_labels(is_de))
             .utility_labels(sequence_utility_labels(is_de))
+    }
+
+    fn context_menu(
+        &self,
+        request: &ContextMenuRequest,
+        _doc: &DocumentView<'_, SequenceFixture>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+
+        let is_de = is_de_locale(view_state);
+        let selected = self.runtime.borrow().selected_step_ids.clone();
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        let mut menu = Menu::of(registry);
+        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+            menu = menu.item(spec);
+        }
+        menu.build()
     }
 }
 

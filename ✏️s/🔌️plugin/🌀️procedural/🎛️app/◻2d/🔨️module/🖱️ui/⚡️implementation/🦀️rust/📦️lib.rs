@@ -14,9 +14,10 @@ use procedural_2d_op::{procedural2d_fixture_operations, Procedural2dOperation};
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlayExt, ArtifactKindSpec, Canvas2dScene, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, NodeGraphScene,
-    OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind,     UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, ui_declarative_sections_to_tree,
 };
+
 use serde_json::{json, Value};
 use std::cell::RefCell;
 
@@ -301,11 +302,18 @@ fn build_catalogue_tree(labels: &Procedural2dLabels) -> UiNode {
 
 fn build_inspector_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
     if play.runtime.selected_ids.is_empty() {
-        return ui_stack_vertical(vec![
-            ui_text(format!("{} flow.fixture", labels.schema_prefix)),
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "procedural2d-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![
+                ui_text(format!("{} flow.fixture", labels.schema_prefix)),
             ui_text(format!("{} {}", labels.widgets_prefix, play.fixture.widgets.len())),
             ui_text(format!("{} {}", labels.show_mode_prefix, play.runtime.show_mode)),
-        ]);
+            ],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
         id: "procedural2d-play-inspector.selection".into(),
@@ -331,15 +339,6 @@ fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -
         serde_json::to_string(&play.runtime.selected_ids).ok()
     };
     let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(&play.runtime.eval_driver));
-    let context_menu_json = serde_json::to_string(&json!([{
-        "id": "delete-selection",
-        "label": labels.delete_selection,
-        "icon": "trash",
-        "action": "nodeGraphEdit",
-        "args": { "operations": [{ "operation": "deleteSelection" }] },
-        "destructive": true,
-    }]))
-    .ok();
     build_node_graph_scene(
         PROCEDURAL2D_PLAY_SURFACE_MAIN,
         PROCEDURAL2D_PLAY_APP_ID,
@@ -350,7 +349,6 @@ fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -
             lod_json: flow_extras.lod_json,
             fixture_json: flow_extras.fixture_json,
             selection_json,
-            context_menu_json,
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
@@ -717,6 +715,27 @@ impl DocumentApp for Procedural2dPlayApp {
             .mode_label("generate", if is_de { "Generieren" } else { "Generate" })
             .action_labels(procedural2d_action_labels(is_de))
             .example_labels(semio_framework_plugin::localized_label_map(is_de, &[("default", "Default", "Standard")]))
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &DocumentView<'_, Procedural2dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        use semio_framework_plugin::{is_de_locale, node_graph_delete_selection_spec, resolve_labels, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+
+        let labels = resolve_labels::<Procedural2dLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        let selected = self.runtime.borrow().selected_ids.clone();
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        let mut menu = Menu::of(registry);
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+            menu = menu.item(spec);
+        }
+        menu.build()
     }
 }
 //#endregion 🔖️Procedural2dPlayApp

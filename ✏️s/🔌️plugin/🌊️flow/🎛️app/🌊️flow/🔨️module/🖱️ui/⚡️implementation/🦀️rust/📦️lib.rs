@@ -1300,6 +1300,20 @@ impl DocumentApp for FlowPlayApp {
             .map(|window_id| (window_id, flow_window_measures(&*runtime, labels)))
             .collect()
     }
+
+    fn context_menu(
+        &self,
+        request: &ContextMenuRequest,
+        doc: &DocumentView<'_, FlowFixture>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        let labels = resolve_labels::<FlowPlayLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        let runtime = self.runtime.borrow();
+        flow_context_menu_items(registry, doc.projection, &runtime, labels, is_de, request.surface.as_ref())
+    }
 }
 //#endregion 🔖️FlowPlayApp
 
@@ -1425,7 +1439,8 @@ pub fn create_flow_app() -> App {
             ])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .keybinding("mod+a", "selectAll"),
+            .keybinding("mod+a", "selectAll")
+            .keybinding("delete,backspace", "deleteSelection"),
     )
     .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"), "flask-conical")
     .workflow("flow", "Flow", "graph")
@@ -1439,7 +1454,7 @@ mod tests {
     use flow_core::FlowFixture;
     use flow_engine::FLOW_WIDGET_DRAG_MIME;
     use semio_framework_plugin::{
-        testkit::{assert_undo_redo_round_trip, meta, new_app, paired_apps},
+        testkit::{assert_undo_redo_round_trip, meta, new_app, new_app_with_registry, paired_apps},
         PluginApp, VcsDocumentApp,
     };
 
@@ -1447,13 +1462,14 @@ mod tests {
         serde_json::to_string(&app.render(body_key, None, view_state).expect("render")).unwrap()
     }
 
-    fn context_menu_items(app: &mut VcsDocumentApp<FlowPlayApp>, view_state: &ViewState) -> Value {
-        let rendered: Value = serde_json::from_str(&render(app, FLOW_PLAY_BODY_MAIN, view_state)).expect("render json");
-        rendered
-            .pointer("/nodeGraph/contextMenuJson")
-            .and_then(Value::as_str)
-            .and_then(|raw| serde_json::from_str(raw).ok())
-            .unwrap_or(Value::Null)
+    fn context_menu_items(app: &mut VcsDocumentApp<FlowPlayApp>, view_state: &ViewState, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
+        let request = semio_framework_plugin::ContextMenuRequest {
+            menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
+            surface,
+            window_instance_id: None,
+            point: None,
+        };
+        serde_json::to_value(app.context_menu(&request, view_state)).unwrap_or(Value::Null)
     }
 
     fn preview_off_ids(app: &mut VcsDocumentApp<FlowPlayApp>, view_state: &ViewState) -> Value {
@@ -1619,26 +1635,33 @@ mod tests {
         assert!(json.contains("flow-play-inspector.empty"));
     }
 
+    fn flow_app_with_registry() -> VcsDocumentApp<FlowPlayApp> {
+        new_app_with_registry::<FlowPlayApp>(create_flow_app)
+    }
+
     #[test]
     fn context_menu_includes_select_all_when_empty() {
-        let mut app = new_app::<FlowPlayApp>();
-        let menu = context_menu_items(&mut app, &ViewState::default());
+        let mut app = flow_app_with_registry();
+        let menu = context_menu_items(&mut app, &ViewState::default(), Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: "main".into(),
+            kind: "nodeGraph".into(),
+            hits: vec![],
+            selection: vec![],
+            text: None,
+        }));
         let menu_json = menu.to_string();
         assert!(menu_json.contains("selectAll"), "menu should be {menu_json}");
         assert!(menu_json.contains("Select All") || menu_json.contains("select-all"), "menu should be {menu_json}");
         assert!(menu_json.contains(r#""icon":"plus""#), "add-node icon: {menu_json}");
-        assert!(menu_json.contains(r#""icon":"trash""#), "delete icon: {menu_json}");
-        assert!(menu_json.contains(r#""destructive":true"#), "delete destructive: {menu_json}");
-        assert!(menu_json.contains("setPreviewOff"), "empty menu still lists preview: {menu_json}");
-        assert!(menu_json.contains("focusSelection"), "empty menu still lists zoom: {menu_json}");
-        assert!(menu_json.contains(r#""disabled":true"#), "selection actions disabled when empty: {menu_json}");
+        assert!(!menu_json.contains(r#""id":"delete-selection""#), "empty canvas must omit delete: {menu_json}");
+        assert!(!menu_json.contains("setPreviewOff"), "empty canvas must omit preview: {menu_json}");
     }
 
     #[test]
     fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene() {
-        let mut app = new_app::<FlowPlayApp>();
+        let mut app = flow_app_with_registry();
         app.handle_action("setSelection", Some(&json!({ "ids": ["slider"] })), &ViewState::default(), &meta("local")).expect("setSelection");
-        let menu = context_menu_items(&mut app, &ViewState::default()).to_string();
+        let menu = context_menu_items(&mut app, &ViewState::default(), None).to_string();
         assert!(menu.contains("setPreviewOff"), "menu should expose preview toggle: {menu}");
         assert!(menu.contains("Hide preview") || menu.contains("eye-off"), "menu should offer hide preview: {menu}");
         assert!(menu.contains("focusSelection"), "menu should expose zoom to selection: {menu}");
@@ -1652,7 +1675,7 @@ mod tests {
             .unwrap_or("")
             .contains("\"disabled\":true"), "preview must be enabled with selection: {menu}");
         app.handle_action("setPreviewOff", Some(&json!({ "ids": ["slider"], "value": true })), &ViewState::default(), &meta("local")).expect("setPreviewOff");
-        let after_menu = context_menu_items(&mut app, &ViewState::default()).to_string();
+        let after_menu = context_menu_items(&mut app, &ViewState::default(), None).to_string();
         let preview_off = preview_off_ids(&mut app, &ViewState::default());
         assert_eq!(preview_off, json!(["slider"]), "preview_off should land on scene: {preview_off}");
         assert!(after_menu.contains("Show preview") || after_menu.contains(r#""icon":"eye""#), "menu should offer show preview: {after_menu}");
@@ -1660,18 +1683,17 @@ mod tests {
 
     #[test]
     fn context_menu_at_selects_target_and_enables_preview() {
-        let mut app = new_app::<FlowPlayApp>();
-        let before = context_menu_items(&mut app, &ViewState::default()).to_string();
-        assert!(before.contains(r#""disabled":true"#), "preview starts disabled: {before}");
+        let mut app = flow_app_with_registry();
+        let before = context_menu_items(&mut app, &ViewState::default(), None).to_string();
+        assert!(!before.contains(r#""id":"delete-selection""#), "preview starts without delete: {before}");
         app.handle_action("contextMenuAt", Some(&json!({ "id": "slider" })), &ViewState::default(), &meta("local")).expect("contextMenuAt");
-        let after = context_menu_items(&mut app, &ViewState::default()).to_string();
+        let after = context_menu_items(&mut app, &ViewState::default(), None).to_string();
         assert!(after.contains("setPreviewOff"), "menu keeps preview: {after}");
         assert!(after.contains(r#""ids":["slider"]"#) || after.contains("slider"), "preview args target the clicked node: {after}");
-        let toggle = after
-            .split("\"id\":\"toggle-preview\"")
+        assert!(!after.split("\"id\":\"toggle-preview\"")
             .nth(1)
-            .unwrap_or("");
-        assert!(!toggle.contains("\"disabled\":true"), "preview enabled after contextMenuAt: {after}");
+            .unwrap_or("")
+            .contains("\"disabled\":true"), "preview enabled after contextMenuAt: {after}");
     }
 
     #[test]

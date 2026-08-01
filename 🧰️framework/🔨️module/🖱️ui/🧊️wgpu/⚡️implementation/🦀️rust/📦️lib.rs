@@ -19863,10 +19863,10 @@ fn tree_gutter_width(depth: u32) -> f32 {
     depth as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH
 }
 
-fn tree_icon_id<E>(item: &TreeItem<E>, expandable: bool) -> &str {
+fn tree_icon_id<E>(item: &TreeItem<E>, expandable: bool) -> Option<&str> {
     item.icon_id
         .map(IconName::as_str)
-        .unwrap_or(if expandable { "folder" } else { "file-text" })
+        .or(if expandable { Some("folder") } else { None })
 }
 
 fn tree_row_collapsed(collapsed: &HashMap<String, bool>, key: &str, default_open: bool) -> bool {
@@ -20008,9 +20008,11 @@ fn render_tree_item<E: Clone>(
     } else {
         ctx.theme.text_element
     };
-    if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(icon_id)) {
-        draw_icon(ctx, uv, label_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
-        label_x += TREE_ICON_SIZE + ctx.theme.gap_standard;
+    if let Some(icon_id) = icon_id {
+        if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(icon_id)) {
+            draw_icon(ctx, uv, label_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
+            label_x += TREE_ICON_SIZE + ctx.theme.gap_standard;
+        }
     }
     draw_text(
         ctx,

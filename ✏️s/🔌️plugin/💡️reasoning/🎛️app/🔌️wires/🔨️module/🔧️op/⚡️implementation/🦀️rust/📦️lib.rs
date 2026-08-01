@@ -1,24 +1,25 @@
 //! ⚡️ Reasoning wires app — operation enum + laws (constitutional: op).
 
+use dsl::DslValue;
 use protocol::{Operation, OperationDiff};
 use reasoning_wires::MindmapWiresDocument;
 use reasoning_wires_engine::{array_mut, entity_id, find_board_edge, find_board_node, find_relationship};
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use std::collections::BTreeMap;
 
 //#region 🔖️Steps
 /// 🧩️ One atomic, absorb-concatenatable board/wires mutation — the building block of {@link MindmapWiresDiff}.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "step", rename_all = "camelCase")]
 pub enum MindmapWiresStep {
-    AddNode { node: Value },
+    AddNode { node: DslValue },
     RemoveNode { node_id: String },
-    PatchNode { node_id: String, patch: Map<String, Value> },
-    AddEdge { edge: Value, relationship: Value },
+    PatchNode { node_id: String, patch: BTreeMap<String, DslValue> },
+    AddEdge { edge: DslValue, relationship: DslValue },
     RemoveEdge { edge_id: String },
 }
 
-fn apply_step(wires: &mut Value, board: &mut Value, step: &MindmapWiresStep) {
+fn apply_step(wires: &mut DslValue, board: &mut DslValue, step: &MindmapWiresStep) {
     match step {
         MindmapWiresStep::AddNode { node } => array_mut(board, "nodes").push(node.clone()),
         MindmapWiresStep::RemoveNode { node_id } => {
@@ -29,9 +30,13 @@ fn apply_step(wires: &mut Value, board: &mut Value, step: &MindmapWiresStep) {
                 .iter_mut()
                 .find(|node| entity_id(node, "id") == Some(node_id.as_str()))
             {
-                if let Some(object) = node.as_object_mut() {
+                if let DslValue::Object(entries) = node {
                     for (key, value) in patch {
-                        object.insert(key.clone(), value.clone());
+                        if let Some((_, slot)) = entries.iter_mut().find(|(entry_key, _)| entry_key == key) {
+                            *slot = value.clone();
+                        } else {
+                            entries.push((key.clone(), value.clone()));
+                        }
                     }
                 }
             }
@@ -54,12 +59,12 @@ fn apply_step(wires: &mut Value, board: &mut Value, step: &MindmapWiresStep) {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum MindmapWiresOperation {
-    AddNode { node: Value },
+    AddNode { node: DslValue },
     RemoveNode { node_id: String },
-    PatchNode { node_id: String, patch: Map<String, Value> },
-    AddRelationship { edge: Value, relationship: Value },
+    PatchNode { node_id: String, patch: BTreeMap<String, DslValue> },
+    AddRelationship { edge: DslValue, relationship: DslValue },
     RemoveEdge { edge_id: String },
-    ReplaceDocument { wires_fixture: Value, board_fixture: Value },
+    ReplaceDocument { wires_fixture: DslValue, board_fixture: DslValue },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -127,10 +132,10 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOperation {
                 .unwrap_or_default(),
             MindmapWiresOperation::PatchNode { node_id, patch } => {
                 let node = find_board_node(projection, node_id);
-                let inverse: Map<String, Value> = patch
+                let inverse: BTreeMap<String, DslValue> = patch
                     .keys()
                     .map(|key| {
-                        let prior = node.and_then(|node| node.get(key)).cloned().unwrap_or(Value::Null);
+                        let prior = node.and_then(|node| node.get(key)).cloned().unwrap_or(DslValue::Null);
                         (key.clone(), prior)
                     })
                     .collect();
@@ -142,7 +147,7 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOperation {
             MindmapWiresOperation::RemoveEdge { edge_id } => find_board_edge(projection, edge_id)
                 .map(|edge| MindmapWiresOperation::AddRelationship {
                     edge: edge.clone(),
-                    relationship: find_relationship(projection, edge_id).cloned().unwrap_or(Value::Null),
+                    relationship: find_relationship(projection, edge_id).cloned().unwrap_or(DslValue::Null),
                 })
                 .into_iter()
                 .collect(),
@@ -163,8 +168,8 @@ mod tests {
     use serde_json::json;
     use store::apply_operation;
 
-    fn node(id: &str, text: &str) -> Value {
-        json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })
+    fn node(id: &str, text: &str) -> DslValue {
+        dsl::to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
     }
 
     fn round_trip(document: &MindmapWiresDocument, operation: &MindmapWiresOperation) -> MindmapWiresDocument {
@@ -181,13 +186,13 @@ mod tests {
     fn add_remove_patch_node_round_trip() {
         let document = empty_mindmap_wires_document();
         let with_node = round_trip(&document, &MindmapWiresOperation::AddNode { node: node("node-1", "Alpha") });
-        assert_eq!(with_node.board_fixture["nodes"].as_array().unwrap().len(), 1);
-        let mut patch = Map::new();
-        patch.insert("text".into(), json!("Renamed"));
+        assert_eq!(with_node.board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        let mut patch = BTreeMap::new();
+        patch.insert("text".into(), dsl::to_dsl_value(&json!("Renamed")).unwrap());
         let patched = round_trip(&with_node, &MindmapWiresOperation::PatchNode { node_id: "node-1".into(), patch });
-        assert_eq!(find_board_node(&patched, "node-1").unwrap()["text"], json!("Renamed"));
+        assert_eq!(find_board_node(&patched, "node-1").and_then(|node| node.get("text")), Some(&DslValue::String("Renamed".into())));
         let removed = round_trip(&patched, &MindmapWiresOperation::RemoveNode { node_id: "node-1".into() });
-        assert!(removed.board_fixture["nodes"].as_array().unwrap().is_empty());
+        assert!(removed.board_fixture.get("nodes").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 
     #[test]
@@ -195,14 +200,14 @@ mod tests {
         let mut document = empty_mindmap_wires_document();
         document = apply_operation(&document, &MindmapWiresOperation::AddNode { node: node("node-1", "A") });
         document = apply_operation(&document, &MindmapWiresOperation::AddNode { node: node("node-2", "B") });
-        let edge = json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" });
-        let relationship = json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 });
+        let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+        let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
         let with_edge = round_trip(&document, &MindmapWiresOperation::AddRelationship { edge, relationship });
-        assert_eq!(with_edge.board_fixture["edges"].as_array().unwrap().len(), 1);
-        assert_eq!(with_edge.wires_fixture["relationships"].as_array().unwrap().len(), 1);
+        assert_eq!(with_edge.board_fixture.get("edges").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
+        assert_eq!(with_edge.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         let removed = round_trip(&with_edge, &MindmapWiresOperation::RemoveEdge { edge_id: "edge-1".into() });
-        assert!(removed.board_fixture["edges"].as_array().unwrap().is_empty());
-        assert!(removed.wires_fixture["relationships"].as_array().unwrap().is_empty());
+        assert!(removed.board_fixture.get("edges").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
+        assert!(removed.wires_fixture.get("relationships").and_then(|value| value.as_array()).is_some_and(|items| items.is_empty()));
     }
 
     //#region 🔖️OpTextTests
@@ -218,19 +223,16 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_patch_node() {
-        let mut patch = Map::new();
-        patch.insert("text".into(), json!("Renamed"));
-        patch.insert("x".into(), json!(12.5));
+        let mut patch = BTreeMap::new();
+        patch.insert("text".into(), dsl::to_dsl_value(&json!("Renamed")).unwrap());
+        patch.insert("x".into(), dsl::to_dsl_value(&json!(12.5)).unwrap());
         store::test_support::assert_op_line_round_trip(&MindmapWiresOperation::PatchNode { node_id: "node-1".into(), patch });
     }
 
     #[test]
     fn op_text_round_trip_add_relationship() {
-        let edge = json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" });
-        // 🌱️ Number literals must be floats: op-text binds `Value` fields through `dsl`'s schema-less
-        // `Shape::Value` escape hatch, whose `DslValue::Number` is a single `f64` (see `dsl/rs/lib.rs`)
-        // — an integer JSON literal here would never compare equal to its own round-tripped value.
-        let relationship = json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0 });
+        let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+        let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1.0, "targetIdentityId": 2.0 })).unwrap();
         store::test_support::assert_op_line_round_trip(&MindmapWiresOperation::AddRelationship { edge, relationship });
     }
 

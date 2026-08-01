@@ -7938,7 +7938,7 @@ pub mod vcs {
                 let kind_len = u32::from_le_bytes(len_bytes) as usize;
                 let kind_end = 4 + kind_len;
                 let kind = std::str::from_utf8(bytes.get(4..kind_end).ok_or_else(|| malformed("truncated kind".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
-                let input = store::pack_rt::decode_json_value(&bytes[kind_end..]).map(store::pack_rt::renormalize_whole_number_floats).map_err(|error| malformed(error.to_string()))?;
+                let input = store::pack_rt::decode_json_value(&bytes[kind_end..]).map(store::pack_rt::renormalize_json_wire_value).map_err(|error| malformed(error.to_string()))?;
                 Ok(ComposeWireOperation { kind, input })
             }
         }

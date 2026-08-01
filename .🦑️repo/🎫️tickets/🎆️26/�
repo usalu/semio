@@ -1,0 +1,173 @@
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-framework-os-kernel-protocol-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-framework-os-kernel-pack-cli` (manifest) generated 1 warning
+warning: 🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/Cargo.toml: file `/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🛢️db/⌨️cli/⚡️implementation/🦀️rust/../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-framework-os-kernel-db-cli` (manifest) generated 1 warning
+warning: profile package spec `semio-s-kernel-store` in profile `release` did not match any packages
+   Compiling semio-framework-os-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust)
+   Compiling semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+warning: variable does not need to be mutable
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust/../../../🧬️schema/⚡️implementation/🦀️rust/dsl_value_serde.rs:539:21
+    |
+539 |                 let mut de = ValueDeserializer::new(other);
+    |                     ----^^
+    |                     |
+    |                     help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `de`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust/../../../🧬️schema/⚡️implementation/🦀️rust/dsl_value_serde.rs:539:21
+    |
+539 |                 let mut de = ValueDeserializer::new(other);
+    |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_de`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `kind`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/🧬️schema/⚡️implementation/🦀️rust/../../../🧬️schema/⚡️implementation/🦀️rust/dsl_value_serde.rs:465:22
+    |
+465 |         if let Some((kind, DslValue::String(variant))) = self.entries.iter().find(|(k, _)| k == "kind") {
+    |                      ^^^^ help: if this is intentional, prefix it with an underscore: `_kind`
+
+   Compiling semio-framework-os-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📜️history/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️value/⚡️implementation/🦀️rust)
+warning: `semio-framework-os-kernel-dsl-schema` (lib) generated 3 warnings (run `cargo fix --lib -p semio-framework-os-kernel-dsl-schema` to apply 3 suggestions)
+   Compiling semio-framework-os-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/🔢️index/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔌️io/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/💎️materialize/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-framework-os-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust)
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+   Compiling semio-s-plugin-block-shared v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🔨️module/🤝️shared/⚡️implementation/🦀️rust)
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:1987:42
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1987 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2000:43
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2000 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> 🧰️framework/⚡️implementation/🦀️rust/../../../🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs:2115:53
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+2115 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+warning: unused import: `ConfigFieldShape`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:578:32
+    |
+578 |     use semio_framework_core::{ConfigFieldShape, ConfigFieldSpec, ConfigSpec};
+    |                                ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust/📦️lib.rs:3707:6
+     |
+3707 | impl protocol::OpText for SpaceHistoryOperation {
+     |      ^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+3707 - impl protocol::OpText for SpaceHistoryOperation {
+3707 + impl OpText for SpaceHistoryOperation {
+     |
+
+warning: `semio-framework-os-kernel-store` (lib) generated 2 warnings (run `cargo fix --lib -p semio-framework-os-kernel-store` to apply 2 suggestions)
+   Compiling semio-s-app-block-3d v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/⚡️implementation/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+warning: unused import: `DocumentEnvelope`
+   --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:104:116
+    |
+104 | ...create_document_envelope, ConfigStore, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, SpaceConflict};
+    |                                                            ^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `DslValue`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5279:41
+     |
+5279 | use dsl::{from_dsl_value, to_dsl_value, DslValue};
+     |                                         ^^^^^^^^
+
+   Compiling semio-s-app-block-3d-dsl v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-3d-op v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🔧️op/⚡️implementation/🦀️rust)
+   Compiling semio-s-app-block-3d-engine v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust)
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5114:61
+     |
+5114 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:5128:61
+     |
+5128 |         let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                             ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: unused variable: `cfg`
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4865:65
+     |
+4865 |             let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+     |                                                                 ^^^ help: if this is intentional, prefix it with an underscore: `_cfg`
+
+warning: variable does not need to be mutable
+    --> 🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust/📦️lib.rs:4201:13
+     |
+4201 |         let mut config_store = ConfigStore::new(config_envelope);
+     |             ----^^^^^^^^^^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+   Compiling semio-s-app-block-3d-ui v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 7.12s
+     Running unittests ../../../../../../../../../✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs (/Users/ueli/Documents/semio/target/debug/deps/semio_s_app_block_3d_ui-07c5dedc09f7af3a)
+
+running 5 tests
+test tests::renders_document_tree_and_inspector ... ok
+test tests::undo_redo_round_trips_through_the_wrapper ... ok
+test tests::add_representation_then_set_active_then_render_world_shows_mesh ... ok
+test tests::add_vortex_kind_then_add_vortex_then_remove_round_trips ... ok
+test tests::set_active_example_loads_capsule_fixture ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

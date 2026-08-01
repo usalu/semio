@@ -401,11 +401,16 @@ impl store::DocumentDsl for Puzzle5dPlayProjection {
 
 impl store::DocumentPack for Puzzle5dPlayProjection {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        self.0.encode_pack_with(options)
+        dsl::to_dsl_value(&self.0)
+            .map_err(store::PackError::Schema)?
+            .encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        Value::decode_pack_with(bytes, options).map(Puzzle5dPlayProjection)
+        let value = dsl::DslValue::decode_pack_with(bytes, options)?;
+        dsl::from_dsl_value(value)
+            .map(Puzzle5dPlayProjection)
+            .map_err(store::PackError::Schema)
     }
 }
 

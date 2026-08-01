@@ -28,27 +28,7 @@ mod tests {
 
     #[test]
     fn pack_round_trips_empty_document() {
-        let document = MindmapWiresDocument {
-            wires_fixture: serde_json::json!({
-                "schema": reasoning_wires::MINDMAP_WIRES_SCHEMA,
-                "identities": [],
-                "relationships": [],
-                "board": {
-                    "schema": reasoning_wires::MINDMAP_BOARD_SCHEMA,
-                    "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
-                    "nodes": [],
-                    "edges": [],
-                    "wires": []
-                }
-            }),
-            board_fixture: serde_json::json!({
-                "schema": reasoning_wires::MINDMAP_BOARD_SCHEMA,
-                "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
-                "nodes": [],
-                "edges": [],
-                "wires": []
-            }),
-        };
+        let document = reasoning_wires::empty_mindmap_wires_document();
         store::test_support::assert_dsl_pack_equivalence(&document);
     }
 }

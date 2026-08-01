@@ -18,10 +18,10 @@ use semio_framework_plugin::{
     apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_scene, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App,
     AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MeasureSelectItem, MediaClass, MediaForm, MediaType, NodeGraphScene, OsMediaCapability, PanelGroup, PanelTreeBuilder,
-    SelectionSet, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, ViewState, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    SelectionSet, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UtilityDefinition, ViewState, WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_declarative_sections_to_tree,
 };
-use ui_wgpu::SurfaceKind;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 
@@ -267,13 +267,27 @@ fn build_catalogue_tree(labels: &Procedural3dLabels) -> UiNode {
 
 fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &SelectionSet, labels: &Procedural3dLabels) -> UiNode {
     let Some(selected_id) = selected_node_ids.first() else {
-        return ui_stack_vertical(vec![
-            ui_text(format!("{} {}", labels.schema_prefix, fixture.schema)),
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "procedural-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![
+                ui_text(format!("{} {}", labels.schema_prefix, fixture.schema)),
             ui_text(format!("{} {}", labels.widgets_prefix, fixture.widgets.len())),
-        ]);
+            ],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     };
     let Some(widget) = fixture.widgets.iter().find(|entry| widget_id(entry) == selected_id) else {
-        return ui_text(labels.no_selection.to_string());
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "procedural-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![ui_text(labels.no_selection.to_string())],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     };
     let mut fields = vec![ui_inspector_readonly_field(
         "procedural-play-inspector.id",

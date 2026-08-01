@@ -1,0 +1,3 @@
+/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs
+/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/🖐️5d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs
+/Users/ueli/Documents/semio/✏️s/🔌️plugin/🧱️block/🎛️app/◻2d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs

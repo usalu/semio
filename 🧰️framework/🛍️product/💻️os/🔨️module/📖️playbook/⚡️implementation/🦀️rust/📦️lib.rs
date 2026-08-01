@@ -6,6 +6,8 @@
 //! (see `Contribution::PlaybookBlockKind` in `semio-framework-core`).
 
 use serde::{Deserialize, Serialize};
+use dsl::DslValue;
+use std::collections::HashMap;
 use store::{DocumentEnvelope, DocumentStore};
 use protocol::{Operation, OperationDiff};
 
@@ -46,7 +48,7 @@ pub struct PlaybookBlock {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub placeholder: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub default: Option<serde_json::Value>,
+    pub default: Option<DslValue>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub min: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -70,7 +72,7 @@ pub struct PlaybookBlock {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fixture_slug: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub params: Option<serde_json::Value>,
+    pub params: Option<DslValue>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[dsl(statements, block)]
     pub condition: Option<PlaybookExpr>,
@@ -103,7 +105,7 @@ pub struct PlaybookBlockOption {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PlaybookExpr {
-    Const { value: serde_json::Value },
+    Const { value: DslValue },
     Var { name: String },
     Eq {
         #[dsl(statements, block)]
@@ -172,36 +174,62 @@ pub fn find_block_location<'a>(spec: &'a PlaybookSpec, block_id: &str) -> Option
     None
 }
 
-pub fn eval_playbook_expr(expr: &PlaybookExpr, values: &serde_json::Map<String, serde_json::Value>) -> serde_json::Value {
+pub fn dsl_value_to_json(value: DslValue) -> serde_json::Value {
+    dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null)
+}
+
+pub type PlaybookValues = HashMap<String, DslValue>;
+
+fn playbook_values_from_json(values: &serde_json::Map<String, serde_json::Value>) -> PlaybookValues {
+    values.iter().filter_map(|(key, value)| dsl::to_dsl_value(value).ok().map(|dsl| (key.clone(), dsl))).collect()
+}
+
+fn dsl_object_nonempty(value: &DslValue) -> bool {
+    matches!(value, DslValue::Object(entries) if !entries.is_empty())
+}
+
+pub fn eval_playbook_expr(expr: &PlaybookExpr, values: &PlaybookValues) -> DslValue {
     match expr {
         PlaybookExpr::Const { value } => value.clone(),
-        PlaybookExpr::Var { name } => values.get(name).cloned().unwrap_or(serde_json::Value::Null),
-        PlaybookExpr::Eq { left, right } => serde_json::Value::Bool(eval_playbook_expr(left, values) == eval_playbook_expr(right, values)),
-        PlaybookExpr::And { items } => serde_json::Value::Bool(items.iter().all(|item| eval_playbook_expr(item, values).as_bool().unwrap_or(false))),
-        PlaybookExpr::Or { items } => serde_json::Value::Bool(items.iter().any(|item| eval_playbook_expr(item, values).as_bool().unwrap_or(false))),
-        PlaybookExpr::Truthy { expr } => serde_json::Value::Bool(eval_playbook_expr(expr, values).as_bool().unwrap_or(false)),
+        PlaybookExpr::Var { name } => values.get(name).cloned().unwrap_or(DslValue::Null),
+        PlaybookExpr::Eq { left, right } => DslValue::Bool(eval_playbook_expr(left, values) == eval_playbook_expr(right, values)),
+        PlaybookExpr::And { items } => DslValue::Bool(items.iter().all(|item| eval_playbook_expr(item, values).as_bool().unwrap_or(false))),
+        PlaybookExpr::Or { items } => DslValue::Bool(items.iter().any(|item| eval_playbook_expr(item, values).as_bool().unwrap_or(false))),
+        PlaybookExpr::Truthy { expr } => DslValue::Bool(eval_playbook_expr(expr, values).as_bool().unwrap_or(false)),
     }
 }
 
 pub fn is_block_visible(block: &PlaybookBlock, values: &serde_json::Map<String, serde_json::Value>) -> bool {
-    block.condition.as_ref().map(|expr| eval_playbook_expr(expr, values).as_bool().unwrap_or(false)).unwrap_or(true)
+    block
+        .condition
+        .as_ref()
+        .map(|expr| eval_playbook_expr(expr, &playbook_values_from_json(values)).as_bool().unwrap_or(false))
+        .unwrap_or(true)
 }
 
-pub fn default_value_for_block(block: &PlaybookBlock) -> serde_json::Value {
+pub fn default_value_for_block(block: &PlaybookBlock) -> DslValue {
     match block.kind.as_str() {
-        "text" | "longText" => block.default.clone().unwrap_or(serde_json::Value::String(String::new())),
-        "number" | "slider" => block.default.clone().or_else(|| block.min.map(|value| serde_json::json!(value))).unwrap_or(serde_json::json!(0)),
-        "boolean" => block.default.clone().unwrap_or(serde_json::json!(false)),
-        "single" => block.default.clone().or_else(|| block.options.as_ref().and_then(|options| options.first()).map(|option| serde_json::Value::String(option.value.clone()))).unwrap_or(serde_json::Value::String(String::new())),
-        "multi" => block.default.clone().unwrap_or(serde_json::json!([])),
-        "date" | "color" => block.default.clone().unwrap_or(serde_json::Value::String(String::new())),
+        "text" | "longText" => block.default.clone().unwrap_or(DslValue::String(String::new())),
+        "number" | "slider" => block.default.clone().or_else(|| block.min.map(DslValue::Number)).unwrap_or(DslValue::Number(0.0)),
+        "boolean" => block.default.clone().unwrap_or(DslValue::Bool(false)),
+        "single" => block
+            .default
+            .clone()
+            .or_else(|| block.options.as_ref().and_then(|options| options.first()).map(|option| DslValue::String(option.value.clone())))
+            .unwrap_or(DslValue::String(String::new())),
+        "multi" => block.default.clone().unwrap_or(DslValue::Array(vec![])),
+        "date" | "color" => block.default.clone().unwrap_or(DslValue::String(String::new())),
         "vector" => {
-            let values: Vec<f64> = block.fields.as_ref().map(|fields| fields.iter().map(|field| field.value.unwrap_or(0.0)).collect()).unwrap_or_default();
-            serde_json::json!(values)
+            let values: Vec<DslValue> = block
+                .fields
+                .as_ref()
+                .map(|fields| fields.iter().map(|field| DslValue::Number(field.value.unwrap_or(0.0))).collect())
+                .unwrap_or_default();
+            DslValue::Array(values)
         }
-        "note" | "image" | "file" => serde_json::Value::Null,
-        _ if is_extension_block_kind(&block.kind) => block.params.clone().filter(|value| value.is_object() && !value.as_object().is_none_or(|obj| obj.is_empty())).unwrap_or_else(|| serde_json::json!({})),
-        _ => serde_json::Value::Null,
+        "note" | "image" | "file" => DslValue::Null,
+        _ if is_extension_block_kind(&block.kind) => block.params.clone().filter(dsl_object_nonempty).unwrap_or(DslValue::Object(vec![])),
+        _ => DslValue::Null,
     }
 }
 
@@ -246,7 +274,7 @@ pub fn can_advance(step: &PlaybookStep, values: &serde_json::Map<String, serde_j
 pub fn initial_values(spec: &PlaybookSpec, overrides: &serde_json::Map<String, serde_json::Value>) -> serde_json::Map<String, serde_json::Value> {
     let mut values = serde_json::Map::new();
     for block in flatten_playbook_blocks(spec) {
-        values.insert(block.id.clone(), default_value_for_block(block));
+        values.insert(block.id.clone(), dsl_value_to_json(default_value_for_block(block)));
     }
     for (key, value) in overrides {
         if values.contains_key(key) {
@@ -566,7 +594,7 @@ pub mod generation_forms {
     pub fn initial_generation_values(spec: &PlaybookSpec) -> Map<String, Value> {
         let mut values = Map::new();
         for question in flatten_playbook_blocks(spec) {
-            values.insert(question.id.clone(), default_value_for_block(question));
+            values.insert(question.id.clone(), crate::dsl_value_to_json(default_value_for_block(question)));
         }
         values
     }
@@ -827,7 +855,7 @@ pub mod generation_forms {
         if !is_block_visible(question, values) {
             return None;
         }
-        let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_block(question));
+        let value = values.get(&question.id).cloned().unwrap_or_else(|| crate::dsl_value_to_json(default_value_for_block(question)));
         let field_id = format!("generate.form.{}", question.id);
         let on_change = || {
             generation_action(

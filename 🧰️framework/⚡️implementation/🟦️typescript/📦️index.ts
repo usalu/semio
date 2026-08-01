@@ -850,7 +850,11 @@ export type UiComponentSceneNode = {
 };
 
 /** 🧷️ Shared prop shape for every `framework/os/renderer/js/react/index.tsx` host component. */
-export type ComponentSceneHostProps = { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void };
+export type ComponentSceneHostProps = {
+  readonly node: UiComponentSceneNode;
+  readonly onAction: (action: ActionDescriptor) => void;
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
+};
 //#endregion ComponentSceneProtocol
 
 export function canvasPickTargetKey(target: CanvasPickTarget): string {
@@ -2473,7 +2477,7 @@ function pluginWorkerUrl(moduleUrl: string): string {
 class PluginWorkerClient {
   private worker: Worker | null = null;
   private readonly pending = new Map<string, { resolve: (value: Record<string, unknown>) => void; reject: (error: Error) => void; watchdog: number }>();
-  onBackboneOutbound?: (uri: string, messageJson: string) => void;
+  onBackboneOutbound?: (uri: string, message: Uint8Array) => void;
 
   constructor(
     private readonly pluginId: string,
@@ -2497,7 +2501,8 @@ class PluginWorkerClient {
         message?: string;
       };
       if (message.type === "backboneOutbound" && message.uri && message.message != null) {
-        this.onBackboneOutbound?.(message.uri, message.message);
+        const bytes = message.message instanceof Uint8Array ? message.message : new Uint8Array(message.message as ArrayBuffer);
+        this.onBackboneOutbound?.(message.uri, bytes);
         return;
       }
       const requestId = message.requestId;
@@ -2563,7 +2568,7 @@ class PluginWorkerClient {
     this.worker = null;
   }
 
-  postBackboneInbound(uri: string, messages: readonly string[]): void {
+  postBackboneInbound(uri: string, messages: readonly Uint8Array[]): void {
     this.worker?.postMessage({ type: "backboneInbound", uri, messages });
   }
 }
@@ -2578,7 +2583,7 @@ const pluginWorkerClients = new Map<string, PluginWorkerClient>();
 async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
   const client = new PluginWorkerClient(pluginId, moduleUrl);
   pluginWorkerClients.set(pluginId, client);
-  client.onBackboneOutbound = (uri, messageJson) => relayPluginBackboneOutbound(uri, messageJson);
+  client.onBackboneOutbound = (uri, message) => relayPluginBackboneOutbound(uri, message);
   await client.start();
   return withSerializedPluginWasmHandle({
     manifest: () => client.manifest(),
@@ -2593,26 +2598,26 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
 }
 //#endregion PluginWorkerClient
 
-export function relayPluginBackboneOutbound(uri: string, messageJson: string): void {
-  pluginBackboneOutboundRelay?.(uri, messageJson);
+export function relayPluginBackboneOutbound(uri: string, message: Uint8Array): void {
+  pluginBackboneOutboundRelay?.(uri, message);
 }
 
 /** @emoji 🌉️ A direct-import (main-thread, no-worker) plugin's generated `🟨️host-shim.js` runs in this
  * same realm but can't import from this module, so it reaches the outbound relay through this
  * well-known global instead — the same relay a worker-backed program reaches via `postMessage`. */
-(globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, messageJson: string) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
+(globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, message: Uint8Array) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
 
 /** @emoji 🌉️ Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
  * `🟨️host-shim.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
  * scoping is needed even though several plugins may share this realm). */
-function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly string[]): void {
-  const bridge = globalThis as unknown as { __semioBackboneInbound?: Map<string, string[]> };
-  const queue = bridge.__semioBackboneInbound ?? new Map<string, string[]>();
+function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly Uint8Array[]): void {
+  const bridge = globalThis as unknown as { __semioBackboneInbound?: Map<string, Uint8Array[]> };
+  const queue = bridge.__semioBackboneInbound ?? new Map<string, Uint8Array[]>();
   queue.set(uri, [...(queue.get(uri) ?? []), ...messages]);
   bridge.__semioBackboneInbound = queue;
 }
 
-export function postPluginBackboneInbound(pluginId: string, uri: string, messages: readonly string[]): void {
+export function postPluginBackboneInbound(pluginId: string, uri: string, messages: readonly Uint8Array[]): void {
   const client = pluginWorkerClients.get(pluginId);
   if (client) {
     client.postBackboneInbound(uri, messages);
@@ -2621,9 +2626,9 @@ export function postPluginBackboneInbound(pluginId: string, uri: string, message
   pushMainThreadPluginBackboneInbound(uri, messages);
 }
 
-let pluginBackboneOutboundRelay: ((uri: string, messageJson: string) => void) | null = null;
+let pluginBackboneOutboundRelay: ((uri: string, message: Uint8Array) => void) | null = null;
 
-export function setPluginBackboneOutboundRelay(relay: ((uri: string, messageJson: string) => void) | null): void {
+export function setPluginBackboneOutboundRelay(relay: ((uri: string, message: Uint8Array) => void) | null): void {
   pluginBackboneOutboundRelay = relay;
 }
 

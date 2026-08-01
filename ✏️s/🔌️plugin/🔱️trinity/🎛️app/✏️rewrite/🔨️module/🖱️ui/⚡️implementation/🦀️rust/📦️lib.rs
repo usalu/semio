@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
     is_de_locale, localized_label_map, resolve_labels, tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest,
     DocumentApp, DocumentView, MeasureSelectItem, NodeGraphScene, PanelTreeBuilder,
     TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
@@ -14,6 +14,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
 };
 use serde::Serialize;
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use trinity_jack::semantic_tokens;
 use trinity_ram::{Camera, Graph, GraphFixture, Node, PortDirection, PropertyValue};
@@ -821,8 +822,9 @@ fn build_document_tree(state: &RewriteRuleState, runtime: &RewritePlayRuntime, l
 }
 
 fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNode {
-    tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind })))),
-    menu: None,
+    UiTreeItemNode {
+        ..tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind }))))
+    }
 }
 
 fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
@@ -875,7 +877,14 @@ fn fixture_with_derived(fixture_json: &str) -> Option<GraphFixture> {
 
 fn build_inspector_tree(state: &RewriteRuleState, runtime: &RewritePlayRuntime, term_labels: &TrinityRewriteLabels) -> UiNode {
     let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
-        return ui_text("Invalid trinity fixture");
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "trinity-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![ui_text("Invalid trinity fixture")],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     };
     if runtime.selected_node_ids.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
@@ -893,7 +902,14 @@ fn build_inspector_tree(state: &RewriteRuleState, runtime: &RewritePlayRuntime, 
         .filter_map(|id| fixture.nodes.iter().find(|node| &node.id == id))
         .collect();
     if nodes.is_empty() {
-        return ui_text("Piece not found");
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "trinity-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![ui_text("Piece not found")],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
     let name_mixed = ui_inspector_mixed_text(&nodes.iter().map(|node| node.name.clone()).collect::<Vec<_>>());
@@ -1042,9 +1058,6 @@ impl ParameterKindLabel for ParameterSpec {
 //#endregion 🔖️Panels
 
 //#region 🔖️Render
-const DELETE_SELECTION_CONTEXT_MENU: &str =
-    r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"operations":[{"operation":"deleteSelection"}]},"destructive":true}]"#;
-
 fn rewrite_lod_json_for_window(runtime: &RewritePlayRuntime, window_id: &str) -> Option<String> {
     let mode = runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
@@ -1106,7 +1119,6 @@ fn render_rule_graph(
             selection_json,
             lod_json: rewrite_lod_json_for_window(runtime, window_id),
             editable: editable.then_some(true),
-            context_menu_json: editable.then(|| DELETE_SELECTION_CONTEXT_MENU.into()),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
@@ -1161,12 +1173,12 @@ fn render_jack_editor(state: &RewriteRuleState, runtime: &RewritePlayRuntime) ->
 /// projection. Every rule/parameter/before-fixture mutation flows through the single LWW
 /// {@link RewriteRuleOperation::SetState}; hover/select var focus, epochs and LOD are runtime.
 pub struct TrinityRewritePlayApp {
-    runtime: RewritePlayRuntime,
+    runtime: RefCell<RewritePlayRuntime>,
 }
 
 impl Default for TrinityRewritePlayApp {
     fn default() -> Self {
-        Self { runtime: RewritePlayRuntime { before_pane_camera: seed_before_pane_camera(&default_rule_state()), ..Default::default() } }
+        Self { runtime: RefCell::new(RewritePlayRuntime { before_pane_camera: seed_before_pane_camera(&default_rule_state()), ..Default::default() }) }
     }
 }
 
@@ -1197,14 +1209,15 @@ impl DocumentApp for TrinityRewritePlayApp {
         _view_state: &ViewState,
     ) -> ActionEmit<RewriteRuleOperation> {
         let state = doc.projection;
+        let mut runtime = self.runtime.borrow_mut();
         match action {
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
-                self.runtime.selected_node_ids = selection_ids(args);
+                runtime.selected_node_ids = selection_ids(args);
                 let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or("");
-                if let Some(node_id) = self.runtime.selected_node_ids.first().cloned() {
+                if let Some(node_id) = runtime.selected_node_ids.first().cloned() {
                     let fixture_json = fixture_json_for_surface(surface_id, state);
-                    sync_select_var_from_node(&mut self.runtime, &fixture_json, &node_id);
-                    self.runtime.select_epoch += 1;
+                    sync_select_var_from_node(&mut runtime, &fixture_json, &node_id);
+                    runtime.select_epoch += 1;
                 }
                 ActionEmit::default()
             }
@@ -1225,7 +1238,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                     });
                 if let Some(node_id) = node_id {
                     let fixture_json = fixture_json_for_surface(surface_id, state);
-                    sync_hover_var_from_node(&mut self.runtime, &fixture_json, &node_id);
+                    sync_hover_var_from_node(&mut runtime, &fixture_json, &node_id);
                 }
                 ActionEmit::default()
             }
@@ -1234,7 +1247,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                 if surface_id == TRINITY_REWRITE_PLAY_SURFACE_BEFORE {
                     if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
                         if let Ok(camera) = serde_json::from_str::<Camera>(viewport_json) {
-                            self.runtime.before_pane_camera = camera;
+                            runtime.before_pane_camera = camera;
                         }
                     }
                 }
@@ -1248,7 +1261,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                     .cloned()
                     .unwrap_or_default();
                 let mut next = state.clone();
-                if apply_rewrite_node_graph_edit_operations(&mut next, &mut self.runtime, surface_id, &operations) {
+                if apply_rewrite_node_graph_edit_operations(&mut next, &mut runtime, surface_id, &operations) {
                     set_state_emit(state, next)
                 } else {
                     ActionEmit::default()
@@ -1305,17 +1318,17 @@ impl DocumentApp for TrinityRewritePlayApp {
                 ActionEmit::default()
             }
             "recomputeRewrite" | "reorganize" => {
-                self.runtime.reorganize_epoch += 1;
+                runtime.reorganize_epoch += 1;
                 ActionEmit::default()
             }
             "resetRule" => {
                 let next = default_rule_state();
-                self.runtime.before_pane_camera = seed_before_pane_camera(&next);
+                runtime.before_pane_camera = seed_before_pane_camera(&next);
                 set_state_emit(state, next)
             }
             "graphPointerDown" => {
                 if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(|v| v.as_str()) {
-                    self.runtime.selected_node_ids = vec![node_id.into()];
+                    runtime.selected_node_ids = vec![node_id.into()];
                 }
                 ActionEmit::default()
             }
@@ -1337,24 +1350,24 @@ impl DocumentApp for TrinityRewritePlayApp {
             }
             "textSelect" => {
                 if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
-                    self.runtime.active_select_var = var.into();
+                    runtime.active_select_var = var.into();
                 } else if let Some(start) = args.and_then(|v| v.get("start")).and_then(|v| v.as_u64()) {
                     if let Some(token) = jack_token_at_offset(&compiled_jack_query(state), start as usize) {
-                        self.runtime.active_select_var = token;
+                        runtime.active_select_var = token;
                     }
                 }
-                self.runtime.select_epoch += 1;
+                runtime.select_epoch += 1;
                 ActionEmit::default()
             }
             "textHover" => {
                 if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
-                    self.runtime.active_hover_var = var.into();
+                    runtime.active_hover_var = var.into();
                 } else if let Some(offset) = args.and_then(|v| v.get("offset")).and_then(|v| v.as_u64()) {
                     if let Some(token) = jack_token_at_offset(&compiled_jack_query(state), offset as usize) {
-                        self.runtime.active_hover_var = token;
+                        runtime.active_hover_var = token;
                     }
                 }
-                self.runtime.hover_epoch += 1;
+                runtime.hover_epoch += 1;
                 ActionEmit::default()
             }
             "setLodMode" => {
@@ -1362,7 +1375,7 @@ impl DocumentApp for TrinityRewritePlayApp {
                     args.and_then(|v| v.get("windowId")).and_then(|v| v.as_str()),
                     args.and_then(|v| v.get("value")).and_then(|v| v.as_str()),
                 ) {
-                    self.runtime.lod_mode_by_window.insert(window_id.into(), value.into());
+                    runtime.lod_mode_by_window.insert(window_id.into(), value.into());
                 }
                 ActionEmit::default()
             }
@@ -1372,7 +1385,7 @@ impl DocumentApp for TrinityRewritePlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let state = doc.projection;
-        let runtime = &self.runtime;
+        let runtime = &*self.runtime.borrow();
         let labels = resolve_labels::<TrinityRewriteLabels>(view_state);
         match body_key {
             TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(
@@ -1417,7 +1430,8 @@ impl DocumentApp for TrinityRewritePlayApp {
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, RewriteRuleState>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let mode_for = |window_id: &str| self.runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
+        let runtime = self.runtime.borrow();
+        let mode_for = |window_id: &str| runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);
         HashMap::from([
             (TRINITY_REWRITE_PLAY_WINDOW_BEFORE.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, mode_for(TRINITY_REWRITE_PLAY_WINDOW_BEFORE))]),
             (TRINITY_REWRITE_PLAY_WINDOW_AFTER.to_string(), vec![trinity_rewrite_lod_measure(TRINITY_REWRITE_PLAY_WINDOW_AFTER, mode_for(TRINITY_REWRITE_PLAY_WINDOW_AFTER))]),
@@ -1436,6 +1450,26 @@ impl DocumentApp for TrinityRewritePlayApp {
             .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_JACK, labels.window_jack)
             .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS, labels.window_parameters)
             .action_labels(trinity_rewrite_action_labels(is_de_locale(view_state)))
+    }
+
+    fn context_menu(
+        &self,
+        request: &ContextMenuRequest,
+        _doc: &DocumentView<'_, RewriteRuleState>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+
+        let is_de = is_de_locale(view_state);
+        let selected = self.runtime.borrow().selected_node_ids.clone();
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        let mut menu = Menu::of(registry);
+        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+            menu = menu.item(spec);
+        }
+        menu.build()
     }
 }
 //#endregion 🔖️TrinityRewritePlayApp

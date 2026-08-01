@@ -5,7 +5,7 @@ use puzzle_3d_engine::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineO
 use puzzle_3d_op::{puzzle3d_document_delta_operations, Puzzle3dOperation, Puzzle3dPlayProjection};
 use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, SelectionSet, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
-    ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec,
+    ui_stack_vertical, ui_text, ui_declarative_sections_to_tree, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec,
     SurfaceKind, ToolRef, UtilityDefinition, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition,
@@ -3026,11 +3026,18 @@ fn build_inspector_tree(envelope: &Puzzle3dScene, term_labels: &Puzzle3dLabels) 
             return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.target-volume".into(), label: term_labels.target_volume.into(), default_open: None, presence: UiPresence::default(), fields }]);
         }
     }
-    ui_stack_vertical(vec![
-        ui_text(format!("{}: {}", term_labels.schema, envelope.fixture.schema)),
+    ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "puzzle3d-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![
+                ui_text(format!("{}: {}", term_labels.schema, envelope.fixture.schema)),
         ui_text(format!("{}: {}", term_labels.domain, envelope.fixture.domain)),
         ui_text(format!("{}: {}", term_labels.objects, envelope.fixture.objects.len())),
-    ])
+            ],
+            presence: UiPresence::default(),
+            menu: None,
+        }])
 }
 
 fn build_settings_body(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {

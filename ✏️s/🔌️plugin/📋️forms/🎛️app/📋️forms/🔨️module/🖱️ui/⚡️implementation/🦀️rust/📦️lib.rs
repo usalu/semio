@@ -1,18 +1,37 @@
 //! 📋️ Forms app — DocumentApp impl, render, manifest (constitutional: ui).
 
+
+use std::cell::RefCell;
+
+fn value_to_dsl(value: &Value) -> dsl::DslValue {
+    dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
+}
+
+fn dsl_to_value(value: &dsl::DslValue) -> Value {
+    dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
+}
+
+fn dsl_string_value(value: &dsl::DslValue) -> String {
+    json_string_value(&dsl_to_value(value))
+}
+
+fn dsl_f64_value(value: &dsl::DslValue) -> f64 {
+    json_f64_value(&dsl_to_value(value))
+}
+
 use forms::{FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField, FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA};
 use forms_engine::{building_component_spec, can_advance, default_value_for_question, empty_forms_projection, initial_try_values, is_extension_question_kind, visible_questions};
 use forms_op::FormOperation;
 use semio_framework_plugin::{SurfaceKind,
     create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action,
-    ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
+    ui_external_slot, ui_image, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionKind, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, Contribution,
     DocumentApp, DocumentView, HostEffect, IconName, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ArtifactKindSpec, ActionDescriptor,
     UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode, UiPresence,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode,
     ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -174,7 +193,7 @@ fn extension_params_value(question: &FormQuestion, values: &Map<String, Value>) 
     values
         .get(&question.id)
         .cloned()
-        .or_else(|| question.params.clone())
+        .or_else(|| question.params.as_ref().map(dsl_to_value))
         .unwrap_or_else(|| json!({}))
 }
 
@@ -279,7 +298,7 @@ fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "number" => {
             let mut question = question_shell(id, "Number".into(), "number".into());
-            question.default = Some(json!(0));
+            question.default = Some(value_to_dsl(&json!(0)));
             question.min = Some(0.0);
             question.max = Some(100.0);
             question.step = Some(1.0);
@@ -287,7 +306,7 @@ fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "slider" => {
             let mut question = question_shell(id, "Slider".into(), "slider".into());
-            question.default = Some(json!(50));
+            question.default = Some(value_to_dsl(&json!(50)));
             question.min = Some(0.0);
             question.max = Some(100.0);
             question.step = Some(1.0);
@@ -295,7 +314,7 @@ fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "boolean" => {
             let mut question = question_shell(id, "Boolean".into(), "boolean".into());
-            question.default = Some(json!(false));
+            question.default = Some(value_to_dsl(&json!(false)));
             question
         }
         "single" | "multi" => {
@@ -304,7 +323,7 @@ fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
                 if kind == "single" { "Single Select" } else { "Multi Select" }.into(),
                 kind.into(),
             );
-            question.default = if kind == "multi" { Some(json!([])) } else { None };
+            question.default = if kind == "multi" { Some(value_to_dsl(&json!([]))) } else { None };
             question.options = Some(vec![
                 FormQuestionOption {
                     value: "a".into(),
@@ -324,12 +343,12 @@ fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         }
         "date" => {
             let mut question = question_shell(id, "Date".into(), "date".into());
-            question.default = Some(json!("2026-01-01"));
+            question.default = Some(value_to_dsl(&json!("2026-01-01")));
             question
         }
         "color" => {
             let mut question = question_shell(id, "Color".into(), "color".into());
-            question.default = Some(json!("#336699"));
+            question.default = Some(value_to_dsl(&json!("#336699")));
             question
         }
         "image" => question_shell(id, "Image".into(), "image".into()),
@@ -364,7 +383,7 @@ fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
         "buildingComponent" => {
             let mut question = question_shell(id, "Building Component".into(), "buildingComponent".into());
             question.fixture_slug = Some("hexagonal-mushroom-column".into());
-            question.params = Some(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
+            question.params = Some(value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
             question
         }
         _ => question_shell(id, kind.into(), kind.into()),
@@ -409,7 +428,7 @@ fn patch_question_field(spec: &FormSpec, question_id: &str, field: &str, raw_val
         "placeholder" => question.placeholder = raw_value.as_str().map(str::to_string),
         "required" => question.required = Some(raw_value.as_bool().unwrap_or(false)),
         "text" => question.text = raw_value.as_str().map(str::to_string),
-        "default" => question.default = Some(raw_value.clone()),
+        "default" => question.default = Some(value_to_dsl(raw_value)),
         "min" => question.min = raw_value.as_f64(),
         "max" => question.max = raw_value.as_f64(),
         "step" => question.step = raw_value.as_f64(),
@@ -487,9 +506,14 @@ fn remove_vector_field(spec: &FormSpec, question_id: &str, field_key: &str) -> O
 
 fn patch_building_component_param(spec: &FormSpec, question_id: &str, param_key: &str, raw_value: &Value) -> Option<FormOperation> {
     update_block_operation(spec, question_id, |question| {
-        let mut params = question.params.take().unwrap_or_else(|| json!({}));
-        if let Some(map) = params.as_object_mut() {
-            map.insert(param_key.into(), raw_value.clone());
+        let mut params = question.params.take().unwrap_or(dsl::DslValue::Object(vec![]));
+        if let dsl::DslValue::Object(entries) = &mut params {
+            let value = value_to_dsl(raw_value);
+            if let Some((_, slot)) = entries.iter_mut().find(|(key, _)| key == param_key) {
+                *slot = value;
+            } else {
+                entries.push((param_key.to_string(), value));
+            }
         }
         question.params = Some(params);
     })
@@ -652,13 +676,13 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
                 .map(|question| UiTreeItemNode {
                     icon_id: Some("help-circle".into()),
                     draggable: Some(true),
+                    menu: None,
                     ..tree_item_with_action(
                         question.id.clone(),
                         question.label.clone(),
                         Some(question.kind.clone()),
                         forms_action("setSelection", Some(json!({ "ids": [question.id.clone()] }))),
-                    ),
-                    menu: None,
+                    )
                 })
                 .collect();
             UiTreeItemNode {
@@ -666,13 +690,13 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsL
                 default_open: Some(true),
                 draggable: Some(true),
                 items: Some(question_items),
+                menu: None,
                 ..tree_item_with_action(
                     forms_play_step_tree_id(&step.id),
                     step.title.clone(),
                     Some(format!("{} questions", step.blocks.len())),
                     forms_action("setSelection", Some(json!({ "ids": [] }))),
-                ),
-                menu: None,
+                )
             }
         })
         .collect();
@@ -700,30 +724,31 @@ fn build_catalogue_tree(contributions: &[ProgramContributionEntry], labels: &For
                 icon_id: Some(icon),
                 draggable: Some(true),
                 drag_data: Some(drag_data),
+                menu: None,
                 ..tree_item_with_action(
                     format!("forms-play-catalogue.{kind}"),
                     label,
                     Some(kind.clone()),
                     forms_action("addQuestion", Some(json!({ "kind": kind }))),
-                ),
-                menu: None,
+                )
             }
         })
         .collect();
     let action_items = vec![
         UiTreeItemNode {
             icon_id: Some("plus".into()),
+            menu: None,
             ..tree_item_with_action("forms-play-catalogue.add-step", labels.add_step, None, forms_action("addStep", None))
         },
         UiTreeItemNode {
             icon_id: Some("type".into()),
+            menu: None,
             ..tree_item_with_action(
                 "forms-play-catalogue.add-question",
                 labels.add_text_question,
                 None,
                 forms_action("addQuestion", Some(json!({ "kind": "text" }))),
-            ),
-            menu: None,
+            )
         },
     ];
     PanelTreeBuilder::new("forms-play-catalogue")
@@ -815,7 +840,7 @@ fn question_kind_editor_fields(
                 question_ids,
                 &fid("default"),
                 labels.default,
-                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
+                &[question.default.as_ref().map(dsl_string_value).unwrap_or_default()],
                 "default",
             ));
         }
@@ -827,7 +852,7 @@ fn question_kind_editor_fields(
                 question_ids,
                 &fid("default"),
                 labels.default,
-                &[question.default.as_ref().map(json_f64_value).unwrap_or(0.0)],
+                &[question.default.as_ref().map(dsl_f64_value).unwrap_or(0.0)],
                 "default",
             ));
             if question.kind == "slider" {
@@ -841,7 +866,11 @@ fn question_kind_editor_fields(
             }
         }
         "boolean" => {
-            let pressed = question.default.as_ref().and_then(|default| default.as_bool()).unwrap_or(false);
+            let pressed = question
+                .default
+                .as_ref()
+                .and_then(|default| dsl_to_value(default).as_bool())
+                .unwrap_or(false);
             fields.push(UiNode::Field(UiFieldNode {
                 id: fid("default"),
                 label: labels.default.into(),
@@ -918,7 +947,7 @@ fn question_kind_editor_fields(
                 question_ids,
                 &fid("default"),
                 labels.default,
-                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
+                &[question.default.as_ref().map(dsl_string_value).unwrap_or_default()],
                 "default",
             ));
         }
@@ -1062,11 +1091,18 @@ fn build_inspector_tree(
         .filter_map(|id| find_question_location(spec, id).map(|location| location.question))
         .collect();
     if questions.is_empty() {
-        return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {FORMS_DOCUMENT_SCHEMA}")),
-            ui_text(format!("Steps: {}", spec.steps.len())),
-            ui_text(format!("Questions: {}", flatten_questions(spec).len())),
-        ]);
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "forms-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![
+                ui_text(format!("Schema: {FORMS_DOCUMENT_SCHEMA}")),
+                ui_text(format!("Steps: {}", spec.steps.len())),
+                ui_text(format!("Questions: {}", flatten_questions(spec).len())),
+            ],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     }
     let question_ids: Vec<String> = questions.iter().map(|question| question.id.clone()).collect();
     let labels: Vec<String> = questions.iter().map(|question| question.label.clone()).collect();
@@ -1244,7 +1280,7 @@ fn render_try_question(
     error: Option<&str>,
     labels: &FormsLabels,
 ) -> UiNode {
-    let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_question(question));
+    let value = values.get(&question.id).cloned().unwrap_or_else(|| dsl_to_value(&default_value_for_question(question)));
     let key = question.id.clone();
     match question.kind.as_str() {
         "text" | "longText" => try_field(
@@ -1519,9 +1555,14 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
 //#endregion 🔖️Render
 
 //#region 🔖️FormsPlayApp
-#[derive(Default)]
 pub struct FormsPlayApp {
-    runtime: FormsPlayRuntime,
+    runtime: RefCell<FormsPlayRuntime>,
+}
+
+impl Default for FormsPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(FormsPlayRuntime::default()) }
+    }
 }
 
 impl DocumentApp for FormsPlayApp {
@@ -1551,10 +1592,11 @@ impl DocumentApp for FormsPlayApp {
         _view_state: &ViewState,
     ) -> ActionEmit<FormOperation> {
         let spec = doc.projection;
+        let mut rt = self.runtime.borrow_mut();
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setSelection" => {
-                self.runtime.selected_ids = selection_ids(args);
+                rt.selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "editEngagementInput" | "tryEngagementInput" => ActionEmit::default(),
@@ -1569,8 +1611,7 @@ impl DocumentApp for FormsPlayApp {
                 let param_key = args.and_then(|value| value.get("paramKey")).and_then(|value| value.as_str());
                 if let Some(key) = key {
                     if let Some(option_value) = option_value {
-                        let mut selected = self
-                            .runtime
+                        let mut selected = rt
                             .try_values
                             .get(key)
                             .and_then(|value| value.as_array().cloned())
@@ -1583,17 +1624,17 @@ impl DocumentApp for FormsPlayApp {
                         } else {
                             selected.retain(|entry| entry.as_str() != Some(option_value));
                         }
-                        self.runtime.try_values.insert(key.into(), Value::Array(selected));
+                        rt.try_values.insert(key.into(), Value::Array(selected));
                     } else if let Some(index) = vector_index {
                         if let Some(raw) = raw_value {
-                            patch_try_vector_field(&mut self.runtime, key, index, &raw);
+                            patch_try_vector_field(&mut rt, key, index, &raw);
                         }
                     } else if let Some(param_key) = param_key {
                         if let Some(raw) = raw_value {
-                            patch_try_object_field(&mut self.runtime, key, param_key, &raw);
+                            patch_try_object_field(&mut rt, key, param_key, &raw);
                         }
                     } else if let Some(raw) = raw_value {
-                        self.runtime.try_values.insert(key.into(), raw);
+                        rt.try_values.insert(key.into(), raw);
                     }
                 }
                 ActionEmit::default()
@@ -1601,25 +1642,25 @@ impl DocumentApp for FormsPlayApp {
             "setTryValues" => {
                 if let Some(values) = args.and_then(|value| value.get("values")).and_then(|value| value.as_object()) {
                     for (key, value) in values {
-                        self.runtime.try_values.insert(key.clone(), value.clone());
+                        rt.try_values.insert(key.clone(), value.clone());
                     }
                 }
                 ActionEmit::default()
             }
             "resetTry" => {
-                reset_try_runtime(&mut self.runtime);
+                reset_try_runtime(&mut rt);
                 ActionEmit::default()
             }
             "previousStep" => {
-                self.runtime.current_step_index = self.runtime.current_step_index.saturating_sub(1);
+                rt.current_step_index = rt.current_step_index.saturating_sub(1);
                 ActionEmit::default()
             }
             "nextStep" => {
-                if self.runtime.current_step_index + 1 < spec.steps.len() {
-                    let step = &spec.steps[self.runtime.current_step_index];
-                    let values = effective_try_values(spec, &self.runtime);
+                if rt.current_step_index + 1 < spec.steps.len() {
+                    let step = &spec.steps[rt.current_step_index];
+                    let values = effective_try_values(spec, &rt);
                     if can_advance(step, &values) {
-                        self.runtime.current_step_index += 1;
+                        rt.current_step_index += 1;
                     }
                 }
                 ActionEmit::default()
@@ -1633,7 +1674,7 @@ impl DocumentApp for FormsPlayApp {
                     description: None,
                     blocks: Vec::new(),
                 };
-                self.runtime.try_values.clear();
+                rt.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::AddStep { step, index: None }])
             }
             "patchStep" => {
@@ -1651,7 +1692,7 @@ impl DocumentApp for FormsPlayApp {
                     },
                     _ => return ActionEmit::default(),
                 };
-                self.runtime.try_values.clear();
+                rt.try_values.clear();
                 ActionEmit::amend(vec![FormOperation::UpdateStep { step }], format!("patch-step:{step_id}:{field}"))
             }
             "removeStep" => {
@@ -1665,8 +1706,8 @@ impl DocumentApp for FormsPlayApp {
                     .filter(|step| step.id == step_id)
                     .flat_map(|step| step.blocks.iter().map(|question| question.id.clone()))
                     .collect();
-                self.runtime.selected_ids.retain(|id| !removed_ids.contains(id));
-                self.runtime.try_values.clear();
+                rt.selected_ids.retain(|id| !removed_ids.contains(id));
+                rt.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::RemoveStep { step_id: step_id.into() }])
             }
             "moveStep" => {
@@ -1675,7 +1716,7 @@ impl DocumentApp for FormsPlayApp {
                 if step_id.is_empty() {
                     return ActionEmit::default();
                 }
-                self.runtime.try_values.clear();
+                rt.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::MoveStep { step_id: step_id.into(), index }])
             }
             "updateForm" | "updatePlaybook" => {
@@ -1696,8 +1737,8 @@ impl DocumentApp for FormsPlayApp {
                     return ActionEmit::default();
                 };
                 let question = default_question_for_kind(kind, create_form_id("q"));
-                self.runtime.selected_ids = vec![question.id.clone()];
-                self.runtime.try_values.clear();
+                rt.selected_ids = vec![question.id.clone()];
+                rt.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::AddBlock { step_id, block: question, index: None }])
             }
             "removeQuestion" | "removeBlock" => {
@@ -1708,8 +1749,8 @@ impl DocumentApp for FormsPlayApp {
                 let Some(location) = find_question_location(spec, question_id) else {
                     return ActionEmit::default();
                 };
-                self.runtime.selected_ids.retain(|id| id != question_id);
-                self.runtime.try_values.clear();
+                rt.selected_ids.retain(|id| id != question_id);
+                rt.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::RemoveBlock {
                     step_id: location.step_id,
                     block_id: question_id.into(),
@@ -1745,7 +1786,7 @@ impl DocumentApp for FormsPlayApp {
                         .filter_map(|question_id| patch_question_field(spec, question_id, field, &raw_value))
                         .collect()
                 };
-                self.runtime.try_values.clear();
+                rt.try_values.clear();
                 if operations.is_empty() {
                     return ActionEmit::default();
                 }
@@ -1767,7 +1808,7 @@ impl DocumentApp for FormsPlayApp {
                     .iter()
                     .filter_map(|question_id| patch_question_option(spec, question_id, option_value, field, &raw_value))
                     .collect();
-                self.runtime.try_values.clear();
+                rt.try_values.clear();
                 if operations.is_empty() {
                     return ActionEmit::default();
                 }
@@ -1848,7 +1889,7 @@ impl DocumentApp for FormsPlayApp {
                 let target_id = target_id.unwrap_or(question_id);
                 let index = explicit_index
                     .unwrap_or_else(|| resolve_question_insert_index(spec, to_step_id, target_id, position).unwrap_or(0));
-                self.runtime.try_values.clear();
+                rt.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::MoveBlock {
                     block_id: question_id.into(),
                     from_step_id: source.step_id,
@@ -1871,8 +1912,8 @@ impl DocumentApp for FormsPlayApp {
                 };
                 let index = resolve_question_insert_index(spec, &step_id, target_id, drop_position);
                 let question = default_question_for_kind(kind, create_form_id("q"));
-                self.runtime.selected_ids = vec![question.id.clone()];
-                self.runtime.try_values.clear();
+                rt.selected_ids = vec![question.id.clone()];
+                rt.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::AddBlock { step_id, block: question, index }])
             }
             "setSpecJson" => {
@@ -1883,8 +1924,8 @@ impl DocumentApp for FormsPlayApp {
                 else {
                     return ActionEmit::default();
                 };
-                reset_try_runtime(&mut self.runtime);
-                self.runtime.selected_ids.clear();
+                reset_try_runtime(&mut rt);
+                rt.selected_ids.clear();
                 ActionEmit::operations(replace_spec_operations(spec, &next))
             }
             "setActiveExample" => {
@@ -1898,17 +1939,17 @@ impl DocumentApp for FormsPlayApp {
                 }) else {
                     return ActionEmit::default();
                 };
-                reset_try_runtime(&mut self.runtime);
-                self.runtime.selected_ids.clear();
+                reset_try_runtime(&mut rt);
+                rt.selected_ids.clear();
                 ActionEmit::operations(replace_spec_operations(spec, &next))
             }
             // 🐚️ Shell action — download the current form spec as JSON.
             "exportFixture" => {
-                let json = serde_json::to_string_pretty(spec).unwrap_or_default();
+                let data = forms_dsl::print_dsl(spec);
                 ActionEmit::effect(HostEffect::DownloadMediaExport {
-                    filename: format!("{}.forms.json", spec.id),
-                    mime_type: "application/json".into(),
-                    data: json,
+                    filename: format!("{}.forms.dsl", spec.id),
+                    mime_type: "text/plain".into(),
+                    data,
                     encoding: None,
                 })
             }
@@ -1920,12 +1961,13 @@ impl DocumentApp for FormsPlayApp {
         let spec = doc.projection;
         let contributions = parse_contributions(view_state);
         let labels = resolve_labels::<FormsLabels>(view_state);
+        let runtime = self.runtime.borrow();
         match body_key {
-            FORMS_PLAY_BODY_BLUEPRINT => render_blueprint_builder(spec, &self.runtime, &contributions, labels),
-            FORMS_PLAY_BODY_TRY => render_try_wizard(spec, &self.runtime, &contributions, labels),
-            FORMS_PLAY_BODY_DOCUMENT => build_document_tree(spec, &self.runtime.selected_ids, labels),
+            FORMS_PLAY_BODY_BLUEPRINT => render_blueprint_builder(spec, &runtime, &contributions, labels),
+            FORMS_PLAY_BODY_TRY => render_try_wizard(spec, &runtime, &contributions, labels),
+            FORMS_PLAY_BODY_DOCUMENT => build_document_tree(spec, &runtime.selected_ids, labels),
             FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(&contributions, labels),
-            FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(spec, &self.runtime, &contributions, labels),
+            FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(spec, &runtime, &contributions, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2290,7 +2332,7 @@ mod tests {
     fn building_component_question() -> FormQuestion {
         let mut question = question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
-        question.params = Some(json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
+        question.params = Some(value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
     }
 

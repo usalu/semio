@@ -270,7 +270,7 @@ enum Procedural2dOperationDsl {
     GenerationUpdateValues {
         id: String,
         question_id: String,
-        value: serde_json::Value,
+        value: dsl::DslValue,
     }
 }
 
@@ -288,7 +288,11 @@ fn procedural2d_operation_to_dsl(operation: &Procedural2dOperation) -> Procedura
         Procedural2dOperation::Generation(GenerationOperation::Remove { id }) => Procedural2dOperationDsl::GenerationRemove { id: id.clone() },
         Procedural2dOperation::Generation(GenerationOperation::Rename { id, name }) => Procedural2dOperationDsl::GenerationRename { id: id.clone(), name: name.clone() },
         Procedural2dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value }) => {
-            Procedural2dOperationDsl::GenerationUpdateValues { id: id.clone(), question_id: question_id.clone(), value: value.clone() }
+            Procedural2dOperationDsl::GenerationUpdateValues {
+                id: id.clone(),
+                question_id: question_id.clone(),
+                value: dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null),
+            }
         }
     }
 }
@@ -306,7 +310,11 @@ fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Resul
         Procedural2dOperationDsl::GenerationAdd { generation } => Procedural2dOperation::Generation(GenerationOperation::Add { generation: form_generation_from_dsl(generation) }),
         Procedural2dOperationDsl::GenerationRemove { id } => Procedural2dOperation::Generation(GenerationOperation::Remove { id }),
         Procedural2dOperationDsl::GenerationRename { id, name } => Procedural2dOperation::Generation(GenerationOperation::Rename { id, name }),
-        Procedural2dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural2dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value }),
+        Procedural2dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural2dOperation::Generation(GenerationOperation::UpdateValues {
+            id,
+            question_id,
+            value: dsl::from_dsl_value(value).unwrap_or(serde_json::Value::Null),
+        }),
     })
 }
 

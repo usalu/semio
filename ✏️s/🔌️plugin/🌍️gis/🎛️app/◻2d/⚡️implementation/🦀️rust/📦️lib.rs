@@ -19,7 +19,7 @@ pub struct MapFeature {
     /// set genuinely varies by collection — positions carry `{lon, lat, icon, kind, label, name,
     /// sourceUrl?}`, routes carry `{points: [[f64; 2]]}`, regions carry `{ring: [[f64; 2]]}` — no single
     /// fixed schema fits all three, so a typed `dsl::DslDocument` derive doesn't apply here.
-    pub data: serde_json::Value,
+    pub data: dsl::DslValue,
 }
 
 impl Identified<String> for MapFeature {
@@ -32,7 +32,7 @@ impl Identified<String> for MapFeature {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct MapFeaturePatch {
-    pub data: Option<serde_json::Value>,
+    pub data: Option<dsl::DslValue>,
 }
 
 impl Patchable<MapFeaturePatch> for MapFeature {

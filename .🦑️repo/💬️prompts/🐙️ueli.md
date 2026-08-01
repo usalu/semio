@@ -356,6 +356,13 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+No structured formats such as json must be used at all.
+Only use binary protocols for commands, binary pack formats for documents, etc
+When debugging or for llm purposes always use the handcrafted syntaxes such as dsl or op.
+Everything must be 100% app-specific, domain driven, token efficient, streaming compatible, etc
+
+---
+
 Every single app must be
 - non destructive
 - have configuration (every ui interaction changes the configuration)
@@ -3590,7 +3597,7 @@ The two specific implemtations must be used:
 @spatial/js/kernel-brepjs/index.ts @spatial/js/machine-stately/index.ts
 
 ---
-‚
+
 ## 🥅️framework
 
 ###
@@ -10150,7 +10157,14 @@ Keep the renderer isolated from native details
 
 ### demonstrator
 
-The current aggregator should be generalized into a demonstrator
+The current aggregator should be generalized into a demonstrator.
+The demonstrator consists of three apps:
+Generator (branded version of procedural 3d)
+Coordinator (branded version of cad)
+Aggregator (branded version of puzzle 3d)
+
+The main page of the demonstrator (not considering the introduction)
+
 
 ### 🟨️33.projekttage
 

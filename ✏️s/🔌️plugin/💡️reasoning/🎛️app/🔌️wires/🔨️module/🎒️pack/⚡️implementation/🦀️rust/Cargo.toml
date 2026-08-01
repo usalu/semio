@@ -17,4 +17,3 @@ store = { path = "../../../../../../../../../🧰️framework/🛍️product/�
 
 [dev-dependencies]
 reasoning_wires_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires-dsl" }
-serde_json = "1.0.140"

@@ -97,8 +97,9 @@ struct ModuleRenderPayload {
     /// `fixture_slug`'s flow graph happens to define (see `apply_flow_params`, which walks `params` as
     /// an arbitrary `key -> f64` map and forwards every entry to `FlowHost::set_slider_value`) — no
     /// fixed schema spans all fixtures, so a typed `dsl::DslDocument` derive doesn't apply here.
-    #[serde(default)]
-    params: Value,
+    #[serde(default = "default_params_field")]
+    #[dsl(value)]
+    params: dsl::DslValue,
     #[serde(default)]
     question_id: String,
     #[serde(default)]
@@ -109,10 +110,25 @@ struct ModuleRenderPayload {
     interactive: bool,
 }
 
+fn default_params_field() -> dsl::DslValue {
+    dsl::DslValue::Null
+}
+
 /// 🌱️ The module's default document — the hex-column fixture with its stock procedural params. Used
 /// as `DocumentApp::initial_projection`; live slot renders override it with the forms-supplied payload.
 fn default_payload() -> ModuleRenderPayload {
-    ModuleRenderPayload { fixture_slug: "hexagonal-mushroom-column".into(), params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }), question_id: String::new(), controller_id: String::new(), surface: "try".into(), interactive: true }
+    ModuleRenderPayload {
+        fixture_slug: "hexagonal-mushroom-column".into(),
+        params: dsl::to_dsl_value(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })).expect("default params"),
+        question_id: String::new(),
+        controller_id: String::new(),
+        surface: "try".into(),
+        interactive: true,
+    }
+}
+
+fn params_as_json(params: &dsl::DslValue) -> Value {
+    dsl::from_dsl_value(params.clone()).unwrap_or(Value::Null)
 }
 
 //#region 🔖️DocumentOperation
@@ -336,7 +352,7 @@ fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
         return ui_text(format!("Unknown fixture slug: {slug}"));
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
-    let params = payload.params.clone();
+    let params = params_as_json(&payload.params);
     let (meshes_json, instances_json) = evaluated_preview_payload(&fixture, &params);
     build_world_3d_scene(PREVIEW_SURFACE, MODULE_APP_ID, world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
 }
@@ -374,11 +390,14 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) 
         return;
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
-    let handles = evaluated_preview_geometry_handles(&fixture, &payload.params);
+    let handles = evaluated_preview_geometry_handles(&fixture, &params_as_json(&payload.params));
     let result_json = if handles.is_empty() { json!({ "error": "no procedural solid geometry to export" }) } else { serde_json::from_str(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(json!({ "error": "export failed" })) };
-    let mut params = payload.params.as_object().cloned().unwrap_or_default();
-    params.insert("__solidExport".into(), result_json);
-    payload.params = Value::Object(params);
+    let mut object = params_as_json(&payload.params);
+    let Some(map) = object.as_object_mut() else {
+        return;
+    };
+    map.insert("__solidExport".into(), result_json);
+    payload.params = dsl::to_dsl_value(&object).expect("params object");
 }
 
 /// 📥️ Handles `ACTION_IMPORT_SOLID`: imports `args.data` (UTF-8 text for STEP/OBJ, base64 for STL/GLB) as `args.format` through `flow_module_brep`'s in-process kernel (GLB bridges through mesh tessellation into an OBJ ingestion) and stashes the resulting geometry handles on `params.__solidImport`.
@@ -386,9 +405,12 @@ fn handle_import_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) 
     let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("obj");
     let data = args.and_then(|value| value.get("data")).and_then(|value| value.as_str()).unwrap_or("");
     let result_json = if data.is_empty() { json!({ "error": "no import data provided" }) } else { serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" })) };
-    let mut params = payload.params.as_object().cloned().unwrap_or_default();
-    params.insert("__solidImport".into(), result_json);
-    payload.params = Value::Object(params);
+    let mut object = params_as_json(&payload.params);
+    let Some(map) = object.as_object_mut() else {
+        return;
+    };
+    map.insert("__solidImport".into(), result_json);
+    payload.params = dsl::to_dsl_value(&object).expect("params object");
 }
 
 fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
@@ -532,7 +554,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let spec = flow_fixture_to_form_spec(&fixture);
-    let values: Map<String, Value> = payload.params.as_object().cloned().unwrap_or_default();
+    let values: Map<String, Value> = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
     let step = spec.steps.first();
     let Some(step) = step else {
         return ui_text(labels.no_flow_inputs.to_string());
@@ -671,7 +693,15 @@ mod tests {
     }
 
     fn payload_json(params: Value) -> String {
-        serde_json::to_string(&ModuleRenderPayload { fixture_slug: "hexagonal-mushroom-column".into(), params, question_id: "q".into(), controller_id: "forms-play".into(), surface: "try".into(), interactive: true }).unwrap()
+        serde_json::to_string(&ModuleRenderPayload {
+            fixture_slug: "hexagonal-mushroom-column".into(),
+            params: dsl::to_dsl_value(&params).expect("params"),
+            question_id: "q".into(),
+            controller_id: "forms-play".into(),
+            surface: "try".into(),
+            interactive: true,
+        })
+        .unwrap()
     }
 
     #[test]

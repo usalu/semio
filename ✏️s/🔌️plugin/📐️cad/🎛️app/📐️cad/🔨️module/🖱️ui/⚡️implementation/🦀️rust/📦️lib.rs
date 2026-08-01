@@ -565,7 +565,7 @@ fn cad_solid_export_effect(export: CadSolidExport) -> HostEffect {
 fn cad_spatial_export_effect(value: Value, filename: &str) -> HostEffect {
     HostEffect::DownloadMediaExport {
         filename: filename.into(),
-        mime_type: "application/json".into(),
+        mime_type: "text/plain".into(),
         data: serde_json::to_string(&value).unwrap_or_default(),
         encoding: None,
     }
@@ -2637,14 +2637,14 @@ impl DocumentApp for CadPlayApp {
                 let view = CadPlayView { document: document.clone(), runtime: (*runtime).clone() };
                 ActionEmit::effect(cad_spatial_export_effect(
                     export_spatial_json(&view, "selected"),
-                    "cad.selected.spatial.json",
+                    "cad.selected.spatial.dsl",
                 ))
             }
             "saveInPlay" => {
                 let view = CadPlayView { document: document.clone(), runtime: (*runtime).clone() };
                 let effect = match export_solid_modelspace(&view, OsMediaFormat::Step) {
                     Some(export) => cad_solid_export_effect(export),
-                    None => cad_spatial_export_effect(export_spatial_json(&view, "modelspace"), "cad.modelspace.spatial.json"),
+                    None => cad_spatial_export_effect(export_spatial_json(&view, "modelspace"), "cad.modelspace.spatial.dsl"),
                 };
                 ActionEmit::effect(effect)
             }
@@ -2659,12 +2659,12 @@ impl DocumentApp for CadPlayApp {
                 let view = CadPlayView { document: document.clone(), runtime: (*runtime).clone() };
                 let effect = match export_solid_for_pane(&view, pane, format) {
                     Some(export) => cad_solid_export_effect(export),
-                    None => cad_spatial_export_effect(export_spatial_json(&view, "current"), "cad.current.spatial.json"),
+                    None => cad_spatial_export_effect(export_spatial_json(&view, "current"), "cad.current.spatial.dsl"),
                 };
                 ActionEmit::effect(effect)
             }
             "loadRawRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
-                accept: ".json,.spatial.json,.stp,.step,.obj,.stl,.glb".into(),
+                accept: ".dsl,.spatial.dsl,.spk,.ops,.stp,.step,.obj,.stl,.glb,application/octet-stream,text/plain".into(),
                 read_as: Some("dataUrl".into()),
                 import_action: "importCadFile".into(),
                 multiple: false,
@@ -3219,7 +3219,7 @@ mod tests {
         CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_WIDTH_WORLD,
         CAD_FOREST_REFERENCE_Y_OFFSET_RATIO,
     };
-    use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{ActionMeta, AppActionRegistry, HistoryView, PluginApp, UiMenuRef, VcsDocumentApp};
     use protocol::{Operation, OperationDiff};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
 
@@ -3254,6 +3254,25 @@ mod tests {
         let config = semio_framework_plugin::NoConfig::default();
         let cfg = semio_framework_plugin::ConfigView { projection: &config };
         app.handle_action(action, args.as_ref(), &doc, &cfg, view_state)
+    }
+
+    fn render_direct(app: &CadPlayApp, body_key: &str, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> UiNode {
+        let config = semio_framework_plugin::NoConfig::default();
+        let cfg = semio_framework_plugin::ConfigView { projection: &config };
+        app.render(body_key, doc, &cfg, view_state)
+    }
+
+    fn window_measures_direct(app: &CadPlayApp, doc: &DocumentView<'_, CadScene>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let config = semio_framework_plugin::NoConfig::default();
+        let cfg = semio_framework_plugin::ConfigView { projection: &config };
+        app.window_measures(doc, &cfg, view_state)
+    }
+
+    fn context_menu_direct(app: &CadPlayApp, doc: &DocumentView<'_, CadScene>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+        let config = semio_framework_plugin::NoConfig::default();
+        let cfg = semio_framework_plugin::ConfigView { projection: &config };
+        let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
+        app.context_menu(&request, doc, &cfg, &ViewState::default(), registry)
     }
 
     /// 🧮️ Folds a list of `CadOperation`s onto a scene via the core `Operation`/`OperationDiff` impls —
@@ -3458,7 +3477,7 @@ mod tests {
             CAD_PLAY_BODY_ENERGY,
             CAD_PLAY_BODY_STRUCTURE_CLASSIC,
         ] {
-            let node = app.render(body_key, &doc, &ViewState::default());
+            let node = render_direct(&app, body_key, &doc, &ViewState::default());
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("world-3d"), "body {body_key} should render a world-3d scene");
         }
@@ -3481,7 +3500,7 @@ mod tests {
         scene.objects[0].typology = "building.building.beam".into();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let node = app.render(CAD_PLAY_BODY_DOCUMENT, &doc, &ViewState::default());
+        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &ViewState::default());
         let UiNode::Tree(tree) = node else {
             panic!("document body should render a tree");
         };
@@ -3493,7 +3512,8 @@ mod tests {
             .expect("named object tree item");
         assert_eq!(object_item.description.as_deref(), Some("Beam"));
 
-        let de_node = app.render(
+        let de_node = render_direct(
+            &app,
             CAD_PLAY_BODY_DOCUMENT,
             &doc,
             &ViewState { locale: Some("de".into()), ..ViewState::default() },
@@ -3639,7 +3659,7 @@ mod tests {
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
         let view_state = ViewState { active_utility_id: Some(CAD_DISLOCATE_UTILITY_ID.into()), ..ViewState::default() };
-        let node = app.render(CAD_PLAY_BODY_SHAPE, &doc, &view_state);
+        let node = render_direct(&app, CAD_PLAY_BODY_SHAPE, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         // The world selection blob is embedded as an escaped JSON string inside the scene node.
         assert!(json.contains(r#"transformMode\":\"transform"#), "render sources Dislocate from ViewState::active_utility_id");
@@ -3659,12 +3679,14 @@ mod tests {
         let mut active_utility_by_window_id = HashMap::new();
         active_utility_by_window_id.insert(CAD_PLAY_WINDOW_SHAPE.into(), CAD_DISLOCATE_UTILITY_ID.into());
         let shared = ViewState { window_instances, active_utility_by_window_id, ..ViewState::default() };
-        let shape = app.render(
+        let shape = render_direct(
+            &app,
             CAD_PLAY_BODY_SHAPE,
             &doc,
             &ViewState { window_id: Some(CAD_PLAY_WINDOW_SHAPE.into()), ..shared.clone() },
         );
-        let building = app.render(
+        let building = render_direct(
+            &app,
             CAD_PLAY_BODY_BUILDING,
             &doc,
             &ViewState { window_id: Some(CAD_PLAY_WINDOW_BUILDING.into()), ..shared },
@@ -3675,6 +3697,25 @@ mod tests {
         assert!(shape_json.contains(r#"transformMode\":\"transform"#));
         assert!(building_json.contains(r#"gumballActive\":false"#));
         assert!(!building_json.contains(r#"transformMode\":"#));
+    }
+
+    #[test]
+    fn context_menu_is_selection_gated_and_resolves_labels_from_the_registry() {
+        let app = CadPlayApp::default();
+        let scene = default_document();
+        let history = empty_history();
+        let doc = DocumentView { projection: &scene, history: &history };
+        let registry = AppActionRegistry::from_definition(&create_cad_app().definition);
+
+        assert!(context_menu_direct(&app, &doc, &registry).is_empty(), "no selection must fall through to the shell's window-level menu");
+
+        drive(&app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
+        let items = context_menu_direct(&app, &doc, &registry);
+        assert!(items.iter().any(|item| item.id == "translateSelection" && item.label.is_some()), "labels must resolve from the registry: {items:?}");
+        assert!(
+            items.iter().any(|item| item.id == "deleteObject" && item.destructive == Some(true)),
+            "deleteObject must be marked destructive: {items:?}"
+        );
     }
 
     #[test]
@@ -3696,7 +3737,7 @@ mod tests {
         );
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let measures = app.window_measures(&doc, &ViewState { window_instances, ..ViewState::default() });
+        let measures = window_measures_direct(&app, &doc, &ViewState { window_instances, ..ViewState::default() });
         let rotate_pressed = |window_id: &str| {
             measures
                 .get(window_id)
@@ -3756,7 +3797,7 @@ mod tests {
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
-        let measures = app.window_measures(&doc, &ViewState::default());
+        let measures = window_measures_direct(&app, &doc, &ViewState::default());
         for window_kind in [
             CAD_PLAY_WINDOW_SHAPE,
             CAD_PLAY_WINDOW_BUILDING,
@@ -3972,7 +4013,7 @@ mod tests {
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(CAD_PLAY_BODY_DOCUMENT, &doc, &view_state);
+        let node = render_direct(&app, CAD_PLAY_BODY_DOCUMENT, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"Form\""));
         assert!(json.contains("Gebäude"));
@@ -3991,7 +4032,7 @@ mod tests {
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
         let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
-        let node = app.render(CAD_PLAY_BODY_CATALOGUE, &doc, &view_state);
+        let node = render_direct(&app, CAD_PLAY_BODY_CATALOGUE, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Typologien"));
         assert!(json.contains("Quader"));
@@ -4079,7 +4120,7 @@ mod tests {
         assert_eq!(emit.effects.len(), 1);
         match &emit.effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
-                assert_eq!(filename, "cad.selected.spatial.json");
+                assert_eq!(filename, "cad.selected.spatial.dsl");
                 assert!(data.contains("activeModelDefinitionId"));
             }
             other => panic!("expected DownloadMediaExport, got {other:?}"),
@@ -4119,7 +4160,8 @@ mod tests {
 
         let emit = drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })));
         assert!(emit.operations.is_empty(), "a pointer move must not emit any document operation");
-        let session = app.runtime.borrow().engagement_session.as_ref().expect("session still active");
+        let runtime = app.runtime.borrow();
+        let session = runtime.engagement_session.as_ref().expect("session still active");
         assert_eq!(session.state, "first_corner", "pointer.move must not change state");
         assert_eq!(session.context.get("cursor"), Some(&json!([3.0, 4.0, 0.0])));
     }
@@ -4201,7 +4243,8 @@ mod tests {
         assert_eq!(app.runtime.borrow().last_finalized_interaction_id.as_deref(), Some("primitive.box"));
 
         drive(&mut app, &scene, "engagementRepeatLast", Some(json!({ "pane": "shape" })));
-        let session = app.runtime.borrow().engagement_session.as_ref().expect("repeat-last should start a session");
+        let runtime = app.runtime.borrow();
+        let session = runtime.engagement_session.as_ref().expect("repeat-last should start a session");
         assert_eq!(session.interaction_id, "primitive.box");
     }
     //#endregion 🔖️Engagement

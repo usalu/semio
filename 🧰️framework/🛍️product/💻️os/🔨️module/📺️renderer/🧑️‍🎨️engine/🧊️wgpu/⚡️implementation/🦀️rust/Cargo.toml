@@ -52,6 +52,7 @@ semio-framework-plugin-host = { path = "../../../../../🔌️plugin/🖥️host
 store_sync = { path = "../../../../../🏪️store/🔄️sync/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store-sync" }
 vcs = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 tokio = { version = "1", features = ["sync"], default-features = false }
 ureq = "2.12.1"

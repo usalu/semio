@@ -31298,7 +31298,7 @@ if (import.meta.vitest) {
       expect(chrome?.style.position).toBe("fixed");
       expect(chrome?.style.left).toBe("123px");
       expect(chrome?.style.top).toBe("calc(87px - var(--size-medium))");
-      expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon]')).toBeTruthy();
+      expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon-kind]')).toBeTruthy();
     });
 
     it("wraps context menu rows in window chrome with a title chip and no enlarge control", async () => {
@@ -31311,7 +31311,7 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(document.querySelector('[data-slot="context-menu-content"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="context-menu-title-chip"]')?.textContent).toContain("Actions");
-        expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon]')).toBeTruthy();
+        expect(document.querySelector('[data-slot="context-menu-title-chip"] [data-icon-kind]')).toBeTruthy();
         expect(document.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
         expect(document.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
         expect(document.querySelector('[data-slot="window-chrome-controls"]')).toBeNull();

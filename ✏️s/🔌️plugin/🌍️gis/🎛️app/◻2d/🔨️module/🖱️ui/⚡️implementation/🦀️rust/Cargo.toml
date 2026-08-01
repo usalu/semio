@@ -14,6 +14,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/�
 gis2d = { path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-gis-2d" }
 gis2d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-gis-2d-engine" }
 gis2d_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-gis-2d-op" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 framework_surface_tiled_map = { path = "../../../../../../../../../🧰️framework/🔨️module/🗺️surface/🗺️tiled-map/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-surface-tiled-map" }

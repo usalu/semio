@@ -15,6 +15,7 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -237,9 +238,14 @@ fn render_canvas(document: &Gis3dTerrainDocument, runtime: &Gis3dPlayRuntime) ->
 //#endregion 🔖️Render
 
 //#region 🔖️Gis3dPlayApp
-#[derive(Default)]
 pub struct Gis3dPlayApp {
-    runtime: Gis3dPlayRuntime,
+    runtime: RefCell<Gis3dPlayRuntime>,
+}
+
+impl Default for Gis3dPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(Gis3dPlayRuntime::default()) }
+    }
 }
 
 impl DocumentApp for Gis3dPlayApp {
@@ -272,13 +278,13 @@ impl DocumentApp for Gis3dPlayApp {
             "setCamera" => {
                 let camera = args.and_then(|value| value.get("camera")).or_else(|| args.and_then(|value| value.get("cameraJson")));
                 if let Some(camera) = camera {
-                    self.runtime.camera_json = camera.to_string();
+                    self.runtime.borrow_mut().camera_json = camera.to_string();
                 }
                 ActionEmit::default()
             }
             "setSelection" | "worldSelect" => {
                 if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
-                    self.runtime.selected_ids = ids;
+                    self.runtime.borrow_mut().selected_ids = ids;
                 }
                 ActionEmit::default()
             }
@@ -294,7 +300,7 @@ impl DocumentApp for Gis3dPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Gis3dTerrainDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
         match body_key {
-            GIS3D_PLAY_BODY_COMPOSITE => render_canvas(doc.projection, &self.runtime),
+            GIS3D_PLAY_BODY_COMPOSITE => render_canvas(doc.projection, &*self.runtime.borrow()),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

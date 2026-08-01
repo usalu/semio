@@ -22,6 +22,7 @@ use semio_framework_plugin::{SurfaceKind,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -226,7 +227,6 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
             Some(description.into()),
             play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [layer_node_id(layer)] }))),
         )
-        menu: None,
     }
 }
 
@@ -239,8 +239,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
                 labels.add_pixel,
                 None,
                 play_action(RASTER_PLAY_CONTROLLER_ID, "addLayer", Some(json!({ "kind": "pixel" }))),
-            ),
-            menu: None,
+            )
         },
         UiTreeItemNode {
             icon_id: Some("folder-plus".into()),
@@ -249,8 +248,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
                 labels.add_group,
                 None,
                 play_action(RASTER_PLAY_CONTROLLER_ID, "addLayer", Some(json!({ "kind": "group" }))),
-            ),
-            menu: None,
+            )
         },
     ];
     let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect();
@@ -286,8 +284,7 @@ fn render_masks_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, vi
                         format!("{name} {}", labels.mask_suffix),
                         Some("mask".into()),
                         play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [id] }))),
-                    ),
-                    menu: None,
+                    )
                 });
             }
         }
@@ -406,9 +403,14 @@ fn render_navigator_scene(document: &RasterDocument, runtime: &RasterPlayRuntime
 //#endregion 🔖️Render
 
 //#region 🔖️RasterPlayApp
-#[derive(Default)]
 pub struct RasterPlayApp {
-    runtime: RasterPlayRuntime,
+    runtime: RefCell<RasterPlayRuntime>,
+}
+
+impl Default for RasterPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(RasterPlayRuntime::default()) }
+    }
 }
 
 impl RasterPlayApp {
@@ -516,17 +518,18 @@ impl DocumentApp for RasterPlayApp {
         _view_state: &ViewState,
     ) -> ActionEmit<RasterOperation> {
         let document = doc.projection;
+        let mut runtime = self.runtime.borrow_mut();
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setBrushSize" => {
                 if let Some(size) = args.and_then(|value| value.get("value").or_else(|| value.get("brushSize"))).and_then(|value| value.as_f64()) {
-                    self.runtime.brush_size = size as f32;
+                    runtime.brush_size = size as f32;
                 }
                 ActionEmit::default()
             }
             "setBrushOpacity" => {
                 if let Some(opacity) = args.and_then(|value| value.get("value").or_else(|| value.get("opacity"))).and_then(|value| value.as_f64()) {
-                    self.runtime.brush_opacity = (opacity as f32).clamp(0.0, 1.0);
+                    runtime.brush_opacity = (opacity as f32).clamp(0.0, 1.0);
                 }
                 ActionEmit::default()
             }
@@ -537,11 +540,11 @@ impl DocumentApp for RasterPlayApp {
                 ActionEmit::default()
             }
             "setSelection" => {
-                self.runtime.selected_ids = selection_ids(args);
+                runtime.selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "setHover" => {
-                self.runtime.hovered_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
+                runtime.hovered_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
                 ActionEmit::default()
             }
             "setCompositeViewport" => {
@@ -549,12 +552,12 @@ impl DocumentApp for RasterPlayApp {
                     args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()),
                     args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()),
                 ) {
-                    self.runtime.composite_viewport = Some(RasterViewportSize { width, height });
+                    runtime.composite_viewport = Some(RasterViewportSize { width, height });
                 }
                 ActionEmit::default()
             }
             "selectAll" => {
-                self.runtime.selected_ids = flatten_raster_layers(&document.layers)
+                runtime.selected_ids = flatten_raster_layers(&document.layers)
                     .into_iter()
                     .map(|layer| layer_node_id(layer).to_string())
                     .collect();
@@ -563,11 +566,11 @@ impl DocumentApp for RasterPlayApp {
             // 📷️ Camera — session-only runtime pose, never a document operation.
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value::<RasterCamera>(value.clone()).ok()) {
-                    self.runtime.camera = camera;
+                    runtime.camera = camera;
                     return ActionEmit::default();
                 }
                 if let Some(zoom) = args.and_then(|value| value.get("zoom")).and_then(|value| value.as_f64()) {
-                    self.runtime.camera = RasterCamera { zoom, ..self.runtime.camera.clone() };
+                    runtime.camera = RasterCamera { zoom, ..runtime.camera.clone() };
                     return ActionEmit::default();
                 }
                 ActionEmit::default()
@@ -580,7 +583,7 @@ impl DocumentApp for RasterPlayApp {
                 } else {
                     empty_raster_document()
                 };
-                self.runtime.selected_ids.clear();
+                runtime.selected_ids.clear();
                 ActionEmit::operations(vec![RasterOperation::ReplaceDocument { document: replacement }])
             }
             "setDocument" => match args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<RasterDocument>(value.clone()).ok()) {
@@ -604,13 +607,13 @@ impl DocumentApp for RasterPlayApp {
             "addLayer" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
                 let layer = create_layer_of_kind(kind);
-                self.runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
+                runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
                 ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }])
             }
             "dropLayerKind" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
                 let layer = create_layer_of_kind(kind);
-                self.runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
+                runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
                 ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }])
             }
             "deleteLayer" => {
@@ -620,7 +623,7 @@ impl DocumentApp for RasterPlayApp {
                 if find_layer(&document.layers, target_id).is_none() {
                     return ActionEmit::default();
                 }
-                self.runtime.selected_ids.retain(|id| id != target_id);
+                runtime.selected_ids.retain(|id| id != target_id);
                 ActionEmit::operations(vec![RasterOperation::RemoveLayer { layer_id: target_id.into() }])
             }
             "duplicateLayer" => {
@@ -630,7 +633,7 @@ impl DocumentApp for RasterPlayApp {
                 match find_layer(&document.layers, target_id) {
                     Some(layer) => {
                         let copy = clone_layer(layer);
-                        self.runtime.selected_ids = vec![layer_node_id(&copy).to_string()];
+                        runtime.selected_ids = vec![layer_node_id(&copy).to_string()];
                         ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) }])
                     }
                     None => ActionEmit::default(),
@@ -695,7 +698,7 @@ impl DocumentApp for RasterPlayApp {
     }
 
     fn window_measures(&self, _doc: &DocumentView<'_, RasterDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let measures = raster_window_measures(&self.runtime);
+        let measures = raster_window_measures(&*self.runtime.borrow());
         HashMap::from([(RASTER_PLAY_WINDOW_COMPOSITE.into(), measures)])
     }
 
@@ -704,12 +707,12 @@ impl DocumentApp for RasterPlayApp {
         let labels = resolve_labels::<RasterPlayLabels>(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(RASTER_DEFAULT_UTILITY);
         match body_key {
-            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, &self.runtime, active_utility),
-            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, &self.runtime, active_utility),
-            RASTER_PLAY_BODY_LAYERS => render_layers_panel(document, &self.runtime, view_state, labels),
-            RASTER_PLAY_BODY_MASKS => render_masks_panel(document, &self.runtime, view_state, labels),
+            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(document, &*self.runtime.borrow(), active_utility),
+            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(document, &*self.runtime.borrow(), active_utility),
+            RASTER_PLAY_BODY_LAYERS => render_layers_panel(document, &*self.runtime.borrow(), view_state, labels),
+            RASTER_PLAY_BODY_MASKS => render_masks_panel(document, &*self.runtime.borrow(), view_state, labels),
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
-            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(document, &self.runtime, view_state, labels),
+            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(document, &*self.runtime.borrow(), view_state, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

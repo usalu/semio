@@ -7,10 +7,10 @@
 // #endregion Header
 
 import type { BackboneWorkerRequest, BackboneWorkerResponse, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, OperationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireOperationEnvelope } from "./📦️index";
-import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "./📦️index";
+import { decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePresencePeer, encodeServerFrame } from "./📦️index";
 
 type RustWorkerHost = {
-  handleRequestJson(json: string): void;
+  handleRequestBytes(bytes: Uint8Array): void;
   postReady(): void;
 };
 
@@ -40,15 +40,25 @@ async function ensureRustHost(): Promise<RustWorkerHost | null> {
 
 const rustHostPromise = ensureRustHost();
 
-(self as unknown as DedicatedWorkerGlobalScope).onmessage = (messageEvent: MessageEvent<BackboneWorkerRequest>) => {
-  void rustHostPromise.then((host) => {
-    if (host) {
-      host.handleRequestJson(JSON.stringify(messageEvent.data));
-      return;
-    }
-    handleTsRequest(messageEvent.data);
-  });
-};
+function decodeWorkerRequest(message: BackboneWorkerRequest | { readonly wire: Uint8Array }): BackboneWorkerRequest {
+  if ("wire" in message) return JSON.parse(new TextDecoder().decode(message.wire)) as BackboneWorkerRequest;
+  return message;
+}
+
+const workerScope = typeof self !== "undefined" ? (self as unknown as DedicatedWorkerGlobalScope) : null;
+
+if (workerScope) {
+  workerScope.onmessage = (messageEvent: MessageEvent<BackboneWorkerRequest | { readonly wire: Uint8Array }>) => {
+    const request = decodeWorkerRequest(messageEvent.data);
+    void rustHostPromise.then((host) => {
+      if (host) {
+        host.handleRequestBytes(encodeBackboneWorkerRequest(request));
+        return;
+      }
+      handleTsRequest(request);
+    });
+  };
+}
 
 void rustHostPromise.then((host) => {
   if (host) host.postReady();
@@ -91,7 +101,7 @@ type DocumentState = {
 const documents = new Map<string, DocumentState>();
 
 function post(message: BackboneWorkerResponse): void {
-  (self as unknown as DedicatedWorkerGlobalScope).postMessage(message);
+  workerScope?.postMessage({ wire: encodeBackboneWorkerResponse(message) });
 }
 
 function emitEvent(documentId: string, event: DocumentEvent): void {
@@ -237,8 +247,9 @@ async function pollFolderOnce(state: DocumentState, binding: Extract<Persistence
     const response = await fetch(folderEnvelopeUrl(binding, state.config.documentId));
     if (response.status === 404) return;
     if (!response.ok) throw new Error(`folder backbone read failed (${response.status})`);
-    const envelopeJson = await response.text();
-    emitEvent(state.config.documentId, { kind: "snapshotReplaced", envelopeJson });
+    const bundle = new Uint8Array(await response.arrayBuffer());
+    const { pack, spr } = decodeDocumentPackBytes(bundle);
+    emitEvent(state.config.documentId, { kind: "snapshotReplaced", pack: Array.from(pack), spr: Array.from(spr) });
     setStatus(state, { persisted: true });
   } catch (error) {
     console.error("[backbone-worker] folder poll failed", state.config.documentId, error);
@@ -277,11 +288,12 @@ function startFolderPolling(state: DocumentState, binding: Extract<PersistenceBi
   void pollFolderOnce(state, binding);
 }
 
-async function writeFolder(state: DocumentState, binding: Extract<PersistenceBinding, { kind: "folder" }>, envelopeJson: string): Promise<void> {
+async function writeFolder(state: DocumentState, binding: Extract<PersistenceBinding, { kind: "folder" }>, pack: readonly number[], spr: readonly number[]): Promise<void> {
+  const bundle = encodeDocumentPackBytes(new Uint8Array(pack), new Uint8Array(spr));
   const response = await fetch(folderEnvelopeUrl(binding, state.config.documentId), {
     method: "PUT",
-    headers: { "content-type": "application/json" },
-    body: envelopeJson,
+    headers: { "content-type": "application/octet-stream" },
+    body: bundle,
   });
   if (!response.ok) throw new Error(`folder backbone write failed (${response.status})`);
   setStatus(state, { persisted: true });
@@ -641,7 +653,7 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       const folder = folderBinding(state.config);
       if (folder) {
         try {
-          await writeFolder(state, folder, message.envelopeJson);
+          await writeFolder(state, folder, message.pack, message.spr);
           state.pendingOperations = [];
           setStatus(state, { pendingOperations: 0 });
         } catch (error) {

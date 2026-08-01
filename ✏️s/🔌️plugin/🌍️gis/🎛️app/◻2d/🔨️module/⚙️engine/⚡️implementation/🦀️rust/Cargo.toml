@@ -13,6 +13,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/�
 [dependencies]
 gis2d = { path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/⚡️implementation/🦀️rust", package = "semio-s-app-gis-2d" }
 gis2d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/🌍️gis/🎛️app/◻2d/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-s-app-gis-2d-dsl" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-os = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/⚡️implementation/🦀️rust", package = "semio-framework-os" }

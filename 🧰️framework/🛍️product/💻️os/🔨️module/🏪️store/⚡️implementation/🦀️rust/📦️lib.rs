@@ -14,7 +14,7 @@
 // this crate even when the derive is exercised in-crate.
 extern crate self as store;
 
-use dsl::{DslOps, DslRecord};
+use dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
 use semio_framework_core::{ActorId, DocumentId, HybridLogicalTimestamp, OperationId, SchemaId, UndoPolicy};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -149,7 +149,7 @@ pub use pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOp
 /// @emoji 🧵️ Thin runtime bridge to `pack::{encode_document, decode_document}`, resolved as
 /// `::store::pack_rt::...` by `dsl_derive`'s generated `DocumentPack` impl (app crates depend on
 /// `vcs`, never on `pack` directly — same seam `::dsl::RecordSpec`/`RecordValue` already use). Also
-/// hosts the schema-less JSON bridge behind `impl DocumentPack for serde_json::Value` below.
+/// hosts the schema-less `DslValue` bridge behind `impl DocumentPack for DslValue` below.
 pub mod pack_rt {
     use super::{PackDecodeOptions, PackEncodeOptions, PackError};
     use dsl::{DslValue, FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
@@ -169,79 +169,99 @@ pub mod pack_rt {
     /// `serde_json::Value` payload in — mirrors `dsl::DslField for serde_json::Value`'s
     /// `Shape::Value` escape hatch (`dsl/rs/lib.rs`), lifted one level from "one field" to "one
     /// whole document" so schema-less apps (puzzle plugins, semio_compose_rs kit) get a pack encoding too.
-    const JSON_BRIDGE_FIELD_ID: u16 = 1;
+    const VALUE_BRIDGE_FIELD_ID: u16 = 1;
 
-    fn json_bridge_spec() -> RecordSpec {
-        RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(JSON_BRIDGE_FIELD_ID, "value", Shape::Value)])
+    fn value_bridge_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(VALUE_BRIDGE_FIELD_ID, "value", Shape::Value)])
     }
 
-    /// @emoji 🌱️ Encodes an arbitrary `serde_json::Value` as a complete pack file. Infallible for any
-    /// well-formed JSON value — mirrors `DocumentDsl::print_dsl`'s infallible signature; a
-    /// `LimitExceeded` on a pathologically huge value is the one way this can panic, same ceiling
-    /// `pack_value`'s own encoder enforces.
-    pub fn encode_json_value(value: &serde_json::Value) -> Vec<u8> {
+    /// @emoji 🌱️ Encodes an arbitrary `DslValue` as a complete pack file.
+    pub fn encode_pack_value(value: &DslValue) -> Vec<u8> {
         let mut fields = HashMap::new();
-        fields.insert(JSON_BRIDGE_FIELD_ID, FieldValue::Value(DslValue::from(value.clone())));
+        fields.insert(VALUE_BRIDGE_FIELD_ID, FieldValue::Value(value.clone()));
         let record = RecordValue { fields };
-        encode_document(&json_bridge_spec(), &record, &PackEncodeOptions::default())
-            .expect("json bridge encode is infallible for a well-formed DslValue")
+        encode_document(&value_bridge_spec(), &record, &PackEncodeOptions::default())
+            .expect("value bridge encode is infallible for a well-formed DslValue")
     }
 
-    /// @emoji 🌱️ Inverse of `encode_json_value`.
-    pub fn decode_json_value(bytes: &[u8]) -> Result<serde_json::Value, PackError> {
-        let (record, _report) = decode_document(bytes, &json_bridge_spec(), &PackDecodeOptions::default())?;
-        match record.get(JSON_BRIDGE_FIELD_ID) {
-            Some(FieldValue::Value(dsl_value)) => Ok(serde_json::Value::from(dsl_value.clone())),
-            _ => Ok(serde_json::Value::Null),
+    /// @emoji 🌱️ Inverse of `encode_pack_value`.
+    pub fn decode_pack_value(bytes: &[u8]) -> Result<DslValue, PackError> {
+        let (record, _report) = decode_document(bytes, &value_bridge_spec(), &PackDecodeOptions::default())?;
+        match record.get(VALUE_BRIDGE_FIELD_ID) {
+            Some(FieldValue::Value(dsl_value)) => Ok(dsl_value.clone()),
+            _ => Ok(DslValue::Null),
         }
     }
 
-    /// @emoji 🪶️ Container-less twin of `encode_json_value` for per-message wire payloads (UI tree
-    /// diffs, host effects, events, manifests — anything carried as one frame of a binary command
-    /// protocol) rather than whole documents. `encode_json_value` calls `pack::encode_document`,
-    /// which produces a full standalone `.spk` container (32-byte header, deflate-compressed
-    /// segments, an End segment, an 84-byte footer with a real BLAKE3 hash) — 200+ bytes of
-    /// overhead per value and, worse, deflate-compressed bytes that are NOT portable byte-for-byte
-    /// across a spec-compliant TS deflate implementation (`miniz_oxide`'s match-finding heuristics
-    /// are not part of the DEFLATE format contract). Calls `pack::encode_record_body` instead — see
-    /// its doc for the exact grammar (`symbol_count varint, (len varint, utf8)*, record fields`, no
-    /// header/segments/manifest/footer) — fully deterministic and a few bytes of overhead.
-    pub fn encode_wire_value(value: &serde_json::Value) -> Vec<u8> {
+    /// @emoji 🪶️ Container-less twin of `encode_pack_value` for per-message wire payloads.
+    pub fn encode_wire_value(value: &DslValue) -> Vec<u8> {
         let mut fields = HashMap::new();
-        fields.insert(JSON_BRIDGE_FIELD_ID, FieldValue::Value(DslValue::from(value.clone())));
+        fields.insert(VALUE_BRIDGE_FIELD_ID, FieldValue::Value(value.clone()));
         let record = RecordValue { fields };
-        pack::encode_record_body(&json_bridge_spec(), &record, &PackEncodeOptions::default())
+        pack::encode_record_body(&value_bridge_spec(), &record, &PackEncodeOptions::default())
             .expect("wire value encode is infallible for a well-formed DslValue")
     }
 
     /// @emoji 🪶️ Inverse of `encode_wire_value`.
-    pub fn decode_wire_value(bytes: &[u8]) -> Result<serde_json::Value, PackError> {
-        let (record, _report) = pack::decode_record_body(bytes, &json_bridge_spec(), &PackDecodeOptions::default())?;
-        match record.get(JSON_BRIDGE_FIELD_ID) {
-            Some(FieldValue::Value(dsl_value)) => Ok(serde_json::Value::from(dsl_value.clone())),
-            _ => Ok(serde_json::Value::Null),
+    pub fn decode_wire_value(bytes: &[u8]) -> Result<DslValue, PackError> {
+        let (record, _report) = pack::decode_record_body(bytes, &value_bridge_spec(), &PackDecodeOptions::default())?;
+        match record.get(VALUE_BRIDGE_FIELD_ID) {
+            Some(FieldValue::Value(dsl_value)) => Ok(dsl_value.clone()),
+            _ => Ok(DslValue::Null),
         }
     }
 
-    /// @emoji 🔧️ `encode_json_value`/`decode_json_value`'s `DslValue` bridge normalizes every JSON
-    /// number to `f64` (matching JS/JSON dynamic-value semantics, `dsl/schema/rs/lib.rs`'s
-    /// `🔖️Value` region) — lossless for a genuinely schema-less consumer, but lossy for a
-    /// whole-number field a `serde`-derived struct expects to deserialize as `u64`/`i32`
-    /// (serde_json's `Number` is float-tagged once round-tripped through `f64`, and integer
-    /// `Deserialize` impls reject a float-tagged `Number` even at a whole value like `0.0`). Walks
-    /// the decoded tree and rewrites every fractionless float back to an integer `Number` — call
-    /// this on `decode_json_value`'s output before `serde_json::from_value`-ing into a typed
-    /// struct with integer fields (skip it for a genuinely dynamic `serde_json::Value` consumer,
-    /// where the distinction doesn't matter and the rewrite is just wasted work). Applies equally
-    /// to `decode_wire_value`'s output for the same reason.
-    pub fn renormalize_whole_number_floats(value: serde_json::Value) -> serde_json::Value {
+    /// @emoji 🧩️ Compose-only bridge — external technology; converts through `DslValue` without JSON on the wire.
+    pub fn encode_json_value(value: &serde_json::Value) -> Vec<u8> {
+        encode_pack_value(&json_value_to_dsl(value))
+    }
+
+    /// @emoji 🧩️ Compose-only inverse of `encode_json_value`.
+    pub fn decode_json_value(bytes: &[u8]) -> Result<serde_json::Value, PackError> {
+        decode_pack_value(bytes).map(dsl_value_to_json)
+    }
+
+    /// @emoji 🧩️ Compose wire decode helper — renormalizes a `serde_json::Value` tree after pack decode.
+    pub fn renormalize_json_wire_value(value: serde_json::Value) -> serde_json::Value {
+        dsl_value_to_json(renormalize_whole_number_floats(json_value_to_dsl(&value)))
+    }
+
+    fn json_value_to_dsl(value: &serde_json::Value) -> DslValue {
         match value {
-            serde_json::Value::Number(n) => match n.as_f64() {
-                Some(f) if f.fract() == 0.0 && f.is_finite() && f.abs() < (1u64 << 53) as f64 => serde_json::json!(f as i64),
-                _ => serde_json::Value::Number(n),
-            },
-            serde_json::Value::Array(items) => serde_json::Value::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
-            serde_json::Value::Object(map) => serde_json::Value::Object(map.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
+            serde_json::Value::Null => DslValue::Null,
+            serde_json::Value::Bool(b) => DslValue::Bool(*b),
+            serde_json::Value::Number(n) => DslValue::Number(n.as_f64().unwrap_or(0.0)),
+            serde_json::Value::String(s) => DslValue::String(s.clone()),
+            serde_json::Value::Array(items) => DslValue::Array(items.iter().map(json_value_to_dsl).collect()),
+            serde_json::Value::Object(map) => DslValue::Object(map.iter().map(|(k, v)| (k.clone(), json_value_to_dsl(v))).collect()),
+        }
+    }
+
+    fn dsl_value_to_json(value: DslValue) -> serde_json::Value {
+        match value {
+            DslValue::Null => serde_json::Value::Null,
+            DslValue::Bool(b) => serde_json::Value::Bool(b),
+            DslValue::Number(n) => serde_json::Number::from_f64(n).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null),
+            DslValue::String(s) => serde_json::Value::String(s),
+            DslValue::Array(items) => serde_json::Value::Array(items.into_iter().map(dsl_value_to_json).collect()),
+            DslValue::Object(entries) => serde_json::Value::Object(
+                entries.into_iter().map(|(k, v)| (k, dsl_value_to_json(v))).collect::<serde_json::Map<_, _>>(),
+            ),
+        }
+    }
+
+    /// @emoji 🔧️ Rewrites fractionless floats in a `DslValue` tree to whole-number floats for integer fields.
+    pub fn renormalize_whole_number_floats(value: DslValue) -> DslValue {
+        match value {
+            DslValue::Number(n) => {
+                if n.fract() == 0.0 && n.is_finite() && n.abs() < (1u64 << 53) as f64 {
+                    DslValue::Number((n as i64) as f64)
+                } else {
+                    DslValue::Number(n)
+                }
+            }
+            DslValue::Array(items) => DslValue::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
+            DslValue::Object(entries) => DslValue::Object(entries.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
             other => other,
         }
     }
@@ -316,14 +336,23 @@ pub fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vc
     Ok((bytes[pos..pack_end].to_vec(), bytes[pack_end..].to_vec()))
 }
 
-/// @emoji 🌱️ Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-plugin/
-/// semio_compose_rs-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
+/// @emoji 🧩️ Compose-only pack bridge (external technology).
 impl DocumentPack for serde_json::Value {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         Ok(pack_rt::encode_json_value(self))
     }
     fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
         pack_rt::decode_json_value(bytes)
+    }
+}
+
+/// @emoji 🌱️ Pack counterpart of the schema-less `DslValue` escape hatch: delegates to `pack_rt`'s value bridge.
+impl DocumentPack for DslValue {
+    fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        Ok(pack_rt::encode_pack_value(self))
+    }
+    fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
+        pack_rt::decode_pack_value(bytes)
     }
 }
 
@@ -584,10 +613,10 @@ fn shape_to_config_field_shape(shape: &dsl::Shape) -> semio_framework_core::Conf
 }
 
 /// @emoji ✅️ Validates a JSON projection against a manifest `ConfigSpec` (required keys must be present).
-pub fn validate_config_projection(spec: &semio_framework_core::ConfigSpec, value: &serde_json::Value) -> Result<(), String> {
+pub fn validate_config_projection(spec: &semio_framework_core::ConfigSpec, value: &DslValue) -> Result<(), String> {
     let object = value.as_object().ok_or_else(|| "config projection must be a JSON object".to_string())?;
     for field in &spec.fields {
-        if object.contains_key(&field.key) {
+        if object.iter().any(|(key, _)| key == &field.key) {
             continue;
         }
         return Err(format!("missing config field `{key}`", key = field.key));
@@ -3690,12 +3719,12 @@ impl protocol::OpText for SpaceHistoryOperation {
 }
 impl protocol::OpBinary for SpaceHistoryOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value = serde_json::to_value(self).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
-        Ok(pack_rt::encode_json_value(&value))
+        let value = to_dsl_value(self).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error })?;
+        Ok(pack_rt::encode_pack_value(&value))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = pack_rt::decode_json_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
-        serde_json::from_value(renormalize_whole_number_floats(value)).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })
+        let value = pack_rt::decode_pack_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
+        from_dsl_value(renormalize_whole_number_floats(value)).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error })
     }
 }
 impl DocumentDsl for SpaceHistoryProjection {
@@ -3709,12 +3738,12 @@ impl DocumentDsl for SpaceHistoryProjection {
 }
 impl DocumentPack for SpaceHistoryProjection {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
-        let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
-        Ok(pack_rt::encode_json_value(&value))
+        let value = to_dsl_value(self).map_err(PackError::Schema)?;
+        Ok(pack_rt::encode_pack_value(&value))
     }
     fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
-        let value = pack_rt::decode_json_value(bytes)?;
-        serde_json::from_value(renormalize_whole_number_floats(value)).map_err(|error| PackError::Schema(error.to_string()))
+        let value = pack_rt::decode_pack_value(bytes)?;
+        from_dsl_value(renormalize_whole_number_floats(value)).map_err(PackError::Schema)
     }
 }
 //#endregion SpaceHistoryDocument
@@ -6308,102 +6337,84 @@ mod tests {
     //#endregion 🔖️BackbonePorts
 
     //#region 🔖️PackValueFixtures
-    /// @emoji 🧾️ Hex-dumps `pack_rt::encode_json_value` over a representative `serde_json::Value`
-    /// corpus (null/bool/int/float/whole-number-float/string-with-escapes/array/object/nested) —
-    /// ground truth for `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s TS
-    /// `PackValueCodec` mirror (`framework/product/os/ts/index.ts`). Run with `--nocapture` to
-    /// capture the printed `name -> hex` lines; also asserts `decode_json_value(encode_json_value(v))
-    /// == v` for every entry so the corpus is never accidentally out of date with the real codec.
-    #[test]
-    fn pack_value_fixture_corpus_hex_dump() {
-        let fixtures: Vec<(&str, serde_json::Value)> = vec![
-            ("null", serde_json::json!(null)),
-            ("bool_true", serde_json::json!(true)),
-            ("bool_false", serde_json::json!(false)),
-            ("int_zero", serde_json::json!(0)),
-            ("int_negative_one", serde_json::json!(-1)),
-            ("float_pi", serde_json::json!(3.14)),
-            ("float_whole_number", serde_json::json!(2.0)),
-            ("string_empty", serde_json::json!("")),
-            ("string_escapes", serde_json::json!("hello\nworld with \"quotes\"")),
-            ("array_empty", serde_json::json!([])),
-            ("array_ints", serde_json::json!([1, 2, 3])),
-            ("object_empty", serde_json::json!({})),
-            ("object_mixed", serde_json::json!({"a": 1, "b": [true, null]})),
+    fn pack_value_fixture_corpus() -> Vec<(&'static str, DslValue)> {
+        vec![
+            ("null", DslValue::Null),
+            ("bool_true", DslValue::Bool(true)),
+            ("bool_false", DslValue::Bool(false)),
+            ("int_zero", DslValue::Number(0.0)),
+            ("int_negative_one", DslValue::Number(-1.0)),
+            ("float_pi", DslValue::Number(3.14)),
+            ("float_whole_number", DslValue::Number(2.0)),
+            ("string_empty", DslValue::String(String::new())),
+            ("string_escapes", DslValue::String("hello\nworld with \"quotes\"".into())),
+            ("array_empty", DslValue::Array(vec![])),
+            ("array_ints", DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(2.0), DslValue::Number(3.0)])),
+            ("object_empty", DslValue::Object(vec![])),
+            (
+                "object_mixed",
+                DslValue::object([
+                    ("a".into(), DslValue::Number(1.0)),
+                    ("b".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null])),
+                ]),
+            ),
             (
                 "nested_deep",
-                serde_json::json!({"a": {"b": {"c": [1, 2, {"d": "leaf"}]}}}),
+                DslValue::object([(
+                    "a".into(),
+                    DslValue::object([(
+                        "b".into(),
+                        DslValue::object([(
+                            "c".into(),
+                            DslValue::Array(vec![
+                                DslValue::Number(1.0),
+                                DslValue::Number(2.0),
+                                DslValue::object([("d".into(), DslValue::String("leaf".into()))]),
+                            ]),
+                        )]),
+                    )]),
+                )]),
             ),
-        ];
-        // 🔢️ `decode_json_value`'s `DslValue` bridge always comes back `Number`-tagged as `f64`
-        // (`DslValue::Number(f64)` -> `serde_json::json!(n)`), so a whole-number int literal like
-        // `0`/`1` round-trips as the float-tagged `Number(0.0)` rather than serde_json's original
-        // int-tagged `Number(0)` — same value, different internal tag, and `serde_json::Value`'s
-        // `PartialEq` cares about that tag. Compare structurally through `f64` for numbers instead.
-        fn numeric_insensitive_eq(a: &serde_json::Value, b: &serde_json::Value) -> bool {
-            match (a, b) {
-                (serde_json::Value::Number(x), serde_json::Value::Number(y)) => x.as_f64() == y.as_f64(),
-                (serde_json::Value::Array(x), serde_json::Value::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| numeric_insensitive_eq(a, b)),
-                (serde_json::Value::Object(x), serde_json::Value::Object(y)) => {
-                    x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|other| numeric_insensitive_eq(v, other)))
-                }
-                _ => a == b,
-            }
-        }
+        ]
+    }
 
-        for (name, value) in &fixtures {
-            let bytes = pack_rt::encode_json_value(value);
-            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
-            println!("[pack_value_fixture] {name} ({} bytes) -> {hex}", bytes.len());
-            let decoded = pack_rt::decode_json_value(&bytes).expect("decode_json_value");
-            assert!(numeric_insensitive_eq(&decoded, value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
+    fn dsl_value_numeric_insensitive_eq(a: &DslValue, b: &DslValue) -> bool {
+        match (a, b) {
+            (DslValue::Number(x), DslValue::Number(y)) => x == y,
+            (DslValue::Array(x), DslValue::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| dsl_value_numeric_insensitive_eq(a, b)),
+            (DslValue::Object(x), DslValue::Object(y)) => {
+                x.len() == y.len() && x.iter().all(|(k, v)| y.iter().find(|(ok, _)| ok == k).is_some_and(|(_, ov)| dsl_value_numeric_insensitive_eq(v, ov)))
+            }
+            _ => a == b,
         }
     }
 
-    /// @emoji 🪶️ Hex-dumps `pack_rt::encode_wire_value` (the `encode_record_body`-backed
-    /// container-less sibling of `encode_json_value` above) over the SAME fixture corpus — ground
-    /// truth for `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s rewritten TS
-    /// `PackValueCodec` mirror, which now implements `encode_record_body`'s grammar instead of the
-    /// full `.spk` container. Run with `--nocapture` to capture the printed `name -> hex` lines;
-    /// also asserts `decode_wire_value(encode_wire_value(v)) == v` for every entry.
+    /// @emoji 🧾️ Hex-dumps `pack_rt::encode_pack_value` over a representative `DslValue`
+    /// corpus — ground truth for `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s TS
+    /// `PackValueCodec` mirror (`framework/product/os/ts/index.ts`). Run with `--nocapture` to
+    /// capture the printed `name -> hex` lines; also asserts `decode_pack_value(encode_pack_value(v))
+    /// == v` for every entry so the corpus is never accidentally out of date with the real codec.
+    #[test]
+    fn pack_value_fixture_corpus_hex_dump() {
+        for (name, value) in pack_value_fixture_corpus() {
+            let bytes = pack_rt::encode_pack_value(&value);
+            let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+            println!("[pack_value_fixture] {name} ({} bytes) -> {hex}", bytes.len());
+            let decoded = pack_rt::decode_pack_value(&bytes).expect("decode_pack_value");
+            assert!(dsl_value_numeric_insensitive_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
+        }
+    }
+
+    /// @emoji 🪶️ Hex-dumps `pack_rt::encode_wire_value` over the SAME fixture corpus — ground
+    /// truth for the container-less wire codec mirror in TS.
     #[test]
     fn pack_wire_value_fixture_corpus_hex_dump() {
-        let fixtures: Vec<(&str, serde_json::Value)> = vec![
-            ("null", serde_json::json!(null)),
-            ("bool_true", serde_json::json!(true)),
-            ("bool_false", serde_json::json!(false)),
-            ("int_zero", serde_json::json!(0)),
-            ("int_negative_one", serde_json::json!(-1)),
-            ("float_pi", serde_json::json!(3.14)),
-            ("float_whole_number", serde_json::json!(2.0)),
-            ("string_empty", serde_json::json!("")),
-            ("string_escapes", serde_json::json!("hello\nworld with \"quotes\"")),
-            ("array_empty", serde_json::json!([])),
-            ("array_ints", serde_json::json!([1, 2, 3])),
-            ("object_empty", serde_json::json!({})),
-            ("object_mixed", serde_json::json!({"a": 1, "b": [true, null]})),
-            (
-                "nested_deep",
-                serde_json::json!({"a": {"b": {"c": [1, 2, {"d": "leaf"}]}}}),
-            ),
-        ];
-        fn numeric_insensitive_eq(a: &serde_json::Value, b: &serde_json::Value) -> bool {
-            match (a, b) {
-                (serde_json::Value::Number(x), serde_json::Value::Number(y)) => x.as_f64() == y.as_f64(),
-                (serde_json::Value::Array(x), serde_json::Value::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(a, b)| numeric_insensitive_eq(a, b)),
-                (serde_json::Value::Object(x), serde_json::Value::Object(y)) => {
-                    x.len() == y.len() && x.iter().all(|(k, v)| y.get(k).is_some_and(|other| numeric_insensitive_eq(v, other)))
-                }
-                _ => a == b,
-            }
-        }
-
-        for (name, value) in &fixtures {
-            let bytes = pack_rt::encode_wire_value(value);
+        for (name, value) in pack_value_fixture_corpus() {
+            let bytes = pack_rt::encode_wire_value(&value);
             let hex: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
             println!("[pack_wire_value_fixture] {name} ({} bytes) -> {hex}", bytes.len());
             let decoded = pack_rt::decode_wire_value(&bytes).expect("decode_wire_value");
-            assert!(numeric_insensitive_eq(&decoded, value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
+            assert!(dsl_value_numeric_insensitive_eq(&decoded, &value), "round-trip mismatch for fixture {name}: {decoded:?} != {value:?}");
         }
     }
     //#endregion 🔖️PackValueFixtures

@@ -137,7 +137,7 @@ pub struct Puzzle2dMeta {
     #[dsl(table)]
     pub kind_compatibility: Vec<Puzzle2dKindCompatibility>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub kind_catalogs: Option<serde_json::Value>,
+    pub kind_catalogs: Option<dsl::DslValue>,
 }
 
 /// 🧩️ The puzzle-2d projection: a typed fixture document (schema/camera/nodes/edges/meta) — see

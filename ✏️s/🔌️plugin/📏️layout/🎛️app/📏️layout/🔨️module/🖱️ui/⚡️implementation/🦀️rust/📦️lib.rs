@@ -20,6 +20,7 @@ use semio_framework_plugin::{SurfaceKind,
 use protocol::CollectionOperation;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -874,12 +875,19 @@ fn build_catalogue_tree(labels: &LayoutLabels) -> UiNode {
 
 fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels: &LayoutLabels) -> UiNode {
     if runtime.selected_ids.is_empty() {
-        return ui_stack_vertical(vec![
-            ui_text(format!("{}: {}", labels.schema, LAYOUT_FIXTURE_SCHEMA)),
-            ui_text(format!("{}: {}", labels.name, doc.name)),
-            ui_text(format!("{}: {}", labels.pages, doc.pages.len())),
-            ui_text(format!("{}: {}", labels.active_page, runtime.active_page_id)),
-        ]);
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "layout-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![
+                ui_text(format!("{}: {}", labels.schema, LAYOUT_FIXTURE_SCHEMA)),
+                ui_text(format!("{}: {}", labels.name, doc.name)),
+                ui_text(format!("{}: {}", labels.pages, doc.pages.len())),
+                ui_text(format!("{}: {}", labels.active_page, runtime.active_page_id)),
+            ],
+            presence: UiPresence::default(),
+            menu: None,
+        }]);
     }
     let selected_id = &runtime.selected_ids[0];
     if let Some(page) = doc.pages.iter().find(|page| page.id == *selected_id) {
@@ -1269,11 +1277,16 @@ fn layout_drag_preview_payload(state: &LayoutDropPreviewState) -> Value {
 //#endregion 🔖️GesturePreview
 
 //#region 🔖️LayoutPlayApp
-#[derive(Default)]
 pub struct LayoutPlayApp {
-    runtime: LayoutPlayRuntime,
+    runtime: RefCell<LayoutPlayRuntime>,
     /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
-    preview_seq: u64,
+    preview_seq: Cell<u64>,
+}
+
+impl Default for LayoutPlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(LayoutPlayRuntime::default()), preview_seq: Cell::new(0) }
+    }
 }
 
 impl LayoutPlayApp {
@@ -1283,9 +1296,9 @@ impl LayoutPlayApp {
     /// `🧪️Tests` only until that bridge lands.
     #[allow(dead_code)]
     fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
-        let state = self.runtime.drop_preview.as_ref()?;
-        let payload = layout_drag_preview_payload(state);
-        Some(("gesture:dropPreview", self.preview_seq, serde_json::to_vec(&payload).ok()?))
+        let state = self.runtime.borrow().drop_preview.clone()?;
+        let payload = layout_drag_preview_payload(&state);
+        Some(("gesture:dropPreview", self.preview_seq.get(), serde_json::to_vec(&payload).ok()?))
     }
 }
 
@@ -1316,20 +1329,21 @@ impl DocumentApp for LayoutPlayApp {
         view_state: &ViewState,
     ) -> ActionEmit<LayoutOperation> {
         let document = doc.projection;
+        let mut rt = self.runtime.borrow_mut();
         match action {
             //#region 👁️View
             "setSelection" => {
-                self.runtime.selected_ids = selection_ids(args);
+                rt.selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "setActivePage" => {
                 if let Some(page_id) = args.and_then(|value| value.get("pageId")).and_then(|value| value.as_str()) {
-                    self.runtime.active_page_id = page_id.into();
+                    rt.active_page_id = page_id.into();
                 }
                 ActionEmit::default()
             }
             "setHover" => {
-                self.runtime.hovered_id = args
+                rt.hovered_id = args
                     .and_then(|value| value.get("id"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
@@ -1338,17 +1352,17 @@ impl DocumentApp for LayoutPlayApp {
             "focusPreflightIssue" => {
                 if let Some(issue) = args.and_then(|value| value.get("issue")) {
                     if let Some(object_id) = issue.get("objectId").and_then(|value| value.as_str()) {
-                        self.runtime.selected_ids = vec![object_id.into()];
+                        rt.selected_ids = vec![object_id.into()];
                     }
                     if let Some(page_id) = issue.get("pageId").and_then(|value| value.as_str()) {
-                        self.runtime.active_page_id = page_id.into();
+                        rt.active_page_id = page_id.into();
                     }
                 }
                 ActionEmit::default()
             }
             "engagementInput" => {
                 if let Some(value) = args.and_then(|value| value.get("value")).and_then(Value::as_str) {
-                    self.runtime.engagement_input = value.into();
+                    rt.engagement_input = value.into();
                 }
                 ActionEmit::default()
             }
@@ -1359,10 +1373,10 @@ impl DocumentApp for LayoutPlayApp {
                     return ActionEmit::default();
                 }
                 let extend = args.and_then(|value| value.get("extend")).and_then(Value::as_bool).unwrap_or(false);
-                let hit = hit_test_at(document, &self.runtime, args, blueprint);
-                self.runtime.selected_ids = match hit {
+                let hit = hit_test_at(document, &rt, args, blueprint);
+                rt.selected_ids = match hit {
                     Some(id) if extend => {
-                        let mut ids = self.runtime.selected_ids.clone();
+                        let mut ids = rt.selected_ids.clone();
                         if let Some(position) = ids.iter().position(|existing| *existing == id) {
                             ids.remove(position);
                         } else {
@@ -1380,7 +1394,7 @@ impl DocumentApp for LayoutPlayApp {
                 if !blueprint {
                     return ActionEmit::default();
                 }
-                self.runtime.hovered_id = hit_test_at(document, &self.runtime, args, blueprint);
+                rt.hovered_id = hit_test_at(document, &rt, args, blueprint);
                 ActionEmit::default()
             }
             "canvasPointerUp" => ActionEmit::default(),
@@ -1399,13 +1413,13 @@ impl DocumentApp for LayoutPlayApp {
                     })
                     .unwrap_or_else(|| "unknown".into());
                 let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(&self.runtime, blueprint, sx, sy, width, height);
-                self.runtime.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
-                self.preview_seq = self.preview_seq.wrapping_add(1);
+                let (wx, wy) = screen_to_world_for_surface(&rt, blueprint, sx, sy, width, height);
+                rt.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
+                self.preview_seq.set(self.preview_seq.get().wrapping_add(1));
                 ActionEmit::default()
             }
             "canvasDragLeave" => {
-                self.runtime.drop_preview = None;
+                rt.drop_preview = None;
                 ActionEmit::default()
             }
             "setCamera" => {
@@ -1417,9 +1431,9 @@ impl DocumentApp for LayoutPlayApp {
                     if let (Some(x), Some(y), Some(zoom)) = (x, y, zoom) {
                         let camera = LayoutCamera { x, y, zoom };
                         if blueprint {
-                            self.runtime.camera = camera;
+                            rt.camera = camera;
                         } else {
-                            self.runtime.preview_camera = camera;
+                            rt.preview_camera = camera;
                         }
                     }
                 }
@@ -1431,7 +1445,7 @@ impl DocumentApp for LayoutPlayApp {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("rect");
                 let drop_x = args.and_then(|value| value.get("x")).and_then(Value::as_f64);
                 let drop_y = args.and_then(|value| value.get("y")).and_then(Value::as_f64);
-                let page_id = self.runtime.active_page_id.clone();
+                let page_id = rt.active_page_id.clone();
                 let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
                     return ActionEmit::default();
                 };
@@ -1469,14 +1483,14 @@ impl DocumentApp for LayoutPlayApp {
                         stroke: None,
                     },
                 };
-                self.runtime.selected_ids = vec![frame_id];
+                rt.selected_ids = vec![frame_id];
                 ActionEmit::operations(vec![LayoutOperation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }])
             }
             "addPage" => {
                 let template = document
                     .pages
                     .iter()
-                    .find(|page| page.id == self.runtime.active_page_id)
+                    .find(|page| page.id == rt.active_page_id)
                     .or_else(|| document.pages.first());
                 let (width, height, spread_id, parent_page_id, margins, columns) = template
                     .map(|page| {
@@ -1514,8 +1528,8 @@ impl DocumentApp for LayoutPlayApp {
                     frames: Vec::new(),
                     overrides: Vec::new(),
                 };
-                self.runtime.active_page_id = page_id.clone();
-                self.runtime.selected_ids = vec![page_id];
+                rt.active_page_id = page_id.clone();
+                rt.selected_ids = vec![page_id];
                 ActionEmit::operations(vec![LayoutOperation::Pages(CollectionOperation::Add { id: page.id.clone(), item: page, at: document.pages.len() })])
             }
             "patchPage" => {
@@ -1523,7 +1537,7 @@ impl DocumentApp for LayoutPlayApp {
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .unwrap_or_else(|| self.runtime.active_page_id.clone());
+                    .unwrap_or_else(|| rt.active_page_id.clone());
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 match page_patch_for_field(field, &value) {
@@ -1539,7 +1553,7 @@ impl DocumentApp for LayoutPlayApp {
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
-                    .unwrap_or_else(|| self.runtime.active_page_id.clone());
+                    .unwrap_or_else(|| rt.active_page_id.clone());
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 if frame_id.is_empty() {
@@ -1620,7 +1634,7 @@ impl DocumentApp for LayoutPlayApp {
             }
             "canvasDrop" => {
                 let blueprint = surface_is_blueprint(args);
-                self.runtime.drop_preview = None;
+                rt.drop_preview = None;
                 if !blueprint {
                     return ActionEmit::default();
                 }
@@ -1635,11 +1649,11 @@ impl DocumentApp for LayoutPlayApp {
                     return ActionEmit::default();
                 };
                 let (sx, sy, width, height) = pointer_args(args);
-                let (wx, wy) = screen_to_world_for_surface(&self.runtime, blueprint, sx, sy, width, height);
+                let (wx, wy) = screen_to_world_for_surface(&rt, blueprint, sx, sy, width, height);
                 if kind == "page" {
-                    self.handle_action("addPage", None, doc, view_state)
+                    self.handle_action("addPage", None, doc, _cfg, view_state)
                 } else {
-                    self.handle_action("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), doc, view_state)
+                    self.handle_action("addFrame", Some(&json!({ "kind": kind, "x": wx, "y": wy })), doc, _cfg, view_state)
                 }
             }
             //#endregion 🔧️Operations
@@ -1648,7 +1662,7 @@ impl DocumentApp for LayoutPlayApp {
                 let page_id = args
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or(self.runtime.active_page_id.as_str())
+                    .unwrap_or(rt.active_page_id.as_str())
                     .to_string();
                 match export_document_png_cpu(document, &page_id) {
                     Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
@@ -1664,7 +1678,7 @@ impl DocumentApp for LayoutPlayApp {
                 let page_id = args
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or(self.runtime.active_page_id.as_str())
+                    .unwrap_or(rt.active_page_id.as_str())
                     .to_string();
                 match export_document_svg(document, &page_id) {
                     Ok(svg) => ActionEmit::effect(HostEffect::DownloadMediaExport {
@@ -1680,7 +1694,7 @@ impl DocumentApp for LayoutPlayApp {
                 let page_id = args
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or(self.runtime.active_page_id.as_str())
+                    .unwrap_or(rt.active_page_id.as_str())
                     .to_string();
                 match export_document_pdf(document, &page_id) {
                     Ok(bytes) => ActionEmit::effect(HostEffect::DownloadMediaExport {
@@ -1720,7 +1734,7 @@ impl DocumentApp for LayoutPlayApp {
                     None
                 };
                 match export {
-                    Some(export) => self.handle_action(export, None, doc, view_state),
+                    Some(export) => self.handle_action(export, None, doc, _cfg, view_state),
                     None => ActionEmit::default(),
                 }
             }
@@ -1732,12 +1746,13 @@ impl DocumentApp for LayoutPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, LayoutDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = layout_labels(view_state);
+        let runtime = self.runtime.borrow();
         match body_key {
-            LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(document, &self.runtime),
-            LAYOUT_PLAY_BODY_PREVIEW => render_preview(document, &self.runtime),
-            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(document, &self.runtime, labels),
+            LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(document, &runtime),
+            LAYOUT_PLAY_BODY_PREVIEW => render_preview(document, &runtime),
+            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(document, &runtime, labels),
             LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(labels),
-            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(document, &self.runtime, labels),
+            LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(document, &runtime, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(document, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -1745,9 +1760,10 @@ impl DocumentApp for LayoutPlayApp {
 
     fn window_engagements(&self, _doc: &DocumentView<'_, LayoutDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let labels = layout_labels(view_state);
+        let runtime = self.runtime.borrow();
         HashMap::from([
-            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&self.runtime, "blueprint", labels)),
-            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&self.runtime, "preview", labels)),
+            (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), layout_window_engagement(&runtime, "blueprint", labels)),
+            (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), layout_window_engagement(&runtime, "preview", labels)),
         ])
     }
 
@@ -2587,10 +2603,10 @@ mod tests {
             &doc,
             &ViewState::default(),
         );
-        let state_before = app.runtime.drop_preview.clone();
+        let state_before = app.runtime.borrow().drop_preview.clone();
         let _ = app.gesture_preview();
         let _ = app.gesture_preview();
-        assert_eq!(app.runtime.drop_preview, state_before, "gesture_preview must never mutate the live drop-preview scratch it reads");
+        assert_eq!(app.runtime.borrow().drop_preview, state_before, "gesture_preview must never mutate the live drop-preview scratch it reads");
     }
     //#endregion 🔖️GesturePreview
 

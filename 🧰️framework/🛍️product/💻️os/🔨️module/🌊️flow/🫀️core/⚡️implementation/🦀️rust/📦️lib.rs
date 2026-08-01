@@ -439,8 +439,8 @@ fn cluster_io_layout(cluster_id: &str, name: &str, tree: &Tree, synapses: &[Syna
     (inputs, outputs)
 }
 
-fn neural_value_to_json_value(value: &NeuralValue) -> serde_json::Value {
-    serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+fn neural_value_to_dsl_value(value: &NeuralValue) -> dsl::DslValue {
+    dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
 }
 
 fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
@@ -459,17 +459,17 @@ fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
     port.value_type = channel_spec_value_type(spec);
-    port.default = spec.default.as_ref().map(neural_value_to_json_value);
+    port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.cardinality = spec.cardinality.symbol();
     port
 }
 
 fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary, connected: bool) -> IoPortSpec {
-    let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_json_value);
+    let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_dsl_value);
     let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
     port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
     port.value_type = channel_spec_value_type(spec);
-    port.default = spec.default.as_ref().map(neural_value_to_json_value);
+    port.default = spec.default.as_ref().map(neural_value_to_dsl_value);
     port.value = value;
     port.connected = Some(connected);
     port.cardinality = spec.cardinality.symbol();
@@ -906,7 +906,7 @@ fn dag_preview_content_from_dict(dict: &Dictionary) -> DagPreviewContent {
     if dict.is_empty() {
         return DagPreviewContent::Empty;
     }
-    serde_json::to_value(dict).ok().map(|json| DagPreviewContent::Tree { json }).unwrap_or(DagPreviewContent::Empty)
+    dsl::to_dsl_value(dict).ok().map(|json| DagPreviewContent::Tree { json }).unwrap_or(DagPreviewContent::Empty)
 }
 
 fn preview_content_summary(content: &DagPreviewContent) -> String {
@@ -924,14 +924,14 @@ fn preview_content_summary(content: &DagPreviewContent) -> String {
     }
 }
 
-fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+fn preview_tree_collapsed_summary(value: &dsl::DslValue) -> String {
     match value {
-        serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
-        serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
-        serde_json::Value::String(s) => s.clone(),
-        serde_json::Value::Number(n) => n.to_string(),
-        serde_json::Value::Bool(b) => b.to_string(),
-        serde_json::Value::Null => "null".into(),
+        dsl::DslValue::Object(map) => format!("{{{} keys}}", map.len()),
+        dsl::DslValue::Array(arr) => format!("[{} items]", arr.len()),
+        dsl::DslValue::String(s) => s.clone(),
+        dsl::DslValue::Number(n) => n.to_string(),
+        dsl::DslValue::Bool(b) => b.to_string(),
+        dsl::DslValue::Null => "null".into(),
     }
 }
 
@@ -4613,7 +4613,7 @@ enum WidgetDsl {
         name: String,
         #[dsl(block)]
         tree: TreeDsl,
-        flow: serde_json::Value,
+        flow: dsl::DslValue,
     }
 }
 
@@ -4650,7 +4650,7 @@ fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_option_dsl_map(preview), expanded: btree_set_to_vec(expanded) },
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
-        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: serde_json::to_value(flow).unwrap_or(serde_json::Value::Null) },
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) },
     }
 }
 
@@ -4666,7 +4666,7 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
         WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_btree_set(expanded) },
         WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
         WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
-        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: serde_json::from_value(flow).unwrap_or_default() },
+        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: dsl::from_dsl_value(flow).unwrap_or_default() },
     })
 }
 
@@ -4956,7 +4956,7 @@ pub mod forms_bridge {
                 description: None,
                 required: None,
                 placeholder: None,
-                default: Some(serde_json::json!(*value)),
+                default: Some(dsl::DslValue::Number(*value)),
                 min: Some(*min),
                 max: Some(*max),
                 step: Some(*step),
@@ -5025,7 +5025,7 @@ pub mod forms_bridge {
                     description: None,
                     required: None,
                     placeholder: None,
-                    default: Some(serde_json::Value::String(name.clone())),
+                    default: Some(dsl::DslValue::String(name.clone())),
                     min: None,
                     max: None,
                     step: None,

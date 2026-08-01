@@ -23,6 +23,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
 };
 use serde::Deserialize;
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 //#region 🔖️Constants
@@ -272,13 +273,13 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         draggable: Some(true),
         items: nested,
         dimmed: if block_visible(block) { None } else { Some(true) },
+        menu: None,
         ..tree_item_with_action(
             block_tree_row_id(block),
             block_name(block),
             Some(block_kind(block).into()),
             play_action(NOTE_PLAY_CONTROLLER_ID, "setSelection", Some(json!({ "ids": [block_id(block)] }))),
         )
-        menu: None,
     }
 }
 
@@ -297,13 +298,13 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
     .into_iter()
     .map(|(kind, label, icon)| UiTreeItemNode {
         icon_id: Some(icon.into()),
+        menu: None,
         ..tree_item_with_action(
             format!("note-play-blocks.add.{kind}"),
             label,
             None,
             play_action(NOTE_PLAY_CONTROLLER_ID, "addBlock", Some(json!({ "kind": kind }))),
-        ),
-        menu: None,
+        )
     })
     .collect();
     let block_items: Vec<UiTreeItemNode> = if document.blocks.is_empty() {
@@ -844,16 +845,26 @@ fn note_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefini
 //#endregion 🔖️Render
 
 //#region 🔖️NotePlayApp
-/// 🎛️ Ephemeral view state living on the app struct (never in the document): the current multi-selection,
-/// the hovered block, the pending engagement-rename input, and the canvas camera pose. Content lives in
-/// the store's `NoteDocument` projection; every content mutation returns a typed {@link NoteOperation} so
-/// the store records a true inverse.
 #[derive(Default)]
-pub struct NotePlayApp {
+struct NotePlayRuntime {
     selected_ids: Vec<String>,
     hovered_id: Option<String>,
     engagement_input: String,
     camera: NoteCamera,
+}
+
+/// 🎛️ Ephemeral view state living on the app struct (never in the document): the current multi-selection,
+/// the hovered block, the pending engagement-rename input, and the canvas camera pose. Content lives in
+/// the store's `NoteDocument` projection; every content mutation returns a typed {@link NoteOperation} so
+/// the store records a true inverse.
+pub struct NotePlayApp {
+    runtime: RefCell<NotePlayRuntime>,
+}
+
+impl Default for NotePlayApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(NotePlayRuntime::default()) }
+    }
 }
 
 impl NotePlayApp {
@@ -890,12 +901,13 @@ impl DocumentApp for NotePlayApp {
     ) -> ActionEmit<NoteOperation> {
         // "undo"/"redo" never reach here — `VcsDocumentApp` intercepts them into store commands.
         let document = doc.projection;
+        let mut rt = self.runtime.borrow_mut();
         match action {
             // 📷️ Camera — session-only runtime pose, never a document operation.
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value::<NoteCamera>(camera.clone()) {
-                        self.camera = parsed;
+                        rt.camera = parsed;
                     }
                     return ActionEmit::default();
                 }
@@ -904,7 +916,7 @@ impl DocumentApp for NotePlayApp {
                     .or_else(|| args.and_then(|value| value.get("value")))
                     .and_then(|value| value.as_f64());
                 if let Some(zoom) = zoom {
-                    self.camera.zoom = zoom;
+                    rt.camera.zoom = zoom;
                 }
                 ActionEmit::default()
             }
@@ -964,7 +976,7 @@ impl DocumentApp for NotePlayApp {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(80.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(80.0);
                 let block = create_block_by_kind(kind, x, y);
-                self.selected_ids = vec![block_id(&block).into()];
+                rt.selected_ids = vec![block_id(&block).into()];
                 let mut blocks = document.blocks.clone();
                 blocks.push(block);
                 ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }])
@@ -1015,15 +1027,15 @@ impl DocumentApp for NotePlayApp {
                 if let Some(block_id) = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str()) {
                     let mut blocks = document.blocks.clone();
                     remove_block_from_tree(&mut blocks, block_id);
-                    self.selected_ids.retain(|id| id != block_id);
+                    rt.selected_ids.retain(|id| id != block_id);
                     return ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }]);
                 }
-                if !self.selected_ids.is_empty() {
+                if !rt.selected_ids.is_empty() {
                     let mut blocks = document.blocks.clone();
-                    for block_id in self.selected_ids.clone() {
+                    for block_id in rt.selected_ids.clone() {
                         remove_block_from_tree(&mut blocks, &block_id);
                     }
-                    self.selected_ids.clear();
+                    rt.selected_ids.clear();
                     return ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }]);
                 }
                 ActionEmit::default()
@@ -1035,7 +1047,7 @@ impl DocumentApp for NotePlayApp {
                     .map(|id| vec![id.to_string()])
                     .unwrap_or_default();
                 if ids.is_empty() {
-                    ids = self.selected_ids.clone();
+                    ids = rt.selected_ids.clone();
                 }
                 if ids.is_empty() {
                     return ActionEmit::default();
@@ -1055,7 +1067,7 @@ impl DocumentApp for NotePlayApp {
                 if new_ids.is_empty() {
                     return ActionEmit::default();
                 }
-                self.selected_ids = new_ids;
+                rt.selected_ids = new_ids;
                 ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }])
             }
             "patchBlocks" => {
@@ -1080,22 +1092,22 @@ impl DocumentApp for NotePlayApp {
                 ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks: next.blocks }])
             }
             "selectAll" => {
-                self.selected_ids = flatten_blocks(&document.blocks)
+                rt.selected_ids = flatten_blocks(&document.blocks)
                     .into_iter()
                     .map(|block| block_id(block).into())
                     .collect();
                 ActionEmit::default()
             }
             "clearSelection" => {
-                self.selected_ids.clear();
+                rt.selected_ids.clear();
                 ActionEmit::default()
             }
             "setSelection" => {
-                self.selected_ids = selection_ids(args);
+                rt.selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "setHover" => {
-                self.hovered_id = args
+                rt.hovered_id = args
                     .and_then(|value| value.get("id"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string);
@@ -1116,10 +1128,10 @@ impl DocumentApp for NotePlayApp {
                 };
                 let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(default_dx);
                 let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(default_dy);
-                if self.selected_ids.is_empty() {
+                if rt.selected_ids.is_empty() {
                     return ActionEmit::default();
                 }
-                let selected: std::collections::HashSet<String> = self.selected_ids.iter().cloned().collect();
+                let selected: std::collections::HashSet<String> = rt.selected_ids.iter().cloned().collect();
                 let nudges: Vec<(String, NoteBlockNode)> = flatten_blocks(&document.blocks)
                     .into_iter()
                     .filter(|block| selected.contains(block_id(block)))
@@ -1162,7 +1174,7 @@ impl DocumentApp for NotePlayApp {
                 ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }])
             }
             "engagementInput" => {
-                self.engagement_input = args
+                rt.engagement_input = args
                     .and_then(|value| value.get("value"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("")
@@ -1170,19 +1182,19 @@ impl DocumentApp for NotePlayApp {
                 ActionEmit::default()
             }
             "engagementSubmit" => {
-                let emit = if self.selected_ids.len() == 1 {
+                let emit = if rt.selected_ids.len() == 1 {
                     let name = args
                         .and_then(|value| value.get("value"))
                         .and_then(|value| value.as_str())
                         .map(str::to_string)
-                        .unwrap_or_else(|| self.engagement_input.clone());
-                    let target_id = self.selected_ids[0].clone();
+                        .unwrap_or_else(|| rt.engagement_input.clone());
+                    let target_id = rt.selected_ids[0].clone();
                     let next = patch_block_field(document, &target_id, "name", &Value::String(name));
                     ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks: next.blocks }])
                 } else {
                     ActionEmit::default()
                 };
-                self.engagement_input.clear();
+                rt.engagement_input.clear();
                 emit
             }
             "navigatorEngagementInput" => ActionEmit::default(),
@@ -1196,7 +1208,7 @@ impl DocumentApp for NotePlayApp {
                 } else {
                     empty_note_document()
                 };
-                self.selected_ids.clear();
+                rt.selected_ids.clear();
                 ActionEmit::operations(vec![NoteOperation::SetDocument { document }])
             }
             "setFixtureJson" => {
@@ -1208,29 +1220,34 @@ impl DocumentApp for NotePlayApp {
                     return ActionEmit::default();
                 };
                 let text = raw.as_str().map(str::to_string).unwrap_or_else(|| raw.to_string());
-                let Ok(parsed) = serde_json::from_str::<Value>(&text) else {
-                    return ActionEmit::default();
+                let document = if let Ok(document) = note_dsl::parse_dsl(&text) {
+                    document
+                } else {
+                    let Ok(parsed) = serde_json::from_str::<Value>(&text) else {
+                        return ActionEmit::default();
+                    };
+                    if parsed.get("schema").and_then(|value| value.as_str()) != Some(NOTE_DOCUMENT_SCHEMA) {
+                        return ActionEmit::default();
+                    };
+                    let Ok(document) = serde_json::from_value::<NoteDocument>(parsed) else {
+                        return ActionEmit::default();
+                    };
+                    document
                 };
-                if parsed.get("schema").and_then(|value| value.as_str()) != Some(NOTE_DOCUMENT_SCHEMA) {
-                    return ActionEmit::default();
-                }
-                let Ok(document) = serde_json::from_value::<NoteDocument>(parsed) else {
-                    return ActionEmit::default();
-                };
-                self.selected_ids.clear();
+                rt.selected_ids.clear();
                 ActionEmit::operations(vec![NoteOperation::SetDocument { document }])
             }
             "saveDownload" => {
-                let data = serde_json::to_string_pretty(document).unwrap_or_else(|_| "{}".into());
+                let data = note_dsl::print_dsl(document);
                 ActionEmit::effect(HostEffect::DownloadMediaExport {
-                    filename: "🗒️semio.note.json".into(),
-                    mime_type: "application/json".into(),
+                    filename: "🗒️semio.note.dsl".into(),
+                    mime_type: "text/plain".into(),
                     data,
                     encoding: None,
                 })
             }
             "loadRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
-                accept: ".json,.note.json,application/json".into(),
+                accept: ".dsl,.note.dsl,.spk,.ops,application/octet-stream,text/plain".into(),
                 read_as: None,
                 import_action: "setFixtureJson".into(),
                 multiple: false,
@@ -1249,13 +1266,13 @@ impl DocumentApp for NotePlayApp {
                     .and_then(|value| value.get("selectIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok());
                 if let Some(ids) = select_ids {
-                    self.selected_ids = ids;
+                    rt.selected_ids = ids;
                 }
                 // 📷️ Camera rides in the same batch as content edits but never becomes a document
                 // operation — pull it into runtime state before diffing the rest of the batch.
                 for event in &events {
                     if let NoteCanvasEvent::SetCamera { camera } = event {
-                        self.camera = camera.clone();
+                        rt.camera = camera.clone();
                     }
                 }
                 let operations = note_ops_from_canvas_events(document, &events);
@@ -1278,45 +1295,48 @@ impl DocumentApp for NotePlayApp {
         let document = doc.projection;
         let labels = resolve_labels::<NotePlayLabels>(view_state);
         let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into());
+        let rt = self.runtime.borrow();
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(
                 document,
-                &self.camera,
-                &self.selected_ids,
-                self.hovered_id.as_deref(),
+                &rt.camera,
+                &rt.selected_ids,
+                rt.hovered_id.as_deref(),
                 &active_utility,
                 NOTE_PLAY_SURFACE_COMPOSITE,
                 "composite",
             ),
             NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(
                 document,
-                &self.camera,
-                &self.selected_ids,
-                self.hovered_id.as_deref(),
+                &rt.camera,
+                &rt.selected_ids,
+                rt.hovered_id.as_deref(),
                 &active_utility,
                 NOTE_PLAY_SURFACE_NAVIGATOR,
                 "navigator",
             ),
-            NOTE_PLAY_BODY_DOCUMENT => render_document_panel(document, &self.selected_ids, view_state, labels),
+            NOTE_PLAY_BODY_DOCUMENT => render_document_panel(document, &rt.selected_ids, view_state, labels),
             NOTE_PLAY_BODY_CATALOGUE => render_catalogue_panel(labels),
-            NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(document, &self.selected_ids, view_state, labels),
+            NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(document, &rt.selected_ids, view_state, labels),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, NoteDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let rt = self.runtime.borrow();
         let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| "selectDirect".into());
         HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(doc.projection, &self.camera, &self.selected_ids, &self.engagement_input)),
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_engagement(doc.projection, &rt.camera, &rt.selected_ids, &rt.engagement_input)),
             (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_engagement(&active_utility)),
         ])
     }
 
     fn window_measures(&self, doc: &DocumentView<'_, NoteDocument>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let rt = self.runtime.borrow();
         let labels = resolve_labels::<NotePlayLabels>(view_state);
         HashMap::from([
-            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, &self.camera, labels)),
-            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, &self.camera, labels)),
+            (NOTE_PLAY_WINDOW_COMPOSITE.to_string(), note_canvas_measures(doc.projection, &rt.camera, labels)),
+            (NOTE_PLAY_WINDOW_NAVIGATOR.to_string(), note_navigator_measures(doc.projection, &rt.camera, labels)),
         ])
     }
 
@@ -1718,7 +1738,7 @@ mod tests {
     }
 
     /// 🎥️ `setCamera`/`setCameraZoom` are View actions — they must never emit a `NoteOperation` (no VCS
-    /// edit, no undo entry) and instead write straight into `self.camera`, which the composite scene's
+    /// edit, no undo entry) and instead write straight into `rt.`, which the composite scene's
     /// `documentJson.camera` then reflects.
     #[test]
     fn set_camera_writes_runtime_and_emits_no_operations() {
@@ -1840,7 +1860,7 @@ mod tests {
         let save = app.handle_action("saveDownload", None, &ViewState::default(), &meta("local")).expect("save");
         assert!(save.operations.is_empty());
         assert!(
-            matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "🗒️semio.note.json"),
+            matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "🗒️semio.note.dsl"),
             "saveDownload must request a media export: {:?}",
             save.requested_effects
         );

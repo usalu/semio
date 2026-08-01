@@ -1368,7 +1368,7 @@ impl DocumentApp for RemodelPlayApp {
             "exportQcReport" => {
                 let Some(qc) = &doc.projection.results.qc else { return ActionEmit::default() };
                 let data = serde_json::to_string_pretty(qc).unwrap_or_default();
-                ActionEmit::effect(HostEffect::DownloadMediaExport { filename: "remodel-qc-report.json".into(), mime_type: "application/json".into(), data, encoding: None })
+                ActionEmit::effect(HostEffect::DownloadMediaExport { filename: "remodel-qc-report.ops".into(), mime_type: "text/plain".into(), data, encoding: None })
             }
             //#endregion 🔖️Export
             _ => ActionEmit::default(),

@@ -4,8 +4,8 @@ use block_3d::{Block3dDefinition, Block3dVortexKind, Block3dVortexTemplate, BLOC
 use block_3d_op::Block3dOperation;
 use block_shared::BlockRepresentation;
 use semio_framework_plugin::{
-    is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, ActionEmit, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode,
+    is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionDescriptor, ActionEmit, App,
+    AppLabelsOverlay, AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, SurfaceKind, UiFieldNode, UiInspectorFieldGroup,
     UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiTreeItemNode, ViewState,
 };
 use serde_json::{json, Value};
@@ -128,14 +128,20 @@ fn build_inspection_tree(definition: &Block3dDefinition, active_representation_i
         presence: UiPresence::default(),
         menu: None,
     });
-    ui_stack_vertical(vec![
-        text_field("block3d-play-inspector.name", labels.name, &definition.object_kind.name, "name"),
-        text_field("block3d-play-inspector.label", labels.label, &definition.object_kind.label, "label"),
-        UiNode::Field(UiFieldNode { presence: UiPresence::default(), id: "block3d-play-inspector.representation-field".into(), label: labels.representation.into(), child: Box::new(representation_select), description: None, required: None, error: None,
-            menu: None,
-        }),
-        ui_inspector_readonly_field("block3d-play-inspector.vortex-count", labels.vortices, definition.vortices.len().to_string()),
-    ])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        id: "block3d-play-inspector".into(),
+        label: labels.summary.into(),
+        default_open: Some(true),
+        presence: UiPresence::default(),
+        fields: vec![
+            text_field("block3d-play-inspector.name", labels.name, &definition.object_kind.name, "name"),
+            text_field("block3d-play-inspector.label", labels.label, &definition.object_kind.label, "label"),
+            UiNode::Field(UiFieldNode { presence: UiPresence::default(), id: "block3d-play-inspector.representation-field".into(), label: labels.representation.into(), child: Box::new(representation_select), description: None, required: None, error: None,
+                menu: None,
+            }),
+            ui_inspector_readonly_field("block3d-play-inspector.vortex-count", labels.vortices, definition.vortices.len().to_string()),
+        ],
+    }])
 }
 
 fn render_world(definition: &Block3dDefinition, active_representation_id: Option<&str>, labels: &Block3dLabels) -> UiNode {
@@ -350,6 +356,12 @@ mod tests {
         let node = app.render(BLOCK3D_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Representations"));
+        let inspector = app.render(BLOCK3D_BODY_INSPECTOR, None, &ViewState::default()).expect("render");
+        let inspector_json = serde_json::to_string(&inspector).unwrap();
+        assert!(inspector_json.contains("\"type\":\"tree\""), "inspection body must be a tree like document");
+        assert!(inspector_json.contains("Name"));
+        assert!(inspector_json.contains("Vortices"));
+        assert!(!inspector_json.contains("\"type\":\"stack\""), "inspection body must not be a free-form stack");
     }
 
     #[test]

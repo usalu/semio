@@ -186,6 +186,62 @@ pub enum DslValue {
     Object(Vec<(String, DslValue)>),
 }
 
+impl DslValue {
+    pub fn null() -> Self {
+        Self::Null
+    }
+
+    pub fn is_null(&self) -> bool {
+        matches!(self, Self::Null)
+    }
+
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            Self::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    pub fn as_f64(&self) -> Option<f64> {
+        match self {
+            Self::Number(n) => Some(*n),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Self::String(s) => Some(s.as_str()),
+            _ => None,
+        }
+    }
+
+    pub fn as_array(&self) -> Option<&[DslValue]> {
+        match self {
+            Self::Array(items) => Some(items.as_slice()),
+            _ => None,
+        }
+    }
+
+    pub fn as_object(&self) -> Option<&[(String, DslValue)]> {
+        match self {
+            Self::Object(entries) => Some(entries.as_slice()),
+            _ => None,
+        }
+    }
+
+    pub fn get(&self, key: &str) -> Option<&DslValue> {
+        let Self::Object(entries) = self else {
+            return None;
+        };
+        entries.iter().find(|(k, _)| k == key).map(|(_, v)| v)
+    }
+
+    pub fn object(entries: impl IntoIterator<Item = (String, DslValue)>) -> Self {
+        Self::Object(entries.into_iter().collect())
+    }
+}
+
 /// @emoji 🕸️ One endpoint (and optional edge) of a wire-literal.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WireNode {
@@ -1811,33 +1867,19 @@ pub fn canonicalize(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Resul
 }
 //#endregion 🔖️Canonicalize
 
-//#region 🔖️Serde
-impl From<serde_json::Value> for DslValue {
-    fn from(value: serde_json::Value) -> Self {
-        match value {
-            serde_json::Value::Null => DslValue::Null,
-            serde_json::Value::Bool(b) => DslValue::Bool(b),
-            serde_json::Value::Number(n) => DslValue::Number(n.as_f64().unwrap_or(0.0)),
-            serde_json::Value::String(s) => DslValue::String(s),
-            serde_json::Value::Array(items) => DslValue::Array(items.into_iter().map(DslValue::from).collect()),
-            serde_json::Value::Object(map) => DslValue::Object(map.into_iter().map(|(k, v)| (k, DslValue::from(v))).collect()),
-        }
-    }
+//#region 🔖️SerDe
+mod dsl_value_serde;
+
+/// @emoji 🔀️ Materializes a `serde::Serialize` value into a `DslValue` tree (no JSON text).
+pub fn to_dsl_value<T: serde::Serialize>(value: &T) -> Result<DslValue, String> {
+    value.serialize(dsl_value_serde::ValueSerializer).map_err(|error| error.to_string())
 }
 
-impl From<DslValue> for serde_json::Value {
-    fn from(value: DslValue) -> Self {
-        match value {
-            DslValue::Null => serde_json::Value::Null,
-            DslValue::Bool(b) => serde_json::Value::Bool(b),
-            DslValue::Number(n) => serde_json::json!(n),
-            DslValue::String(s) => serde_json::Value::String(s),
-            DslValue::Array(items) => serde_json::Value::Array(items.into_iter().map(serde_json::Value::from).collect()),
-            DslValue::Object(entries) => serde_json::Value::Object(entries.into_iter().map(|(k, v)| (k, serde_json::Value::from(v))).collect()),
-        }
-    }
+/// @emoji 🔀️ Hydrates a `serde::DeserializeOwned` value from a `DslValue` tree (no JSON text).
+pub fn from_dsl_value<T: serde::de::DeserializeOwned>(value: DslValue) -> Result<T, String> {
+    T::deserialize(&mut dsl_value_serde::ValueDeserializer::new(value)).map_err(|error| error.to_string())
 }
-//#endregion 🔖️Serde
+//#endregion 🔖️SerDe
 
 //#region 🔖️Language
 /// @emoji 🎨️ Generic editor surface over any `RecordSpec` — the generalization of
@@ -2277,13 +2319,12 @@ mod tests {
     }
 
     #[test]
-    fn primitive_dynamic_value_round_trips_and_bridges_to_serde_json() {
+    fn primitive_dynamic_value_round_trips() {
         let spec = value_spec();
         assert_round_trip("payload data={a=1 b=[1 2 3] c=\"x\"}", &spec);
         let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).expect("parse");
         let FieldValue::Value(dsl_value) = value.get(0).unwrap().clone() else { panic!() };
-        let json: serde_json::Value = dsl_value.into();
-        assert_eq!(json["a"], serde_json::json!(1.0));
+        assert_eq!(dsl_value.get("a"), Some(&DslValue::Number(1.0)));
     }
 
     // --- primitive 12: sparse patch records (Option<T> absent != null) ---

@@ -105,14 +105,13 @@ impl dsl::DslField for CatalogueValue {
         dsl::Shape::Value
     }
     fn to_value(&self) -> dsl::FieldValue {
-        let json = serde_json::to_value(self).expect("CatalogueValue always serializes to JSON");
-        dsl::FieldValue::Value(dsl::DslValue::from(json))
+        dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("CatalogueValue always serializes to DslValue"))
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Value(dsl_value) => {
-                let json = renormalize_whole_number_floats(serde_json::Value::from(dsl_value.clone()));
-                serde_json::from_value(json).map_err(|e| e.to_string())
+                let normalized = store::pack_rt::renormalize_whole_number_floats(dsl_value.clone());
+                dsl::from_dsl_value(normalized)
             }
             other => Err(format!("expected Value, found {other:?}")),
         }
@@ -183,7 +182,7 @@ pub struct CatalogueReference {
 /// 🧩️ Lossless extension bag for unknown fields.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ExtensionBag {
-    pub fields: BTreeMap<String, serde_json::Value>,
+    pub fields: BTreeMap<String, dsl::DslValue>,
 }
 
 /// 📅️ Lifecycle metadata.
@@ -729,14 +728,11 @@ pub mod part_5 {
             dsl::Shape::Value
         }
         fn to_value(&self) -> dsl::FieldValue {
-            let json = serde_json::to_value(self).expect("PartNumberRule always serializes to JSON");
-            dsl::FieldValue::Value(dsl::DslValue::from(json))
+            dsl::FieldValue::Value(dsl::to_dsl_value(self).expect("PartNumberRule always serializes to DslValue"))
         }
         fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
             match value {
-                dsl::FieldValue::Value(dsl_value) => {
-                    serde_json::from_value(serde_json::Value::from(dsl_value.clone())).map_err(|e| e.to_string())
-                }
+                dsl::FieldValue::Value(dsl_value) => dsl::from_dsl_value(dsl_value.clone()),
                 other => Err(format!("expected Value, found {other:?}")),
             }
         }

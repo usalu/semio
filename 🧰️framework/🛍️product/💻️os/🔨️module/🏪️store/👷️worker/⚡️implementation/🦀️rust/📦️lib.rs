@@ -54,6 +54,12 @@ impl BackboneWorkerHost {
         }
     }
 
+    #[wasm_bindgen(js_name = handleRequestBytes)]
+    pub fn handle_request_bytes(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
+        let json = std::str::from_utf8(bytes).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        self.handle_request_json(json)
+    }
+
     #[wasm_bindgen(js_name = handleRequestJson)]
     pub fn handle_request_json(&mut self, json: &str) -> Result<(), JsValue> {
         let request: WorkerRequest =
@@ -86,7 +92,7 @@ impl BackboneWorkerHost {
                                     event,
                                 };
                                 if let Ok(json) = serde_json::to_string(&response) {
-                                    post_worker_message(&json);
+                                    post_worker_message_bytes(json.as_bytes());
                                 }
                             }
                             Err(_) => break,
@@ -111,17 +117,24 @@ impl BackboneWorkerHost {
     #[wasm_bindgen(js_name = postReady)]
     pub fn post_ready() {
         if let Ok(json) = serde_json::to_string(&WorkerResponse::Ready) {
-            post_worker_message(&json);
+            post_worker_message_bytes(json.as_bytes());
         }
     }
 }
 
-fn post_worker_message(json: &str) {
+fn post_worker_message_bytes(bytes: &[u8]) {
     let global = js_sys::global();
     if let Ok(post_message) = js_sys::Reflect::get(&global, &JsValue::from_str("postMessage")) {
         if let Some(function) = post_message.dyn_ref::<js_sys::Function>() {
-            let _ = function.call1(&global, &JsValue::from_str(json));
+            let wire = js_sys::Object::new();
+            let _ = js_sys::Reflect::set(&wire, &JsValue::from_str("wire"), &js_sys::Uint8Array::from(bytes));
+            let _ = function.call1(&global, &wire);
         }
     }
+}
+
+#[allow(dead_code)]
+fn post_worker_message(json: &str) {
+    post_worker_message_bytes(json.as_bytes());
 }
 //#endregion 🔖️Worker

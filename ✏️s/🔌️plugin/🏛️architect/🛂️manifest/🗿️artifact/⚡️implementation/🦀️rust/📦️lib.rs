@@ -1,7 +1,8 @@
 //! 🏛️ Architect plugin — architectural program DocumentApp bundled as a hot-swappable WASM plugin.
 
+use store::DocumentDsl;
 use semio_s_plugin_architect_spine::{
-    adjacency_matrix, apply_template, audit_trail, build_report, detect_adjacency_conflicts, empty_plugin, export_json, export_registers_csv, import_json, import_registers_csv, normalize_pair, run_analysis, sample_plugin, search_plugin,
+    adjacency_matrix, apply_template, audit_trail, build_report, detect_adjacency_conflicts, empty_plugin, export_registers_csv, import_registers_csv, normalize_pair, run_analysis, sample_plugin, search_plugin,
     status_summary, trace_chain, trace_impact, undirected_edges, validate_plugin, Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, AnalysisResult, ConnectionKind, EngagementLevel, EntityHeader, EntityId, Function,
     FunctionKind, InfluenceLevel, Issue, IssueSeverity, MergeStrategy, Program, ProgramElement, ProgramElementKind, ProgramElementPatch, ProgramOperation, ProgramReport, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, SearchQuery,
     Stakeholder, StakeholderPatch, TextField, TraceChain, TraceKind, TraceLink, UserCategory, UserProfile, ValidationStatus, ARCHITECT_PROGRAM_SCHEMA,
@@ -15,6 +16,7 @@ use semio_framework_plugin::{
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use protocol::CollectionOperation;
 
@@ -167,7 +169,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
 }
 
 fn tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
-    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), presence: UiPresence::default(), items },
+    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), presence: UiPresence::default(), items }
 }
 
 fn tree_node(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
@@ -929,8 +931,7 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         diff_view: None,
         event_feed: None,
         menu: None,
-    },
-    menu: None,
+    }
 }
 
 fn parse_entity_id(value: Option<&Value>, key: &str) -> Option<EntityId> {
@@ -1279,7 +1280,7 @@ fn build_catalogue_tree() -> UiNode {
                     tree_item_with_action("architect-catalogue.analysis", "Run Analysis", None, architect_action("runAnalysis", Some(json!({ "analysisKind": "gap" })))),
                     tree_item_with_action("architect-catalogue.report", "Run Report", None, architect_action("runReport", Some(json!({ "reportKind": "executiveSummary" })))),
                     tree_item_with_action("architect-catalogue.export", "Export Program", None, architect_action("exportProgram", None)),
-                    tree_item_with_action("architect-catalogue.import", "Import Program", None, architect_action("importProgram", Some(json!({ "json": "" })))),
+                    tree_item_with_action("architect-catalogue.import", "Import Program", None, architect_action("importProgramRequest", None)),
                     tree_item_with_action("architect-catalogue.export-csv", "Export Registers CSV", None, architect_action("exportRegistersCsv", None)),
                     tree_item_with_action("architect-catalogue.import-csv", "Import Registers CSV", None, architect_action("importRegistersCsv", Some(json!({ "csv": "", "strategy": "upsert" })))),
                     tree_item_with_action("architect-catalogue.apply-template", "Apply Template", None, architect_action("applyTemplate", Some(json!({ "templateId": "" })))),
@@ -1410,15 +1411,20 @@ fn build_inspection_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> U
 //#endregion 🔖️Panels
 
 //#region 🔖️ArchitectApp
-#[derive(Default)]
 struct ArchitectApp {
-    runtime: ArchitectPlayRuntime,
+    runtime: RefCell<ArchitectPlayRuntime>,
+}
+
+impl Default for ArchitectApp {
+    fn default() -> Self {
+        Self { runtime: RefCell::new(ArchitectPlayRuntime::default()) }
+    }
 }
 
 impl ArchitectApp {
-    fn ensure_default_register(&mut self) {
-        if self.runtime.active_register.is_empty() {
-            self.runtime.active_register = "elements".into();
+    fn ensure_default_register(runtime: &mut ArchitectPlayRuntime) {
+        if runtime.active_register.is_empty() {
+            runtime.active_register = "elements".into();
         }
     }
 }
@@ -1442,19 +1448,20 @@ impl DocumentApp for ArchitectApp {
     }
 
     fn handle_action(&self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Program>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> ActionEmit<ProgramOperation> {
-        self.ensure_default_register();
+        let mut rt = self.runtime.borrow_mut();
+        Self::ensure_default_register(&mut rt);
         let program = doc.projection;
         match action {
             "setSelection" => {
                 if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()) {
-                    self.runtime.selected_ids = ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect();
+                    rt.selected_ids = ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect();
                 }
                 ActionEmit::default()
             }
             "selectRegister" => {
                 if let Some(register) = parse_register_id(args) {
-                    self.runtime.active_register = register;
-                    self.runtime.selected_ids.clear();
+                    rt.active_register = register;
+                    rt.selected_ids.clear();
                 }
                 ActionEmit::default()
             }
@@ -1474,8 +1481,8 @@ impl DocumentApp for ArchitectApp {
                 let Some((operation, id)) = add_register_item_operation(program, &register, label) else {
                     return ActionEmit::default();
                 };
-                self.runtime.active_register = register;
-                self.runtime.selected_ids = vec![id.to_string()];
+                rt.active_register = register;
+                rt.selected_ids = vec![id.to_string()];
                 ActionEmit::operations(vec![operation])
             }
             "removeRegisterItem" => {
@@ -1485,7 +1492,7 @@ impl DocumentApp for ArchitectApp {
                 let Some(entity_id) = parse_entity_id_from_args(args, "entityId") else {
                     return ActionEmit::default();
                 };
-                self.runtime.selected_ids.retain(|selected| selected != &entity_id.0);
+                rt.selected_ids.retain(|selected| selected != &entity_id.0);
                 let mut operations = Vec::new();
                 if let Some(operation) = remove_register_item_operation(&register, entity_id.clone()) {
                     operations.push(operation);
@@ -1532,10 +1539,10 @@ impl DocumentApp for ArchitectApp {
             }
             "search" => {
                 if let Some(query) = args.and_then(|value| value.get("query")).and_then(|value| value.as_str()) {
-                    self.runtime.search_query = query.into();
-                    let hits = search_plugin(program, &SearchQuery { keywords: query.split_whitespace().map(str::to_string).collect(), ..SearchQuery::default() }, None, Some(&mut self.runtime.search_history));
-                    self.runtime.selected_ids = hits.iter().take(8).map(|hit| hit.entity_id.to_string()).collect();
-                    store_runtime_json(&mut self.runtime, &hits);
+                    rt.search_query = query.into();
+                    let hits = search_plugin(program, &SearchQuery { keywords: query.split_whitespace().map(str::to_string).collect(), ..SearchQuery::default() }, None, Some(&mut rt.search_history));
+                    rt.selected_ids = hits.iter().take(8).map(|hit| hit.entity_id.to_string()).collect();
+                    store_runtime_json(&mut rt, &hits);
                 }
                 ActionEmit::default()
             }
@@ -1573,8 +1580,8 @@ impl DocumentApp for ArchitectApp {
                 let name = args.and_then(|value| value.get("name")).and_then(|value| value.as_str()).unwrap_or("New Room");
                 let element = default_element(name);
                 let id = element.header.id.to_string();
-                self.runtime.selected_ids = vec![id];
-                self.runtime.active_register = "elements".into();
+                rt.selected_ids = vec![id];
+                rt.active_register = "elements".into();
                 ActionEmit::operations(vec![ProgramOperation::Elements(CollectionOperation::Add { id: element.header.id.clone(), at: program.elements.len(), item: element })])
             }
             "removeElement" => {
@@ -1582,7 +1589,7 @@ impl DocumentApp for ArchitectApp {
                 let Some(id) = id else {
                     return ActionEmit::default();
                 };
-                self.runtime.selected_ids.retain(|selected| selected != id);
+                rt.selected_ids.retain(|selected| selected != id);
                 let mut operations = vec![ProgramOperation::Elements(CollectionOperation::Remove { id: EntityId(id.into()) })];
                 for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id) {
                     operations.push(ProgramOperation::ClearAdjacency { id: adjacency.header.id.clone() });
@@ -1591,23 +1598,23 @@ impl DocumentApp for ArchitectApp {
             }
             "runValidation" => {
                 let diagnostics = validate_plugin(program);
-                store_runtime_json(&mut self.runtime, &diagnostics);
+                store_runtime_json(&mut rt, &diagnostics);
                 ActionEmit::default()
             }
             "runAnalysis" => {
                 let kind = analysis_kind_from_args(args);
                 let result = run_analysis(program, kind);
                 let record = analysis_record_from(program, kind, &result);
-                self.runtime.last_analysis = Some(result.clone());
-                store_runtime_json(&mut self.runtime, &result);
+                rt.last_analysis = Some(result.clone());
+                store_runtime_json(&mut rt, &result);
                 ActionEmit::operations(vec![ProgramOperation::Analyses(CollectionOperation::Add { id: record.header.id.clone(), at: program.analyses.len(), item: record })])
             }
             "runReport" => {
                 let kind = report_kind_from_args(args);
                 let report = build_report(program, kind);
                 let record = report_record_from(program, kind, &report);
-                self.runtime.last_report = Some(report.clone());
-                store_runtime_json(&mut self.runtime, &report);
+                rt.last_report = Some(report.clone());
+                store_runtime_json(&mut rt, &report);
                 ActionEmit::operations(vec![ProgramOperation::Reports(CollectionOperation::Add { id: record.header.id.clone(), at: program.reports.len(), item: record })])
             }
             "applyTemplate" => {
@@ -1640,17 +1647,32 @@ impl DocumentApp for ArchitectApp {
                 ActionEmit::operations(vec![ProgramOperation::SetProgram { program: Box::new(next) }])
             }
             "exportProgram" => {
-                let json_text = export_json(program).unwrap_or_else(|error| json!({ "error": error.to_string() }).to_string());
-                ActionEmit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.architect.json", program.meta.document_id), mime_type: "application/json".into(), data: json_text, encoding: None })
+                let dsl_text = store::DocumentDsl::print_dsl(program);
+                ActionEmit::effect(HostEffect::DownloadMediaExport {
+                    filename: format!("{}.architect.dsl", program.meta.document_id),
+                    mime_type: "text/plain".into(),
+                    data: dsl_text,
+                    encoding: None,
+                })
             }
+            "importProgramRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
+                accept: ".dsl,.architect.dsl,.spk,.ops,application/octet-stream,text/plain".into(),
+                read_as: None,
+                import_action: "importProgram".into(),
+                multiple: false,
+            }),
             "importProgram" => {
-                let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) else {
+                let Some(text) = args
+                    .and_then(|value| value.get("payload"))
+                    .or_else(|| args.and_then(|value| value.get("dsl")))
+                    .and_then(|value| value.as_str())
+                else {
                     return ActionEmit::default();
                 };
-                let Ok(next) = import_json(json_text) else {
+                let Ok(next) = <Program as store::DocumentDsl>::parse_dsl(text) else {
                     return ActionEmit::default();
                 };
-                self.runtime.selected_ids.clear();
+                rt.selected_ids.clear();
                 ActionEmit::operations(vec![ProgramOperation::SetProgram { program: Box::new(next) }])
             }
             "nodeGraphEdit" => {
@@ -1690,13 +1712,13 @@ impl DocumentApp for ArchitectApp {
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(Value::as_str) {
                     if let Ok(camera) = serde_json::from_str::<GraphCamera>(viewport_json) {
-                        self.runtime.graph_camera = camera;
+                        rt.graph_camera = camera;
                     }
                 }
                 ActionEmit::default()
             }
             "setAdjacencyFilter" => {
-                self.runtime.adjacency_kind_filter = parse_adjacency_kind(args);
+                rt.adjacency_kind_filter = parse_adjacency_kind(args);
                 ActionEmit::default()
             }
             _ => ActionEmit::default(),
@@ -1705,15 +1727,16 @@ impl DocumentApp for ArchitectApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Program>, _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>, _view_state: &ViewState) -> UiNode {
         let program = doc.projection;
+        let rt = self.runtime.borrow();
         match body_key {
-            ARCHITECT_BODY_ADJACENCY => render_adjacency_body(program, &self.runtime),
-            ARCHITECT_BODY_GRAPH => render_graph_body(program, &self.runtime),
-            ARCHITECT_BODY_REGISTER => render_register_body(program, &self.runtime),
-            ARCHITECT_BODY_REPORT => render_report_body(&self.runtime),
-            ARCHITECT_BODY_TRACE => render_trace_body(program, &self.runtime),
-            ARCHITECT_BODY_DOCUMENT => build_document_tree(program, &self.runtime),
+            ARCHITECT_BODY_ADJACENCY => render_adjacency_body(program, &rt),
+            ARCHITECT_BODY_GRAPH => render_graph_body(program, &rt),
+            ARCHITECT_BODY_REGISTER => render_register_body(program, &rt),
+            ARCHITECT_BODY_REPORT => render_report_body(&rt),
+            ARCHITECT_BODY_TRACE => render_trace_body(program, &rt),
+            ARCHITECT_BODY_DOCUMENT => build_document_tree(program, &rt),
             ARCHITECT_BODY_CATALOGUE => build_catalogue_tree(),
-            ARCHITECT_BODY_INSPECTION => build_inspection_tree(program, &self.runtime),
+            ARCHITECT_BODY_INSPECTION => build_inspection_tree(program, &rt),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1832,7 +1855,7 @@ fn create_architect_app() -> App {
             .action_args("runAnalysis", vec![ActionArgDef::select("analysisKind", "Analysis", analysis_kind_picker_options())])
             .action_args("runReport", vec![ActionArgDef::select("reportKind", "Report", report_kind_picker_options())])
             .action_args("search", vec![ActionArgDef::text("query", "Query")])
-            .action_args("importProgram", vec![ActionArgDef::text("json", "Program JSON")])
+            .action_args("importProgram", vec![ActionArgDef::text("payload", "Program DSL")])
             .default_layout(create_default_layout(
                 &[ARCHITECT_WINDOW_ADJACENCY.into(), ARCHITECT_WINDOW_GRAPH.into(), ARCHITECT_WINDOW_REGISTER.into(), ARCHITECT_WINDOW_REPORT.into()],
                 "row",

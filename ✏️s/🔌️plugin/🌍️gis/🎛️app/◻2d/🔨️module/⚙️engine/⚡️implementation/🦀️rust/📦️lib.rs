@@ -5,6 +5,14 @@ use gis2d_dsl::REUSE_MAP_EXAMPLE_TEXT;
 use semio_framework_plugin::{DwgDrawing, DwgGeometry};
 use serde_json::{json, Value};
 
+fn value_to_dsl(value: &Value) -> dsl::DslValue {
+    dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)
+}
+
+fn dsl_to_value(value: &dsl::DslValue) -> Value {
+    dsl::from_dsl_value(value.clone()).unwrap_or(Value::Null)
+}
+
 //#region 🔖️DocumentHelpers
 pub fn empty_gis_map_projection() -> GisMapDocument {
     GisMapDocument::default()
@@ -23,7 +31,7 @@ pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapDocument {
                     .iter()
                     .filter_map(|item| {
                         let id = item.get("id").and_then(|value| value.as_str())?.to_string();
-                        Some(MapFeature { id, data: item.clone() })
+                        Some(MapFeature { id, data: value_to_dsl(item) })
                     })
                     .collect()
             })
@@ -35,7 +43,7 @@ pub fn gis_map_document_from_descriptor_json(json: &str) -> GisMapDocument {
 /// 📤️ Rebuilds the `{ positions, routes, regions }` map-descriptor JSON the `MapHost`/renderer consume,
 /// emitting each feature's opaque payload.
 pub fn gis_map_descriptor_json(document: &GisMapDocument) -> String {
-    let payloads = |features: &[MapFeature]| -> Vec<Value> { features.iter().map(|feature| feature.data.clone()).collect() };
+    let payloads = |features: &[MapFeature]| -> Vec<Value> { features.iter().map(|feature| dsl_to_value(&feature.data)).collect() };
     serde_json::json!({
         "positions": payloads(&document.positions),
         "routes": payloads(&document.routes),
@@ -80,7 +88,7 @@ pub fn gis2d_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Strin
         .enumerate()
         .map(|(index, point)| {
             let id = format!("dwg-{index}");
-            MapFeature { id: id.clone(), data: json!({ "id": id, "lon": point[0], "lat": point[1] }) }
+            MapFeature { id: id.clone(), data: value_to_dsl(&json!({ "id": id, "lon": point[0], "lat": point[1] })) }
         })
         .collect();
     serde_json::to_value(GisMapDocument { positions, routes: Vec::new(), regions: Vec::new() }).map_err(|error| error.to_string())

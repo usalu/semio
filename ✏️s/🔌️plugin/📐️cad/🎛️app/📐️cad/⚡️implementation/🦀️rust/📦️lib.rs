@@ -109,7 +109,7 @@ pub struct CadSolid {
 #[serde(rename_all = "camelCase")]
 pub struct CadGeometry {
     #[serde(default)]
-    pub anchors: Vec<Value>,
+    pub anchors: Vec<dsl::DslValue>,
     #[serde(default)]
     pub vertices: Vec<CadVertex>,
     #[serde(default)]

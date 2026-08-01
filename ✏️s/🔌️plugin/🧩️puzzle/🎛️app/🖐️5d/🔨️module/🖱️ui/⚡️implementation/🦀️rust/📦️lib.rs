@@ -7,7 +7,7 @@ use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
 use semio_framework_plugin::{
     apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
-    merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
+    merge_world_selection_ids, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
     ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, ui_tree_stamp_presence, IconName,
     WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, SelectionSet};
@@ -2111,12 +2111,19 @@ fn build_inspector_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Ui
             return build_fastener_inspector(fastener, envelope.runtime.selection.fastener_ids.len(), labels);
         }
     }
-    ui_stack_vertical(vec![
-        ui_text(format!("{}: {}", labels.schema, envelope.document.schema)),
-        ui_text(format!("{}: {}", labels.parts, envelope.document.parts.len())),
-        ui_text(format!("{}: {}", labels.fasteners, envelope.document.fasteners.len())),
-        ui_text(format!("{}: {}", labels.utility, envelope.active_utility)),
-    ])
+    ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+        id: "puzzle5d-play-inspector.empty".into(),
+        label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+        default_open: Some(true),
+        children: vec![
+            ui_text(format!("{}: {}", labels.schema, envelope.document.schema)),
+            ui_text(format!("{}: {}", labels.parts, envelope.document.parts.len())),
+            ui_text(format!("{}: {}", labels.fasteners, envelope.document.fasteners.len())),
+            ui_text(format!("{}: {}", labels.utility, envelope.active_utility)),
+        ],
+        presence: UiPresence::default(),
+        menu: None,
+    }])
 }
 //#endregion 🔖️Panels
 

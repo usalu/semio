@@ -304,7 +304,8 @@ impl WasmPluginRuntime {
         use std::sync::atomic::{AtomicU64, Ordering};
         static SEQ: AtomicU64 = AtomicU64::new(1);
         let seq = SEQ.fetch_add(1, Ordering::Relaxed);
-        let request_bytes = store::pack_rt::encode_wire_value(&request);
+        let request_dsl = dsl::to_dsl_value(&request).map_err(|error| PluginHostError::Plugin(error))?;
+        let request_bytes = store::pack_rt::encode_wire_value(&request_dsl);
         let command = AppCommand::ContextMenu { seq, request: request_bytes };
         let frames = self.exchange(instance_id, vec![encode_app_command(&command)])?;
         for bytes in frames {
@@ -312,7 +313,7 @@ impl WasmPluginRuntime {
             match frame {
                 AppFrame::ContextMenu { in_reply_to, items } if in_reply_to == seq => {
                     let value = store::pack_rt::decode_wire_value(&items).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
-                    return serde_json::from_value(value).map_err(PluginHostError::Json);
+                    return dsl::from_dsl_value(value).map_err(|error| PluginHostError::Plugin(error));
                 }
                 AppFrame::Error { in_reply_to, code, message } if in_reply_to == Some(seq) => {
                     return Err(PluginHostError::Plugin(format!("{code}: {message}")));
@@ -367,7 +368,7 @@ impl WasmPluginRuntime {
         let wire_bytes = bindings.semio_framework_plugin().call_manifest(&mut store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         let value = store::pack_rt::decode_wire_value(&wire_bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
         let value = store::pack_rt::renormalize_whole_number_floats(value);
-        Ok(serde_json::from_value(value)?)
+        Ok(dsl::from_dsl_value(value).map_err(|error| PluginHostError::Plugin(error))?)
     }
 
     fn instantiate(mut store: Store<HostState>, component: &Component, linker: &Linker<HostState>) -> Result<(Store<HostState>, PluginWorld), PluginHostError> {

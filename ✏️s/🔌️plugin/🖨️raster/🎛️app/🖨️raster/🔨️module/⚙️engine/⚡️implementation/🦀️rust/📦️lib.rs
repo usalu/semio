@@ -138,7 +138,7 @@ fn create_adjustment_layer() -> RasterLayerNode {
         blend_mode: "normal".into(),
         transform: RasterTransform::default(),
         adjustment_kind: "brightnessContrast".into(),
-        params: serde_json::Map::new(),
+        params: std::collections::BTreeMap::new(),
     }
 }
 

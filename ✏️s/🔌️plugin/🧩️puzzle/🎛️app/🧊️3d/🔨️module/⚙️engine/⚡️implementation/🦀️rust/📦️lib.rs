@@ -219,7 +219,7 @@ pub struct ObjectKind {
     #[serde(rename = "meshUrl", default)]
     mesh_url: Option<String>,
     #[serde(default)]
-    scale: Option<serde_json::Value>,
+    scale: Option<dsl::DslValue>,
     #[serde(default)]
     vortices: Vec<ObjectKindVortexTemplate>,
 }
@@ -268,7 +268,7 @@ pub struct FixtureObject {
     pub mesh_url: Option<String>,
     pub origin: Vec3,
     pub orientation: Option<Quat>,
-    pub scale: Option<serde_json::Value>,
+    pub scale: Option<dsl::DslValue>,
     #[serde(default)]
     pub vortices: Vec<VortexProps>,
     /// 🪣️ Live-viewport-only tag (never persisted to the document): this object's 0-based position in
@@ -307,7 +307,7 @@ pub struct WorldVolumeProps {
     #[serde(default)]
     pub orientation: Option<Quat>,
     #[serde(default)]
-    pub scale: Option<serde_json::Value>,
+    pub scale: Option<dsl::DslValue>,
 }
 
 /// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
@@ -359,7 +359,7 @@ pub struct BrushPreviewState {
     pub origin: Vec3,
     pub orientation: Quat,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scale: Option<serde_json::Value>,
+    pub scale: Option<dsl::DslValue>,
 }
 
 /// 🎯️ Public so `Puzzle3dEngineOutcome::BrushCandidates` can hand this back to callers (`ui` slot) as
@@ -389,7 +389,7 @@ pub struct BrushPlacePayload {
     pub origin: Vec3,
     pub orientation: Quat,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scale: Option<serde_json::Value>,
+    pub scale: Option<dsl::DslValue>,
 }
 
 /// 🎯️ A suggestion-popup preview accepted as-is becomes a placement at the exact same pose — the one
@@ -494,14 +494,14 @@ fn negate_vec3(v: Vec3) -> Vec3 {
     [-v[0], -v[1], -v[2]]
 }
 
-fn vec3_scale(v: Vec3, scale: &Option<serde_json::Value>) -> Vec3 {
+fn vec3_scale(v: Vec3, scale: &Option<dsl::DslValue>) -> Vec3 {
     match scale {
         None => v,
-        Some(serde_json::Value::Number(n)) => {
-            let s = n.as_f64().unwrap_or(1.0);
+        Some(dsl::DslValue::Number(n)) => {
+            let s = *n;
             [v[0] * s, v[1] * s, v[2] * s]
         }
-        Some(serde_json::Value::Array(arr)) if arr.len() >= 3 => {
+        Some(dsl::DslValue::Array(arr)) if arr.len() >= 3 => {
             let sx = arr[0].as_f64().unwrap_or(1.0);
             let sy = arr[1].as_f64().unwrap_or(1.0);
             let sz = arr[2].as_f64().unwrap_or(1.0);
@@ -538,7 +538,7 @@ fn anti_parallel_brush_orientation(target_dir: Vec3) -> Quat {
     quaternion_from_180_degree_axis(axis)
 }
 
-fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<serde_json::Value>) -> Pose3d {
+fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<dsl::DslValue>) -> Pose3d {
     let q = unit_quat_from_cad(orientation);
     let t = Vec3d::new(origin[0] as f32, origin[1] as f32, origin[2] as f32);
     Pose3d::from_parts(t, q)
@@ -547,7 +547,7 @@ fn pose_isometry(origin: Vec3, orientation: Quat, _scale: &Option<serde_json::Va
 fn compute_brush_placement_pose(
     source_local_position: Vec3,
     source_local_direction: Vec3,
-    scale: &Option<serde_json::Value>,
+    scale: &Option<dsl::DslValue>,
     target_world_position: Vec3,
     target_world_direction: Vec3,
     reference_orientation: Option<Quat>,
@@ -625,13 +625,13 @@ fn world_bounds(body: &CollisionBody, world: &Pose3d) -> (Point3d, Point3d) {
     (min, max)
 }
 
-fn volume_scale_vec(scale: &Option<serde_json::Value>) -> [f32; 3] {
+fn volume_scale_vec(scale: &Option<dsl::DslValue>) -> [f32; 3] {
     match scale {
-        Some(serde_json::Value::Number(n)) => {
-            let s = n.as_f64().unwrap_or(1.0) as f32;
+        Some(dsl::DslValue::Number(n)) => {
+            let s = *n as f32;
             [s, s, s]
         }
-        Some(serde_json::Value::Array(values)) if values.len() == 3 => {
+        Some(dsl::DslValue::Array(values)) if values.len() == 3 => {
             let read = |index: usize| values.get(index).and_then(|v| v.as_f64()).unwrap_or(1.0) as f32;
             [read(0), read(1), read(2)]
         }

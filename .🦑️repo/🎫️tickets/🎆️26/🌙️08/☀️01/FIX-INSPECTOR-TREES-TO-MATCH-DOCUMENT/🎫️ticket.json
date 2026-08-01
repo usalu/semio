@@ -1,0 +1,19 @@
+{
+  "title": "Fix Inspector Trees To Match Document",
+  "status": "closed",
+  "goal": "ui/side-panels",
+  "summary": "Side-panel Inspection bodies must be UiTreeNode (like Document), not Stack of Fields.",
+  "created": "2026-08-01",
+  "client": "cursor-chat",
+  "llm": "gpt-5-5",
+  "closed": "2026-08-01",
+  "files": [
+    "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ufe0fblock/\ud83c\udf9b\ufe0fapp/\u25fb2d/.../\ud83d\udce6\ufe0flib.rs",
+    "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ufe0fblock/\ud83c\udf9b\ufe0fapp/\ufe0f3d/.../\ud83d\udce6\ufe0flib.rs",
+    "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ufe0fblock/\ud83c\udf9b\ufe0fapp/\ud83d\udd90\ufe0f5d/.../\ud83d\udce6\ufe0flib.rs",
+    "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ud83c\udf3f\ufe0fvcs/.../\ud83d\udce6\ufe0flib.rs",
+    "\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugin/\ud83d\udcdc\ufe0fimperative/.../\ud83d\udce6\ufe0flib.rs",
+    "multiple empty-state inspector fallbacks",
+    "\ufe0fframework/.../\ud83d\uddb1\ufe0fui/.../\ud83d\udce6\ufe0flib.rs (tree_icon_id)"
+  ]
+}

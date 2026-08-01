@@ -203,7 +203,7 @@ pub enum WidgetDsl {
     OutputPreview { id: String, #[dsl(table)] preview: Vec<DictEntryDsl>, expanded: Vec<String> },
     OutputAction { id: String, action: String },
     OutputExport { id: String, format: String },
-    Cluster { id: String, name: String, tree: serde_json::Value, flow: serde_json::Value },
+    Cluster { id: String, name: String, tree: dsl::DslValue, flow: dsl::DslValue },
 }
 
 pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
@@ -219,7 +219,7 @@ pub fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
         Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
         Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
         Widget::Cluster { id, name, tree, flow } => {
-            WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: serde_json::to_value(tree).unwrap_or(serde_json::Value::Null), flow: serde_json::to_value(flow).unwrap_or(serde_json::Value::Null) }
+            WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: dsl::to_dsl_value(tree).unwrap_or(dsl::DslValue::Null), flow: dsl::to_dsl_value(flow).unwrap_or(dsl::DslValue::Null) }
         }
     }
 }
@@ -237,8 +237,8 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
         WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster {
             id,
             name,
-            tree: serde_json::from_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree JSON: {error}"), store::TextSpan::at(1, 1)))?,
-            flow: serde_json::from_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow JSON: {error}"), store::TextSpan::at(1, 1)))?,
+            tree: dsl::from_dsl_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree: {error}"), store::TextSpan::at(1, 1)))?,
+            flow: dsl::from_dsl_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow: {error}"), store::TextSpan::at(1, 1)))?,
         },
     })
 }
@@ -250,15 +250,23 @@ pub fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
 pub struct FormGenerationDsl {
     id: String,
     name: String,
-    values: serde_json::Map<String, serde_json::Value>,
+    values: std::collections::BTreeMap<String, dsl::DslValue>,
 }
 
 pub fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
-    FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.clone() }
+    FormGenerationDsl {
+        id: generation.id.clone(),
+        name: generation.name.clone(),
+        values: generation.values.iter().map(|(key, value)| (key.clone(), dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))).collect(),
+    }
 }
 
 pub fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration {
-    FormGeneration { id: generation.id, name: generation.name, values: generation.values }
+    FormGeneration {
+        id: generation.id,
+        name: generation.name,
+        values: generation.values.into_iter().filter_map(|(key, value)| dsl::from_dsl_value(value).ok().map(|json| (key, json))).collect(),
+    }
 }
 
 /// 🧾️ Local twin of `Procedural3dDocument`, flattening `FlowFixture`/`GenerationPlayState`'s fields

@@ -20,6 +20,8 @@ pub use dsl_core::*;
 pub use dsl_derive::{DslDocument, DslEnum, DslOps, DslRecord, DslScalar};
 pub use dsl_schema::*;
 
+pub use dsl_schema::{from_dsl_value, to_dsl_value};
+
 //#region 🔖️Field
 /// @emoji 🔗️ Bridges a concrete Rust field type to the engine's `Shape`/`FieldValue` — every
 /// primitive implements it directly; `#[derive(DslRecord)]`/`#[derive(DslScalar)]` implement it
@@ -203,40 +205,17 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
     }
 }
 
-/// @emoji 🌱️ Schema-less escape hatch: a bare `serde_json::Value` field binds as `Shape::Value`
-/// (dynamic `DslValue` literal) via the engine's existing serde_json bridge — for technology
-/// fields that are genuinely untyped (arbitrary adjustment params, freeform scale/metadata) rather
-/// than a fixed record shape.
-impl DslField for serde_json::Value {
+/// @emoji 🌱️ Schema-less dynamic literal — binds as `Shape::Value`.
+impl DslField for DslValue {
     fn shape() -> Shape {
         Shape::Value
     }
     fn to_value(&self) -> FieldValue {
-        FieldValue::Value(DslValue::from(self.clone()))
+        FieldValue::Value(self.clone())
     }
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
-            FieldValue::Value(dsl_value) => Ok(serde_json::Value::from(dsl_value.clone())),
-            other => Err(format!("expected Value, found {other:?}")),
-        }
-    }
-}
-
-/// @emoji 🌱️ Same escape hatch as `serde_json::Value`, for the `serde_json::Map` a `#[serde(tag =
-/// "kind")]` catch-all/adjustment-params field is typed as — bridges through a JSON object literal.
-impl DslField for serde_json::Map<String, serde_json::Value> {
-    fn shape() -> Shape {
-        Shape::Value
-    }
-    fn to_value(&self) -> FieldValue {
-        FieldValue::Value(DslValue::from(serde_json::Value::Object(self.clone())))
-    }
-    fn from_value(value: &FieldValue) -> Result<Self, String> {
-        match value {
-            FieldValue::Value(dsl_value) => match serde_json::Value::from(dsl_value.clone()) {
-                serde_json::Value::Object(map) => Ok(map),
-                other => Err(format!("expected a JSON object, found {other:?}")),
-            },
+            FieldValue::Value(dsl_value) => Ok(dsl_value.clone()),
             other => Err(format!("expected Value, found {other:?}")),
         }
     }
@@ -570,15 +549,21 @@ mod tests {
     }
 
     #[test]
-    fn serde_json_value_and_map_dsl_field_impls_round_trip_through_dsl_value() {
-        // `DslValue::Number` is a single `f64` variant (no int/float distinction, matching dsl_core's
-        // canonical number policy elsewhere) — literals here are already floats so the round trip is exact.
-        let value = serde_json::json!({ "a": 1.0, "b": [true, null, "x"] });
-        assert_eq!(serde_json::Value::from_value(&value.to_value()), Ok(value));
+    fn dsl_value_dsl_field_round_trips_through_record_value() {
+        let value = DslValue::object([
+            ("a".into(), DslValue::Number(1.0)),
+            ("b".into(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null, DslValue::String("x".into())])),
+        ]);
+        assert_eq!(DslValue::from_value(&value.to_value()), Ok(value));
 
-        let mut map = serde_json::Map::new();
-        map.insert("curves".to_string(), serde_json::json!([[0.0, 0.0], [1.0, 1.0]]));
-        assert_eq!(<serde_json::Map<String, serde_json::Value>>::from_value(&map.to_value()), Ok(map));
+        let map = DslValue::object([(
+            "curves".into(),
+            DslValue::Array(vec![
+                DslValue::Array(vec![DslValue::Number(0.0), DslValue::Number(0.0)]),
+                DslValue::Array(vec![DslValue::Number(1.0), DslValue::Number(1.0)]),
+            ]),
+        )]);
+        assert_eq!(DslValue::from_value(&map.to_value()), Ok(map));
     }
 
     // --- end-to-end derive tests: mirrors the norm-family "flat scalar document" worked example ---

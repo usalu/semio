@@ -13,4 +13,3 @@ path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛�
 [dependencies]
 reasoning_wires = { path = "../../../../../../../../../✏️s/🔌️plugin/💡️reasoning/🎛️app/🔌️wires/⚡️implementation/🦀️rust", package = "semio-s-app-reasoning-wires" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
-serde_json = "1.0.140"

@@ -3,6 +3,7 @@
 use std::cell::Cell;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
+use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 
 use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
@@ -262,9 +263,9 @@ pub struct IoPortSpec {
     #[dsl(key = "type")]
     pub value_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub default: Option<serde_json::Value>,
+    pub default: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<serde_json::Value>,
+    pub value: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
     #[serde(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
@@ -376,7 +377,7 @@ pub enum DagPreviewContent {
         src: String,
     },
     Tree {
-        json: serde_json::Value,
+        json: DslValue,
     }
 }
 
@@ -434,21 +435,21 @@ fn clamp_preview_image_size(w: f64, h: f64) -> (f64, f64) {
     ((w * scale).max(1.0), (h * scale).max(1.0))
 }
 
-fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+fn preview_tree_collapsed_summary(value: &DslValue) -> String {
     match value {
-        serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
-        serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
-        serde_json::Value::String(s) => format!("\"{s}\""),
-        serde_json::Value::Number(n) => n.to_string(),
-        serde_json::Value::Bool(b) => b.to_string(),
-        serde_json::Value::Null => "null".into(),
+        DslValue::Object(entries) => format!("{{{} keys}}", entries.len()),
+        DslValue::Array(arr) => format!("[{} items]", arr.len()),
+        DslValue::String(s) => format!("\"{s}\""),
+        DslValue::Number(n) => n.to_string(),
+        DslValue::Bool(b) => b.to_string(),
+        DslValue::Null => "null".into(),
     }
 }
 
-fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+fn preview_tree_scalar_display(value: &DslValue) -> String {
     match value {
-        serde_json::Value::String(s) => format!("\"{s}\""),
-        v => v.to_string(),
+        DslValue::String(s) => format!("\"{s}\""),
+        other => preview_tree_collapsed_summary(other),
     }
 }
 
@@ -508,13 +509,13 @@ fn hit_byte_in_note_line(line: &str, world_x: f64, line_origin_x: f64, font_px: 
     line.len()
 }
 
-fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+fn preview_tree_rows(json: &DslValue, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
     let mut rows = Vec::new();
     match json {
-        serde_json::Value::Object(map) => {
-            for (key, val) in map {
+        DslValue::Object(entries) => {
+            for (key, val) in entries {
                 let row_path = if path.is_empty() { key.clone() } else { format!("{path}.{key}") };
-                let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+                let has_children = matches!(val, DslValue::Object(_) | DslValue::Array(_));
                 let is_expanded = expanded.contains(&row_path);
                 let summary = if has_children { preview_tree_collapsed_summary(val) } else { preview_tree_scalar_display(val) };
                 rows.push(PreviewTreeRow { path: row_path.clone(), depth, label: key.clone(), summary, has_children, expanded: is_expanded });
@@ -523,11 +524,11 @@ fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path
                 }
             }
         }
-        serde_json::Value::Array(arr) => {
+        DslValue::Array(arr) => {
             for (i, val) in arr.iter().enumerate() {
                 let key = format!("[{i}]");
                 let row_path = if path.is_empty() { key.clone() } else { format!("{path}{key}") };
-                let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+                let has_children = matches!(val, DslValue::Object(_) | DslValue::Array(_));
                 let is_expanded = expanded.contains(&row_path);
                 let summary = if has_children { preview_tree_collapsed_summary(val) } else { preview_tree_scalar_display(val) };
                 rows.push(PreviewTreeRow { path: row_path.clone(), depth, label: key, summary, has_children, expanded: is_expanded });
@@ -593,7 +594,7 @@ pub fn preview_widget_size(content: &DagPreviewContent, expanded: &BTreeSet<Stri
     preview_content_node_size(content, expanded)
 }
 
-fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+fn preview_tree_row_layouts(node: &DagNodeSpec, json: &DslValue, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
     let (x0, y0, x1, _y1) = preview_content_bounds(node);
     preview_tree_rows(json, expanded, "", 0)
         .into_iter()

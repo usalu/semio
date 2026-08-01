@@ -12,6 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️
 
 [dependencies]
 sequence = { path = "../../../../../../../../../✏️s/🔌️plugin/🎬️sequence/🎛️app/🎬️sequence/⚡️implementation/🦀️rust", package = "semio-s-app-sequence" }
+dsl = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 imperative_engine = { path = "../../../../../../../../../✏️s/🔨️module/📜️imperative/⚡️implementation/🦀️rust", package = "semio-s-kernel-imperative" }
 neural_engine = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧠️neural/⚙️engine/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }

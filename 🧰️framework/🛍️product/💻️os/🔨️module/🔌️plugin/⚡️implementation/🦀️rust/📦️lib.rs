@@ -20,7 +20,7 @@ pub mod component {
     impl Guest for ComponentGuest {
         fn manifest() -> Vec<u8> {
             ensure_plugin_initialized();
-            store::pack_rt::encode_wire_value(&serde_json::to_value(&plugin_manifest()).unwrap_or_default())
+            store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&plugin_manifest()).unwrap_or(dsl::DslValue::Null))
         }
 
         fn instantiate_app(app_id: String, _instance_id: String) -> Result<u32, PluginError> {
@@ -94,7 +94,7 @@ use ui_wgpu::{
     NamedLayout, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence,
     UiSectionNode, UiSelectItem, UiSelectNode, UiStackNode, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind, FRAMEWORK_HISTORY_BODY_KEY,
-    ContextMenuItemSpec, ContextMenuRequest,
+    ContextMenuItemSpec, ContextMenuRequest, ContextMenuSurfaceTarget,
 };
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
@@ -4074,6 +4074,69 @@ pub fn selection_count_phrase(is_de: bool, counts: &[(usize, &str, &str)]) -> St
 }
 //#endregion 🖱️MenuBuilder
 
+/// 🎯️ Node and edge ids from a context-menu surface snapshot, falling back to runtime selection.
+pub fn selection_domains_from_surface(
+    surface: Option<&ContextMenuSurfaceTarget>,
+    fallback_nodes: &[String],
+    fallback_edges: &[String],
+) -> (Vec<String>, Vec<String>) {
+    let groups = surface.map(|target| target.selection.as_slice()).unwrap_or(&[]);
+    let mut nodes: Vec<String> = groups.iter().filter(|group| group.domain == "node").flat_map(|group| group.ids.iter().cloned()).collect();
+    let mut edges: Vec<String> = groups.iter().filter(|group| group.domain == "edge").flat_map(|group| group.ids.iter().cloned()).collect();
+    if nodes.is_empty() && edges.is_empty() {
+        nodes = fallback_nodes.to_vec();
+        edges = fallback_edges.to_vec();
+    }
+    (nodes, edges)
+}
+
+/// 🗑️ How delete-selection is dispatched from a node-graph context menu row.
+pub enum NodeGraphDeleteDispatch {
+    /// `deleteSelection` view action (flow and similar).
+    Direct,
+    /// `nodeGraphEdit` with a `deleteSelection` operation (dag, sequence, procedural).
+    ViaNodeGraphEdit,
+}
+
+/// 🗑️ Delete-selection row with a localized count phrase — omitted when the selection is empty.
+pub fn node_graph_delete_selection_spec(
+    delete_label: &str,
+    is_de: bool,
+    node_count: usize,
+    edge_count: usize,
+    dispatch: NodeGraphDeleteDispatch,
+) -> Option<ContextMenuItemSpec> {
+    if node_count == 0 && edge_count == 0 {
+        return None;
+    }
+    let phrase = selection_count_phrase(
+        is_de,
+        &[
+            (node_count, if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" }),
+            (edge_count, if is_de { "Kante" } else { "edge" }, if is_de { "Kanten" } else { "edges" }),
+        ],
+    );
+    if phrase.is_empty() {
+        return None;
+    }
+    let (action, args) = match dispatch {
+        NodeGraphDeleteDispatch::Direct => ("deleteSelection".into(), None),
+        NodeGraphDeleteDispatch::ViaNodeGraphEdit => (
+            "nodeGraphEdit".into(),
+            Some(serde_json::json!({ "operations": [{ "operation": "deleteSelection" }] })),
+        ),
+    };
+    Some(ContextMenuItemSpec {
+        id: "delete-selection".into(),
+        label: Some(format!("{delete_label} ({phrase})")),
+        icon: Some("trash".into()),
+        destructive: Some(true),
+        action: Some(action),
+        args,
+        ..Default::default()
+    })
+}
+
 /// @emoji 🧬️ Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
 /// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Operation>` — the single source of
 /// truth for the app's document across every call — intercepts the six injected history actions into
@@ -4776,9 +4839,8 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
 
     /// 🎯️ The actual body of `PluginApp::handle_command_frame` — see `dispatch_action`'s doc. Prefers
     /// `DocumentApp::handle_typed_command`; when the app returns `None` (hasn't migrated to typed
-    /// commands yet) falls back to decoding `command_bytes` as a `store::pack_rt::decode_wire_value`
-    /// `{kind, name, args}` envelope and routing through `dispatch_action`/`dispatch_command` unchanged
-    /// — so an unmigrated app keeps working byte-identically over the new binary channel.
+    /// commands yet) falls back to decoding `command_bytes` as a legacy JSON envelope — removed;
+    /// apps must handle typed command frames via `DocumentApp::handle_typed_command`.
     fn dispatch_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String> {
         self.refresh_cache()?;
         let typed = {
@@ -4790,17 +4852,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         match typed {
             Some(Ok(emit)) => self.dispatch_emit("typed-command", emit, meta),
             Some(Err(message)) => Err(message),
-            None => {
-                let envelope: Value = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
-                let kind = envelope.get("kind").and_then(Value::as_str).unwrap_or("action").to_string();
-                let name = envelope.get("name").and_then(Value::as_str).unwrap_or("").to_string();
-                let args = envelope.get("args").cloned();
-                if kind == "command" {
-                    self.dispatch_command(&name, args.as_ref(), view_state, meta)
-                } else {
-                    self.dispatch_action(&name, args.as_ref(), view_state, meta)
-                }
-            }
+            None => Err("app must handle command frames via handle_typed_command".into()),
         }
     }
 
@@ -5222,7 +5274,9 @@ use ui_wgpu::{
     framework_panel_tab_label, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef, UiNode,
 };
 use serde::{Deserialize, Serialize};
+use serde::de::DeserializeOwned;
 use serde_json::Value;
+use dsl::{from_dsl_value, to_dsl_value, DslValue};
 use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -5241,6 +5295,19 @@ thread_local! {
     /// `AppCommand::RefreshUi`/`AppCommand::DocumentCommand` (`RefreshUi` carries `view_state`; DocumentCommand still
     /// the new channel) — see `plugin_exchange`'s doc comment for this Wave 1 scoping.
     static INSTANCE_VIEW_STATES: RefCell<std::collections::HashMap<u32, ViewState>> = RefCell::new(std::collections::HashMap::new());
+}
+
+fn encode_wire_serialized<T: Serialize>(value: &T) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(&to_dsl_value(value).expect("wire payload must serialize to DslValue"))
+}
+
+fn decode_wire_serialized<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, String> {
+    let value = store::pack_rt::decode_wire_value(bytes).map_err(|error| error.to_string())?;
+    from_dsl_value(value)
+}
+
+fn decode_wire_serialized_or<T: DeserializeOwned>(bytes: &[u8], default: T) -> T {
+    decode_wire_serialized(bytes).unwrap_or(default)
 }
 
 /// 🪪️ Records `actor` as the local actor id for `instance_id` (from `AppCommand::Hello`).
@@ -5272,7 +5339,7 @@ fn adopt_instance_view_state(instance_id: u32, view_state_bytes: &[u8]) -> ViewS
     } else {
         store::pack_rt::decode_wire_value(view_state_bytes)
             .ok()
-            .and_then(|value| serde_json::from_value::<ViewState>(value).ok())
+            .and_then(|value| from_dsl_value::<ViewState>(value).ok())
             .unwrap_or_default()
     };
     set_instance_view_state(instance_id, view_state.clone());
@@ -5862,7 +5929,7 @@ fn push_invocation_side_frames(frames: &mut Vec<protocol::AppFrame>, seq: u64, r
         let effects = result
             .requested_effects
             .iter()
-            .map(|effect| store::pack_rt::encode_wire_value(&serde_json::to_value(effect).unwrap_or_default()))
+            .map(|effect| encode_wire_serialized(effect))
             .collect();
         frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects });
     }
@@ -5870,7 +5937,7 @@ fn push_invocation_side_frames(frames: &mut Vec<protocol::AppFrame>, seq: u64, r
         let events = result
             .events
             .iter()
-            .map(|event| store::pack_rt::encode_wire_value(&serde_json::to_value(event).unwrap_or_default()))
+            .map(|event| encode_wire_serialized(event))
             .collect();
         frames.push(protocol::AppFrame::Events { in_reply_to: Some(seq), events });
     }
@@ -5918,7 +5985,7 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                         continue;
                     }
                 }
-                let manifest_bytes = store::pack_rt::encode_wire_value(&serde_json::to_value(&plugin_manifest()).unwrap_or_default());
+                let manifest_bytes = encode_wire_serialized(&plugin_manifest());
                 frames.push(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: instance_id, manifest: manifest_bytes });
             }
             protocol::AppCommand::ConfigCommand { seq, command } => {
@@ -5941,8 +6008,8 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 match dispatched {
                     Ok(result) => {
                         mutated = true;
-                        let output = store::pack_rt::encode_wire_value(&result.output);
-                        let diagnostics = store::pack_rt::encode_wire_value(&serde_json::to_value(&result.diagnostics).unwrap_or_default());
+                        let output = encode_wire_serialized(&result.output);
+                        let diagnostics = encode_wire_serialized(&result.diagnostics);
                         frames.push(protocol::AppFrame::Invocation { in_reply_to: seq, output, diagnostics });
                         push_invocation_side_frames(&mut frames, seq, &result);
                     }
@@ -5992,7 +6059,7 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                             kind: probe.kind,
                             key: probe.key.clone(),
                             hash,
-                            body: body.map(|value| store::pack_rt::encode_wire_value(&value)),
+                            body: body.map(|value| encode_wire_serialized(&value)),
                         });
                     }
                     Ok(section_frames)
@@ -6003,7 +6070,7 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 }
             }
             protocol::AppCommand::ContextMenu { seq, request } => {
-                let request_value: Value = store::pack_rt::decode_wire_value(&request).unwrap_or(Value::Null);
+                let request_value: Value = decode_wire_serialized_or(&request, Value::Null);
                 let request_json = serde_json::to_string(&request_value).unwrap_or_else(|_| "{}".into());
                 match plugin_context_menu(instance_id, &request_json) {
                     Ok(response_json) => {
@@ -6011,13 +6078,13 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                             .ok()
                             .and_then(|value| value.get("items").cloned())
                             .unwrap_or_else(|| Value::Array(Vec::new()));
-                        frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: store::pack_rt::encode_wire_value(&items_value) });
+                        frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: encode_wire_serialized(&items_value) });
                     }
                     Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
                 }
             }
             protocol::AppCommand::DocumentCommand { seq, command } => {
-                let envelope: Value = store::pack_rt::decode_wire_value(&command).unwrap_or(Value::Null);
+                let envelope: Value = decode_wire_serialized_or(&command, Value::Null);
                 let action = envelope.get("action").and_then(Value::as_str).unwrap_or("").to_string();
                 let args = envelope.get("args").cloned();
                 if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action.as_str()) {
@@ -6090,7 +6157,7 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
             },
             protocol::AppCommand::MediaIn { seq, port, descriptor, data } => {
-                let descriptor_value: Value = store::pack_rt::decode_wire_value(&descriptor).unwrap_or(Value::Null);
+                let descriptor_value: Value = decode_wire_serialized_or(&descriptor, Value::Null);
                 let descriptor_json = serde_json::to_string(&descriptor_value).unwrap_or_else(|_| "{}".into());
                 match plugin_consume_media(instance_id, &port, &descriptor_json, data) {
                     Ok(()) => {
@@ -6103,7 +6170,7 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
             protocol::AppCommand::MediaOut { seq, port, request: _ } => match plugin_produce_media(instance_id, &port, "") {
                 Ok((descriptor_json, data)) => {
                     let descriptor_value: Value = serde_json::from_str(&descriptor_json).unwrap_or(Value::Null);
-                    frames.push(protocol::AppFrame::Media { in_reply_to: seq, port, descriptor: store::pack_rt::encode_wire_value(&descriptor_value), data });
+                    frames.push(protocol::AppFrame::Media { in_reply_to: seq, port, descriptor: encode_wire_serialized(&descriptor_value), data });
                 }
                 Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
             },
@@ -6115,7 +6182,7 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 match fingerprint {
                     Ok(fingerprint) => {
                         let value = serde_json::to_value(&fingerprint).unwrap_or_default();
-                        frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: store::pack_rt::encode_wire_value(&value) });
+                        frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: encode_wire_serialized(&value) });
                     }
                     Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
                 }
@@ -6132,7 +6199,7 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
         })
         .unwrap_or_default();
         if !effects.is_empty() {
-            let encoded = effects.iter().map(|effect| store::pack_rt::encode_wire_value(&serde_json::to_value(effect).unwrap_or_default())).collect();
+            let encoded = effects.iter().map(|effect| encode_wire_serialized(effect)).collect();
             frames.push(protocol::AppFrame::Effects { in_reply_to: None, effects: encoded });
         }
     }
@@ -6218,7 +6285,7 @@ mod semio_plugin_macro_tests {
         ActionEmit, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, HistoryCommandFilter, HistoryView,
         InverseAction, Menu, NoConfig, NoConfigOperation, PluginApp, VcsDocumentApp, ui_history_panel,
     };
-    use crate::{IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState, ui_text};
+    use crate::{selection_count_phrase, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState, ui_text};
     use ui_wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
     use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
     use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
@@ -8342,7 +8409,7 @@ mod tests {
 pub use app::{
     ActionEmit, ActionMeta, App, AppActionRegistry, AppBuilder, AppInstance, ConfigView, DocumentApp, DocumentView, HistoryView,
     KeybindingSpec, MediaClass, MediaType, Menu, ModeSpec, NoConfig, NoConfigOperation, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp,
-    PluginBundle, ArtifactKindSpec, VcsDocumentApp, WindowKindSpec,
+    PluginBundle, ArtifactKindSpec, VcsDocumentApp, WindowKindSpec, node_graph_delete_selection_spec, selection_count_phrase, selection_domains_from_surface, NodeGraphDeleteDispatch,
 };
 pub use semio_framework_core::{MediaForm, MediaPortDirection, MediaPortSpec};
 pub use app::{

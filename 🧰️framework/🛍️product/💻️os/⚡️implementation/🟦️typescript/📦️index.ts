@@ -85,32 +85,62 @@ function remoteEnvelopeUrl(remote: { readonly hostPort: string; readonly spaceId
   return `http://${remote.hostPort}/spaces/${encodeURIComponent(remote.spaceId)}/documents/${encodeURIComponent(remote.documentId)}/envelope`;
 }
 
-export async function readBackboneEnvelope(uri: string): Promise<string | null> {
+/** @emoji 🔌️ `store::encode_document_pack_bytes` — length-prefixed `pack` then raw `spr`. */
+export function encodeDocumentPackBytes(pack: Uint8Array, spr: Uint8Array): Uint8Array {
+  const out: number[] = [];
+  writeVarintU64(out, pack.length);
+  for (const byte of pack) out.push(byte);
+  for (const byte of spr) out.push(byte);
+  return new Uint8Array(out);
+}
+
+/** @emoji 🎯️ Inverse of {@link encodeDocumentPackBytes}. */
+export function decodeDocumentPackBytes(bytes: Uint8Array): { readonly pack: Uint8Array; readonly spr: Uint8Array } {
+  const pos: [number] = [0];
+  const packLen = readVarintU64(bytes, pos);
+  const packEnd = pos[0] + packLen;
+  if (packEnd > bytes.length) throw new Error("document pack bytes truncated");
+  const pack = bytes.subarray(pos[0], packEnd);
+  pos[0] = packEnd;
+  return { pack, spr: bytes.subarray(pos[0]) };
+}
+
+/** @emoji 📦️ Packs a projection value into a document bundle (`pack` + `spr`). */
+export function encodeDocumentPackBundle(projection: unknown, spr: Uint8Array = new Uint8Array()): Uint8Array {
+  return encodeDocumentPackBytes(encodePackValue(projection), spr);
+}
+
+/** @emoji 📥️ Decodes the projection from a document bundle (ignores `spr` history). */
+export function decodeDocumentPackProjection(bundle: Uint8Array): unknown {
+  const { pack } = decodeDocumentPackBytes(bundle);
+  return decodePackValue(pack);
+}
+
+const BACKBONE_OCTET_STREAM = "application/octet-stream";
+
+export async function readBackboneEnvelope(uri: string): Promise<Uint8Array | null> {
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) return null;
     const response = await fetch(remoteEnvelopeUrl(remote));
     if (response.status === 404) return null;
     if (!response.ok) throw new Error(`remote backbone read failed (${response.status})`);
-    const body = (await response.json()) as { envelope?: unknown };
-    return JSON.stringify(body.envelope ?? body);
+    return new Uint8Array(await response.arrayBuffer());
   }
   const response = await fetch(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`);
   if (response.status === 404) return null;
   if (!response.ok) throw new Error(`backbone read failed (${response.status})`);
-  return response.text();
+  return new Uint8Array(await response.arrayBuffer());
 }
 
-export async function writeBackboneEnvelope(uri: string, envelopeJson: string): Promise<void> {
+export async function writeBackboneEnvelope(uri: string, bundle: Uint8Array): Promise<void> {
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) throw new Error(`invalid remote backbone uri: ${uri}`);
-    const current = await fetch(remoteEnvelopeUrl(remote));
-    const version = current.ok ? Number(((await current.json()) as { version?: number }).version ?? 0) : 0;
     const response = await fetch(remoteEnvelopeUrl(remote), {
       method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ version, envelope: JSON.parse(envelopeJson) }),
+      headers: { "content-type": BACKBONE_OCTET_STREAM },
+      body: bundle,
     });
     if (!response.ok) throw new Error(`remote backbone write failed (${response.status})`);
     console.log("[DEBUG] remote backbone synced", uri);
@@ -118,65 +148,75 @@ export async function writeBackboneEnvelope(uri: string, envelopeJson: string): 
   }
   const response = await fetch(`${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`, {
     method: "PUT",
-    headers: { "content-type": "application/json" },
-    body: envelopeJson,
+    headers: { "content-type": BACKBONE_OCTET_STREAM },
+    body: bundle,
   });
   if (!response.ok) throw new Error(`backbone write failed (${response.status})`);
   console.log("[DEBUG] backbone synced", uri);
 }
 
-export function documentFromEnvelopeJson(envelopeJson: string): unknown {
-  const parsed = JSON.parse(envelopeJson) as { projection?: unknown; document?: unknown; vcs?: unknown };
-  if (parsed.projection != null) return parsed.projection;
-  if (parsed.document != null) return parsed.document;
-  return parsed;
+/** @deprecated Use {@link decodeDocumentPackProjection}. */
+export function documentFromEnvelopeJson(_envelopeJson: string): unknown {
+  throw new Error("documentFromEnvelopeJson removed — use decodeDocumentPackProjection on binary bundle bytes");
 }
 
-export function wrapDocumentEnvelope(document: unknown, documentId: string, uri: string): string {
-  if (document && typeof document === "object" && "vcs" in (document as Record<string, unknown>)) {
-    const envelope = { ...(document as Record<string, unknown>), backbone: documentBackboneRef(uri) };
-    return JSON.stringify(envelope);
-  }
-  return JSON.stringify({
-    schema: "document/v1",
-    id: documentId,
-    projection: document,
-    vcs: { edits: [], changes: [], checkpoints: [], alternatives: [], operations: [] },
-    backbone: documentBackboneRef(uri),
-  });
+/** @deprecated Use {@link encodeDocumentPackBundle}. */
+export function wrapDocumentEnvelope(_document: unknown, _documentId: string, _uri: string): string {
+  throw new Error("wrapDocumentEnvelope removed — use encodeDocumentPackBundle");
 }
 
 //#region 🔀️ApplyBackboneMessage
-export type BackboneOpEnvelope = { readonly diff?: { readonly payload?: { readonly id?: string } & Record<string, unknown> } };
+export type BinaryBackboneMessage =
+  | { readonly kind: "snapshot"; readonly pack: Uint8Array; readonly spr: Uint8Array }
+  | { readonly kind: "operations"; readonly envelopes: readonly WireOperationEnvelope[] }
+  | { readonly kind: "ack"; readonly opIds: readonly string[] };
 
-export type BackboneMessage = { readonly kind: "snapshot"; readonly envelopeJson: string } | { readonly kind: "operations"; readonly envelopes?: readonly BackboneOpEnvelope[] };
+/** @emoji 🎯️ TS twin of `store::encode_backbone_message`. */
+export function encodeBackboneMessage(message: BinaryBackboneMessage): Uint8Array {
+  const out: number[] = [];
+  if (message.kind === "snapshot") {
+    out.push(0);
+    writeBytes(out, Array.from(message.pack));
+    writeBytes(out, Array.from(message.spr));
+  } else if (message.kind === "operations") {
+    out.push(1);
+    writeVecEnvelope(out, message.envelopes);
+  } else {
+    out.push(2);
+    writeVecStr(out, message.opIds);
+  }
+  return new Uint8Array(out);
+}
+
+/** @emoji 🎯️ Inverse of {@link encodeBackboneMessage}. */
+export function decodeBackboneMessage(bytes: Uint8Array): BinaryBackboneMessage {
+  if (bytes.length === 0) throw new Error("backbone message: empty");
+  const tag = bytes[0]!;
+  const pos: [number] = [1];
+  if (tag === 0) {
+    const pack = new Uint8Array(readBytes(bytes, pos));
+    const spr = new Uint8Array(readBytes(bytes, pos));
+    return { kind: "snapshot", pack, spr };
+  }
+  if (tag === 1) {
+    return { kind: "operations", envelopes: readVecEnvelope(bytes, pos) };
+  }
+  if (tag === 2) {
+    return { kind: "ack", opIds: readVecStr(bytes, pos) };
+  }
+  throw new Error(`backbone message: unknown tag ${tag}`);
+}
 
 /**
- * 🔀️ Mirrors `vcs::storage_send` — applies an incoming backbone message on top of a previously
- * stored envelope: a `snapshot` message overwrites, an `operations` message appends into `vcs.edits`
- * deduped by id. This is the canonical implementation; the dev host shim's generated JS
- * (`hostShimSource` in `framework/os/dev/script.ts`) hand-ports the same algorithm and
- * must be kept in sync until a build-time inlining step exists.
+ * 🔀️ Applies an incoming {@link encodeBackboneMessage} payload onto a stored document bundle.
+ * Snapshot overwrites; operations require the native store (not implemented in this TS twin).
  */
-export function applyBackboneMessage(storedEnvelopeJson: string | null, messageJson: string): string {
-  const message = JSON.parse(messageJson) as BackboneMessage;
-  if (message.kind === "snapshot") return message.envelopeJson;
+export function applyBackboneMessage(storedBundle: Uint8Array | null, messageBytes: Uint8Array): Uint8Array {
+  const message = decodeBackboneMessage(messageBytes);
+  if (message.kind === "snapshot") return encodeDocumentPackBytes(message.pack, message.spr);
   if (message.kind === "operations") {
-    if (storedEnvelopeJson == null) throw new Error("cannot append operations before a snapshot exists");
-    const envelope = JSON.parse(storedEnvelopeJson) as { vcs?: { edits?: unknown[] } };
-    const edits = envelope?.vcs?.edits;
-    if (!Array.isArray(edits)) throw new Error("stored envelope missing vcs.edits");
-    const seen = new Set(edits.map((edit) => (edit as { id?: unknown })?.id).filter((id): id is string => typeof id === "string"));
-    for (const operationEnvelope of message.envelopes ?? []) {
-      const editJson = operationEnvelope?.diff?.payload;
-      const id = editJson?.id;
-      if (typeof id === "string") {
-        if (seen.has(id)) continue;
-        seen.add(id);
-      }
-      edits.push(editJson);
-    }
-    return JSON.stringify(envelope);
+    if (storedBundle == null) throw new Error("cannot append operations before a snapshot exists");
+    throw new Error("backbone operations apply requires native store — ingest envelopes through the sync actor");
   }
   throw new Error(`unsupported backbone message kind: ${(message as { kind: string }).kind}`);
 }
@@ -279,6 +319,43 @@ export type OperationEnvelope = {
     readonly undoPolicy: string;
   };
 };
+
+/** 🌉️ Maps the actor-protocol {@link OperationEnvelope} into a {@link WireOperationEnvelope}. */
+export function operationEnvelopeToWire(envelope: OperationEnvelope, timestamp: WireOperationEnvelope["timestamp"]): WireOperationEnvelope {
+  const packPayload = (value: unknown) => Array.from(encodePackValue(value));
+  return {
+    operation_id: envelope.id,
+    document_id: envelope.document,
+    actor: envelope.actor,
+    dependencies: [...(envelope.deps ?? [])],
+    diff: { schema: envelope.diff.schemaId, payload: packPayload(envelope.diff.payload) },
+    inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: packPayload(envelope.inverse.inverseDiff.payload) },
+    timestamp,
+  };
+}
+
+/** 🌉️ Inverse of {@link operationEnvelopeToWire}. */
+export function operationEnvelopeFromWire(envelope: WireOperationEnvelope): OperationEnvelope {
+  const decodePayload = (bytes: readonly number[]) => decodePackValue(new Uint8Array(bytes));
+  const payload = decodePayload(envelope.diff.payload);
+  const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
+  return {
+    id: envelope.operation_id,
+    actor: envelope.actor,
+    document: envelope.document_id,
+    schemaVersion: envelope.diff.schema,
+    deps: [...envelope.dependencies],
+    payloadHash: "",
+    diff: { schemaId: envelope.diff.schema, payload },
+    inverse: {
+      targetOperation: envelope.operation_id,
+      inverseDiff: { schemaId: envelope.inverse.schema, payload: decodePayload(envelope.inverse.payload) },
+      baseVersion: Number.isFinite(sequenceNumber) ? Math.max(0, sequenceNumber) : 0,
+      dependencies: [],
+      undoPolicy: "exactBaseOnly",
+    },
+  };
+}
 
 /** 📡️ Wire-protocol presence identity — distinct from the UI-rendering {@link PresencePeer} scene prop. */
 export type DocumentPresencePeer = {
@@ -939,7 +1016,7 @@ export type DocumentActorConfig = {
 /** 📨️ Caller→actor control messages — mirrors Rust `DocumentActorMsg`. */
 export type DocumentActorMsg =
   | { readonly kind: "localOperations"; readonly envelopes: readonly OperationEnvelope[] }
-  | { readonly kind: "localSnapshot"; readonly envelopeJson: string }
+  | { readonly kind: "localSnapshot"; readonly pack: readonly number[]; readonly spr: readonly number[] }
   | { readonly kind: "presenceHeartbeat"; readonly peer: DocumentPresencePeer }
   | { readonly kind: "publishPreview"; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "externalChanged" }
@@ -967,14 +1044,32 @@ export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind:
 /** 📬️ Actor→subscriber events — mirrors Rust `DocumentEvent`. */
 export type DocumentEvent =
   | { readonly kind: "remoteOperations"; readonly envelopes: readonly OperationEnvelope[] }
-  | { readonly kind: "snapshotReplaced"; readonly envelopeJson: string }
+  | { readonly kind: "snapshotReplaced"; readonly pack: readonly number[]; readonly spr: readonly number[] }
   | ({ readonly kind: "status" } & DocumentSyncStatus)
   | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
   | { readonly kind: "preview"; readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "commandOutcome"; readonly batchId: number; readonly outcome: CommandAckOutcome }
   | ({ readonly kind: "conflict" } & SyncConflict);
 
-/** 📤️ Main thread → `🟦️backbone-worker.ts` messages. */
+/** 📤️ Main thread → `🟦️backbone-worker.ts` — `bytes` is a UTF-8 worker wire payload (see {@link encodeBackboneWorkerRequest}). */
+export type BackboneWorkerWireMessage = { readonly wire: Uint8Array };
+
+/** @emoji 🧵️ Encodes a {@link BackboneWorkerRequest} for the wasm `store_worker` (`handleRequestBytes`). */
+export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(request));
+}
+
+/** @emoji 🧵️ Encodes a {@link BackboneWorkerResponse} from the wasm actor / TS fallback. */
+export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(response));
+}
+
+/** @emoji 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
+export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
+  return JSON.parse(new TextDecoder().decode(wire)) as BackboneWorkerResponse;
+}
+
+/** 📤️ Main thread → `🟦️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}). */
 export type BackboneWorkerRequest = ({ readonly kind: "open" } & DocumentActorConfig) | { readonly kind: "close"; readonly documentId: string } | { readonly kind: "send"; readonly documentId: string; readonly message: DocumentActorMsg };
 
 /** 📥️ `🟦️backbone-worker.ts` → main thread messages. */
@@ -1949,44 +2044,38 @@ if (import.meta.vitest) {
       expect(parseRemoteBackboneUri("file:///tmp/a.json")).toBeNull();
     });
 
-    it("wraps and unwraps document envelopes", () => {
-      const envelopeJson = wrapDocumentEnvelope({ nodes: [] }, "doc-1", "file:///tmp/a.json");
-      const envelope = JSON.parse(envelopeJson) as { schema: string; id: string; projection: unknown; backbone: unknown };
-      expect(envelope.schema).toBe("document/v1");
-      expect(envelope.id).toBe("doc-1");
-      expect(documentFromEnvelopeJson(envelopeJson)).toEqual({ nodes: [] });
+    it("packs and unpacks document bundles", () => {
+      const bundle = encodeDocumentPackBundle({ nodes: [] });
+      expect(decodeDocumentPackProjection(bundle)).toEqual({ nodes: [] });
     });
 
-    it("preserves an existing vcs envelope instead of re-wrapping it", () => {
-      const existing = { vcs: { edits: [], changes: [], checkpoints: [], alternatives: [], operations: [] }, projection: { a: 1 } };
-      const envelopeJson = wrapDocumentEnvelope(existing, "doc-1", "file:///tmp/a.json");
-      const envelope = JSON.parse(envelopeJson) as { projection: unknown; vcs: unknown };
-      expect(envelope.projection).toEqual({ a: 1 });
+    it("round-trips backbone snapshot messages", () => {
+      const message: BinaryBackboneMessage = { kind: "snapshot", pack: new Uint8Array([1, 2]), spr: new Uint8Array([3]) };
+      const round = decodeBackboneMessage(encodeBackboneMessage(message));
+      expect(round.kind).toBe("snapshot");
+      if (round.kind !== "snapshot") return;
+      expect(Array.from(round.pack)).toEqual([1, 2]);
+      expect(Array.from(round.spr)).toEqual([3]);
     });
 
-    it("applies a snapshot message by overwriting the stored envelope", () => {
-      const messageJson = JSON.stringify({ kind: "snapshot", envelopeJson: '{"vcs":{"edits":[]}}' });
-      expect(applyBackboneMessage(null, messageJson)).toBe('{"vcs":{"edits":[]}}');
+    it("applies a snapshot backbone message by overwriting the stored bundle", () => {
+      const snapshot = encodeBackboneMessage({ kind: "snapshot", pack: new Uint8Array([9]), spr: new Uint8Array() });
+      const result = applyBackboneMessage(encodeDocumentPackBytes(new Uint8Array([1]), new Uint8Array()), snapshot);
+      expect(decodeDocumentPackBytes(result).pack).toEqual(new Uint8Array([9]));
     });
 
-    it("applies an operations message by appending deduped edits into vcs.edits", () => {
-      const stored = JSON.stringify({ vcs: { edits: [{ id: "e1" }] } });
-      const messageJson = JSON.stringify({
-        kind: "operations",
-        envelopes: [{ diff: { payload: { id: "e1" } } }, { diff: { payload: { id: "e2" } } }],
-      });
-      const result = JSON.parse(applyBackboneMessage(stored, messageJson)) as { vcs: { edits: Array<{ id: string }> } };
-      expect(result.vcs.edits.map((edit) => edit.id)).toEqual(["e1", "e2"]);
+    it("throws when applying operations without native store", () => {
+      const message = encodeBackboneMessage({ kind: "operations", envelopes: [] });
+      expect(() => applyBackboneMessage(encodeDocumentPackBytes(new Uint8Array(), new Uint8Array()), message)).toThrow("native store");
     });
 
-    it("throws when applying an operations message before a snapshot exists", () => {
-      const messageJson = JSON.stringify({ kind: "operations", envelopes: [] });
-      expect(() => applyBackboneMessage(null, messageJson)).toThrow("cannot append operations before a snapshot exists");
+    it("throws when applying operations before a snapshot exists", () => {
+      const message = encodeBackboneMessage({ kind: "operations", envelopes: [] });
+      expect(() => applyBackboneMessage(null, message)).toThrow("cannot append operations before a snapshot exists");
     });
 
-    it("throws on an unsupported backbone message kind", () => {
-      const messageJson = JSON.stringify({ kind: "bogus" });
-      expect(() => applyBackboneMessage(null, messageJson)).toThrow("unsupported backbone message kind: bogus");
+    it("throws on an unknown backbone message tag", () => {
+      expect(() => decodeBackboneMessage(new Uint8Array([99]))).toThrow("unknown tag");
     });
 
     it("builds sync utilities reflecting the active backbone kind", () => {
@@ -2204,15 +2293,15 @@ if (import.meta.vitest) {
       expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
     });
 
-    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... Bye=15)", () => {
+    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... Bye=17)", () => {
       expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
       expect(encodeAppCommand({ ConfigCommand: { seq: 0, command: [] } })[0]).toBe(1);
-      expect(encodeAppCommand("Bye")[0]).toBe(15);
+      expect(encodeAppCommand("Bye")[0]).toBe(17);
     });
 
-    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Error=11)", () => {
+    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Error=13)", () => {
       expect(encodeAppFrame({ Welcome: { channel_version: 0, instance: 0, manifest: [] } })[0]).toBe(0);
-      expect(encodeAppFrame({ Error: { in_reply_to: null, code: "", message: "" } })[0]).toBe(11);
+      expect(encodeAppFrame({ Error: { in_reply_to: null, code: "", message: "" } })[0]).toBe(13);
     });
 
     /**
@@ -2364,7 +2453,7 @@ if (import.meta.vitest) {
       await client.configure({ locale: "en" });
       await client.readDocument();
       await client.loadDocument(new Uint8Array([1]), new Uint8Array([2]));
-      expect(seen[0]).toEqual({ RefreshUi: { seq: 1, sections: [{ kind: 1, key: "panel-a", hash: null }], view_state: [] } });
+      expect(seen[0]).toEqual({ RefreshUi: { seq: 1, sections: [{ kind: 1, key: "panel-a", hash: null }], view_state: Array.from(encodePackValue({})) } });
       expect(seen[1]).toEqual({ ConfigCommand: { seq: 2, command: Array.from(encodePackValue({ locale: "en" })) } });
       expect(seen[2]).toEqual({ ReadDocument: { seq: 3 } });
       expect(seen[3]).toEqual({ LoadDocument: { seq: 4, pack: [1], spr: [2] } });

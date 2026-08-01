@@ -35,8 +35,8 @@ if (typeof globalThis.Path2D === "undefined") {
 
 function stubFetchBody(url: string): { body: string; contentType: string } {
 	const path = url.split("?")[0]?.split("#")[0] ?? url;
-	if (path.endsWith(".json")) {
-		return { body: "{}", contentType: "application/json" };
+	if (path.endsWith(".ops") || path.endsWith(".dsl") || path.endsWith(".spk")) {
+		return { body: "", contentType: "application/octet-stream" };
 	}
 	if (path.endsWith(".md") || path.endsWith(".markdown")) {
 		return { body: "# stub", contentType: "text/markdown" };

@@ -49,7 +49,7 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        assert_eq!(store.projection().expect("projection").board_fixture["nodes"].as_array().unwrap().len(), 1);
+        assert_eq!(store.projection().expect("projection").board_fixture.get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
     #[test]

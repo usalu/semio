@@ -12,6 +12,7 @@
 pub use protocol::{AppCommand, AppFrame, CHANNEL_VERSION};
 use semio_framework_core::{Media, MediaError, MediaFingerprint, MediaPayload, MediaWireFormat};
 use semio_framework_os::{OsAppInstance, OsWorkflow, OsWorkflowNode};
+use dsl::{from_dsl_value, to_dsl_value};
 use store::{decode_document_pack_bytes, encode_document_pack_bytes, BlobStore};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
@@ -210,7 +211,7 @@ pub fn media_to_artifact(media: &Media, blob_store: &dyn BlobStore) -> Result<(V
         }
     };
     let descriptor = semio_framework_plugin::app::MediaArtifactDescriptor { edge_id: None, port_id: None, kind_id: None, media_type: Some(media.media_type), wire, blob_hash };
-    let descriptor_value = serde_json::to_value(&descriptor)?;
+    let descriptor_value = to_dsl_value(&descriptor).map_err(|error| RunError::Host(error))?;
     Ok((store::pack_rt::encode_wire_value(&descriptor_value), data))
 }
 
@@ -220,7 +221,8 @@ pub fn media_to_artifact(media: &Media, blob_store: &dyn BlobStore) -> Result<(V
 /// whatever `blob_hash` the artifact's own descriptor claimed.
 pub fn media_from_artifact(descriptor: &[u8], data: Vec<u8>, blob_store: &dyn BlobStore) -> Result<Media, RunError> {
     let value = store::pack_rt::decode_wire_value(descriptor).map_err(|error| RunError::Host(error.to_string()))?;
-    let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor = serde_json::from_value(value)?;
+    let descriptor: semio_framework_plugin::app::MediaArtifactDescriptor =
+        from_dsl_value(value).map_err(|error| RunError::Host(error))?;
     let media_type = descriptor.media_type.ok_or_else(|| RunError::Host("media artifact descriptor is missing media_type".to_string()))?;
     let payload = match descriptor.wire {
         MediaWireFormat::Document { schema } => MediaPayload::Structured { schema, json: String::from_utf8(data).map_err(|error| RunError::Host(error.to_string()))? },
@@ -246,7 +248,8 @@ fn frame_in_reply_to(frame: &AppFrame) -> Option<u64> {
         AppFrame::Effects { in_reply_to, .. } => *in_reply_to,
         AppFrame::Events { in_reply_to, .. } => *in_reply_to,
         AppFrame::Error { in_reply_to, .. } => *in_reply_to,
-        AppFrame::Welcome { .. } | AppFrame::DocumentChanged { .. } => None,
+        AppFrame::Welcome { .. } | AppFrame::DocumentChanged { .. } | AppFrame::ConfigChanged { .. } => None,
+        AppFrame::Config { in_reply_to, .. } => Some(*in_reply_to),
     }
 }
 
