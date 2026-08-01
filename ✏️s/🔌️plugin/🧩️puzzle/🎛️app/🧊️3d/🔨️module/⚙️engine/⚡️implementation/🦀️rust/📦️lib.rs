@@ -141,9 +141,6 @@ fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &Co
 }
 //#endregion 🔒️GeometryAdapter
 
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-use wasm_bindgen::prelude::*;
-
 const SURFACE_CONTACT_MAX_AABB_VOLUME: f64 = 1e-4;
 const BRUSH_COLLISION_MESH_MIN_EXTENT: f64 = 2.0;
 const BRUSH_PLACEMENT_PARALLEL_TOLERANCE: f64 = 1e-6;
@@ -153,9 +150,9 @@ const FILL_COUNT_MAX: usize = 1000;
 type Quat = [f64; 4];
 type Vec3 = [f64; 3];
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-struct BrushHostRules {
+pub struct BrushHostRules {
     #[serde(default)]
     reject_capital_on_tambour: bool,
     #[serde(default)]
@@ -188,17 +185,17 @@ impl Default for BrushHostRules {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-struct BrushKindWeights {
+pub struct BrushKindWeights {
     #[serde(default)]
-    object_weights: HashMap<String, f64>,
+    object_weights: std::collections::BTreeMap<String, f64>,
     #[serde(default)]
-    vortex_weights: HashMap<String, f64>,
+    vortex_weights: std::collections::BTreeMap<String, f64>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct KindCompatEntry {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct KindCompatEntry {
     source: String,
     target: String,
     #[serde(default)]
@@ -208,16 +205,16 @@ struct KindCompatEntry {
     specificity: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ObjectKindVortexTemplate {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ObjectKindVortexTemplate {
     #[serde(rename = "vortexKind", default)]
     vortex_kind: Option<String>,
     position: Vec3,
     direction: Option<Vec3>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct ObjectKind {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ObjectKind {
     id: String,
     #[serde(rename = "meshUrl", default)]
     mesh_url: Option<String>,
@@ -227,15 +224,15 @@ struct ObjectKind {
     vortices: Vec<ObjectKindVortexTemplate>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct VortexKindCatalog {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct VortexKindCatalog {
     id: String,
     #[serde(rename = "defaultCableKind", default)]
     default_cable_kind: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct CableKindCatalog {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct CableKindCatalog {
     id: String,
     #[serde(rename = "defaultAttractionKind", default)]
     default_attraction_kind: Option<String>,
@@ -243,7 +240,7 @@ struct CableKindCatalog {
 
 /// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct KindCatalogBundle {
     #[serde(default)]
     objects: Vec<ObjectKind>,
@@ -253,80 +250,83 @@ pub struct KindCatalogBundle {
     cables: Vec<CableKindCatalog>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct VortexProps {
-    id: String,
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct VortexProps {
+    pub id: String,
     #[serde(rename = "vortexKind", default)]
-    vortex_kind: Option<String>,
-    position: Vec3,
-    direction: Option<Vec3>,
+    pub vortex_kind: Option<String>,
+    pub position: Vec3,
+    pub direction: Option<Vec3>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct FixtureObject {
-    id: String,
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct FixtureObject {
+    pub id: String,
     #[serde(rename = "objectKind", default)]
-    object_kind: Option<String>,
+    pub object_kind: Option<String>,
     #[serde(rename = "meshUrl", default)]
-    mesh_url: Option<String>,
-    origin: Vec3,
-    orientation: Option<Quat>,
-    scale: Option<serde_json::Value>,
+    pub mesh_url: Option<String>,
+    pub origin: Vec3,
+    pub orientation: Option<Quat>,
+    pub scale: Option<serde_json::Value>,
     #[serde(default)]
-    vortices: Vec<VortexProps>,
+    pub vortices: Vec<VortexProps>,
     /// 🪣️ Live-viewport-only tag (never persisted to the document): this object's 0-based position in
     /// the fill plan's sequence, so the viewport can reveal/hide planned pieces by drag position without
     /// a WASM round trip. Set only on `compose_fill_display`'s output, stripped from committed fixtures.
     #[serde(rename = "revealIndex", default, skip_serializing_if = "Option::is_none")]
-    reveal_index: Option<usize>,
+    pub reveal_index: Option<usize>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-struct AttractionProps {
+pub struct AttractionProps {
     #[serde(default)]
-    id: String,
-    attracting: String,
-    attracted: String,
+    pub id: String,
+    pub attracting: String,
+    pub attracted: String,
     #[serde(default)]
-    gap: f64,
+    pub gap: f64,
     #[serde(default)]
-    shift: f64,
+    pub shift: f64,
     #[serde(default)]
-    rise: f64,
+    pub rise: f64,
     #[serde(default)]
-    rotation: f64,
+    pub rotation: f64,
     #[serde(default)]
-    turn: f64,
+    pub turn: f64,
     #[serde(default)]
-    tilt: f64,
+    pub tilt: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-struct WorldVolumeProps {
-    id: String,
-    origin: Vec3,
+pub struct WorldVolumeProps {
+    pub id: String,
+    pub origin: Vec3,
     #[serde(default)]
-    orientation: Option<Quat>,
+    pub orientation: Option<Quat>,
     #[serde(default)]
-    scale: Option<serde_json::Value>,
+    pub scale: Option<serde_json::Value>,
 }
 
 /// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
 /// `apply_brush_placement_to_fixture`'s public signature.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Fixture {
     #[serde(default)]
-    attractions: Vec<AttractionProps>,
+    pub attractions: Vec<AttractionProps>,
     #[serde(default)]
-    objects: Vec<FixtureObject>,
+    pub objects: Vec<FixtureObject>,
     #[serde(default, rename = "targetVolumes")]
-    target_volumes: Vec<WorldVolumeProps>,
+    pub target_volumes: Vec<WorldVolumeProps>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct SceneConfig {
+/// 📨️ The full typed payload `Puzzle3dEngineCommand::SetScene` (`puzzle_3d_protocol`) carries — the
+/// exact same shape `Puzzle3dEngine::set_scene`'s JSON payload has always deserialized into, just
+/// reused directly instead of re-declared, so the command enum's field IS this type, not a mirror of it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct SceneConfig {
     fixture: Fixture,
     #[serde(rename = "kindCatalogs", default)]
     kind_catalogs: Option<KindCatalogBundle>,
@@ -345,11 +345,11 @@ struct SceneConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BrushCompatibleCandidate {
-    object_kind_id: String,
-    source_vortex_index: usize,
+    pub object_kind_id: String,
+    pub source_vortex_index: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BrushPreviewState {
     pub target_vortex_full_id: String,
@@ -362,33 +362,43 @@ pub struct BrushPreviewState {
     pub scale: Option<serde_json::Value>,
 }
 
+/// 🎯️ Public so `Puzzle3dEngineOutcome::BrushCandidates` can hand this back to callers (`ui` slot) as
+/// a typed value instead of the JSON string the old `brush_candidates` wasm-bindgen method returned.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct BrushCollisionFreeResult {
-    free: Vec<BrushCompatibleCandidate>,
-    unknown_pending: bool,
+pub struct BrushCollisionFreeResult {
+    pub free: Vec<BrushCompatibleCandidate>,
+    pub unknown_pending: bool,
     #[serde(default)]
-    resume_candidate_index: usize,
+    pub resume_candidate_index: usize,
 }
 
 /// 🚦️ Which background precompute lane a tick should advance — fill and brush never share one FIFO queue.
-#[cfg_attr(all(target_arch = "wasm32", not(target_env = "p2")), wasm_bindgen)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PrecomputeLane {
     Brush = 0,
     Fill = 1,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct BrushPlacePayload {
-    target_vortex_full_id: String,
-    object_kind_id: String,
-    source_vortex_index: usize,
-    origin: Vec3,
-    orientation: Quat,
+    pub target_vortex_full_id: String,
+    pub object_kind_id: String,
+    pub source_vortex_index: usize,
+    pub origin: Vec3,
+    pub orientation: Quat,
     #[serde(skip_serializing_if = "Option::is_none")]
-    scale: Option<serde_json::Value>,
+    pub scale: Option<serde_json::Value>,
+}
+
+/// 🎯️ A suggestion-popup preview accepted as-is becomes a placement at the exact same pose — the one
+/// field `BrushPreviewState` carries that `BrushPlacePayload` doesn't (`mesh_url`, resolvable again
+/// from `object_kind_id` via the kind catalog) is simply dropped.
+impl From<BrushPreviewState> for BrushPlacePayload {
+    fn from(preview: BrushPreviewState) -> Self {
+        Self { target_vortex_full_id: preview.target_vortex_full_id, object_kind_id: preview.object_kind_id, source_vortex_index: preview.source_vortex_index, origin: preview.origin, orientation: preview.orientation, scale: preview.scale }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -406,7 +416,7 @@ pub struct FillBuildProgress {
     sequence: Vec<BrushPlacePayload>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FillProgressSummary {
     pub count: usize,
@@ -1028,7 +1038,7 @@ fn enumerate_brush_fill_vortex_targets(fixture: &Fixture) -> Vec<BrushFillVortex
     out
 }
 
-fn brush_kind_weight_value(weights: &HashMap<String, f64>, id: &str) -> f64 {
+fn brush_kind_weight_value(weights: &std::collections::BTreeMap<String, f64>, id: &str) -> f64 {
     weights.get(id).copied().unwrap_or(1.0)
 }
 
@@ -1148,13 +1158,16 @@ fn brush_preview_from_candidate(target_full_id: &str, candidate: &BrushCompatibl
     Some(BrushPreviewState { target_vortex_full_id: target_full_id.to_string(), object_kind_id: kind.id.clone(), source_vortex_index: candidate.source_vortex_index, mesh_url, origin, orientation, scale: kind.scale.clone() })
 }
 
-/// ⏱️ Monotonic-enough wall clock in milliseconds — `Date.now()` only for wasm-bindgen web targets.
-/// WASI P2 program components (`target_env = "p2"`) must not call `js_sys` (no wasm-bindgen imports);
-/// they share the native `Instant` path so precompute budgets still advance.
-/// @link https://docs.rs/js-sys/latest/js_sys/struct.Date.html#method.now
+/// ⏱️ Monotonic-enough wall clock in milliseconds for precompute step budgeting. WASI P2 program
+/// components (`target_env = "p2"`, this crate's real deployment target) and native (tests) share the
+/// `Instant`-based path below. Plain `wasm32-unknown-unknown` has no OS clock and this headless
+/// (constitutional: engine) crate must not depend on `js-sys`/`wasm-bindgen` to bridge to `Date.now()`
+/// — it freezes at 0.0 instead, degrading step budgeting to the step-count budget alone. The one real
+/// `wasm32-unknown-unknown` build of this crate's dependents (a Storybook DSL-text-parsing wasm
+/// bundle) never drives the precompute session, so this never actually matters at runtime.
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 fn puzzle3d_now_ms() -> f64 {
-    js_sys::Date::now()
+    0.0
 }
 
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
@@ -1308,7 +1321,7 @@ impl Puzzle3dEngine {
         self.fill_steps_remaining = fill.max_count.saturating_sub(applied);
     }
 
-    fn update_kind_weights(&mut self, object_weights: HashMap<String, f64>, vortex_weights: HashMap<String, f64>) {
+    fn update_kind_weights(&mut self, object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64>) {
         if let Some(scene) = &mut self.scene {
             scene.weights.object_weights = object_weights;
             scene.weights.vortex_weights = vortex_weights;
@@ -1541,7 +1554,7 @@ impl Puzzle3dEngine {
         self.brush_collision_free(target_full_id, &compatible, scene.overlap_budget)
     }
 
-    pub fn brush_preview_json(&self, target_full_id: &str, candidate_index: usize) -> Option<String> {
+    pub fn brush_preview(&self, target_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {
         let scene = self.scene.as_ref()?;
         let result = self.brush_cache.get(target_full_id)?;
         if result.unknown_pending && result.free.is_empty() {
@@ -1566,8 +1579,7 @@ impl Puzzle3dEngine {
         let (position, direction) = vortex_world_from_object(host, vortex_index)?;
         let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
-        let preview = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, &catalogs, &scene.fixture)?;
-        serde_json::to_string(&preview).ok()
+        brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, &catalogs, &scene.fixture)
     }
 
     fn precompute_step_lane(&mut self, lane: PrecomputeLane, budget: u32) -> bool {
@@ -1862,160 +1874,48 @@ fn uuid_simple() -> String {
     out
 }
 
-#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 fn js_sys_time_now() -> f64 {
     0.0
 }
 
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-fn js_sys_time_now() -> f64 {
-    js_sys::Date::now()
+//#region 🔖️Dispatch
+/// 🎯️ Typed command envelope for `Puzzle3dPrecomputeSession::dispatch` — the headless
+/// (constitutional: engine) replacement for the old per-action JSON-string wasm-bindgen methods.
+/// Derived (not hand-written `OpText`/`OpBinary`) here — not in `puzzle_3d_protocol` — because the
+/// derive's generated code needs `SceneConfig`/`BrushPlacePayload` in scope by value, and `protocol`
+/// (the app slot) must depend on `engine` for those types, so the derive has to live on the engine
+/// side of that edge to avoid a cycle; `puzzle_3d_protocol` re-exports this type and wraps
+/// `encode_op`/`decode_op`, exactly like it already does for `puzzle_3d_op::Puzzle3dOperation`.
+/// Field shapes mirror the exact payload each old JSON-string method parsed: `SetScene` mirrors
+/// `set_scene`'s `SceneConfig` JSON body, `ApplyBrushPlacement` mirrors `apply_brush_placement_json`'s
+/// `BrushPlacePayload` body, `UpdateKindWeights` mirrors `update_kind_weights`'s two JSON map bodies.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum Puzzle3dEngineCommand {
+    #[dsl(key = "set-scene")]
+    SetScene { scene: SceneConfig },
+    #[dsl(key = "apply-brush-placement")]
+    ApplyBrushPlacement { payload: BrushPlacePayload },
+    #[dsl(key = "apply-fill-count")]
+    ApplyFillCount { count: u32 },
+    #[dsl(key = "compose-fill-display")]
+    ComposeFillDisplay { count: u32 },
+    #[dsl(key = "update-kind-weights")]
+    UpdateKindWeights { object_weights: std::collections::BTreeMap<String, f64>, vortex_weights: std::collections::BTreeMap<String, f64> },
+    #[dsl(key = "brush-preview")]
+    BrushPreview { vortex_full_id: String, candidate_index: u32 },
 }
 
-/// 🔤️ Parses `.puzzle3d` DSL text (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.3d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[wasm_bindgen(js_name = puzzle3dParseDslJson)]
-pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-    use store::DocumentDsl;
-    let projection = Puzzle3dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
-    serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
+/// 📬️ What `dispatch` hands back — the typed counterpart of what each old JSON-string method
+/// returned (a `Fixture` JSON string, a `BrushPreviewState` JSON string, or nothing). Plain Rust, no
+/// DSL/wasm-bindgen requirement — this only ever crosses the `engine` <-> `ui` boundary in-process.
+#[derive(Debug, Clone, PartialEq)]
+pub enum Puzzle3dEngineOutcome {
+    Unit,
+    Fixture(Fixture),
+    BrushPreview(Option<BrushPreviewState>),
 }
+//#endregion 🔖️Dispatch
 
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[wasm_bindgen]
-pub struct Puzzle3dPrecomputeSession {
-    engine: Puzzle3dEngine,
-}
-
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-impl Default for Puzzle3dPrecomputeSession {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-#[wasm_bindgen]
-impl Puzzle3dPrecomputeSession {
-    #[wasm_bindgen(constructor)]
-    pub fn new() -> Self {
-        Self { engine: Puzzle3dEngine::new() }
-    }
-
-    pub fn set_scene(&mut self, json: &str) -> Result<(), JsValue> {
-        self.engine.set_scene(json).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
-        self.engine.register_mesh(url.to_string(), positions.to_vec(), indices.to_vec());
-    }
-
-    pub fn register_mesh_fallback(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
-        self.engine.register_mesh_fallback(url.to_string(), positions.to_vec(), indices.to_vec());
-    }
-
-    pub fn has_mesh(&self, url: &str) -> bool {
-        self.engine.has_mesh(url)
-    }
-
-    pub fn precompute_step(&mut self, budget: u32) -> bool {
-        self.engine.precompute_step(budget)
-    }
-
-    pub fn precompute_step_lane(&mut self, lane: PrecomputeLane, budget: u32) -> bool {
-        self.engine.precompute_step_lane(lane, budget)
-    }
-
-    pub fn enqueue_brush_target(&mut self, vortex_full_id: &str) {
-        self.engine.enqueue_brush_target(vortex_full_id);
-    }
-
-    pub fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
-        self.engine.invalidate_brush_target(vortex_full_id);
-    }
-
-    pub fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
-        self.engine.refresh_brush_candidates(vortex_full_id);
-    }
-
-    pub fn brush_candidates(&self, vortex_full_id: &str) -> String {
-        if let Some(hit) = self.engine.brush_cache.get(vortex_full_id) {
-            return serde_json::to_string(hit).unwrap_or_else(|_| "{}".to_string());
-        }
-        serde_json::to_string(&BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 }).unwrap_or_else(|_| "{}".to_string())
-    }
-
-    pub fn brush_preview_json(&self, vortex_full_id: &str, candidate_index: usize) -> Option<String> {
-        self.engine.brush_preview_json(vortex_full_id, candidate_index)
-    }
-
-    pub fn fill_progress(&self) -> String {
-        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
-        serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
-    }
-
-    pub fn fill_progress_summary(&self) -> String {
-        serde_json::to_string(&self.engine.fill_progress_summary()).unwrap_or_else(|_| "{}".to_string())
-    }
-
-    /// 🪣️ O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` JSON
-    /// round trip just to read `sequence.len()`.
-    pub fn fill_available_count(&self) -> u32 {
-        self.engine.fill.as_ref().map(|fill| fill.sequence.len() as u32).unwrap_or(0)
-    }
-
-    pub fn fill_is_done(&self) -> bool {
-        self.engine.fill.as_ref().map(|fill| fill.stalled || fill.sequence.len() >= fill.max_count).unwrap_or(true)
-    }
-
-    pub fn apply_brush_placement_json(&mut self, payload_json: &str) -> Result<String, JsValue> {
-        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let fixture = self.engine.apply_brush_placement(&payload).ok_or_else(|| JsValue::from_str("brush placement rejected"))?;
-        serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    pub fn apply_fill_count(&mut self, count: u32) -> Result<String, JsValue> {
-        let fixture = self.engine.apply_fill_count(count as usize).ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
-        serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    pub fn compose_fill_display(&self, count: u32) -> Result<String, JsValue> {
-        let fixture = self.engine.compose_fill_display(count as usize).ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
-        serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    pub fn update_kind_weights(&mut self, object_weights: &str, vortex_weights: &str) -> Result<(), JsValue> {
-        let object_weights: HashMap<String, f64> = serde_json::from_str(object_weights).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let vortex_weights: HashMap<String, f64> = serde_json::from_str(vortex_weights).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        self.engine.update_kind_weights(object_weights, vortex_weights);
-        Ok(())
-    }
-}
-
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
-impl Puzzle3dPrecomputeSession {
-    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle3dError> {
-        let payload: BrushPlacePayload = serde_json::from_str(payload_json)?;
-        let fixture = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
-        Ok(serde_json::to_string(&fixture)?)
-    }
-
-    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle3dError> {
-        let fixture = self.engine.apply_fill_count(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
-        Ok(serde_json::to_string(&fixture)?)
-    }
-
-    pub fn compose_fill_display_rust(&self, count: u32) -> Result<String, Puzzle3dError> {
-        let fixture = self.engine.compose_fill_display(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
-        Ok(serde_json::to_string(&fixture)?)
-    }
-
-    pub fn update_kind_weights_rust(&mut self, object_weights: HashMap<String, f64>, vortex_weights: HashMap<String, f64>) {
-        self.engine.update_kind_weights(object_weights, vortex_weights);
-    }
-}
-
-#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 pub struct Puzzle3dPrecomputeSession {
     engine: Puzzle3dEngine,
 }
@@ -2299,9 +2199,9 @@ mod tests {
 
         let queue_before = engine.work_pending_for_test();
         let weight_start = std::time::Instant::now();
-        let mut object_weights = HashMap::new();
+        let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Placed".to_string(), 1.0);
-        let mut vortex_weights = HashMap::new();
+        let mut vortex_weights = std::collections::BTreeMap::new();
         vortex_weights.insert("c-b".to_string(), 0.5);
         vortex_weights.insert("b-s".to_string(), 0.5);
         engine.update_kind_weights(object_weights, vortex_weights);
@@ -2370,10 +2270,10 @@ mod tests {
         let queue_len_after_step = engine.work_pending_for_test();
         assert!(queue_len_after_step < queue_len_after_seed);
 
-        let mut object_weights = HashMap::new();
+        let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 0.25);
         object_weights.insert("Placed".to_string(), 0.75);
-        let mut vortex_weights = HashMap::new();
+        let mut vortex_weights = std::collections::BTreeMap::new();
         vortex_weights.insert("c-b".to_string(), 0.5);
         vortex_weights.insert("b-s".to_string(), 0.5);
         engine.update_kind_weights(object_weights, vortex_weights);
@@ -3067,7 +2967,7 @@ mod tests {
 
         engine.refresh_brush_candidates("host:v0");
         assert!(engine.brush_cache.contains_key("host:v0"));
-        assert_eq!(engine.brush_preview_json("host:v0", 0), None, "the catalog's Host kind has no vortices, so there are no free candidates");
+        assert_eq!(engine.brush_preview("host:v0", 0), None, "the catalog's Host kind has no vortices, so there are no free candidates");
     }
 
     #[test]
@@ -3083,31 +2983,34 @@ mod tests {
         session.precompute_step(50);
         session.invalidate_brush_target("host:v0");
         session.refresh_brush_candidates("host:v0");
-        let candidates_json = session.brush_candidates("host:v0");
-        assert!(candidates_json.contains("free"));
-        assert!(session.brush_preview_json("host:v0", 0).is_none());
+        let _candidates: BrushCollisionFreeResult = session.brush_candidates("host:v0");
+        assert!(session.brush_preview("host:v0", 0).is_none());
 
-        assert!(session.fill_progress().contains("maxCount"));
+        assert_eq!(session.fill_progress().max_count, FILL_COUNT_MAX);
         assert_eq!(session.fill_available_count(), 0);
 
-        let mut object_weights = HashMap::new();
+        let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 1.0);
-        session.update_kind_weights_rust(object_weights, HashMap::new());
+        session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() }).expect("update kind weights");
 
-        assert!(session.apply_brush_placement_rust("not json").is_err());
+        let missing_payload = BrushPlacePayload { target_vortex_full_id: "missing:v0".to_string(), object_kind_id: "Nonexistent".to_string(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        assert!(session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: missing_payload }).is_err());
 
-        let fixture_json = session.apply_fill_count_rust(0).expect("fill session available");
-        assert!(fixture_json.contains("\"host\""));
-        let display_json = session.compose_fill_display_rust(0).expect("fill session available");
-        assert!(display_json.contains("\"host\""));
+        let outcome = session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).expect("fill session available");
+        let Puzzle3dEngineOutcome::Fixture(fixture) = outcome else { panic!("expected a Fixture outcome") };
+        assert!(fixture.objects.iter().any(|object| object.id == "host"));
+        let outcome = session.dispatch(Puzzle3dEngineCommand::ComposeFillDisplay { count: 0 }).expect("fill session available");
+        let Puzzle3dEngineOutcome::Fixture(fixture) = outcome else { panic!("expected a Fixture outcome") };
+        assert!(fixture.objects.iter().any(|object| object.id == "host"));
     }
 
     #[test]
     fn precompute_session_native_wrapper_errors_without_scene() {
         let mut session = Puzzle3dPrecomputeSession::new();
-        assert!(session.apply_fill_count_rust(0).is_err());
-        assert!(session.compose_fill_display_rust(0).is_err());
-        assert!(session.apply_brush_placement_rust(r#"{"targetVortexFullId":"a","objectKindId":"b","sourceVortexIndex":0,"origin":[0,0,0],"orientation":[0,0,0,1]}"#).is_err());
+        assert!(session.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count: 0 }).is_err());
+        assert!(session.dispatch(Puzzle3dEngineCommand::ComposeFillDisplay { count: 0 }).is_err());
+        let payload = BrushPlacePayload { target_vortex_full_id: "a:v0".to_string(), object_kind_id: "b".to_string(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        assert!(session.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload }).is_err());
         assert!(session.fill_is_done());
         assert_eq!(session.fill_available_count(), 0);
     }
@@ -3131,20 +3034,18 @@ mod tests {
     fn brush_candidates_cold_cache_returns_pending_without_populating_cache() {
         let mut session = Puzzle3dPrecomputeSession::new();
         session.set_scene(&single_object_scene_json()).expect("seed");
-        let json = session.brush_candidates("host:v0");
-        assert!(json.contains("unknownPending"), "cold cache must surface pending state: {json}");
-        assert!(session.brush_preview_json("host:v0", 0).is_none());
+        let result = session.brush_candidates("host:v0");
+        assert!(result.unknown_pending, "cold cache must surface pending state: {result:?}");
+        assert!(session.brush_preview("host:v0", 0).is_none());
     }
 }
 
-#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 impl Default for Puzzle3dPrecomputeSession {
     fn default() -> Self {
         Self::new()
     }
 }
 
-#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
         Self { engine: Puzzle3dEngine::new() }
@@ -3186,28 +3087,26 @@ impl Puzzle3dPrecomputeSession {
         self.engine.refresh_brush_candidates(vortex_full_id);
     }
 
-    pub fn brush_candidates(&self, vortex_full_id: &str) -> String {
-        if let Some(hit) = self.engine.brush_cache.get(vortex_full_id) {
-            return serde_json::to_string(hit).unwrap_or_else(|_| "{}".to_string());
-        }
-        serde_json::to_string(&BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 }).unwrap_or_else(|_| "{}".to_string())
+    /// 🎯️ Typed readout — was a JSON string (`Result<String, _>`-free `String`) before this ticket's
+    /// headless-engine-law fix; `puzzle_3d_ui` now reads `.free`/`.unknown_pending` directly.
+    pub fn brush_candidates(&self, vortex_full_id: &str) -> BrushCollisionFreeResult {
+        self.engine.brush_cache.get(vortex_full_id).cloned().unwrap_or(BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 })
     }
 
-    pub fn brush_preview_json(&self, vortex_full_id: &str, candidate_index: usize) -> Option<String> {
-        self.engine.brush_preview_json(vortex_full_id, candidate_index)
+    pub fn brush_preview(&self, vortex_full_id: &str, candidate_index: usize) -> Option<BrushPreviewState> {
+        self.engine.brush_preview(vortex_full_id, candidate_index)
     }
 
-    pub fn fill_progress(&self) -> String {
-        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
-        serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
+    pub fn fill_progress(&self) -> FillBuildProgress {
+        self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] })
     }
 
-    pub fn fill_progress_summary(&self) -> String {
-        serde_json::to_string(&self.engine.fill_progress_summary()).unwrap_or_else(|_| "{}".to_string())
+    pub fn fill_progress_summary(&self) -> FillProgressSummary {
+        self.engine.fill_progress_summary()
     }
 
-    /// 🪣️ O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` JSON
-    /// round trip just to read `sequence.len()`.
+    /// 🪣️ O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` round
+    /// trip just to read `sequence.len()`.
     pub fn fill_available_count(&self) -> u32 {
         self.engine.fill.as_ref().map(|fill| fill.sequence.len() as u32).unwrap_or(0)
     }
@@ -3216,27 +3115,47 @@ impl Puzzle3dPrecomputeSession {
         self.engine.fill.as_ref().map(|fill| fill.stalled || fill.sequence.len() >= fill.max_count).unwrap_or(true)
     }
 
-    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle3dError> {
-        let payload: BrushPlacePayload = serde_json::from_str(payload_json)?;
-        let fixture = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
-        Ok(serde_json::to_string(&fixture)?)
+    /// 🪣️ Read-only prefix of the precomputed fill plan for live viewport show/hide — a query, so it
+    /// stays a plain `&self` method rather than routing through `dispatch` (which is `&mut self`,
+    /// uniform for the small number of genuinely mutating actions). `Puzzle3dEngineCommand::
+    /// ComposeFillDisplay` still exists as a `dispatch`-able alias of this same call for command-log/
+    /// wasm-bindgen-wrapper callers that only ever hold `&mut Puzzle3dPrecomputeSession`.
+    pub fn compose_fill_display(&self, count: u32) -> Option<Fixture> {
+        self.engine.compose_fill_display(count as usize)
     }
 
-    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle3dError> {
-        let fixture = self.engine.apply_fill_count(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
-        Ok(serde_json::to_string(&fixture)?)
-    }
-
-    pub fn compose_fill_display_rust(&self, count: u32) -> Result<String, Puzzle3dError> {
-        let fixture = self.engine.compose_fill_display(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
-        Ok(serde_json::to_string(&fixture)?)
-    }
-
-    pub fn update_kind_weights_rust(&mut self, object_weights: HashMap<String, f64>, vortex_weights: HashMap<String, f64>) {
-        self.engine.update_kind_weights(object_weights, vortex_weights);
+    /// 🎯️ Single typed entry point for every mutating (or JSON-carrying-before-this-fix) engine
+    /// action — the headless (constitutional: engine) replacement for the old per-action
+    /// `apply_brush_placement_json`/`apply_fill_count`/`compose_fill_display`/`update_kind_weights`/
+    /// `brush_preview_json` wasm-bindgen methods. Each arm calls the SAME underlying typed
+    /// `Puzzle3dEngine` method those JSON wrappers always delegated to — no reimplementation.
+    pub fn dispatch(&mut self, command: Puzzle3dEngineCommand) -> Result<Puzzle3dEngineOutcome, Puzzle3dError> {
+        match command {
+            Puzzle3dEngineCommand::SetScene { scene } => {
+                let json = serde_json::to_string(&scene)?;
+                self.engine.set_scene(&json)?;
+                Ok(Puzzle3dEngineOutcome::Unit)
+            }
+            Puzzle3dEngineCommand::ApplyBrushPlacement { payload } => {
+                let fixture = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
+                Ok(Puzzle3dEngineOutcome::Fixture(fixture))
+            }
+            Puzzle3dEngineCommand::ApplyFillCount { count } => {
+                let fixture = self.engine.apply_fill_count(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
+                Ok(Puzzle3dEngineOutcome::Fixture(fixture))
+            }
+            Puzzle3dEngineCommand::ComposeFillDisplay { count } => {
+                let fixture = self.engine.compose_fill_display(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
+                Ok(Puzzle3dEngineOutcome::Fixture(fixture))
+            }
+            Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights } => {
+                self.engine.update_kind_weights(object_weights, vortex_weights);
+                Ok(Puzzle3dEngineOutcome::Unit)
+            }
+            Puzzle3dEngineCommand::BrushPreview { vortex_full_id, candidate_index } => Ok(Puzzle3dEngineOutcome::BrushPreview(self.engine.brush_preview(&vortex_full_id, candidate_index as usize))),
+        }
     }
 }
-
 
 //#region 🔖️DocumentHelpers
 pub fn empty_puzzle3d_projection() -> Puzzle3dProjection {

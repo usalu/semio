@@ -391,6 +391,14 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             field_path: String,
         },
         SyncParameterPorts,
+        /// 🧮️ Sets (or, with `config: None`, clears back to the app's own defaults) an app instance's
+        /// dynamic `OsAppInstance::config` — the studio-document-side counterpart to dispatching
+        /// `AppCommand::Configure` at the running app instance (see `build_configure_config`).
+        SetAppInstanceConfig {
+            instance_id: String,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            config: Option<Value>,
+        },
     }
 
     pub type OsVcs = DocumentVcs<OsProjection, OsOperation>;
@@ -494,6 +502,13 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             OsOperation::SyncParameterPorts => {
                 next.workflow = sync_workflow_parameter_ports(&next.workflow, &next.parameter_bindings);
             }
+            OsOperation::SetAppInstanceConfig { instance_id, config } => {
+                for instance in &mut next.app_instances {
+                    if instance.id == *instance_id {
+                        instance.config = config.clone();
+                    }
+                }
+            }
         }
         next
     }
@@ -563,6 +578,11 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             field_path: String,
         },
         SyncParameterPorts,
+        SetAppInstanceConfig {
+            instance_id: String,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            config: Option<Value>,
+        },
     }
 
     impl OperationDiff<OsProjection> for OsDiff {
@@ -583,6 +603,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 OsDiff::BindParameterField { binding } => OsOperation::BindParameterField { binding: binding.clone() },
                 OsDiff::UnbindParameterField { instance_id, field_path } => OsOperation::UnbindParameterField { instance_id: instance_id.clone(), field_path: field_path.clone() },
                 OsDiff::SyncParameterPorts => OsOperation::SyncParameterPorts,
+                OsDiff::SetAppInstanceConfig { instance_id, config } => OsOperation::SetAppInstanceConfig { instance_id: instance_id.clone(), config: config.clone() },
             };
             apply_os_operation(projection, &operation)
         }
@@ -613,6 +634,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 OsOperation::BindParameterField { binding } => OsDiff::BindParameterField { binding: binding.clone() },
                 OsOperation::UnbindParameterField { instance_id, field_path } => OsDiff::UnbindParameterField { instance_id: instance_id.clone(), field_path: field_path.clone() },
                 OsOperation::SyncParameterPorts => OsDiff::SyncParameterPorts,
+                OsOperation::SetAppInstanceConfig { instance_id, config } => OsDiff::SetAppInstanceConfig { instance_id: instance_id.clone(), config: config.clone() },
             }
         }
 
@@ -653,6 +675,12 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     projection.parameter_bindings.iter().find(|binding| binding.instance_id == *instance_id && binding.field_path == *field_path).map(|binding| vec![OsOperation::BindParameterField { binding: binding.clone() }]).unwrap_or_default()
                 }
                 OsOperation::SyncParameterPorts => Vec::new(),
+                OsOperation::SetAppInstanceConfig { instance_id, .. } => projection
+                    .app_instances
+                    .iter()
+                    .find(|instance| instance.id == *instance_id)
+                    .map(|instance| vec![OsOperation::SetAppInstanceConfig { instance_id: instance_id.clone(), config: instance.config.clone() }])
+                    .unwrap_or_default(),
             }
         }
 
@@ -745,8 +773,45 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         edges = drop_workflow_cycle_edges(edges, &mut conflicts);
         //#endregion CycleDrop
 
+        //#region ParameterBindingValidation
+        // 🛡️ Same defense-in-depth spirit as `TypeMismatchDrop`, for the OTHER thing a concurrent edit
+        // can invalidate: a binding's target `ConfigSpec` field (a concurrent app swap/downgrade
+        // removed or re-shaped the field) or the bound parameter's own type (a concurrent
+        // `PatchParameter` re-typed it). Missing instance/registration/parameter is left alone here —
+        // those are separate lifecycle concerns already handled at op-apply time (`RemoveAppInstance`/
+        // `RemoveParameter` retain the dependent bindings themselves) or by a plugin simply not being
+        // loaded yet, neither of which this binding is at fault for.
+        let parameters = projection.parameters.clone();
+        let app_instances = projection.app_instances.clone();
+        projection.parameter_bindings.retain(|binding| {
+            let Some(instance) = app_instances.iter().find(|instance| instance.id == binding.instance_id) else { return true };
+            let Some(registration) = os_app_registration(&instance.plugin_id, &instance.app_id) else { return true };
+            let Some(parameter_type) = parameters.iter().find(|parameter| parameter_entity_id(parameter) == binding.parameter_id).map(parameter_type_of) else { return true };
+            match crate::instance::validate_parameter_config_binding(binding, &parameter_type, &registration.config) {
+                Ok(()) => true,
+                Err(conflict) => {
+                    conflicts.push(conflict);
+                    false
+                }
+            }
+        });
+        projection.workflow = sync_workflow_parameter_ports(&projection.workflow, &projection.parameter_bindings);
+        //#endregion ParameterBindingValidation
+
         projection.workflow.edges = edges;
         (projection, conflicts)
+    }
+
+    /// @emoji 🎛️ Maps an `OsParameter` to its `OsParameterType` tag — the `reconcile_os_workflow`-local
+    /// twin of the space plugin UI's own inline match (`os_parameter_types_compatible`'s caller),
+    /// needed here to type-check a binding's parameter against its target `ConfigFieldShape`.
+    fn parameter_type_of(parameter: &OsParameter) -> OsParameterType {
+        match parameter {
+            OsParameter::Numeric { .. } => OsParameterType::Numeric,
+            OsParameter::Categorical { .. } => OsParameterType::Categorical,
+            OsParameter::Toggle { .. } => OsParameterType::Toggle,
+            OsParameter::Text { .. } => OsParameterType::Text,
+        }
     }
 
     /// @emoji 🌀️ Repeatedly finds a cycle in `edges` (by node-id adjacency) and drops the participating
@@ -884,6 +949,11 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         BindParameterField { binding: OsParameterFieldBinding },
         UnbindParameterField { instance_id: String, field_path: String },
         SyncParameterPorts,
+        SetAppInstanceConfig {
+            #[dsl(key = "id")]
+            instance_id: String,
+            config: Option<Value>,
+        },
     }
 
     fn os_operation_to_dsl(operation: &OsOperation) -> OsOperationDsl {
@@ -902,6 +972,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             OsOperation::BindParameterField { binding } => OsOperationDsl::BindParameterField { binding: binding.clone() },
             OsOperation::UnbindParameterField { instance_id, field_path } => OsOperationDsl::UnbindParameterField { instance_id: instance_id.clone(), field_path: field_path.clone() },
             OsOperation::SyncParameterPorts => OsOperationDsl::SyncParameterPorts,
+            OsOperation::SetAppInstanceConfig { instance_id, config } => OsOperationDsl::SetAppInstanceConfig { instance_id: instance_id.clone(), config: config.clone() },
         }
     }
 
@@ -921,6 +992,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             OsOperationDsl::BindParameterField { binding } => OsOperation::BindParameterField { binding },
             OsOperationDsl::UnbindParameterField { instance_id, field_path } => OsOperation::UnbindParameterField { instance_id, field_path },
             OsOperationDsl::SyncParameterPorts => OsOperation::SyncParameterPorts,
+            OsOperationDsl::SetAppInstanceConfig { instance_id, config } => OsOperation::SetAppInstanceConfig { instance_id, config },
         }
     }
 
@@ -1070,6 +1142,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 label: label.map(str::to_string).unwrap_or_else(|| registration.label.clone()),
                 yields: os_app_primary_output_kind(&registration),
                 document: OsDocumentRef { document_id, schema: registration.source_format.clone() },
+                config: None,
             };
             self.dispatch_apply(vec![OsOperation::SpawnAppInstance { instance, position, node_id }])?;
             Ok(instance_id)
@@ -1383,6 +1456,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     media_inputs: Vec::new(),
                     media_outputs: Vec::new(),
                     artifact_kinds: Vec::new(),
+                    config: semio_framework_core::ConfigSpec::empty(),
+                    command_grammar: semio_framework_core::CommandGrammar::empty(),
+                    io: semio_framework_core::AppIo::default(),
                     tutorials: Vec::new(),
                 }],
                 workflows: vec![],
@@ -1436,6 +1512,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
+                config: semio_framework_core::ConfigSpec::empty(),
+                command_grammar: semio_framework_core::CommandGrammar::empty(),
+                io: semio_framework_core::AppIo::default(),
                 tutorials: Vec::new(),
             };
             let note_app = AppDefinition {
@@ -1476,6 +1555,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
+                config: semio_framework_core::ConfigSpec::empty(),
+                command_grammar: semio_framework_core::CommandGrammar::empty(),
+                io: semio_framework_core::AppIo::default(),
                 tutorials: Vec::new(),
             };
             host.load_plugin(LoadedProgram {
@@ -1539,6 +1621,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 artifact_kinds: Vec::new(),
+                config: semio_framework_core::ConfigSpec::empty(),
+                command_grammar: semio_framework_core::CommandGrammar::empty(),
+                io: semio_framework_core::AppIo::default(),
                 tutorials: Vec::new(),
             };
             host.load_plugin(LoadedProgram {
@@ -1656,6 +1741,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
                     default_mode_id: None,
                     parameter_fields: Vec::new(),
+                    config: semio_framework_core::ConfigSpec::empty(),
                 },
             );
             merge_os_plugin_definition(
@@ -1816,6 +1902,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                         label: "Puzzle Board \"3D\"".into(),
                         yields: "puzzle.2d.fixture".into(),
                         document: OsDocumentRef { document_id: "doc-1".into(), schema: "puzzle.2d.fixture".into() },
+                        config: Some(serde_json::json!({ "brushSize": 4.0 })),
                     },
                     OsAppInstance {
                         id: "app-2".into(),
@@ -1824,6 +1911,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                         label: "Draw Sink".into(),
                         yields: "draw.document".into(),
                         document: OsDocumentRef { document_id: "doc-2".into(), schema: "draw.document".into() },
+                        config: None,
                     },
                 ],
                 workflow: OsWorkflow { schema: OS_WORKFLOW_SCHEMA.into(), nodes: vec![node_a, node_b], edges: vec![edge] },
@@ -1884,6 +1972,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     label: "Puzzle Board".into(),
                     yields: "puzzle.2d.fixture".into(),
                     document: OsDocumentRef { document_id: "doc-1".into(), schema: "puzzle.2d.fixture".into() },
+                    config: None,
                 },
                 position: WorkflowPosition { x: 10.0, y: -20.5 },
                 node_id: "node-1".into(),
@@ -1961,6 +2050,12 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         #[test]
         fn op_text_round_trips_sync_parameter_ports() {
             store::test_support::assert_op_line_round_trip(&OsOperation::SyncParameterPorts);
+        }
+
+        #[test]
+        fn op_text_round_trips_set_app_instance_config() {
+            store::test_support::assert_op_line_round_trip(&OsOperation::SetAppInstanceConfig { instance_id: "app-1".into(), config: Some(serde_json::json!({ "zoom": 2.0, "label": "Roof Beam \"B12\"" })) });
+            store::test_support::assert_op_line_round_trip(&OsOperation::SetAppInstanceConfig { instance_id: "app-1".into(), config: None });
         }
 
         #[test]
@@ -2267,10 +2362,12 @@ pub mod instance {
     // #region instance
     //! 📦 App instance schemas, parameters, and studio bindings.
 
+    use semio_framework_core::{ConfigFieldShape, ConfigSpec};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
     use std::sync::atomic::{AtomicU64, Ordering};
+    use store::SpaceConflict;
 
     pub const OS_PARAMETER_PORT_PREFIX: &str = "param.";
 
@@ -2300,6 +2397,16 @@ pub mod instance {
         pub yields: String,
         #[dsl(block)]
         pub document: OsDocumentRef,
+        /// 🧮️ Dynamic wire-value-encodable config for this instance, validated against the app's
+        /// declared `ConfigSpec` (`AppDefinition.config`) at apply time (`build_configure_config`) —
+        /// `None` means "use the app's own config defaults". Mirrors the `serde_json::Value`
+        /// schema-less-escape-hatch convention this crate's `dsl_derive` already uses elsewhere (see
+        /// `dsl::DslField for serde_json::Value`) rather than `dsl_schema::DslValue` directly, which
+        /// has no `DslField` impl of its own. New field appended last per this struct's `dsl_derive`
+        /// field-id-by-declaration-order convention (field ids are never renumbered) — see
+        /// `dsl_derive::plan_fields`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub config: Option<Value>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2336,6 +2443,14 @@ pub mod instance {
     pub struct OsParameterFieldBinding {
         pub parameter_id: String,
         pub instance_id: String,
+        /// 🎯️ Names a `ConfigFieldSpec.key` in the target `instance`'s app's declared `ConfigSpec`
+        /// (resolved via `registry::os_app_registration(instance.plugin_id, instance.app_id).config`)
+        /// — see `validate_parameter_config_binding` (type-checks this against the field's
+        /// `ConfigFieldShape`) and `build_configure_config` (overlays the bound parameter's value onto
+        /// that config field for an `AppCommand::Configure` payload). Historically a JSON pointer into
+        /// the instance's live document (`apply_parameter_values_to_projection`'s still-live overlay,
+        /// used only by the media-export path today) — that document-projection sense is now
+        /// superseded by the config-field sense for anything driving a running app instance.
         pub field_path: String,
     }
 
@@ -2530,7 +2645,12 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Applies bound space parameter values onto an app projection via JSON pointers.
+    /// @emoji 🎛️ Applies bound space parameter values onto an app projection via JSON pointers. 🩹️
+    /// Pre-`ConfigSpec` document-projection overlay, kept for its one remaining live caller
+    /// (`app_instance_document_patches_for_binding`, the media-export path's synthetic-document seed)
+    /// — `field_path` here is still read as a JSON pointer into that bare document, distinct from the
+    /// `ConfigFieldSpec.key` sense `validate_parameter_config_binding`/`build_configure_config` give it
+    /// for driving a running app instance's config (see `OsParameterFieldBinding::field_path`'s doc).
     pub fn apply_parameter_values_to_projection(projection: Value, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], instance_id: &str) -> Value {
         let instance_bindings: Vec<_> = bindings.iter().filter(|binding| binding.instance_id == instance_id).collect();
         if instance_bindings.is_empty() {
@@ -2544,6 +2664,37 @@ pub mod instance {
             set_json_pointer_value(&mut clone, &binding.field_path, os_parameter_value(parameter));
         }
         clone
+    }
+
+    /// @emoji ✅️ Type-checks one binding's `field_path` against the target app's declared
+    /// `ConfigSpec`: the field must exist, and `parameter_type` must be able to drive its
+    /// `ConfigFieldShape` (`Numeric`↔`Number`, `Categorical`↔`Select`, `Toggle`↔`Toggle`,
+    /// `Text`↔`Text`; anything else — including an unknown `field_path` — is a conflict). Raised the
+    /// same way `host::reconcile_os_workflow` raises `"workflow/edge-type-mismatch"`, as
+    /// `"workflow/parameter-binding-invalid"`, so callers fold this into that same conflict-collecting
+    /// pass instead of a bespoke error type.
+    pub fn validate_parameter_config_binding(binding: &OsParameterFieldBinding, parameter_type: &OsParameterType, config_spec: &ConfigSpec) -> Result<(), SpaceConflict> {
+        let uri = format!("{}#{}", binding.instance_id, binding.field_path);
+        let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
+            return Err(SpaceConflict {
+                kind: "workflow/parameter-binding-invalid".into(),
+                uri,
+                message: format!("binding targets config field '{}', which the app's ConfigSpec does not declare", binding.field_path),
+            });
+        };
+        let compatible = matches!(
+            (parameter_type, &field.shape),
+            (OsParameterType::Numeric, ConfigFieldShape::Number { .. }) | (OsParameterType::Categorical, ConfigFieldShape::Select { .. }) | (OsParameterType::Toggle, ConfigFieldShape::Toggle) | (OsParameterType::Text, ConfigFieldShape::Text)
+        );
+        if compatible {
+            Ok(())
+        } else {
+            Err(SpaceConflict {
+                kind: "workflow/parameter-binding-invalid".into(),
+                uri,
+                message: format!("parameter type {parameter_type:?} cannot drive config field '{}' ({:?})", binding.field_path, field.shape),
+            })
+        }
     }
 
     trait OsParameterId {
@@ -2617,6 +2768,45 @@ pub mod instance {
     /// {@link OsDocumentRef} creation time (see `host_runtime`), not on every materialize/read.
     pub fn os_fixture_json(slug: &str) -> Option<String> {
         os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned())
+    }
+
+    /// @emoji 🎚️ Default config value seeded from `config_spec.fields[].default` — what a freshly
+    /// spawned instance's config resolves to before any explicit `instance.config`/binding overlay.
+    fn config_spec_default_value(config_spec: &ConfigSpec) -> Value {
+        let mut defaults = serde_json::Map::new();
+        for field in &config_spec.fields {
+            if let Some(default) = &field.default {
+                defaults.insert(field.key.clone(), default.clone());
+            }
+        }
+        Value::Object(defaults)
+    }
+
+    /// @emoji 🧩️ Builds the dynamic config value for an `AppCommand::Configure` payload: starts from
+    /// `instance.config` (falling back to the app's own `ConfigSpec` defaults when `None`), then
+    /// overlays every parameter bound to one of `config_spec`'s fields with that parameter's current
+    /// value — the config-driving counterpart to `apply_parameter_values_to_projection`'s
+    /// document-JSON-pointer overlay (see `OsParameterFieldBinding::field_path`'s doc for how the two
+    /// diverge). Callers (the renderer/headless-runner drivers dispatching `AppCommand::Configure`,
+    /// both out of this crate's scope) `store::pack_rt::encode_wire_value` the result themselves —
+    /// this function only builds the value, it never sends anything over a channel.
+    pub fn build_configure_config(instance: &OsAppInstance, parameters: &[OsParameter], bindings: &[OsParameterFieldBinding], config_spec: &ConfigSpec) -> Value {
+        let mut config = instance.config.clone().unwrap_or_else(|| config_spec_default_value(config_spec));
+        if !config.is_object() {
+            config = Value::Object(serde_json::Map::new());
+        }
+        // infallible: forced to `Value::Object(_)` immediately above.
+        let object = config.as_object_mut().expect("config is always an object here");
+        for binding in bindings.iter().filter(|binding| binding.instance_id == instance.id) {
+            let Some(field) = config_spec.fields.iter().find(|field| field.key == binding.field_path) else {
+                continue;
+            };
+            let Some(parameter) = parameters.iter().find(|entry| entry.id() == binding.parameter_id) else {
+                continue;
+            };
+            object.insert(field.key.clone(), os_parameter_value(parameter));
+        }
+        config
     }
 
     /// @emoji 🧩️ Overlays bound parameter values onto an app instance's current document projection.
@@ -2695,6 +2885,62 @@ pub mod instance {
             let parsed: Value = serde_json::from_str(&json).expect("json");
             assert_eq!(parsed["schema"], "draw.document");
             assert_eq!(parsed["id"], "semio");
+        }
+
+        fn sample_config_spec() -> ConfigSpec {
+            ConfigSpec {
+                fields: vec![
+                    semio_framework_core::ConfigFieldSpec { key: "zoom".into(), label: "Zoom".into(), shape: ConfigFieldShape::Number { min: None, max: None, step: None }, default: Some(serde_json::json!(1.0)) },
+                    semio_framework_core::ConfigFieldSpec { key: "mode".into(), label: "Mode".into(), shape: ConfigFieldShape::Select { options: vec!["A".into(), "B".into()] }, default: Some(serde_json::json!("A")) },
+                    semio_framework_core::ConfigFieldSpec { key: "flag".into(), label: "Flag".into(), shape: ConfigFieldShape::Toggle, default: None },
+                    semio_framework_core::ConfigFieldSpec { key: "label".into(), label: "Label".into(), shape: ConfigFieldShape::Text, default: None },
+                ],
+            }
+        }
+
+        #[test]
+        fn validates_matching_parameter_config_bindings() {
+            let config_spec = sample_config_spec();
+            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "i1".into(), field_path: "zoom".into() }, &OsParameterType::Numeric, &config_spec).is_ok());
+            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p2".into(), instance_id: "i1".into(), field_path: "mode".into() }, &OsParameterType::Categorical, &config_spec).is_ok());
+            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p3".into(), instance_id: "i1".into(), field_path: "flag".into() }, &OsParameterType::Toggle, &config_spec).is_ok());
+            assert!(validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p4".into(), instance_id: "i1".into(), field_path: "label".into() }, &OsParameterType::Text, &config_spec).is_ok());
+        }
+
+        #[test]
+        fn rejects_mismatched_parameter_config_bindings() {
+            let config_spec = sample_config_spec();
+            let mismatch = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "i1".into(), field_path: "zoom".into() }, &OsParameterType::Toggle, &config_spec).expect_err("toggle cannot drive a Number field");
+            assert_eq!(mismatch.kind, "workflow/parameter-binding-invalid");
+            let mismatch = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p2".into(), instance_id: "i1".into(), field_path: "mode".into() }, &OsParameterType::Text, &config_spec).expect_err("text cannot drive a Select field");
+            assert_eq!(mismatch.kind, "workflow/parameter-binding-invalid");
+        }
+
+        #[test]
+        fn rejects_parameter_config_binding_to_unknown_field() {
+            let config_spec = sample_config_spec();
+            let error = validate_parameter_config_binding(&OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "i1".into(), field_path: "nonexistent".into() }, &OsParameterType::Numeric, &config_spec).expect_err("field does not exist on the ConfigSpec");
+            assert_eq!(error.kind, "workflow/parameter-binding-invalid");
+        }
+
+        #[test]
+        fn build_configure_config_starts_from_config_spec_defaults() {
+            let config_spec = sample_config_spec();
+            let instance = OsAppInstance { id: "i1".into(), plugin_id: "p".into(), app_id: "a".into(), label: "A".into(), yields: "a.document".into(), document: OsDocumentRef { document_id: "d1".into(), schema: "a.document".into() }, config: None };
+            let config = build_configure_config(&instance, &[], &[], &config_spec);
+            assert_eq!(config["zoom"], 1.0);
+            assert_eq!(config["mode"], "A");
+        }
+
+        #[test]
+        fn build_configure_config_overlays_bound_parameter_values() {
+            let config_spec = sample_config_spec();
+            let instance = OsAppInstance { id: "i1".into(), plugin_id: "p".into(), app_id: "a".into(), label: "A".into(), yields: "a.document".into(), document: OsDocumentRef { document_id: "d1".into(), schema: "a.document".into() }, config: Some(serde_json::json!({ "zoom": 1.0, "mode": "A" })) };
+            let parameters = vec![OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 42.0, min: None, max: None, step: None }];
+            let bindings = vec![OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "i1".into(), field_path: "zoom".into() }];
+            let config = build_configure_config(&instance, &parameters, &bindings, &config_spec);
+            assert_eq!(config["zoom"], 42.0);
+            assert_eq!(config["mode"], "A");
         }
     }
     //#endregion 🧪Tests
@@ -4399,6 +4645,7 @@ pub mod workflow {
                 label: "Draw".into(),
                 yields: os_app_primary_output_kind(&registration),
                 document: OsDocumentRef { document_id: "doc-app-1".into(), schema: "draw.document".into() },
+                config: None,
             };
             let mut graph = empty_workflow();
             graph.nodes.push(workflow_node_for_instance(&instance, &registration, &WorkflowPosition { x: 0.0, y: 0.0 }, "node-1"));
@@ -4446,6 +4693,7 @@ pub mod workflow {
                 label: "Draw".into(),
                 yields: os_app_primary_output_kind(&registration),
                 document: OsDocumentRef { document_id: "doc-app-vfs-1".into(), schema: "draw.document".into() },
+                config: None,
             };
             let graph = empty_workflow();
             let inputs_folder = os_workflow_vfs_inputs_folder_id(&instance.id);
@@ -4661,7 +4909,7 @@ pub mod registry {
     //! 🗂️ Plugin manifest registry and OS plugin/artifact catalog.
 
     use crate::instance::{media_port_id_for_spec, OsParameterFieldSpec};
-    use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, WorkflowDefinition, ArtifactKindSpec, WindowKindDefinition};
+    use semio_framework_core::{AppDefinition, ConfigSpec, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, WorkflowDefinition, ArtifactKindSpec, WindowKindDefinition};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
@@ -4824,6 +5072,11 @@ pub mod registry {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub parameter_fields: Vec<OsParameterFieldSpec>,
         pub modes: Vec<ModeDefinition>,
+        /// 🧮️ The app's declared `AppDefinition.config` — how `host::reconcile_os_workflow` resolves
+        /// a `plugin_id`/`app_id` app instance's `ConfigSpec` to type-check/materialize its parameter
+        /// bindings (`instance::validate_parameter_config_binding`/`build_configure_config`).
+        #[serde(default)]
+        pub config: ConfigSpec,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -4873,6 +5126,9 @@ pub mod registry {
         pub default_mode_id: Option<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub parameter_fields: Vec<OsParameterFieldSpec>,
+        /// 🧮️ Threaded straight through into `OsAppRegistration::config` by `merge_os_plugin_definition`.
+        #[serde(default)]
+        pub config: ConfigSpec,
     }
 
     pub fn os_out_port(artifact_kind: &str, id: &str, label: &str) -> OsPortSpec {
@@ -4896,6 +5152,7 @@ pub mod registry {
             modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
             default_mode_id: None,
             parameter_fields: Vec::new(),
+            config: ConfigSpec::empty(),
         }
     }
 
@@ -4936,6 +5193,7 @@ pub mod registry {
                     parameter_fields: resource.parameter_fields,
                     modes: if app.modes.is_empty() { resource.modes } else { app.modes.clone() },
                     default_mode_id: app.default_mode_id.clone().or(resource.default_mode_id),
+                    config: resource.config,
                 }
             })
             .collect();
@@ -5049,6 +5307,9 @@ pub mod registry {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
+            config: semio_framework_core::ConfigSpec::empty(),
+            command_grammar: semio_framework_core::CommandGrammar::empty(),
+            io: semio_framework_core::AppIo::default(),
             tutorials: Vec::new(),
         })
     }

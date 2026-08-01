@@ -1949,6 +1949,9 @@ mod tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
+            config: semio_framework_core::ConfigSpec::empty(),
+            command_grammar: semio_framework_core::CommandGrammar::empty(),
+            io: semio_framework_core::AppIo::default(),
         }
     }
 
@@ -22678,6 +22681,9 @@ mod command_registry_tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
+            config: semio_framework_core::ConfigSpec::empty(),
+            command_grammar: semio_framework_core::CommandGrammar::empty(),
+            io: semio_framework_core::AppIo::default(),
         }
     }
 

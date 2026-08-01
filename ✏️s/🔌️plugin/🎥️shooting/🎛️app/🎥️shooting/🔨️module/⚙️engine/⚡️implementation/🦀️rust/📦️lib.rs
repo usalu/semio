@@ -1,6 +1,7 @@
 //! ⚙️ Shooting app — headless compute (constitutional: engine).
 
 use shooting::{empty_shooting_fixture, ShootingAsset, ShootingFixture, ShootingShot};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::atomic::{AtomicU32, Ordering};
 use store::DocumentDsl;
@@ -8,6 +9,58 @@ use store::DocumentDsl;
 //#region 🔖️Constants
 static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖️Constants
+
+//#region 🔖️Config
+/// 🧮️ Typed whole-app configuration for the shooting plugin — the eventual replacement for the sticky
+/// per-action `ActionArgDef::default_value` fields the ui slot's manifest currently hardcodes (see
+/// `create_shooting_app`'s `.action_args("addShot", ...)`/`.action_args("addAsset", ...)`): the same
+/// three sticky defaults (`addShot`'s `format`/`shape`, `addAsset`'s `format`), lifted onto an
+/// app-wide config record so a headless caller can set them once via `AppCommand::Configure` instead
+/// of repeating them on every `addShot`/`addAsset` dispatch. Not yet wired back into `handle_action`'s
+/// own defaulting (that stays on `ActionArgDef::default_value` for now, unaffected) — this is Wave 1's
+/// additive typed-config channel, not a behavior change to the existing action-arg path.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ShootingConfig {
+    /// 🖼️ Mirrors `addShot`'s `format` `ActionArgDef` default (`"png"`).
+    pub default_shot_format: String,
+    /// 🖼️ Mirrors `addShot`'s `shape` `ActionArgDef` default (`"rectangle"`).
+    pub default_shot_shape: String,
+    /// 🧱️ Mirrors `addAsset`'s `format` `ActionArgDef` default (`"glb"`).
+    pub default_asset_format: String,
+}
+
+impl Default for ShootingConfig {
+    fn default() -> Self {
+        Self { default_shot_format: "png".into(), default_shot_shape: "rectangle".into(), default_asset_format: "glb".into() }
+    }
+}
+//#endregion 🔖️Config
+
+//#region 🔖️Io
+/// 🔌️ This app's typed media I/O surface (`AppDefinition.io`) — mirrors the `ArtifactKindSpec` literal
+/// `create_shooting_app` already declares via `.artifact_kind(...)` (schema/media type/export+import
+/// formats/presentation fields copied verbatim); no additional workflow ports beyond the implicit
+/// document in/out (the app declares none of its own today).
+pub fn shooting_io() -> semio_framework_plugin::AppIo {
+    semio_framework_plugin::AppIo {
+        document_schema: "shooting.scene".into(),
+        document_media_type: semio_framework_plugin::MediaType {
+            class: semio_framework_plugin::MediaClass::TwoD,
+            form: semio_framework_plugin::MediaForm::Raster,
+        },
+        ports: Vec::new(),
+        export_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        import_formats: vec![semio_framework_plugin::OsMediaFormat::Svg, semio_framework_plugin::OsMediaFormat::Png],
+        artifact: semio_framework_plugin::ArtifactPresentation {
+            id: "2d.shooting".into(),
+            name: "2D Shooting".into(),
+            dimension: "2d".into(),
+            component_kind: "shooting".into(),
+        },
+    }
+}
+//#endregion 🔖️Io
 
 //#region 🔖️DocumentHelpers
 pub fn next_shooting_id(prefix: &str) -> String {
@@ -122,6 +175,23 @@ mod tests {
         assert_eq!(fixture.schema, SHOOTING_FIXTURE_SCHEMA);
         assert!(!fixture.shots.is_empty());
         assert!(!fixture.assets.is_empty());
+    }
+
+    #[test]
+    fn shooting_config_default_matches_the_existing_action_arg_sticky_defaults() {
+        let config = ShootingConfig::default();
+        assert_eq!(config.default_shot_format, "png");
+        assert_eq!(config.default_shot_shape, "rectangle");
+        assert_eq!(config.default_asset_format, "glb");
+    }
+
+    #[test]
+    fn shooting_io_mirrors_the_declared_artifact_kind() {
+        let io = shooting_io();
+        assert_eq!(io.document_schema, "shooting.scene");
+        assert_eq!(io.artifact.id, "2d.shooting");
+        assert_eq!(io.export_formats.len(), 2);
+        assert_eq!(io.import_formats.len(), 2);
     }
 
     #[test]

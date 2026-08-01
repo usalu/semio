@@ -1,5 +1,6 @@
 //! ⚙️ Puzzle 5d app — headless compute (constitutional: engine).
 
+use puzzle_3d::Puzzle3dError;
 use puzzle_5d::{Puzzle5dError, Puzzle5dFastener, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dProjection};
 use serde_json::Value;
 use std::collections::HashSet;
@@ -34,16 +35,30 @@ impl Puzzle5dPrecomputeSession {
         self.inner.precompute_step(budget)
     }
 
+    /// 🎯️ `puzzle_3d_engine`'s headless-engine-law fix (`HEADLESS-ENGINE-LAW-AND-OFFENDER-FIXES`) made
+    /// `brush_candidates` typed (`BrushCollisionFreeResult`, not a JSON string) — re-serialized here so
+    /// this crate's own JSON-string surface for its callers stays unchanged.
     pub fn brush_candidates(&self, grip_full_id: &str) -> String {
-        self.inner.brush_candidates(grip_full_id)
+        serde_json::to_string(&self.inner.brush_candidates(grip_full_id)).unwrap_or_else(|_| "{}".to_string())
     }
 
     pub fn brush_preview_json(&self, grip_full_id: &str, candidate_index: usize) -> Option<String> {
-        self.inner.brush_preview_json(grip_full_id, candidate_index)
+        self.inner.brush_preview(grip_full_id, candidate_index).and_then(|preview| serde_json::to_string(&preview).ok())
     }
 
     pub fn fill_progress(&self) -> String {
-        self.inner.fill_progress()
+        serde_json::to_string(&self.inner.fill_progress()).unwrap_or_else(|_| "{}".to_string())
+    }
+
+    /// 🎯️ Extracts the `Fixture` a `puzzle_3d_engine::dispatch` call produced, re-serialized to the
+    /// JSON string this crate's own callers (native `_rust` methods below, and the wasm-bindgen
+    /// methods further down) expect — every dispatched command this file issues returns a `Fixture`
+    /// outcome, so the `Unit`/`BrushPreview` arms are unreachable in practice.
+    fn fixture_outcome_json(outcome: puzzle_3d_engine::Puzzle3dEngineOutcome) -> Result<String, Puzzle3dError> {
+        match outcome {
+            puzzle_3d_engine::Puzzle3dEngineOutcome::Fixture(fixture) => Ok(serde_json::to_string(&fixture)?),
+            _ => Err(Puzzle3dError::BrushPlacementRejected),
+        }
     }
 }
 
@@ -55,11 +70,12 @@ impl Puzzle5dPrecomputeSession {
     }
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
-        Ok(self.inner.apply_brush_placement_rust(payload_json)?)
+        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(Puzzle3dError::from)?;
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(puzzle_3d_engine::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
     }
 
     pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle5dError> {
-        Ok(self.inner.apply_fill_count_rust(count)?)
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(puzzle_3d_engine::Puzzle3dEngineCommand::ApplyFillCount { count })?)?)
     }
 }
 
@@ -67,23 +83,24 @@ impl Puzzle5dPrecomputeSession {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 impl Puzzle5dPrecomputeSession {
     pub fn set_scene(&mut self, json: &str) -> Result<(), wasm_bindgen::JsValue> {
-        self.inner.set_scene(json)
+        self.inner.set_scene(json).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))
     }
 
     pub fn apply_brush_placement_json(&mut self, payload_json: &str) -> Result<String, wasm_bindgen::JsValue> {
-        self.inner.apply_brush_placement_json(payload_json)
+        self.apply_brush_placement_rust(payload_json).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))
     }
 
     pub fn apply_fill_count(&mut self, count: u32) -> Result<String, wasm_bindgen::JsValue> {
-        self.inner.apply_fill_count(count)
+        self.apply_fill_count_rust(count).map_err(|e| wasm_bindgen::JsValue::from_str(&e.to_string()))
     }
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
-        Ok(self.inner.apply_brush_placement_rust(payload_json)?)
+        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(Puzzle3dError::from)?;
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(puzzle_3d_engine::Puzzle3dEngineCommand::ApplyBrushPlacement { payload })?)?)
     }
 
     pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle5dError> {
-        Ok(self.inner.apply_fill_count_rust(count)?)
+        Ok(Self::fixture_outcome_json(self.inner.dispatch(puzzle_3d_engine::Puzzle3dEngineCommand::ApplyFillCount { count })?)?)
     }
 }
 //#endregion 🔖️BrushEngine

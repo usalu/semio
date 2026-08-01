@@ -1,9 +1,5 @@
 {
   "name": "@semio-tech/puzzle-2d-rs",
   "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/puzzle_2d.js",
-    "./pkg/puzzle_2d.js": "./pkg/puzzle_2d.js"
-  }
+  "type": "module"
 }

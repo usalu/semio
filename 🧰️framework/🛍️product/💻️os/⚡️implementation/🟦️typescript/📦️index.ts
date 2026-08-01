@@ -14,7 +14,7 @@
  */
 // #endregion Header
 
-import type { UtilityLeaf } from "@semio-tech/framework-core";
+import type { PluginWasmHandle, UtilityLeaf } from "@semio-tech/framework-core";
 
 export type OsPluginArtifactMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
 
@@ -1105,6 +1105,755 @@ export function planWorkflow(graph: OsWorkflow, dirtyInstanceIds: ReadonlySet<st
 }
 //#endregion 🔖️WorkflowPlanner
 
+//#region 🔖️PackValueCodec
+/**
+ * 📦️ TS mirror of `store::pack_rt::encode_wire_value`/`decode_wire_value`
+ * (`framework/product/os/module/store/rs/lib.rs`) — the schema-less `serde_json::Value` bridge
+ * for per-message wire payloads (UI tree diffs, host effects, events, manifests), NOT whole
+ * documents (that's `encode_json_value`/`decode_json_value`'s job, backed by
+ * `pack::encode_document`'s full `.spk` container — 32-byte header, deflate-compressed segments,
+ * an 84-byte footer with a BLAKE3 content hash, 200+ bytes of overhead per value, and
+ * deflate-compressed bytes that are NOT portable byte-for-byte across a spec-compliant TS
+ * deflate implementation). `encode_wire_value` instead calls `pack::encode_record_body` — the
+ * container-less twin used by `dsl::op_rt::encode_op` — for a `symbol_count varint, (len varint,
+ * utf8)*, record fields` grammar with no header, segments, manifest, or footer. Every JSON value
+ * is still wrapped as a single `Shape::Value` field (id 1) of the same synthetic one-field
+ * `json_bridge_spec()` record; only the outer framing changed. Fully deterministic and
+ * byte-exact against real Rust output in both directions (no compression involved, unlike the
+ * old container-backed encoding this replaces).
+ */
+
+//#region 🔖️PackContainerPrimitives
+/** 🌱️ `store::pack_rt`'s synthetic single-field record spec (`{ id: 1, key: "value", shape:
+ * Shape::Value }`) every JSON value is wrapped in before hitting `encode_record_body`. */
+const JSON_BRIDGE_FIELD_ID = 1;
+
+/** 🌱️ `pack_value`'s wire tags actually reachable from a `DslValue` (`encode_dsl_value`/
+ * `decode_dsl_value`, `pack/value/rs/lib.rs`'s `🔖️Tags` region) — the subset `PackValueCodec`
+ * needs (no `Int`/`UInt`/`Bytes64`/`Enum`/... — a JSON value never produces those). */
+const PACK_TAG_FALSE = 0x01;
+const PACK_TAG_TRUE = 0x02;
+const PACK_TAG_F64 = 0x05;
+const PACK_TAG_STR = 0x06;
+const PACK_TAG_STR_INLINE = 0x07;
+const PACK_TAG_LIST = 0x0c;
+const PACK_TAG_MAP = 0x10;
+const PACK_TAG_VALUE = 0x11;
+const PACK_TAG_NULL = 0x12;
+
+function packPushBytes(out: number[], bytes: Uint8Array): void {
+  for (let index = 0; index < bytes.length; index++) out.push(bytes[index]!);
+}
+/** 🔤️ Byte-lexicographic string comparison — the TS twin of Rust `str`'s `Ord` (which compares
+ * the UTF-8 byte sequence), used everywhere `pack_value` sorts by `.as_bytes()` (symbol table,
+ * `DslValue::Object` keys). Differs from JS's default UTF-16-code-unit `<`/`.sort()` only outside
+ * the BMP, but is implemented properly rather than assumed equivalent. */
+function packByteCompare(a: string, b: string): number {
+  const encoder = new TextEncoder();
+  const ab = encoder.encode(a);
+  const bb = encoder.encode(b);
+  const len = Math.min(ab.length, bb.length);
+  for (let index = 0; index < len; index++) {
+    const diff = ab[index]! - bb[index]!;
+    if (diff !== 0) return diff;
+  }
+  return ab.length - bb.length;
+}
+//#endregion 🔖️PackContainerPrimitives
+
+//#region 🔖️JsonValueTags
+/** 🔎️ `pack_value::build_symbols`, specialized to a JSON-bridge document (one `Shape::Value`
+ * field — no `TableSoA`/`Statements` forced-symbol cases apply). Walks `value` counting only
+ * STRING LEAVES (object/array keys are never counted — `pack_value::walk_dsl_value_for_symbols`'s
+ * `DslValue::Object` case only walks entry VALUES); a string is interned (added to the symbol
+ * table) iff its UTF-8 byte length is `<= 128` or it occurs `>= 2` times, matching `pack_value`'s
+ * rule exactly (note: `.len()` on the Rust side is UTF-8 BYTE length, not char count). */
+function packCollectStrings(value: unknown, counts: Map<string, number>): void {
+  if (typeof value === "string") {
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) packCollectStrings(item, counts);
+    return;
+  }
+  if (value !== null && typeof value === "object") {
+    for (const item of Object.values(value as Record<string, unknown>)) packCollectStrings(item, counts);
+  }
+}
+function packBuildSymbols(value: unknown): string[] {
+  const counts = new Map<string, number>();
+  packCollectStrings(value, counts);
+  const encoder = new TextEncoder();
+  const symbols: string[] = [];
+  for (const [text, count] of counts) if (encoder.encode(text).length <= 128 || count >= 2) symbols.push(text);
+  symbols.sort(packByteCompare);
+  return symbols;
+}
+
+/** ✍️ `pack_value::encode_string`: `TAG_STR + symref varint` if interned, else
+ * `TAG_STR_INLINE + len varint + utf8 bytes`. */
+function packEncodeString(text: string, symbolIndex: ReadonlyMap<string, number>, out: number[]): void {
+  const index = symbolIndex.get(text);
+  if (index !== undefined) {
+    out.push(PACK_TAG_STR);
+    writeVarintU64(out, index);
+    return;
+  }
+  packEncodeStringInline(text, out);
+}
+/** ✍️ `pack_value::encode_string_inline` — forced, e.g. every `DslValue::Object` key. */
+function packEncodeStringInline(text: string, out: number[]): void {
+  const bytes = new TextEncoder().encode(text);
+  out.push(PACK_TAG_STR_INLINE);
+  writeVarintU64(out, bytes.length);
+  packPushBytes(out, bytes);
+}
+/** 📖️ `pack_value::decode_string` — reads its OWN leading tag (`TAG_STR`/`TAG_STR_INLINE`), used
+ * both for `Map`/object keys and inside {@link packDecodeValue}'s `TAG_STR` case. */
+function packDecodeString(bytes: Uint8Array, symbols: readonly string[], pos: [number]): string {
+  const tag = bytes[pos[0]]!;
+  pos[0] += 1;
+  if (tag === PACK_TAG_STR) {
+    const index = readVarintU64(bytes, pos);
+    const symbol = symbols[index];
+    if (symbol === undefined) throw new Error(`decodePackValue: symref ${index} out of range for table of ${symbols.length}`);
+    return symbol;
+  }
+  if (tag === PACK_TAG_STR_INLINE) {
+    const len = readVarintU64(bytes, pos);
+    const text = new TextDecoder().decode(bytes.subarray(pos[0], pos[0] + len));
+    pos[0] += len;
+    return text;
+  }
+  throw new Error(`decodePackValue: expected a string tag, found 0x${tag.toString(16)}`);
+}
+
+/** ✍️ `pack_value::encode_dsl_value` — the tag-prefixed encoding one JSON value recurses through.
+ * `Number` always writes `TAG_F64` (`DslValue::Number` is always `f64`; `pack_rt`'s
+ * `renormalize_whole_number_floats` is a SEPARATE opt-in helper for typed-struct consumers, never
+ * called by `encode_json_value`/`decode_json_value`/`encode_wire_value`/`decode_wire_value`
+ * themselves — verified empirically against real fixture bytes, see this region's header doc).
+ * `-0` normalizes to `0` (byte-level parity
+ * with Rust's `normalize_f64`; unobservable via `===` in JS either way). Object entries sort by
+ * key BYTES with keys always forced inline, never a symref. */
+function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number>, out: number[]): void {
+  if (value === null || value === undefined) {
+    out.push(PACK_TAG_NULL);
+    return;
+  }
+  if (typeof value === "boolean") {
+    out.push(value ? PACK_TAG_TRUE : PACK_TAG_FALSE);
+    return;
+  }
+  if (typeof value === "number") {
+    out.push(PACK_TAG_F64);
+    writeF64(out, value === 0 ? 0 : value);
+    return;
+  }
+  if (typeof value === "string") {
+    packEncodeString(value, symbolIndex, out);
+    return;
+  }
+  if (Array.isArray(value)) {
+    out.push(PACK_TAG_LIST);
+    writeVarintU64(out, value.length);
+    for (const item of value) packEncodeValue(item, symbolIndex, out);
+    return;
+  }
+  if (typeof value === "object") {
+    out.push(PACK_TAG_MAP);
+    const entries = Object.entries(value as Record<string, unknown>).sort((a, b) => packByteCompare(a[0], b[0]));
+    writeVarintU64(out, entries.length);
+    for (const [key, entryValue] of entries) {
+      packEncodeStringInline(key, out);
+      packEncodeValue(entryValue, symbolIndex, out);
+    }
+    return;
+  }
+  throw new Error(`encodePackValue: unsupported JSON value of type ${typeof value}`);
+}
+/** 📖️ Inverse of {@link packEncodeValue} — the TS twin of `pack_value::decode_dsl_value`. */
+function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [number]): unknown {
+  const tag = bytes[pos[0]]!;
+  pos[0] += 1;
+  switch (tag) {
+    case PACK_TAG_NULL:
+      return null;
+    case PACK_TAG_FALSE:
+      return false;
+    case PACK_TAG_TRUE:
+      return true;
+    case PACK_TAG_F64:
+      return readF64(bytes, pos);
+    case PACK_TAG_STR: {
+      const index = readVarintU64(bytes, pos);
+      const symbol = symbols[index];
+      if (symbol === undefined) throw new Error(`decodePackValue: symref ${index} out of range for table of ${symbols.length}`);
+      return symbol;
+    }
+    case PACK_TAG_STR_INLINE: {
+      const len = readVarintU64(bytes, pos);
+      const text = new TextDecoder().decode(bytes.subarray(pos[0], pos[0] + len));
+      pos[0] += len;
+      return text;
+    }
+    case PACK_TAG_LIST: {
+      const count = readVarintU64(bytes, pos);
+      const items: unknown[] = [];
+      for (let i = 0; i < count; i++) items.push(packDecodeValue(bytes, symbols, pos));
+      return items;
+    }
+    case PACK_TAG_MAP: {
+      const count = readVarintU64(bytes, pos);
+      const entries: Record<string, unknown> = {};
+      for (let i = 0; i < count; i++) {
+        const key = packDecodeString(bytes, symbols, pos);
+        entries[key] = packDecodeValue(bytes, symbols, pos);
+      }
+      return entries;
+    }
+    default:
+      throw new Error(`decodePackValue: unrecognized dsl value tag 0x${tag.toString(16)}`);
+  }
+}
+//#endregion 🔖️JsonValueTags
+
+//#region 🔖️PublicApi
+/** 📤️ TS twin of `store::pack_rt::encode_wire_value` — encodes any JSON-shaped `value` (null,
+ * bool, number, string, array, nested object) as an `encode_record_body` payload: `symbol_count
+ * varint, (len varint, utf8 bytes)*` (the symbol table, written inline — no `Symbols` segment)
+ * followed directly by the synthetic one-field record's fields (`field_count=1, field_id=1,
+ * TAG_VALUE, <value>`, matching `pack_value::encode_record_fields`'s grammar exactly). No header,
+ * segments, manifest, or footer — byte-exact against real Rust output (verified against the
+ * `pack_wire_value_fixture_corpus_hex_dump` fixture corpus, `store/rs/lib.rs`'s
+ * `🔖️PackValueFixtures` region). */
+export function encodePackValue(value: unknown): Uint8Array {
+  const symbols = packBuildSymbols(value);
+  const symbolIndex = new Map(symbols.map((symbol, index) => [symbol, index] as const));
+  const encoder = new TextEncoder();
+
+  const out: number[] = [];
+  writeVarintU64(out, symbols.length);
+  for (const symbol of symbols) {
+    const bytes = encoder.encode(symbol);
+    writeVarintU64(out, bytes.length);
+    packPushBytes(out, bytes);
+  }
+  writeVarintU64(out, 1); // field_count
+  writeVarintU64(out, JSON_BRIDGE_FIELD_ID);
+  out.push(PACK_TAG_VALUE);
+  packEncodeValue(value, symbolIndex, out);
+  return new Uint8Array(out);
+}
+
+/** 📥️ TS twin of `store::pack_rt::decode_wire_value` — the inverse of {@link encodePackValue}. */
+export function decodePackValue(bytes: Uint8Array): unknown {
+  const pos: [number] = [0];
+  const decoder = new TextDecoder();
+  const symbolCount = readVarintU64(bytes, pos);
+  const symbols: string[] = [];
+  for (let i = 0; i < symbolCount; i++) {
+    const len = readVarintU64(bytes, pos);
+    symbols.push(decoder.decode(bytes.subarray(pos[0], pos[0] + len)));
+    pos[0] += len;
+  }
+
+  const fieldCount = readVarintU64(bytes, pos);
+  let result: unknown = null;
+  for (let i = 0; i < fieldCount; i++) {
+    const fieldId = readVarintU64(bytes, pos);
+    const outerTag = bytes[pos[0]]!;
+    pos[0] += 1;
+    if (outerTag !== PACK_TAG_VALUE) throw new Error(`decodePackValue: unexpected field tag 0x${outerTag.toString(16)} for field ${fieldId}`);
+    const value = packDecodeValue(bytes, symbols, pos);
+    if (fieldId === JSON_BRIDGE_FIELD_ID) result = value;
+  }
+  return result;
+}
+//#endregion 🔖️PublicApi
+//#endregion 🔖️PackValueCodec
+
+//#region 🔖️AppChannelCodec
+/**
+ * 📡️ TS mirror of the `protocol_channel` crate's `AppCommand`/`AppFrame` binary frame protocol
+ * (`tag u8 | fields`, built on `protocol_core`'s varint/string/bytes primitives — the same ones
+ * {@link encodeClientFrame}/{@link decodeClientFrame} above use). `protocol_channel` is being
+ * built in parallel (WP-0A of `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`) and may
+ * not exist on disk yet, so this mirrors the AGREED WIRE CONTRACT, not that crate's source —
+ * `envelopes`/`config`/`command`/`descriptor`/etc. all stay OPAQUE `bytes` here (never a decoded
+ * `protocol_causal::OperationEnvelope` or app-specific payload shape), exactly like
+ * {@link WireOperationEnvelope}'s `diff`/`inverse` payloads above. `Option<T>` fields use the same
+ * `0x00`/`0x01` presence-byte convention as {@link writeOptStr}/{@link writeOptBytes} elsewhere in
+ * this file. ⚠️ Round-trip-tested against itself only (no `protocol_channel` Rust crate exists yet
+ * to source hex fixtures from) — cross-language hex-fixture reconciliation is follow-up work once
+ * WP-0A lands (see this file's `🧪️Tests` region for the tracking note).
+ */
+
+//#region 🔖️Types
+/** 🔍️ One UI section's cache-probe entry inside `AppCommand.RefreshUi` — `kind u8 | key str |
+ * hash: (u64 | null)`. */
+export type SectionProbe = { readonly kind: number; readonly key: string; readonly hash: number | null };
+
+export type AppCommandValue =
+  | { readonly Hello: { readonly channel_version: number; readonly app_id: string; readonly actor: string; readonly config: readonly number[] } }
+  | { readonly Configure: { readonly seq: number; readonly config: readonly number[] } }
+  | { readonly Command: { readonly seq: number; readonly command: readonly number[]; readonly view_state: readonly number[] } }
+  | { readonly CommandText: { readonly seq: number; readonly line: string } }
+  | { readonly RefreshUi: { readonly seq: number; readonly sections: readonly SectionProbe[] } }
+  | { readonly ContextMenu: { readonly seq: number; readonly request: readonly number[] } }
+  | { readonly DocumentCommand: { readonly seq: number; readonly command: readonly number[] } }
+  | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly (readonly number[])[] } }
+  | { readonly LoadDocument: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
+  | { readonly ReadDocument: { readonly seq: number } }
+  | { readonly AttachBackbone: { readonly seq: number; readonly uri: string } }
+  | { readonly DetachBackbone: { readonly seq: number } }
+  | { readonly MediaIn: { readonly seq: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
+  | { readonly MediaOut: { readonly seq: number; readonly port: string; readonly request: readonly number[] } }
+  | { readonly MediaFingerprint: { readonly seq: number; readonly port: string } }
+  | "Bye";
+
+export type AppFrameValue =
+  | { readonly Welcome: { readonly channel_version: number; readonly instance: number; readonly manifest: readonly number[] } }
+  | { readonly Done: { readonly in_reply_to: number } }
+  | { readonly Invocation: { readonly in_reply_to: number; readonly output: readonly number[]; readonly diagnostics: readonly number[] } }
+  | { readonly UiSection: { readonly in_reply_to: number | null; readonly kind: number; readonly key: string; readonly hash: number; readonly body: readonly number[] | null } }
+  | { readonly Effects: { readonly in_reply_to: number | null; readonly effects: readonly (readonly number[])[] } }
+  | { readonly Events: { readonly in_reply_to: number | null; readonly events: readonly (readonly number[])[] } }
+  | { readonly DocumentChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
+  | { readonly Document: { readonly in_reply_to: number; readonly pack: readonly number[]; readonly spr: readonly number[]; readonly ops: string } }
+  | { readonly ContextMenu: { readonly in_reply_to: number; readonly items: readonly number[] } }
+  | { readonly Media: { readonly in_reply_to: number; readonly port: string; readonly descriptor: readonly number[]; readonly data: readonly number[] } }
+  | { readonly MediaFingerprint: { readonly in_reply_to: number; readonly port: string; readonly fingerprint: readonly number[] } }
+  | { readonly Error: { readonly in_reply_to: number | null; readonly code: string; readonly message: string } };
+//#endregion 🔖️Types
+
+//#region 🔖️Combinators
+/** 🎞️ `presence u8 | varint` — an `Option<u64>` (e.g. `SectionProbe.hash`,
+ * `AppFrame.*.in_reply_to`), the same convention {@link writeOptStr}/{@link writeOptBytes} use. */
+function writeOptU64(out: number[], value: number | null): void {
+  writeBool(out, value !== null);
+  if (value !== null) writeVarintU64(out, value);
+}
+function readOptU64(bytes: Uint8Array, pos: [number]): number | null {
+  return readBool(bytes, pos) ? readVarintU64(bytes, pos) : null;
+}
+function writeSectionProbe(out: number[], probe: SectionProbe): void {
+  out.push(probe.kind);
+  writeStr(out, probe.key);
+  writeOptU64(out, probe.hash);
+}
+function readSectionProbe(bytes: Uint8Array, pos: [number]): SectionProbe {
+  const kind = bytes[pos[0]]!;
+  pos[0] += 1;
+  const key = readStr(bytes, pos);
+  const hash = readOptU64(bytes, pos);
+  return { kind, key, hash };
+}
+function writeVecSectionProbe(out: number[], values: readonly SectionProbe[]): void {
+  writeVarintU64(out, values.length);
+  for (const value of values) writeSectionProbe(out, value);
+}
+function readVecSectionProbe(bytes: Uint8Array, pos: [number]): SectionProbe[] {
+  const count = readVarintU64(bytes, pos);
+  const result: SectionProbe[] = [];
+  for (let i = 0; i < count; i++) result.push(readSectionProbe(bytes, pos));
+  return result;
+}
+//#endregion 🔖️Combinators
+
+//#region 🔖️Codec
+const APP_COMMAND_TAGS = {
+  Hello: 0, Configure: 1, Command: 2, CommandText: 3, RefreshUi: 4, ContextMenu: 5, DocumentCommand: 6, ApplyEnvelopes: 7,
+  LoadDocument: 8, ReadDocument: 9, AttachBackbone: 10, DetachBackbone: 11, MediaIn: 12, MediaOut: 13, MediaFingerprint: 14, Bye: 15,
+} as const;
+const APP_FRAME_TAGS = {
+  Welcome: 0, Done: 1, Invocation: 2, UiSection: 3, Effects: 4, Events: 5, DocumentChanged: 6, Document: 7,
+  ContextMenu: 8, Media: 9, MediaFingerprint: 10, Error: 11,
+} as const;
+
+/** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_command` (agreed contract). */
+export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
+  const out: number[] = [];
+  if (cmd === "Bye") {
+    out.push(APP_COMMAND_TAGS.Bye);
+    return new Uint8Array(out);
+  }
+  if ("Hello" in cmd) {
+    out.push(APP_COMMAND_TAGS.Hello);
+    writeVarintU64(out, cmd.Hello.channel_version);
+    writeStr(out, cmd.Hello.app_id);
+    writeStr(out, cmd.Hello.actor);
+    writeBytes(out, cmd.Hello.config);
+  } else if ("Configure" in cmd) {
+    out.push(APP_COMMAND_TAGS.Configure);
+    writeVarintU64(out, cmd.Configure.seq);
+    writeBytes(out, cmd.Configure.config);
+  } else if ("Command" in cmd) {
+    out.push(APP_COMMAND_TAGS.Command);
+    writeVarintU64(out, cmd.Command.seq);
+    writeBytes(out, cmd.Command.command);
+    writeBytes(out, cmd.Command.view_state);
+  } else if ("CommandText" in cmd) {
+    out.push(APP_COMMAND_TAGS.CommandText);
+    writeVarintU64(out, cmd.CommandText.seq);
+    writeStr(out, cmd.CommandText.line);
+  } else if ("RefreshUi" in cmd) {
+    out.push(APP_COMMAND_TAGS.RefreshUi);
+    writeVarintU64(out, cmd.RefreshUi.seq);
+    writeVecSectionProbe(out, cmd.RefreshUi.sections);
+  } else if ("ContextMenu" in cmd) {
+    out.push(APP_COMMAND_TAGS.ContextMenu);
+    writeVarintU64(out, cmd.ContextMenu.seq);
+    writeBytes(out, cmd.ContextMenu.request);
+  } else if ("DocumentCommand" in cmd) {
+    out.push(APP_COMMAND_TAGS.DocumentCommand);
+    writeVarintU64(out, cmd.DocumentCommand.seq);
+    writeBytes(out, cmd.DocumentCommand.command);
+  } else if ("ApplyEnvelopes" in cmd) {
+    out.push(APP_COMMAND_TAGS.ApplyEnvelopes);
+    writeVarintU64(out, cmd.ApplyEnvelopes.seq);
+    writeVecBytes(out, cmd.ApplyEnvelopes.envelopes);
+  } else if ("LoadDocument" in cmd) {
+    out.push(APP_COMMAND_TAGS.LoadDocument);
+    writeVarintU64(out, cmd.LoadDocument.seq);
+    writeBytes(out, cmd.LoadDocument.pack);
+    writeBytes(out, cmd.LoadDocument.spr);
+  } else if ("ReadDocument" in cmd) {
+    out.push(APP_COMMAND_TAGS.ReadDocument);
+    writeVarintU64(out, cmd.ReadDocument.seq);
+  } else if ("AttachBackbone" in cmd) {
+    out.push(APP_COMMAND_TAGS.AttachBackbone);
+    writeVarintU64(out, cmd.AttachBackbone.seq);
+    writeStr(out, cmd.AttachBackbone.uri);
+  } else if ("DetachBackbone" in cmd) {
+    out.push(APP_COMMAND_TAGS.DetachBackbone);
+    writeVarintU64(out, cmd.DetachBackbone.seq);
+  } else if ("MediaIn" in cmd) {
+    out.push(APP_COMMAND_TAGS.MediaIn);
+    writeVarintU64(out, cmd.MediaIn.seq);
+    writeStr(out, cmd.MediaIn.port);
+    writeBytes(out, cmd.MediaIn.descriptor);
+    writeBytes(out, cmd.MediaIn.data);
+  } else if ("MediaOut" in cmd) {
+    out.push(APP_COMMAND_TAGS.MediaOut);
+    writeVarintU64(out, cmd.MediaOut.seq);
+    writeStr(out, cmd.MediaOut.port);
+    writeBytes(out, cmd.MediaOut.request);
+  } else if ("MediaFingerprint" in cmd) {
+    out.push(APP_COMMAND_TAGS.MediaFingerprint);
+    writeVarintU64(out, cmd.MediaFingerprint.seq);
+    writeStr(out, cmd.MediaFingerprint.port);
+  } else {
+    throw new Error("encodeAppCommand: unrecognized command variant");
+  }
+  return new Uint8Array(out);
+}
+
+/** 📥️ Inverse of {@link encodeAppCommand} — the TS twin of `protocol_channel::decode_app_command`. */
+export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
+  if (bytes.length === 0) throw new Error("decodeAppCommand: empty frame");
+  const pos: [number] = [1];
+  switch (bytes[0]) {
+    case APP_COMMAND_TAGS.Hello: {
+      const channel_version = readVarintU64(bytes, pos);
+      const app_id = readStr(bytes, pos);
+      const actor = readStr(bytes, pos);
+      const config = readBytes(bytes, pos);
+      return { Hello: { channel_version, app_id, actor, config } };
+    }
+    case APP_COMMAND_TAGS.Configure:
+      return { Configure: { seq: readVarintU64(bytes, pos), config: readBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.Command: {
+      const seq = readVarintU64(bytes, pos);
+      const command = readBytes(bytes, pos);
+      const view_state = readBytes(bytes, pos);
+      return { Command: { seq, command, view_state } };
+    }
+    case APP_COMMAND_TAGS.CommandText:
+      return { CommandText: { seq: readVarintU64(bytes, pos), line: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.RefreshUi:
+      return { RefreshUi: { seq: readVarintU64(bytes, pos), sections: readVecSectionProbe(bytes, pos) } };
+    case APP_COMMAND_TAGS.ContextMenu:
+      return { ContextMenu: { seq: readVarintU64(bytes, pos), request: readBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.DocumentCommand:
+      return { DocumentCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.ApplyEnvelopes:
+      return { ApplyEnvelopes: { seq: readVarintU64(bytes, pos), envelopes: readVecBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.LoadDocument: {
+      const seq = readVarintU64(bytes, pos);
+      const pack = readBytes(bytes, pos);
+      const spr = readBytes(bytes, pos);
+      return { LoadDocument: { seq, pack, spr } };
+    }
+    case APP_COMMAND_TAGS.ReadDocument:
+      return { ReadDocument: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.AttachBackbone:
+      return { AttachBackbone: { seq: readVarintU64(bytes, pos), uri: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.DetachBackbone:
+      return { DetachBackbone: { seq: readVarintU64(bytes, pos) } };
+    case APP_COMMAND_TAGS.MediaIn: {
+      const seq = readVarintU64(bytes, pos);
+      const port = readStr(bytes, pos);
+      const descriptor = readBytes(bytes, pos);
+      const data = readBytes(bytes, pos);
+      return { MediaIn: { seq, port, descriptor, data } };
+    }
+    case APP_COMMAND_TAGS.MediaOut: {
+      const seq = readVarintU64(bytes, pos);
+      const port = readStr(bytes, pos);
+      const request = readBytes(bytes, pos);
+      return { MediaOut: { seq, port, request } };
+    }
+    case APP_COMMAND_TAGS.MediaFingerprint:
+      return { MediaFingerprint: { seq: readVarintU64(bytes, pos), port: readStr(bytes, pos) } };
+    case APP_COMMAND_TAGS.Bye:
+      return "Bye";
+    default:
+      throw new Error(`decodeAppCommand: unknown tag ${bytes[0]}`);
+  }
+}
+
+/** 📤️ `tag u8 | fields` — the TS twin of `protocol_channel::encode_app_frame` (agreed contract). */
+export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
+  const out: number[] = [];
+  if ("Welcome" in frame) {
+    out.push(APP_FRAME_TAGS.Welcome);
+    writeVarintU64(out, frame.Welcome.channel_version);
+    writeVarintU64(out, frame.Welcome.instance);
+    writeBytes(out, frame.Welcome.manifest);
+  } else if ("Done" in frame) {
+    out.push(APP_FRAME_TAGS.Done);
+    writeVarintU64(out, frame.Done.in_reply_to);
+  } else if ("Invocation" in frame) {
+    out.push(APP_FRAME_TAGS.Invocation);
+    writeVarintU64(out, frame.Invocation.in_reply_to);
+    writeBytes(out, frame.Invocation.output);
+    writeBytes(out, frame.Invocation.diagnostics);
+  } else if ("UiSection" in frame) {
+    out.push(APP_FRAME_TAGS.UiSection);
+    writeOptU64(out, frame.UiSection.in_reply_to);
+    out.push(frame.UiSection.kind);
+    writeStr(out, frame.UiSection.key);
+    writeVarintU64(out, frame.UiSection.hash);
+    writeOptBytes(out, frame.UiSection.body);
+  } else if ("Effects" in frame) {
+    out.push(APP_FRAME_TAGS.Effects);
+    writeOptU64(out, frame.Effects.in_reply_to);
+    writeVecBytes(out, frame.Effects.effects);
+  } else if ("Events" in frame) {
+    out.push(APP_FRAME_TAGS.Events);
+    writeOptU64(out, frame.Events.in_reply_to);
+    writeVecBytes(out, frame.Events.events);
+  } else if ("DocumentChanged" in frame) {
+    out.push(APP_FRAME_TAGS.DocumentChanged);
+    writeVecBytes(out, frame.DocumentChanged.envelopes);
+    writeStr(out, frame.DocumentChanged.origin);
+  } else if ("Document" in frame) {
+    out.push(APP_FRAME_TAGS.Document);
+    writeVarintU64(out, frame.Document.in_reply_to);
+    writeBytes(out, frame.Document.pack);
+    writeBytes(out, frame.Document.spr);
+    writeStr(out, frame.Document.ops);
+  } else if ("ContextMenu" in frame) {
+    out.push(APP_FRAME_TAGS.ContextMenu);
+    writeVarintU64(out, frame.ContextMenu.in_reply_to);
+    writeBytes(out, frame.ContextMenu.items);
+  } else if ("Media" in frame) {
+    out.push(APP_FRAME_TAGS.Media);
+    writeVarintU64(out, frame.Media.in_reply_to);
+    writeStr(out, frame.Media.port);
+    writeBytes(out, frame.Media.descriptor);
+    writeBytes(out, frame.Media.data);
+  } else if ("MediaFingerprint" in frame) {
+    out.push(APP_FRAME_TAGS.MediaFingerprint);
+    writeVarintU64(out, frame.MediaFingerprint.in_reply_to);
+    writeStr(out, frame.MediaFingerprint.port);
+    writeBytes(out, frame.MediaFingerprint.fingerprint);
+  } else if ("Error" in frame) {
+    out.push(APP_FRAME_TAGS.Error);
+    writeOptU64(out, frame.Error.in_reply_to);
+    writeStr(out, frame.Error.code);
+    writeStr(out, frame.Error.message);
+  } else {
+    throw new Error("encodeAppFrame: unrecognized frame variant");
+  }
+  return new Uint8Array(out);
+}
+
+/** 📥️ Inverse of {@link encodeAppFrame} — the TS twin of `protocol_channel::decode_app_frame`. */
+export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
+  if (bytes.length === 0) throw new Error("decodeAppFrame: empty frame");
+  const pos: [number] = [1];
+  switch (bytes[0]) {
+    case APP_FRAME_TAGS.Welcome: {
+      const channel_version = readVarintU64(bytes, pos);
+      const instance = readVarintU64(bytes, pos);
+      const manifest = readBytes(bytes, pos);
+      return { Welcome: { channel_version, instance, manifest } };
+    }
+    case APP_FRAME_TAGS.Done:
+      return { Done: { in_reply_to: readVarintU64(bytes, pos) } };
+    case APP_FRAME_TAGS.Invocation: {
+      const in_reply_to = readVarintU64(bytes, pos);
+      const output = readBytes(bytes, pos);
+      const diagnostics = readBytes(bytes, pos);
+      return { Invocation: { in_reply_to, output, diagnostics } };
+    }
+    case APP_FRAME_TAGS.UiSection: {
+      const in_reply_to = readOptU64(bytes, pos);
+      const kind = bytes[pos[0]]!;
+      pos[0] += 1;
+      const key = readStr(bytes, pos);
+      const hash = readVarintU64(bytes, pos);
+      const body = readOptBytes(bytes, pos);
+      return { UiSection: { in_reply_to, kind, key, hash, body } };
+    }
+    case APP_FRAME_TAGS.Effects:
+      return { Effects: { in_reply_to: readOptU64(bytes, pos), effects: readVecBytes(bytes, pos) } };
+    case APP_FRAME_TAGS.Events:
+      return { Events: { in_reply_to: readOptU64(bytes, pos), events: readVecBytes(bytes, pos) } };
+    case APP_FRAME_TAGS.DocumentChanged: {
+      const envelopes = readVecBytes(bytes, pos);
+      const origin = readStr(bytes, pos);
+      return { DocumentChanged: { envelopes, origin } };
+    }
+    case APP_FRAME_TAGS.Document: {
+      const in_reply_to = readVarintU64(bytes, pos);
+      const pack = readBytes(bytes, pos);
+      const spr = readBytes(bytes, pos);
+      const ops = readStr(bytes, pos);
+      return { Document: { in_reply_to, pack, spr, ops } };
+    }
+    case APP_FRAME_TAGS.ContextMenu:
+      return { ContextMenu: { in_reply_to: readVarintU64(bytes, pos), items: readBytes(bytes, pos) } };
+    case APP_FRAME_TAGS.Media: {
+      const in_reply_to = readVarintU64(bytes, pos);
+      const port = readStr(bytes, pos);
+      const descriptor = readBytes(bytes, pos);
+      const data = readBytes(bytes, pos);
+      return { Media: { in_reply_to, port, descriptor, data } };
+    }
+    case APP_FRAME_TAGS.MediaFingerprint: {
+      const in_reply_to = readVarintU64(bytes, pos);
+      const port = readStr(bytes, pos);
+      const fingerprint = readBytes(bytes, pos);
+      return { MediaFingerprint: { in_reply_to, port, fingerprint } };
+    }
+    case APP_FRAME_TAGS.Error: {
+      const in_reply_to = readOptU64(bytes, pos);
+      const code = readStr(bytes, pos);
+      const message = readStr(bytes, pos);
+      return { Error: { in_reply_to, code, message } };
+    }
+    default:
+      throw new Error(`decodeAppFrame: unknown tag ${bytes[0]}`);
+  }
+}
+//#endregion 🔖️Codec
+//#endregion 🔖️AppChannelCodec
+
+//#region 🔖️AppChannelClient
+/**
+ * 📡️ TS twin of `protocol_channel::CHANNEL_VERSION` (`🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs`)
+ * — bump both sides together on a wire-incompatible frame change.
+ */
+const APP_CHANNEL_VERSION = 1;
+
+/** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
+ * than the full handle so a caller can hand in any `exchange`-shaped object (a real handle, a test
+ * double, ...) without importing the rest of `@semio-tech/framework-core`'s plugin-loading surface. */
+export type AppChannelHandle = Pick<PluginWasmHandle, "exchange">;
+
+/**
+ * 📡️ Typed facade over one plugin instance's `exchange` channel — encodes an {@link AppCommandValue},
+ * sends it through {@link PluginWasmHandle.exchange} as the sole batched frame, and decodes every
+ * {@link AppFrameValue} the call returns. This is the ONLY place `AppCommand`/`AppFrame` framing
+ * happens on the host side; callers (a React renderer's dispatch/refresh loop, a headless workflow
+ * runner) work with decoded frames and plain JS values, never raw bytes or wire tags. `seq` is a
+ * per-client monotonic counter — the host has no other way to correlate a `Command`/`RefreshUi`/
+ * `Configure`/`LoadDocument`/`ReadDocument` with the `Invocation`/`UiSection`/`Effects`/`Events`/
+ * `Document` frame(s) it produced (`AppFrame.*.in_reply_to`).
+ */
+export class AppChannelClient {
+  private seq = 0;
+
+  constructor(
+    private readonly handle: AppChannelHandle,
+    private readonly instanceId: number,
+    private readonly appId: string,
+    private readonly actor: string = "local",
+  ) {}
+
+  private nextSeq(): number {
+    this.seq += 1;
+    return this.seq;
+  }
+
+  /** 🔀️ Sends one encoded command, decodes every frame the batched `exchange` call returns. */
+  private async exchangeOne(command: AppCommandValue): Promise<AppFrameValue[]> {
+    const replies = await this.handle.exchange(this.instanceId, [encodeAppCommand(command)]);
+    return replies.map(decodeAppFrame);
+  }
+
+  /** 👋️ The channel handshake — must be the first call on a freshly created instance. Returns the
+   * (expected single) `Welcome` reply frame. */
+  async hello(config: unknown): Promise<AppFrameValue> {
+    const frames = await this.exchangeOne({
+      Hello: { channel_version: APP_CHANNEL_VERSION, app_id: this.appId, actor: this.actor, config: Array.from(encodePackValue(config)) },
+    });
+    const frame = frames[0];
+    if (!frame) throw new Error(`AppChannelClient.hello(${this.appId}): no reply frame`);
+    return frame;
+  }
+
+  /** 🎛️ Forwards one opaque app-specific command (already encoded by the caller's own command
+   * grammar) plus the current view state; may return several frames (`Invocation` + `Effects` +
+   * `Events` + any dirtied `UiSection`s) — routing them is the caller's job. */
+  async command(commandBytes: Uint8Array, viewState: unknown): Promise<AppFrameValue[]> {
+    return this.exchangeOne({
+      Command: { seq: this.nextSeq(), command: Array.from(commandBytes), view_state: Array.from(encodePackValue(viewState)) },
+    });
+  }
+
+  /** 🔄️ Cache-probed UI section refresh — one `UiSection` frame per section whose `hash` changed. */
+  async refreshUi(sections: readonly SectionProbe[]): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ RefreshUi: { seq: this.nextSeq(), sections } });
+  }
+
+  async configure(config: unknown): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ Configure: { seq: this.nextSeq(), config: Array.from(encodePackValue(config)) } });
+  }
+
+  async readDocument(): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ ReadDocument: { seq: this.nextSeq() } });
+  }
+
+  async loadDocument(pack: Uint8Array, spr: Uint8Array): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ LoadDocument: { seq: this.nextSeq(), pack: Array.from(pack), spr: Array.from(spr) } });
+  }
+
+  /** 🔗️ Attaches this instance to a backbone `uri` — the channel twin of the old
+   * `attach-backbone` WIT verb. */
+  async attachBackbone(uri: string): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ AttachBackbone: { seq: this.nextSeq(), uri } });
+  }
+
+  /** 🔗️ Detaches this instance's backbone, if any. */
+  async detachBackbone(): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ DetachBackbone: { seq: this.nextSeq() } });
+  }
+
+  /** 💓️ The heartbeat — a pure drain (`exchange(id, [])`) for pending effects/events/backbone-ingested
+   * `DocumentChanged` frames queued since the previous call. Replaces the old poll-backbone +
+   * refresh-ui tick. */
+  async drain(): Promise<AppFrameValue[]> {
+    const replies = await this.handle.exchange(this.instanceId, []);
+    return replies.map(decodeAppFrame);
+  }
+}
+//#endregion 🔖️AppChannelClient
+
 //#region 🧪️Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -1275,6 +2024,274 @@ if (import.meta.vitest) {
         const deliveries = planWorkflow(viaDsl.graph, new Set(viaDsl.dirtyInstanceIds));
         expect(deliveries).toEqual(viaDsl.expectedDeliveries);
       }
+    });
+  });
+
+  describe("@semio-tech/framework-os-core PackValueCodec", () => {
+    function bytesToHex(bytes: Uint8Array): string {
+      return Array.from(bytes)
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+    function hexToBytes(hex: string): Uint8Array {
+      const out = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < out.length; i++) out[i] = Number.parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+      return out;
+    }
+
+    // 🔬️ Ground truth captured verbatim from `cargo test -p semio-framework-os-kernel-store
+    // pack_wire_value_fixture_corpus_hex_dump -- --nocapture` (`store/rs/lib.rs`'s
+    // `🔖️PackValueFixtures` region) — the REAL bytes `pack_rt::encode_wire_value` produces (the
+    // `encode_record_body`-backed sibling of `encode_json_value`, see this file's
+    // `🔖️PackValueCodec` header doc for why the container-backed encoding was replaced).
+    // `encode_record_body`'s grammar has no compression anywhere it is fully deterministic, so
+    // both `encodePackValue` and `decodePackValue` are asserted BYTE-EXACT against these, unlike
+    // the old DEFLATE-backed encoding this replaced (which was only decode-exact).
+    const packValueFixtures: ReadonlyArray<readonly [string, unknown, string]> = [
+      ["null", null, "0001011112"],
+      ["bool_true", true, "0001011102"],
+      ["bool_false", false, "0001011101"],
+      ["int_zero", 0, "00010111050000000000000000"],
+      ["int_negative_one", -1, "0001011105000000000000f0bf"],
+      ["float_pi", 3.14, "00010111051f85eb51b81e0940"],
+      ["float_whole_number", 2.0, "00010111050000000000000040"],
+      ["string_empty", "", "01000101110600"],
+      ["string_escapes", 'hello\nworld with "quotes"', "011968656c6c6f0a776f726c642077697468202271756f746573220101110600"],
+      ["array_empty", [], "000101110c00"],
+      ["array_ints", [1, 2, 3], "000101110c0305000000000000f03f050000000000000040050000000000000840"],
+      ["object_empty", {}, "000101111000"],
+      ["object_mixed", { a: 1, b: [true, null] }, "00010111100207016105000000000000f03f0701620c020212"],
+      [
+        "nested_deep",
+        { a: { b: { c: [1, 2, { d: "leaf" }] } } },
+        "01046c6561660101111001070161100107016210010701630c0305000000000000f03f05000000000000004010010701640600",
+      ],
+    ];
+
+    it.each(packValueFixtures)("decodes real Rust encode_wire_value bytes for %s", (_name, expected, hex) => {
+      expect(decodePackValue(hexToBytes(hex))).toEqual(expected);
+    });
+
+    it.each(packValueFixtures)("encodes byte-exact against real Rust encode_wire_value output for %s", (_name, value, hex) => {
+      expect(bytesToHex(encodePackValue(value))).toBe(hex);
+    });
+
+    it.each(packValueFixtures)("round-trips %s through encodePackValue/decodePackValue", (_name, value) => {
+      expect(decodePackValue(encodePackValue(value))).toEqual(value);
+    });
+  });
+
+  describe("@semio-tech/framework-os-core AppChannelCodec", () => {
+    const sampleCommands: readonly AppCommandValue[] = [
+      { Hello: { channel_version: 1, app_id: "app.demo", actor: "actor-1", config: [1, 2, 3] } },
+      { Configure: { seq: 1, config: [4, 5] } },
+      { Command: { seq: 2, command: [1], view_state: [2, 3] } },
+      { CommandText: { seq: 3, line: "move 1 2" } },
+      { RefreshUi: { seq: 4, sections: [{ kind: 1, key: "panel-a", hash: 42 }, { kind: 2, key: "panel-b", hash: null }] } },
+      { ContextMenu: { seq: 5, request: [9, 9] } },
+      { DocumentCommand: { seq: 6, command: [7] } },
+      { ApplyEnvelopes: { seq: 7, envelopes: [[1, 2], [3, 4, 5], []] } },
+      { LoadDocument: { seq: 8, pack: [1, 2, 3], spr: [4, 5, 6] } },
+      { ReadDocument: { seq: 9 } },
+      { AttachBackbone: { seq: 10, uri: "file:///tmp/a.json" } },
+      { DetachBackbone: { seq: 11 } },
+      { MediaIn: { seq: 12, port: "in-1", descriptor: [1], data: [2, 3] } },
+      { MediaOut: { seq: 13, port: "out-1", request: [4] } },
+      { MediaFingerprint: { seq: 14, port: "fp-1" } },
+      "Bye",
+    ];
+
+    const sampleFrames: readonly AppFrameValue[] = [
+      { Welcome: { channel_version: 1, instance: 7, manifest: [1, 2, 3] } },
+      { Done: { in_reply_to: 1 } },
+      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [] } },
+      { UiSection: { in_reply_to: 3, kind: 1, key: "panel-a", hash: 42, body: [1, 2] } },
+      { UiSection: { in_reply_to: null, kind: 1, key: "panel-b", hash: 0, body: null } },
+      { Effects: { in_reply_to: 4, effects: [[1], [2, 3]] } },
+      { Effects: { in_reply_to: null, effects: [] } },
+      { Events: { in_reply_to: 5, events: [[9]] } },
+      { DocumentChanged: { envelopes: [[1, 2]], origin: "remote" } },
+      { Document: { in_reply_to: 6, pack: [1, 2], spr: [3, 4], ops: "op-log" } },
+      { ContextMenu: { in_reply_to: 7, items: [1, 2, 3] } },
+      { Media: { in_reply_to: 8, port: "out-1", descriptor: [1], data: [2] } },
+      { MediaFingerprint: { in_reply_to: 9, port: "fp-1", fingerprint: [1, 2, 3, 4] } },
+      { Error: { in_reply_to: 10, code: "E_BAD", message: "boom" } },
+      { Error: { in_reply_to: null, code: "E_BAD", message: "boom" } },
+    ];
+
+    it.each(sampleCommands.map((cmd) => [cmd] as const))("round-trips AppCommand %j", (cmd) => {
+      expect(decodeAppCommand(encodeAppCommand(cmd))).toEqual(cmd);
+    });
+
+    it.each(sampleFrames.map((frame) => [frame] as const))("round-trips AppFrame %j", (frame) => {
+      expect(decodeAppFrame(encodeAppFrame(frame))).toEqual(frame);
+    });
+
+    it("tags every AppCommand variant per the agreed contract order (Hello=0 ... Bye=15)", () => {
+      expect(encodeAppCommand({ Hello: { channel_version: 0, app_id: "", actor: "", config: [] } })[0]).toBe(0);
+      expect(encodeAppCommand({ Configure: { seq: 0, config: [] } })[0]).toBe(1);
+      expect(encodeAppCommand("Bye")[0]).toBe(15);
+    });
+
+    it("tags every AppFrame variant per the agreed contract order (Welcome=0 ... Error=11)", () => {
+      expect(encodeAppFrame({ Welcome: { channel_version: 0, instance: 0, manifest: [] } })[0]).toBe(0);
+      expect(encodeAppFrame({ Error: { in_reply_to: null, code: "", message: "" } })[0]).toBe(11);
+    });
+
+    /**
+     * 🔒️ Cross-language drift guard: the exact same fixture values and golden hex committed in
+     * `protocol_channel`'s own `🔖️Corpus` region (`🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust/📦️lib.rs`,
+     * `channel_command_fixture_corpus`/`channel_command_fixture_hex` and their `AppFrame` twins) —
+     * sourced by running the real `encode_app_command`/`encode_app_frame` and copying their
+     * printed `[DEBUG] AppCommand::<label> = <hex>` output (`cargo test -p semio-protocol-channel
+     * -- --nocapture`), NOT hand-computed. Any future change to either codec that shifts these
+     * bytes fails on exactly one side, forcing a deliberate update of both this table and the Rust
+     * golden hex in the same change.
+     */
+    it("matches protocol_channel's own golden hex fixture corpus, byte-for-byte", () => {
+      const commandFixtures: readonly (readonly [string, AppCommandValue])[] = [
+        ["Hello", { Hello: { channel_version: 1, app_id: "app", actor: "actor", config: [1, 2] } }],
+        ["Configure", { Configure: { seq: 1, config: [9] } }],
+        ["Command", { Command: { seq: 1, command: [1], view_state: [2] } }],
+        ["CommandText", { CommandText: { seq: 1, line: "go" } }],
+        ["RefreshUi", { RefreshUi: { seq: 1, sections: [{ kind: 1, key: "a", hash: 1 }] } }],
+        ["ContextMenu", { ContextMenu: { seq: 1, request: [1] } }],
+        ["DocumentCommand", { DocumentCommand: { seq: 1, command: [1] } }],
+        ["ApplyEnvelopes", { ApplyEnvelopes: { seq: 1, envelopes: [] } }],
+        ["LoadDocument", { LoadDocument: { seq: 1, pack: [1], spr: [2] } }],
+        ["ReadDocument", { ReadDocument: { seq: 1 } }],
+        ["AttachBackbone", { AttachBackbone: { seq: 1, uri: "u" } }],
+        ["DetachBackbone", { DetachBackbone: { seq: 1 } }],
+        ["MediaIn", { MediaIn: { seq: 1, port: "p", descriptor: [1], data: [2] } }],
+        ["MediaOut", { MediaOut: { seq: 1, port: "p", request: [1] } }],
+        ["MediaFingerprint", { MediaFingerprint: { seq: 1, port: "p" } }],
+        ["Bye", "Bye"],
+      ];
+      const commandGoldenHex: Readonly<Record<string, string>> = {
+        Hello: "000103617070056163746f72020102",
+        Configure: "01010109",
+        Command: "020101010102",
+        CommandText: "030102676f",
+        RefreshUi: "0401010101610101",
+        ContextMenu: "05010101",
+        DocumentCommand: "06010101",
+        ApplyEnvelopes: "070100",
+        LoadDocument: "080101010102",
+        ReadDocument: "0901",
+        AttachBackbone: "0a010175",
+        DetachBackbone: "0b01",
+        MediaIn: "0c01017001010102",
+        MediaOut: "0d0101700101",
+        MediaFingerprint: "0e010170",
+        Bye: "0f",
+      };
+      const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
+        ["Welcome", { Welcome: { channel_version: 1, instance: 1, manifest: [1] } }],
+        ["Done", { Done: { in_reply_to: 1 } }],
+        ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [] } }],
+        ["UiSection", { UiSection: { in_reply_to: 1, kind: 1, key: "k", hash: 1, body: null } }],
+        ["Effects", { Effects: { in_reply_to: null, effects: [[1]] } }],
+        ["Events", { Events: { in_reply_to: null, events: [] } }],
+        ["DocumentChanged", { DocumentChanged: { envelopes: [], origin: "o" } }],
+        ["Document", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
+        ["ContextMenu", { ContextMenu: { in_reply_to: 1, items: [1] } }],
+        ["Media", { Media: { in_reply_to: 1, port: "p", descriptor: [1], data: [2] } }],
+        ["MediaFingerprint", { MediaFingerprint: { in_reply_to: 1, port: "p", fingerprint: [1] } }],
+        ["Error", { Error: { in_reply_to: null, code: "c", message: "m" } }],
+      ];
+      const frameGoldenHex: Readonly<Record<string, string>> = {
+        Welcome: "0001010101",
+        Done: "0101",
+        Invocation: "0201010100",
+        UiSection: "03010101016b0100",
+        Effects: "0400010101",
+        Events: "050000",
+        DocumentChanged: "0600016f",
+        Document: "070101010102016f",
+        ContextMenu: "08010101",
+        Media: "0901017001010102",
+        MediaFingerprint: "0a0101700101",
+        Error: "0b000163016d",
+      };
+      const hex = (bytes: Uint8Array) => Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+      for (const [label, value] of commandFixtures) expect(hex(encodeAppCommand(value)), `AppCommand::${label}`).toBe(commandGoldenHex[label]);
+      for (const [label, value] of frameFixtures) expect(hex(encodeAppFrame(value)), `AppFrame::${label}`).toBe(frameGoldenHex[label]);
+    });
+  });
+
+  describe("@semio-tech/framework-os-core AppChannelClient", () => {
+    /** 🧪️ A fake `exchange` that decodes whatever {@link AppChannelClient} encoded and replies with
+     * caller-supplied frames — enough to assert the client frames/unframes correctly without a real
+     * plugin instance. */
+    function fakeHandle(reply: (instanceId: number, commands: AppCommandValue[]) => AppFrameValue[]): AppChannelHandle {
+      return {
+        exchange: async (instanceId, frames) => {
+          const commands = frames.map(decodeAppCommand);
+          return reply(instanceId, commands).map(encodeAppFrame);
+        },
+      };
+    }
+
+    it("hello() encodes channel_version/app_id/actor/config and returns the single Welcome reply", async () => {
+      let seen: AppCommandValue[] = [];
+      const handle = fakeHandle((instanceId, commands) => {
+        seen = commands;
+        expect(instanceId).toBe(7);
+        return [{ Welcome: { channel_version: 1, instance: 7, manifest: [9, 9] } }];
+      });
+      const client = new AppChannelClient(handle, 7, "app.demo", "actor-1");
+      const frame = await client.hello({ mode: "edit" });
+      expect(seen).toEqual([{ Hello: { channel_version: 1, app_id: "app.demo", actor: "actor-1", config: Array.from(encodePackValue({ mode: "edit" })) } }]);
+      expect(frame).toEqual({ Welcome: { channel_version: 1, instance: 7, manifest: [9, 9] } });
+    });
+
+    it("hello() throws when the exchange returns no frame", async () => {
+      const client = new AppChannelClient(fakeHandle(() => []), 1, "app.demo");
+      await expect(client.hello({})).rejects.toThrow(/no reply frame/);
+    });
+
+    it("command() allocates an incrementing seq and returns every frame the batch produced", async () => {
+      const seqsSeen: number[] = [];
+      const handle = fakeHandle((_instanceId, commands) => {
+        const cmd = commands[0];
+        if (cmd && cmd !== "Bye" && "Command" in cmd) seqsSeen.push(cmd.Command.seq);
+        return [
+          { Invocation: { in_reply_to: seqsSeen.at(-1) ?? 0, output: [1], diagnostics: [] } },
+          { Effects: { in_reply_to: seqsSeen.at(-1) ?? 0, effects: [] } },
+        ];
+      });
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      const first = await client.command(new Uint8Array([1, 2]), { cursor: 0 });
+      const second = await client.command(new Uint8Array([3]), { cursor: 1 });
+      expect(seqsSeen).toEqual([1, 2]);
+      expect(first).toHaveLength(2);
+      expect(second).toHaveLength(2);
+    });
+
+    it("refreshUi()/configure()/readDocument()/loadDocument() frame the right AppCommand variant", async () => {
+      const seen: AppCommandValue[] = [];
+      const handle = fakeHandle((_instanceId, commands) => {
+        seen.push(...commands);
+        return [{ Done: { in_reply_to: 1 } }];
+      });
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      await client.refreshUi([{ kind: 1, key: "panel-a", hash: null }]);
+      await client.configure({ locale: "en" });
+      await client.readDocument();
+      await client.loadDocument(new Uint8Array([1]), new Uint8Array([2]));
+      expect(seen[0]).toEqual({ RefreshUi: { seq: 1, sections: [{ kind: 1, key: "panel-a", hash: null }] } });
+      expect(seen[1]).toEqual({ Configure: { seq: 2, config: Array.from(encodePackValue({ locale: "en" })) } });
+      expect(seen[2]).toEqual({ ReadDocument: { seq: 3 } });
+      expect(seen[3]).toEqual({ LoadDocument: { seq: 4, pack: [1], spr: [2] } });
+    });
+
+    it("drain() sends an empty batch and decodes whatever frames come back", async () => {
+      const handle = fakeHandle((_instanceId, commands) => {
+        expect(commands).toEqual([]);
+        return [{ Events: { in_reply_to: null, events: [[1]] } }];
+      });
+      const client = new AppChannelClient(handle, 1, "app.demo");
+      expect(await client.drain()).toEqual([{ Events: { in_reply_to: null, events: [[1]] } }]);
     });
   });
 }

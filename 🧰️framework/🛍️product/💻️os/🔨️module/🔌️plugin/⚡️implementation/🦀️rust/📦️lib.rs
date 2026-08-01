@@ -4,12 +4,7 @@
 pub mod component {
     //! 🧩️ WASI P2 component exports for the plugin world contract.
 
-    use crate::plugin_runtime::{
-        ensure_plugin_initialized, plugin_attach_backbone, plugin_clear_instance_guard, plugin_consume_media, plugin_context_menu,
-        plugin_create_app, plugin_detach_backbone, plugin_document_pack, plugin_document_text, plugin_handle_action,
-        plugin_handle_command, plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document_pack,
-        plugin_load_document_text, plugin_manifest, plugin_produce_media, plugin_refresh_ui, plugin_render_with_document,
-    };
+    use crate::plugin_runtime::{ensure_plugin_initialized, plugin_clear_instance_guard, plugin_create_app, plugin_exchange, plugin_manifest};
     use wit_bindgen::generate;
 
     generate!({
@@ -18,20 +13,14 @@ pub mod component {
     });
 
     use exports::semio::framework::plugin::Guest;
-    use semio::framework::types::{
-        ActionInvocationJson, CommandInvocationJson, ContextMenuRequestJson, ContextMenuResponseJson, DocumentPackFiles,
-        DocumentTextFiles, InvocationContextJson, InvocationResponseJson, MediaArtifact, MigrateDocumentInput, MigrateDocumentOutput,
-        PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
-    };
+    use semio::framework::types::{MigrateDocumentInput, MigrateDocumentOutput, PluginError};
 
     pub struct ComponentGuest;
 
     impl Guest for ComponentGuest {
-        fn manifest() -> PluginManifestJson {
+        fn manifest() -> Vec<u8> {
             ensure_plugin_initialized();
-            PluginManifestJson {
-                json: serde_json::to_string(&plugin_manifest()).unwrap_or_else(|_| "{}".into()),
-            }
+            store::pack_rt::encode_wire_value(&serde_json::to_value(&plugin_manifest()).unwrap_or_default())
         }
 
         fn instantiate_app(app_id: String, _instance_id: String) -> Result<u32, PluginError> {
@@ -39,119 +28,13 @@ pub mod component {
             plugin_create_app(&app_id).map_err(PluginError::Message)
         }
 
-        fn handle_action(
-            instance_id: u32,
-            action: ActionInvocationJson,
-            context: InvocationContextJson,
-        ) -> Result<InvocationResponseJson, PluginError> {
+        fn exchange(instance_id: u32, commands: Vec<Vec<u8>>) -> Result<Vec<Vec<u8>>, PluginError> {
             ensure_plugin_initialized();
-            let result = plugin_handle_action(instance_id, &action.json, &context.json)
-                .map_err(PluginError::Message)?;
-            Ok(InvocationResponseJson {
-                json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
-            })
-        }
-
-        fn handle_command(
-            instance_id: u32,
-            command: CommandInvocationJson,
-            context: InvocationContextJson,
-        ) -> Result<InvocationResponseJson, PluginError> {
-            ensure_plugin_initialized();
-            let result = plugin_handle_command(instance_id, &command.json, &context.json)
-                .map_err(PluginError::Message)?;
-            Ok(InvocationResponseJson {
-                json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
-            })
-        }
-
-        fn update_window(
-            instance_id: u32,
-            input: WindowInputJson,
-        ) -> Result<WindowOutputJson, PluginError> {
-            ensure_plugin_initialized();
-            let node = plugin_render_with_document(instance_id, "", None, &input.json)
-                .map_err(PluginError::Message)?;
-            Ok(WindowOutputJson {
-                json: serde_json::to_string(&node).unwrap_or_else(|_| "{}".into()),
-            })
-        }
-
-        fn refresh_ui(
-            instance_id: u32,
-            request: UiRefreshRequestJson,
-        ) -> Result<UiRefreshResponseJson, PluginError> {
-            ensure_plugin_initialized();
-            let json = plugin_refresh_ui(instance_id, &request.json).map_err(PluginError::Message)?;
-            Ok(UiRefreshResponseJson { json })
-        }
-
-        fn context_menu(
-            instance_id: u32,
-            request: ContextMenuRequestJson,
-        ) -> Result<ContextMenuResponseJson, PluginError> {
-            ensure_plugin_initialized();
-            let json = plugin_context_menu(instance_id, &request.json).map_err(PluginError::Message)?;
-            Ok(ContextMenuResponseJson { json })
+            plugin_exchange(instance_id, &commands).map_err(PluginError::Message)
         }
 
         fn migrate_document(_input: MigrateDocumentInput) -> Result<MigrateDocumentOutput, PluginError> {
             Err(PluginError::Message("migrate-document not implemented".into()))
-        }
-
-        fn apply_operations(instance_id: u32, operations: Vec<u8>) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            plugin_ingest_operations(instance_id, &operations).map_err(PluginError::Message)
-        }
-
-        fn apply_operations_text(instance_id: u32, operations_text: String) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            plugin_ingest_operations_text(instance_id, &operations_text).map_err(PluginError::Message)
-        }
-
-        fn read_app_document_text(instance_id: u32) -> Result<DocumentTextFiles, PluginError> {
-            ensure_plugin_initialized();
-            let files = plugin_document_text(instance_id).map_err(PluginError::Message)?;
-            Ok(DocumentTextFiles { dsl: files.dsl, ops: files.ops })
-        }
-
-        fn load_app_document_text(instance_id: u32, document_text: DocumentTextFiles) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            let files = store::DocumentTextFiles { dsl: document_text.dsl, ops: document_text.ops };
-            plugin_load_document_text(instance_id, &files).map_err(PluginError::Message)
-        }
-
-        fn read_app_document_pack(instance_id: u32) -> Result<DocumentPackFiles, PluginError> {
-            ensure_plugin_initialized();
-            let files = plugin_document_pack(instance_id).map_err(PluginError::Message)?;
-            Ok(DocumentPackFiles { pack: files.pack, spr: files.spr, ops: files.ops })
-        }
-
-        fn load_app_document_pack(instance_id: u32, document_pack: DocumentPackFiles) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            let files = store::DocumentPackFiles { pack: document_pack.pack, spr: document_pack.spr, ops: document_pack.ops };
-            plugin_load_document_pack(instance_id, &files).map_err(PluginError::Message)
-        }
-
-        fn attach_backbone(instance_id: u32, uri: String) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            plugin_attach_backbone(instance_id, &uri).map_err(PluginError::Message)
-        }
-
-        fn detach_backbone(instance_id: u32) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            plugin_detach_backbone(instance_id).map_err(PluginError::Message)
-        }
-
-        fn consume_media(instance_id: u32, port_id: String, artifact: MediaArtifact) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            plugin_consume_media(instance_id, &port_id, &artifact.descriptor_json, artifact.data).map_err(PluginError::Message)
-        }
-
-        fn produce_media(instance_id: u32, port_id: String, request_json: String) -> Result<MediaArtifact, PluginError> {
-            ensure_plugin_initialized();
-            let (descriptor_json, data) = plugin_produce_media(instance_id, &port_id, &request_json).map_err(PluginError::Message)?;
-            Ok(MediaArtifact { descriptor_json, data })
         }
 
         fn clear_instance_guard() {
@@ -204,6 +87,7 @@ use semio_framework_core::{
     UtilityDefinition, UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID,
     NOTE_SHELL_COMMAND_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
+    AppIo, CommandGrammar, ConfigSpec,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor,
@@ -426,6 +310,9 @@ pub struct AppBuilder {
     artifact_kinds: Vec<ArtifactKindSpec>,
     media_inputs: Vec<MediaPortSpec>,
     media_outputs: Vec<MediaPortSpec>,
+    config: ConfigSpec,
+    command_grammar: CommandGrammar,
+    io: AppIo,
 }
 
 impl AppBuilder {
@@ -456,12 +343,33 @@ impl AppBuilder {
             artifact_kinds: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
+            config: ConfigSpec::empty(),
+            command_grammar: CommandGrammar::empty(),
+            io: AppIo::default(),
         }
     }
 
     /// 🗂️ Declares one resource kind this app produces/consumes (see `ArtifactKindSpec`). Repeatable.
     pub fn artifact_kind(mut self, spec: ArtifactKindSpec) -> Self {
         self.artifact_kinds.push(spec);
+        self
+    }
+
+    /// 🧮️ Declares this app's typed configuration record (see `crate::ConfigSpec`).
+    pub fn config(mut self, spec: ConfigSpec) -> Self {
+        self.config = spec;
+        self
+    }
+
+    /// 🔌️ Declares this app's typed media I/O surface (see `crate::AppIo`).
+    pub fn io(mut self, io: AppIo) -> Self {
+        self.io = io;
+        self
+    }
+
+    /// 🎛️ Declares this app's typed binary command grammar (see `crate::CommandGrammar`).
+    pub fn command_grammar(mut self, grammar: CommandGrammar) -> Self {
+        self.command_grammar = grammar;
         self
     }
 
@@ -1344,6 +1252,9 @@ impl AppBuilder {
             media_inputs: self.media_inputs,
             media_outputs: self.media_outputs,
             artifact_kinds: self.artifact_kinds,
+            config: self.config,
+            command_grammar: self.command_grammar,
+            io: self.io,
         }
     }
 }
@@ -3520,6 +3431,33 @@ pub trait DocumentApp: Send + 'static {
     ) -> ActionEmit<Self::Operation> {
         ActionEmit::default()
     }
+    //#region 🔖️TypedChannel
+    /// 🎯️ Typed binary command dispatch — the eventual replacement for `handle_action`/`handle_command`'s
+    /// stringly-typed dispatch. `None` (the default) means "this app hasn't migrated to typed commands
+    /// yet" — the caller (`VcsDocumentApp::handle_command_frame`) falls back to decoding the frame bytes
+    /// as a `{kind,name,args}` wire-value envelope and routing through the existing `handle_action`/
+    /// `handle_command` unchanged. An app's later conversion overrides this: decode `command_bytes` via
+    /// `<Self::TypedCommand as protocol::OpBinary>::decode_op(...)` (a per-app enum it declares) and
+    /// dispatch for real.
+    fn handle_typed_command(
+        &mut self,
+        _command_bytes: &[u8],
+        _doc: &DocumentView<'_, Self::Projection>,
+        _view_state: &ViewState,
+    ) -> Option<Result<ActionEmit<Self::Operation>, String>> {
+        None
+    }
+    /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
+    fn config_spec(&self) -> ConfigSpec {
+        ConfigSpec::empty()
+    }
+    /// 🧮️ Applies wire-value-decoded config bytes directly to in-app state — NOT a document operation,
+    /// not undoable, not routed through the `DocumentStore`. Default no-op (apps with no `config_spec`
+    /// never need this).
+    fn apply_config_bytes(&mut self, _config_bytes: &[u8]) -> Result<(), String> {
+        Ok(())
+    }
+    //#endregion 🔖️TypedChannel
     /// 📋️ The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
     /// default) means this app doesn't participate in the clipboard mechanism, and `VcsDocumentApp`'s
     /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
@@ -3724,6 +3662,11 @@ pub trait PluginApp: Send {
         view_state: &ViewState,
         meta: &ActionMeta,
     ) -> Result<InvocationResult, String>;
+    /// 🎯️ Object-safe counterpart to `DocumentApp::handle_typed_command` + legacy fallback — the single
+    /// dispatch point `plugin_runtime::plugin_exchange` calls for every `AppCommand::Command` frame.
+    fn handle_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String>;
+    /// 🧮️ Object-safe counterpart to `DocumentApp::apply_config_bytes`.
+    fn apply_config_bytes(&mut self, config_bytes: &[u8]) -> Result<(), String>;
     /// @emoji 📥️ Ingests binary-encoded remote `OperationEnvelope`s (`protocol::decode_envelopes`)
     /// into the causal DAG (idempotent — duplicate operation ids are dropped).
     fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String>;
@@ -4679,6 +4622,36 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.dispatch_emit(command, emit, meta)
     }
 
+    /// 🎯️ The actual body of `PluginApp::handle_command_frame` — see `dispatch_action`'s doc. Prefers
+    /// `DocumentApp::handle_typed_command`; when the app returns `None` (hasn't migrated to typed
+    /// commands yet) falls back to decoding `command_bytes` as a `store::pack_rt::decode_wire_value`
+    /// `{kind, name, args}` envelope and routing through `dispatch_action`/`dispatch_command` unchanged
+    /// — so an unmigrated app keeps working byte-identically over the new binary channel.
+    fn dispatch_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        self.refresh_cache()?;
+        let typed = {
+            let VcsDocumentApp { app, cache, .. } = self;
+            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { projection, history };
+            app.handle_typed_command(command_bytes, &doc, view_state)
+        };
+        match typed {
+            Some(Ok(emit)) => self.dispatch_emit("typed-command", emit, meta),
+            Some(Err(message)) => Err(message),
+            None => {
+                let envelope: Value = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+                let kind = envelope.get("kind").and_then(Value::as_str).unwrap_or("action").to_string();
+                let name = envelope.get("name").and_then(Value::as_str).unwrap_or("").to_string();
+                let args = envelope.get("args").cloned();
+                if kind == "command" {
+                    self.dispatch_command(&name, args.as_ref(), view_state, meta)
+                } else {
+                    self.dispatch_action(&name, args.as_ref(), view_state, meta)
+                }
+            }
+        }
+    }
+
     /// @emoji 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.
     fn dispatch_import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
         self.refresh_cache()?;
@@ -4771,6 +4744,16 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         let log_generation_before = self.log_generation;
         let result = self.dispatch_command(command, args, view_state, meta)?;
         Ok(self.finish_recorded(log_generation_before, command, result))
+    }
+
+    fn handle_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let log_generation_before = self.log_generation;
+        let result = self.dispatch_command_frame(command_bytes, view_state, meta)?;
+        Ok(self.finish_recorded(log_generation_before, "typed-command", result))
+    }
+
+    fn apply_config_bytes(&mut self, config_bytes: &[u8]) -> Result<(), String> {
+        self.app.apply_config_bytes(config_bytes)
     }
 
     fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String> {
@@ -5095,6 +5078,36 @@ thread_local! {
     // serialized plugin bridge instead.
     static INSTANCES: std::cell::UnsafeCell<Vec<AppInstance>> = const { std::cell::UnsafeCell::new(Vec::new()) };
     static INSTANCE_GUARD: Cell<u32> = const { Cell::new(0) };
+    /// 🪪️ Per-instance local actor id, set by `AppCommand::Hello` and read back by every `Command`
+    /// frame's `ActionMeta` — see `plugin_exchange`. Never cleared on `Bye`/instance destruction (Wave
+    /// 1 scope: a destroyed instance id is never reused within one plugin's lifetime today).
+    static INSTANCE_ACTORS: RefCell<std::collections::HashMap<u32, String>> = RefCell::new(std::collections::HashMap::new());
+    /// 🪟️ Per-instance last-seen `ViewState`, updated by every `AppCommand::Command` and read back by
+    /// `AppCommand::RefreshUi`/`AppCommand::DocumentCommand` (neither carries its own `ViewState` on
+    /// the new channel) — see `plugin_exchange`'s doc comment for this Wave 1 scoping.
+    static INSTANCE_VIEW_STATES: RefCell<std::collections::HashMap<u32, ViewState>> = RefCell::new(std::collections::HashMap::new());
+}
+
+/// 🪪️ Records `actor` as the local actor id for `instance_id` (from `AppCommand::Hello`).
+fn set_instance_actor(instance_id: u32, actor: String) {
+    INSTANCE_ACTORS.with(|slot| { slot.borrow_mut().insert(instance_id, actor); });
+}
+
+/// 🪪️ The actor id last recorded for `instance_id` via `set_instance_actor`, or `"local"` when no
+/// `Hello` has been processed yet (mirrors `plugin_handle_action`'s own `"local"` fallback).
+fn instance_actor(instance_id: u32) -> String {
+    INSTANCE_ACTORS.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_else(|| "local".to_string())
+}
+
+/// 🪟️ Records `view_state` as the last-seen `ViewState` for `instance_id` (from `AppCommand::Command`).
+fn set_instance_view_state(instance_id: u32, view_state: ViewState) {
+    INSTANCE_VIEW_STATES.with(|slot| { slot.borrow_mut().insert(instance_id, view_state); });
+}
+
+/// 🪟️ The `ViewState` last recorded for `instance_id` via `set_instance_view_state`, or
+/// `ViewState::default()` when no `Command` has been processed yet.
+fn instance_view_state(instance_id: u32) -> ViewState {
+    INSTANCE_VIEW_STATES.with(|slot| slot.borrow().get(&instance_id).cloned()).unwrap_or_default()
 }
 
 struct InstanceGuard;
@@ -5420,16 +5433,26 @@ pub fn plugin_render_with_document(
 }
 
 //#region 🔖️RefreshUi
-/// 🐢️ A tiny non-cryptographic hash (fnv1a-64) for cheap "did this section's content change" checks —
-/// not a security boundary, just change detection, so speed over collision-resistance is the right
-/// tradeoff (mirrors the identical pattern already used for `cached_fixture_json` in puzzle's plugin).
-fn ui_refresh_fnv1a_hash(bytes: &[u8]) -> String {
+/// 🐢️ The raw fnv1a-64 core — a tiny non-cryptographic hash for cheap "did this section's content
+/// change" checks, not a security boundary, just change detection, so speed over collision-resistance
+/// is the right tradeoff (mirrors the identical pattern already used for `cached_fixture_json` in
+/// puzzle's plugin). Extracted from `ui_refresh_fnv1a_hash` (which formats it as hex for the legacy
+/// JSON `refreshUi` wire) so `plugin_exchange`'s `AppFrame::UiSection.hash: u64` can reuse the same
+/// numeric core instead of hex-formatting and reparsing.
+fn fnv1a64(bytes: &[u8]) -> u64 {
     let mut hash: u64 = 0xcbf29ce484222325;
     for byte in bytes {
         hash ^= u64::from(*byte);
         hash = hash.wrapping_mul(0x100000001b3);
     }
-    format!("{hash:016x}")
+    hash
+}
+
+/// 🐢️ A tiny non-cryptographic hash (fnv1a-64) for cheap "did this section's content change" checks —
+/// not a security boundary, just change detection, so speed over collision-resistance is the right
+/// tradeoff (mirrors the identical pattern already used for `cached_fixture_json` in puzzle's plugin).
+fn ui_refresh_fnv1a_hash(bytes: &[u8]) -> String {
+    format!("{:016x}", fnv1a64(bytes))
 }
 
 /// 🐢️ Hashes `value`'s canonical JSON serialization and returns `(hash, Some(value))` when it differs
@@ -5439,6 +5462,20 @@ fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (Str
     let wire = serde_json::to_string(value).unwrap_or_default();
     let hash = ui_refresh_fnv1a_hash(wire.as_bytes());
     if known_hash == Some(hash.as_str()) {
+        (hash, None)
+    } else {
+        let payload = serde_json::from_str(&wire).unwrap_or(Value::Null);
+        (hash, Some(payload))
+    }
+}
+
+/// 🐢️ `ui_refresh_section`'s `u64`-hash twin for `protocol::SectionProbe`/`AppFrame::UiSection` on the
+/// new binary channel (which carries `hash: Option<u64>`/`u64` directly, no hex string) — same
+/// hash-conditional payload-omission behavior, reusing `fnv1a64`.
+fn channel_refresh_section<T: Serialize>(value: &T, known_hash: Option<u64>) -> (u64, Option<Value>) {
+    let wire = serde_json::to_string(value).unwrap_or_default();
+    let hash = fnv1a64(wire.as_bytes());
+    if known_hash == Some(hash) {
         (hash, None)
     } else {
         let payload = serde_json::from_str(&wire).unwrap_or(Value::Null);
@@ -5630,6 +5667,299 @@ pub fn plugin_context_menu(instance_id: u32, request_json: &str) -> Result<Strin
     })
 }
 //#endregion 🔖️ContextMenu
+
+//#region 🔖️Exchange
+/// 🔍️ `SectionProbe.kind` byte convention for `plugin_exchange`'s `AppCommand::RefreshUi` handling —
+/// no shared WIT/protocol_channel enum exists for this yet (Wave 1 scope), so the mapping lives here,
+/// the single producer+consumer of it until a TS-side client needs the same constants.
+const SECTION_KIND_WINDOW: u8 = 0;
+const SECTION_KIND_PANEL: u8 = 1;
+const SECTION_KIND_ENGAGEMENTS: u8 = 2;
+const SECTION_KIND_MEASURES: u8 = 3;
+const SECTION_KIND_TOOLS: u8 = 4;
+const SECTION_KIND_LABELS: u8 = 5;
+
+/// 🎯️ `AppCommand::DocumentCommand`'s Wave 1 mapping — the same magic action-name strings
+/// `VcsDocumentApp::dispatch_action` already intercepts for `store::DocumentCommand` verbs (duplicated
+/// here rather than imported since `app`'s `HISTORY_ACTION_IDS` const is private — see
+/// `plugin_exchange`'s doc for why this frame is scoped to history verbs only in Wave 1).
+const DOCUMENT_COMMAND_ACTION_IDS: [&str; 6] = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"];
+
+/// 📤️ Appends `AppFrame::Effects`/`AppFrame::Events` for `result`'s side channels, if any — shared by
+/// `AppCommand::Command`'s and `AppCommand::DocumentCommand`'s handling below.
+fn push_invocation_side_frames(frames: &mut Vec<protocol::AppFrame>, seq: u64, result: &InvocationResult) {
+    if !result.requested_effects.is_empty() {
+        let effects = result
+            .requested_effects
+            .iter()
+            .map(|effect| store::pack_rt::encode_wire_value(&serde_json::to_value(effect).unwrap_or_default()))
+            .collect();
+        frames.push(protocol::AppFrame::Effects { in_reply_to: Some(seq), effects });
+    }
+    if !result.events.is_empty() {
+        let events = result
+            .events
+            .iter()
+            .map(|event| store::pack_rt::encode_wire_value(&serde_json::to_value(event).unwrap_or_default()))
+            .collect();
+        frames.push(protocol::AppFrame::Events { in_reply_to: Some(seq), events });
+    }
+}
+
+/// 🔀️ The single bidirectional entry point behind WIT `exchange` (see `📜️wit/📜️world.wit`'s
+/// `interface plugin` doc) — decodes each `protocol::AppCommand` in `commands`, dispatches it against
+/// `instance_id`, and returns every `protocol::AppFrame` produced, encoded back to bytes.
+///
+/// 🚧️ Wave 1 scope — documented here rather than silently: `AppCommand::CommandText` is stubbed
+/// (`Error{code:"unsupported"}`, a later wave wires real headless op-text scripts);
+/// `AppCommand::DocumentCommand` only accepts the six history verbs (`DOCUMENT_COMMAND_ACTION_IDS`),
+/// mapped onto the existing magic action-name interception rather than a real typed
+/// `store::DocumentCommand` wire codec; `AppCommand::RefreshUi` has no `view_state` field of its own —
+/// it renders against the last `ViewState` seen on an `AppCommand::Command` for this instance (via
+/// `instance_view_state`), defaulting to `ViewState::default()` before any `Command` has been
+/// processed; the unsolicited outbox (backbone-driven `AppFrame::DocumentChanged`, a persistent
+/// per-instance frame queue surviving across calls) is NOT implemented — only `pending_effects` is
+/// drained, once, at the end of the batch, whenever a dispatched command mutated the document,
+/// mirroring exactly where `plugin_refresh_ui` already calls it.
+pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec<u8>>, String> {
+    let mut frames: Vec<protocol::AppFrame> = Vec::new();
+    let mut mutated = false;
+
+    for bytes in commands {
+        let command = protocol::decode_app_command(bytes).map_err(|error| error.to_string())?;
+        match command {
+            protocol::AppCommand::Hello { channel_version, app_id: _, actor, config } => {
+                if channel_version != protocol::CHANNEL_VERSION {
+                    frames.push(protocol::AppFrame::Error {
+                        in_reply_to: None,
+                        code: "channel-version".into(),
+                        message: format!("expected channel version {}, got {channel_version}", protocol::CHANNEL_VERSION),
+                    });
+                    continue;
+                }
+                set_instance_actor(instance_id, actor);
+                if !config.is_empty() {
+                    let applied = with_instances_mut(|list| {
+                        let instance = find_instance(list, instance_id)?;
+                        instance.app.apply_config_bytes(&config)
+                    });
+                    if let Err(message) = applied {
+                        frames.push(protocol::AppFrame::Error { in_reply_to: None, code: "config".into(), message });
+                        continue;
+                    }
+                }
+                let manifest_bytes = store::pack_rt::encode_wire_value(&serde_json::to_value(&plugin_manifest()).unwrap_or_default());
+                frames.push(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: instance_id, manifest: manifest_bytes });
+            }
+            protocol::AppCommand::Configure { seq, config } => {
+                let applied = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    instance.app.apply_config_bytes(&config)
+                });
+                match applied {
+                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "config".into(), message }),
+                }
+            }
+            protocol::AppCommand::Command { seq, command, view_state } => {
+                let view_state: ViewState = store::pack_rt::decode_wire_value(&view_state)
+                    .ok()
+                    .and_then(|value| serde_json::from_value(value).ok())
+                    .unwrap_or_default();
+                set_instance_view_state(instance_id, view_state.clone());
+                let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
+                let dispatched = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    instance.app.handle_command_frame(&command, &view_state, &meta)
+                });
+                match dispatched {
+                    Ok(result) => {
+                        mutated = true;
+                        let output = store::pack_rt::encode_wire_value(&result.output);
+                        let diagnostics = store::pack_rt::encode_wire_value(&serde_json::to_value(&result.diagnostics).unwrap_or_default());
+                        frames.push(protocol::AppFrame::Invocation { in_reply_to: seq, output, diagnostics });
+                        push_invocation_side_frames(&mut frames, seq, &result);
+                    }
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::CommandText { seq, line: _ } => {
+                // 🚧️ Wave 1 stub — see this function's doc comment.
+                frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "unsupported".into(), message: "CommandText not yet wired".into() });
+            }
+            protocol::AppCommand::RefreshUi { seq, sections } => {
+                let view_state = instance_view_state(instance_id);
+                let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+                let manifest = plugin_manifest();
+                let outcome = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    let app_id = instance.app.app_id().to_string();
+                    let panel_tab_ids: Vec<String> = manifest
+                        .apps
+                        .iter()
+                        .find(|app| app.id == app_id)
+                        .map(|app| app.panel_tabs.iter().map(|tab| tab.id().to_string()).collect())
+                        .unwrap_or_default();
+                    let mut section_frames = Vec::new();
+                    for probe in &sections {
+                        let (hash, body) = match probe.kind {
+                            SECTION_KIND_WINDOW | SECTION_KIND_PANEL => {
+                                let node = instance.app.render(&probe.key, None, &view_state)?;
+                                channel_refresh_section(&node, probe.hash)
+                            }
+                            SECTION_KIND_ENGAGEMENTS => channel_refresh_section(&instance.app.window_engagements(&view_state), probe.hash),
+                            SECTION_KIND_MEASURES => channel_refresh_section(&instance.app.window_measures(&view_state), probe.hash),
+                            SECTION_KIND_TOOLS => channel_refresh_section(&instance.app.tool_measures(&view_state), probe.hash),
+                            SECTION_KIND_LABELS => {
+                                let mut overlay = instance.app.app_labels(&view_state);
+                                for id in &panel_tab_ids {
+                                    if let Some(label) = framework_panel_tab_label(id, is_de) {
+                                        overlay.panel_tab_labels.entry(id.clone()).or_insert_with(|| label.into());
+                                    }
+                                }
+                                channel_refresh_section(&overlay, probe.hash)
+                            }
+                            _ => (0u64, None),
+                        };
+                        section_frames.push(protocol::AppFrame::UiSection {
+                            in_reply_to: Some(seq),
+                            kind: probe.kind,
+                            key: probe.key.clone(),
+                            hash,
+                            body: body.map(|value| store::pack_rt::encode_wire_value(&value)),
+                        });
+                    }
+                    Ok(section_frames)
+                });
+                match outcome {
+                    Ok(section_frames) => frames.extend(section_frames),
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::ContextMenu { seq, request } => {
+                let request_value: Value = store::pack_rt::decode_wire_value(&request).unwrap_or(Value::Null);
+                let request_json = serde_json::to_string(&request_value).unwrap_or_else(|_| "{}".into());
+                match plugin_context_menu(instance_id, &request_json) {
+                    Ok(response_json) => {
+                        let items_value = serde_json::from_str::<Value>(&response_json)
+                            .ok()
+                            .and_then(|value| value.get("items").cloned())
+                            .unwrap_or_else(|| Value::Array(Vec::new()));
+                        frames.push(protocol::AppFrame::ContextMenu { in_reply_to: seq, items: store::pack_rt::encode_wire_value(&items_value) });
+                    }
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::DocumentCommand { seq, command } => {
+                let envelope: Value = store::pack_rt::decode_wire_value(&command).unwrap_or(Value::Null);
+                let action = envelope.get("action").and_then(Value::as_str).unwrap_or("").to_string();
+                let args = envelope.get("args").cloned();
+                if !DOCUMENT_COMMAND_ACTION_IDS.contains(&action.as_str()) {
+                    frames.push(protocol::AppFrame::Error {
+                        in_reply_to: Some(seq),
+                        code: "unsupported".into(),
+                        message: format!("DocumentCommand action {action:?} not supported (Wave 1: history verbs only)"),
+                    });
+                    continue;
+                }
+                let view_state = instance_view_state(instance_id);
+                let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
+                let dispatched = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    instance.app.handle_action(&action, args.as_ref(), &view_state, &meta)
+                });
+                match dispatched {
+                    Ok(result) => {
+                        mutated = true;
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                        push_invocation_side_frames(&mut frames, seq, &result);
+                    }
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::ApplyEnvelopes { seq, envelopes } => {
+                let encoded = protocol::encode_envelopes(&envelopes);
+                match plugin_ingest_operations(instance_id, &encoded) {
+                    Ok(()) => {
+                        mutated = true;
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                    }
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::LoadDocument { seq, pack, spr } => {
+                let files = store::DocumentPackFiles { pack, spr, ops: String::new() };
+                match plugin_load_document_pack(instance_id, &files) {
+                    Ok(()) => {
+                        mutated = true;
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                    }
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::ReadDocument { seq } => match plugin_document_pack(instance_id) {
+                Ok(files) => frames.push(protocol::AppFrame::Document { in_reply_to: seq, pack: files.pack, spr: files.spr, ops: files.ops }),
+                Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+            },
+            protocol::AppCommand::AttachBackbone { seq, uri } => match plugin_attach_backbone(instance_id, &uri) {
+                Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+            },
+            protocol::AppCommand::DetachBackbone { seq } => match plugin_detach_backbone(instance_id) {
+                Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+            },
+            protocol::AppCommand::MediaIn { seq, port, descriptor, data } => {
+                let descriptor_value: Value = store::pack_rt::decode_wire_value(&descriptor).unwrap_or(Value::Null);
+                let descriptor_json = serde_json::to_string(&descriptor_value).unwrap_or_else(|_| "{}".into());
+                match plugin_consume_media(instance_id, &port, &descriptor_json, data) {
+                    Ok(()) => {
+                        mutated = true;
+                        frames.push(protocol::AppFrame::Done { in_reply_to: seq });
+                    }
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::MediaOut { seq, port, request: _ } => match plugin_produce_media(instance_id, &port, "") {
+                Ok((descriptor_json, data)) => {
+                    let descriptor_value: Value = serde_json::from_str(&descriptor_json).unwrap_or(Value::Null);
+                    frames.push(protocol::AppFrame::Media { in_reply_to: seq, port, descriptor: store::pack_rt::encode_wire_value(&descriptor_value), data });
+                }
+                Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+            },
+            protocol::AppCommand::MediaFingerprint { seq, port } => {
+                let fingerprint = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    instance.app.media_fingerprint(&port).map_err(|error| error.to_string())
+                });
+                match fingerprint {
+                    Ok(fingerprint) => {
+                        let value = serde_json::to_value(&fingerprint).unwrap_or_default();
+                        frames.push(protocol::AppFrame::MediaFingerprint { in_reply_to: seq, port, fingerprint: store::pack_rt::encode_wire_value(&value) });
+                    }
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+                }
+            }
+            protocol::AppCommand::Bye => {}
+        }
+    }
+
+    if mutated {
+        let view_state = instance_view_state(instance_id);
+        let effects = with_instances_mut(|list| {
+            let instance = find_instance(list, instance_id)?;
+            Ok(instance.app.pending_effects(&view_state))
+        })
+        .unwrap_or_default();
+        if !effects.is_empty() {
+            let encoded = effects.iter().map(|effect| store::pack_rt::encode_wire_value(&serde_json::to_value(effect).unwrap_or_default())).collect();
+            frames.push(protocol::AppFrame::Effects { in_reply_to: None, effects: encoded });
+        }
+    }
+
+    Ok(frames.iter().map(protocol::encode_app_frame).collect())
+}
+//#endregion 🔖️Exchange
 
 #[macro_export]
 macro_rules! plugin_exports {

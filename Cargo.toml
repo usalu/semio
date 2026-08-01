@@ -100,6 +100,7 @@ members = [
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/💎️materialize/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🔌️io/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/📡️wire/⚡️implementation/🦀️rust",
+    "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧵️channel/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/🧪️testkit/⚡️implementation/🦀️rust",
     "🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⌨️cli/⚡️implementation/🦀️rust",

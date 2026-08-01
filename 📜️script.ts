@@ -1137,6 +1137,25 @@ export class CommitScript extends Script {
 //#endregion 🔖️CommitScript
 
 //#region 🔖️OsScript
+/** 🧩️One `framework/os/dev` plugin registry row ([[🔣️plugins.json]]) — only the fields `os run`'s preflight needs. */
+type OsPluginArtifact = { pluginId: string; wasmOut: string };
+
+/**
+ * 🔍️Plugin ids from the generated plugin registry whose `.wasm` isn't built yet under the dev build's
+ * `plugin-modules/<pluginId>/` output root. `os run`'s cargo runner (`semio-framework-os-run`) panics
+ * with an obscure "file not found" when a program is unregistered, so this runs first and names the
+ * gap. Checks every registry entry rather than just the target `.studio` bundle's own app instances —
+ * that would need re-decoding the bundle's binary `store` document pack (the `space.os.pack`/`.spr`
+ * VCS envelope) in TypeScript, disproportionate for a preflight check.
+ */
+function missingPluginWasmArtifacts(repoRoot: string): string[] {
+  const registryPath = join(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🟦️typescript/📇️registry/🤖️generated/🔣️plugins.json");
+  if (!existsSync(registryPath)) return [];
+  const pluginOutRoot = join(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🔌️plugin-modules");
+  const entries = JSON.parse(readFileSync(registryPath, "utf8")) as OsPluginArtifact[];
+  return entries.filter((entry) => !existsSync(join(pluginOutRoot, entry.pluginId, entry.wasmOut))).map((entry) => entry.pluginId);
+}
+
 /** 🕸️Headless OS studio commands — computes a workflow without a UI (`os run <bundle>.studio`). */
 export class OsScript extends Script {
   run(segments: string[]): void {
@@ -1148,8 +1167,21 @@ export class OsScript extends Script {
         console.error("[os.run] usage: bun ./📜️script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]");
         process.exit(1);
       }
+      const repoRoot = getWorkspaceRoot();
+      if (!rest.includes("--dry")) {
+        const missing = missingPluginWasmArtifacts(repoRoot);
+        if (missing.length > 0) {
+          console.error(`[os.run] missing built plugin artifact(s): ${missing.join(", ")}`);
+          for (const pluginId of missing) console.error(`[os.run]   build it: bun nx run @semio-tech/framework-os-dev:build -- ${pluginId}`);
+          process.exit(1);
+        }
+      }
       const watch = rest.includes("--watch");
-      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], { cwd: this.root, ...(watch ? daemonBudgetOpts() : { budgetMs: buildBudgetMs() }) });
+      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], {
+        cwd: this.root,
+        env: { ...process.env, SEMIO_REPO_ROOT: repoRoot },
+        ...(watch ? daemonBudgetOpts() : { budgetMs: buildBudgetMs() }),
+      });
       return;
     }
     console.error(`[os] unknown subcommand ${JSON.stringify(sub)}`);

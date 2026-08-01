@@ -30,6 +30,7 @@ pub use protocol_causal::{
 };
 pub use protocol_crdt::merge_concurrent_diffs;
 pub use protocol_wire::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame, decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame};
+pub use protocol_channel::{AppCommand, AppFrame, CHANNEL_VERSION, SectionProbe, decode_app_command, decode_app_frame, encode_app_command, encode_app_frame};
 //#endregion 🔖️Reexports
 
 //#region 🔖️Compile

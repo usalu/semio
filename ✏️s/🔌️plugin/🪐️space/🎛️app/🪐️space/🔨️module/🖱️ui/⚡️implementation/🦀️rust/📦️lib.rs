@@ -2793,6 +2793,7 @@ mod tests {
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
+                config: semio_framework_core::ConfigSpec::empty(),
             },
         );
         merge_os_plugin_definition(
@@ -2837,6 +2838,7 @@ mod tests {
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
+                config: semio_framework_core::ConfigSpec::empty(),
             },
         );
         merge_os_plugin_definition(

@@ -122,6 +122,7 @@ import {
   borderNormalBottomClass,
   createEvenWindowLayout,
   iconRenderPort,
+  reactHostPort,
   surfaceClass,
   glassClass,
   insertWindowAtDropZone,
@@ -446,6 +447,11 @@ import {
   buildFolderBackboneUri,
   buildFrameworkSyncUtilities,
   buildRemoteBackboneUri,
+  AppChannelClient,
+  encodePackValue,
+  decodePackValue,
+  type AppFrameValue,
+  type SectionProbe,
   type BackboneWorkerRequest,
   type BackboneWorkerResponse,
   type DocumentActorMsg,
@@ -8922,10 +8928,19 @@ export type PluginWasmHandle = {
   readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<InvocationResponse>;
   /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands. */
   readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<InvocationResponse>;
-  readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
-  readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
-  /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every program has migrated onto it yet (WS-F). */
+  /** 🔗️ The `DocumentApp` document-sync surface (WS-D) — optional since not every program has migrated onto it yet (WS-F).
+   * 🚧️ Wave 1 gap (documented, not silently dropped): `protocol_channel::AppCommand` only carries
+   * binary `pack`/`spr` document-container bytes (`LoadDocument`/`ReadDocument`, backed by
+   * `store::print_document_pack`/`parse_document_pack`'s deflate+BLAKE3 `.spk` container) — there is
+   * no JSON-text document command on the new channel, and no TS-side encoder for that container
+   * format (deliberately out of scope for `🔖️PackValueCodec`, see its header doc). The OLD
+   * `applyOperations`/`readAppDocument`/`loadAppDocument` all carried plain JSON text
+   * (`OperationEnvelope[]` / a VCS envelope string), so they cannot be rebuilt on top of the binary
+   * channel without a real pack encoder in TS (a separate, much larger work package). Every call
+   * site already feature-detects these (`if (plugin.loadAppDocument) ...`), so leaving them
+   * `undefined` here fails loud-but-inert (a `console.error`/no-op at the call site) rather than
+   * silently miscoding a `.spk` container. */
   readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
   readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
@@ -8937,32 +8952,211 @@ export type PluginWasmHandle = {
 export type { PluginRegistryEntry };
 
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return adaptPluginHandle(await loadCorePluginModule(pluginId, moduleUrl));
+  return adaptPluginHandle(pluginId, await loadCorePluginModule(pluginId, moduleUrl));
 }
 
 export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return adaptPluginHandle(await loadCorePluginWasm(pluginId, moduleUrl));
+  return adaptPluginHandle(pluginId, await loadCorePluginWasm(pluginId, moduleUrl));
 }
 
-function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
+//#region 🔖️ChannelAdapter
+/** 🔍️ `SectionProbe.kind` byte convention — mirrors `plugin_exchange`'s `SECTION_KIND_*` consts
+ * (`framework/os/module/plugin/rs/lib.rs` `🔖️Exchange` region) byte-for-byte. No shared
+ * WIT/protocol_channel enum exists for this yet (Wave 1 scope), so the numbering is duplicated here
+ * as the single TS-side consumer. */
+const SECTION_KIND_WINDOW = 0;
+const SECTION_KIND_PANEL = 1;
+const SECTION_KIND_ENGAGEMENTS = 2;
+const SECTION_KIND_MEASURES = 3;
+const SECTION_KIND_TOOLS = 4;
+const SECTION_KIND_LABELS = 5;
+
+/** 🐢️ `PluginUiRefreshSectionRequest.hash`/`PluginUiRefreshSectionResponse.hash` are hex strings
+ * (opaque to this file — never parsed by Rust, only echoed back on the next request); the wire
+ * `SectionProbe.hash`/`AppFrame.UiSection.hash` are plain `number` u64s (the same JS-`number`
+ * convention `readVarintU64`/`writeVarintU64` already use throughout `@semio-tech/framework-os-core`).
+ * These two converters are this adapter's own round-trip only — any consistent base works. */
+function hashHexToWire(hex: string | undefined): number | null {
+  if (hex === undefined) return null;
+  const parsed = Number.parseInt(hex, 16);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+function hashWireToHex(value: number): string {
+  return Math.trunc(value).toString(16);
+}
+
+/** 🎛️ The fallback envelope `plugin_exchange`'s `dispatch_command_frame` decodes when an app hasn't
+ * overridden `DocumentApp::handle_typed_command` yet (`{kind, name, args}`, `store::pack_rt`-wire-value
+ * encoded) — see that function's doc comment in `framework/os/module/plugin/rs/lib.rs`. */
+type WireCommandEnvelope = { readonly kind: "action" | "command"; readonly name: string; readonly args: unknown };
+
+/** 🎯️ Shared by `handleAction`/`handleCommand`: encodes `envelope` + `viewState`, sends one
+ * `AppCommand::Command` frame, and reassembles the `Invocation`/`Effects`/`Events` frames it produces
+ * back into the `InvocationResponse` shape the rest of this file already consumes. `operations`/
+ * `inverseGroup` stay at their empty defaults — Wave 1's `AppFrame::Invocation` carries only
+ * `output`/`diagnostics` (see `plugin_exchange`'s `AppCommand::Command` arm); no call site in this
+ * file reads either field (only `.requestedEffects`/`.uiScope`), confirmed by grep before this
+ * adapter was written. `uiScope` stays `undefined` too (not sent over the wire yet), which
+ * `resolveUiDirtyScope` already treats as `full` — the safe default. */
+async function performCommand(client: AppChannelClient, envelope: WireCommandEnvelope, viewState: unknown): Promise<InvocationResponse> {
+  const frames = await client.command(encodePackValue(envelope), viewState);
+  let output: unknown = null;
+  let diagnostics: InvocationResponse["diagnostics"] = [];
+  let requestedEffects: HostEffect[] = [];
+  let events: InvocationResponse["events"] = [];
+  for (const frame of frames) {
+    if ("Invocation" in frame) {
+      output = decodePackValue(new Uint8Array(frame.Invocation.output));
+      const decodedDiagnostics = decodePackValue(new Uint8Array(frame.Invocation.diagnostics));
+      diagnostics = Array.isArray(decodedDiagnostics) ? (decodedDiagnostics as InvocationResponse["diagnostics"]) : [];
+    } else if ("Effects" in frame) {
+      requestedEffects = frame.Effects.effects.map((bytes) => decodePackValue(new Uint8Array(bytes)) as HostEffect);
+    } else if ("Events" in frame) {
+      events = frame.Events.events.map((bytes) => decodePackValue(new Uint8Array(bytes))) as InvocationResponse["events"];
+    } else if ("Error" in frame) {
+      throw new Error(`[DEBUG] ${envelope.kind} '${envelope.name}' failed (${frame.Error.code}): ${frame.Error.message}`);
+    }
+  }
   return {
-    pluginId: handle.pluginId,
-    manifest: handle.manifest as unknown as PluginManifest,
-    createApp: (appId) => handle.createApp(appId),
-    destroyApp: (instanceId) => handle.destroyApp(instanceId),
-    handleAction: (instanceId, actionJson, viewState) => handle.handleAction(instanceId, actionJson, viewState),
-    handleCommand: handle.handleCommand ? (instanceId, commandJson, viewState) => handle.handleCommand!(instanceId, commandJson, viewState) : undefined,
-    render: async (instanceId, bodyKey, viewState) => (await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
-    renderWithDocument: handle.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => (await handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) as unknown as UiNode : undefined,
-    refreshUi: (instanceId, request) => handle.refreshUi(instanceId, request),
-    applyOperations: handle.applyOperations ? (instanceId, operationsJson) => handle.applyOperations!(instanceId, operationsJson) : undefined,
-    readAppDocument: handle.readAppDocument ? (instanceId) => handle.readAppDocument!(instanceId) : undefined,
-    loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => handle.loadAppDocument!(instanceId, documentJson) : undefined,
-    attachBackbone: handle.attachBackbone ? (instanceId, uri) => handle.attachBackbone!(instanceId, uri) : undefined,
-    detachBackbone: handle.detachBackbone ? (instanceId) => handle.detachBackbone!(instanceId) : undefined,
+    output,
+    operations: [],
+    inverseGroup: { invocationId: "", operations: [], inverseOperations: [] },
+    diagnostics,
+    requestedEffects,
+    events,
+  };
+}
+
+/** 🔄️ One `PluginUiRefreshRequest` section, tagged with where its `AppFrame::UiSection` reply must
+ * land in the reassembled `PluginUiRefreshResponse` — `plugin_exchange`'s `AppCommand::RefreshUi`
+ * handling always emits exactly one `UiSection` frame per requested `SectionProbe`, in request order
+ * (verified against its source), so positional zipping (not `key` round-tripping) is what recovers
+ * the window/panel INSTANCE id `SectionProbe.key` can't carry (the wire probe's `key` must instead be
+ * the render body-key `plugin_exchange` renders against). */
+type RefreshUiTarget =
+  | { readonly kind: "window" | "panel"; readonly key: string }
+  | { readonly kind: "engagements" | "measures" | "tools" | "labels" };
+
+async function performRefreshUi(client: AppChannelClient, request: PluginUiRefreshRequest): Promise<PluginUiRefreshResponse> {
+  const probes: SectionProbe[] = [];
+  const targets: RefreshUiTarget[] = [];
+  for (const entry of request.windows ?? []) {
+    probes.push({ kind: SECTION_KIND_WINDOW, key: entry.bodyKey ?? entry.key, hash: hashHexToWire(entry.hash) });
+    targets.push({ kind: "window", key: entry.key });
+  }
+  for (const entry of request.panels ?? []) {
+    probes.push({ kind: SECTION_KIND_PANEL, key: entry.bodyKey ?? entry.key, hash: hashHexToWire(entry.hash) });
+    targets.push({ kind: "panel", key: entry.key });
+  }
+  if (request.engagements) {
+    probes.push({ kind: SECTION_KIND_ENGAGEMENTS, key: "engagements", hash: hashHexToWire(request.engagements.hash) });
+    targets.push({ kind: "engagements" });
+  }
+  if (request.measures) {
+    probes.push({ kind: SECTION_KIND_MEASURES, key: "measures", hash: hashHexToWire(request.measures.hash) });
+    targets.push({ kind: "measures" });
+  }
+  if (request.tools) {
+    probes.push({ kind: SECTION_KIND_TOOLS, key: "tools", hash: hashHexToWire(request.tools.hash) });
+    targets.push({ kind: "tools" });
+  }
+  if (request.labels) {
+    probes.push({ kind: SECTION_KIND_LABELS, key: "labels", hash: hashHexToWire(request.labels.hash) });
+    targets.push({ kind: "labels" });
+  }
+  if (probes.length === 0) return {};
+
+  const frames = await client.refreshUi(probes);
+  const sections = frames.filter((frame): frame is Extract<AppFrameValue, { readonly UiSection: unknown }> => "UiSection" in frame);
+  if (sections.length !== probes.length) {
+    const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+    throw new Error(errorFrame ? `[DEBUG] refreshUi failed (${errorFrame.Error.code}): ${errorFrame.Error.message}` : `[DEBUG] refreshUi: expected ${probes.length} UiSection frames, got ${sections.length}`);
+  }
+
+  const windows: PluginUiRefreshSectionResponse[] = [];
+  const panels: PluginUiRefreshSectionResponse[] = [];
+  let engagements: PluginUiRefreshSectionResponse | undefined;
+  let measures: PluginUiRefreshSectionResponse | undefined;
+  let tools: PluginUiRefreshSectionResponse | undefined;
+  let labels: PluginUiRefreshSectionResponse | undefined;
+  sections.forEach((frame, index) => {
+    const target = targets[index]!;
+    const section = frame.UiSection;
+    const response: PluginUiRefreshSectionResponse = {
+      key: target.kind === "window" || target.kind === "panel" ? target.key : target.kind,
+      hash: hashWireToHex(section.hash),
+      value: section.body !== null ? decodePackValue(new Uint8Array(section.body)) : undefined,
+    };
+    if (target.kind === "window") windows.push(response);
+    else if (target.kind === "panel") panels.push(response);
+    else if (target.kind === "engagements") engagements = response;
+    else if (target.kind === "measures") measures = response;
+    else if (target.kind === "tools") tools = response;
+    else labels = response;
+  });
+  // ⏱️ `requestedEffects` stays empty: `plugin_exchange` only drains `pending_effects` when a
+  // `Command` in the SAME batch mutated the document — a pure `RefreshUi` batch never sets `mutated`,
+  // so no `Effects` frame can appear here. A refresh-triggered effect chain (e.g. resuming a
+  // `flowEvalTick`) is therefore a documented Wave 1 gap, not silently dropped.
+  return { windows, panels, engagements, measures, tools, labels };
+}
+
+/** 📡️ Wraps the framework-core `PluginWasmHandle` (the 5-function binary `exchange` ABI) behind the
+ * SAME method surface the rest of this file already calls — the compatibility adapter for
+ * `HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`'s ABI flip. One `AppChannelClient` per
+ * live instance id (created in `createApp`, dropped in `destroyApp`) frames every call through
+ * `AppCommand`/`AppFrame`; no `AppCommand::Hello` handshake is sent — `plugin_exchange` already
+ * defaults an un-`Hello`'d instance's actor to `"local"` (see `instance_actor`'s doc), so skipping it
+ * avoids the alternative (sending a real `Hello.config`, which would run every migrated app's
+ * `apply_config_bytes` against an arbitrary empty/placeholder config — wrong for an app like shooting
+ * whose `ShootingConfig` fields have no `#[serde(default)]` and would reject `{}`). */
+export async function adaptPluginHandle(pluginId: string, handle: CorePluginWasmHandle): Promise<PluginWasmHandle> {
+  const manifest = decodePackValue(await handle.manifest()) as unknown as PluginManifest;
+  const channels = new Map<number, AppChannelClient>();
+  const requireChannel = (instanceId: number): AppChannelClient => {
+    const client = channels.get(instanceId);
+    if (!client) throw new Error(`[DEBUG] program ${pluginId}: no channel for instance ${instanceId} (createApp not called, or already destroyed)`);
+    return client;
+  };
+  return {
+    pluginId,
+    manifest,
+    createApp: async (appId) => {
+      const instanceId = await handle.createApp(appId);
+      channels.set(instanceId, new AppChannelClient(handle, instanceId, appId));
+      return instanceId;
+    },
+    destroyApp: async (instanceId) => {
+      channels.delete(instanceId);
+      await handle.destroyApp(instanceId);
+    },
+    handleAction: (instanceId, actionJson, viewState) => {
+      const parsed = JSON.parse(actionJson) as { readonly action: string; readonly args?: unknown };
+      return performCommand(requireChannel(instanceId), { kind: "action", name: parsed.action, args: parsed.args }, viewState);
+    },
+    handleCommand: (instanceId, commandJson, viewState) => {
+      const parsed = JSON.parse(commandJson) as { readonly command: string; readonly args?: unknown };
+      return performCommand(requireChannel(instanceId), { kind: "command", name: parsed.command, args: parsed.args }, viewState);
+    },
+    refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
+    // 🚧️ Wave 1 gap — see this method's doc comment on `PluginWasmHandle` above.
+    applyOperations: undefined,
+    readAppDocument: undefined,
+    loadAppDocument: undefined,
+    attachBackbone: async (instanceId, uri) => {
+      const frames = await requireChannel(instanceId).attachBackbone(uri);
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: attachBackbone failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+    },
+    detachBackbone: async (instanceId) => {
+      const frames = await requireChannel(instanceId).detachBackbone();
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) console.error(`[DEBUG] program ${pluginId}: detachBackbone failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+    },
     dispose: () => handle.dispose(),
   };
 }
+//#endregion 🔖️ChannelAdapter
 //#endregion 🔖️plugin-runtime
 
 //#region 🔖️wasm-session-loader
@@ -13837,6 +14031,7 @@ function WorldInstancesLayer({
     [currentComponentIds, mergedComponentIdsSet],
   );
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
+  const selectedIds = selection.ids ?? [];
   const instanceChromeStore = useMemo(() => createWorldInstanceChromeStore(), []);
   reactHostPort.useLayoutEffect(() => {
     instanceChromeStore.setSnapshot({

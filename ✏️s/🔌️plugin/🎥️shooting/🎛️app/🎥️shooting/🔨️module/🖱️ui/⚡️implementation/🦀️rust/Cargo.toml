@@ -14,7 +14,9 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️
 shooting = { path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/⚡️implementation/🦀️rust", package = "semio-s-app-shooting" }
 shooting_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-shooting-engine" }
 shooting_op = { path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-shooting-op" }
+shooting_protocol = { path = "../../../../../../../../../✏️s/🔌️plugin/🎥️shooting/🎛️app/🎥️shooting/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-s-app-shooting-protocol" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

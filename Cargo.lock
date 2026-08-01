@@ -8082,6 +8082,7 @@ name = "semio-framework-os-kernel-protocol"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-protocol-causal",
+ "semio-framework-os-kernel-protocol-channel",
  "semio-framework-os-kernel-protocol-command",
  "semio-framework-os-kernel-protocol-core",
  "semio-framework-os-kernel-protocol-crdt",
@@ -8100,6 +8101,14 @@ dependencies = [
  "semio-framework-os-kernel-protocol-core",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-os-kernel-protocol-channel"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel-protocol-causal",
+ "semio-framework-os-kernel-protocol-core",
 ]
 
 [[package]]
@@ -8406,7 +8415,9 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-hash",
  "semio-framework-os",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
+ "semio-framework-plugin",
  "semio-framework-plugin-host",
  "serde",
  "serde_json",
@@ -9630,7 +9641,6 @@ dependencies = [
  "semio-s-kernel-imperative",
  "serde_json",
  "thiserror 2.0.18",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -9679,6 +9689,7 @@ dependencies = [
  "semio-s-app-imperative-op",
  "serde",
  "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -11344,19 +11355,13 @@ dependencies = [
 name = "semio-s-app-puzzle-2d-engine"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "semio-framework-os-kernel-infinite-board-port-directed-normal",
- "semio-framework-os-kernel-math-geometry",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-2d",
  "semio-s-kernel-reasoning-mindmap",
  "serde",
- "serde-wasm-bindgen",
  "serde_json",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -11433,17 +11438,16 @@ dependencies = [
 name = "semio-s-app-puzzle-3d-engine"
 version = "0.1.0"
 dependencies = [
- "js-sys",
  "nalgebra 0.33.3",
  "parry3d",
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-math-graph-manifest",
+ "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-puzzle-3d",
  "serde",
- "serde-wasm-bindgen",
  "serde_json",
  "thiserror 2.0.18",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -11478,6 +11482,7 @@ dependencies = [
  "semio-s-app-puzzle-3d",
  "semio-s-app-puzzle-3d-engine",
  "semio-s-app-puzzle-3d-op",
+ "serde_json",
 ]
 
 [[package]]
@@ -11523,6 +11528,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-math-graph-manifest",
  "semio-framework-os-kernel-store",
+ "semio-s-app-puzzle-3d",
  "semio-s-app-puzzle-3d-engine",
  "semio-s-app-puzzle-5d",
  "serde",
@@ -11977,6 +11983,7 @@ dependencies = [
 name = "semio-s-app-shooting-protocol"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os-kernel-dsl",
  "semio-framework-os-kernel-protocol",
  "semio-framework-os-kernel-store",
  "semio-s-app-shooting",
@@ -11991,11 +11998,13 @@ name = "semio-s-app-shooting-ui"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel-protocol",
+ "semio-framework-os-kernel-store",
  "semio-framework-plugin",
  "semio-s-app-shooting",
  "semio-s-app-shooting-dsl",
  "semio-s-app-shooting-engine",
  "semio-s-app-shooting-op",
+ "semio-s-app-shooting-protocol",
  "serde",
  "serde_json",
 ]

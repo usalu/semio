@@ -1933,25 +1933,19 @@ export type PluginContextMenuResponse = {
 };
 //#endregion 🖱️ContextMenu
 
+/**
+ * 📡️ Host-facing shape of one loaded plugin, mirroring the 5-function `semio:framework/plugin` WIT
+ * ABI exactly (`world.wit`): `manifest`/`instantiate-app`(as `createApp`)/`exchange` are the whole
+ * runtime surface now — every former per-verb call (`handleAction`, `render`, `refreshUi`,
+ * `contextMenu`, ...) is a binary `protocol_channel::AppCommand` sent through {@link exchange}
+ * instead (see `🔖️AppChannelClient` in the os-product package, which frames these bytes). `dispose`
+ * remains host-side only (never part of the WIT ABI) for worker/resource teardown.
+ */
 export type PluginWasmHandle = {
-  readonly pluginId: string;
-  readonly manifest: PluginManifest;
+  readonly manifest: () => Promise<Uint8Array>;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly handleAction: (instanceId: number, actionJson: string, viewState: PluginViewState) => Promise<InvocationResponse>;
-  readonly handleCommand?: (instanceId: number, commandJson: string, viewState: PluginViewState) => Promise<InvocationResponse>;
-  readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
-  readonly readAppDocument?: (instanceId: number) => Promise<string>;
-  readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
-  readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
-  readonly detachBackbone?: (instanceId: number) => Promise<void>;
-  readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
-  readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: PluginViewState, documentJson: string) => Promise<PluginUiNode>;
-  readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
-  /** 🖱️ Computes the context menu for one right-click, on demand — see `context-menu` in `world.wit`.
-   * Never cached; safe to omit on handles that predate the feature, in which case the host falls
-   * through to the next outer menu layer. */
-  readonly contextMenu?: (instanceId: number, request: PluginContextMenuRequest) => Promise<PluginContextMenuResponse>;
+  readonly exchange: (instanceId: number, frames: Uint8Array[]) => Promise<Uint8Array[]>;
   readonly dispose: () => void;
 };
 
@@ -2170,8 +2164,6 @@ export async function resolveExternalSlots(node: PluginUiNode, context: External
   if (node.type === "externalSlot") {
     const pluginId = String(node.pluginId ?? "");
     const appId = String(node.appId ?? pluginId);
-    const bodyKey = String(node.bodyKey ?? "");
-    const paramsJson = String(node.paramsJson ?? "{}");
     const handle = context.plugins.get(pluginId);
     if (!handle) {
       return { type: "text", value: `Extension unavailable: ${pluginId}` };
@@ -2180,8 +2172,13 @@ export async function resolveExternalSlots(node: PluginUiNode, context: External
     if (instanceId == null) {
       return { type: "text", value: `Extension unavailable: ${pluginId}` };
     }
-    const rendered = handle.renderWithDocument ? await handle.renderWithDocument(instanceId, bodyKey, context.viewState, paramsJson) : await handle.render(instanceId, bodyKey, context.viewState);
-    return resolveExternalSlots(rendered, context);
+    // 🚧️ Rendering a contributor's UI body now goes through `AppChannelClient.refreshUi`
+    // (`RefreshUi` → `UiSection` over `exchange`, os-product `🔖️AppChannelClient` region) instead
+    // of the removed per-verb `render`/`renderWithDocument`. Wiring that dispatch loop into this
+    // exact call site is the dedicated follow-up work package this ticket flags for the React
+    // renderer's dispatch/refresh loops — until then an external slot degrades to unavailable
+    // rather than silently guessing at `SectionProbe.kind`/body-key framing.
+    return { type: "text", value: `Extension unavailable: ${pluginId}` };
   }
   if (node.type === "stack" && Array.isArray(node.children)) {
     const children = await Promise.all(node.children.map((child) => resolveExternalSlots(child as PluginUiNode, context)));
@@ -2426,21 +2423,10 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     return job;
   };
   return {
-    pluginId: handle.pluginId,
-    manifest: handle.manifest,
+    manifest: () => runSerialized(() => handle.manifest()),
     createApp: (appId) => runSerialized(() => handle.createApp(appId)),
     destroyApp: (instanceId) => runSerialized(() => handle.destroyApp(instanceId)),
-    handleAction: (instanceId, actionJson, viewState) => runSerialized(() => handle.handleAction(instanceId, actionJson, viewState)),
-    handleCommand: handle.handleCommand ? (instanceId, commandJson, viewState) => runSerialized(() => handle.handleCommand!(instanceId, commandJson, viewState)) : undefined,
-    render: (instanceId, bodyKey, viewState) => runSerialized(() => handle.render(instanceId, bodyKey, viewState)),
-    renderWithDocument: handle.renderWithDocument ? (instanceId, bodyKey, viewState, documentJson) => runSerialized(() => handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) : undefined,
-    refreshUi: (instanceId, request) => runSerialized(() => handle.refreshUi(instanceId, request)),
-    contextMenu: handle.contextMenu ? (instanceId, request) => runSerialized(() => handle.contextMenu!(instanceId, request)) : undefined,
-    applyOperations: handle.applyOperations ? (instanceId, operationsJson) => runSerialized(() => handle.applyOperations!(instanceId, operationsJson)) : undefined,
-    readAppDocument: handle.readAppDocument ? (instanceId) => runSerialized(() => handle.readAppDocument!(instanceId)) : undefined,
-    loadAppDocument: handle.loadAppDocument ? (instanceId, documentJson) => runSerialized(() => handle.loadAppDocument!(instanceId, documentJson)) : undefined,
-    attachBackbone: handle.attachBackbone ? (instanceId, uri) => runSerialized(() => handle.attachBackbone!(instanceId, uri)) : undefined,
-    detachBackbone: handle.detachBackbone ? (instanceId) => runSerialized(() => handle.detachBackbone!(instanceId)) : undefined,
+    exchange: (instanceId, frames) => runSerialized(() => handle.exchange(instanceId, frames)),
     dispose: handle.dispose,
   };
 }
@@ -2448,17 +2434,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
 
 //#region PluginWorkerClient
 /** @emoji 🧵️ Message types the generated `🟨️plugin-worker.js` dispatches (framework/os/dev/script.ts `pluginWorkerSource`). */
-type PluginWorkerMessageType =
-  | "init"
-  | "manifest"
-  | "createApp"
-  | "handleAction"
-  | "handleCommand"
-  | "render"
-  | "destroy"
-  | "refreshUi"
-  | "contextMenu"
-  | "error";
+type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "destroy" | "exchange" | "error";
 
 /** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
  * state, so abandoning it mid-call (the wgpu renderer's timeout+restart policy) would corrupt it. */
@@ -2544,8 +2520,8 @@ class PluginWorkerClient {
     });
   }
 
-  async manifest(): Promise<string> {
-    return String((await this.request("manifest", {})).value ?? "");
+  async manifest(): Promise<Uint8Array> {
+    return ((await this.request("manifest", {})).value as Uint8Array | undefined) ?? new Uint8Array();
   }
 
   async createApp(appId: string): Promise<number> {
@@ -2556,24 +2532,8 @@ class PluginWorkerClient {
     await this.request("destroy", { instanceId });
   }
 
-  async handleAction(instanceId: number, actionJson: string, contextJson: string): Promise<string> {
-    return String((await this.request("handleAction", { instanceId, actionJson, contextJson })).value ?? "{}");
-  }
-
-  async handleCommand(instanceId: number, commandJson: string, contextJson: string): Promise<string> {
-    return String((await this.request("handleCommand", { instanceId, commandJson, contextJson })).value ?? "{}");
-  }
-
-  async render(instanceId: number, bodyKey: string, viewStateJson: string, documentJson?: string): Promise<string> {
-    return String((await this.request("render", { instanceId, bodyKey, viewStateJson, documentJson })).value ?? "{}");
-  }
-
-  async refreshUi(instanceId: number, requestJson: string): Promise<string> {
-    return String((await this.request("refreshUi", { instanceId, requestJson })).value ?? "{}");
-  }
-
-  async contextMenu(instanceId: number, requestJson: string): Promise<string> {
-    return String((await this.request("contextMenu", { instanceId, requestJson })).value ?? "{}");
+  async exchange(instanceId: number, frames: Uint8Array[]): Promise<Uint8Array[]> {
+    return ((await this.request("exchange", { instanceId, frames })).value as Uint8Array[] | undefined) ?? [];
   }
 
   dispose(): void {
@@ -2599,18 +2559,11 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
   pluginWorkerClients.set(pluginId, client);
   client.onBackboneOutbound = (uri, messageJson) => relayPluginBackboneOutbound(uri, messageJson);
   await client.start();
-  const manifest = JSON.parse(await client.manifest()) as PluginManifest;
   return withSerializedPluginWasmHandle({
-    pluginId,
-    manifest,
+    manifest: () => client.manifest(),
     createApp: (appId) => client.createApp(appId),
     destroyApp: (instanceId) => client.destroyApp(instanceId),
-    handleAction: async (instanceId, actionJson, viewState) => parseInvocationResponse(await client.handleAction(instanceId, actionJson, JSON.stringify({ viewState, actor: "local" }))),
-    handleCommand: async (instanceId, commandJson, viewState) => parseInvocationResponse(await client.handleCommand(instanceId, commandJson, JSON.stringify({ viewState, actor: "local" }))),
-    render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
-    renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode,
-    refreshUi: async (instanceId, request) => JSON.parse(await client.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
-    contextMenu: async (instanceId, request) => JSON.parse(await client.contextMenu(instanceId, JSON.stringify(request))) as PluginContextMenuResponse,
+    exchange: (instanceId, frames) => client.exchange(instanceId, frames),
     dispose: () => {
       pluginWorkerClients.delete(pluginId);
       client.dispose();
@@ -2668,11 +2621,18 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
   }
 }
 
+/**
+ * 🌉️ Direct main-thread import fallback for {@link loadPluginModuleViaWorker} (no `Worker` global —
+ * vitest/node — or no `🟨️plugin-worker.js` alongside this module). Only the component-model
+ * `createPluginApi` ABI is supported: the pre-ABI-flip flat `semio_plugin_*` wasm-bindgen export
+ * surface (one JS function per verb: `semio_plugin_handle_action`, `semio_plugin_render`, ...)
+ * predates the binary `exchange` ABI entirely and has no equivalent under it, so it is dropped
+ * rather than adapted — this is a greenfield codebase with no legacy-ABI support obligation.
+ */
 async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  // 🧵️ Worker-backed by default so a plugin's `handleAction` (e.g. puzzle-3d's collision precompute) can
+  // 🧵️ Worker-backed by default so a plugin's `exchange` (e.g. puzzle-3d's collision precompute) can
   // never block the UI thread. Falls back to the direct main-thread import below when unavailable: no
-  // `Worker` global (vitest/node), no `🟨️plugin-worker.js` alongside this module, or a wasm-bindgen-only
-  // program (the worker template only supports the `createPluginApi` component-model ABI).
+  // `Worker` global (vitest/node) or no `🟨️plugin-worker.js` alongside this module.
   if (typeof Worker !== "undefined") {
     try {
       return await loadPluginModuleViaWorker(pluginId, moduleUrl);
@@ -2683,125 +2643,24 @@ async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Pr
   const module = (await import(/* @vite-ignore */ moduleUrl)) as {
     default?: () => Promise<void> | void;
     createPluginApi?: () => Promise<{
-      manifest: () => Promise<string>;
+      manifest: () => Promise<Uint8Array>;
       createApp: (appId: string) => Promise<number>;
       destroyApp?: (instanceId: number) => Promise<void>;
-      handleAction: (instanceId: number, actionJson: string, contextJson: string) => Promise<string>;
-      handleCommand?: (instanceId: number, commandJson: string, contextJson: string) => Promise<string>;
-      render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
-      renderWithDocument?: (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => Promise<string>;
-      refreshUi: (instanceId: number, requestJson: string) => Promise<string>;
-      contextMenu?: (instanceId: number, requestJson: string) => Promise<string>;
-      applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
-      readAppDocument?: (instanceId: number) => Promise<string>;
-      loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
-      attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
-      detachBackbone?: (instanceId: number) => Promise<void>;
+      exchange: (instanceId: number, frames: Uint8Array[]) => Promise<Uint8Array[]>;
     }>;
-    semio_plugin_manifest?: () => string;
-    semio_plugin_create_app?: (appId: string) => number;
-    semio_plugin_destroy_app?: (instanceId: number) => void;
-    semio_plugin_handle_action?: (instanceId: number, actionJson: string, viewStateJson: string) => string;
-    semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
-    semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
-    semio_plugin_refresh_ui?: (instanceId: number, requestJson: string) => string;
-    semio_plugin_apply_operations?: (instanceId: number, operationsJson: string) => void;
-    semio_plugin_read_app_document?: (instanceId: number) => string;
-    semio_plugin_load_app_document?: (instanceId: number, documentJson: string) => void;
-    semio_plugin_attach_backbone?: (instanceId: number, uri: string) => void;
-    semio_plugin_detach_backbone?: (instanceId: number) => void;
   };
   if (module.default) await module.default();
-  if (module.createPluginApi) {
-    const api = await module.createPluginApi();
-    const manifest = JSON.parse(await api.manifest()) as PluginManifest;
-    return withSerializedPluginWasmHandle({
-      pluginId,
-      manifest,
-      createApp: (appId) => api.createApp(appId),
-      destroyApp: async (instanceId) => {
-        await api.destroyApp?.(instanceId);
-      },
-      handleAction: async (instanceId, actionJson, viewState) => {
-        const raw = await api.handleAction(instanceId, actionJson, JSON.stringify(viewState));
-        return parseInvocationResponse(raw);
-      },
-      handleCommand: api.handleCommand
-        ? async (instanceId, commandJson, viewState) => {
-            const raw = await api.handleCommand!(instanceId, commandJson, JSON.stringify(viewState));
-            return parseInvocationResponse(raw);
-          }
-        : undefined,
-      render: async (instanceId, bodyKey, viewState) => JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
-      renderWithDocument: api.renderWithDocument ? async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await api.renderWithDocument!(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode : undefined,
-      refreshUi: async (instanceId, request) => JSON.parse(await api.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
-      contextMenu: api.contextMenu ? async (instanceId, request) => JSON.parse(await api.contextMenu!(instanceId, JSON.stringify(request))) as PluginContextMenuResponse : undefined,
-      applyOperations: api.applyOperations ? (instanceId, operationsJson) => api.applyOperations!(instanceId, operationsJson) : undefined,
-      readAppDocument: api.readAppDocument ? (instanceId) => api.readAppDocument!(instanceId) : undefined,
-      loadAppDocument: api.loadAppDocument ? (instanceId, documentJson) => api.loadAppDocument!(instanceId, documentJson) : undefined,
-      attachBackbone: api.attachBackbone ? (instanceId, uri) => api.attachBackbone!(instanceId, uri) : undefined,
-      detachBackbone: api.detachBackbone ? (instanceId) => api.detachBackbone!(instanceId) : undefined,
-      dispose() {},
-    });
+  if (!module.createPluginApi) {
+    throw new Error(`[DEBUG] program ${pluginId} missing createPluginApi export`);
   }
-  if (!module.semio_plugin_manifest) {
-    throw new Error(`[DEBUG] program ${pluginId} missing semio_plugin_manifest export`);
-  }
-  const manifest = JSON.parse(module.semio_plugin_manifest()) as PluginManifest;
+  const api = await module.createPluginApi();
   return withSerializedPluginWasmHandle({
-    pluginId,
-    manifest,
-    async createApp(appId: string) {
-      const create = module.semio_plugin_create_app;
-      if (!create) throw new Error(`plugin ${pluginId} missing create_app`);
-      return create(appId);
+    manifest: () => api.manifest(),
+    createApp: (appId) => api.createApp(appId),
+    destroyApp: async (instanceId) => {
+      await api.destroyApp?.(instanceId);
     },
-    async destroyApp(instanceId: number) {
-      module.semio_plugin_destroy_app?.(instanceId);
-    },
-    async handleAction(instanceId: number, actionJson: string, viewState: PluginViewState) {
-      const handle = module.semio_plugin_handle_action;
-      if (!handle) return EMPTY_INVOCATION_RESPONSE;
-      const raw = handle(instanceId, actionJson, JSON.stringify(viewState));
-      return parseInvocationResponse(raw);
-    },
-    async handleCommand(instanceId: number, commandJson: string, viewState: PluginViewState) {
-      const handle = module.semio_plugin_handle_command;
-      if (!handle) return EMPTY_INVOCATION_RESPONSE;
-      const raw = handle(instanceId, commandJson, JSON.stringify(viewState));
-      return parseInvocationResponse(raw);
-    },
-    async render(instanceId: number, bodyKey: string, viewState: PluginViewState) {
-      const render = module.semio_plugin_render;
-      if (!render) throw new Error(`plugin ${pluginId} missing render`);
-      return JSON.parse(render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode;
-    },
-    async refreshUi(instanceId: number, request: PluginUiRefreshRequest) {
-      const refreshUi = module.semio_plugin_refresh_ui;
-      if (!refreshUi) return {};
-      return JSON.parse(refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse;
-    },
-    applyOperations: module.semio_plugin_apply_operations
-      ? async (instanceId, operationsJson) => {
-          module.semio_plugin_apply_operations!(instanceId, operationsJson);
-        }
-      : undefined,
-    readAppDocument: module.semio_plugin_read_app_document ? async (instanceId) => module.semio_plugin_read_app_document!(instanceId) : undefined,
-    loadAppDocument: module.semio_plugin_load_app_document
-      ? async (instanceId, documentJson) => {
-          module.semio_plugin_load_app_document!(instanceId, documentJson);
-        }
-      : undefined,
-    attachBackbone: module.semio_plugin_attach_backbone
-      ? async (instanceId, uri) => {
-          module.semio_plugin_attach_backbone!(instanceId, uri);
-        }
-      : undefined,
-    detachBackbone: module.semio_plugin_detach_backbone
-      ? async (instanceId) => {
-          module.semio_plugin_detach_backbone!(instanceId);
-        }
-      : undefined,
+    exchange: (instanceId, frames) => api.exchange(instanceId, frames),
     dispose() {},
   });
 }
@@ -2810,21 +2669,16 @@ export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promi
   return loadPluginModule(pluginId, moduleUrl);
 }
 
+/** 🌉️ Adapts a {@link PluginWasmHandle} to a plain-object shape safe to close over across a
+ * `postMessage`/global-bridge boundary (see the wgpu renderer's own program-worker embedding) — a
+ * pass-through now that the whole ABI is already binary (`manifest`/`exchange` bytes cross
+ * structured clone natively, same as `Uint8Array` payloads elsewhere on this bridge). */
 export function pluginHandleForBridge(handle: PluginWasmHandle) {
   return {
-    manifest: () => JSON.stringify(handle.manifest),
+    manifest: () => handle.manifest(),
     createApp: (appId: string) => handle.createApp(appId),
     destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
-    handleAction: (instanceId: number, actionJson: string, viewStateJson: string) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson) as PluginViewState).then((operations) => JSON.stringify(operations)),
-    handleCommand: handle.handleCommand ? (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand!(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((operations) => JSON.stringify(operations)) : undefined,
-    render: (instanceId: number, bodyKey: string, viewStateJson: string) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
-    renderWithDocument: handle.renderWithDocument
-      ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState, documentJson).then((node) => JSON.stringify(node))
-      : undefined,
-    refreshUi: (instanceId: number, requestJson: string) => handle.refreshUi(instanceId, JSON.parse(requestJson) as PluginUiRefreshRequest).then((response) => JSON.stringify(response)),
-    contextMenu: handle.contextMenu
-      ? (instanceId: number, requestJson: string) => handle.contextMenu!(instanceId, JSON.parse(requestJson) as PluginContextMenuRequest).then((response) => JSON.stringify(response))
-      : undefined,
+    exchange: (instanceId: number, frames: Uint8Array[]) => handle.exchange(instanceId, frames),
   };
 }
 //#endregion PluginRuntime

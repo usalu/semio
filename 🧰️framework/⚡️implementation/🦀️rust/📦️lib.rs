@@ -1139,6 +1139,190 @@ pub fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> Med
 }
 //#endregion MediaType
 
+//#region 🔖️AppIo
+/// 🧷️ The non-format fields of `ArtifactKindSpec` (see `ArtifactKind` region above) that describe how
+/// a resource presents in the OS catalog — split out so `AppIo` can carry its own `export_formats`/
+/// `import_formats` lists without duplicating `ArtifactKindSpec`'s full shape (which stays alive
+/// unchanged for now; later waves retire it onto `AppIo`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ArtifactPresentation {
+    pub id: String,
+    pub name: String,
+    pub dimension: String,
+    pub component_kind: String,
+}
+
+/// 🔌️ An app's full media I/O surface — the document schema/type every app carries implicitly (see
+/// `document_in_port`/`document_out_port`) plus whatever additional workflow ports, catalog
+/// export/import formats, and OS presentation it declares itself. Scaffolding for the typed manifest
+/// surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
+/// `media_outputs`/`artifact_kinds` onto it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AppIo {
+    pub document_schema: String,
+    pub document_media_type: MediaType,
+    /// 🔌️ App-specific ports only — the implicit document ports are auto-injected by `all_ports`.
+    pub ports: Vec<MediaPortSpec>,
+    pub export_formats: Vec<OsMediaFormat>,
+    pub import_formats: Vec<OsMediaFormat>,
+    pub artifact: ArtifactPresentation,
+}
+
+impl AppIo {
+    /// 🔌️ The implicit `"document:in"` port every app accepts, keyed by `self.document_media_type`.
+    pub fn document_in_port(&self) -> MediaPortSpec {
+        MediaPortSpec {
+            id: "document:in".into(),
+            label: "Document".into(),
+            direction: MediaPortDirection::In,
+            media_type: self.document_media_type,
+            kind_id: None,
+            required: true,
+        }
+    }
+
+    /// 🔌️ The implicit `"document:out"` port every app produces — see `document_in_port`.
+    pub fn document_out_port(&self) -> MediaPortSpec {
+        MediaPortSpec {
+            id: "document:out".into(),
+            label: "Document".into(),
+            direction: MediaPortDirection::Out,
+            media_type: self.document_media_type,
+            kind_id: None,
+            required: true,
+        }
+    }
+
+    /// 🔌️ The full port list: the implicit document ports followed by every app-specific port.
+    pub fn all_ports(&self) -> Vec<MediaPortSpec> {
+        let mut ports = vec![self.document_in_port(), self.document_out_port()];
+        ports.extend(self.ports.clone());
+        ports
+    }
+}
+
+impl Default for AppIo {
+    fn default() -> Self {
+        Self {
+            document_schema: String::new(),
+            document_media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            ports: Vec::new(),
+            export_formats: Vec::new(),
+            import_formats: Vec::new(),
+            artifact: ArtifactPresentation {
+                id: String::new(),
+                name: String::new(),
+                dimension: String::new(),
+                component_kind: String::new(),
+            },
+        }
+    }
+}
+//#endregion 🔖️AppIo
+
+//#region 🔖️ConfigSpec
+/// 🧮️ How one config field's value is edited/validated, independent of what record it belongs to.
+/// Deliberately hand-rolled rather than derived from `dsl_schema::Shape` (`dsl_schema`'s `Shape` isn't
+/// `Serialize`/`Deserialize` — `Shape::Record`/`Statements`/`Table` carry `fn() -> RecordSpec` pointers
+/// — and `semio-framework-core` doesn't depend on `dsl`/`dsl_schema` today, so wrapping it would add a
+/// new cross-crate dependency purely to reach a shape that can't round-trip over the wire anyway).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum ConfigFieldShape {
+    Number {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+    },
+    Toggle,
+    Text,
+    Select { options: Vec<String> },
+    Record(Vec<ConfigFieldSpec>),
+}
+
+/// 🧮️ One field of an app's declared configuration record — the whole-app-settings counterpart to
+/// `ActionArgDef` (which scopes to a single action's arguments instead).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ConfigFieldSpec {
+    pub key: String,
+    pub label: String,
+    pub shape: ConfigFieldShape,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub default: Option<serde_json::Value>,
+}
+
+/// 🧮️ An app's full typed configuration record — the manifest-level declaration
+/// `AppDefinition.config` carries. Empty until per-app waves populate it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ConfigSpec {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub fields: Vec<ConfigFieldSpec>,
+}
+
+impl ConfigSpec {
+    pub fn empty() -> Self {
+        Self::default()
+    }
+}
+//#endregion 🔖️ConfigSpec
+
+//#region 🔖️CommandGrammar
+/// 🎛️ One field of a binary command variant — reuses `ConfigFieldShape` for the value shape (see
+/// `ConfigFieldShape`'s doc comment for why command grammar fields are hand-rolled rather than
+/// derived from `dsl_schema`). No `List`/array shape exists yet — the manifest's existing field-typed
+/// vocabulary (`ActionArgControl`: Text/Number/Slider/Toggle/Select/Vec3/IconSelect) has no array
+/// control either, so `ConfigFieldShape` doesn't invent one ahead of a real need.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CommandFieldSpec {
+    pub key: String,
+    pub shape: ConfigFieldShape,
+    pub optional: bool,
+}
+
+/// 🎛️ One keyword-dispatched command variant (e.g. `move x=1 y=2`) and its field grammar.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CommandVariantSpec {
+    pub keyword: String,
+    pub fields: Vec<CommandFieldSpec>,
+}
+
+/// 🎛️ An app's full typed binary command grammar — the manifest-level declaration
+/// `AppDefinition.command_grammar` carries. Empty until per-app waves populate it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CommandGrammar {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub variants: Vec<CommandVariantSpec>,
+}
+
+impl CommandGrammar {
+    pub fn empty() -> Self {
+        Self::default()
+    }
+}
+//#endregion 🔖️CommandGrammar
+
 //#region Media
 /// 🎞️ The value that actually flows over a workflow wire, produced by `DocumentApp::export_media` and consumed by `DocumentApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3116,6 +3300,9 @@ mod tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
+            config: crate::ConfigSpec::empty(),
+            command_grammar: crate::CommandGrammar::empty(),
+            io: crate::AppIo::default(),
         });
         assert_eq!(platform.active_app_id, "draw-play");
     }
@@ -3166,6 +3353,9 @@ mod tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
+            config: crate::ConfigSpec::empty(),
+            command_grammar: crate::CommandGrammar::empty(),
+            io: crate::AppIo::default(),
         }
     }
 
@@ -3220,7 +3410,7 @@ pub mod ui {
 
 use serde::{Deserialize, Serialize};
 use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
-use crate::mesh::{MediaPortSpec, ArtifactKindSpec};
+use crate::mesh::{MediaPortSpec, ArtifactKindSpec, ConfigSpec, CommandGrammar, AppIo};
 use crate::IconName;
 
 //#region 🔖️Manifest
@@ -5512,6 +5702,19 @@ pub struct AppDefinition {
     /// `framework/product/os/core`'s artifact catalog registry instead of a hardcoded per-app match.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub artifact_kinds: Vec<ArtifactKindSpec>,
+    /// 🧮️ This app's typed configuration record — see `crate::ConfigSpec`. Empty until per-app waves
+    /// populate it.
+    #[serde(default)]
+    pub config: ConfigSpec,
+    /// 🎛️ This app's typed binary command grammar — see `crate::CommandGrammar`. Empty until per-app
+    /// waves populate it.
+    #[serde(default)]
+    pub command_grammar: CommandGrammar,
+    /// 🔌️ This app's typed media I/O surface — see `crate::AppIo`. Not yet populated; `media_inputs`/
+    /// `media_outputs`/`artifact_kinds` above remain the live source of truth until later waves migrate
+    /// onto this.
+    #[serde(default)]
+    pub io: AppIo,
 }
 
 /// 🧭️ Resolves the dock layout a mode should present.
@@ -6827,6 +7030,9 @@ mod app_document_tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
+            config: crate::ConfigSpec::empty(),
+            command_grammar: crate::CommandGrammar::empty(),
+            io: crate::AppIo::default(),
         }
     }
 
@@ -7970,6 +8176,9 @@ pub use mesh::{
     MediaClass, MediaForm, MediaType, MediaWireFormat, MediaKindDescriptor, MediaPortDirection, MediaPortSpec,
     MediaCompat, media_types_compatible,
     Media, MediaPayload, MediaFingerprint, MediaError, MediaConverter,
+    AppIo, ArtifactPresentation,
+    ConfigFieldShape, ConfigFieldSpec, ConfigSpec,
+    CommandFieldSpec, CommandVariantSpec, CommandGrammar,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use ui::*;

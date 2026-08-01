@@ -2,10 +2,19 @@
 //! the `ShootingEnvelope`/`ShootingStore` type aliases and the WASM VCS bridge — both need
 //! `ShootingOperation` (from `shooting_op`) alongside `ShootingFixture` (from `shooting`), so this is
 //! the first constitutional crate in the stack where that pairing is available.
+//!
+//! 🎯️ Also hosts `ShootingCommand` — the app-engine `AppCommand::Command` binary command envelope
+//! (`HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS`, Wave 1 pilot conversion). One variant
+//! per a representative subset of `create_shooting_app`'s real declared actions (the ones with
+//! non-trivial typed args); every OTHER declared action keeps working unchanged through the legacy
+//! `{kind,name,args}` wire-value envelope fallback `VcsDocumentApp::dispatch_command_frame` falls back
+//! to whenever `DocumentApp::handle_typed_command` returns `None` — see `shooting_ui`'s
+//! `ShootingPlayApp::handle_typed_command` for the dispatch and exactly which actions are covered.
 
 use shooting::ShootingFixture;
 use shooting_op::ShootingOperation;
 use protocol::OpBinary;
+use serde::{Deserialize, Serialize};
 use store::{DocumentEnvelope, DocumentStore};
 
 /// 📦️ Encodes a `ShootingOperation` to its binary command form.
@@ -17,6 +26,55 @@ pub fn encode_op(operation: &ShootingOperation) -> Result<Vec<u8>, protocol::Pro
 pub fn decode_op(bytes: &[u8]) -> Result<ShootingOperation, protocol::ProtocolError> {
     ShootingOperation::decode_op(bytes)
 }
+
+//#region 🔖️ShootingCommand
+/// 🎯️ Typed binary command envelope for the shooting app's app-engine channel — one variant per a
+/// representative subset of `create_shooting_app`'s real declared actions (see the module doc). Field
+/// shapes mirror each action's real `args` object exactly (`shooting_ui`'s `handle_action` match arms
+/// are the ground truth): e.g. `SetActiveShot.shot_id` mirrors `"setActiveShot"`'s `value`/`id` arg,
+/// `AddShot.{format,shape}` mirrors its `.action_args` defaults. `#[derive(dsl::DslOps)]` gives this a
+/// binary (`OpBinary`) AND text (`OpText`) codec, matching `ShootingOperationDsl`'s (`shooting_op`)
+/// derive/attribute conventions exactly, even though this enum is never dispatched through
+/// `store::DocumentCommand` (it is not a `protocol::Operation` — no `diff`/`backwards` — purely a
+/// command-channel wire codec).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+pub enum ShootingCommand {
+    #[dsl(key = "active-shot")]
+    SetActiveShot { shot_id: Option<String> },
+    #[dsl(key = "active-asset")]
+    SetActiveAsset { asset_id: Option<String> },
+    #[dsl(key = "sun-azimuth")]
+    SetSunAzimuth { value: f64 },
+    #[dsl(key = "sun-elevation")]
+    SetSunElevation { value: f64 },
+    #[dsl(key = "sun-intensity")]
+    SetSunIntensity { value: f64 },
+    #[dsl(key = "ambient-intensity")]
+    SetAmbientIntensity { value: f64 },
+    #[dsl(key = "material-roughness")]
+    SetMaterialRoughness { value: f64 },
+    #[dsl(key = "shadow-enabled")]
+    SetShadowEnabled { value: bool },
+    #[dsl(key = "toggle-sun")]
+    ToggleSun { value: bool },
+    #[dsl(key = "add-shot")]
+    AddShot { format: String, shape: String },
+    #[dsl(key = "add-asset")]
+    AddAsset { format: String },
+    #[dsl(key = "translate-selection")]
+    TranslateSelection { asset_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
+    #[dsl(key = "rotate-selection")]
+    RotateSelection { asset_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
+    #[dsl(key = "scale-selection")]
+    ScaleSelection { asset_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
+    #[dsl(key = "set-selection")]
+    SetSelection { shot_ids: Vec<String>, asset_ids: Vec<String> },
+    #[dsl(key = "selection-method")]
+    SetSelectionMethod { method: String },
+    #[dsl(key = "reset-fixture")]
+    ResetFixture,
+}
+//#endregion 🔖️ShootingCommand
 
 //#region 🔖️Store
 pub type ShootingEnvelope = DocumentEnvelope<ShootingFixture, ShootingOperation>;

@@ -3306,6 +3306,17 @@
       }
     },
     {
+      "name": "🧪️test🎞️protocol-channel",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-channel-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.9095
+      }
+    },
+    {
       "name": "🧪️test🎞️protocol",
       "type": "node-terminal",
       "request": "launch",

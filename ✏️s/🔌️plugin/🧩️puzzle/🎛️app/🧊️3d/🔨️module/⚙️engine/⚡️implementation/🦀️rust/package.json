@@ -2,12 +2,9 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/puzzle-3d-rs",
   "version": "0.1.0",
-  "description": "puzzle \u00b7 3d rs",
+  "description": "puzzle \u00b7 3d rs \u00b7 headless engine (constitutional: engine, no wasm build)",
   "type": "module",
   "private": true,
-  "scripts": {
-    "wasm": "bun nx run @semio-tech/puzzle-3d-rs:wasm"
-  },
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

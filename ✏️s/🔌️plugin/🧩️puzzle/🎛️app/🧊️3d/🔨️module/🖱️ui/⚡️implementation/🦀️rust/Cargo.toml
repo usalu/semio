@@ -8,6 +8,8 @@ description = "Puzzle 3d app — DocumentApp impl, render, manifest (constitutio
 [lints]
 workspace = true
 [lib]
+name = "puzzle_3d_ui"
+crate-type = ["rlib", "cdylib"]
 path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/🖱️ui/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]

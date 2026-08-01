@@ -469,8 +469,7 @@ fn catalog_shot_item(id: &str, label: &str, format: &str, shape: &str) -> UiTree
         label,
         "camera",
         shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))),
-    ),
-    menu: None,
+    )
 }
 
 fn build_inspector_tree(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime, labels: &ShootingLabels) -> UiNode {
@@ -894,6 +893,10 @@ fn shooting_icon_engagement(fixture: &ShootingFixture, labels: &ShootingLabels) 
 #[derive(Default)]
 pub struct ShootingPlayApp {
     runtime: ShootingPlayRuntime,
+    /// 🧮️ Typed whole-app config — see `shooting_engine::ShootingConfig`. Applied wholesale via
+    /// `apply_config_bytes` (`AppCommand::Hello.config`/`AppCommand::Configure`), never through the
+    /// document store (not undoable, not synced).
+    config: shooting_engine::ShootingConfig,
 }
 
 impl DocumentApp for ShootingPlayApp {
@@ -1300,7 +1303,8 @@ impl DocumentApp for ShootingPlayApp {
                     .and_then(|value| value.get("ids"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
-                self.runtime.selected_asset_ids = merge_world_selection_ids(&self.runtime.selected_asset_ids, &ids, merge);
+                self.runtime.selected_asset_ids =
+                    merge_world_selection_ids(&semio_framework_plugin::SelectionSet::from_ids(self.runtime.selected_asset_ids.clone()), &ids, merge).to_vec();
                 ActionEmit::default()
             }
             "worldHover" | "setHover" => {
@@ -1323,7 +1327,8 @@ impl DocumentApp for ShootingPlayApp {
                     .map(|asset| asset.id.clone())
                     .or_else(|| id_value.and_then(|value| value.as_str()).map(str::to_string));
                 if let Some(asset_id) = asset_id {
-                    self.runtime.selected_asset_ids = merge_world_selection_ids(&self.runtime.selected_asset_ids, &[asset_id], merge);
+                    self.runtime.selected_asset_ids =
+                        merge_world_selection_ids(&semio_framework_plugin::SelectionSet::from_ids(self.runtime.selected_asset_ids.clone()), &[asset_id], merge).to_vec();
                 }
                 ActionEmit::default()
             }
@@ -1338,6 +1343,146 @@ impl DocumentApp for ShootingPlayApp {
             _ => ActionEmit::default(),
         }
     }
+
+    //#region 🔖️TypedChannel
+    /// 🎯️ Typed binary command dispatch — decodes `command_bytes` as a `shooting_protocol::ShootingCommand`
+    /// and reproduces, verbatim, the same behavior `handle_action`'s matching string-keyed arm above
+    /// implements for that action (see the module doc comment on `shooting_protocol::ShootingCommand`
+    /// for exactly which actions are covered here vs. left on the legacy string-dispatch fallback).
+    fn handle_typed_command(
+        &mut self,
+        command_bytes: &[u8],
+        doc: &DocumentView<'_, ShootingFixture>,
+        _view_state: &ViewState,
+    ) -> Option<Result<ActionEmit<ShootingOperation>, String>> {
+        let command = match <shooting_protocol::ShootingCommand as protocol::OpBinary>::decode_op(command_bytes) {
+            Ok(command) => command,
+            Err(error) => return Some(Err(error.to_string())),
+        };
+        let fixture = doc.projection;
+        let emit = match command {
+            shooting_protocol::ShootingCommand::SetActiveShot { shot_id } => match shot_id.filter(|id| !id.is_empty()) {
+                Some(id) => ActionEmit::operations(vec![ShootingOperation::SetActiveShot { shot_id: Some(id) }]),
+                None => ActionEmit::default(),
+            },
+            shooting_protocol::ShootingCommand::SetActiveAsset { asset_id } => match asset_id.filter(|id| !id.is_empty()) {
+                Some(id) => {
+                    self.runtime.fit_revision += 1;
+                    ActionEmit::operations(vec![ShootingOperation::SetActiveAsset { asset_id: Some(id) }])
+                }
+                None => ActionEmit::default(),
+            },
+            shooting_protocol::ShootingCommand::SetSunAzimuth { value } => {
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(value), ..Default::default() } }])
+            }
+            shooting_protocol::ShootingCommand::SetSunElevation { value } => {
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_elevation: Some(value), ..Default::default() } }])
+            }
+            shooting_protocol::ShootingCommand::SetSunIntensity { value } => {
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_intensity: Some(value), ..Default::default() } }])
+            }
+            shooting_protocol::ShootingCommand::SetAmbientIntensity { value } => {
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { ambient_intensity: Some(value), ..Default::default() } }])
+            }
+            shooting_protocol::ShootingCommand::SetMaterialRoughness { value } => {
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { material_roughness: Some(value), ..Default::default() } }])
+            }
+            shooting_protocol::ShootingCommand::SetShadowEnabled { value } => {
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(value), ..Default::default() } }])
+            }
+            shooting_protocol::ShootingCommand::ToggleSun { value } => {
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(value), ..Default::default() } }])
+            }
+            shooting_protocol::ShootingCommand::AddShot { format, shape } => {
+                let id = next_shooting_id("shot");
+                let shot = ShootingShot { id: id.clone(), label: format!("Shot {}", fixture.shots.len() + 1), width: 256, height: 256, format, shape, background: None, camera_id: None };
+                self.runtime.selected_shot_ids = vec![id.clone()];
+                self.runtime.selected_asset_ids.clear();
+                ActionEmit::operations(vec![
+                    ShootingOperation::Shots(CollectionOperation::Add { id: id.clone(), item: shot, at: fixture.shots.len() }),
+                    ShootingOperation::SetActiveShot { shot_id: Some(id) },
+                ])
+            }
+            shooting_protocol::ShootingCommand::AddAsset { format } => {
+                let id = next_shooting_id("asset");
+                let asset = ShootingAsset {
+                    id: id.clone(),
+                    name: format!("Asset {}", fixture.assets.len() + 1),
+                    url: format!("/mesh/placeholder.{format}"),
+                    format,
+                    origin: [0.0, 0.0, 0.0],
+                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    scale: None,
+                };
+                self.runtime.selected_asset_ids = vec![id.clone()];
+                self.runtime.selected_shot_ids.clear();
+                ActionEmit::operations(vec![
+                    ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }),
+                    ShootingOperation::SetActiveAsset { asset_id: Some(id) },
+                ])
+            }
+            shooting_protocol::ShootingCommand::TranslateSelection { asset_ids, dx, dy, dz } => {
+                let ids = if asset_ids.is_empty() { self.runtime.selected_asset_ids.clone() } else { asset_ids };
+                if ids.is_empty() { ActionEmit::default() } else { ActionEmit::amend(vec![ShootingOperation::TranslateAssets { asset_ids: ids, dx, dy, dz }], "gumball-translate") }
+            }
+            shooting_protocol::ShootingCommand::RotateSelection { asset_ids, ax, ay, az, angle } => {
+                let ids = if asset_ids.is_empty() { self.runtime.selected_asset_ids.clone() } else { asset_ids };
+                if ids.is_empty() { ActionEmit::default() } else { ActionEmit::amend(vec![ShootingOperation::RotateAssets { asset_ids: ids, ax, ay, az, angle }], "gumball-rotate") }
+            }
+            shooting_protocol::ShootingCommand::ScaleSelection { asset_ids, sx, sy, sz } => {
+                let ids = if asset_ids.is_empty() { self.runtime.selected_asset_ids.clone() } else { asset_ids };
+                if ids.is_empty() { ActionEmit::default() } else { ActionEmit::amend(vec![ShootingOperation::ScaleAssets { asset_ids: ids, sx, sy, sz }], "gumball-scale") }
+            }
+            shooting_protocol::ShootingCommand::SetSelection { shot_ids, asset_ids } => {
+                self.runtime.selected_shot_ids = shot_ids;
+                self.runtime.selected_asset_ids = asset_ids;
+                ActionEmit::default()
+            }
+            shooting_protocol::ShootingCommand::SetSelectionMethod { method } => {
+                self.runtime.selection_method = method;
+                ActionEmit::default()
+            }
+            shooting_protocol::ShootingCommand::ResetFixture => ActionEmit::operations(vec![ShootingOperation::SetFixture { fixture: default_fixture() }]),
+        };
+        Some(Ok(emit))
+    }
+
+    /// 🧮️ This app's typed configuration spec — mirrors `shooting_engine::ShootingConfig`'s three
+    /// fields, each grounded in an existing `.action_args` sticky default (see that struct's doc).
+    fn config_spec(&self) -> semio_framework_plugin::ConfigSpec {
+        semio_framework_plugin::ConfigSpec {
+            fields: vec![
+                semio_framework_plugin::ConfigFieldSpec {
+                    key: "defaultShotFormat".into(),
+                    label: "Default Shot Format".into(),
+                    shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["svg".into(), "png".into()] },
+                    default: Some(serde_json::json!("png")),
+                },
+                semio_framework_plugin::ConfigFieldSpec {
+                    key: "defaultShotShape".into(),
+                    label: "Default Shot Shape".into(),
+                    shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["rectangle".into(), "ellipse".into()] },
+                    default: Some(serde_json::json!("rectangle")),
+                },
+                semio_framework_plugin::ConfigFieldSpec {
+                    key: "defaultAssetFormat".into(),
+                    label: "Default Asset Format".into(),
+                    shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["glb".into()] },
+                    default: Some(serde_json::json!("glb")),
+                },
+            ],
+        }
+    }
+
+    /// 🧮️ Decodes `config_bytes` (a `store::pack_rt`-wire-value-encoded `ShootingConfig`) and stores it
+    /// wholesale — not a document operation, not undoable, not routed through the `DocumentStore`.
+    fn apply_config_bytes(&mut self, config_bytes: &[u8]) -> Result<(), String> {
+        let value = store::pack_rt::decode_wire_value(config_bytes).map_err(|error| error.to_string())?;
+        let config: shooting_engine::ShootingConfig = serde_json::from_value(value).map_err(|error| error.to_string())?;
+        self.config = config;
+        Ok(())
+    }
+    //#endregion 🔖️TypedChannel
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
@@ -1490,7 +1635,14 @@ pub fn create_shooting_app() -> App {
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
             .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
-            .window_kind_utilities(SHOOTING_PLAY_WINDOW_SCENE, vec!["move".into(), "rotate".into(), "scale".into()]),
+            .window_kind_utilities(SHOOTING_PLAY_WINDOW_SCENE, vec!["move".into(), "rotate".into(), "scale".into()])
+            // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS Wave 1) —
+            // `config_spec()`/`shooting_io()` are this same information's single source of truth, reused
+            // here rather than duplicated (`command_grammar` stays `CommandGrammar::empty()`: this app's
+            // typed commands are dispatched via `ShootingCommand`'s `OpBinary` codec directly, not a
+            // keyword-parsed text grammar).
+            .config(ShootingPlayApp::default().config_spec())
+            .io(shooting_engine::shooting_io()),
     )
     .example(
         SHOOTING_EXAMPLE_DEFAULT_ID,
@@ -1934,5 +2086,79 @@ mod tests {
         let projection = app.projection().expect("materialize projection");
         assert_eq!(projection.assets.last().unwrap().format, "glb", "format default materialized from the registry");
     }
+
+    //#region 🔖️TypedChannelParity
+    /// 🎯️ Real behavioral parity check (not just "it compiles"): encodes a `ShootingCommand::SetSunAzimuth`
+    /// via its `OpBinary` codec, dispatches it through `handle_typed_command`, and asserts it produces the
+    /// exact same `ActionEmit` (down to the `ShootingOperation`) as the existing string-keyed
+    /// `"setSunAzimuth"` arm in `handle_action` for equivalent args — the two dispatch paths must never
+    /// drift for an action `ShootingCommand` covers.
+    #[test]
+    fn typed_set_sun_azimuth_matches_string_dispatch_action_emit() {
+        let fixture = default_fixture();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &fixture, history: &history };
+        let view_state = ViewState::default();
+
+        let command = shooting_protocol::ShootingCommand::SetSunAzimuth { value: 123.5 };
+        let command_bytes = <shooting_protocol::ShootingCommand as protocol::OpBinary>::encode_op(&command).expect("encode shooting command");
+
+        let mut typed_app = ShootingPlayApp::default();
+        let typed_emit = typed_app
+            .handle_typed_command(&command_bytes, &doc, &view_state)
+            .expect("handle_typed_command must recognize SetSunAzimuth")
+            .expect("typed dispatch must succeed");
+
+        let mut string_app = ShootingPlayApp::default();
+        let string_emit = string_app.handle_action("setSunAzimuth", Some(&json!({ "value": 123.5 })), &doc, &view_state);
+
+        assert_eq!(typed_emit.operations, string_emit.operations, "typed and string dispatch must emit identical operations");
+        assert_eq!(
+            typed_emit.operations,
+            vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(123.5), ..Default::default() } }],
+        );
+    }
+
+    /// 🎯️ Same parity check as above for an action with no document operations (a pure runtime-state
+    /// write): `SetSelectionMethod`.
+    #[test]
+    fn typed_set_selection_method_matches_string_dispatch_and_runtime_state() {
+        let fixture = default_fixture();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &fixture, history: &history };
+        let view_state = ViewState::default();
+
+        let command = shooting_protocol::ShootingCommand::SetSelectionMethod { method: "lasso".into() };
+        let command_bytes = <shooting_protocol::ShootingCommand as protocol::OpBinary>::encode_op(&command).expect("encode shooting command");
+
+        let mut typed_app = ShootingPlayApp::default();
+        let typed_emit = typed_app
+            .handle_typed_command(&command_bytes, &doc, &view_state)
+            .expect("handle_typed_command must recognize SetSelectionMethod")
+            .expect("typed dispatch must succeed");
+        assert!(typed_emit.operations.is_empty());
+        assert_eq!(typed_app.runtime.selection_method, "lasso");
+
+        let mut string_app = ShootingPlayApp::default();
+        let string_emit = string_app.handle_action("setSelectionMethod", Some(&json!({ "method": "lasso" })), &doc, &view_state);
+        assert_eq!(typed_emit.operations, string_emit.operations);
+        assert_eq!(typed_app.runtime.selection_method, string_app.runtime.selection_method);
+    }
+
+    /// 🚧️ `handle_typed_command` only ever recognizes `ShootingCommand`-encoded bytes — an action
+    /// `ShootingCommand` does NOT cover (e.g. `"setCamera"`) is instead served by the legacy
+    /// `{kind,name,args}` wire-value envelope path in `VcsDocumentApp::dispatch_command_frame`, which
+    /// this crate's `handle_typed_command` override never sees. Malformed bytes must surface a decode
+    /// `Err`, never panic.
+    #[test]
+    fn handle_typed_command_surfaces_decode_errors_for_malformed_bytes() {
+        let fixture = default_fixture();
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = DocumentView { projection: &fixture, history: &history };
+        let mut app = ShootingPlayApp::default();
+        let result = app.handle_typed_command(&[0xFF, 0xFF, 0xFF], &doc, &ViewState::default());
+        assert!(matches!(result, Some(Err(_))), "malformed ShootingCommand bytes must surface a decode error, not a silent None");
+    }
+    //#endregion 🔖️TypedChannelParity
 }
 //#endregion 🧪️Tests

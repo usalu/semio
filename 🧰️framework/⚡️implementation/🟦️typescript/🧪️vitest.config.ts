@@ -11,16 +11,16 @@ export default defineConfig({
   root,
   resolve: {
     alias: {
-      "@semio-tech/framework-core": resolve(root, "index.ts"),
+      "@semio-tech/framework-core": resolve(root, "📦️index.ts"),
     },
   },
   test: {
     name: "@semio-tech/framework-core",
     mode: "test",
     environment: "node",
-    include: ["index.ts"],
-    coverage: { include: ["index.ts"] },
-    includeSource: ["index.ts"],
+    include: ["📦️index.ts"],
+    coverage: { include: ["📦️index.ts"] },
+    includeSource: ["📦️index.ts"],
     passWithNoTests: false,
   },
 });

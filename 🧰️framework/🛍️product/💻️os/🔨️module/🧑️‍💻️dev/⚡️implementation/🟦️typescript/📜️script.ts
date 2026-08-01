@@ -598,41 +598,8 @@ self.addEventListener("message", async (event) => {
         await api.destroyApp?.(msg.instanceId);
         reply(requestId, "destroy", { ok: true });
         break;
-      case "handleAction":
-        reply(requestId, "handleAction", {
-          value: await api.handleAction(msg.instanceId, msg.actionJson, msg.contextJson ?? msg.viewStateJson),
-        });
-        break;
-      case "handleCommand":
-        reply(requestId, "handleCommand", {
-          value: await api.handleCommand(msg.instanceId, msg.commandJson, msg.contextJson ?? msg.viewStateJson),
-        });
-        break;
-      case "render":
-        reply(requestId, "render", {
-          value: msg.documentJson && api.renderWithDocument
-            ? await api.renderWithDocument(msg.instanceId, msg.bodyKey, msg.viewStateJson, msg.documentJson)
-            : await api.render(msg.instanceId, msg.bodyKey, msg.viewStateJson),
-        });
-        break;
-      case "refreshUi":
-        reply(requestId, "refreshUi", {
-          value: await api.refreshUi(msg.instanceId, msg.requestJson),
-        });
-        break;
-      case "contextMenu":
-        reply(requestId, "contextMenu", {
-          value: await api.contextMenu(msg.instanceId, msg.requestJson),
-        });
-        break;
-      case "consumeMedia":
-        await api.consumeMedia(msg.instanceId, msg.portId, msg.descriptorJson, msg.data);
-        reply(requestId, "consumeMedia", { ok: true });
-        break;
-      case "produceMedia":
-        reply(requestId, "produceMedia", {
-          value: await api.produceMedia(msg.instanceId, msg.portId, msg.requestJson),
-        });
+      case "exchange":
+        reply(requestId, "exchange", { value: await api.exchange(msg.instanceId, msg.frames) });
         break;
       default:
         throw new Error(\`unknown worker message type: \${type}\`);
@@ -684,7 +651,7 @@ function runSerialized(fn) {
 async function createPluginApiInner() {
   const core = {
     async manifest() {
-      return (await plugin.manifest()).json;
+      return await plugin.manifest();
     },
     async createApp(appId) {
       const instanceId = await plugin.instantiateApp(appId, appId);
@@ -694,105 +661,16 @@ async function createPluginApiInner() {
     async destroyApp(instanceId) {
       apps.delete(instanceId);
     },
-    async handleAction(instanceId, actionJson, contextJson) {
+    async exchange(instanceId, frames) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const context =
-        contextJson && contextJson.trim().startsWith("{")
-          ? contextJson
-          : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
-      const response = await plugin.handleAction(instanceId, { json: actionJson }, { json: context });
-      return response.json;
-    },
-    async handleCommand(instanceId, commandJson, contextJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const context =
-        contextJson && contextJson.trim().startsWith("{")
-          ? contextJson
-          : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
-      const response = await plugin.handleCommand(instanceId, { json: commandJson }, { json: context });
-      return response.json;
-    },
-    async render(instanceId, bodyKey, viewStateJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const response = await plugin.updateWindow(instanceId, {
-        json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson) }),
-      });
-      return response.json;
-    },
-    async renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const response = await plugin.updateWindow(instanceId, {
-        json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson), documentJson }),
-      });
-      return response.json;
-    },
-    async refreshUi(instanceId, requestJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const response = await plugin.refreshUi(instanceId, { json: requestJson });
-      return response.json;
-    },
-    async contextMenu(instanceId, requestJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const response = await plugin.contextMenu(instanceId, { json: requestJson });
-      return response.json;
-    },
-    async consumeMedia(instanceId, portId, descriptorJson, data) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      await plugin.consumeMedia(instanceId, portId, {
-        descriptorJson,
-        data: data instanceof Uint8Array ? data : new Uint8Array(data ?? []),
-      });
-    },
-    async produceMedia(instanceId, portId, requestJson) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const artifact = await plugin.produceMedia(instanceId, portId, requestJson ?? "");
-      return { descriptorJson: artifact.descriptorJson, data: artifact.data };
-    },
-    async readAppDocumentText(instanceId) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const files = await plugin.readAppDocumentText(instanceId);
-      return { dsl: files.dsl, ops: files.ops };
-    },
-    async loadAppDocumentText(instanceId, dsl, ops) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      await plugin.loadAppDocumentText(instanceId, { dsl, ops });
-    },
-    async readAppDocumentPack(instanceId) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const files = await plugin.readAppDocumentPack(instanceId);
-      return { pack: files.pack, spr: files.spr, ops: files.ops };
-    },
-    async loadAppDocumentPack(instanceId, pack, spr, ops) {
-      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      await plugin.loadAppDocumentPack(instanceId, {
-        pack: pack instanceof Uint8Array ? pack : new Uint8Array(pack ?? []),
-        spr: spr instanceof Uint8Array ? spr : new Uint8Array(spr ?? []),
-        ops,
-      });
+      return await plugin.exchange(instanceId, frames);
     },
   };
   return {
     manifest: () => runSerialized(() => core.manifest()),
     createApp: (appId) => runSerialized(() => core.createApp(appId)),
     destroyApp: (instanceId) => runSerialized(() => core.destroyApp(instanceId)),
-    handleAction: (instanceId, actionJson, contextJson) =>
-      runSerialized(() => core.handleAction(instanceId, actionJson, contextJson)),
-    handleCommand: (instanceId, commandJson, contextJson) =>
-      runSerialized(() => core.handleCommand(instanceId, commandJson, contextJson)),
-    render: (instanceId, bodyKey, viewStateJson) =>
-      runSerialized(() => core.render(instanceId, bodyKey, viewStateJson)),
-    renderWithDocument: (instanceId, bodyKey, viewStateJson, documentJson) =>
-      runSerialized(() => core.renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson)),
-    refreshUi: (instanceId, requestJson) => runSerialized(() => core.refreshUi(instanceId, requestJson)),
-    contextMenu: (instanceId, requestJson) => runSerialized(() => core.contextMenu(instanceId, requestJson)),
-    consumeMedia: (instanceId, portId, descriptorJson, data) =>
-      runSerialized(() => core.consumeMedia(instanceId, portId, descriptorJson, data)),
-    produceMedia: (instanceId, portId, requestJson) =>
-      runSerialized(() => core.produceMedia(instanceId, portId, requestJson)),
-    readAppDocumentText: (instanceId) => runSerialized(() => core.readAppDocumentText(instanceId)),
-    loadAppDocumentText: (instanceId, dsl, ops) => runSerialized(() => core.loadAppDocumentText(instanceId, dsl, ops)),
-    readAppDocumentPack: (instanceId) => runSerialized(() => core.readAppDocumentPack(instanceId)),
-    loadAppDocumentPack: (instanceId, pack, spr, ops) => runSerialized(() => core.loadAppDocumentPack(instanceId, pack, spr, ops)),
+    exchange: (instanceId, frames) => runSerialized(() => core.exchange(instanceId, frames)),
   };
 }
 

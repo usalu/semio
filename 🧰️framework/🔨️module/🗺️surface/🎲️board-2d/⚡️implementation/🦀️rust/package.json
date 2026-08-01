@@ -1,0 +1,11 @@
+{
+  "name": "@semio-tech/framework-surface-board-2d-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "../../../🎲️board-2d/⚡️implementation/🦀️rust/pkg/framework_surface_board_2d.js",
+    "./pkg/framework_surface_board_2d.js": "../../../🎲️board-2d/⚡️implementation/🦀️rust/pkg/framework_surface_board_2d.js"
+  },
+  "bundleKind": "library"
+}

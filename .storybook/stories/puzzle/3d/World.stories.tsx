@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/story/puzzle/3d/World.stories.tsx
 // Specs: Host the framework renderer's `World3dHost` for Storybook + Playwright selection/camera checks, driven by the *real* puzzle-3d example fixtures.
-// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the subset of `puzzle3d-play`'s (`puzzle/plugin/rs/lib.rs`'s `d3` module, `handle_action`) object/vortex pick + camera + delete/duplicate actions the story exercises, so the controlled scene ⇄️ session loop round-trips without a running dev server — mirrors `../puzzle/2d/Board.stories.tsx`'s pattern. Fixture data comes from the real `puzzle/3d/example/*.puzzle3d` DSL-text fixtures (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-3d-rs`'s `puzzle3dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
+// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the subset of `puzzle3d-play`'s (`puzzle/plugin/rs/lib.rs`'s `d3` module, `handle_action`) object/vortex pick + camera + delete/duplicate actions the story exercises, so the controlled scene ⇄️ session loop round-trips without a running dev server — mirrors `../puzzle/2d/Board.stories.tsx`'s pattern. Fixture data comes from the real `puzzle/3d/example/*.puzzle3d` DSL-text fixtures (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-3d-ui-rs`'s `puzzle3dParseDslJson` wasm export (moved here from the engine's own wasm-pack build by `HEADLESS-ENGINE-LAW-AND-OFFENDER-FIXES`, since the engine (constitutional: engine) slot must not depend on `wasm-bindgen`) — the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript.
 // Real GLB mesh assets referenced by `meshUrl` in these fixtures aren't part of this Storybook scope's asset pipeline (no `mesh-collection` route is registered for `puzzle/3d`, and the GLBs themselves don't exist in this checkout) — object instances are therefore built *without* a mesh `url`, so `World3dHost` renders its built-in neutral placeholder box per object instead of attempting (and failing) a GLTF fetch. Reference-plane images do exist on disk, so those load for real via a Vite asset import.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -77,12 +77,12 @@ const STORY_REFERENCE_URL_OVERRIDES: Record<string, string> = {
 //#endregion ReferenceAssetOverrides
 
 //#region WasmFixtureLoader
-/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-3d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
+/** @emoji 🧵️ Lazily loads+inits `@semio-tech/puzzle-3d-ui-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
 type Puzzle3dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle3dParseDslJson: (dslText: string) => string };
 let puzzle3dWasmModulePromise: Promise<Puzzle3dWasmModule> | null = null;
 function loadPuzzle3dWasm(): Promise<Puzzle3dWasmModule> {
   if (!puzzle3dWasmModulePromise) {
-    puzzle3dWasmModulePromise = import("@semio-tech/puzzle-3d-rs/pkg/puzzle_3d.js").then(async (mod) => {
+    puzzle3dWasmModulePromise = import("@semio-tech/puzzle-3d-ui-rs/pkg/puzzle_3d.js").then(async (mod) => {
       await (mod as unknown as Puzzle3dWasmModule).default();
       return mod as unknown as Puzzle3dWasmModule;
     });

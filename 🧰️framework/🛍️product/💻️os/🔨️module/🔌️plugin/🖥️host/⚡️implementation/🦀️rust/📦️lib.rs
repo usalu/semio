@@ -2,12 +2,12 @@
 
 use semio_framework_core::{
     kernel::{CapabilityRequirement, ArtifactKind, Rights, Scope},
-    InvocationResult, PluginManifest, ViewState,
+    PluginManifest, ViewState,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use ui_wgpu::{UiNode, UtilityNode, WindowEngagement, WindowMeasure};
+use ui_wgpu::{UtilityNode, WindowEngagement, WindowMeasure};
 use wasmtime::component::{bindgen, Component, Linker};
 use wasmtime::{Config, Engine, Store};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
@@ -283,157 +283,40 @@ impl WasmPluginRuntime {
         Ok(())
     }
 
-    /// @emoji 📥️ Ingests a binary-encoded (`protocol::encode_envelopes`) array of remote
-    /// `OperationEnvelope`s into the plugin instance's store.
-    pub fn apply_operations(&self, instance_id: u32, operations: &[u8]) -> Result<(), PluginHostError> {
+    /// @emoji 🔀️ The single bidirectional entry point onto `semio:framework/plugin.exchange` — every
+    /// former per-verb call (`handle-action`, `handle-command`, `update-window`, `refresh-ui`,
+    /// `context-menu`, `apply-operations[-text]`, `read/load-app-document-{text,pack}`,
+    /// `attach/detach-backbone`, `consume/produce-media`) is now just a caller-encoded
+    /// `protocol_channel::AppCommand` batch forwarded here; the result is every `AppFrame` the batch
+    /// produced plus anything queued since the previous call. `exchange(id, [])` is a pure drain, the
+    /// heartbeat tick.
+    pub fn exchange(&self, instance_id: u32, commands: Vec<Vec<u8>>) -> Result<Vec<Vec<u8>>, PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_apply_operations(&mut *store, instance_id, operations).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let result = bindings.semio_framework_plugin().call_exchange(&mut *store, instance_id, &commands).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::plugin_result(result)
     }
 
-    /// @emoji 📜️ Text-DSL counterpart of {@link Self::apply_operations}.
-    pub fn apply_operations_text(&self, instance_id: u32, operations_text: &str) -> Result<(), PluginHostError> {
+    /// @emoji 🩹️ Mirrors the WIT `migrate-document` call unchanged — `input`/output `data` is
+    /// pack-container bytes (see `document-pack-files`).
+    pub fn migrate_document(&self, from_version: &str, to_version: &str, data: Vec<u8>) -> Result<Vec<u8>, PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_apply_operations_text(&mut *store, instance_id, operations_text).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
+        let input = semio::framework::types::MigrateDocumentInput { from_version: from_version.to_string(), to_version: to_version.to_string(), data };
+        let result = bindings.semio_framework_plugin().call_migrate_document(&mut *store, &input).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result).map(|output| output.data)
     }
 
-    /// @emoji 📜️ Text-DSL counterpart of {@link Self::read_app_document_pack}.
-    pub fn read_app_document_text(&self, instance_id: u32) -> Result<semio::framework::types::DocumentTextFiles, PluginHostError> {
+    /// @emoji 🩹️ Clears the plugin's single-flight instance guard after a wasm trap skipped `Drop`.
+    /// Callers must only invoke this between serialized top-level calls — never while another call is
+    /// in flight (mirrors the WIT doc's own caveat).
+    pub fn clear_instance_guard(&self) -> Result<(), PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_read_app_document_text(&mut *store, instance_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 📜️ Text-DSL counterpart of {@link Self::load_app_document_pack}.
-    pub fn load_app_document_text(&self, instance_id: u32, document_text: semio::framework::types::DocumentTextFiles) -> Result<(), PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_load_app_document_text(&mut *store, instance_id, &document_text).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 📦️ Pack counterpart of {@link Self::read_app_document_text}.
-    pub fn read_app_document_pack(&self, instance_id: u32) -> Result<semio::framework::types::DocumentPackFiles, PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_read_app_document_pack(&mut *store, instance_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 📦️ Pack counterpart of {@link Self::load_app_document_text}.
-    pub fn load_app_document_pack(&self, instance_id: u32, document_pack: semio::framework::types::DocumentPackFiles) -> Result<(), PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_load_app_document_pack(&mut *store, instance_id, &document_pack).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 🔗️ Asks the plugin to attach a backbone by uri (resolved to a `PortBackbone` inside the
-    /// sandbox, relayed to the endpoint registered here via {@link register_host_backbone}).
-    pub fn attach_backbone(&self, instance_id: u32, uri: &str) -> Result<(), PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_attach_backbone(&mut *store, instance_id, uri).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji ✂️ Asks the plugin to detach its backbone channel.
-    pub fn detach_backbone(&self, instance_id: u32) -> Result<(), PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_detach_backbone(&mut *store, instance_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 🔌️ Delivers a typed media artifact to the plugin instance's declared input port — the
-    /// ABI-level counterpart of the plugin SDK's `PluginApp::consume_media`.
-    pub fn consume_media(&self, instance_id: u32, port_id: &str, descriptor_json: &str, data: Vec<u8>) -> Result<(), PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let artifact = semio::framework::types::MediaArtifact { descriptor_json: descriptor_json.to_string(), data };
-        let result = bindings.semio_framework_plugin().call_consume_media(&mut *store, instance_id, port_id, &artifact).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 🎬️ Requests a typed media artifact from the plugin instance's declared output port — the
-    /// ABI-level counterpart of `PluginApp::produce_media`. Returns `(descriptor_json, data)` mirroring
-    /// the WIT `media-artifact` record's two fields.
-    pub fn produce_media(&self, instance_id: u32, port_id: &str, request_json: &str) -> Result<(String, Vec<u8>), PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_produce_media(&mut *store, instance_id, port_id, request_json).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let artifact = Self::plugin_result(result)?;
-        Ok((artifact.descriptor_json, artifact.data))
-    }
-
-    pub fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewState) -> Result<InvocationResult, PluginHostError> {
-        let context_json = serde_json::json!({
-            "viewState": view_state,
-            "actor": "local",
-        })
-        .to_string();
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings
-            .semio_framework_plugin()
-            .call_handle_action(&mut *store, instance_id, &semio::framework::types::ActionInvocationJson { json: action_json.to_string() }, &semio::framework::types::InvocationContextJson { json: context_json })
-            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let response = Self::plugin_result(result)?;
-        Ok(serde_json::from_str(&response.json)?)
-    }
-
-    /// @emoji 🎛️ Dispatches a scoped command (os/plugin/app/mode) — the command mirror of `handle_action`.
-    pub fn handle_command(&self, instance_id: u32, command_json: &str, view_state: &ViewState) -> Result<InvocationResult, PluginHostError> {
-        let context_json = serde_json::json!({
-            "viewState": view_state,
-            "actor": "local",
-        })
-        .to_string();
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings
-            .semio_framework_plugin()
-            .call_handle_command(&mut *store, instance_id, &semio::framework::types::CommandInvocationJson { json: command_json.to_string() }, &semio::framework::types::InvocationContextJson { json: context_json })
-            .map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let response = Self::plugin_result(result)?;
-        Ok(serde_json::from_str(&response.json)?)
-    }
-
-    pub fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, PluginHostError> {
-        self.render_with_document(instance_id, body_key, view_state, None)
-    }
-
-    pub fn render_with_document(&self, instance_id: u32, body_key: &str, view_state: &ViewState, document_json: Option<&str>) -> Result<UiNode, PluginHostError> {
-        let mut input = serde_json::json!({
-            "bodyKey": body_key,
-            "viewState": view_state,
-        });
-        if let Some(document) = document_json {
-            input["documentJson"] = serde_json::Value::String(document.to_string());
-        }
-        let input_json = input.to_string();
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_update_window(&mut *store, instance_id, &semio::framework::types::WindowInputJson { json: input_json }).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let response = Self::plugin_result(result)?;
-        Ok(serde_json::from_str(&response.json)?)
+        bindings.semio_framework_plugin().call_clear_instance_guard(&mut *store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))
     }
 
     pub fn utilities(&self, _instance_id: u32, _view_state: &ViewState) -> Result<Vec<UtilityNode>, PluginHostError> {
@@ -456,8 +339,10 @@ impl WasmPluginRuntime {
         let manifest = PluginManifest { plugin_id: "unknown".into(), label: "Unknown".into(), version: "0.0.0".into(), apps: vec![], workflows: vec![], examples: vec![], capabilities: vec![], contributions: vec![], commands: vec![] };
         let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));
         let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        let response = bindings.semio_framework_plugin().call_manifest(&mut store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Ok(serde_json::from_str(&response.json)?)
+        let wire_bytes = bindings.semio_framework_plugin().call_manifest(&mut store).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let value = store::pack_rt::decode_wire_value(&wire_bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        let value = store::pack_rt::renormalize_whole_number_floats(value);
+        Ok(serde_json::from_value(value)?)
     }
 
     fn instantiate(mut store: Store<HostState>, component: &Component, linker: &Linker<HostState>) -> Result<(Store<HostState>, PluginWorld), PluginHostError> {

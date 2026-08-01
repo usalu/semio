@@ -128,6 +128,7 @@ import {
   type InkStrokeItem,
   appDocumentLabel,
   appWindowDocumentLabel,
+  adaptPluginHandle,
   applyUiRefreshResponseToCache,
   resolveAppDocument,
   buildUtilityRibbonSegments,
@@ -138,7 +139,6 @@ import {
   groupUtilityNodesByCategory,
   initialShellState,
   isFlowGraphScene,
-  loadPluginModule,
   mergeRecordPreservingIdentity,
   parseSpaceShellPath,
   preserveJsonIdentity,
@@ -913,18 +913,47 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
 });
 
 describe("framework plugin runtime", () => {
+  // 🔌️ HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS: the WIT ABI flipped from 14
+  // per-verb `{json: string}` calls to 5 binary functions (`manifest`/`createApp`/`destroyApp`/
+  // `exchange`/`migrate-document`) framing `protocol_channel::AppCommand`/`AppFrame` bytes. These
+  // fakes speak that new ABI directly (`exchange` decodes/encodes real frames via the os-core
+  // codecs) instead of the old flat `semio_plugin_*` wasm-bindgen JSON exports, which no longer
+  // exist anywhere in the ABI (`loadPluginModuleUncached`'s doc comment).
   it("preserves batched UI refreshes through the React program adapter", async () => {
-    const moduleUrl = `data:application/javascript,${encodeURIComponent("export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock-refresh',label:'Mock Refresh',version:'0',apps:[],programs:[],examples:[]})};export function semio_plugin_refresh_ui(instanceId,requestJson){return JSON.stringify({windows:[{key:'overview',hash:'fresh',value:{instanceId,request:JSON.parse(requestJson)}}]})}")}`;
-    const handle = await loadPluginModule("mock-refresh", moduleUrl);
-    await expect(handle.refreshUi(7, { viewState: {} })).resolves.toEqual({
-      windows: [{ key: "overview", hash: "fresh", value: { instanceId: 7, request: { viewState: {} } } }],
+    const { encodeAppFrame, decodeAppCommand, encodePackValue } = await import("@semio-tech/framework-os-core");
+    const fakeHandle = {
+      manifest: async () => encodePackValue({ pluginId: "mock-refresh", label: "Mock Refresh", version: "0", apps: [], programs: [], examples: [] }),
+      createApp: async () => 7,
+      destroyApp: async () => {},
+      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
+        const [command] = frames.map(decodeAppCommand);
+        if (!command || typeof command !== "object" || !("RefreshUi" in command)) throw new Error("expected a RefreshUi command");
+        const [probe] = command.RefreshUi.sections;
+        if (!probe) throw new Error("expected one SectionProbe");
+        return [
+          encodeAppFrame({
+            UiSection: { in_reply_to: command.RefreshUi.seq, kind: probe.kind, key: probe.key, hash: 1, body: Array.from(encodePackValue({ instanceId: 7, probeKey: probe.key })) },
+          }),
+        ];
+      },
+      dispose: () => {},
+    };
+    const handle = await adaptPluginHandle("mock-refresh", fakeHandle as unknown as Parameters<typeof adaptPluginHandle>[1]);
+    const instanceId = await handle.createApp("main");
+    await expect(handle.refreshUi(instanceId, { viewState: {}, windows: [{ key: "overview", bodyKey: "overview" }] })).resolves.toEqual({
+      windows: [{ key: "overview", hash: "1", value: { instanceId: 7, probeKey: "overview" } }],
     });
   });
 
   it("loads plugin modules through framework-core", async () => {
     const { loadPluginModule } = await import("@semio-tech/framework-core");
-    const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");
-    expect(handle.manifest.pluginId).toBe("mock");
+    const { encodePackValue, decodePackValue } = await import("@semio-tech/framework-os-core");
+    const manifestBytes = Array.from(encodePackValue({ pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] }));
+    const moduleUrl = `data:application/javascript,${encodeURIComponent(
+      `export async function createPluginApi(){return {manifest: async()=>new Uint8Array(${JSON.stringify(manifestBytes)}), createApp: async()=>1, destroyApp: async()=>{}, exchange: async()=>[]};}`,
+    )}`;
+    const handle = await loadPluginModule("mock", moduleUrl);
+    expect((decodePackValue(await handle.manifest()) as { pluginId: string }).pluginId).toBe("mock");
   });
 
   it("parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response", async () => {
@@ -952,23 +981,44 @@ describe("framework plugin runtime", () => {
     let inFlight = 0;
     let maxInFlight = 0;
     const handle = withSerializedPluginWasmHandle({
-      pluginId: "mock",
-      manifest: { pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] },
+      manifest: async () => new Uint8Array(),
       createApp: async () => 1,
       destroyApp: async () => {},
-      handleAction: async () => {
+      exchange: async () => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
         await new Promise((resolve) => setTimeout(resolve, 5));
         inFlight -= 1;
-        return { output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } };
+        return [];
       },
-      render: async () => ({ type: "text", value: "x" }),
-      refreshUi: async () => ({}),
       dispose: () => {},
     });
-    await Promise.all([handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {})]);
+    await Promise.all([handle.exchange(1, []), handle.exchange(1, []), handle.exchange(1, [])]);
     expect(maxInFlight).toBe(1);
+  });
+
+  it("adaptPluginHandle.handleAction round-trips an action through AppCommand::Command and reassembles requestedEffects/uiScope-free InvocationResponse", async () => {
+    const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os-core");
+    const fakeHandle = {
+      manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
+      createApp: async () => 3,
+      destroyApp: async () => {},
+      exchange: async (_instanceId: number, frames: Uint8Array[]) => {
+        const [command] = frames.map(decodeAppCommand);
+        if (!command || typeof command !== "object" || !("Command" in command)) throw new Error("expected a Command");
+        const envelope = decodePackValue(new Uint8Array(command.Command.command)) as { kind: string; name: string; args: unknown };
+        return [
+          encodeAppFrame({ Invocation: { in_reply_to: command.Command.seq, output: Array.from(encodePackValue({ echo: envelope })), diagnostics: Array.from(encodePackValue([])) } }),
+          encodeAppFrame({ Effects: { in_reply_to: command.Command.seq, effects: [Array.from(encodePackValue("requestSync"))] } }),
+        ];
+      },
+      dispose: () => {},
+    };
+    const handle = await adaptPluginHandle("mock-action", fakeHandle as unknown as Parameters<typeof adaptPluginHandle>[1]);
+    const instanceId = await handle.createApp("main");
+    const response = await handle.handleAction(instanceId, JSON.stringify({ controllerId: "c1", action: "addShot", args: { format: "png" } }), {});
+    expect(response.output).toEqual({ echo: { kind: "action", name: "addShot", args: { format: "png" } } });
+    expect(response.requestedEffects).toEqual(["requestSync"]);
   });
 
   it("detects jco payload-shaped plugin instance busy errors", async () => {
@@ -1054,20 +1104,20 @@ describe("framework renderer types", () => {
 });
 
 describe("framework external slots", () => {
-  it("resolves external slots through contributor plugins", async () => {
+  // 🚧️ HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS: `resolveExternalSlots` (framework-core)
+  // no longer has a `render`/`renderWithDocument` verb to call — rendering a contributor's UI body
+  // through the new binary channel (`AppChannelClient.refreshUi`) is a dedicated follow-up work
+  // package this ticket flags, so a found plugin/instance still degrades to "Extension unavailable"
+  // (see that function's doc comment). This test now asserts that documented Wave 1 behavior instead
+  // of the old per-verb `renderWithDocument` round trip.
+  it("degrades a resolvable external slot to 'unavailable' until the binary-channel render path lands", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework-core");
+    const { encodePackValue } = await import("@semio-tech/framework-os-core");
     const handle = {
-      pluginId: "forms-module-procedural",
-      manifest: { pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] },
+      manifest: async () => encodePackValue({ pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 7,
       destroyApp: async () => {},
-      handleAction: async () => [],
-      render: async () => ({ type: "text", value: "fallback" }),
-      renderWithDocument: async (_instanceId: number, bodyKey: string) => ({
-        type: "text",
-        value: `resolved:${bodyKey}`,
-      }),
-      refreshUi: async () => ({}),
+      exchange: async () => [],
       dispose: () => {},
     };
     const resolved = await resolveExternalSlots(
@@ -1084,7 +1134,7 @@ describe("framework external slots", () => {
         viewState: {},
       },
     );
-    expect(resolved).toEqual({ type: "text", value: "resolved:preview" });
+    expect(resolved).toEqual({ type: "text", value: "Extension unavailable: forms-module-procedural" });
   });
 
   it("renders external slot fallback text when unresolved", () => {

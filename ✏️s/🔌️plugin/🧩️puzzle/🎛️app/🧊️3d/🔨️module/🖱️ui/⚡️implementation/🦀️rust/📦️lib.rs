@@ -1,7 +1,7 @@
 //! 🧊️ Puzzle 3d app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use puzzle_3d::Puzzle3dProjection;
-use puzzle_3d_engine::{BrushPlacePayload, PrecomputeLane, Puzzle3dPrecomputeSession};
+use puzzle_3d_engine::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, PrecomputeLane, Puzzle3dPrecomputeSession};
 use puzzle_3d_op::{puzzle3d_document_delta_operations, Puzzle3dOperation, Puzzle3dPlayProjection};
 use semio_framework_plugin::{
     apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, SelectionSet, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
@@ -1100,17 +1100,15 @@ fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecompute
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
         let (pending, candidates) = puzzle3d_brush_target_vortex(envelope)
             .map(|target| {
-                let raw = session.brush_candidates(&target);
-                let free = parse_brush_candidates_free(&raw);
-                let pending: Value = serde_json::from_str(&raw).unwrap_or(Value::Null);
-                let pending = pending.get("unknownPending").and_then(Value::as_bool).unwrap_or(false);
-                let candidates: Vec<Value> = free
+                let result = session.brush_candidates(&target);
+                let candidates: Vec<Value> = result
+                    .free
                     .iter()
                     .enumerate()
                     .map(|(index, candidate)| {
-                        let object_kind = candidate.get("objectKind").and_then(Value::as_str).or_else(|| candidate.get("objectKindId").and_then(Value::as_str));
-                        let object_label = object_kind.unwrap_or("kind");
-                        let source_vortex_index = candidate.get("sourceVortexIndex").and_then(Value::as_u64).unwrap_or(0);
+                        let object_kind = Some(candidate.object_kind_id.as_str());
+                        let object_label = candidate.object_kind_id.as_str();
+                        let source_vortex_index = candidate.source_vortex_index;
                         let color = object_kind_color(&envelope.fixture.meta, object_kind);
                         let icon = object_kind_icon(&envelope.fixture.meta, object_kind);
                         json!({
@@ -1122,7 +1120,7 @@ fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecompute
                         })
                     })
                     .collect();
-                (pending, candidates)
+                (result.unknown_pending, candidates)
             })
             .unwrap_or((false, Vec::new()));
         json!({
@@ -1135,12 +1133,12 @@ fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecompute
             "candidates": candidates,
         })
     });
-    let fill_build: Value = serde_json::from_str(&session.fill_progress_summary()).unwrap_or(Value::Null);
+    let fill_build = session.fill_progress_summary();
     let fill_build = json!({
-        "count": fill_build.get("count").cloned().unwrap_or(json!(0)),
-        "appliedCount": fill_build.get("appliedCount").cloned().unwrap_or(json!(0)),
-        "maxCount": fill_build.get("maxCount").cloned().unwrap_or(json!(PUZZLE3D_FILL_COUNT_MAX)),
-        "done": fill_build.get("done").cloned().unwrap_or(json!(true)),
+        "count": fill_build.count,
+        "appliedCount": fill_build.applied_count,
+        "maxCount": fill_build.max_count,
+        "done": fill_build.done,
     });
     // 🪣️ Committed fill count as a viewport reveal cutoff — instances tagged `revealIndex` (see
     // `world_instances_json`) below this value are shown, the rest (already planned, not yet
@@ -1178,13 +1176,13 @@ fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzz
         return None;
     }
     let vortex_id = puzzle3d_brush_target_vortex(envelope)?;
-    let preview_json = session.brush_preview_json(&vortex_id, envelope.runtime.brush_candidate_index)?;
-    let mut preview: Value = serde_json::from_str(&preview_json).ok()?;
-    let object_kind = preview.get("objectKindId").and_then(Value::as_str).map(str::to_string);
-    if let Some(obj) = preview.as_object_mut() {
-        obj.insert("color".into(), json!(object_kind_color(&envelope.fixture.meta, object_kind.as_deref())));
+    let preview = session.brush_preview(&vortex_id, envelope.runtime.brush_candidate_index)?;
+    let color = object_kind_color(&envelope.fixture.meta, Some(preview.object_kind_id.as_str()));
+    let mut value = serde_json::to_value(&preview).ok()?;
+    if let Some(obj) = value.as_object_mut() {
+        obj.insert("color".into(), json!(color));
     }
-    serde_json::to_string(&preview).ok()
+    serde_json::to_string(&value).ok()
 }
 
 /// ⏱️ Bounded to one small chunk per call (matches puzzle5d's drive path and the premigration idle
@@ -1358,8 +1356,15 @@ fn scaled_mesh_positions(positions: &[f32], scale: f32) -> Vec<f32> {
 }
 
 /// 🧊️ Only seeds the box fallback for URLs with no mesh yet, so a real GLB registered earlier via `registerBrushMesh` survives every subsequent resync.
+/// 🎯️ `scene_config_json` bridges two independently-evolved Rust schemas (this app's own document
+/// model here vs. `puzzle_3d_engine::SceneConfig`) through JSON — that's schema translation, not a
+/// wasm-bindgen boundary, so it stays. What changed for the headless-engine-law fix is the next step:
+/// the parsed, TYPED `SceneConfig` goes into `Puzzle3dEngineCommand::SetScene` and through
+/// `dispatch`, rather than a raw JSON string crossing into the engine's own JSON-string API.
 fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
-    let _ = session.set_scene(&scene_config_json(envelope));
+    if let Ok(scene) = serde_json::from_str::<puzzle_3d_engine::SceneConfig>(&scene_config_json(envelope)) {
+        let _ = session.dispatch(Puzzle3dEngineCommand::SetScene { scene });
+    }
     let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
     let fallback_positions = scaled_mesh_positions(&fallback.positions, PUZZLE3D_FALLBACK_MESH_SCALE);
     if !session.has_mesh(PUZZLE3D_FALLBACK_MESH_KIND) {
@@ -1373,7 +1378,9 @@ fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &P
 }
 
 fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
-    session.update_kind_weights_rust(envelope.runtime.object_kind_weights.clone(), envelope.runtime.vortex_kind_weights.clone());
+    let object_weights = envelope.runtime.object_kind_weights.iter().map(|(k, v)| (k.clone(), *v)).collect();
+    let vortex_weights = envelope.runtime.vortex_kind_weights.iter().map(|(k, v)| (k.clone(), *v)).collect();
+    let _ = session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights });
 }
 
 fn world_selection_json(envelope: &Puzzle3dScene) -> String {
@@ -1443,8 +1450,12 @@ fn gumball_target_world(envelope: &Puzzle3dScene) -> Option<[f64; 3]> {
     Some([sum[0] / count, sum[1] / count, sum[2] / count])
 }
 
-fn fixture_from_engine_json(envelope: &Puzzle3dScene, fixture_json: &str) -> Option<Puzzle3dScene> {
-    let parsed: Value = serde_json::from_str(fixture_json).ok()?;
+/// 🎯️ `dispatch`'s `Fixture` outcome is `puzzle_3d_engine`'s own typed fixture shape, distinct from
+/// this app's `Puzzle3dFixture` document model — bridged through one JSON round trip (schema
+/// translation between two independently-evolved Rust types, not a wasm-bindgen boundary) exactly
+/// like `scene_config_json` bridges the same two schemas in the other direction.
+fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &puzzle_3d_engine::Fixture) -> Option<Puzzle3dScene> {
+    let parsed = serde_json::to_value(fixture).ok()?;
     let mut next = envelope.clone();
     next.fixture.objects = serde_json::from_value(parsed.get("objects")?.clone()).ok()?;
     next.fixture.attractions = parsed.get("attractions").and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
@@ -1468,10 +1479,12 @@ struct FillDisplayMemo {
     payload: Puzzle3dFillDisplayPayload,
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct FillProgressSummaryJson {
-    count: u32,
+/// 🎯️ Bridges `puzzle_3d_engine::Fixture` (typed `compose_fill_display` outcome) into this app's own
+/// `Puzzle3dObject`/`Puzzle3dAttraction` document types via one JSON round trip — same schema
+/// translation `fixture_from_engine_fixture` does, factored out since both fill-display helpers below
+/// need it.
+fn fill_display_payload_from_fixture(fixture: &puzzle_3d_engine::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
+    serde_json::to_value(fixture).ok().and_then(|value| serde_json::from_value(value).ok())
 }
 
 fn append_fill_display_tail(fixture: &mut Puzzle3dFixture, payload: &Puzzle3dFillDisplayPayload, applied_count: u32, available_count: u32) {
@@ -1486,8 +1499,8 @@ fn puzzle3d_fixture_with_fill_display(mut fixture: Puzzle3dFixture, precompute: 
     if available_count <= applied_count {
         return fixture;
     }
-    if let Ok(display_json) = precompute.compose_fill_display_rust(available_count) {
-        if let Ok(payload) = serde_json::from_str::<Puzzle3dFillDisplayPayload>(&display_json) {
+    if let Some(engine_fixture) = precompute.compose_fill_display(available_count) {
+        if let Some(payload) = fill_display_payload_from_fixture(&engine_fixture) {
             append_fill_display_tail(&mut fixture, &payload, applied_count, available_count);
         }
     }
@@ -1504,19 +1517,14 @@ fn puzzle3d_fixture_with_fill_display_memo(
     if available_count <= applied_count {
         return fixture;
     }
-    let plan_count: u32 = serde_json::from_str::<FillProgressSummaryJson>(&precompute.fill_progress_summary())
-        .map(|summary| summary.count)
-        .unwrap_or(0);
+    let plan_count: u32 = precompute.fill_progress_summary().count as u32;
     let cached = memo.lock().ok().and_then(|guard| {
         guard.as_ref().filter(|entry| entry.plan_count == plan_count && entry.available_count == available_count && entry.applied_count == applied_count).cloned()
     });
     let payload = if let Some(entry) = cached {
         entry.payload
     } else {
-        let payload = precompute
-            .compose_fill_display_rust(available_count)
-            .ok()
-            .and_then(|display_json| serde_json::from_str::<Puzzle3dFillDisplayPayload>(&display_json).ok());
+        let payload = precompute.compose_fill_display(available_count).and_then(|engine_fixture| fill_display_payload_from_fixture(&engine_fixture));
         if let Some(payload) = payload {
             if let Ok(mut guard) = memo.lock() {
                 *guard = Some(FillDisplayMemo { plan_count, available_count, applied_count, payload: payload.clone() });
@@ -1538,8 +1546,8 @@ fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut env
         envelope.active_utility = "fill".into();
     }
     envelope.runtime.fill_count = count.min(precompute.fill_available_count());
-    if let Ok(fixture_json) = precompute.apply_fill_count_rust(count) {
-        if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
+    if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = precompute.dispatch(Puzzle3dEngineCommand::ApplyFillCount { count }) {
+        if let Some(next) = fixture_from_engine_fixture(&envelope, &fixture) {
             envelope = next;
         }
     }
@@ -3099,15 +3107,6 @@ fn build_settings_body(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiN
 
 
 //#region 🔖️Engagement
-fn parse_brush_candidates_free(raw: &str) -> Vec<Value> {
-    let parsed: Value = serde_json::from_str(raw).unwrap_or(Value::Null);
-    parsed.get("free").and_then(|value| value.as_array()).cloned().unwrap_or_default()
-}
-
-fn parse_brush_candidates_free_count(raw: &str) -> usize {
-    parse_brush_candidates_free(raw).len()
-}
-
 fn puzzle3d_brush_target_vortex(envelope: &Puzzle3dScene) -> Option<String> {
     envelope
         .runtime
@@ -3570,9 +3569,9 @@ fn puzzle3d_vortex_direction_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3
 /// preserves the action semantics). The label stays fixed; preload progress is the ready extent + loading ring.
 /// The slider range stays fixed at [`PUZZLE3D_FILL_COUNT_MAX`]; `ready` tracks how far planning has preloaded.
 fn puzzle3d_fill_count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
-    let progress: Value = serde_json::from_str(&precompute.fill_progress_summary()).unwrap_or(Value::Null);
-    let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
-    let available_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
+    let progress = precompute.fill_progress_summary();
+    let done = progress.done;
+    let available_count = progress.count;
     WindowMeasure::Slider {
         id: "puzzle3d-fill-count".into(),
         label: Some(labels.count.into()),
@@ -3657,14 +3656,13 @@ fn puzzle3d_brush_utility_options(envelope: &Puzzle3dScene, precompute: &Puzzle3
     ];
     if envelope.active_utility == "brush" {
         if let Some(target) = puzzle3d_brush_target_vortex(envelope) {
-            let raw = precompute.brush_candidates(&target);
-            let candidates = parse_brush_candidates_free(&raw);
+            let candidates = precompute.brush_candidates(&target).free;
             if !candidates.is_empty() {
             let items: Vec<MeasureSelectItem> = candidates
                 .iter()
                 .enumerate()
                 .map(|(index, candidate)| {
-                    let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
+                    let label = candidate.object_kind_id.as_str();
                     let id = format!("puzzle3d.brush.candidate.{index}");
                     MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
                 })
@@ -4564,8 +4562,8 @@ impl DocumentApp for Puzzle3dPlayApp {
                 drive_precompute(&mut self.precompute, &envelope);
                 if let Some(payload_value) = args {
                     if let Ok(payload) = serde_json::from_value::<BrushPlacePayload>(payload_value.clone()) {
-                        if let Ok(fixture_json) = self.precompute.apply_brush_placement_rust(&serde_json::to_string(&payload).unwrap_or_default()) {
-                            if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
+                        if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = self.precompute.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload }) {
+                            if let Some(next) = fixture_from_engine_fixture(&envelope, &fixture) {
                                 envelope = next;
                                 puzzle3d_rederive_all_attractions(&mut envelope.fixture);
                                 resolve_puzzle3d_attractions(&mut envelope.fixture);
@@ -4618,8 +4616,7 @@ impl DocumentApp for Puzzle3dPlayApp {
                 let default_delta = if action == "cycleBrushCandidateBack" { -1 } else { 1 };
                 let delta = args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(default_delta);
                 if let Some(vortex_id) = puzzle3d_brush_target_vortex(&envelope) {
-                    let raw = self.precompute.brush_candidates(&vortex_id);
-                    let free_count = parse_brush_candidates_free_count(&raw);
+                    let free_count = self.precompute.brush_candidates(&vortex_id).free.len();
                     if free_count > 0 {
                         let current = envelope.runtime.brush_candidate_index as i64;
                         let next = (current + delta).rem_euclid(free_count as i64);
@@ -4678,9 +4675,9 @@ impl DocumentApp for Puzzle3dPlayApp {
                     envelope.runtime.selection.vortex_ids = SelectionSet::from(vec![vortex_id.clone()]);
                     envelope.runtime.selection.object_ids.clear();
                     self.precompute.refresh_brush_candidates(&vortex_id);
-                    if let Some(preview_json) = self.precompute.brush_preview_json(&vortex_id, index) {
-                        if let Ok(fixture_json) = self.precompute.apply_brush_placement_rust(&preview_json) {
-                            if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
+                    if let Some(preview) = self.precompute.brush_preview(&vortex_id, index) {
+                        if let Ok(Puzzle3dEngineOutcome::Fixture(fixture)) = self.precompute.dispatch(Puzzle3dEngineCommand::ApplyBrushPlacement { payload: BrushPlacePayload::from(preview) }) {
+                            if let Some(next) = fixture_from_engine_fixture(&envelope, &fixture) {
                                 envelope = next;
                                 puzzle3d_rederive_all_attractions(&mut envelope.fixture);
                                 resolve_puzzle3d_attractions(&mut envelope.fixture);
@@ -5484,6 +5481,19 @@ mod wasm_bridge {
         pub fn generation(&self) -> u32 {
             self.store.borrow().generation() as u32
         }
+    }
+
+    /// 🔤️ Parses `.puzzle3d` DSL text (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) into the same
+    /// camelCase JSON shape callers previously got from a hand-authored `*.3d.json` fixture — lets
+    /// non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating
+    /// the DSL grammar. Moved here from `puzzle_3d_engine` (`HEADLESS-ENGINE-LAW-AND-OFFENDER-FIXES`):
+    /// the engine (constitutional: engine) slot must not depend on `wasm-bindgen`, and this UI slot is
+    /// where every other wasm-bindgen-exported puzzle-3d surface already lives.
+    #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
+    pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
+        use store::DocumentDsl;
+        let projection = Puzzle3dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 }
 //#endregion 🔖️WasmBridge

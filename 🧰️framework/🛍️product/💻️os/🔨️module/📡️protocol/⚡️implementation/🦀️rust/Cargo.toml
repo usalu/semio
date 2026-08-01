@@ -25,6 +25,7 @@ protocol_format = { path = "../../📐️format/⚡️implementation/🦀️rust
 protocol_history = { path = "../../📜️history/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol-history" }
 protocol_materialize = { path = "../../💎️materialize/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol-materialize" }
 protocol_wire = { path = "../../📡️wire/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol-wire" }
+protocol_channel = { path = "../../🧵️channel/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol-channel" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 protocol_io = { path = "../../🔌️io/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol-io" }

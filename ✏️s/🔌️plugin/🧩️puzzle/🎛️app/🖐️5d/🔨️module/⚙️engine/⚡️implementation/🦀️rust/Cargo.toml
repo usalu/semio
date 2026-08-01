@@ -16,6 +16,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️ap
 
 [dependencies]
 puzzle_5d = { path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🖐️5d/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-5d" }
+puzzle_3d = { path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-3d" }
 puzzle_3d_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/🧩️puzzle/🎛️app/🧊️3d/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-puzzle-3d-engine" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 mathematical_graph_manifest = { path = "../../../../../../../../../🧰️framework/🔨️module/🧮️math/🕸️graph/🛂️manifest/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-math-graph-manifest" }

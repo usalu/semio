@@ -149,6 +149,7 @@ pub fn spawn_app_instance_operation(
             document_id: create_os_document_id(),
             schema: registration.source_format.clone(),
         },
+        config: None,
     };
     Some((OsOperation::SpawnAppInstance { instance, position, node_id }, instance_id))
 }

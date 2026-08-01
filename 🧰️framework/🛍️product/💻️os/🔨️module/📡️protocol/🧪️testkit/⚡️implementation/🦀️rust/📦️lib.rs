@@ -583,6 +583,30 @@ pub fn assert_wire_frame_round_trip(sample: &WireFrameSample) {
         }
     }
 }
+
+/// @emoji 🧵️ Which side of the app-engine channel an `assert_channel_frame_round_trip` sample
+/// represents — `AppCommand`/`AppFrame` are distinct enums with distinct encode/decode fn pairs,
+/// same rationale as `WireFrameSample` above.
+pub enum ChannelFrameSample {
+    Command(protocol::AppCommand),
+    Frame(protocol::AppFrame),
+}
+
+/// ✅️ LAW: `decode(encode(frame)) == frame`, for either channel direction.
+pub fn assert_channel_frame_round_trip(sample: &ChannelFrameSample) {
+    match sample {
+        ChannelFrameSample::Command(command) => {
+            let bytes = protocol::encode_app_command(command);
+            let decoded = protocol::decode_app_command(&bytes).expect("decode_app_command must succeed on its own encode_app_command output");
+            assert_eq!(&decoded, command, "decode_app_command(encode_app_command(command)) must equal command");
+        }
+        ChannelFrameSample::Frame(frame) => {
+            let bytes = protocol::encode_app_frame(frame);
+            let decoded = protocol::decode_app_frame(&bytes).expect("decode_app_frame must succeed on its own encode_app_frame output");
+            assert_eq!(&decoded, frame, "decode_app_frame(encode_app_frame(frame)) must equal frame");
+        }
+    }
+}
 //#endregion 🔖️Laws
 
 //#region 🔖️Corrupt
@@ -946,6 +970,19 @@ mod tests {
             protocol::ServerFrame::Welcome { session_id: "s1".to_string(), resume_token: "r1".to_string(), server_frontier: frontier, bootstrap: protocol::Bootstrap::Tail },
             protocol::Lane::Command,
         ));
+    }
+
+    #[test]
+    fn channel_frame_round_trip_holds_for_command_and_frame_samples() {
+        assert_channel_frame_round_trip(&ChannelFrameSample::Command(protocol::AppCommand::Bye));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Command(protocol::AppCommand::Hello {
+            channel_version: protocol::CHANNEL_VERSION,
+            app_id: "app-1".to_string(),
+            actor: "actor-1".to_string(),
+            config: vec![1, 2, 3],
+        }));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: 1, manifest: vec![1, 2] }));
+        assert_channel_frame_round_trip(&ChannelFrameSample::Frame(protocol::AppFrame::Error { in_reply_to: None, code: "e".to_string(), message: "m".to_string() }));
     }
     //#endregion 🔖️Laws (continued)
 
