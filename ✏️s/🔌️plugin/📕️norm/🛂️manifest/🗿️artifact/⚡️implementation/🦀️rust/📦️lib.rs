@@ -41,6 +41,8 @@ macro_rules! define_norm_family_app {
             type Family = family_crate::$family_ty;
             type Document = doc_crate::Document;
             type Operation = op_crate::Operation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
             const BODY_INPUTS: &str = concat!("norm.", $variant, ".play.inputs");
             const BODY_RESULTS: &str = concat!("norm.", $variant, ".play.results");

@@ -337,18 +337,18 @@ describe("micro-commit", () => {
     expect(formatMetricLocCount(422_377)).toBe("422k");
     expect(formatMetricLocCount(52_759)).toBe("52.8k");
     expect(formatMetricLocCount(500)).toBe("500");
-    expect(formatMetricRatio(0.001)).toBe("0.001");
-    expect(formatMetricRatio(0.0000854)).toBe("0.0001");
-    expect(formatMetricRatio(0.0305)).toBe("0.03");
-    expect(formatMetricRatio(0.00264)).toBe("0.003");
-    expect(formatMetricRatio(10.061)).toBe("10.1");
-    expect(formatMetricRatio(121.001)).toBe("121");
+    expect(formatMetricRatio(0.001)).toBe("0.1");
+    expect(formatMetricRatio(0.0000854)).toBe("0.009");
+    expect(formatMetricRatio(0.0305)).toBe("3.05");
+    expect(formatMetricRatio(0.00264)).toBe("0.264");
+    expect(formatMetricRatio(0.10061)).toBe("10.1");
+    expect(formatMetricRatio(1.21001)).toBe("121");
     expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 0, added: 0, removed: 0 })).toBe("📊️uloc🐚️shell💯️2k");
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 2, removed: 0 })).toBe("📊️uloc🐚️shell💯️2k📈️2➗️0.001➕️2✏️2🟰️4");
-    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 0, removed: 2 })).toBe("📊️uloc🐚️shell💯️2k📉️2➗️0.001✏️2➖️2🟰️4");
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 2, removed: 0 })).toBe("📊️uloc🐚️shell💯️2k📈️2➗️0.1➕️2✏️2🟰️4");
+    expect(formatMicroCommitMetricLine({ lang: "Shell", emoji: "🐚️", code: 2000, edited: 2, added: 0, removed: 2 })).toBe("📊️uloc🐚️shell💯️2k📉️2➗️0.1✏️2➖️2🟰️4");
     const lines = formatMicroCommitMetricsLines([{ lang: "Rust", emoji: "🦀️", code: 200_000, edited: 2220, added: 2000, removed: 500 }]);
-    expect(lines[0]).toBe("📊️uloc💯️200k📈️1.5k➗️0.008➕️2k✏️2.22k➖️500🟰️4.72k");
-    expect(lines[1]).toBe("📊️uloc🦀️rust💯️200k📈️1.5k➗️0.008➕️2k✏️2.22k➖️500🟰️4.72k");
+    expect(lines[0]).toBe("📊️uloc💯️200k📈️1.5k➗️0.756➕️2k✏️2.22k➖️500🟰️4.72k");
+    expect(lines[1]).toBe("📊️uloc🦀️rust💯️200k📈️1.5k➗️0.756➕️2k✏️2.22k➖️500🟰️4.72k");
   });
 
   test("formatMicroCommitMetricsLines totals all languages on the first row", async () => {
@@ -357,8 +357,8 @@ describe("micro-commit", () => {
       { lang: "TypeScript", emoji: "🟦️", code: 3000, edited: 10, added: 8, removed: 0 },
       { lang: "Markdown", emoji: "📝️", code: 44, edited: 0, added: 0, removed: 0 },
     ]);
-    expect(lines[0]).toBe("📊️uloc💯️3.04k📈️8➗️0.003➕️8✏️10🟰️18");
-    expect(lines[1]).toBe("📊️uloc🟦️typescript💯️3k📈️8➗️0.003➕️8✏️10🟰️18");
+    expect(lines[0]).toBe("📊️uloc💯️3.04k📈️8➗️0.264➕️8✏️10🟰️18");
+    expect(lines[1]).toBe("📊️uloc🟦️typescript💯️3k📈️8➗️0.267➕️8✏️10🟰️18");
     expect(lines[2]).toBe("📊️uloc📝️markdown💯️44");
   });
 
@@ -408,7 +408,7 @@ describe("micro-commit", () => {
   test("appendGitDeltaSuffix formats legacy delta-only suffixes", async () => {
     const { appendGitDeltaSuffix, formatBundleUlocSuffix } = await import("../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts");
     expect(appendGitDeltaSuffix("🟦️65k", { added: 700, edited: 200, removed: 10 })).toBe("🟦️65k➕️700✏️200➖️10🟰️910");
-    expect(formatBundleUlocSuffix({ added: 700, edited: 200, removed: 10 }, 65_000)).toBe("📊️uloc💯️65k📈️690➗️0.01➕️700✏️200➖️10🟰️910");
+    expect(formatBundleUlocSuffix({ added: 700, edited: 200, removed: 10 }, 65_000)).toBe("📊️uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910");
   });
 
   test("splitGitNumstatDelta separates replaced lines from net added and removed", async () => {
@@ -770,7 +770,7 @@ describe("commit", () => {
   test("formatBundleDateLine appends per-day uloc suffix", async () => {
     const { formatBundleDateLine } = await import("../../../../../../../🧰️framework/🛍️product/🦑️repo/🔨️module/📚️lib/⚡️implementation/🟦️typescript/📦️index.ts");
     expect(formatBundleDateLine("🎆️26🌙️06☀️04", { added: 700, edited: 200, removed: 10 }, 65_000)).toBe(
-      "🎆️26🌙️06☀️04📊️uloc💯️65k📈️690➗️0.01➕️700✏️200➖️10🟰️910",
+      "🎆️26🌙️06☀️04📊️uloc💯️65k📈️690➗️1.07➕️700✏️200➖️10🟰️910",
     );
   });
 

@@ -535,6 +535,8 @@ impl DagPlayApp {
 impl DocumentApp for DagPlayApp {
     type Projection = DagDocument;
     type Operation = DagOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         DAG_PLAY_APP_ID

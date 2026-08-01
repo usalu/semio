@@ -1050,6 +1050,8 @@ impl RemodelPlayApp {
 impl DocumentApp for RemodelPlayApp {
     type Projection = RemodelScene;
     type Operation = RemodelOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         REMODEL_PLAY_APP_ID

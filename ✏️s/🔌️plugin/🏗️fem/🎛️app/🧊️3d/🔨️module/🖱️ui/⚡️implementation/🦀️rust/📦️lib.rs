@@ -372,6 +372,8 @@ pub struct Fem3dPlayApp {
 impl DocumentApp for Fem3dPlayApp {
     type Projection = Fem3dDocument;
     type Operation = fem3d_op::Fem3dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         FEM3D_APP_ID

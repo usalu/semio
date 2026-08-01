@@ -1788,7 +1788,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         #[test]
         fn create_ephemeral_os_space_has_no_backbone() {
             let document = create_ephemeral_os_space("Ephemeral Space");
-            assert!(document.id.starts_with("studio-"));
+            assert!(document.id.starts_with("space-"));
             assert_eq!(document.name, "Ephemeral Space");
             assert!(document.backbone.is_none());
             assert!(document.vcs.initial_projection.app_instances.is_empty());
@@ -3315,6 +3315,8 @@ pub mod workflow {
     // #region workflow
     //! 🎬 Workflow, VFS projection types, and media export registry.
 
+    pub use workflow::workflow_node_for_app;
+
     use crate::host::OsOperation;
     use crate::instance::{create_os_id, is_parameter_port_id, media_port_spec_id, parameter_id_from_port_id, parameter_port_id, OsAppInstance, OsParameter, OsParameterFieldBinding};
     use crate::registry::{os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
@@ -4830,7 +4832,7 @@ pub mod workflow {
         /// `.spk` through a wasm export), keeping the two implementations in lockstep. See
         /// `framework/product/os/core/fixtures/README.md`.
         fn workflow_fixture_dsl_paths() -> Vec<std::path::PathBuf> {
-            let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures");
+            let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🧫️fixtures");
             let entries = std::fs::read_dir(&fixtures_dir).unwrap_or_else(|error| panic!("read fixtures dir {fixtures_dir:?}: {error}"));
             let mut paths: Vec<std::path::PathBuf> = entries
                 .map(|entry| entry.expect("dir entry").path())
@@ -4862,7 +4864,9 @@ pub mod workflow {
         fn workflow_fixture_dsl_and_spk_pairs_are_canonical_and_equivalent() {
             let paths = workflow_fixture_dsl_paths();
             for dsl_path in &paths {
-                let spk_path = dsl_path.with_extension("spk");
+                let file_name = dsl_path.file_name().and_then(|name| name.to_str()).unwrap_or_default();
+                let spk_name = if file_name.starts_with('🗣') { file_name.replacen('🗣', "📦", 1).replace(".dsl", ".spk") } else { file_name.replace(".dsl", ".spk") };
+                let spk_path = dsl_path.with_file_name(spk_name);
                 let dsl_text = std::fs::read_to_string(dsl_path).unwrap_or_else(|error| panic!("read {dsl_path:?}: {error}"));
                 let spk_bytes = std::fs::read(&spk_path).unwrap_or_else(|error| panic!("read {spk_path:?}: {error}"));
                 let via_dsl = <WorkflowFixture as store::DocumentDsl>::parse_dsl(&dsl_text).unwrap_or_else(|error| panic!("parse {dsl_path:?}: {error}"));

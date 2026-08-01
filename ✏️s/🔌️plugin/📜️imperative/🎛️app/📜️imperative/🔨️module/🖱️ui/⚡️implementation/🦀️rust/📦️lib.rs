@@ -226,6 +226,8 @@ pub struct ImperativePlayApp {
 impl DocumentApp for ImperativePlayApp {
     type Projection = ImperativeDocument;
     type Operation = ImperativeOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         IMPERATIVE_PLAY_APP_ID

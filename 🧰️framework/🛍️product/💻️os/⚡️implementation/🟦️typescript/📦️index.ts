@@ -2003,7 +2003,7 @@ if (import.meta.vitest) {
       const { fileURLToPath, pathToFileURL } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const here = dirname(fileURLToPath(import.meta.url));
-      const fixturesDir = join(here, "..", "fixtures");
+      const fixturesDir = join(here, "..", "..", "🧫️fixtures");
       const rsPkgDir = join(here, "..", "🦀️rust", "pkg");
 
       const wasmModule = (await import(/* @vite-ignore */ pathToFileURL(join(rsPkgDir, "semio_framework_os.js")).href)) as {
@@ -2017,7 +2017,8 @@ if (import.meta.vitest) {
       expect(dslFiles.length).toBeGreaterThanOrEqual(5);
       for (const dslFile of dslFiles) {
         const dslText = readFileSync(join(fixturesDir, dslFile), "utf8");
-        const spkBytes = new Uint8Array(readFileSync(join(fixturesDir, dslFile.replace(/\.dsl$/, ".spk"))));
+        const spkFile = dslFile.replace(/^🗣️?/, "📦️").replace(/\.dsl$/, ".spk");
+        const spkBytes = new Uint8Array(readFileSync(join(fixturesDir, spkFile)));
         const viaDsl = wasmModule.parseWorkflowFixtureDsl(dslText);
         const viaPack = wasmModule.decodeWorkflowFixturePack(spkBytes);
         expect(viaDsl).toEqual(viaPack);

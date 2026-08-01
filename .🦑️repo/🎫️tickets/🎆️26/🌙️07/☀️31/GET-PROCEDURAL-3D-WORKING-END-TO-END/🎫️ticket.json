@@ -1,8 +1,8 @@
 {
   "title": "Get Procedural 3D Working End to End",
   "emoji": "\ud83e\uddca",
-  "status": "closed",
-  "description": "Get procedural 3d working end to end. Regression after root package.json rename compose\u2192workspace broke plugin registry generation under nx; follow-on UiTreeNode and Cargo path fixes.",
+  "status": "open",
+  "description": "Get procedural 3d working end to end. Latest: SelectionSet migration broke procedural-3d-ui (merge_world_selection_ids).",
   "summary": "Restored procedural 3d after workspace rename regression. Fixed getWorkspaceRoot (\"compose\"\u2192\"workspace\"), UiTreeNode selected_ids/highlighted_ids initializers + Default, PanelTreeBuilder build stamp, and CAD engine Cargo path to math-graph-dsl. Verified :6018 e2e: title semio \u00b7 procedural \u00b7 3d, Flow+Preview, 3 canvases, no render errors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2403"

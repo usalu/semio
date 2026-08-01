@@ -492,6 +492,8 @@ pub struct ReasoningWiresPlayApp {
 impl DocumentApp for ReasoningWiresPlayApp {
     type Projection = MindmapWiresDocument;
     type Operation = MindmapWiresOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         WIRES_PLAY_APP_ID
@@ -506,10 +508,11 @@ impl DocumentApp for ReasoningWiresPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, MindmapWiresDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<MindmapWiresOperation> {
         let document = doc.projection;

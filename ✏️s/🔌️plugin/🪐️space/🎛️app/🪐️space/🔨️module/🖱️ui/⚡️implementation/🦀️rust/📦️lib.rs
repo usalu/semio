@@ -1013,6 +1013,8 @@ impl SpaceApp {
 impl DocumentApp for SpaceApp {
     type Projection = OsProjection;
     type Operation = OsOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         S_PLAY_APP_ID
@@ -1027,10 +1029,11 @@ impl DocumentApp for SpaceApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, OsProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         view_state: &ViewState,
     ) -> ActionEmit<OsOperation> {
         let projection = doc.projection;

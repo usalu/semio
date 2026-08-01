@@ -902,6 +902,8 @@ pub struct ShootingPlayApp {
 impl DocumentApp for ShootingPlayApp {
     type Projection = ShootingFixture;
     type Operation = ShootingOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         SHOOTING_PLAY_APP_ID
@@ -916,10 +918,11 @@ impl DocumentApp for ShootingPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, ShootingFixture>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<ShootingOperation> {
         let fixture = doc.projection;
@@ -1353,6 +1356,7 @@ impl DocumentApp for ShootingPlayApp {
         &mut self,
         command_bytes: &[u8],
         doc: &DocumentView<'_, ShootingFixture>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> Option<Result<ActionEmit<ShootingOperation>, String>> {
         let command = match <shooting_protocol::ShootingCommand as protocol::OpBinary>::decode_op(command_bytes) {

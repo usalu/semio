@@ -316,6 +316,8 @@ pub struct SourcingCurateApp;
 impl DocumentApp for SourcingCurateApp {
     type Projection = CurateDocument;
     type Operation = SourcingOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         SOURCING_CURATE_APP_ID

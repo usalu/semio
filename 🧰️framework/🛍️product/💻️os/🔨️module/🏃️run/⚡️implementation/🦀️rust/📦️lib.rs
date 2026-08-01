@@ -594,7 +594,7 @@ impl<H: AppChannelHost> SpaceRunner<H> {
             None
         } else {
             let this_seq = next_seq();
-            commands.push(AppCommand::Configure { seq: this_seq, config: config_bytes.to_vec() });
+            commands.push(AppCommand::ConfigCommand { seq: this_seq, command: config_bytes.to_vec() });
             Some(this_seq)
         };
 
@@ -883,8 +883,8 @@ mod tests {
                         }
                         frames.push(AppFrame::Welcome { channel_version: CHANNEL_VERSION, instance: node, manifest: Vec::new() });
                     }
-                    AppCommand::Configure { seq, config } => {
-                        self.configs.insert(node, config);
+                    AppCommand::ConfigCommand { seq, command } => {
+                        self.configs.insert(node, command);
                         frames.push(AppFrame::Done { in_reply_to: seq });
                     }
                     AppCommand::LoadDocument { seq, pack, spr } => {

@@ -17,7 +17,7 @@
 /// @emoji 🔢️ The channel wire format's own version, advertised by `AppCommand::Hello` and echoed
 /// back by `AppFrame::Welcome` so either side can detect a mismatched build before exchanging any
 /// other frame.
-pub const CHANNEL_VERSION: u32 = 1;
+pub const CHANNEL_VERSION: u32 = 2;
 //#endregion 🔖️Version
 
 //#region 🔖️SectionProbe
@@ -41,14 +41,13 @@ pub enum AppCommand {
         actor: String,
         config: Vec<u8>,
     },
-    Configure {
+    ConfigCommand {
         seq: u64,
-        config: Vec<u8>,
+        command: Vec<u8>,
     },
     Command {
         seq: u64,
         command: Vec<u8>,
-        view_state: Vec<u8>,
     },
     CommandText {
         seq: u64,
@@ -76,6 +75,14 @@ pub enum AppCommand {
         spr: Vec<u8>,
     },
     ReadDocument {
+        seq: u64,
+    },
+    LoadConfig {
+        seq: u64,
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+    },
+    ReadConfig {
         seq: u64,
     },
     AttachBackbone {
@@ -145,6 +152,16 @@ pub enum AppFrame {
         pack: Vec<u8>,
         spr: Vec<u8>,
         ops: String,
+    },
+    Config {
+        in_reply_to: u64,
+        pack: Vec<u8>,
+        spr: Vec<u8>,
+        ops: String,
+    },
+    ConfigChanged {
+        envelopes: Vec<protocol_causal::OperationEnvelope>,
+        origin: String,
     },
     ContextMenu {
         in_reply_to: u64,
@@ -263,16 +280,15 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             protocol_core::write_str(&mut out, actor);
             protocol_core::write_bytes(&mut out, config);
         }
-        AppCommand::Configure { seq, config } => {
+        AppCommand::ConfigCommand { seq, command } => {
             out.push(1);
             protocol_core::write_varint_u64(&mut out, *seq);
-            protocol_core::write_bytes(&mut out, config);
+            protocol_core::write_bytes(&mut out, command);
         }
-        AppCommand::Command { seq, command, view_state } => {
+        AppCommand::Command { seq, command } => {
             out.push(2);
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_bytes(&mut out, command);
-            protocol_core::write_bytes(&mut out, view_state);
         }
         AppCommand::CommandText { seq, line } => {
             out.push(3);
@@ -309,34 +325,44 @@ pub fn encode_app_command(command: &AppCommand) -> Vec<u8> {
             out.push(9);
             protocol_core::write_varint_u64(&mut out, *seq);
         }
-        AppCommand::AttachBackbone { seq, uri } => {
+        AppCommand::LoadConfig { seq, pack, spr } => {
             out.push(10);
+            protocol_core::write_varint_u64(&mut out, *seq);
+            protocol_core::write_bytes(&mut out, pack);
+            protocol_core::write_bytes(&mut out, spr);
+        }
+        AppCommand::ReadConfig { seq } => {
+            out.push(11);
+            protocol_core::write_varint_u64(&mut out, *seq);
+        }
+        AppCommand::AttachBackbone { seq, uri } => {
+            out.push(12);
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_str(&mut out, uri);
         }
         AppCommand::DetachBackbone { seq } => {
-            out.push(11);
+            out.push(13);
             protocol_core::write_varint_u64(&mut out, *seq);
         }
         AppCommand::MediaIn { seq, port, descriptor, data } => {
-            out.push(12);
+            out.push(14);
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_str(&mut out, port);
             protocol_core::write_bytes(&mut out, descriptor);
             protocol_core::write_bytes(&mut out, data);
         }
         AppCommand::MediaOut { seq, port, request } => {
-            out.push(13);
+            out.push(15);
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_str(&mut out, port);
             protocol_core::write_bytes(&mut out, request);
         }
         AppCommand::MediaFingerprint { seq, port } => {
-            out.push(14);
+            out.push(16);
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_str(&mut out, port);
         }
-        AppCommand::Bye => out.push(15),
+        AppCommand::Bye => out.push(17),
     }
     out
 }
@@ -352,11 +378,10 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, protocol_core::Pro
             actor: protocol_core::read_str(bytes, &mut pos)?,
             config: protocol_core::read_bytes(bytes, &mut pos)?,
         },
-        1 => AppCommand::Configure { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, config: protocol_core::read_bytes(bytes, &mut pos)? },
+        1 => AppCommand::ConfigCommand { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, command: protocol_core::read_bytes(bytes, &mut pos)? },
         2 => AppCommand::Command {
             seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
             command: protocol_core::read_bytes(bytes, &mut pos)?,
-            view_state: protocol_core::read_bytes(bytes, &mut pos)?,
         },
         3 => AppCommand::CommandText { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, line: protocol_core::read_str(bytes, &mut pos)? },
         4 => AppCommand::RefreshUi { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, sections: read_vec_section_probe(bytes, &mut pos)? },
@@ -369,17 +394,23 @@ pub fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, protocol_core::Pro
             spr: protocol_core::read_bytes(bytes, &mut pos)?,
         },
         9 => AppCommand::ReadDocument { seq: protocol_core::read_varint_u64(bytes, &mut pos)? },
-        10 => AppCommand::AttachBackbone { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, uri: protocol_core::read_str(bytes, &mut pos)? },
-        11 => AppCommand::DetachBackbone { seq: protocol_core::read_varint_u64(bytes, &mut pos)? },
-        12 => AppCommand::MediaIn {
+        10 => AppCommand::LoadConfig {
+            seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
+            pack: protocol_core::read_bytes(bytes, &mut pos)?,
+            spr: protocol_core::read_bytes(bytes, &mut pos)?,
+        },
+        11 => AppCommand::ReadConfig { seq: protocol_core::read_varint_u64(bytes, &mut pos)? },
+        12 => AppCommand::AttachBackbone { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, uri: protocol_core::read_str(bytes, &mut pos)? },
+        13 => AppCommand::DetachBackbone { seq: protocol_core::read_varint_u64(bytes, &mut pos)? },
+        14 => AppCommand::MediaIn {
             seq: protocol_core::read_varint_u64(bytes, &mut pos)?,
             port: protocol_core::read_str(bytes, &mut pos)?,
             descriptor: protocol_core::read_bytes(bytes, &mut pos)?,
             data: protocol_core::read_bytes(bytes, &mut pos)?,
         },
-        13 => AppCommand::MediaOut { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, request: protocol_core::read_bytes(bytes, &mut pos)? },
-        14 => AppCommand::MediaFingerprint { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)? },
-        15 => AppCommand::Bye,
+        15 => AppCommand::MediaOut { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)?, request: protocol_core::read_bytes(bytes, &mut pos)? },
+        16 => AppCommand::MediaFingerprint { seq: protocol_core::read_varint_u64(bytes, &mut pos)?, port: protocol_core::read_str(bytes, &mut pos)? },
+        17 => AppCommand::Bye,
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
@@ -435,26 +466,38 @@ pub fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             protocol_core::write_bytes(&mut out, spr);
             protocol_core::write_str(&mut out, ops);
         }
-        AppFrame::ContextMenu { in_reply_to, items } => {
+        AppFrame::Config { in_reply_to, pack, spr, ops } => {
             out.push(8);
+            protocol_core::write_varint_u64(&mut out, *in_reply_to);
+            protocol_core::write_bytes(&mut out, pack);
+            protocol_core::write_bytes(&mut out, spr);
+            protocol_core::write_str(&mut out, ops);
+        }
+        AppFrame::ConfigChanged { envelopes, origin } => {
+            out.push(9);
+            write_vec_envelope(&mut out, envelopes);
+            protocol_core::write_str(&mut out, origin);
+        }
+        AppFrame::ContextMenu { in_reply_to, items } => {
+            out.push(10);
             protocol_core::write_varint_u64(&mut out, *in_reply_to);
             protocol_core::write_bytes(&mut out, items);
         }
         AppFrame::Media { in_reply_to, port, descriptor, data } => {
-            out.push(9);
+            out.push(11);
             protocol_core::write_varint_u64(&mut out, *in_reply_to);
             protocol_core::write_str(&mut out, port);
             protocol_core::write_bytes(&mut out, descriptor);
             protocol_core::write_bytes(&mut out, data);
         }
         AppFrame::MediaFingerprint { in_reply_to, port, fingerprint } => {
-            out.push(10);
+            out.push(12);
             protocol_core::write_varint_u64(&mut out, *in_reply_to);
             protocol_core::write_str(&mut out, port);
             protocol_core::write_bytes(&mut out, fingerprint);
         }
         AppFrame::Error { in_reply_to, code, message } => {
-            out.push(11);
+            out.push(13);
             write_opt_u64(&mut out, in_reply_to);
             protocol_core::write_str(&mut out, code);
             protocol_core::write_str(&mut out, message);
@@ -497,19 +540,26 @@ pub fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol_core::Protoco
             spr: protocol_core::read_bytes(bytes, &mut pos)?,
             ops: protocol_core::read_str(bytes, &mut pos)?,
         },
-        8 => AppFrame::ContextMenu { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, items: protocol_core::read_bytes(bytes, &mut pos)? },
-        9 => AppFrame::Media {
+        8 => AppFrame::Config {
+            in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
+            pack: protocol_core::read_bytes(bytes, &mut pos)?,
+            spr: protocol_core::read_bytes(bytes, &mut pos)?,
+            ops: protocol_core::read_str(bytes, &mut pos)?,
+        },
+        9 => AppFrame::ConfigChanged { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: protocol_core::read_str(bytes, &mut pos)? },
+        10 => AppFrame::ContextMenu { in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?, items: protocol_core::read_bytes(bytes, &mut pos)? },
+        11 => AppFrame::Media {
             in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
             port: protocol_core::read_str(bytes, &mut pos)?,
             descriptor: protocol_core::read_bytes(bytes, &mut pos)?,
             data: protocol_core::read_bytes(bytes, &mut pos)?,
         },
-        10 => AppFrame::MediaFingerprint {
+        12 => AppFrame::MediaFingerprint {
             in_reply_to: protocol_core::read_varint_u64(bytes, &mut pos)?,
             port: protocol_core::read_str(bytes, &mut pos)?,
             fingerprint: protocol_core::read_bytes(bytes, &mut pos)?,
         },
-        11 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, code: protocol_core::read_str(bytes, &mut pos)?, message: protocol_core::read_str(bytes, &mut pos)? },
+        13 => AppFrame::Error { in_reply_to: read_opt_u64(bytes, &mut pos)?, code: protocol_core::read_str(bytes, &mut pos)?, message: protocol_core::read_str(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(frame)
@@ -560,13 +610,13 @@ mod tests {
     }
 
     #[test]
-    fn app_command_configure_round_trips() {
-        assert_command_round_trips(&AppCommand::Configure { seq: 1, config: vec![9, 9] });
+    fn app_command_config_command_round_trips() {
+        assert_command_round_trips(&AppCommand::ConfigCommand { seq: 1, command: vec![9, 9] });
     }
 
     #[test]
     fn app_command_command_round_trips() {
-        assert_command_round_trips(&AppCommand::Command { seq: 2, command: vec![1, 2], view_state: vec![3, 4] });
+        assert_command_round_trips(&AppCommand::Command { seq: 2, command: vec![1, 2] });
     }
 
     #[test]
@@ -608,28 +658,38 @@ mod tests {
     }
 
     #[test]
+    fn app_command_load_config_round_trips() {
+        assert_command_round_trips(&AppCommand::LoadConfig { seq: 10, pack: vec![1], spr: vec![2] });
+    }
+
+    #[test]
+    fn app_command_read_config_round_trips() {
+        assert_command_round_trips(&AppCommand::ReadConfig { seq: 11 });
+    }
+
+    #[test]
     fn app_command_attach_backbone_round_trips() {
-        assert_command_round_trips(&AppCommand::AttachBackbone { seq: 10, uri: "backbone://host/doc".to_string() });
+        assert_command_round_trips(&AppCommand::AttachBackbone { seq: 12, uri: "backbone://host/doc".to_string() });
     }
 
     #[test]
     fn app_command_detach_backbone_round_trips() {
-        assert_command_round_trips(&AppCommand::DetachBackbone { seq: 11 });
+        assert_command_round_trips(&AppCommand::DetachBackbone { seq: 13 });
     }
 
     #[test]
     fn app_command_media_in_round_trips() {
-        assert_command_round_trips(&AppCommand::MediaIn { seq: 12, port: "camera".to_string(), descriptor: vec![1], data: vec![2, 3] });
+        assert_command_round_trips(&AppCommand::MediaIn { seq: 14, port: "camera".to_string(), descriptor: vec![1], data: vec![2, 3] });
     }
 
     #[test]
     fn app_command_media_out_round_trips() {
-        assert_command_round_trips(&AppCommand::MediaOut { seq: 13, port: "speaker".to_string(), request: vec![4] });
+        assert_command_round_trips(&AppCommand::MediaOut { seq: 15, port: "speaker".to_string(), request: vec![4] });
     }
 
     #[test]
     fn app_command_media_fingerprint_round_trips() {
-        assert_command_round_trips(&AppCommand::MediaFingerprint { seq: 14, port: "camera".to_string() });
+        assert_command_round_trips(&AppCommand::MediaFingerprint { seq: 16, port: "camera".to_string() });
     }
 
     #[test]
@@ -684,6 +744,16 @@ mod tests {
     #[test]
     fn app_frame_document_round_trips() {
         assert_frame_round_trips(&AppFrame::Document { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set foo = 1".to_string() });
+    }
+
+    #[test]
+    fn app_frame_config_round_trips() {
+        assert_frame_round_trips(&AppFrame::Config { in_reply_to: 5, pack: vec![1], spr: vec![2], ops: "set cam = 1".to_string() });
+    }
+
+    #[test]
+    fn app_frame_config_changed_round_trips() {
+        assert_frame_round_trips(&AppFrame::ConfigChanged { envelopes: vec![sample_envelope("cfg-1")], origin: "peer-1".to_string() });
     }
 
     #[test]
@@ -796,9 +866,9 @@ mod tests {
     /// @emoji 🧾️ Named `AppCommand` fixture corpus, one entry per variant.
     fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
         vec![
-            ("Hello", AppCommand::Hello { channel_version: 1, app_id: "app".to_string(), actor: "actor".to_string(), config: vec![1, 2] }),
-            ("Configure", AppCommand::Configure { seq: 1, config: vec![9] }),
-            ("Command", AppCommand::Command { seq: 1, command: vec![1], view_state: vec![2] }),
+            ("Hello", AppCommand::Hello { channel_version: CHANNEL_VERSION, app_id: "app".to_string(), actor: "actor".to_string(), config: vec![1, 2] }),
+            ("ConfigCommand", AppCommand::ConfigCommand { seq: 1, command: vec![9] }),
+            ("Command", AppCommand::Command { seq: 1, command: vec![1] }),
             ("CommandText", AppCommand::CommandText { seq: 1, line: "go".to_string() }),
             ("RefreshUi", AppCommand::RefreshUi { seq: 1, sections: vec![SectionProbe { kind: 1, key: "a".to_string(), hash: Some(1) }] }),
             ("ContextMenu", AppCommand::ContextMenu { seq: 1, request: vec![1] }),
@@ -806,6 +876,8 @@ mod tests {
             ("ApplyEnvelopes", AppCommand::ApplyEnvelopes { seq: 1, envelopes: Vec::new() }),
             ("LoadDocument", AppCommand::LoadDocument { seq: 1, pack: vec![1], spr: vec![2] }),
             ("ReadDocument", AppCommand::ReadDocument { seq: 1 }),
+            ("LoadConfig", AppCommand::LoadConfig { seq: 1, pack: vec![1], spr: vec![2] }),
+            ("ReadConfig", AppCommand::ReadConfig { seq: 1 }),
             ("AttachBackbone", AppCommand::AttachBackbone { seq: 1, uri: "u".to_string() }),
             ("DetachBackbone", AppCommand::DetachBackbone { seq: 1 }),
             ("MediaIn", AppCommand::MediaIn { seq: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
@@ -818,7 +890,7 @@ mod tests {
     /// @emoji 🧾️ Named `AppFrame` fixture corpus, one entry per variant.
     fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         vec![
-            ("Welcome", AppFrame::Welcome { channel_version: 1, instance: 1, manifest: vec![1] }),
+            ("Welcome", AppFrame::Welcome { channel_version: CHANNEL_VERSION, instance: 1, manifest: vec![1] }),
             ("Done", AppFrame::Done { in_reply_to: 1 }),
             ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![] }),
             ("UiSection", AppFrame::UiSection { in_reply_to: Some(1), kind: 1, key: "k".to_string(), hash: 1, body: None }),
@@ -826,6 +898,8 @@ mod tests {
             ("Events", AppFrame::Events { in_reply_to: None, events: vec![] }),
             ("DocumentChanged", AppFrame::DocumentChanged { envelopes: vec![], origin: "o".to_string() }),
             ("Document", AppFrame::Document { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "o".to_string() }),
+            ("Config", AppFrame::Config { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "c".to_string() }),
+            ("ConfigChanged", AppFrame::ConfigChanged { envelopes: vec![], origin: "o".to_string() }),
             ("ContextMenu", AppFrame::ContextMenu { in_reply_to: 1, items: vec![1] }),
             ("Media", AppFrame::Media { in_reply_to: 1, port: "p".to_string(), descriptor: vec![1], data: vec![2] }),
             ("MediaFingerprint", AppFrame::MediaFingerprint { in_reply_to: 1, port: "p".to_string(), fingerprint: vec![1] }),
@@ -839,9 +913,9 @@ mod tests {
     /// this test, forcing a deliberate update of both this table and the TS-side twin (WP-0B).
     fn channel_command_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Hello" => "000103617070056163746f72020102",
-            "Configure" => "01010109",
-            "Command" => "020101010102",
+            "Hello" => "000203617070056163746f72020102",
+            "ConfigCommand" => "01010109",
+            "Command" => "02010101",
             "CommandText" => "030102676f",
             "RefreshUi" => "0401010101610101",
             "ContextMenu" => "05010101",
@@ -849,12 +923,14 @@ mod tests {
             "ApplyEnvelopes" => "070100",
             "LoadDocument" => "080101010102",
             "ReadDocument" => "0901",
-            "AttachBackbone" => "0a010175",
-            "DetachBackbone" => "0b01",
-            "MediaIn" => "0c01017001010102",
-            "MediaOut" => "0d0101700101",
-            "MediaFingerprint" => "0e010170",
-            "Bye" => "0f",
+            "LoadConfig" => "0a0101010102",
+            "ReadConfig" => "0b01",
+            "AttachBackbone" => "0c010175",
+            "DetachBackbone" => "0d01",
+            "MediaIn" => "0e01017001010102",
+            "MediaOut" => "0f0101700101",
+            "MediaFingerprint" => "10010170",
+            "Bye" => "11",
             other => panic!("channel_command_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }
@@ -863,7 +939,7 @@ mod tests {
     /// `channel_command_fixture_hex`'s docstring for provenance/drift-guard rationale.
     fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
-            "Welcome" => "0001010101",
+            "Welcome" => "0002010101",
             "Done" => "0101",
             "Invocation" => "0201010100",
             "UiSection" => "03010101016b0100",
@@ -871,10 +947,12 @@ mod tests {
             "Events" => "050000",
             "DocumentChanged" => "0600016f",
             "Document" => "070101010102016f",
-            "ContextMenu" => "08010101",
-            "Media" => "0901017001010102",
-            "MediaFingerprint" => "0a0101700101",
-            "Error" => "0b000163016d",
+            "Config" => "0801010101020163",
+            "ConfigChanged" => "0900016f",
+            "ContextMenu" => "0a010101",
+            "Media" => "0b01017001010102",
+            "MediaFingerprint" => "0c0101700101",
+            "Error" => "0d000163016d",
             other => panic!("channel_frame_fixture_hex: no golden hex registered for label {other:?}"),
         }
     }

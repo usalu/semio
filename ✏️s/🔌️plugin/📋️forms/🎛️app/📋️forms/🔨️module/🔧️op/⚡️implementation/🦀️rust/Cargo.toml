@@ -12,7 +12,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app
 
 [dependencies]
 forms = { path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/⚡️implementation/🦀️rust", package = "semio-s-app-forms" }
-playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
+playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 
 [dev-dependencies]
 forms_engine = { path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/🔨️module/⚙️engine/⚡️implementation/🦀️rust", package = "semio-s-app-forms-engine" }

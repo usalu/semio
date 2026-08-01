@@ -1527,6 +1527,8 @@ pub struct FormsPlayApp {
 impl DocumentApp for FormsPlayApp {
     type Projection = FormSpec;
     type Operation = FormOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         FORMS_PLAY_APP_ID
@@ -1541,10 +1543,11 @@ impl DocumentApp for FormsPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, FormSpec>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<FormOperation> {
         let spec = doc.projection;

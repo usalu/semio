@@ -783,6 +783,8 @@ impl Default for Gis2dPlayApp {
 impl DocumentApp for Gis2dPlayApp {
     type Projection = gis2d::GisMapDocument;
     type Operation = GisMapOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         GIS2D_PLAY_APP_ID
@@ -797,10 +799,11 @@ impl DocumentApp for Gis2dPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, gis2d::GisMapDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<GisMapOperation> {
         let document = doc.projection;
@@ -1001,6 +1004,7 @@ impl DocumentApp for Gis2dPlayApp {
     fn window_measures(
         &self,
         _doc: &DocumentView<'_, gis2d::GisMapDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         view_state: &ViewState,
     ) -> HashMap<String, Vec<WindowMeasure>> {
         let labels = resolve_labels::<Gis2dPlayLabels>(view_state);

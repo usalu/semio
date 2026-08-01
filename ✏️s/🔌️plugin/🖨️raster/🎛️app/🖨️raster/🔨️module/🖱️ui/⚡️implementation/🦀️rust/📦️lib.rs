@@ -492,6 +492,8 @@ fn raster_window_measures(runtime: &RasterPlayRuntime) -> Vec<WindowMeasure> {
 impl DocumentApp for RasterPlayApp {
     type Projection = RasterDocument;
     type Operation = RasterOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         RASTER_PLAY_APP_ID
@@ -506,10 +508,11 @@ impl DocumentApp for RasterPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, RasterDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<RasterOperation> {
         let document = doc.projection;

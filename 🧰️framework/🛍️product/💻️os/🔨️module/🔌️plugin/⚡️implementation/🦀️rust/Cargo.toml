@@ -29,6 +29,7 @@ store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os
 # 🎞️ CW3 kernel cut-over: `DocumentApp::Operation`'s trait bound now references `protocol::Operation`/
 # `protocol::OpText` directly.
 protocol = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 wit-bindgen = { version = "0.36.0", features = ["macros"] }
 
 [dev-dependencies]

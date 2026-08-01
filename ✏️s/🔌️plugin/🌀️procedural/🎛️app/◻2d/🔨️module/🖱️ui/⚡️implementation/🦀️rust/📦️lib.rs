@@ -483,6 +483,8 @@ impl Procedural2dPlayApp {
 impl DocumentApp for Procedural2dPlayApp {
     type Projection = Procedural2dDocument;
     type Operation = Procedural2dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         PROCEDURAL2D_PLAY_APP_ID
@@ -497,10 +499,11 @@ impl DocumentApp for Procedural2dPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, Procedural2dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<Procedural2dOperation> {
         let fixture = &doc.projection.fixture;

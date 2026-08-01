@@ -146,6 +146,8 @@ pub struct Block2dPlayApp {
 impl DocumentApp for Block2dPlayApp {
     type Projection = Block2dDefinition;
     type Operation = Block2dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         BLOCK2D_PLAY_APP_ID

@@ -110,6 +110,8 @@ pub struct MathematicalPlayApp {
 impl DocumentApp for MathematicalPlayApp {
     type Projection = MathProjection;
     type Operation = MathOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         MATH_APP_ID

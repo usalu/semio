@@ -753,6 +753,8 @@ pub struct Process3dPlayApp {
 impl DocumentApp for Process3dPlayApp {
     type Projection = Process3dDocument;
     type Operation = Process3dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         PROCESS_3D_PLAY_APP_ID

@@ -531,7 +531,71 @@ where
 }
 //#endregion 🔖️MergeHelpers
 
-//#region 🔖️Materialize
+//#region 🔖️Config
+pub type ConfigEnvelope<C, ConfigOperation> = DocumentEnvelope<C, ConfigOperation>;
+pub type ConfigStore<C, ConfigOperation> = DocumentStore<C, ConfigOperation>;
+
+pub fn create_config_envelope<C, ConfigOperation>(
+    schema: &str,
+    id: &str,
+    initial_projection: C,
+    backbone: Option<DocumentBackboneRef>,
+) -> ConfigEnvelope<C, ConfigOperation>
+where
+    C: Clone,
+{
+    create_document_envelope(schema, id, initial_projection, backbone)
+}
+
+/// @emoji 🧮️ Config projections use the same DSL law as documents — `ConfigRecord` marks config types.
+pub trait ConfigRecord: DocumentDsl {}
+
+pub fn config_spec_from_record_spec(spec: &dsl::RecordSpec) -> semio_framework_core::ConfigSpec {
+    use semio_framework_core::{ConfigFieldShape, ConfigFieldSpec, ConfigSpec};
+    let fields = spec
+        .fields
+        .iter()
+        .filter(|field| !field.key.is_empty())
+        .map(|field| ConfigFieldSpec {
+            key: field.key.clone(),
+            label: field.key.clone(),
+            shape: shape_to_config_field_shape(&field.shape),
+            default: None,
+        })
+        .collect();
+    ConfigSpec { fields }
+}
+
+pub fn config_spec_from_dsl_record<T: DocumentPack>() -> semio_framework_core::ConfigSpec {
+    T::record_spec().map(|spec| config_spec_from_record_spec(&spec)).unwrap_or_default()
+}
+
+fn shape_to_config_field_shape(shape: &dsl::Shape) -> semio_framework_core::ConfigFieldShape {
+    use dsl::Shape;
+    use semio_framework_core::ConfigFieldShape;
+    match shape {
+        Shape::Bool => ConfigFieldShape::Toggle,
+        Shape::Int | Shape::UInt | Shape::Float | Shape::Quantity(_) | Shape::Angle(_) | Shape::Count => ConfigFieldShape::Number { min: None, max: None, step: None },
+        Shape::Text | Shape::Ref(_) | Shape::Embed(_) => ConfigFieldShape::Text,
+        Shape::Enum(variants) => ConfigFieldShape::Select { options: variants.iter().map(|(tag, _)| tag.clone()).collect() },
+        Shape::Record(spec_fn) => ConfigFieldShape::Record(config_spec_from_record_spec(&spec_fn()).fields),
+        _ => ConfigFieldShape::Text,
+    }
+}
+
+/// @emoji ✅️ Validates a JSON projection against a manifest `ConfigSpec` (required keys must be present).
+pub fn validate_config_projection(spec: &semio_framework_core::ConfigSpec, value: &serde_json::Value) -> Result<(), String> {
+    let object = value.as_object().ok_or_else(|| "config projection must be a JSON object".to_string())?;
+    for field in &spec.fields {
+        if object.contains_key(&field.key) {
+            continue;
+        }
+        return Err(format!("missing config field `{key}`", key = field.key));
+    }
+    Ok(())
+}
+//#endregion 🔖️Config
+
 //#region 🔖️Materialize
 pub fn create_document_envelope<P, Operation>(
     schema: &str,
@@ -3921,6 +3985,14 @@ pub mod test_support {
         let printed = projection.print_dsl();
         let parsed = P::parse_dsl(&printed).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
         assert_eq!(&parsed, projection, "dsl round trip diverged;\nprinted:\n{printed}");
+    }
+
+    /// @emoji 🧮️ Config artifact twin of [`assert_dsl_round_trip`] — same law for `ConfigRecord` projections.
+    pub fn assert_config_round_trip<C>(projection: &C)
+    where
+        C: ConfigRecord + PartialEq + std::fmt::Debug,
+    {
+        assert_dsl_round_trip(projection);
     }
 
     /// @emoji 🧭️ Non-panicking twin of [`assert_dsl_round_trip`] for a repo-wide fixture-law SWEEP

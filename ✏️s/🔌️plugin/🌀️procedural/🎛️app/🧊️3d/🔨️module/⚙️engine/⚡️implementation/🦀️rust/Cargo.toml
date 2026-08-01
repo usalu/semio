@@ -16,7 +16,7 @@ procedural_3d_dsl = { path = "../../../../../../../../../✏️s/🔌️plugin/�
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 flow_core = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-flow-core" }
 flow_module_brep = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/⚡️implementation/🦀️rust/🔨️module/📐️brep", default-features = false, package = "semio-s-kernel-flow-module-brep" }
-playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
+playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 semio-framework-plugin = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-core = { path = "../../../../../../../../../🧰️framework/⚡️implementation/🦀️rust", package = "semio-framework-core" }
 ui_wgpu = { path = "../../../../../../../../../🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust", package = "semio-framework-ui-wgpu" }

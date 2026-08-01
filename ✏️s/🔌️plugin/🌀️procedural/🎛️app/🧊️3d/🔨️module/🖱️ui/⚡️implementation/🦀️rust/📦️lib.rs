@@ -462,6 +462,8 @@ impl Procedural3dPlayApp {
 impl DocumentApp for Procedural3dPlayApp {
     type Projection = Procedural3dDocument;
     type Operation = Procedural3dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         PROCEDURAL_3D_PLAY_APP_ID
@@ -476,10 +478,11 @@ impl DocumentApp for Procedural3dPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, Procedural3dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<Procedural3dOperation> {
         let fixture = &doc.projection.fixture;
@@ -841,6 +844,7 @@ impl DocumentApp for Procedural3dPlayApp {
     fn window_measures(
         &self,
         _doc: &DocumentView<'_, Procedural3dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
         let measures = vec![world3d_sun_measures("procedural3d", &self.runtime.sun, procedural_action)];

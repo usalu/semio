@@ -18,7 +18,7 @@ crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/📖️playbook/🧩️extension/🌀️procedural/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-playbook = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
+playbook = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 vcs = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 store = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 protocol = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }

@@ -747,6 +747,8 @@ impl Default for TrinityJackPlayApp {
 impl DocumentApp for TrinityJackPlayApp {
     type Projection = GraphFixture;
     type Operation = TrinityGraphOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         TRINITY_JACK_PLAY_APP_ID
@@ -761,10 +763,11 @@ impl DocumentApp for TrinityJackPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, GraphFixture>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<TrinityGraphOperation> {
         let fixture = doc.projection;

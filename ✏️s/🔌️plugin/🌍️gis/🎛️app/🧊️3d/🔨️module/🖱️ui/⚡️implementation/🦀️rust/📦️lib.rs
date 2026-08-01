@@ -245,6 +245,8 @@ pub struct Gis3dPlayApp {
 impl DocumentApp for Gis3dPlayApp {
     type Projection = Gis3dTerrainDocument;
     type Operation = Gis3dTerrainOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         GIS3D_PLAY_APP_ID
@@ -259,10 +261,11 @@ impl DocumentApp for Gis3dPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         _doc: &DocumentView<'_, Gis3dTerrainDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<Gis3dTerrainOperation> {
         match action {

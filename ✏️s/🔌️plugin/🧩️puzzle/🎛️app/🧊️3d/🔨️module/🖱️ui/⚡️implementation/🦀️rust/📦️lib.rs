@@ -3925,6 +3925,8 @@ impl Puzzle3dPlayApp {
 impl DocumentApp for Puzzle3dPlayApp {
     type Projection = Puzzle3dPlayProjection;
     type Operation = Puzzle3dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         PUZZLE3D_PLAY_APP_ID

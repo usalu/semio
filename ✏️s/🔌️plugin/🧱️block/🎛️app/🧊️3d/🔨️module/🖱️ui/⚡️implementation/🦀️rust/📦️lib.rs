@@ -161,6 +161,8 @@ pub struct Block3dPlayApp {
 impl DocumentApp for Block3dPlayApp {
     type Projection = Block3dDefinition;
     type Operation = Block3dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         BLOCK3D_PLAY_APP_ID

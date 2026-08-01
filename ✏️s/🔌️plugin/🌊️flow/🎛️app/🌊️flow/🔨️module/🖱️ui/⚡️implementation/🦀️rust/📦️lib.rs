@@ -874,6 +874,8 @@ impl FlowPlayApp {
 impl DocumentApp for FlowPlayApp {
     type Projection = FlowFixture;
     type Operation = FlowOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         FLOW_PLAY_APP_ID

@@ -2136,6 +2136,8 @@ impl CadPlayApp {
 impl DocumentApp for CadPlayApp {
     type Projection = CadScene;
     type Operation = CadOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         CAD_PLAY_APP_ID
@@ -2150,10 +2152,11 @@ impl DocumentApp for CadPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, CadScene>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<CadOperation> {
         let document = doc.projection;

@@ -2927,13 +2927,16 @@ export function formatMetricLocCount(n: number): string {
 }
 
 /** ➗️Formats a ratio with 3 significant digits as a short decimal; never formats a positive value as 0. */
+/** ➗Formats net/previous as a percentage (*100) with 3 significant digits; never formats a positive value as 0. */
 export function formatMetricRatio(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return "0";
-  let v = roundSignificant(n, 3);
-  if (v === 0) v = roundSignificant(n, 1);
-  if (v === 0) return formatTinyPositive(n);
+  // Caller passes a fraction (net/previous); display as percent.
+  const pct = n * 100;
+  let v = roundSignificant(pct, 3);
+  if (v === 0) v = roundSignificant(pct, 1);
+  if (v === 0) return formatTinyPositive(pct);
   if (v >= 1) return formatSignificantCoeff(v);
-  // Short decimals by magnitude (keeps ~3 sig figs without long tails like 0.0305 / 0.0000854).
+  // Short decimals by magnitude for sub-1% values.
   let places: number;
   if (v >= 0.1) places = 3;
   else if (v >= 0.01) places = 2;

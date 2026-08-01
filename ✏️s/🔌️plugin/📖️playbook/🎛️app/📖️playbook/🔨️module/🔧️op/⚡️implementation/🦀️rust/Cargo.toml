@@ -11,4 +11,4 @@ workspace = true
 path = "../../../../../../../../../✏️s/🔌️plugin/📖️playbook/🎛️app/📖️playbook/🔨️module/🔧️op/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [dependencies]
-playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
+playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }

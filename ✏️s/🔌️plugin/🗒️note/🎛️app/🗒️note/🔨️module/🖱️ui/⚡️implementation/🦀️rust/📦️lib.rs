@@ -865,6 +865,8 @@ impl NotePlayApp {
 impl DocumentApp for NotePlayApp {
     type Projection = NoteDocument;
     type Operation = NoteOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         NOTE_PLAY_APP_ID
@@ -879,10 +881,11 @@ impl DocumentApp for NotePlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, NoteDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<NoteOperation> {
         // "undo"/"redo" never reach here — `VcsDocumentApp` intercepts them into store commands.

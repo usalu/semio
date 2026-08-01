@@ -1662,6 +1662,8 @@ fn paint_uv(args: Option<&Value>) -> Option<(f32, f32)> {
 impl DocumentApp for LowpolyPlayApp {
     type Projection = LowpolyProjection;
     type Operation = LowpolyOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         LOWPOLY_PLAY_APP_ID
@@ -1676,10 +1678,11 @@ impl DocumentApp for LowpolyPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, LowpolyProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         view_state: &ViewState,
     ) -> ActionEmit<LowpolyOperation> {
         let projection = doc.projection;

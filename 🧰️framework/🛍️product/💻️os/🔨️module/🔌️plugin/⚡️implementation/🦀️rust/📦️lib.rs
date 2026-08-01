@@ -101,7 +101,7 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use protocol::OpText;
-use store::{build_history_columns, create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, SpaceConflict};
+use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, SpaceConflict};
 
 pub struct ModeSpec {
     pub id: String,
@@ -2078,6 +2078,7 @@ pub fn assert_ingest_idempotent<A, P>(
 mod testkit_tests {
     //! 🧪️ Proves each `testkit` primitive against a minimal dummy `DocumentApp` before any real app
     //! adopts them.
+    use super::super::{ConfigView, NoConfig, NoConfigOperation};
     use super::*;
     use crate::app::{ActionEmit, DocumentView};
     use crate::{ui_text, UiNode};
@@ -2135,6 +2136,8 @@ mod testkit_tests {
     impl DocumentApp for DummyApp {
         type Projection = DummyProjection;
         type Operation = DummyOperation;
+        type Config = NoConfig;
+        type ConfigOperation = NoConfigOperation;
 
         fn app_id(&self) -> &str {
             "testkit-dummy"
@@ -2149,10 +2152,11 @@ mod testkit_tests {
         }
 
         fn handle_action(
-            &mut self,
+            &self,
             action: &str,
             _args: Option<&Value>,
             doc: &DocumentView<'_, DummyProjection>,
+            _cfg: &ConfigView<'_, NoConfig>,
             _view_state: &ViewState,
         ) -> ActionEmit<DummyOperation> {
             match action {
@@ -2165,7 +2169,7 @@ mod testkit_tests {
             }
         }
 
-        fn render(&self, _body_key: &str, doc: &DocumentView<'_, DummyProjection>, _view_state: &ViewState) -> UiNode {
+        fn render(&self, _body_key: &str, doc: &DocumentView<'_, DummyProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> UiNode {
             ui_text(format!("count={}", doc.projection.count))
         }
     }
@@ -3036,6 +3040,68 @@ pub struct DocumentView<'a, P> {
     pub history: &'a HistoryView,
 }
 
+/// @emoji 🧮️ Read-only view of an app's config projection — same role as {@link DocumentView} for the
+/// config {@link ConfigStore} owned by {@link VcsDocumentApp}.
+pub struct ConfigView<'a, C> {
+    pub projection: &'a C,
+}
+
+//#region 🔖️NoConfig
+/// @emoji 🧮️ Default `DocumentApp::Config` for apps with no config artifact yet.
+#[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NoConfig {}
+
+impl store::DocumentDsl for NoConfig {
+    const EXTENSION: &'static str = "nocfg";
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        if text.trim().is_empty() {
+            return Ok(Self::default());
+        }
+        Err(store::TextError::new("no config", store::TextSpan::at(1, 1)))
+    }
+    fn print_dsl(&self) -> String {
+        String::new()
+    }
+}
+
+impl store::DocumentPack for NoConfig {
+    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        Ok(Vec::new())
+    }
+    fn decode_pack_with(_bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        Ok(Self::default())
+    }
+}
+
+impl store::ConfigRecord for NoConfig {}
+
+impl ::protocol::OperationDiff<NoConfig> for NoConfig {
+    fn apply(&self, base: &NoConfig) -> NoConfig {
+        base.clone()
+    }
+    fn absorb(&mut self, _other: Self) {}
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[serde(rename_all = "camelCase")]
+pub enum NoConfigOperation {
+    Noop,
+}
+
+impl ::protocol::Operation<NoConfig> for NoConfigOperation {
+    type Diff = NoConfig;
+
+    fn diff(&self, _base: &NoConfig) -> NoConfig {
+        NoConfig::default()
+    }
+
+    fn backwards(&self, _base: &NoConfig) -> Vec<Self> {
+        vec![NoConfigOperation::Noop]
+    }
+}
+//#endregion 🔖️NoConfig
+
 //#region 🔖️CommandLog
 /// @emoji 🎚️ Tri-state operations filter of the framework history panel — `All` is the default.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -3266,8 +3332,9 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
 /// through the store with a true inverse), an optional description/coalesce key for the resulting
 /// edit, host effects (navigate/export/spawn…), and app events. A view action returns an empty
 /// `operations` (no history entry); an operation action returns one or more `operations`.
-pub struct ActionEmit<Operation> {
+pub struct ActionEmit<Operation, ConfigOperation = NoConfigOperation> {
     pub operations: Vec<Operation>,
+    pub config_operations: Vec<ConfigOperation>,
     pub description: Option<String>,
     pub coalesce_key: Option<String>,
     pub effects: Vec<HostEffect>,
@@ -3283,10 +3350,11 @@ pub struct ActionEmit<Operation> {
     pub inverse: Option<InverseAction>,
 }
 
-impl<Operation> Default for ActionEmit<Operation> {
+impl<Operation, ConfigOperation> Default for ActionEmit<Operation, ConfigOperation> {
     fn default() -> Self {
         Self {
             operations: Vec::new(),
+            config_operations: Vec::new(),
             description: None,
             coalesce_key: None,
             effects: Vec::new(),
@@ -3297,7 +3365,7 @@ impl<Operation> Default for ActionEmit<Operation> {
     }
 }
 
-impl<Operation> ActionEmit<Operation> {
+impl<Operation, ConfigOperation> ActionEmit<Operation, ConfigOperation> {
     /// @emoji ✏️ An operation emission carrying `operations` and nothing else.
     pub fn operations(operations: Vec<Operation>) -> Self {
         Self { operations, ..Default::default() }
@@ -3400,35 +3468,37 @@ macro_rules! app_action_enum {
 ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
     type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + store::DocumentPack;
-    // 🎞️ CW3 kernel cut-over: bound now references `protocol::Operation`/`protocol::OpText` directly
-    // (the new canonical home — see `vcs/rs/lib.rs`'s `🚧️TEMPORARY protocol shim`) rather than
-    // through vcs's temporary re-export, since this file is small/contained and fully owned this
-    // wave. `VcsDocumentApp` keeps its name and behavior; only this bound's source module changed.
-    // 🎯️ W4: `OpBinary` added — `store::print_document_pack`/`parse_document_pack`/`DocumentCodec::of`
-    // (the pack+spr authoritative storage seam) all require it. Purely additive: every op enum
-    // already derives it via `#[derive(dsl::DslOps)]` since the W2 derive flip, so no app's
-    // `impl DocumentApp` needs to change.
     type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
+    type Config: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send + store::ConfigRecord + store::DocumentPack;
+    type ConfigOperation: ::protocol::Operation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
 
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
+    fn config_schema(&self) -> &str {
+        "config.empty"
+    }
     fn initial_projection(&self) -> Self::Projection;
+    fn initial_config(&self) -> Self::Config {
+        Self::Config::default()
+    }
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, Self::Projection>,
+        cfg: &ConfigView<'_, Self::Config>,
         view_state: &ViewState,
-    ) -> ActionEmit<Self::Operation>;
+    ) -> ActionEmit<Self::Operation, Self::ConfigOperation>;
     /// 🎛️ Handles a dispatched `CommandDefinition` (os/plugin/app/mode-scoped — never window-level).
     /// Default no-operation: apps that declare no `AppDefinition.commands` never need to override this.
     fn handle_command(
-        &mut self,
+        &self,
         _command: &str,
         _args: Option<&Value>,
         _doc: &DocumentView<'_, Self::Projection>,
+        _cfg: &ConfigView<'_, Self::Config>,
         _view_state: &ViewState,
-    ) -> ActionEmit<Self::Operation> {
+    ) -> ActionEmit<Self::Operation, Self::ConfigOperation> {
         ActionEmit::default()
     }
     //#region 🔖️TypedChannel
@@ -3440,21 +3510,22 @@ pub trait DocumentApp: Send + 'static {
     /// `<Self::TypedCommand as protocol::OpBinary>::decode_op(...)` (a per-app enum it declares) and
     /// dispatch for real.
     fn handle_typed_command(
-        &mut self,
+        &self,
         _command_bytes: &[u8],
         _doc: &DocumentView<'_, Self::Projection>,
+        _cfg: &ConfigView<'_, Self::Config>,
         _view_state: &ViewState,
-    ) -> Option<Result<ActionEmit<Self::Operation>, String>> {
+    ) -> Option<Result<ActionEmit<Self::Operation, Self::ConfigOperation>, String>> {
         None
     }
     /// 🧮️ This app's typed configuration spec — empty (the default) means "no configuration options."
     fn config_spec(&self) -> ConfigSpec {
         ConfigSpec::empty()
     }
-    /// 🧮️ Applies wire-value-decoded config bytes directly to in-app state — NOT a document operation,
-    /// not undoable, not routed through the `DocumentStore`. Default no-op (apps with no `config_spec`
-    /// never need this).
-    fn apply_config_bytes(&mut self, _config_bytes: &[u8]) -> Result<(), String> {
+    /// 🧮️ Applies wire-value-decoded config bytes directly to in-app state — legacy path until all apps
+    /// route config through `ConfigOperation`s on the config store. Default decodes into `initial_config`.
+    fn apply_config_bytes(&self, config_bytes: &[u8]) -> Result<(), String> {
+        let _ = config_bytes;
         Ok(())
     }
     //#endregion 🔖️TypedChannel
@@ -3475,29 +3546,19 @@ pub trait DocumentApp: Send + 'static {
     /// `VcsDocumentApp`'s injected `copy` and `cut` actions; `cut` additionally calls
     /// `cut_operations`. Default: always empty (apps that don't override `clipboard_media_type` never
     /// reach here in practice, since the interception only calls this when a media type is declared).
-    fn copy_fragment(&mut self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+    fn copy_fragment(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
         Err(ClipboardError::EmptySelection)
     }
-    /// 📋️ The operations that remove the current selection — paired with `copy_fragment` by the
-    /// injected `cut` action into one undo-able edit.
-    fn cut_operations(&mut self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Vec<Self::Operation> {
+    fn cut_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewState) -> Vec<Self::Operation> {
         Vec::new()
     }
-    /// 📋️ The operations that materialize `fragment` into the document at `placement`. Called by the
-    /// injected `paste` action; the fragment may have been copied from a different (but
-    /// `clipboard_accepts`-compatible) app.
-    fn paste_operations(&mut self, _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
+    fn paste_operations(&self, _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
         Ok(Vec::new())
     }
-    /// ⏱️ Effects the host should dispatch right after a refresh (not tied to any one action) —
-    /// the chokepoint for self-sustaining background work: since every action, document load, undo,
-    /// and remote operation is followed by a `refreshUi` pass, an app that needs to notice "something changed,
-    /// keep going" (e.g. a `flowEvalTick` chain resuming an off-main-thread evaluation) arms it here
-    /// instead of duplicating the check into every mutating action. Default no-operation.
-    fn pending_effects(&mut self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Vec<HostEffect> {
+    fn pending_effects(&self, _doc: &DocumentView<'_, Self::Projection>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewState) -> Vec<HostEffect> {
         Vec::new()
     }
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, view_state: &ViewState) -> UiNode;
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewState) -> UiNode;
     /// 🪟️ Keyed by window INSTANCE id (from `view_state.window_instances`), not window kind — an app with
     /// two open instances of the same kind (e.g. split panes) returns one entry per instance so their
     /// chrome/options never collapse together. Apps with a single window kind and no splitting return
@@ -3505,6 +3566,7 @@ pub trait DocumentApp: Send + 'static {
     fn window_engagements(
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
+        _cfg: &ConfigView<'_, Self::Config>,
         _view_state: &ViewState,
     ) -> HashMap<String, WindowEngagement> {
         HashMap::new()
@@ -3513,6 +3575,7 @@ pub trait DocumentApp: Send + 'static {
     fn window_measures(
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
+        _cfg: &ConfigView<'_, Self::Config>,
         _view_state: &ViewState,
     ) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
@@ -3524,6 +3587,7 @@ pub trait DocumentApp: Send + 'static {
     fn tool_measures(
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
+        _cfg: &ConfigView<'_, Self::Config>,
         _view_state: &ViewState,
     ) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
@@ -3548,6 +3612,7 @@ pub trait DocumentApp: Send + 'static {
         &self,
         _request: &ContextMenuRequest,
         _doc: &DocumentView<'_, Self::Projection>,
+        _cfg: &ConfigView<'_, Self::Config>,
         _view_state: &ViewState,
         _registry: &AppActionRegistry,
     ) -> Vec<ContextMenuItemSpec> {
@@ -3578,11 +3643,11 @@ pub trait DocumentApp: Send + 'static {
     /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
     /// state directly, so a headless import is exactly as undoable/syncable as a UI edit.
     fn import_media(
-        &mut self,
+        &self,
         _port: &str,
         _media: &Media,
         _doc: &DocumentView<'_, Self::Projection>,
-    ) -> Result<ActionEmit<Self::Operation>, MediaError> {
+    ) -> Result<ActionEmit<Self::Operation, Self::ConfigOperation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
     /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
@@ -3964,9 +4029,10 @@ impl<'a> Menu<'a> {
 pub struct VcsDocumentApp<A: DocumentApp> {
     app: A,
     store: DocumentStore<A::Projection, A::Operation>,
+    config_store: ConfigStore<A::Config, A::ConfigOperation>,
     /// @emoji 🗂️ Keyed on `(store.generation(), log_generation, history_filter)` — any of the three
     /// changing invalidates the cached projection/`HistoryView` pair.
-    cache: Option<((u64, u64, HistoryCommandFilter), A::Projection, HistoryView)>,
+    cache: Option<((u64, u64, u64, HistoryCommandFilter), A::Projection, A::Config, HistoryView)>,
     registry: AppActionRegistry,
     /// @emoji 🧾️ Append-only session command log — see `🔖️CommandLog`. Never persisted, never
     /// truncated: undo/redo/revert push entries, they never remove any.
@@ -4006,11 +4072,20 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             app.initial_projection(),
             None,
         );
+        let config_id = format!("{}-config", app.app_id());
+        let config_envelope = create_config_envelope::<A::Config, A::ConfigOperation>(
+            app.config_schema(),
+            &config_id,
+            app.initial_config(),
+            None,
+        );
         let mut store = DocumentStore::new(envelope);
+        let mut config_store = ConfigStore::new(config_envelope);
         app.seed(&mut store);
         Self {
             app,
             store,
+            config_store,
             cache: None,
             registry,
             command_log: Vec::new(),
@@ -4176,20 +4251,26 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// after `backfill_command_log` — backfill itself may `push_log_entry` (bumping `log_generation`),
     /// so keying only on the pre-backfill snapshot would store a stale key and thrash on every call.
     fn refresh_cache(&mut self) -> Result<(), String> {
-        let key = (self.store.generation(), self.log_generation, self.history_filter);
-        if self.cache.as_ref().map(|(cached_key, _, _)| *cached_key) == Some(key) {
+        let key = (self.store.generation(), self.config_store.generation(), self.log_generation, self.history_filter);
+        if self.cache.as_ref().map(|(cached_key, _, _, _)| *cached_key) == Some(key) {
             return Ok(());
         }
         self.backfill_command_log();
-        let key = (self.store.generation(), self.log_generation, self.history_filter);
-        let projection = match self.cache.take() {
-            // 🗂️ Only the store's generation actually invalidates the materialized projection — a
-            // log-generation/filter-only change reuses it instead of re-replaying the whole document.
-            Some((cached_key, projection, _)) if cached_key.0 == key.0 => projection,
-            _ => self.store.projection().map_err(|error| error.to_string())?,
+        let key = (self.store.generation(), self.config_store.generation(), self.log_generation, self.history_filter);
+        let (projection, config) = match self.cache.take() {
+            Some((cached_key, projection, config, _)) if cached_key.0 == key.0 && cached_key.1 == key.1 => (projection, config),
+            Some((cached_key, projection, _, _)) if cached_key.0 == key.0 => {
+                let config = self.config_store.projection().map_err(|error| error.to_string())?;
+                (projection, config)
+            },
+            _ => {
+                let projection = self.store.projection().map_err(|error| error.to_string())?;
+                let config = self.config_store.projection().map_err(|error| error.to_string())?;
+                (projection, config)
+            },
         };
         let history = self.build_history_view();
-        self.cache = Some((key, projection, history));
+        self.cache = Some((key, projection, config, history));
         Ok(())
     }
 
@@ -4343,8 +4424,24 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// `Apply`/`AmendLast`, records the resulting edit, and builds the `InvocationResult` from it.
     /// `verb` is the action/command id, used to resolve the registry kind/label and to synthesize the
     /// `InvocationId`.
-    fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Operation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
-        let ActionEmit { operations, description, coalesce_key, effects, events, ui_scope, inverse } = emit;
+    fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Operation, A::ConfigOperation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let ActionEmit { operations, config_operations, description, coalesce_key, effects, events, ui_scope, inverse } = emit;
+        if !config_operations.is_empty() {
+            self.config_store.set_local_actor_id(Some(meta.actor.clone()));
+            let config_coalesce = coalesce_key.clone();
+            let config_command = match config_coalesce {
+                Some(key) => DocumentCommand::AmendLast {
+                    operations: config_operations,
+                    coalesce_key: Some(format!("config:{key}")),
+                },
+                None => DocumentCommand::Apply {
+                    operations: config_operations,
+                    description: description.clone(),
+                },
+            };
+            self.config_store.dispatch(config_command).map_err(|error| error.to_string())?;
+            self.cache = None;
+        }
         if operations.is_empty() {
             // 🧾️ The bugfix this ticket is about: an op-less dispatch used to return here without ever
             // reaching the command log. An app-declared action logs under its declared kind (so an
@@ -4447,7 +4544,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             let target = entry_seq.and_then(|seq| {
                 self.cache
                     .as_ref()
-                    .and_then(|(_, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible))
+                    .and_then(|(_, _, _, history)| history.commands.iter().find(|entry| entry.seq == seq && entry.revertible))
                     .map(|entry| (entry.edit_id.clone(), entry.kind, entry.inverse.clone()))
             });
             match target {
@@ -4538,16 +4635,16 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             self.refresh_cache()?;
             let emit = {
                 let VcsDocumentApp { app, cache, .. } = self;
-                let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = DocumentView { projection, history };
+                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
                 match action {
-                    "copy" => match app.copy_fragment(&doc, view_state) {
+                    "copy" => match app.copy_fragment(&doc, &cfg, view_state) {
                         Ok(fragment) => ActionEmit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..ActionEmit::default() },
                         Err(_) => ActionEmit::default(),
                     },
                     "cut" => {
-                        let fragment = app.copy_fragment(&doc, view_state).ok();
-                        let operations = app.cut_operations(&doc, view_state);
+                        let fragment = app.copy_fragment(&doc, &cfg, view_state).ok();
+                        let operations = app.cut_operations(&doc, &cfg, view_state);
                         let mut emit = ActionEmit::operations(operations);
                         emit.description = Some("Cut".into());
                         if let Some(fragment) = fragment {
@@ -4585,9 +4682,9 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             let dispatch_args = materialized_args.as_ref().or(args);
             let emit = {
                 let VcsDocumentApp { app, cache, .. } = self;
-                let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = DocumentView { projection, history };
-                app.handle_action(action, dispatch_args, &doc, view_state)
+                let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+                app.handle_action(action, dispatch_args, &doc, &cfg, view_state)
             };
             if let Some(def) = &definition {
                 if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.operations.is_empty() {
@@ -4615,9 +4712,9 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         let materialized_args = Self::materialize_args(&format!("command '{command}'"), &definition.args, args)?;
         let emit = {
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            app.handle_command(command, Some(&materialized_args), &doc, view_state)
+            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+            app.handle_command(command, Some(&materialized_args), &doc, &cfg, view_state)
         };
         self.dispatch_emit(command, emit, meta)
     }
@@ -4631,9 +4728,9 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.refresh_cache()?;
         let typed = {
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
-            app.handle_typed_command(command_bytes, &doc, view_state)
+            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+            app.handle_typed_command(command_bytes, &doc, &cfg, view_state)
         };
         match typed {
             Some(Ok(emit)) => self.dispatch_emit("typed-command", emit, meta),
@@ -4657,8 +4754,8 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.refresh_cache()?;
         let emit = {
             let VcsDocumentApp { app, cache, .. } = self;
-            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history };
+            let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
             app.import_media(port, media, &doc).map_err(|error| error.to_string())?
         };
         self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
@@ -4834,7 +4931,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         self.refresh_cache()?;
         if body_key == FRAMEWORK_HISTORY_BODY_KEY {
             // 🕰️ Framework-owned, projection-independent — served before any app body-key match.
-            let (_, _, history) = self.cache.as_ref().expect("cache refreshed above");
+            let (_, _, _, history) = self.cache.as_ref().expect("cache refreshed above");
             return Ok(ui_history_panel(history, &self.registry.controller_id, is_de_locale(view_state)));
         }
         if let Some(json) = projection_override_json {
@@ -4842,12 +4939,15 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                 serde_json::from_str(json).map_err(|error| error.to_string())?;
             let history = self.build_history_view();
             let doc = DocumentView { projection: &projection, history: &history };
-            return Ok(self.app.render(body_key, &doc, view_state));
+            let config = self.config_store.projection().unwrap_or_else(|_| A::Config::default());
+            let cfg = ConfigView { projection: &config };
+            return Ok(self.app.render(body_key, &doc, &cfg, view_state));
         }
         let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history };
-        Ok(app.render(body_key, &doc, view_state))
+        let cfg = ConfigView { projection: config };
+        Ok(app.render(body_key, &doc, &cfg, view_state))
     }
 
     fn window_engagements(&mut self, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
@@ -4855,9 +4955,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             return HashMap::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
-        app.window_engagements(&doc, view_state)
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+        app.window_engagements(&doc, &cfg, view_state)
     }
 
     fn window_measures(&mut self, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
@@ -4865,9 +4965,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             return HashMap::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
-        app.window_measures(&doc, view_state)
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+        app.window_measures(&doc, &cfg, view_state)
     }
 
     fn tool_measures(&mut self, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
@@ -4875,9 +4975,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             return HashMap::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
-        app.tool_measures(&doc, view_state)
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+        app.tool_measures(&doc, &cfg, view_state)
     }
 
     fn pending_effects(&mut self, view_state: &ViewState) -> Vec<HostEffect> {
@@ -4885,9 +4985,9 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             return Vec::new();
         }
         let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
-        app.pending_effects(&doc, view_state)
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+        app.pending_effects(&doc, &cfg, view_state)
     }
 
     fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewState) -> Vec<ContextMenuItemSpec> {
@@ -4895,16 +4995,16 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             return Vec::new();
         }
         let VcsDocumentApp { app, cache, registry, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
-        app.context_menu(request, &doc, view_state, registry)
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+        app.context_menu(request, &doc, &cfg, view_state, registry)
     }
 
     fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
         self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
         let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
         app.export_media(port, &doc)
     }
 
@@ -4917,8 +5017,8 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
         self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
         let VcsDocumentApp { app, cache, .. } = self;
-        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history };
+        let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
         app.media_fingerprint(port, &doc)
     }
 
@@ -5751,22 +5851,18 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
                 let manifest_bytes = store::pack_rt::encode_wire_value(&serde_json::to_value(&plugin_manifest()).unwrap_or_default());
                 frames.push(protocol::AppFrame::Welcome { channel_version: protocol::CHANNEL_VERSION, instance: instance_id, manifest: manifest_bytes });
             }
-            protocol::AppCommand::Configure { seq, config } => {
+            protocol::AppCommand::ConfigCommand { seq, command } => {
                 let applied = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
-                    instance.app.apply_config_bytes(&config)
+                    instance.app.apply_config_bytes(&command)
                 });
                 match applied {
                     Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
                     Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "config".into(), message }),
                 }
             }
-            protocol::AppCommand::Command { seq, command, view_state } => {
-                let view_state: ViewState = store::pack_rt::decode_wire_value(&view_state)
-                    .ok()
-                    .and_then(|value| serde_json::from_value(value).ok())
-                    .unwrap_or_default();
-                set_instance_view_state(instance_id, view_state.clone());
+            protocol::AppCommand::Command { seq, command } => {
+                let view_state = instance_view_state(instance_id);
                 let meta = ActionMeta { actor: instance_actor(instance_id), instance_id };
                 let dispatched = with_instances_mut(|list| {
                     let instance = find_instance(list, instance_id)?;
@@ -5900,6 +5996,20 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
             protocol::AppCommand::ReadDocument { seq } => match plugin_document_pack(instance_id) {
                 Ok(files) => frames.push(protocol::AppFrame::Document { in_reply_to: seq, pack: files.pack, spr: files.spr, ops: files.ops }),
                 Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "handler".into(), message }),
+            },
+            protocol::AppCommand::LoadConfig { seq, pack, spr } => {
+                let wire = store::encode_document_pack_bytes(&pack, &spr);
+                let applied = with_instances_mut(|list| {
+                    let instance = find_instance(list, instance_id)?;
+                    instance.app.apply_config_bytes(&wire)
+                });
+                match applied {
+                    Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
+                    Err(message) => frames.push(protocol::AppFrame::Error { in_reply_to: Some(seq), code: "config".into(), message }),
+                }
+            }
+            protocol::AppCommand::ReadConfig { seq } => {
+                frames.push(protocol::AppFrame::Config { in_reply_to: seq, pack: Vec::new(), spr: Vec::new(), ops: String::new() });
             },
             protocol::AppCommand::AttachBackbone { seq, uri } => match plugin_attach_backbone(instance_id, &uri) {
                 Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
@@ -6035,10 +6145,10 @@ mod semio_plugin_macro_tests {
     //! actions that emit no operations, history interception, and remote-operation ingest idempotency.
 
     use crate::app::{
-        ActionEmit, ActionMeta, App, AppActionRegistry, CommandView, DocumentApp, DocumentView, HistoryCommandFilter, HistoryView,
-        InverseAction, Menu, PluginApp, VcsDocumentApp, ui_history_panel,
+        ActionEmit, ActionMeta, App, AppActionRegistry, CommandView, ConfigView, DocumentApp, DocumentView, HistoryCommandFilter, HistoryView,
+        InverseAction, Menu, NoConfig, NoConfigOperation, PluginApp, VcsDocumentApp, ui_history_panel,
     };
-    use crate::{ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
+    use crate::{IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState, ui_text};
     use ui_wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
     use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement, UiDirtyScope};
     use semio_framework_core::{ActionArgDef, ActionKind, MediaForm, NOTE_SHELL_COMMAND_ACTION_ID, REVERT_TO_COMMAND_ACTION_ID, SET_HISTORY_COMMAND_FILTER_ACTION_ID};
@@ -6112,13 +6222,15 @@ mod semio_plugin_macro_tests {
     /// with — used to prove framework-owned interceptions (e.g. `noteShellCommand`) never reach it.
     #[derive(Default)]
     struct TestApp {
-        selected: Option<String>,
-        received_actions: Vec<String>,
+        selected: std::cell::RefCell<Option<String>>,
+        received_actions: std::cell::RefCell<Vec<String>>,
     }
 
     impl DocumentApp for TestApp {
         type Projection = TestProjection;
         type Operation = TestOperation;
+        type Config = NoConfig;
+        type ConfigOperation = NoConfigOperation;
 
         fn app_id(&self) -> &str {
             "synthetic-play"
@@ -6133,13 +6245,14 @@ mod semio_plugin_macro_tests {
         }
 
         fn handle_action(
-            &mut self,
+            &self,
             action: &str,
             args: Option<&Value>,
             doc: &DocumentView<'_, TestProjection>,
+            _cfg: &ConfigView<'_, NoConfig>,
             view_state: &ViewState,
         ) -> ActionEmit<TestOperation> {
-            self.received_actions.push(action.to_string());
+            self.received_actions.borrow_mut().push(action.to_string());
             let label_arg = || {
                 args.and_then(|value| value.get("value"))
                     .and_then(Value::as_str)
@@ -6173,8 +6286,8 @@ mod semio_plugin_macro_tests {
                 // 🧪️ A real `View`-kind inverse, computed from the app's own runtime state (mirrors
                 // camera-style apps): captures the pre-dispatch selection so backwards can restore it.
                 "select" => {
-                    let previous = self.selected.clone();
-                    self.selected = args
+                    let previous = self.selected.borrow().clone();
+                    *self.selected.borrow_mut() = args
                         .and_then(|value| value.get("id"))
                         .and_then(Value::as_str)
                         .map(str::to_string);
@@ -6206,10 +6319,11 @@ mod semio_plugin_macro_tests {
         }
 
         fn handle_command(
-            &mut self,
+            &self,
             command: &str,
             args: Option<&Value>,
             doc: &DocumentView<'_, TestProjection>,
+            _cfg: &ConfigView<'_, NoConfig>,
             _view_state: &ViewState,
         ) -> ActionEmit<TestOperation> {
             match command {
@@ -6226,7 +6340,7 @@ mod semio_plugin_macro_tests {
             }
         }
 
-        fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> UiNode {
+        fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> UiNode {
             ui_text(format!("count={}", doc.projection.count))
         }
 
@@ -6234,7 +6348,7 @@ mod semio_plugin_macro_tests {
             Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
         }
 
-        fn copy_fragment(&mut self, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+        fn copy_fragment(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
             if doc.projection.label.is_empty() {
                 return Err(ClipboardError::EmptySelection);
             }
@@ -6248,7 +6362,7 @@ mod semio_plugin_macro_tests {
             })
         }
 
-        fn cut_operations(&mut self, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> Vec<TestOperation> {
+        fn cut_operations(&self, doc: &DocumentView<'_, TestProjection>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewState) -> Vec<TestOperation> {
             if doc.projection.label.is_empty() {
                 Vec::new()
             } else {
@@ -6256,7 +6370,7 @@ mod semio_plugin_macro_tests {
             }
         }
 
-        fn paste_operations(&mut self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestOperation>, ClipboardError> {
+        fn paste_operations(&self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestOperation>, ClipboardError> {
             if !self.clipboard_accepts().contains(&fragment.media_type) {
                 return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
             }
@@ -6273,6 +6387,7 @@ mod semio_plugin_macro_tests {
             &self,
             _request: &ContextMenuRequest,
             doc: &DocumentView<'_, TestProjection>,
+            _cfg: &ConfigView<'_, NoConfig>,
             _view_state: &ViewState,
             registry: &AppActionRegistry,
         ) -> Vec<ContextMenuItemSpec> {
@@ -6383,7 +6498,7 @@ mod semio_plugin_macro_tests {
         app.handle_action("select", Some(&json!({ "id": "a" })), &ViewState::default(), &meta()).expect("select a");
         app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
         app.handle_action("select", Some(&json!({ "id": "b" })), &ViewState::default(), &meta()).expect("select b");
-        assert_eq!(app.test_app().selected, Some("b".to_string()));
+        assert_eq!(*app.test_app().selected.borrow(), Some("b".to_string()));
 
         let history = app.test_history();
         let select_b = history
@@ -6398,7 +6513,7 @@ mod semio_plugin_macro_tests {
         app.handle_action(REVERT_TO_COMMAND_ACTION_ID, Some(&json!({ "entrySeq": seq })), &ViewState::default(), &meta())
             .expect("revertToCommand on a View row");
 
-        assert_eq!(app.test_app().selected, Some("a".to_string()), "backwards must replay the stored inverse and restore runtime state");
+        assert_eq!(*app.test_app().selected.borrow(), Some("a".to_string()), "backwards must replay the stored inverse and restore runtime state");
         let after = app.test_history();
         // ⏪️ The replay redispatches "select" through the normal `dispatch_action` path, which folds
         // consecutive identical (action_id, kind, edit_id: None) rows just like any other View dispatch
@@ -6761,7 +6876,7 @@ mod semio_plugin_macro_tests {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let args = json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" });
         app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &ViewState::default(), &meta()).expect("noteShellCommand");
-        assert!(app.test_app().received_actions.is_empty(), "interception must happen before the app ever sees noteShellCommand");
+        assert!(app.test_app().received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1);
         let entry = &history.commands[0];
@@ -6770,7 +6885,7 @@ mod semio_plugin_macro_tests {
         assert!(entry.label.contains("dark"));
 
         app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &ViewState::default(), &meta()).expect("noteShellCommand again");
-        assert!(app.test_app().received_actions.is_empty());
+        assert!(app.test_app().received_actions.borrow().is_empty());
         let history = app.test_history();
         assert_eq!(history.commands.len(), 1, "the same commandId folds instead of appending");
         assert_eq!(history.commands[0].count, 2);
@@ -8117,8 +8232,8 @@ mod tests {
 }
 
 pub use app::{
-    ActionEmit, ActionMeta, App, AppBuilder, AppInstance, DocumentApp, DocumentView, HistoryView,
-    KeybindingSpec, MediaClass, MediaType, ModeSpec, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp,
+    ActionEmit, ActionMeta, App, AppBuilder, AppInstance, ConfigView, DocumentApp, DocumentView, HistoryView,
+    KeybindingSpec, MediaClass, MediaType, ModeSpec, NoConfig, NoConfigOperation, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp,
     PluginBundle, ArtifactKindSpec, VcsDocumentApp, WindowKindSpec,
 };
 pub use semio_framework_core::{MediaForm, MediaPortDirection, MediaPortSpec};

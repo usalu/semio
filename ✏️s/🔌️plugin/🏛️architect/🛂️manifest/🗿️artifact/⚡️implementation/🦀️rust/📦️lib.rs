@@ -1426,6 +1426,8 @@ impl ArchitectApp {
 impl DocumentApp for ArchitectApp {
     type Projection = Program;
     type Operation = ProgramOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         ARCHITECT_APP_ID

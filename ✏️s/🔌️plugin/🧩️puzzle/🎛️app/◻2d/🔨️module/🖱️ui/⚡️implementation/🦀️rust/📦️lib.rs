@@ -1651,6 +1651,8 @@ impl Default for Puzzle2dPlayApp {
 impl DocumentApp for Puzzle2dPlayApp {
     type Projection = Puzzle2dPlayProjection;
     type Operation = Puzzle2dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         PUZZLE2D_PLAY_APP_ID

@@ -356,6 +356,14 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Every single app must be
+- non destructive
+- have configuration (every ui interaction changes the configuration)
+- have a ui that only displays the results from headless engine
+Every app is instiatable as a node as part of a workflow. When a node is opened and ui interaction happens then the configuration is changed and saved as part of the workflow.
+
+---
+
 Every single app must have a headless engine with bidirectional streaming of binary commands according protocol.
 Every ui interaction is just forwarded as command.
 This architecture is crucial because workflows that use apps must be executable in a headless environment without and ui mock api.

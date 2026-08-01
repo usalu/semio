@@ -13,7 +13,7 @@ path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app
 [dependencies]
 forms = { path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/⚡️implementation/🦀️rust", package = "semio-s-app-forms" }
 forms_op = { path = "../../../../../../../../../✏️s/🔌️plugin/📋️forms/🎛️app/📋️forms/🔨️module/🔧️op/⚡️implementation/🦀️rust", package = "semio-s-app-forms-op" }
-playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🔁️workflow/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-workflow" }
+playbook = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📖️playbook/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-playbook" }
 protocol = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 store = { path = "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 

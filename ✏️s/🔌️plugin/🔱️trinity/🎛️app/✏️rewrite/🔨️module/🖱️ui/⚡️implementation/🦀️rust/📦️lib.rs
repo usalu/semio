@@ -1173,6 +1173,8 @@ impl Default for TrinityRewritePlayApp {
 impl DocumentApp for TrinityRewritePlayApp {
     type Projection = RewriteRuleState;
     type Operation = RewriteRuleOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         TRINITY_REWRITE_PLAY_APP_ID
@@ -1187,10 +1189,11 @@ impl DocumentApp for TrinityRewritePlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, RewriteRuleState>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<RewriteRuleOperation> {
         let state = doc.projection;

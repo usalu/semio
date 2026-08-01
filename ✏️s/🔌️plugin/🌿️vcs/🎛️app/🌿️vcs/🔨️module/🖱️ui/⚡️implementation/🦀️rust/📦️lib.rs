@@ -539,6 +539,8 @@ pub struct VcsPlayApp {
 impl DocumentApp for VcsPlayApp {
     type Projection = VcsDemoProjection;
     type Operation = VcsDemoOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         VCS_PLAY_APP_ID
@@ -557,10 +559,11 @@ impl DocumentApp for VcsPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, VcsDemoProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<VcsDemoOperation> {
         // "undo"/"redo"/"commitCheckpoint"/"createAlternative"/"switchAlternative"/"checkoutCheckpoint"

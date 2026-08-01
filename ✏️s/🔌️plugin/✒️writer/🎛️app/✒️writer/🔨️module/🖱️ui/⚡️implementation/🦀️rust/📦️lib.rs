@@ -463,6 +463,8 @@ pub struct WriterPlayApp {
 impl DocumentApp for WriterPlayApp {
     type Projection = WriterProjection;
     type Operation = WriterOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         WRITER_PLAY_APP_ID
@@ -477,10 +479,11 @@ impl DocumentApp for WriterPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, WriterProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         _view_state: &ViewState,
     ) -> ActionEmit<WriterOperation> {
         // undo/redo/checkpoint/alternative never reach here — `VcsDocumentApp` intercepts them.

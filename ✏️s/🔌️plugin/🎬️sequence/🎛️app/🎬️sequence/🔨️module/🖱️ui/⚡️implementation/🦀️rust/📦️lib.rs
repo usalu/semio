@@ -370,6 +370,8 @@ impl SequencePlayApp {
 impl DocumentApp for SequencePlayApp {
     type Projection = SequenceFixture;
     type Operation = SequenceOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         SEQUENCE_PLAY_APP_ID

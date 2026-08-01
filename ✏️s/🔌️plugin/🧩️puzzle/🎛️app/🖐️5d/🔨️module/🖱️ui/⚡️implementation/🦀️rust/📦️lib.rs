@@ -2282,6 +2282,8 @@ impl Puzzle5dPlayApp {
 impl DocumentApp for Puzzle5dPlayApp {
     type Projection = Puzzle5dPlayProjection;
     type Operation = Puzzle5dOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         PUZZLE5D_PLAY_APP_ID

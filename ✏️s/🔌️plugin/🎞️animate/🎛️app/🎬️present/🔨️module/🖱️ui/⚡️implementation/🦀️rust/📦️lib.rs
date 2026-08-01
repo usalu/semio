@@ -465,6 +465,8 @@ pub struct AnimatePresentPlayApp {
 impl DocumentApp for AnimatePresentPlayApp {
     type Projection = PresentDeck;
     type Operation = PresentOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         ANIMATE_PRESENT_PLAY_APP_ID

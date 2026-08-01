@@ -1669,6 +1669,8 @@ impl DrawPlayApp {
 impl DocumentApp for DrawPlayApp {
     type Projection = DrawDocument;
     type Operation = DrawOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         DRAW_PLAY_APP_ID
@@ -1683,10 +1685,11 @@ impl DocumentApp for DrawPlayApp {
     }
 
     fn handle_action(
-        &mut self,
+        &self,
         action: &str,
         args: Option<&Value>,
         doc: &DocumentView<'_, DrawDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
         view_state: &ViewState,
     ) -> ActionEmit<DrawOperation> {
         let document = doc.projection;

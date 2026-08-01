@@ -560,6 +560,8 @@ struct ModuleApp;
 impl DocumentApp for ModuleApp {
     type Projection = ModuleRenderPayload;
     type Operation = ModulePayloadOperation;
+        type Config = semio_framework_plugin::NoConfig;
+        type ConfigOperation = semio_framework_plugin::NoConfigOperation;
 
     fn app_id(&self) -> &str {
         MODULE_APP_ID
