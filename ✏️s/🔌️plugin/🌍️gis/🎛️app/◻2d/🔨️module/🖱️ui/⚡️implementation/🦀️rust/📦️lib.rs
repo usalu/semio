@@ -233,7 +233,7 @@ fn gis2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: GIS2D_PLAY_APP_ID.into(),
         action: action.into(),
-        args,
+        args: semio_framework_plugin::optional_json_to_dsl(args),
     }
 }
 

@@ -80,7 +80,7 @@ struct WorkflowEdgeRecord {
 
 //#region 🔖️DocumentHelpers
 fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: SEQUENCE_PLAY_APP_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: SEQUENCE_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🧰️ Builds a {@link SequenceHost} seeded from a projection so an action can mutate it (with all the

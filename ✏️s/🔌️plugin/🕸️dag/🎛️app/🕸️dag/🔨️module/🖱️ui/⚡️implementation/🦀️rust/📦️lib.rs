@@ -49,7 +49,7 @@ impl Default for DagPlayRuntime {
 
 //#region 🔖️DocumentHelpers
 fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: DAG_PLAY_APP_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: DAG_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🗑️ Operations removing `node_ids` and every edge touching them, for delete-node / delete-selection.

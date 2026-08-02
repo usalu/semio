@@ -28,7 +28,8 @@
 //! `🔖️Engine`'s doc for why a factory, not a stored engine).
 //!
 //! 🎯️ Design choice (diff convention, unchanged): `protocol::OperationEnvelope`'s `diff`/`inverse`
-//! payloads are schema-erased `serde_json::Value`s — `db_document` has no compile-time knowledge of
+//! payloads are schema-erased `dsl::DslValue` pathmaps encoded with `store::pack_rt::encode_wire_value`
+//! — `db_document` has no compile-time knowledge of
 //! any concrete document schema, so it adopts one generic convention for BOTH: a JSON *object*
 //! whose keys are `db_state`-style `/`-segmented paths and whose values are either the new JSON
 //! value to set at that path, or JSON `null` as an explicit tombstone (path deleted). This is a
@@ -45,6 +46,8 @@ use std::sync::Arc;
 
 use db_core::DbError;
 use protocol::OperationDiff as _;
+
+use dsl::DslValue;
 
 //#region 🔖️Ids
 /// @emoji 🌉️ `protocol::DocumentId` → `db_core::DocumentId`, the lossless single-`String` bridge
@@ -64,11 +67,14 @@ fn to_core_actor_id(id: &protocol::ActorId) -> db_core::ActorId {
 // `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the mapper with an owned `E`, so a
 // by-reference signature would not type-check at any of those call sites despite the function
 // body itself only borrowing `err` to format it.
-#[allow(clippy::needless_pass_by_value)]
-fn json_err(err: serde_json::Error) -> DbError {
-    DbError::InvalidArgument(format!("db_document json error: {err}"))
+fn wire_err(err: store::PackError) -> DbError {
+    DbError::InvalidArgument(format!("db_document wire error: {err}"))
 }
-//#endregion 🔖️Ids
+
+fn dsl_err(err: String) -> DbError {
+    DbError::InvalidArgument(format!("db_document dsl error: {err}"))
+}
+
 
 //#region 🔖️Command
 /// @emoji 📦️ One atomically-submitted group of causally-related operations against a single
@@ -118,30 +124,32 @@ impl Default for SubmitOptions {
 /// that's `db_document`-and-above's future typed path).
 pub const DB_PATHMAP_SCHEMA: &str = "db.pathmap.v1";
 
-/// @emoji 🎯️ `serde_json::Value` -> deterministic bytes (`Value::Object` serializes with
-/// BTreeMap-sorted keys, so this is stable across runs/processes).
-fn encode_pathmap(value: &serde_json::Value) -> Vec<u8> {
-    serde_json::to_vec(value).unwrap_or_default()
+/// @emoji 🎯️ `DslValue` object pathmap -> `store::pack_rt::encode_wire_value` bytes.
+fn encode_pathmap(value: &DslValue) -> Vec<u8> {
+    store::pack_rt::encode_wire_value(value)
 }
 
 /// @emoji 🎯️ Inverse of `encode_pathmap`.
-fn decode_pathmap(bytes: &[u8]) -> Result<serde_json::Value, DbError> {
-    serde_json::from_slice(bytes).map_err(json_err)
+fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
+    store::pack_rt::decode_wire_value(bytes).map_err(wire_err)
 }
 
-/// @emoji 🧮️ Flattens a diff/inverse JSON object into `(path, Some(value) | None)` pairs per this
-/// module's generic path-value convention (see module doc). Errors if `value` is not a JSON
-/// object — this crate's own schema-erased documents have no other shape it can interpret.
-fn entries_from_value(value: &serde_json::Value) -> Result<Vec<(String, Option<serde_json::Value>)>, DbError> {
+/// @emoji 🧮️ Flattens a diff/inverse pathmap object into `(path, Some(value) | None)` pairs per this
+/// module's generic path-value convention (see module doc). Errors if `value` is not an object —
+/// this crate's own schema-erased documents have no other shape it can interpret.
+fn entries_from_value(value: &DslValue) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     let object = value
         .as_object()
-        .ok_or_else(|| DbError::InvalidArgument("diff/inverse payload must be a JSON object of path -> value".to_string()))?;
-    Ok(object.iter().map(|(path, entry)| (path.clone(), if entry.is_null() { None } else { Some(entry.clone()) })).collect())
+        .ok_or_else(|| DbError::InvalidArgument("diff/inverse payload must be a pathmap object".to_string()))?;
+    Ok(object
+        .iter()
+        .map(|(path, entry)| (path.clone(), if entry.is_null() { None } else { Some(entry.clone()) }))
+        .collect())
 }
 
 /// @emoji ➡️ Entries for an envelope's forward diff — empty (not an error) for any schema other
 /// than `DB_PATHMAP_SCHEMA`, see its doc.
-fn diff_entries(diff: &protocol::DocumentDiff) -> Result<Vec<(String, Option<serde_json::Value>)>, DbError> {
+fn diff_entries(diff: &protocol::DocumentDiff) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     if diff.schema.0 != DB_PATHMAP_SCHEMA {
         return Ok(Vec::new());
     }
@@ -150,7 +158,7 @@ fn diff_entries(diff: &protocol::DocumentDiff) -> Result<Vec<(String, Option<ser
 
 /// @emoji ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source) — same
 /// foreign-schema handling as `diff_entries`.
-fn inverse_entries(inverse: &protocol::InverseOperation) -> Result<Vec<(String, Option<serde_json::Value>)>, DbError> {
+fn inverse_entries(inverse: &protocol::InverseOperation) -> Result<Vec<(String, Option<DslValue>)>, DbError> {
     if inverse.schema.0 != DB_PATHMAP_SCHEMA {
         return Ok(Vec::new());
     }
@@ -160,17 +168,13 @@ fn inverse_entries(inverse: &protocol::InverseOperation) -> Result<Vec<(String, 
 /// @emoji 🧮️ The inverse of `entries_from_value` — rebuilds a JSON object from path-value pairs,
 /// `None` becoming an explicit `null` tombstone. Used by `undo` to construct a compensating
 /// envelope's diff/inverse payloads.
-fn entries_to_value(entries: &[(String, Option<serde_json::Value>)]) -> serde_json::Value {
-    let mut object = serde_json::Map::with_capacity(entries.len());
-    for (path, value) in entries {
-        object.insert(path.clone(), value.clone().unwrap_or(serde_json::Value::Null));
-    }
-    serde_json::Value::Object(object)
+fn entries_to_value(entries: &[(String, Option<DslValue>)]) -> DslValue {
+    DslValue::Object(entries.iter().map(|(path, value)| (path.clone(), value.clone().unwrap_or(DslValue::Null))).collect())
 }
 
 /// @emoji 👣️ The `TouchedSet` a set of entries would write — shared by `DocumentState::
 /// apply_entries` and preview publishing.
-fn entries_touched(entries: &[(String, Option<serde_json::Value>)]) -> db_state::TouchedSet {
+fn entries_touched(entries: &[(String, Option<DslValue>)]) -> db_state::TouchedSet {
     let mut touched = db_state::TouchedSet::new();
     for (path, _) in entries {
         touched.record(db_state::TouchedRegion::write(path.clone()));
@@ -202,18 +206,16 @@ where
 {
     let diff = op.diff(base);
     let post = diff.apply(base);
-    let mut forward = serde_json::Map::with_capacity(1);
-    forward.insert(path.to_string(), serde_json::to_value(&post).map_err(json_err)?);
-    let mut backward = serde_json::Map::with_capacity(1);
-    backward.insert(path.to_string(), serde_json::to_value(base).map_err(json_err)?);
+    let forward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(&post).map_err(dsl_err)?)]);
+    let backward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(base).map_err(dsl_err)?)]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::OperationEnvelope {
         operation_id: op.operation_id().unwrap_or(default_operation_id),
         document_id: document,
         actor: op.author_id().unwrap_or(default_actor),
         dependencies: op.dependencies(),
-        diff: protocol::DocumentDiff { schema: schema.clone(), payload: encode_pathmap(&serde_json::Value::Object(forward)) },
-        inverse: protocol::InverseOperation { schema, payload: encode_pathmap(&serde_json::Value::Object(backward)) },
+        diff: protocol::DocumentDiff { schema: schema.clone(), payload: encode_pathmap(&forward) },
+        inverse: protocol::InverseOperation { schema, payload: encode_pathmap(&backward) },
         timestamp: op.timestamp().unwrap_or(default_timestamp),
     })
 }
@@ -322,7 +324,7 @@ impl DocumentState {
         &self,
         operation_id: &protocol::OperationId,
         dependencies: &[protocol::OperationId],
-        entries: &[(String, Option<serde_json::Value>)],
+        entries: &[(String, Option<DslValue>)],
     ) -> Result<(DocumentState, db_state::TouchedSet, Vec<ConflictRecord>), DbError> {
         let mut values = self.values.clone();
         let mut last_writer = self.last_writer.clone();
@@ -339,8 +341,8 @@ impl DocumentState {
                 }
             }
             match value {
-                Some(json) => {
-                    let bytes = serde_json::to_vec(json).map_err(json_err)?;
+                Some(dsl_value) => {
+                    let bytes = store::pack_rt::encode_wire_value(dsl_value);
                     values = values.insert(path.clone(), bytes);
                 }
                 None => values = values.remove(path),
@@ -928,14 +930,26 @@ impl DocumentEngine {
     /// (never touches the WAL), per the contract's preview law. Backed by a real
     /// `db_preview::PreviewStore` this revision (previously a local, minimal stand-in).
     pub fn publish_preview(&mut self, entries: &[(String, Option<serde_json::Value>)], now_ms: u64) -> Result<db_preview::PreviewId, DbError> {
-        let touched = entries_touched(entries);
+        let dsl_entries: Vec<(String, Option<DslValue>)> = entries
+            .iter()
+            .map(|(path, value)| {
+                Ok((
+                    path.clone(),
+                    value
+                        .as_ref()
+                        .map(|json| dsl::to_dsl_value(json).map_err(dsl_err))
+                        .transpose()?,
+                ))
+            })
+            .collect::<Result<Vec<_>, DbError>>()?;
+        let touched = entries_touched(&dsl_entries);
         let envelope = protocol::OperationEnvelope {
             operation_id: protocol::OperationId(format!("preview-{}", entries.len())),
             document_id: self.protocol_document.clone(),
             actor: protocol::ActorId("preview".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(entries)) },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::Value::Object(serde_json::Map::new())) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)) },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
         };
         self.previews.publish(db_preview::PublishPreviewRequest {
@@ -957,7 +971,7 @@ impl DocumentEngine {
         for (entry_path, value) in diff_entries(&preview.envelope.diff)? {
             if entry_path == path {
                 return match value {
-                    Some(json) => Ok(Some(serde_json::to_vec(&json).map_err(json_err)?)),
+                    Some(dsl_value) => Ok(Some(store::pack_rt::encode_wire_value(&dsl_value))),
                     None => Ok(None),
                 };
             }
@@ -1192,18 +1206,23 @@ mod tests {
         protocol::DocumentId("doc-1".to_string())
     }
 
+    fn stored_json(bytes: &[u8]) -> serde_json::Value {
+        let dsl = store::pack_rt::decode_wire_value(bytes).expect("stored wire value");
+        dsl::from_dsl_value(dsl).expect("stored json value")
+    }
+
     fn envelope(id: &str, deps: &[&str], actor: &str, entries: &[(&str, serde_json::Value)]) -> protocol::OperationEnvelope {
-        let mut payload = serde_json::Map::new();
-        for (path, value) in entries {
-            payload.insert((*path).to_string(), value.clone());
-        }
+        let object: Vec<(String, DslValue)> = entries
+            .iter()
+            .map(|(path, value)| (path.to_string(), dsl::to_dsl_value(value).expect("test envelope dsl")))
+            .collect();
         protocol::OperationEnvelope {
             operation_id: protocol::OperationId(id.to_string()),
             document_id: document_id(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::Value::Object(payload)) },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::Value::Object(serde_json::Map::new())) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)) },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -1269,7 +1288,7 @@ mod tests {
             assert_eq!(entries.len(), 1);
             let (path, value) = &entries[0];
             assert_eq!(path, "counter");
-            let new_value: Counter = serde_json::from_value(value.clone().unwrap()).unwrap();
+            let new_value: Counter = dsl::from_dsl_value(value.clone().unwrap()).unwrap();
             assert_eq!(new_value.0, 15);
         }
     }
@@ -1291,7 +1310,7 @@ mod tests {
         assert!(receipt.state_hash.is_some());
 
         let stored = engine.get("name").unwrap();
-        let value: serde_json::Value = serde_json::from_slice(&stored).unwrap();
+        let value: serde_json::Value = stored_json(&stored);
         assert_eq!(value, serde_json::json!("hello"));
         assert_eq!(engine.frontier().head_seq, 1);
     }
@@ -1312,9 +1331,9 @@ mod tests {
         assert_eq!(reopened.frontier().head_seq, 2);
         assert_eq!(reopened.frontier().commit_seq, 2);
 
-        let name: serde_json::Value = serde_json::from_slice(&reopened.get("name").unwrap()).unwrap();
+        let name: serde_json::Value = stored_json(&reopened.get("name").unwrap());
         assert_eq!(name, serde_json::json!("hello"));
-        let count: serde_json::Value = serde_json::from_slice(&reopened.get("count").unwrap()).unwrap();
+        let count: serde_json::Value = stored_json(&reopened.get("count").unwrap());
         assert_eq!(count, serde_json::json!(2));
     }
 
@@ -1343,7 +1362,7 @@ mod tests {
         assert_eq!(report.commands_replayed, 3);
         assert_eq!(reopened.frontier().head_seq, 6);
         for i in 0..6 {
-            let value: serde_json::Value = serde_json::from_slice(&reopened.get(&format!("path-{i}")).unwrap()).unwrap();
+            let value: serde_json::Value = stored_json(&reopened.get(&format!("path-{i}")).unwrap());
             assert_eq!(value, serde_json::json!(format!("value-{i}")));
         }
     }
@@ -1403,7 +1422,7 @@ mod tests {
         assert_eq!(receipt.conflicts[0].conflicting_with, protocol::OperationId("op-1".to_string()));
         assert_eq!(receipt.conflicts[0].path, "x");
         // Last-writer-wins: the conflicting write still applies.
-        let x: serde_json::Value = serde_json::from_slice(&engine.get("x").unwrap()).unwrap();
+        let x: serde_json::Value = stored_json(&engine.get("x").unwrap());
         assert_eq!(x, serde_json::json!(2));
     }
 
@@ -1438,8 +1457,14 @@ mod tests {
             document_id: document_id(),
             actor: protocol::ActorId("alice".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::json!({ "x": 1 })) },
-            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::json!({ "x": null })) },
+            diff: protocol::DocumentDiff {
+                schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()),
+                payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")),
+            },
+            inverse: protocol::InverseOperation {
+                schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()),
+                payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")),
+            },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         };
         engine.submit(CommandBatch::new(vec![original]).unwrap(), SubmitOptions::default(), 0).unwrap();
@@ -1469,14 +1494,14 @@ mod tests {
 
         let preview_id = engine.publish_preview(&[("y".to_string(), Some(serde_json::json!("preview-value")))], 0).unwrap();
         assert_eq!(engine.preview_status(&preview_id).unwrap(), db_preview::PreviewState::Active);
-        let preview_value: serde_json::Value = serde_json::from_slice(&engine.preview_get(&preview_id, "y").unwrap().unwrap()).unwrap();
+        let preview_value: serde_json::Value = stored_json(&engine.preview_get(&preview_id, "y").unwrap().unwrap());
         assert_eq!(preview_value, serde_json::json!("preview-value"));
         assert!(engine.get("y").is_none(), "a preview must never be visible in committed state");
 
         engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "bob", &[("y", serde_json::json!("committed-value"))])]).unwrap(), SubmitOptions::default(), 1).unwrap();
         assert_eq!(engine.preview_status(&preview_id).unwrap(), db_preview::PreviewState::Superseded, "an intersecting real commit must supersede the preview");
 
-        let committed: serde_json::Value = serde_json::from_slice(&engine.get("y").unwrap()).unwrap();
+        let committed: serde_json::Value = stored_json(&engine.get("y").unwrap());
         assert_eq!(committed, serde_json::json!("committed-value"));
     }
 
@@ -1567,7 +1592,7 @@ mod tests {
         let receipt = authority.submit_blocking(batch, SubmitOptions::default(), 0).unwrap();
         assert_eq!(receipt.frontier.head_seq, 1);
 
-        let queried: serde_json::Value = serde_json::from_slice(&authority.query_blocking("name").unwrap().unwrap()).unwrap();
+        let queried: serde_json::Value = stored_json(&authority.query_blocking("name").unwrap().unwrap());
         assert_eq!(queried, serde_json::json!("hi"));
 
         let frontier = authority.frontier_blocking().unwrap();

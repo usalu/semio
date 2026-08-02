@@ -232,7 +232,7 @@ fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> Action
     ActionDescriptor {
         controller_id: controller_id.into(),
         action: action.into(),
-        args,
+        args: semio_framework_plugin::optional_json_to_dsl(args),
     }
 }
 

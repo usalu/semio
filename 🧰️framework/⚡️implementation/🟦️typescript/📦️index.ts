@@ -1592,7 +1592,7 @@ export type TutorialDocumentEventKind =
   | { readonly kind: "checkpoint"; readonly message?: string }
   | { readonly kind: "checkoutCheckpoint"; readonly checkpointId: string }
   | { readonly kind: "switchAlternative"; readonly alternativeId: string }
-  | { readonly kind: "load"; readonly documentJson: string; readonly previousJson: string };
+  | { readonly kind: "load"; readonly documentDsl: string; readonly previousDsl: string };
 
 export type TutorialDocumentEvent = { readonly at: number; readonly kind: TutorialDocumentEventKind };
 
@@ -1618,7 +1618,7 @@ export type TutorialTracks = {
 };
 
 export type TutorialBase = {
-  readonly documentJson?: string;
+  readonly documentDsl?: string;
   readonly exampleId?: string;
   readonly ui: TutorialUiSnapshot;
   readonly cameras: readonly TutorialCameraKeyframe[];

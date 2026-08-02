@@ -14,7 +14,7 @@ path = "../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs"
 
 [[bin]]
 name = "pack"
-path = "../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs"
+path = "📦️main.rs"
 
 [dependencies]
 pack = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack" }

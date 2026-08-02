@@ -3,7 +3,6 @@
 use puzzle_5d::Puzzle5dProjection;
 use puzzle_5d_engine::{import_compose_design_json, BrushPlacePayload, Puzzle5dPrecomputeSession};
 use puzzle_5d_op::{puzzle5d_document_delta_operations, Puzzle5dOperation, Puzzle5dPlayProjection};
-use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
 use semio_framework_plugin::{
     apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
@@ -644,7 +643,7 @@ fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
 }
 
 fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: PUZZLE5D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
@@ -3297,6 +3296,7 @@ pub fn create_puzzle5d_app() -> App {
         .workflow("puzzle5d", "Puzzle 5D", "model")
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 /// 📥️ Tier C DWG mesh import — always returns the empty puzzle-5d document; never errors on a structurally valid mesh.
 fn puzzle5d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     serde_json::to_value(empty_document()).map_err(|error| error.to_string())
@@ -3307,21 +3307,24 @@ pub fn register_puzzle5d_exports() {
     // string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-5d play documents
     // without depending on this crate's concrete `Projection`/`Operation` types.
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle5dPlayApp>(PUZZLE5D_SCHEMA);
-    register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
-    register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
-    register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
-    register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
-    register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-    register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
-    semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
-    semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", puzzle5d_document_from_mesh);
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("5d.puzzle", puzzle5d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
+        semio_framework_os::register_mesh_dwg_export_handler("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+        semio_framework_os::register_mesh_dwg_import_handler("5d.puzzle", puzzle5d_document_from_mesh);
+    }
 }
 //#endregion 🔖️Manifest
 
 //#region 🔖️WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
-    use super::*;
+    
     use puzzle_5d::PUZZLE_5D_SCHEMA;
     use puzzle_5d_engine::empty_puzzle5d_projection;
     use puzzle_5d_op::{Puzzle5dEnvelope, Puzzle5dStore};

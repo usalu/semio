@@ -30,6 +30,56 @@ pub enum SyncError {
 }
 //#endregion 🔖️Errors
 
+//#region 🔖️EnvelopeSerde
+/// @emoji 🧵️ JSON worker seam: `OperationEnvelope` vectors as `encode_envelopes` bytes (not struct JSON).
+mod envelope_serde {
+    use protocol::{decode_envelopes, encode_envelopes, OperationEnvelope};
+    use serde::ser::SerializeSeq;
+    use serde::{Deserializer, Serializer};
+
+    pub fn serialize<S>(envelopes: &[OperationEnvelope], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let bytes = encode_envelopes(envelopes);
+        let mut seq = serializer.serialize_seq(Some(bytes.len()))?;
+        for byte in bytes {
+            seq.serialize_element(&byte)?;
+        }
+        seq.end()
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vec<OperationEnvelope>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct BytesVisitor;
+
+        impl<'de> serde::de::Visitor<'de> for BytesVisitor {
+            type Value = Vec<u8>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a byte sequence")
+            }
+
+            fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::SeqAccess<'de>,
+            {
+                let mut bytes = Vec::new();
+                while let Some(byte) = seq.next_element()? {
+                    bytes.push(byte);
+                }
+                Ok(bytes)
+            }
+        }
+
+        let bytes = deserializer.deserialize_seq(BytesVisitor)?;
+        decode_envelopes(&bytes).map_err(serde::de::Error::custom)
+    }
+}
+//#endregion 🔖️EnvelopeSerde
+
 //#region 🔖️Protocol
 /// @emoji 🗃️ A durable place a document synchronizes with. A document may bind to several at once
 /// (folder-only, semio_hub-only, or both); the actor treats each as an independent peer.
@@ -69,7 +119,10 @@ pub struct DocumentActorConfig {
 pub enum DocumentActorMsg {
     /// @emoji ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
     /// direct-injection fallback used only when no store is attached to the channel (empty = pure wake).
-    LocalOperations { envelopes: Vec<OperationEnvelope> },
+    LocalOperations {
+        #[serde(with = "envelope_serde")]
+        envelopes: Vec<OperationEnvelope>,
+    },
     /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
     PresenceHeartbeat { peer: PresencePeer },
     /// @emoji 👻️ Publishes an ephemeral, best-effort UI-state blob on the semio_hub's uncredited preview
@@ -113,7 +166,10 @@ impl Default for DocumentSyncStatus {
 pub enum DocumentEvent {
     /// @emoji 🕸️ Remote operations (semio_hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
-    RemoteOperations { envelopes: Vec<OperationEnvelope> },
+    RemoteOperations {
+        #[serde(with = "envelope_serde")]
+        envelopes: Vec<OperationEnvelope>,
+    },
     /// @emoji 📸️ The whole document was replaced (divergent external history / semio_hub snapshot swap),
     /// as real pack+spr bytes — no JSON envelope anywhere in this actor's own path.
     SnapshotReplaced { pack: Vec<u8>, spr: Vec<u8> },
@@ -146,6 +202,86 @@ pub enum CommandAckOutcome {
     Rejected { reason: String },
 }
 //#endregion 🔖️Protocol
+
+//#region 🔖️BackboneWorkerWire
+/// @emoji 🧵️ Binary worker seam: `MAGIC` + `store::pack_rt::encode_wire_value` over a `DslValue`
+/// tree (serde-shaped), shared by the wasm `store_worker` and `🟦️backbone-worker.ts`.
+pub mod backbone_worker_wire {
+    use super::{DocumentActorConfig, DocumentActorMsg, DocumentEvent, PersistenceBinding};
+    use dsl::{from_dsl_value, to_dsl_value};
+
+    pub const MAGIC: u8 = 0x01;
+
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(tag = "kind", rename_all = "camelCase")]
+    pub enum BackboneWorkerRequest {
+        Open {
+            document_id: String,
+            schema: String,
+            bindings: Vec<PersistenceBinding>,
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            watch_external: Option<bool>,
+            actor: String,
+        },
+        Close { document_id: String },
+        Send { document_id: String, message: DocumentActorMsg },
+    }
+
+    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(tag = "kind", rename_all = "camelCase")]
+    pub enum BackboneWorkerResponse {
+        Event { document_id: String, event: DocumentEvent },
+        Ready,
+    }
+
+    impl BackboneWorkerRequest {
+        pub fn actor_config(&self) -> Option<DocumentActorConfig> {
+            let Self::Open { document_id, schema, bindings, watch_external, actor } = self else {
+                return None;
+            };
+            Some(DocumentActorConfig {
+                document_id: document_id.clone(),
+                schema: schema.clone(),
+                bindings: bindings.clone(),
+                watch_external: watch_external.unwrap_or(true),
+                actor: actor.clone(),
+            })
+        }
+    }
+
+    pub fn encode_request(request: &BackboneWorkerRequest) -> Result<Vec<u8>, String> {
+        let dsl = to_dsl_value(request)?;
+        let mut bytes = vec![MAGIC];
+        bytes.extend(store::pack_rt::encode_wire_value(&dsl));
+        Ok(bytes)
+    }
+
+    pub fn decode_request(bytes: &[u8]) -> Result<BackboneWorkerRequest, String> {
+        let (magic, payload) = bytes.split_first().ok_or_else(|| "backbone worker wire: empty".to_string())?;
+        if *magic != MAGIC {
+            return Err(format!("backbone worker wire: unknown magic {magic}"));
+        }
+        let dsl = store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        from_dsl_value(dsl)
+    }
+
+    pub fn encode_response(response: &BackboneWorkerResponse) -> Result<Vec<u8>, String> {
+        let dsl = to_dsl_value(response)?;
+        let mut bytes = vec![MAGIC];
+        bytes.extend(store::pack_rt::encode_wire_value(&dsl));
+        Ok(bytes)
+    }
+
+    pub fn decode_response(bytes: &[u8]) -> Result<BackboneWorkerResponse, String> {
+        let (magic, payload) = bytes.split_first().ok_or_else(|| "backbone worker wire: empty".to_string())?;
+        if *magic != MAGIC {
+            return Err(format!("backbone worker wire: unknown magic {magic}"));
+        }
+        let dsl = store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        from_dsl_value(dsl)
+    }
+}
+//#endregion 🔖️BackboneWorkerWire
 
 //#region 🔖️Endpoints
 // 🧱️ `DocumentId` is used only by native-only test helpers below (the wire bridge and production
@@ -1543,8 +1679,82 @@ struct FixtureManifest {
     expected_edit_ids: Vec<String>,
 }
 
-/// @emoji 📂️ Loads every `<name>/🔣️fixture.json` manifest directory under `dir`, resolving each
-/// content-bearing `RawFixtureInbound` against its sibling text file. A fixture whose manifest or
+#[cfg(not(target_arch = "wasm32"))]
+fn parse_fixture_dsl_manifest(text: &str) -> Option<FixtureManifest> {
+    use std::collections::BTreeMap;
+
+    let mut name = None;
+    let mut schema = None;
+    let mut document_id = None;
+    let mut expected_events = Vec::new();
+    let mut expected_edit_ids = Vec::new();
+    let mut inbound_fields: BTreeMap<(usize, String), String> = BTreeMap::new();
+
+    for line in text.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let (key, value) = line.split_once('=')?;
+        let value = value.trim().to_string();
+        if let Some(rest) = key.strip_prefix("inbound.") {
+            let (index, field) = rest.split_once('.')?;
+            let index: usize = index.parse().ok()?;
+            inbound_fields.insert((index, field.to_string()), value);
+            continue;
+        }
+        match key {
+            "name" => name = Some(value),
+            "schema" => schema = Some(value),
+            "documentId" => document_id = Some(value),
+            "expectedEvent" => expected_events.push(value),
+            "expectedEditId" => expected_edit_ids.push(value),
+            _ => {}
+        }
+    }
+
+    let mut inbound_indexes: Vec<usize> = inbound_fields.keys().map(|(index, _)| *index).collect();
+    inbound_indexes.sort_unstable();
+    inbound_indexes.dedup();
+
+    let mut inbound = Vec::new();
+    for index in inbound_indexes {
+        let kind = inbound_fields.get(&(index, "kind".into()))?.clone();
+        let raw = match kind.as_str() {
+            "externalEdits" => {
+                let ops_file = inbound_fields.get(&(index, "opsFile".into()))?.clone();
+                RawFixtureInbound::ExternalEdits { ops_file }
+            }
+            "replaceDocument" => {
+                let dsl_file = inbound_fields.get(&(index, "dslFile".into()))?.clone();
+                let ops_file = inbound_fields.get(&(index, "opsFile".into()))?.clone();
+                RawFixtureInbound::ReplaceDocument { dsl_file, ops_file }
+            }
+            "hubFrame" => {
+                let frame_bytes = inbound_fields
+                    .get(&(index, "frameBytes".into()))?
+                    .split(',')
+                    .filter_map(|part| part.trim().parse::<u8>().ok())
+                    .collect();
+                RawFixtureInbound::HubFrame { frame_bytes }
+            }
+            _ => return None,
+        };
+        inbound.push(raw);
+    }
+
+    Some(FixtureManifest {
+        name: name?,
+        schema: schema?,
+        document_id: document_id?,
+        inbound,
+        expected_events,
+        expected_edit_ids,
+    })
+}
+
+/// @emoji 📂️ Loads every `<name>/🔣️fixture.dsl` manifest directory under `dir`, resolving each
+/// content-bearing inbound entry against its sibling text file. A fixture whose manifest or
 /// any referenced file is missing/unreadable is skipped (never a partial/silently-wrong fixture).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
@@ -1553,8 +1763,8 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     let mut fixture_dirs: Vec<std::path::PathBuf> = entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.is_dir()).collect();
     fixture_dirs.sort();
     for fixture_dir in fixture_dirs {
-        let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("🔣️fixture.json")) else { continue };
-        let Ok(manifest) = serde_json::from_str::<FixtureManifest>(&manifest_text) else { continue };
+        let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("🔣️fixture.dsl")) else { continue };
+        let Some(manifest) = parse_fixture_dsl_manifest(&manifest_text) else { continue };
         let mut inbound = Vec::with_capacity(manifest.inbound.len());
         let mut all_resolved = true;
         for raw in manifest.inbound {
@@ -2564,7 +2774,7 @@ mod tests {
         // sequence and final timeline. The same fixtures drive WS-E's vitest harness against the TS twin.
         #[tokio::test]
         async fn fixtures_replay_matches_expected_events() {
-            let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures");
+            let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("🧫️fixtures");
             let fixtures = load_fixtures(&fixtures_dir);
             assert!(!fixtures.is_empty(), "expected fixtures in {fixtures_dir:?}");
             for fixture in fixtures {

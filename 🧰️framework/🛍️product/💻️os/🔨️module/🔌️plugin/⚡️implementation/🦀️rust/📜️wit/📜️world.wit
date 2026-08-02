@@ -50,10 +50,13 @@ interface plugin {
 interface host {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
-  read-document: func(handle: u64) -> result<string, string>;
-  write-document: func(handle: u64, payload-json: string) -> result<_, string>;
-  open-window: func(kind: string, params-json: string) -> result<u64, string>;
-  invoke-action: func(target: string, invocation-json: string) -> result<string, string>;
+  /// 📦️ `read-document`/`write-document` payloads are `store::pack_rt::encode_wire_value` bytes.
+  read-document: func(handle: u64) -> result<list<u8>, string>;
+  write-document: func(handle: u64, payload: list<u8>) -> result<_, string>;
+  /// 📦️ `params` is a wire-encoded `DslValue` (`encode_wire_value`).
+  open-window: func(kind: string, params: list<u8>) -> result<u64, string>;
+  /// 📦️ `invocation`/`result` are wire-encoded `DslValue` blobs.
+  invoke-action: func(target: string, invocation: list<u8>) -> result<list<u8>, string>;
   read-asset: func(handle: u64) -> result<list<u8>, string>;
   network-fetch: func(origin: string, path: string) -> result<list<u8>, string>;
   write-blob: func(data: list<u8>, media-type: string) -> result<string, string>;

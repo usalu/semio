@@ -26,5 +26,7 @@ db_preview = { path = "../../../👁️preview/⚡️implementation/🦀️rust"
 db_security = { path = "../../../🔒️security/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-db-security" }
 protocol = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 pack = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🎒️pack/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-pack" }
+dsl = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-store" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

@@ -96,7 +96,7 @@ pub trait GraphExtension: canvas::CanvasExtension {}
 
 // #region 🔖️RenderScene
 /// @emoji 🎨️ Encodes a batch of edge curves into a stroked vello scene.
-pub fn encode_board_stroke_scene(curves: &[canvas::CubicBez], stroke_width: f64) -> canvas::Scene {
+pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> canvas::Scene {
     let mut scene = canvas::Scene::new();
     let stroke = canvas::Stroke::new(stroke_width);
     for curve in curves {
@@ -1520,7 +1520,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         if !self.proximity_enabled() || !P::HAS_PORTS {
             return;
         }
-        let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+        let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
         let mut best: Option<(f64, ProximityConnection)> = None;
         for dragged_handle in self.handles.values().filter(|h| dragged.contains(&h.node_id)) {
             if self.handle_has_incident_edge(dragged_handle.id) {

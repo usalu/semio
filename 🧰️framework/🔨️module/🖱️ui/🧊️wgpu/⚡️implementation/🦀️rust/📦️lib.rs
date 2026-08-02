@@ -13,6 +13,7 @@ pub mod layout {
 //! 📐️ Window layouts, panel tab constants, and engagement rails.
 
 use crate::IconName;
+use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -25,7 +26,7 @@ pub struct ActionDescriptor {
     pub action: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-    pub args: Option<serde_json::Value>,
+    pub args: Option<DslValue>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -167,7 +168,7 @@ pub struct UiMenuRef {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-    pub args: Option<serde_json::Value>,
+    pub args: Option<DslValue>,
 }
 
 /// 🖱️ One row of a resolved context menu — serde camelCase twin of TS `ContextMenuItemSpec`
@@ -211,13 +212,13 @@ pub struct ContextMenuItemSpec {
     pub action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-    pub args: Option<serde_json::Value>,
+    pub args: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub hover_action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-    pub hover_args: Option<serde_json::Value>,
+    pub hover_args: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub children: Option<Vec<ContextMenuItemSpec>>,
@@ -1073,7 +1074,7 @@ mod layout_wire_format_tests {
             ActionDescriptor {
                 controller_id: "ctrl".into(),
                 action: "doThing".into(),
-                args: Some(serde_json::json!(42)),
+                args: Some(DslValue::Number(42.0)),
             },
             ActionDescriptor { controller_id: "ctrl".into(), action: "doOther".into(), args: None },
             StyleSpec {
@@ -1314,6 +1315,7 @@ pub mod utilities {
 //! 🧰️ Declarative per-mode utility bar utility trees.
 
 use crate::IconName;
+use dsl::DslValue;
 use super::layout::ActionDescriptor;
 use serde::{Deserialize, Serialize};
 
@@ -1522,7 +1524,7 @@ pub fn derive_utility_nodes(
             on_change: ActionDescriptor {
                 controller_id: controller_id.to_string(),
                 action: "setActiveUtility".into(),
-                args: Some(serde_json::json!({ "utilityId": utility.id })),
+                args: Some(DslValue::Object(vec![("utilityId".into(), DslValue::String(utility.id.clone()))])),
             },
         }
     }
@@ -1619,7 +1621,7 @@ mod utility_node_wire_format_tests {
                 assert_eq!(id, "select");
                 assert_eq!(*pressed, Some(false));
                 assert_eq!(on_change.action, "setActiveUtility");
-                assert_eq!(on_change.args, Some(serde_json::json!({ "utilityId": "select" })));
+                assert_eq!(on_change.args, Some(DslValue::Object(vec![("utilityId".into(), DslValue::String("select".into()))])));
             }
             other => panic!("expected toggle, got {other:?}"),
         }
@@ -1675,6 +1677,7 @@ pub mod ui {
 //! 🧩 Declarative UI graph types shared by kernel, plugins, and renderers.
 
 use crate::IconName;
+use dsl::DslValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -4313,7 +4316,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
     let restart_label = if is_de { "App neu starten" } else { "Restart App" };
     let disable_label = if is_de { "Plugin deaktivieren" } else { "Disable Plugin" };
     let diagnostics_label = if is_de { "Diagnose anzeigen" } else { "Show Diagnostics" };
-    let args = Some(serde_json::json!({ "pluginId": plugin_id }));
+    let args = Some(DslValue::Object(vec![("pluginId".into(), DslValue::String(plugin_id.to_string()))]));
     UiNode::Stack(UiStackNode {
             menu: None,
         direction: "vertical".into(),
@@ -4897,7 +4900,7 @@ mod ui_node_wire_format_tests {
     /// serialize as `hoverArgs` (the exact field-rename pitfall documented on `UiDirtyScope`).
     #[test]
     fn ui_menu_ref_and_context_menu_item_spec_roundtrip_camel_case() {
-        let menu_ref = UiMenuRef { id: "row".into(), args: Some(serde_json::json!({"id": "row-1"})) };
+        let menu_ref = UiMenuRef { id: "row".into(), args: Some(DslValue::Object(vec![("id".into(), DslValue::String("row-1".into()))])) };
         let json = serde_json::to_string(&menu_ref).unwrap();
         assert_eq!(json, r#"{"id":"row","args":{"id":"row-1"}}"#);
         assert_eq!(serde_json::from_str::<UiMenuRef>(&json).unwrap(), menu_ref);
@@ -4915,7 +4918,7 @@ mod ui_node_wire_format_tests {
             action: Some("deleteSelection".into()),
             args: None,
             hover_action: Some("previewDelete".into()),
-            hover_args: Some(serde_json::json!({"x": 1.0, "y": 2.0})),
+            hover_args: Some(DslValue::Object(vec![("x".into(), DslValue::Number(1.0)), ("y".into(), DslValue::Number(2.0))])),
             children: None,
         };
         let json = serde_json::to_string(&item).unwrap();
@@ -5513,6 +5516,7 @@ pub mod reconcile {
 //! the always-ready rows once `WidgetState` grows an `open`-like field to gate *showing*/hit-testing
 //! them — no further reconcile-side change should be needed at that point.
 
+use dsl::DslValue;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 
@@ -5620,12 +5624,12 @@ fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
 /// action for every row.
 fn with_item_value_arg(action: &ActionDescriptor, value: &str) -> ActionDescriptor {
     let mut merged = action.clone();
-    let mut object = match merged.args.take() {
-        Some(serde_json::Value::Object(map)) => map,
-        _ => serde_json::Map::new(),
+    let mut entries = match merged.args.take() {
+        Some(DslValue::Object(map)) => map,
+        _ => Vec::new(),
     };
-    object.insert("value".to_string(), serde_json::Value::String(value.to_string()));
-    merged.args = Some(serde_json::Value::Object(object));
+    entries.push(("value".to_string(), DslValue::String(value.to_string())));
+    merged.args = Some(DslValue::Object(entries));
     merged
 }
 
@@ -6028,7 +6032,7 @@ mod tests {
         match &first.spec.0 {
             UiNode::Button(button) => {
                 assert_eq!(button.label, "Alpha");
-                assert_eq!(button.action.args, Some(serde_json::json!({ "value": "a" })));
+                assert_eq!(button.action.args, Some(DslValue::Object(vec![("value".into(), DslValue::String("a".into()))])));
             }
             other => panic!("expected a synthesized Button row, got {other:?}"),
         }

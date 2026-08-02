@@ -3,7 +3,7 @@
   "emoji": "🧹",
   "status": "open",
   "description": "Purge runtime JSON from framework, OS, and plugins: binary protocols for commands, pack formats for documents, DSL/op for debug and LLM surfaces.",
-  "summary": "DslValue wire foundation, workspace green, binary backbone TS, vitest 196 pass. WGPU/React *Json, framework-core Value fields, WIT *-json, sync fixture manifests, and full grep gate remain.",
+  "summary": "DslValue/pack wire, binary backbone+worker, scene pack sync, plugin ActionDescriptor migration, fixture.dsl-only manifests. cargo check --workspace green; os-core vitest 204 pass. Residual: exempt stacks, nested *\_json text slots, Jack graph fixtures, MCP ticket_close.",
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": []
 }

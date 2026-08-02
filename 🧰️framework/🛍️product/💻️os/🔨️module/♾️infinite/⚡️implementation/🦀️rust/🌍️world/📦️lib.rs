@@ -7,12 +7,16 @@ use kernel_3d_scene::{
     marquee_is_crossing_from_path, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances,
     transform_aabb, vec3_from_f64, Camera3d, Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3,
 };
-use semio_framework_core::{mesh_from_glb, mesh_from_kind, MeshData};
+use semio_framework_core::{mesh_from_glb, mesh_from_kind, optional_json_to_dsl, MeshData};
 use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::{draw_text, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
+
+fn action_args(value: serde_json::Value) -> Option<semio_framework_core::DslValue> {
+    optional_json_to_dsl(Some(value))
+}
 
 //#region SceneRecords
 fn deserialize_optional_string_vec<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
@@ -38,6 +42,20 @@ where
 
 fn json_id_to_string(value: &serde_json::Value) -> Option<String> {
     value.as_str().map(str::to_string).or_else(|| value.as_u64().map(|id| id.to_string()))
+}
+
+fn dsl_id_to_string(value: &semio_framework_core::DslValue) -> Option<String> {
+    value
+        .as_str()
+        .map(str::to_string)
+        .or_else(|| value.as_f64().map(|n| if n.fract() == 0.0 { format!("{}", n as u64) } else { n.to_string() }))
+}
+
+fn dsl_string_vec(value: &semio_framework_core::DslValue) -> Vec<String> {
+    value
+        .as_array()
+        .map(|items| items.iter().filter_map(dsl_id_to_string).collect())
+        .unwrap_or_default()
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -1572,7 +1590,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "translateSelection".into(),
-            args: Some(json!({
+            args: action_args(json!({
                 "surfaceId": state.surface_id,
                 "mode": selection_mode_label(state),
                 "ids": ids,
@@ -1587,7 +1605,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "rotateSelection".into(),
-            args: Some(json!({
+            args: action_args(json!({
                 "surfaceId": state.surface_id,
                 "mode": selection_mode_label(state),
                 "ids": ids,
@@ -1621,7 +1639,7 @@ fn gumball_commit_action(state: &World3dState) -> Option<ActionDescriptor> {
             } else {
                 args["sz"] = json!(scale);
             }
-            return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "scaleSelection".into(), args: Some(args) });
+            return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "scaleSelection".into(), args: action_args(args) });
         }
     }
     None
@@ -1636,7 +1654,7 @@ pub fn orbit_camera_action(state: &World3dState) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "setCamera".into(),
-        args: Some(json!({
+        args: action_args(json!({
             "surfaceId": state.surface_id,
             "camera": {
                 "position": [
@@ -2229,7 +2247,7 @@ pub fn handle_world3d_pointer_move(state: &mut World3dState, x: f32, y: f32, dow
                 return Some(ActionDescriptor {
                     controller_id: state.controller_id.clone(),
                     action: "paintAt".into(),
-                    args: Some(json!({
+                    args: action_args(json!({
                         "surfaceId": state.surface_id,
                         "objectId": object_id,
                         "u": u,
@@ -2266,7 +2284,7 @@ pub fn handle_world3d_paint_actions(state: &mut World3dState, x: f32, y: f32, do
         return vec![ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "paintAt".into(),
-            args: Some(json!({
+            args: action_args(json!({
                 "surfaceId": state.surface_id,
                 "objectId": object_id,
                 "u": u,
@@ -2288,7 +2306,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
         if button == 0 {
             if state.interaction_mode == "paint" {
                 state.paint_stroke_active = true;
-                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeBegin".into(), args: Some(json!({ "surfaceId": state.surface_id })) });
+                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeBegin".into(), args: action_args(json!({ "surfaceId": state.surface_id })) });
             }
             if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
                 if let Some(full_id) = pick_vortex_at(state, x, y, inner) {
@@ -2299,7 +2317,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
                     } else {
                         "replace"
                     };
-                    return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexSelect".into(), args: Some(json!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })) });
+                    return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexSelect".into(), args: action_args(json!({ "surfaceId": state.surface_id, "fullId": full_id, "merge": merge })) });
                 }
             } else if state.active_utility == "select" {
                 if !state.selected_ids.is_empty() {
@@ -2343,7 +2361,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
     if button == 0 && state.interaction_mode == "paint" && state.paint_stroke_active {
         state.paint_stroke_active = false;
         let mut actions = Vec::new();
-        actions.push(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeEnd".into(), args: Some(json!({ "surfaceId": state.surface_id })) });
+        actions.push(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeEnd".into(), args: action_args(json!({ "surfaceId": state.surface_id })) });
         return actions.first().cloned();
     }
     if button == 0 {
@@ -2361,7 +2379,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
                     return Some(ActionDescriptor {
                         controller_id: state.controller_id.clone(),
                         action: "worldRelocate".into(),
-                        args: Some(json!({
+                        args: action_args(json!({
                             "surfaceId": state.surface_id,
                             "objectId": object_id,
                             "position": position,
@@ -2377,7 +2395,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
                     return Some(ActionDescriptor {
                         controller_id: state.controller_id.clone(),
                         action: "addBrushObject".into(),
-                        args: Some(json!({
+                        args: action_args(json!({
                             "targetVortexFullId": target,
                             "objectKindId": kind,
                             "sourceVortexIndex": index,
@@ -2407,7 +2425,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
         state.right_press_point = None;
         if is_click {
             if let Some((kind, id)) = resolve_world_context_menu_target(state) {
-                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "contextMenuAt".into(), args: Some(json!({ "surfaceId": state.surface_id, "kind": kind, "id": id })) });
+                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "contextMenuAt".into(), args: action_args(json!({ "surfaceId": state.surface_id, "kind": kind, "id": id })) });
             }
         }
         return Some(orbit_camera_action(state));
@@ -2523,7 +2541,7 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
             } else {
                 let object_id = args.get("objectId").and_then(|value| value.as_str()).map(str::to_string);
                 let mode = args.get("mode").and_then(|value| value.as_str()).map(str::to_string);
-                let id = args.get("id").and_then(json_id_to_string);
+                let id = args.get("id").and_then(dsl_id_to_string);
                 state.hovered_component_object_id = object_id.clone();
                 state.hovered_component_mode = mode.clone();
                 state.hovered_component_id = id;
@@ -2543,13 +2561,13 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
                 if merge == "replace" {
                     state.component_ids.clear();
                 }
-            } else if let Some(id) = args.get("id").and_then(json_id_to_string) {
+            } else if let Some(id) = args.get("id").and_then(dsl_id_to_string) {
                 state.component_ids = merge_string_ids(&state.component_ids, &[id], merge);
             }
         }
         "worldSelect" => {
             let merge = args.get("merge").and_then(|value| value.as_str()).unwrap_or("replace");
-            let ids: Vec<String> = args.get("ids").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+            let ids = args.get("ids").map(dsl_string_vec).unwrap_or_default();
             state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
         }
         "worldHover" => {
@@ -2559,7 +2577,7 @@ pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescr
             if let Some(mode) = args.get("mode").and_then(|value| value.as_str()) {
                 state.granularity = mode.to_string();
             }
-            let ids: Vec<String> = args.get("ids").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+            let ids = args.get("ids").map(dsl_string_vec).unwrap_or_default();
             state.component_ids = ids;
         }
         _ => {}
@@ -2578,7 +2596,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
             return None;
         }
         state.hovered_vortex_id = hit.clone();
-        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexHover".into(), args: Some(json!({ "surfaceId": state.surface_id, "fullId": hit })) });
+        return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldVortexHover".into(), args: action_args(json!({ "surfaceId": state.surface_id, "fullId": hit })) });
     }
     if component_mode_active(state) {
         if let Some((mode, id, object_id)) = pick_component_at(state, x, y, inner) {
@@ -2592,7 +2610,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
             return Some(ActionDescriptor {
                 controller_id: state.controller_id.clone(),
                 action: "setHover".into(),
-                args: Some(json!({
+                args: action_args(json!({
                     "objectId": object_id,
                     "mode": mode,
                     "id": id_num,
@@ -2616,7 +2634,7 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
         return None;
     }
     state.local_hover_id = hit.clone();
-    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldHover".into(), args: Some(json!({ "surfaceId": state.surface_id, "id": hit })) })
+    Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "worldHover".into(), args: action_args(json!({ "surfaceId": state.surface_id, "id": hit })) })
 }
 
 fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: bool, ctrl: bool) -> Option<ActionDescriptor> {
@@ -2635,7 +2653,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
             return Some(ActionDescriptor {
                 controller_id: state.controller_id.clone(),
                 action: "worldPick".into(),
-                args: Some(json!({
+                args: action_args(json!({
                     "surfaceId": state.surface_id,
                     "granularity": state.granularity,
                     "id": null,
@@ -2646,7 +2664,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "worldPick".into(),
-            args: Some(json!({
+            args: action_args(json!({
                 "surfaceId": state.surface_id,
                 "granularity": granularity,
                 "id": id.parse::<u64>().ok(),
@@ -2660,7 +2678,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "worldPick".into(),
-            args: Some(json!({
+            args: action_args(json!({
                 "surfaceId": state.surface_id,
                 "granularity": "mesh",
                 "id": id,
@@ -2672,7 +2690,7 @@ fn pick_select_action(state: &World3dState, x: f32, y: f32, inner: Rect, shift: 
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "worldSelect".into(),
-        args: Some(json!({
+        args: action_args(json!({
             "surfaceId": state.surface_id,
             "ids": hit.map(|id| vec![id]).unwrap_or_default(),
             "merge": merge,
@@ -2749,7 +2767,7 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
         return Some(ActionDescriptor {
             controller_id: state.controller_id.clone(),
             action: "setSelection".into(),
-            args: Some(json!({
+            args: action_args(json!({
                 "mode": state.granularity,
                 "ids": merged,
             })),
@@ -2758,7 +2776,7 @@ fn marquee_select_action(state: &mut World3dState, inner: Rect, shift: bool, ctr
     Some(ActionDescriptor {
         controller_id: state.controller_id.clone(),
         action: "worldSelect".into(),
-        args: Some(json!({
+        args: action_args(json!({
             "surfaceId": state.surface_id,
             "ids": ids,
             "merge": merge,
@@ -3765,7 +3783,7 @@ mod tests {
             &ActionDescriptor {
                 controller_id: "controller-1".into(),
                 action: "setHover".into(),
-                args: Some(json!({
+                args: action_args(json!({
                     "objectId": "obj-1",
                     "mode": "vertex",
                     "id": 2,
@@ -3781,7 +3799,7 @@ mod tests {
             &ActionDescriptor {
                 controller_id: "controller-1".into(),
                 action: "worldPick".into(),
-                args: Some(json!({
+                args: action_args(json!({
                     "granularity": "vertex",
                     "id": 4,
                     "merge": "replace",
@@ -3803,7 +3821,7 @@ mod tests {
             &ActionDescriptor {
                 controller_id: "controller-1".into(),
                 action: "worldPick".into(),
-                args: Some(json!({
+                args: action_args(json!({
                     "granularity": "vertex",
                     "id": 5,
                     "merge": "replace",

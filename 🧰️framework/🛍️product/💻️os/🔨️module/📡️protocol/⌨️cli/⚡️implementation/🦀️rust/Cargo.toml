@@ -13,7 +13,7 @@ name = "protocol_cli"
 path = "../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs"
 [[bin]]
 name = "protocol"
-path = "../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs"
+path = "📦️main.rs"
 
 [dependencies]
 protocol = { path = "../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }

@@ -71,6 +71,7 @@ fn main() {
         r#"// Generated shortcode resolver (emoji, UI catalog, metabolism).
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum ShortcodeResolved {{
     Emoji(&'static str),
     SvgPlain(&'static str),

@@ -727,6 +727,44 @@ function decodeFrontier(bytes: Uint8Array, pos: [number]): WireFrontierSummary {
   const chain_hash = readHash32(bytes, pos);
   return { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash };
 }
+function decodeCausalEnvelopeBatch(bytes: readonly number[]): OperationEnvelope[] {
+  const pos: [number] = [0];
+  return readVecEnvelope(new Uint8Array(bytes), pos).map(operationEnvelopeFromWire);
+}
+
+function encodeCausalEnvelopeBatch(envelopes: readonly OperationEnvelope[]): readonly number[] {
+  const out: number[] = [];
+  writeVecEnvelope(out, envelopes.map((envelope, index) => operationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })));
+  return out;
+}
+
+function wireDocumentActorMsg(message: DocumentActorMsg): unknown {
+  if (message.kind === "localOperations") {
+    return { kind: "localOperations", envelopes: encodeCausalEnvelopeBatch(message.envelopes) };
+  }
+  return message;
+}
+
+function parseDocumentActorMsg(message: Record<string, unknown>): DocumentActorMsg {
+  if (message.kind === "localOperations" && Array.isArray(message.envelopes) && message.envelopes.every((entry) => typeof entry === "number")) {
+    return { kind: "localOperations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[]) };
+  }
+  return message as DocumentActorMsg;
+}
+
+function wireDocumentEvent(event: DocumentEvent): unknown {
+  if (event.kind === "remoteOperations") {
+    return { kind: "remoteOperations", envelopes: encodeCausalEnvelopeBatch(event.envelopes) };
+  }
+  return event;
+}
+
+function parseDocumentEvent(event: Record<string, unknown>): DocumentEvent {
+  if (event.kind === "remoteOperations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
+    return { kind: "remoteOperations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[]) };
+  }
+  return event as DocumentEvent;
+}
 //#endregion 🔖️EnvelopeCodec
 
 //#region 🔖️NestedEnums
@@ -1054,19 +1092,54 @@ export type DocumentEvent =
 /** 📤️ Main thread → `🟦️backbone-worker.ts` — `bytes` is a UTF-8 worker wire payload (see {@link encodeBackboneWorkerRequest}). */
 export type BackboneWorkerWireMessage = { readonly wire: Uint8Array };
 
+/** @emoji 🧵️ Worker wire magic — must match `store_sync::backbone_worker_wire::MAGIC`. */
+const BACKBONE_WORKER_WIRE_MAGIC = 0x01;
+
+function parseBackboneWorkerWire<T>(wire: Uint8Array, decode: (value: unknown) => T): T {
+  if (wire.length === 0 || wire[0] !== BACKBONE_WORKER_WIRE_MAGIC) {
+    throw new Error("backbone worker wire: unknown or empty payload");
+  }
+  return decode(decodePackValue(wire.subarray(1)));
+}
+
 /** @emoji 🧵️ Encodes a {@link BackboneWorkerRequest} for the wasm `store_worker` (`handleRequestBytes`). */
 export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uint8Array {
-  return new TextEncoder().encode(JSON.stringify(request));
+  const wire =
+    request.kind === "send"
+      ? { ...request, message: wireDocumentActorMsg(request.message) }
+      : request;
+  const packed = encodePackValue(wire);
+  return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
+}
+
+/** @emoji 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
+export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
+  const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "send" && typeof parsed.message === "object" && parsed.message !== null) {
+    return {
+      kind: "send",
+      documentId: String(parsed.documentId),
+      message: parseDocumentActorMsg(parsed.message as Record<string, unknown>),
+    };
+  }
+  return parsed as BackboneWorkerRequest;
 }
 
 /** @emoji 🧵️ Encodes a {@link BackboneWorkerResponse} from the wasm actor / TS fallback. */
 export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): Uint8Array {
-  return new TextEncoder().encode(JSON.stringify(response));
+  const wire =
+    response.kind === "event" ? { ...response, event: wireDocumentEvent(response.event) } : response;
+  const packed = encodePackValue(wire);
+  return new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...packed]);
 }
 
 /** @emoji 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
-  return JSON.parse(new TextDecoder().decode(wire)) as BackboneWorkerResponse;
+  const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
+  if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
+    return { kind: "event", documentId: String(parsed.documentId), event: parseDocumentEvent(parsed.event as Record<string, unknown>) };
+  }
+  return parsed as BackboneWorkerResponse;
 }
 
 /** 📤️ Main thread → `🟦️backbone-worker.ts` messages (structured clone or {@link BackboneWorkerWireMessage}). */
@@ -1466,6 +1539,56 @@ export function decodePackValue(bytes: Uint8Array): unknown {
   }
   return result;
 }
+
+const PACK_B64_PREFIX = "pk:";
+
+/** @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string for `sessionStorage`/`ViewState` string slots. */
+export function packValueToBase64(value: unknown): string {
+  const bytes = encodePackValue(value);
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 1) binary += String.fromCharCode(bytes[index]!);
+  return `${PACK_B64_PREFIX}${btoa(binary)}`;
+}
+
+/** @emoji 📥️ Inverse of {@link packValueToBase64}. */
+export function packValueFromBase64(encoded: string): unknown {
+  if (!encoded.startsWith(PACK_B64_PREFIX)) throw new Error("packValueFromBase64: expected pk: prefix");
+  const binary = atob(encoded.slice(PACK_B64_PREFIX.length));
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return decodePackValue(bytes);
+}
+
+/** @emoji 🎯️ Plugin `handleAction` wire: pack-base64 `{ controllerId, action, args? }`. */
+export type ActionWire = { readonly controllerId: string; readonly action: string; readonly args?: unknown };
+
+export function encodeActionWire(descriptor: ActionWire): string {
+  return packValueToBase64(descriptor);
+}
+
+/** @emoji 📥️ Inverse of {@link encodeActionWire}. */
+export function decodeActionWire(wire: string): ActionWire {
+  return packValueFromBase64(wire) as ActionWire;
+}
+
+/** @emoji 🎬️ Decodes a component-scene `*Json` field when it carries {@link packValueToBase64} bytes. */
+export function decodeScenePackField(encoded: string): unknown {
+  return packValueFromBase64(encoded);
+}
+
+/** @emoji 📤️ `protocol::encode_envelopes` batch as a {@link packValueToBase64} string for `applyOperations`. */
+export function encodeOperationEnvelopesPack(envelopes: readonly OperationEnvelope[]): string {
+  return packValueToBase64(Array.from(encodeCausalEnvelopeBatch(envelopes)));
+}
+
+/** @emoji 📥️ Inverse of {@link encodeOperationEnvelopesPack}. */
+export function decodeOperationEnvelopesPack(pack: string): OperationEnvelope[] {
+  const wire = packValueFromBase64(pack);
+  if (!Array.isArray(wire) || !wire.every((entry) => typeof entry === "number")) {
+    throw new Error("decodeOperationEnvelopesPack: expected pack byte array");
+  }
+  return decodeCausalEnvelopeBatch(wire as readonly number[]);
+}
 //#endregion 🔖️PublicApi
 //#endregion 🔖️PackValueCodec
 
@@ -1498,7 +1621,7 @@ export type AppCommandValue =
   | { readonly RefreshUi: { readonly seq: number; readonly sections: readonly SectionProbe[]; readonly view_state: readonly number[] } }
   | { readonly ContextMenu: { readonly seq: number; readonly request: readonly number[] } }
   | { readonly DocumentCommand: { readonly seq: number; readonly command: readonly number[] } }
-  | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly (readonly number[])[] } }
+  | { readonly ApplyEnvelopes: { readonly seq: number; readonly envelopes: readonly OperationEnvelope[] } }
   | { readonly LoadDocument: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
   | { readonly ReadDocument: { readonly seq: number } }
   | { readonly LoadConfig: { readonly seq: number; readonly pack: readonly number[]; readonly spr: readonly number[] } }
@@ -1614,7 +1737,10 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
   } else if ("ApplyEnvelopes" in cmd) {
     out.push(APP_COMMAND_TAGS.ApplyEnvelopes);
     writeVarintU64(out, cmd.ApplyEnvelopes.seq);
-    writeVecBytes(out, cmd.ApplyEnvelopes.envelopes);
+    writeVecEnvelope(
+      out,
+      cmd.ApplyEnvelopes.envelopes.map((envelope, index) => operationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })),
+    );
   } else if ("LoadDocument" in cmd) {
     out.push(APP_COMMAND_TAGS.LoadDocument);
     writeVarintU64(out, cmd.LoadDocument.seq);
@@ -1691,8 +1817,11 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       return { ContextMenu: { seq: readVarintU64(bytes, pos), request: readBytes(bytes, pos) } };
     case APP_COMMAND_TAGS.DocumentCommand:
       return { DocumentCommand: { seq: readVarintU64(bytes, pos), command: readBytes(bytes, pos) } };
-    case APP_COMMAND_TAGS.ApplyEnvelopes:
-      return { ApplyEnvelopes: { seq: readVarintU64(bytes, pos), envelopes: readVecBytes(bytes, pos) } };
+    case APP_COMMAND_TAGS.ApplyEnvelopes: {
+      const seq = readVarintU64(bytes, pos);
+      const wire = readVecEnvelope(bytes, pos);
+      return { ApplyEnvelopes: { seq, envelopes: wire.map(operationEnvelopeFromWire) } };
+    }
     case APP_COMMAND_TAGS.LoadDocument: {
       const seq = readVarintU64(bytes, pos);
       const pack = readBytes(bytes, pos);
@@ -2013,6 +2142,11 @@ export class AppChannelClient {
     return decodePackValue(new Uint8Array(menuFrame.ContextMenu.items));
   }
 
+  /** @emoji 📥️ Force-applies remote `OperationEnvelope`s through `AppCommand::ApplyEnvelopes`. */
+  async applyEnvelopes(envelopes: readonly OperationEnvelope[]): Promise<AppFrameValue[]> {
+    return this.exchangeOne({ ApplyEnvelopes: { seq: this.nextSeq(), envelopes } });
+  }
+
   /** 💓️ The heartbeat — a pure drain (`exchange(id, [])`) for pending effects/events/backbone-ingested
    * `DocumentChanged` frames queued since the previous call. Replaces the old poll-backbone +
    * refresh-ui tick. */
@@ -2254,7 +2388,7 @@ if (import.meta.vitest) {
       { RefreshUi: { seq: 4, sections: [{ kind: 1, key: "panel-a", hash: 42 }, { kind: 2, key: "panel-b", hash: null }], view_state: [] } },
       { ContextMenu: { seq: 5, request: [9, 9] } },
       { DocumentCommand: { seq: 6, command: [7] } },
-      { ApplyEnvelopes: { seq: 7, envelopes: [[1, 2], [3, 4, 5], []] } },
+      { ApplyEnvelopes: { seq: 7, envelopes: [] } },
       { LoadDocument: { seq: 8, pack: [1, 2, 3], spr: [4, 5, 6] } },
       { ReadDocument: { seq: 9 } },
       { LoadConfig: { seq: 10, pack: [1], spr: [2] } },

@@ -122,7 +122,6 @@ pub trait OpBinary: Sized {
 /// `Option<HybridLogicalTimestamp>` to a required field (an edit's op always has a tick by the time
 /// it is durable).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct OperationMeta {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operation_id: Option<protocol_core::OperationId>,

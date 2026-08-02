@@ -57,7 +57,7 @@ fn block3d_action_labels(is_de: bool) -> std::collections::HashMap<String, Strin
 //#endregion 🔖️CommandLabels
 
 fn block3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: BLOCK3D_PLAY_APP_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: BLOCK3D_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 //#region 🔖️Panels

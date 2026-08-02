@@ -697,7 +697,7 @@ fn build_qc_panel(scene: &RemodelScene, labels: &RemodelLabels) -> UiNode {
 
 //#region 🔖️RemodelPlayApp
 fn remodel_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: REMODEL_PLAY_APP_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: REMODEL_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 #[derive(Default)]

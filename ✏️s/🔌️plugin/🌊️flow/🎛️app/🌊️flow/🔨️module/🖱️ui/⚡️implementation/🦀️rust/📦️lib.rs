@@ -122,7 +122,7 @@ impl Default for FlowPlayRuntime {
 
 //#region 🔖️DocumentHelpers
 fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn apply_canvas_options(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
@@ -205,7 +205,7 @@ fn flow_context_menu_items(
                 label: Some(labels.replace_image.into()),
                 icon: Some("image".into()),
                 action: Some("replaceImage".into()),
-                args: Some(json!({ "id": node_id })),
+                args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "id": node_id }))),
                 ..Default::default()
             });
         }
@@ -217,7 +217,7 @@ fn flow_context_menu_items(
             icon: Some(if all_preview_off { "eye".into() } else { "eye-off".into() }),
             checked: Some(!all_preview_off),
             action: Some("setPreviewOff".into()),
-            args: Some(json!({ "ids": nodes, "value": !all_preview_off })),
+            args: semio_framework_plugin::optional_json_to_dsl(Some(json!({ "ids": nodes, "value": !all_preview_off }))),
             ..Default::default()
         });
         menu = menu.action("focusSelection").action("clearSelection");

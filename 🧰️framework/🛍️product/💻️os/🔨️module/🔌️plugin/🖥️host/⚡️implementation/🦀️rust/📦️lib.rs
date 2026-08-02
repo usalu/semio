@@ -88,19 +88,19 @@ impl semio::framework::host::Host for HostState {
         std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
     }
 
-    fn read_document(&mut self, _handle: u64) -> Result<String, String> {
+    fn read_document(&mut self, _handle: u64) -> Result<Vec<u8>, String> {
         Err("read-document not implemented".into())
     }
 
-    fn write_document(&mut self, _handle: u64, _payload_json: String) -> Result<(), String> {
+    fn write_document(&mut self, _handle: u64, _payload: Vec<u8>) -> Result<(), String> {
         Err("write-document not implemented".into())
     }
 
-    fn open_window(&mut self, _kind: String, _params_json: String) -> Result<u64, String> {
+    fn open_window(&mut self, _kind: String, _params: Vec<u8>) -> Result<u64, String> {
         Err("open-window not implemented".into())
     }
 
-    fn invoke_action(&mut self, _target: String, _invocation_json: String) -> Result<String, String> {
+    fn invoke_action(&mut self, _target: String, _invocation: Vec<u8>) -> Result<Vec<u8>, String> {
         Err("invoke-action not implemented".into())
     }
 

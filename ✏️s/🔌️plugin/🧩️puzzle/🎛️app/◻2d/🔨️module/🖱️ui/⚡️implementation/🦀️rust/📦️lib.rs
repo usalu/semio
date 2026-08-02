@@ -196,7 +196,7 @@ fn example_fixture(json_text: &str) -> Value {
 }
 
 fn puzzle2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🪟️ Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
@@ -2300,6 +2300,7 @@ pub fn create_puzzle2d_app() -> App {
         .workflow("puzzle2d", "Puzzle 2D", "layout")
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
     semio_framework_os::title_card_svg(value, "Puzzle 2D", 1024, 768)
 }
@@ -2309,7 +2310,8 @@ fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), St
 /// The DWG's extents no longer frame a camera here: the camera is session-only `Puzzle2dPlayRuntime`
 /// state (see `setCamera`'s `ActionKind::View`), and this import path produces a bare document with
 /// no live app instance to receive that runtime write.
-fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework_os::DwgDrawing) -> Result<Value, String> {
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+fn puzzle2d_document_json_from_dwg(_drawing: &semio_framework_core::DwgDrawing) -> Result<Value, String> {
     Ok(default_empty_fixture())
 }
 
@@ -2318,8 +2320,11 @@ pub fn register_puzzle2d_exports() {
     // string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-2d play documents
     // without depending on this crate's concrete `Projection`/`Operation` types.
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle2dPlayApp>(PUZZLE2D_FIXTURE_SCHEMA);
-    semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
-    semio_framework_os::register_dwg_import_handler("2d.puzzle", puzzle2d_document_json_from_dwg);
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
+        semio_framework_os::register_dwg_import_handler("2d.puzzle", puzzle2d_document_json_from_dwg);
+    }
 }
 //#endregion 🔖️Manifest
 
@@ -2606,7 +2611,7 @@ mod tests {
     /// `"camera"` key at all, regardless of the drawing's extents.
     #[test]
     fn dwg_import_returns_empty_board_with_no_camera_field() {
-        let mut drawing = semio_framework_os::DwgDrawing::default();
+        let mut drawing = semio_framework_core::DwgDrawing::default();
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [100.0, 200.0, 0.0];
         let fixture = puzzle2d_document_json_from_dwg(&drawing).unwrap();

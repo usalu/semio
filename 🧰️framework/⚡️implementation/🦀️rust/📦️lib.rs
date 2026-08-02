@@ -6,12 +6,12 @@ pub mod action_bus {
 // #region action_bus
 //! 🎯️ Action routing between renderer and app controllers.
 
-use serde_json::Value;
+use dsl::DslValue;
 use std::collections::HashMap;
 
 pub trait ActionHandler: Send {
     fn id(&self) -> &str;
-    fn handle(&mut self, action: &str, args: Option<&Value>) -> Vec<String>;
+    fn handle(&mut self, action: &str, args: Option<&DslValue>) -> Vec<String>;
 }
 
 pub struct ActionBus {
@@ -40,7 +40,7 @@ impl ActionBus {
         self.controllers.remove(controller_id);
     }
 
-    pub fn dispatch(&mut self, controller_id: &str, action: &str, args: Option<&Value>) -> Vec<String> {
+    pub fn dispatch(&mut self, controller_id: &str, action: &str, args: Option<&DslValue>) -> Vec<String> {
         self.controllers
             .get_mut(controller_id)
             .map(|handler| handler.handle(action, args))
@@ -61,7 +61,7 @@ mod tests {
             &self.id
         }
 
-        fn handle(&mut self, action: &str, _args: Option<&Value>) -> Vec<String> {
+        fn handle(&mut self, action: &str, _args: Option<&DslValue>) -> Vec<String> {
             vec![format!("{action}:ok")]
         }
     }
@@ -96,6 +96,7 @@ pub mod mesh {
 //! 🔺️ Shared mesh geometry: primitives, compact JSON, OBJ/GLB interchange.
 
 use serde::{Deserialize, Serialize};
+use dsl::DslValue;
 
 //#region MeshData
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -1262,7 +1263,7 @@ pub struct ConfigFieldSpec {
     pub shape: ConfigFieldShape,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-    pub default: Option<serde_json::Value>,
+    pub default: Option<DslValue>,
 }
 
 /// 🧮️ An app's full typed configuration record — the manifest-level declaration
@@ -1984,7 +1985,7 @@ fn dwg_encode_entity_common(body: &mut DwgBitWriter, handles: &mut DwgBitWriter,
     handles.write_handle(5, layer_handle);
 }
 
-fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
     let _entmode = reader.read_bb()?;
     let _numreactors = reader.read_bl()?;
     let _nolinks = reader.read_b()?;
@@ -1997,7 +1998,7 @@ fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, Strin
     Ok(color)
 }
 
-fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
     reader.pad_to_byte();
     let (_owner_code, _owner) = reader.read_handle()?;
     let (_layer_code, layer_handle) = reader.read_handle()?;
@@ -2112,7 +2113,7 @@ fn dwg_encode_entity(objects_bytes: &mut Vec<u8>, object_map: &mut Vec<(u64, usi
     object_map.push((handle, offset));
 }
 
-fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
     match object_type {
         DWG_TYPE_LINE => {
             let color = dwg_decode_entity_common(reader)?;
@@ -3411,6 +3412,7 @@ pub mod ui {
 //! lives in `ui_wgpu`'s `component` region.
 
 use serde::{Deserialize, Serialize};
+use dsl::DslValue;
 use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
 use crate::mesh::{MediaPortSpec, ArtifactKindSpec, ConfigSpec, CommandGrammar, AppIo};
 use crate::IconName;
@@ -3518,7 +3520,7 @@ pub struct ActionArgDef {
     pub required: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-    pub default: Option<serde_json::Value>,
+    pub default: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub description: Option<String>,
@@ -3566,8 +3568,8 @@ impl ActionArgDef {
     }
 
     /// @emoji 🎁️ Sets the default effective value used when nothing is staged.
-    pub fn default_value(mut self, value: impl Into<serde_json::Value>) -> Self {
-        self.default = Some(value.into());
+    pub fn default_value(mut self, value: impl Serialize) -> Self {
+        self.default = dsl::to_dsl_value(&value).ok();
         self
     }
 
@@ -4763,11 +4765,11 @@ pub struct TutorialChapter {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialBase {
-    /// 📂️ Full `DocumentEnvelope` JSON to sandbox-load; `None` falls back to `example_id`, and both
+    /// 📂️ Full document DSL text (`DocumentTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
     /// `None` falls back to the app's default/empty document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub document_json: Option<String>,
+    pub document_dsl: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub example_id: Option<String>,
@@ -4922,14 +4924,14 @@ pub enum TutorialEventKind {
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-        args: Option<serde_json::Value>,
+        args: Option<DslValue>,
     },
     /// 🎛️ A `CommandDefinition` dispatch.
     Command {
         command: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-        args: Option<serde_json::Value>,
+        args: Option<DslValue>,
     },
     /// ⌨️ A keybinding press, display-only over the action it triggered.
     Key { keys: String },
@@ -5045,7 +5047,7 @@ pub enum TutorialUiChange {
         id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
-        args: Option<serde_json::Value>,
+        args: Option<DslValue>,
     },
     TreeExpansion {
         id: String,
@@ -5077,9 +5079,9 @@ pub struct TutorialDocumentEvent {
 pub enum TutorialDocumentEventKind {
     Edit {
         #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
-        forwards: Vec<serde_json::Value>,
+        forwards: Vec<DslValue>,
         #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
-        backwards: Vec<serde_json::Value>,
+        backwards: Vec<DslValue>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
         description: Option<String>,
@@ -5103,8 +5105,8 @@ pub enum TutorialDocumentEventKind {
     /// 📂️ Wholesale document replacement (e.g. a mid-tutorial example switch) — full
     /// `DocumentEnvelope` JSON in both directions.
     Load {
-        document_json: String,
-        previous_json: String,
+        document_dsl: String,
+        previous_dsl: String,
     }
 }
 
@@ -5863,31 +5865,31 @@ pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<Win
 /// never re-implement default-filling.
 pub fn effective_action_args(
     defs: &[ActionArgDef],
-    staged: &serde_json::Map<String, serde_json::Value>,
-) -> serde_json::Map<String, serde_json::Value> {
-    let mut effective = serde_json::Map::new();
+    staged: &DslValue,
+) -> DslValue {
+    let mut effective = Vec::new();
     for def in defs {
         if let Some(value) = staged.get(&def.id) {
-            effective.insert(def.id.clone(), value.clone());
+            effective.push((def.id.clone(), value.clone()));
         } else if let Some(default) = &def.default {
-            effective.insert(def.id.clone(), default.clone());
+            effective.push((def.id.clone(), default.clone()));
         }
     }
-    effective
+    DslValue::Object(effective)
 }
 
 /// @emoji ❗️ Returns the ids of required args that are still unset in `effective`. "Unset" means absent,
-/// JSON `null`, or an empty string (covers a blank Text/Select/IconSelect); `false`, `0`, and `[]` are
+/// `Null`, or an empty string (covers a blank Text/Select/IconSelect); `false`, `0`, and `[]` are
 /// valid values for Toggle/Number/Slider/Vec3 and never count as unset.
 pub fn missing_required_args(
     defs: &[ActionArgDef],
-    effective: &serde_json::Map<String, serde_json::Value>,
+    effective: &DslValue,
 ) -> Vec<String> {
     defs.iter()
         .filter(|def| def.required)
         .filter(|def| match effective.get(&def.id) {
-            None | Some(serde_json::Value::Null) => true,
-            Some(serde_json::Value::String(text)) => text.is_empty(),
+            None | Some(DslValue::Null) => true,
+            Some(DslValue::String(text)) => text.is_empty(),
             Some(_) => false,
         })
         .map(|def| def.id.clone())
@@ -6186,7 +6188,7 @@ pub mod kernel {
 //! 🧠️ Local-first action kernel contracts: actions, operations, capabilities, window I/O.
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use dsl::DslValue;
 use ui_wgpu::UiNode;
 use crate::mesh::MediaType;
 
@@ -6344,7 +6346,7 @@ pub struct ActionInvocation {
     pub id: InvocationId,
     pub app: AppInstanceId,
     pub action: ActionId,
-    pub input: Value,
+    pub input: DslValue,
     pub actor: ActorId,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub causal_context: Vec<OperationId>,
@@ -6358,7 +6360,7 @@ pub struct CommandInvocation {
     pub id: InvocationId,
     pub app: AppInstanceId,
     pub command: CommandId,
-    pub input: Value,
+    pub input: DslValue,
     pub actor: ActorId,
 }
 
@@ -6440,7 +6442,7 @@ pub enum ClipboardError {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HostEffect {
-    OpenWindow { kind: WindowKindId, params: Value },
+    OpenWindow { kind: WindowKindId, params: DslValue },
     CloseWindow { window: WindowHandle },
     Notify { message: String },
     /// 📋️ Asks the shell to write a copied/cut fragment to the OS clipboard (system clipboard where
@@ -6505,7 +6507,7 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         payload: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        args: Option<Value>,
+        args: Option<DslValue>,
     },
     /// @emoji ✨️ Spawns a plugin instance (idempotent on `os_instance_id`) without focusing it.
     SpawnPluginInstance {
@@ -6537,7 +6539,7 @@ pub enum HostEffect {
     OpenDialog {
         dialog_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        args: Option<Value>,
+        args: Option<DslValue>,
     },
     /// @emoji 🔁️ Re-dispatches `action` onto the same plugin instance after `delay_ms` — lets a
     /// plugin's `handle_action` advance staged/progressive work (e.g. a multi-pass reconstruction)
@@ -6547,7 +6549,7 @@ pub enum HostEffect {
     DispatchAction {
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        args: Option<Value>,
+        args: Option<DslValue>,
         delay_ms: u64,
     },
     /// @emoji ⏪️ Asks the shell to redispatch a shell-owned command (dock/theme/locale/panel chrome)
@@ -6560,7 +6562,7 @@ pub enum HostEffect {
     ReplayShellCommand {
         action_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        args: Option<Value>,
+        args: Option<DslValue>,
     },
     /// @emoji 🎯️ Patches live world-3d selection chrome and document-tree highlights without
     /// re-rendering the composite window body or rebuilding instance geometry JSON.
@@ -6580,14 +6582,14 @@ pub enum HostEffect {
 #[serde(rename_all = "camelCase")]
 pub struct IconRenderExportItem {
     pub filename: String,
-    pub request: Value,
+    pub request: DslValue,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AppEvent {
     pub kind: String,
-    pub payload: Value,
+    pub payload: DslValue,
 }
 
 // 🎯️ W6 kernel unification: re-exports `protocol::DocumentDiff` (schema: `SchemaId`, payload:
@@ -6673,7 +6675,7 @@ pub enum UiDirtyScope {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InvocationResult {
-    pub output: Value,
+    pub output: DslValue,
     pub operations: Vec<KernelOperation>,
     pub inverse_group: UndoGroup,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6690,7 +6692,7 @@ pub struct InvocationResult {
 #[serde(rename_all = "camelCase")]
 pub struct ActionContext {
     pub invocation: ActionInvocation,
-    pub document_projection: Value,
+    pub document_projection: DslValue,
     pub view_state: super::ViewState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub granted_capabilities: Vec<CapabilityGrant>,
@@ -6901,7 +6903,7 @@ pub struct Appearance {
 #[serde(rename_all = "camelCase")]
 pub struct WindowEvent {
     pub kind: String,
-    pub payload: Value,
+    pub payload: DslValue,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -6926,8 +6928,8 @@ pub struct WindowKindDef {
 #[serde(rename_all = "camelCase")]
 pub struct WindowInput {
     pub window: WindowHandle,
-    pub params: Value,
-    pub document_projection: Value,
+    pub params: DslValue,
+    pub document_projection: DslValue,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<WindowEvent>,
     pub size: PhysicalSize,
@@ -7053,6 +7055,7 @@ mod app_document_tests {
         RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID,
     };
     use crate::ui::kernel::HostEffect;
+    use dsl::DslValue;
     use serde_json::json;
 
     #[test]
@@ -7063,7 +7066,7 @@ mod app_document_tests {
             .describe("scale factor");
         assert_eq!(arg.id, "scale");
         assert!(arg.required);
-        assert_eq!(arg.default, Some(json!(1.0)));
+        assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
         assert_eq!(arg.description.as_deref(), Some("scale factor"));
         assert!(matches!(arg.control, ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
     }
@@ -7075,12 +7078,11 @@ mod app_document_tests {
             ActionArgDef::text("b", "B").default_value("db"),
             ActionArgDef::text("c", "C"),
         ];
-        let mut staged = serde_json::Map::new();
-        staged.insert("a".into(), json!("staged-a"));
+        let staged = dsl::to_dsl_value(&serde_json::json!({ "a": "staged-a" })).unwrap();
         let effective = effective_action_args(&defs, &staged);
-        assert_eq!(effective.get("a"), Some(&json!("staged-a")), "staged wins");
-        assert_eq!(effective.get("b"), Some(&json!("db")), "default fills in");
-        assert!(!effective.contains_key("c"), "no staged, no default ⇒ omitted");
+        assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
+        assert_eq!(effective.get("b"), Some(&DslValue::String("db".into())), "default fills in");
+        assert!(!effective.as_object().is_some_and(|o| o.iter().any(|(k, _)| k == "c")), "no staged, no default ⇒ omitted");
     }
 
     #[test]
@@ -7090,16 +7092,13 @@ mod app_document_tests {
             ActionArgDef::toggle("flag", "Flag").required(),
         ];
         // Nothing staged, no defaults: both required ids are missing.
-        let empty = serde_json::Map::new();
+        let empty = DslValue::Object(Vec::new());
         let effective = effective_action_args(&defs, &empty);
         let missing = missing_required_args(&defs, &effective);
         assert!(missing.contains(&"mode".to_string()));
         assert!(missing.contains(&"flag".to_string()));
 
-        // An empty-string select value still counts as unset; `false` for a toggle is a real value.
-        let mut effective = serde_json::Map::new();
-        effective.insert("mode".into(), json!(""));
-        effective.insert("flag".into(), json!(false));
+        let effective = dsl::to_dsl_value(&serde_json::json!({ "mode": "", "flag": false })).unwrap();
         let missing = missing_required_args(&defs, &effective);
         assert_eq!(missing, vec!["mode".to_string()], "empty-string select is unset; false toggle is set");
     }
@@ -7664,7 +7663,7 @@ mod app_document_tests {
             description: None,
             duration_ms: 10_000,
             chapters: vec![TutorialChapter { id: "start".into(), at: 0, title: "Start".into(), body: None }],
-            base: TutorialBase { document_json: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
+            base: TutorialBase { document_dsl: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
             tracks: TutorialTracks::default(),
             recorded_at: None,
         }
@@ -8297,6 +8296,12 @@ mod app_document_tests {
 
 
 pub use action_bus::{ActionBus, ActionHandler};
+pub use dsl::{from_dsl_value, to_dsl_value, DslValue};
+
+/// @emoji 🔀️ Bridges staged `serde_json::Value` action args into `ActionDescriptor.args`.
+pub fn optional_json_to_dsl(args: Option<serde_json::Value>) -> Option<DslValue> {
+    args.map(|value| to_dsl_value(&value).unwrap_or(DslValue::Null))
+}
 // 🧩️ The declarative component model (layout/utilities/UiNode) lives in `ui_wgpu` now — re-import
 // honestly (not a re-export) wherever this crate's manifest/kernel types need it; see `pub mod ui`.
 pub use mesh::{

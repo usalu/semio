@@ -49,6 +49,7 @@ use semio_framework_plugin::{
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
+use semio_framework_plugin::optional_json_to_dsl;
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{LazyLock, Mutex};
@@ -58,7 +59,7 @@ fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: S_PLAY_CONTROLLER_ID.into(),
         action: action.into(),
-        args,
+        args: optional_json_to_dsl(args),
     }
 }
 

@@ -28,6 +28,7 @@ protocol_core = { path = "../../🛍️product/💻️os/🔨️module/📡️pr
 # causal-envelope shape from W5), needing the full facade (protocol_causal's `DocumentDiff`, not
 # just protocol_core).
 protocol = { path = "../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
+dsl = { path = "../../🛍️product/💻️os/🔨️module/🗣️dsl/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-dsl" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

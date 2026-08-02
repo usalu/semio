@@ -7,6 +7,13 @@
 //!   component and the `WindowLayoutNode` tree helpers in `#region ShellHelpers`.
 //! - `interpreter`/widget rendering ~ React's `UiNode` component tree rendering.
 
+#[macro_export]
+macro_rules! action_args_json {
+    ($($tt:tt)*) => {
+        semio_framework_core::optional_json_to_dsl(Some(serde_json::json!($($tt)*)))
+    };
+}
+
 pub mod dock {
 // #region dock
 //! 🪟️ Mode dock — multi-window layout tree with stack chrome and split resize.
@@ -2738,7 +2745,7 @@ struct NodeGraphSyncCache {
     eval_json: Option<String>,
     lod_json: Option<String>,
     viewport_json: Option<String>,
-    scene_json: Option<String>,
+    scene_pack: Option<Vec<u8>>,
 }
 
 fn flow_fixture_semantic_eq(left: &FlowFixture, right: &FlowFixture) -> bool {
@@ -2758,6 +2765,7 @@ struct EngineSurface {
     board_pending_events: Vec<BoardEventRow>,
     board_pointer_inside: bool,
     editor: Option<EditorHost>,
+    editor_scene_pack: Option<Vec<u8>>,
     vello: Renderer,
     texture: wgpu::Texture,
     view: wgpu::TextureView,
@@ -2824,6 +2832,29 @@ fn sync_field(cache: &mut Option<String>, value: &str) -> bool {
     }
 }
 
+fn sync_bytes_field(cache: &mut Option<Vec<u8>>, value: &[u8]) -> bool {
+    if cache.as_deref() == Some(value) {
+        false
+    } else {
+        *cache = Some(value.to_vec());
+        true
+    }
+}
+
+fn effective_json_field(field: &str) -> String {
+    store::pack_rt::scene_field_json_text(field).unwrap_or_else(|_| field.to_string())
+}
+
+fn graph_scene_pack(graph: &ui_wgpu::NodeGraphScene) -> Vec<u8> {
+    let dsl = semio_framework_core::to_dsl_value(graph).expect("node graph scene pack");
+    store::pack_rt::encode_pack_value(&dsl)
+}
+
+fn editor_scene_pack(editor: &ui_wgpu::TextEditorScene) -> Vec<u8> {
+    let dsl = semio_framework_core::to_dsl_value(editor).expect("text editor scene pack");
+    store::pack_rt::encode_pack_value(&dsl)
+}
+
 pub(crate) fn theme_is_dark(theme: &Theme) -> bool {
     let c = theme.canvas_clear;
     let lum = f64::from(linear_to_rgba8_channel(c.r))
@@ -2877,7 +2908,7 @@ fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> Acti
     ActionDescriptor {
         controller_id: scene.controller_id.clone(),
         action: action.to_string(),
-        args: Some(args),
+        args: semio_framework_core::optional_json_to_dsl(Some(args)),
     }
 }
 
@@ -2885,27 +2916,21 @@ fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value
     ActionDescriptor {
         controller_id: controller_id.to_string(),
         action: action.to_string(),
-        args: Some(args),
+        args: semio_framework_core::optional_json_to_dsl(Some(args)),
     }
-}
-
-fn graph_scene_json(graph: &ui_wgpu::NodeGraphScene) -> String {
-    serde_json::to_string(graph).unwrap_or_else(|_| "{}".into())
-}
-
-fn editor_scene_json(editor: &ui_wgpu::TextEditorScene) -> String {
-    serde_json::to_string(editor).unwrap_or_else(|_| "{}".into())
 }
 
 fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
     if let Some(json) = &graph.operators_json {
-        if sync_field(&mut cache.operators_json, json) {
-            host.set_neuron_kind_infos_json(json);
+        let json = effective_json_field(json);
+        if sync_field(&mut cache.operators_json, &json) {
+            host.set_neuron_kind_infos_json(&json);
         }
     }
     if let Some(fixture_json) = &graph.fixture_json {
-        if sync_field(&mut cache.fixture_json, fixture_json) {
-            if let Ok(fixture) = FlowHost::parse_fixture_json(fixture_json) {
+        let fixture_json = effective_json_field(fixture_json);
+        if sync_field(&mut cache.fixture_json, &fixture_json) {
+            if let Ok(fixture) = FlowHost::parse_fixture_json(&fixture_json) {
                 if flow_fixture_semantic_eq(&host.fixture, &fixture) {
                     host.set_camera(fixture.camera.x, fixture.camera.y, fixture.camera.zoom);
                 } else {
@@ -2917,28 +2942,33 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
     // 🧵️ Never evaluates: `eval_json` comes from the plugin worker's off-main-thread `flowEvalTick`
     // chain (see `FlowEvalDriver`) — this host is a pure view, mirroring the React canvas session.
     if let Some(json) = &graph.eval_json {
-        if sync_field(&mut cache.eval_json, json) {
-            host.apply_eval_outputs_json(json);
+        let json = effective_json_field(json);
+        if sync_field(&mut cache.eval_json, &json) {
+            host.apply_eval_outputs_json(&json);
         }
     }
     if let Some(json) = &graph.catalogue_json {
-        if sync_field(&mut cache.catalogue_json, json) {
-            host.set_host_catalogue_json(json);
+        let json = effective_json_field(json);
+        if sync_field(&mut cache.catalogue_json, &json) {
+            host.set_host_catalogue_json(&json);
         }
     }
     if let Some(json) = &graph.selection_json {
-        if sync_field(&mut cache.selection_json, json) {
-            host.set_selection_json(json);
+        let json = effective_json_field(json);
+        if sync_field(&mut cache.selection_json, &json) {
+            host.set_selection_json(&json);
         }
     }
     if let Some(json) = &graph.preview_off_json {
-        if sync_field(&mut cache.preview_off_json, json) {
-            host.set_preview_off_json(json);
+        let json = effective_json_field(json);
+        if sync_field(&mut cache.preview_off_json, &json) {
+            host.set_preview_off_json(&json);
         }
     }
     if let Some(json) = &graph.computing_json {
-        if sync_field(&mut cache.computing_json, json) {
-            if let Ok(value) = serde_json::from_str::<Value>(json) {
+        let json = effective_json_field(json);
+        if sync_field(&mut cache.computing_json, &json) {
+            if let Ok(value) = serde_json::from_str::<Value>(&json) {
                 let active = value.get("active").and_then(|v| v.as_str()).map(str::to_string);
                 let stale: Vec<String> = value
                     .get("stale")
@@ -2955,8 +2985,9 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
         }
     }
     if let Some(json) = &graph.lod_json {
-        if sync_field(&mut cache.lod_json, json) {
-            if let Ok(value) = serde_json::from_str::<Value>(json) {
+        let json = effective_json_field(json);
+        if sync_field(&mut cache.lod_json, &json) {
+            if let Ok(value) = serde_json::from_str::<Value>(&json) {
                 if let Some(automatic) = value.get("automatic").and_then(|v| v.as_bool()) {
                     host.set_automatic_lod(automatic);
                 }
@@ -2978,8 +3009,9 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
             }
         }
     }
-    if sync_field(&mut cache.viewport_json, &graph.viewport_json) {
-        if let Ok(viewport) = serde_json::from_str::<Value>(&graph.viewport_json) {
+    let viewport_json = effective_json_field(&graph.viewport_json);
+    if sync_field(&mut cache.viewport_json, &viewport_json) {
+        if let Ok(viewport) = serde_json::from_str::<Value>(&viewport_json) {
             let x = viewport.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0);
             let y = viewport.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
             let zoom = viewport.get("zoom").and_then(|v| v.as_f64()).unwrap_or(1.0);
@@ -3025,6 +3057,7 @@ fn ensure_surface(
                     board_pending_events: Vec::new(),
                     board_pointer_inside: false,
                     editor: None,
+                    editor_scene_pack: None,
                     vello,
                     texture,
                     view,
@@ -3140,7 +3173,7 @@ pub fn paint_node_graph(
         return;
     }
     let clear = vello_clear(ctx.theme);
-    let scene_json = graph_scene_json(graph);
+    let scene_pack = graph_scene_pack(graph);
     let dark = theme_is_dark(ctx.theme);
     let mut canvas_scene = canvas::Scene::new();
     ENGINE_SURFACES.with(|cell| {
@@ -3174,8 +3207,8 @@ pub fn paint_node_graph(
                     }
                 }
             };
-            if sync_field(&mut entry.sync_cache.scene_json, &scene_json) {
-                let _ = engine.sync_from_scene_json(&scene_json);
+            if sync_bytes_field(&mut entry.sync_cache.scene_pack, &scene_pack) {
+                let _ = engine.sync_from_scene_pack(&scene_pack);
             }
             sync_graph_canvas_theme_dark(&mut entry.sync_cache, dark, engine);
             engine.set_viewport(pw, ph, dpr);
@@ -3393,12 +3426,12 @@ pub fn node_graph_flow_widget_drop_action(
         return Some(ActionDescriptor {
             controller_id: (*controller_id).to_string(),
             action: "addWidget".into(),
-            args: Some(json!({
+            args: crate::action_args_json!({
                 "kind": descriptor.get("kind").and_then(|value| value.as_str()).unwrap_or("inputSlider"),
                 "neuronKind": descriptor.get("neuronKind").and_then(|value| value.as_str()),
                 "x": world.0,
                 "y": world.1,
-            })),
+            }),
         });
     }
     None
@@ -3432,11 +3465,11 @@ pub fn node_graph_catalogue_drop_action(
         return Some(ActionDescriptor {
             controller_id: (*controller_id).to_string(),
             action: "spawnApp".into(),
-            args: Some(json!({
+            args: crate::action_args_json!({
                 "pluginId": plugin_id,
                 "appId": app_id,
                 "position": { "x": world.0, "y": world.1 },
-            })),
+            }),
         });
     }
     None
@@ -4363,7 +4396,7 @@ pub fn map_action(controller_id: &str, action: &str, args: Value) -> ActionDescr
     ActionDescriptor {
         controller_id: controller_id.to_string(),
         action: action.to_string(),
-        args: Some(args),
+        args: semio_framework_core::optional_json_to_dsl(Some(args)),
     }
 }
 
@@ -4737,7 +4770,7 @@ pub fn board_action(controller_id: &str, action: &str, args: Value) -> ActionDes
     ActionDescriptor {
         controller_id: controller_id.to_string(),
         action: action.to_string(),
-        args: Some(args),
+        args: semio_framework_core::optional_json_to_dsl(Some(args)),
     }
 }
 
@@ -4993,7 +5026,7 @@ pub fn paint_text_editor(
         return;
     }
     let clear = vello_clear(ctx.theme);
-    let scene_json = editor_scene_json(editor);
+    let scene_pack = editor_scene_pack(editor);
     let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let entry = map.get_mut(&scene.surface_id).expect("engine surface");
@@ -5001,7 +5034,9 @@ pub fn paint_text_editor(
             entry.editor = Some(EditorHost::new());
         }
         let host = entry.editor.as_mut().expect("editor host");
-        let _ = host.sync_from_scene_json(&scene_json);
+        if sync_bytes_field(&mut entry.editor_scene_pack, &scene_pack) {
+            let _ = host.sync_from_scene_pack(&scene_pack);
+        }
         host.set_size(pw, ph, dpr);
         host.build_scene()
     });
@@ -5687,7 +5722,7 @@ fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, 
     input.queue_event(ActionDescriptor {
         controller_id: action.controller_id,
         action: action.action,
-        args: Some(merge_action_args(action.args.as_ref(), patch)),
+        args: merge_action_args(action.args.as_ref(), patch),
     });
 }
 
@@ -5715,13 +5750,16 @@ fn decode_drop_payload(payload: &DragPayload) -> Option<serde_json::Map<String, 
 
 /// 🔀️ `{...existing, ...patch}` (patch wins on key collision) — mirrors
 /// `framework/renderer/react/index.tsx`'s `dispatchUiAction` merge order exactly.
-fn merge_action_args(existing: Option<&Value>, patch: serde_json::Map<String, Value>) -> Value {
+fn merge_action_args(existing: Option<&semio_framework_core::DslValue>, patch: serde_json::Map<String, Value>) -> Option<semio_framework_core::DslValue> {
     let mut base = match existing {
-        Some(Value::Object(map)) => map.clone(),
-        _ => serde_json::Map::new(),
+        Some(dsl) => match semio_framework_core::from_dsl_value::<Value>(dsl.clone()) {
+            Ok(Value::Object(map)) => map,
+            _ => serde_json::Map::new(),
+        },
+        None => serde_json::Map::new(),
     };
     base.extend(patch);
-    Value::Object(base)
+    semio_framework_core::optional_json_to_dsl(Some(Value::Object(base)))
 }
 
 /// 📋️ Writes to the OS clipboard via `ui_wgpu::host` — the one indirection this module's own tests
@@ -6123,7 +6161,11 @@ mod ui_command_wiring_tests {
     use super::*;
 
     fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args }
+        ActionDescriptor {
+            controller_id: "ctrl".into(),
+            action: name.into(),
+            args: semio_framework_core::optional_json_to_dsl(args),
+        }
     }
 
     fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
@@ -6168,11 +6210,15 @@ mod ui_command_wiring_tests {
     #[test]
     fn merge_action_args_lets_the_patch_win_over_existing_args() {
         let existing = serde_json::json!({"id": "abc", "kept": true});
+        let existing_dsl = semio_framework_core::to_dsl_value(&existing).unwrap();
         let mut patch = serde_json::Map::new();
         patch.insert("id".to_string(), Value::from("overridden"));
         patch.insert("targetId".to_string(), Value::from("t1"));
 
-        let merged = merge_action_args(Some(&existing), patch);
+        let merged = semio_framework_core::from_dsl_value::<Value>(
+            merge_action_args(Some(&existing_dsl), patch).expect("merged args"),
+        )
+        .expect("json args");
 
         assert_eq!(merged.get("id").and_then(Value::as_str), Some("overridden"));
         assert_eq!(merged.get("kept").and_then(Value::as_bool), Some(true));
@@ -7506,7 +7552,7 @@ use semio_framework_plugin_host::WasmPluginRuntime;
 #[cfg(not(target_arch = "wasm32"))]
 mod wasm_program_exchange {
     use super::*;
-    use dsl::{from_dsl_value, to_dsl_value};
+    use dsl::{from_dsl_value, to_dsl_value, DslValue};
     use protocol::{
         decode_app_frame, encode_app_command, AppCommand, AppFrame, SectionProbe,
     };
@@ -7570,7 +7616,7 @@ mod wasm_program_exchange {
     }
 
     fn invocation_from_frames(frames: &[AppFrame], seq: u64) -> Result<InvocationResult, String> {
-        let mut output = serde_json::Value::Null;
+        let mut output = DslValue::Null;
         let mut diagnostics = Vec::new();
         let mut requested_effects = Vec::new();
         let mut events = Vec::new();
@@ -7578,7 +7624,7 @@ mod wasm_program_exchange {
         for frame in frames {
             match frame {
                 AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes } if *in_reply_to == seq => {
-                    output = decode_wire(out_bytes)?;
+                    output = decode_wire::<DslValue>(out_bytes)?;
                     diagnostics = decode_wire(diag_bytes).unwrap_or_default();
                     saw_invocation = true;
                 }
@@ -7695,9 +7741,9 @@ mod wasm_program_exchange {
         instance_id: u32,
         body_key: &str,
         view_state: &ViewState,
-        _document_json: Option<&str>,
+        _document_dsl: Option<&str>,
     ) -> Result<UiNode, String> {
-        let _ = _document_json;
+        let _ = _document_dsl;
         let seq = next_seq();
         let frames = exchange(
             runtime,
@@ -7935,16 +7981,16 @@ impl ProgramBridgeEntry {
         instance_id: u32,
         body_key: &str,
         view_state: &ViewState,
-        document_json: Option<&str>,
+        document_dsl: Option<&str>,
     ) -> Result<UiNode, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             ProgramBridgeBackend::Js(handle) => {
-                render_with_document_js(handle, instance_id, body_key, view_state, document_json).await
+                render_with_document_js(handle, instance_id, body_key, view_state, document_dsl).await
             }
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm(runtime) => {
-                wasm_program_exchange::render_with_document(runtime, instance_id, body_key, view_state, document_json)
+                wasm_program_exchange::render_with_document(runtime, instance_id, body_key, view_state, document_dsl)
             }
         }
     }
@@ -8044,7 +8090,7 @@ async fn handle_action_js(
         .and_then(|v| v.dyn_into::<Function>().ok());
     let Some(action) = action else {
         return Ok(semio_framework_core::kernel::InvocationResult {
-            output: serde_json::Value::Null,
+            output: DslValue::Null,
             operations: vec![],
             inverse_group: semio_framework_core::kernel::UndoGroup {
                 invocation_id: semio_framework_core::kernel::InvocationId(String::new()),
@@ -8125,9 +8171,9 @@ async fn render_with_document_js(
     instance_id: u32,
     body_key: &str,
     view_state: &ViewState,
-    document_json: Option<&str>,
+    document_dsl: Option<&str>,
 ) -> Result<UiNode, String> {
-    let render = if document_json.is_some() {
+    let render = if document_dsl.is_some() {
         Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument"))
             .ok()
             .and_then(|v| v.dyn_into::<Function>().ok())
@@ -8137,7 +8183,7 @@ async fn render_with_document_js(
     };
     let render = render.ok_or("render failed")?;
     let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
-    let result = if let Some(document) = document_json {
+    let result = if let Some(document) = document_dsl {
         render.call4(
             &JsValue::NULL,
             &JsValue::from_f64(instance_id as f64),
@@ -8579,7 +8625,7 @@ fn scene_camera_action(surface_id: &str, controller_id: &str, viewport: Viewport
     ActionDescriptor {
         controller_id: controller_id.to_string(),
         action: "setCamera".into(),
-        args: Some(json!({ "surfaceId": surface_id, "camera": { "x": viewport.x, "y": viewport.y, "zoom": viewport.zoom } })),
+        args: crate::action_args_json!({ "surfaceId": surface_id, "camera": { "x": viewport.x, "y": viewport.y, "zoom": viewport.zoom } }),
     }
 }
 
@@ -8625,7 +8671,7 @@ fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> Acti
     ActionDescriptor {
         controller_id: scene.controller_id.clone(),
         action: action.into(),
-        args: Some(args),
+        args: semio_framework_core::optional_json_to_dsl(Some(args)),
     }
 }
 
@@ -9721,8 +9767,11 @@ struct TableCellButtonPayload {
 /// 🔗️ Merges `patch` into `base`'s existing args (rather than replacing them), so a stepper/button cell keeps its row-identifying args (e.g. `objectId`) alongside the delta/click patch.
 fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor {
     let mut args = match &base.args {
-        Some(Value::Object(map)) => map.clone(),
-        _ => serde_json::Map::new(),
+        Some(dsl) => match semio_framework_core::from_dsl_value::<Value>(dsl.clone()) {
+            Ok(Value::Object(map)) => map.clone(),
+            _ => serde_json::Map::new(),
+        },
+        None => serde_json::Map::new(),
     };
     if let Value::Object(patch_map) = patch {
         args.extend(patch_map);
@@ -9730,7 +9779,7 @@ fn merge_action_args(base: &ActionDescriptor, patch: Value) -> ActionDescriptor 
     ActionDescriptor {
         controller_id: base.controller_id.clone(),
         action: base.action.clone(),
-        args: Some(Value::Object(args)),
+        args: semio_framework_core::optional_json_to_dsl(Some(Value::Object(args))),
     }
 }
 
@@ -13963,7 +14012,7 @@ fn map_graph_context_menu_item(scene: &UiComponentSceneNode, item: GraphContextM
     let action = item.action.map(|action| ActionDescriptor {
         controller_id: scene.controller_id.clone(),
         action,
-        args: item.args,
+        args: semio_framework_core::optional_json_to_dsl(item.args),
     });
     if action.is_none() && children.is_empty() {
         return None;
@@ -14003,15 +14052,15 @@ pub fn resolve_graph_context_action(
     let mut resolved = action.clone();
     match action.action.as_str() {
         "setMediaNodeSelection" => {
-            resolved.args = Some(json!({ "nodeIds": [node_id] }));
+            resolved.args = crate::action_args_json!({ "nodeIds": [node_id] });
         }
         "removeAppInstance" => {
             if let Some(instance_id) = graph_node_instance(node_id) {
-                resolved.args = Some(json!({ "instanceId": instance_id }));
+                resolved.args = crate::action_args_json!({ "instanceId": instance_id });
             }
         }
         "selectNode" => {
-            resolved.args = Some(json!({ "nodeId": node_id }));
+            resolved.args = crate::action_args_json!({ "nodeId": node_id });
         }
         _ => {}
     }
@@ -16643,6 +16692,21 @@ use ui_wgpu::{
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID: &str = "framework.settings.general";
+
+use dsl::DslValue;
+use serde_json::Value;
+
+fn dsl_value_as_json(value: &DslValue) -> Value {
+    serde_json::to_value(value).unwrap_or(Value::Null)
+}
+
+fn optional_dsl_value_as_json(value: Option<DslValue>) -> Option<Value> {
+    value.map(|entry| dsl_value_as_json(&entry))
+}
+
+fn optional_json_as_dsl_value(value: Option<Value>) -> Option<DslValue> {
+    value.map(|entry| serde_json::from_value(entry).unwrap_or(DslValue::Null))
+}
 /// 🎨️ Byte-identical to React's `FRAMEWORK_SETTINGS_THEME_TAB_ID` (`ui/js/react/index.tsx:8807`) — the
 /// `PanelTabKind::SettingsTheme` variant this maps to already existed in `framework/core/rs/lib.rs`
 /// but was completely unwired on this side (see `build_settings_theme_ui`/`right_tabs`).
@@ -17042,7 +17106,7 @@ pub struct ShellState {
     pub sync_card_kind: Option<String>,
     pub sync_card_draft: String,
     pub sync_card_anchor: Option<(f32, f32)>,
-    pub last_envelope_json: Option<String>,
+    pub last_envelope_dsl: Option<String>,
     /// @emoji 🏛️ Shell-lifetime document-host actor registry (native only); the browser wgpu build
     /// has no native `DocumentHost` — its sync flows through the React shell's `🟦️backbone-worker.ts`.
     #[cfg(not(target_arch = "wasm32"))]
@@ -17352,7 +17416,7 @@ impl ShellState {
             sync_card_kind: None,
             sync_card_draft: String::new(),
             sync_card_anchor: None,
-            last_envelope_json: None,
+            last_envelope_dsl: None,
             #[cfg(not(target_arch = "wasm32"))]
             document_host: DocumentHost::new(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -18061,7 +18125,7 @@ impl ShellState {
                 action: ActionDescriptor {
                     controller_id: "framework".into(),
                     action: "deleteThemeId".into(),
-                    args: Some(serde_json::json!({ "value": active_id })),
+                    args: crate::action_args_json!({ "value": active_id }),
                 },
                 style: None,
                 presence: UiPresence::default(),
@@ -18700,7 +18764,7 @@ impl ShellState {
                 self.detach_sync_backbone_internal();
                 self.sync_backbone_uri = None;
                 self.sync_card_kind = None;
-                self.last_envelope_json = None;
+                self.last_envelope_dsl = None;
                 Ok(())
             }
             _ => Ok(()),
@@ -18929,7 +18993,7 @@ impl ShellState {
                         *max_long_edge_px,
                         *fps_hint,
                         payload.as_deref(),
-                        args.clone(),
+                        optional_dsl_value_as_json(args.clone()),
                     ) {
                         self.deferred_actions.push(descriptor);
                     }
@@ -19013,7 +19077,7 @@ impl ShellState {
                             let action = ActionDescriptor {
                                 controller_id: session.app.controller_id.clone(),
                                 action: import_action.to_string(),
-                                args: Some(args),
+                                args: semio_framework_core::optional_json_to_dsl(Some(args)),
                             };
                             if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(action_json) = serde_json::to_string(&action) {
@@ -19042,10 +19106,10 @@ impl ShellState {
                             let action = ActionDescriptor {
                                 controller_id: session.app.controller_id.clone(),
                                 action: "bindSpaceFile".into(),
-                                args: Some(serde_json::json!({
+                                args: crate::action_args_json!({
                                     "spaceId": space_id,
                                     "filePath": path.display().to_string(),
-                                })),
+                                }),
                             };
                             if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(action_json) = serde_json::to_string(&action) {
@@ -19073,7 +19137,7 @@ impl ShellState {
                             let action = ActionDescriptor {
                                 controller_id: session.app.controller_id.clone(),
                                 action: import_action.to_string(),
-                                args: Some(args),
+                                args: semio_framework_core::optional_json_to_dsl(Some(args)),
                             };
                             if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(action_json) = serde_json::to_string(&action) {
@@ -19228,7 +19292,7 @@ impl ShellState {
         let action = ActionDescriptor {
             controller_id: session.app.controller_id.clone(),
             action: "openSpace".into(),
-            args: Some(serde_json::json!({ "spaceId": space_id })),
+            args: crate::action_args_json!({ "spaceId": space_id }),
         };
         let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
         let result = program
@@ -19651,7 +19715,7 @@ impl ShellState {
                                 .map(|s| s.app.controller_id.clone())
                                 .unwrap_or_default(),
                             action: "selectRows".into(),
-                            args: Some(serde_json::json!({ "surfaceId": surface_id, "ids": ids })),
+                            args: crate::action_args_json!({ "surfaceId": surface_id, "ids": ids }),
                         })
                         .await?;
                         return Ok(());
@@ -20050,7 +20114,7 @@ impl ShellState {
                     self.dispatch_action(ActionDescriptor {
                         controller_id: session.app.controller_id.clone(),
                         action: "setActiveExample".into(),
-                        args: Some(serde_json::json!({ "exampleId": example_id })),
+                        args: crate::action_args_json!({ "exampleId": example_id }),
                     })
                     .await?;
                 }
@@ -20283,7 +20347,7 @@ impl ShellState {
                         .map(|s| s.app.controller_id.clone())
                         .unwrap_or_default(),
                     action: "setMode".into(),
-                    args: Some(serde_json::json!({ "modeId": mode_id })),
+                    args: crate::action_args_json!({ "modeId": mode_id }),
                 })
                 .await?;
                 return Ok(true);
@@ -20304,7 +20368,7 @@ impl ShellState {
                     self.dispatch_action(ActionDescriptor {
                         controller_id,
                         action: "setActivePanelTab".into(),
-                        args: Some(serde_json::json!({ "tabId": tab_id })),
+                        args: crate::action_args_json!({ "tabId": tab_id }),
                     })
                     .await?;
                 }
@@ -20356,7 +20420,7 @@ impl ShellState {
                         self.dispatch_action(ActionDescriptor {
                             controller_id: action.controller_id,
                             action: action.action,
-                            args: Some(serde_json::json!({ "value": value })),
+                            args: crate::action_args_json!({ "value": value }),
                         })
                         .await?;
                         return Ok(true);
@@ -20368,7 +20432,7 @@ impl ShellState {
                     self.dispatch_action(ActionDescriptor {
                         controller_id: action.controller_id,
                         action: action.action,
-                        args: Some(serde_json::json!({ "pressed": !pressed })),
+                        args: crate::action_args_json!({ "pressed": !pressed }),
                     })
                     .await?;
                     return Ok(true);
@@ -20380,7 +20444,7 @@ impl ShellState {
                     self.dispatch_action(ActionDescriptor {
                         controller_id: meta.on_delta.controller_id,
                         action: meta.on_delta.action,
-                        args: Some(serde_json::json!({ "delta": -meta.step })),
+                        args: crate::action_args_json!({ "delta": -meta.step }),
                     })
                     .await?;
                     return Ok(true);
@@ -20392,7 +20456,7 @@ impl ShellState {
                     self.dispatch_action(ActionDescriptor {
                         controller_id: meta.on_delta.controller_id,
                         action: meta.on_delta.action,
-                        args: Some(serde_json::json!({ "delta": meta.step })),
+                        args: crate::action_args_json!({ "delta": meta.step }),
                     })
                     .await?;
                     return Ok(true);
@@ -20451,7 +20515,7 @@ impl ShellState {
         self.deferred_actions.push(ActionDescriptor {
             controller_id: action.controller_id,
             action: action.action,
-            args: Some(serde_json::json!({ "ids": [item_id] })),
+            args: crate::action_args_json!({ "ids": [item_id] }),
         });
     }
 
@@ -20481,7 +20545,7 @@ impl ShellState {
                 self.dispatch_action(ActionDescriptor {
                     controller_id: meta.on_change.controller_id,
                     action: meta.on_change.action,
-                    args: Some(serde_json::json!({ "value": value })),
+                    args: crate::action_args_json!({ "value": value }),
                 })
                 .await?;
             }
@@ -20490,7 +20554,7 @@ impl ShellState {
                 self.dispatch_action(ActionDescriptor {
                     controller_id: meta.on_change.controller_id,
                     action: meta.on_change.action,
-                    args: Some(serde_json::json!({ "value": value })),
+                    args: crate::action_args_json!({ "value": value }),
                 })
                 .await?;
             }
@@ -20515,7 +20579,7 @@ impl ShellState {
                 self.dispatch_action(ActionDescriptor {
                     controller_id: meta.on_absolute.controller_id,
                     action: meta.on_absolute.action,
-                    args: Some(serde_json::json!({ "value": parsed })),
+                    args: crate::action_args_json!({ "value": parsed }),
                 })
                 .await?;
                 input.blur_input();
@@ -20526,7 +20590,7 @@ impl ShellState {
             self.dispatch_action(ActionDescriptor {
                 controller_id: meta.on_change.controller_id,
                 action: meta.on_change.action,
-                args: Some(serde_json::json!({ "value": input.text_buffer })),
+                args: crate::action_args_json!({ "value": input.text_buffer }),
             })
             .await?;
             input.blur_input();
@@ -20610,7 +20674,7 @@ impl ShellState {
             self.dispatch_action(ActionDescriptor {
                 controller_id,
                 action: "setActivePanelTab".into(),
-                args: Some(serde_json::json!({ "tabId": tab_id })),
+                args: crate::action_args_json!({ "tabId": tab_id }),
             })
             .await?;
         }
@@ -20669,7 +20733,7 @@ impl ShellState {
                     action: Some(ActionDescriptor {
                         controller_id: session.app.controller_id.clone(),
                         action: "setMediaNodeSelection".into(),
-                        args: Some(serde_json::json!({ "nodeIds": [node_id] })),
+                        args: crate::action_args_json!({ "nodeIds": [node_id] }),
                     }),
                     ..Default::default()
                 });
@@ -20841,7 +20905,7 @@ impl ShellState {
                 dispatch_action: Some(ActionDescriptor {
                     controller_id: session.app.controller_id.clone(),
                     action: "setActivePanelTab".into(),
-                    args: Some(serde_json::json!({ "tabId": tab.id() })),
+                    args: crate::action_args_json!({ "tabId": tab.id() }),
                 }),
                 action: None,
                 category: None,
@@ -21011,10 +21075,10 @@ impl ShellState {
             self.dispatch_action(ActionDescriptor {
                 controller_id: session.app.controller_id.clone(),
                 action: "setMediaNodeSelection".into(),
-                args: Some(serde_json::json!({
+                args: crate::action_args_json!({
                     "surfaceId": item.surface_id,
                     "nodeIds": [item.node_id],
-                })),
+                }),
             })
             .await?;
         }
@@ -21173,10 +21237,10 @@ impl ShellState {
                     self.deferred_actions.push(ActionDescriptor {
                         controller_id: "framework.sync".into(),
                         action: "attach".into(),
-                        args: Some(serde_json::json!({
+                        args: crate::action_args_json!({
                             "path": self.sync_card_draft,
                             "kind": self.sync_card_kind,
-                        })),
+                        }),
                     });
                     return;
                 }
@@ -22670,9 +22734,12 @@ impl ShellState {
         defs: &[semio_framework_core::ActionArgDef],
         staged: &serde_json::Map<String, serde_json::Value>,
     ) -> Option<serde_json::Map<String, serde_json::Value>> {
-        let effective = semio_framework_core::effective_action_args(defs, staged);
+        let staged_dsl = semio_framework_core::to_dsl_value(&serde_json::Value::Object(staged.clone())).ok()?;
+        let effective = semio_framework_core::effective_action_args(defs, &staged_dsl);
         if semio_framework_core::missing_required_args(defs, &effective).is_empty() {
-            Some(effective)
+            semio_framework_core::from_dsl_value::<serde_json::Value>(effective)
+                .ok()
+                .and_then(|value| value.as_object().cloned())
         } else {
             None
         }
@@ -22695,11 +22762,11 @@ impl ShellState {
         let Some(effective) = Self::resolved_execute_args(&action.args, &staged) else {
             return Ok(());
         };
-        let args = if effective.is_empty() {
+        let args = semio_framework_core::optional_json_to_dsl(if effective.is_empty() {
             None
         } else {
             Some(serde_json::Value::Object(effective))
-        };
+        });
         self.dispatch_action(ActionDescriptor {
             controller_id: session.app.controller_id.clone(),
             action: action_id.to_string(),
@@ -22902,7 +22969,7 @@ impl ShellState {
                 self.dispatch_action(ActionDescriptor {
                     controller_id: "framework".into(),
                     action: action.into(),
-                    args: Some(serde_json::json!({ "value": value })),
+                    args: crate::action_args_json!({ "value": value }),
                 })
                 .await
             }
@@ -22967,7 +23034,7 @@ impl ShellState {
         ActionDescriptor {
             controller_id: controller_id.to_string(),
             action: "noteShellCommand".into(),
-            args: Some(args),
+            args: semio_framework_core::optional_json_to_dsl(Some(args)),
         }
     }
 
@@ -24121,7 +24188,7 @@ pub struct TutorialRuntime {
     applied_ms: f64,
     /// 📸️ The live document/UI as they stood the moment the tutorial sandboxed them — restored on exit
     /// (Design Decision 3). `None` for a recording, which is never sandboxed.
-    pre_sandbox_document_json: Option<String>,
+    pre_sandbox_document_dsl: Option<String>,
     pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot,
     last_tick_wall_ms: f64,
     /// 🎥️ Active per-window convergence tweens (Deviated → Playing) — see `TutorialCameraConverge`.
@@ -24137,7 +24204,7 @@ pub struct TutorialRuntime {
 /// than applied inline (the plugin bridge's document calls are async, chrome rendering isn't).
 #[derive(Clone, Debug)]
 pub enum TutorialPendingDocOp {
-    LoadDocumentJson(String),
+    LoadDocumentDsl(String),
     ApplyOperations(Vec<String>),
     /// 🖋️ `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` all replay as a bare
     /// generic action dispatch (`"undo"`/`"redo"`/… against the session's `controller_id`) — the same
@@ -24509,7 +24576,7 @@ fn tutorial_pending_op_for_edit(entry: &semio_framework_core::TutorialDocumentEv
         K::SwitchAlternative { alternative_id } => {
             TutorialPendingDocOp::HistoryAction { action_id: "switchAlternative".into(), args: Some(serde_json::json!({ "alternativeId": alternative_id })) }
         }
-        K::Load { document_json, previous_json } => TutorialPendingDocOp::LoadDocumentJson(if forward { document_json.clone() } else { previous_json.clone() }),
+        K::Load { document_dsl, previous_dsl } => TutorialPendingDocOp::LoadDocumentDsl(if forward { document_dsl.clone() } else { previous_dsl.clone() }),
     }
 }
 //#endregion ✂️PendingDocOps
@@ -24552,11 +24619,11 @@ impl ShellState {
         // 🎬️ Introductions and tutorials are mutually exclusive (Design Decision 8).
         chrome_skip_introduction();
         let pre_sandbox_ui = tutorial_capture_ui_snapshot(self);
-        // 🚧️ `last_envelope_json` is this shell's own best-effort stand-in for "the live document's full
+        // 🚧️ `last_envelope_dsl` is this shell's own best-effort stand-in for "the live document's full
         // `DocumentEnvelope` JSON" — there is no other reachable accessor for it from here.
-        let pre_sandbox_document_json = self.last_envelope_json.clone();
-        if let Some(document_json) = definition.base.document_json.clone() {
-            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentJson(document_json));
+        let pre_sandbox_document_dsl = self.last_envelope_dsl.clone();
+        if let Some(document_dsl) = definition.base.document_dsl.clone() {
+            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentDsl(document_dsl));
         } else if let Some(example_id) = definition.base.example_id.as_ref() {
             // 🚧️ No "load example by id" plugin-bridge primitive is reachable from here without
             // duplicating `apply_shell_uri`'s example-switch machinery — scoped out; the tutorial plays
@@ -24573,7 +24640,7 @@ impl ShellState {
             playhead_ms: 0.0,
             rate: 1.0,
             applied_ms: 0.0,
-            pre_sandbox_document_json,
+            pre_sandbox_document_dsl,
             pre_sandbox_ui,
             last_tick_wall_ms: chrome_now_ms(),
             converge: HashMap::new(),
@@ -24608,7 +24675,7 @@ impl ShellState {
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_json: self.last_envelope_json.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
+            base: semio_framework_core::TutorialBase { document_dsl: self.last_envelope_dsl.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
             tracks: semio_framework_core::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -24618,7 +24685,7 @@ impl ShellState {
             playhead_ms: 0.0,
             rate: 1.0,
             applied_ms: 0.0,
-            pre_sandbox_document_json: None,
+            pre_sandbox_document_dsl: None,
             pre_sandbox_ui: ui.clone(),
             last_tick_wall_ms: now,
             converge: HashMap::new(),
@@ -24647,8 +24714,8 @@ impl ShellState {
             }
             _ => {
                 tutorial_apply_ui_snapshot(self, &runtime.pre_sandbox_ui);
-                if let Some(document_json) = runtime.pre_sandbox_document_json {
-                    self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentJson(document_json));
+                if let Some(document_dsl) = runtime.pre_sandbox_document_dsl {
+                    self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentDsl(document_dsl));
                 }
             }
         }
@@ -24825,7 +24892,10 @@ impl ShellState {
                 let at = runtime.playhead_ms.max(0.0) as u64;
                 runtime.definition.tracks.events.push(semio_framework_core::TutorialEvent {
                     at,
-                    kind: semio_framework_core::TutorialEventKind::Action { action: action.action.clone(), args: action.args.clone() },
+                    kind: semio_framework_core::TutorialEventKind::Action {
+                        action: action.action.clone(),
+                        args: action.args.clone(),
+                    },
                 });
             }
             TutorialMode::Paused | TutorialMode::Deviated => {}
@@ -24845,11 +24915,11 @@ impl ShellState {
         for op in ops {
             match op {
                 // 🚧️ `TutorialBase.document_json` is always `None` fleet-wide today (no tutorial
-                // definition populates it, and `last_envelope_json` — its only non-`None` source — is
+                // definition populates it, and `last_envelope_dsl` — its only non-`None` source — is
                 // itself never set past its `None` default); a real loader needs the tutorial-content
                 // dsl-text conversion this plan's B5 tutorial-track bullet scopes separately, not a
-                // whole-envelope JSON reader (deleted with `PluginApp::load_document`/`document_json`).
-                TutorialPendingDocOp::LoadDocumentJson(_json) => {
+                // whole-envelope JSON reader (deleted with `PluginApp::load_document`/`document_dsl`).
+                TutorialPendingDocOp::LoadDocumentDsl(_json) => {
                     eprintln!("[DEBUG] tutorial load document (json) not wired to the pack-only plugin bridge");
                 }
                 TutorialPendingDocOp::ApplyOperations(operations) => {
@@ -24859,7 +24929,7 @@ impl ShellState {
                 }
                 TutorialPendingDocOp::HistoryAction { action_id, args } => {
                     if let Some(session) = self.session.clone() {
-                        let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args };
+                        let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args: semio_framework_core::optional_json_to_dsl(args) };
                         if let Err(err) = self.dispatch_action(descriptor).await {
                             eprintln!("[DEBUG] tutorial history action failed: {err}");
                         }
@@ -25160,7 +25230,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_json: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework_core::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework_core::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -25170,7 +25240,7 @@ mod tutorial_tests {
             playhead_ms: 0.0,
             rate: 1.0,
             applied_ms: 0.0,
-            pre_sandbox_document_json: None,
+            pre_sandbox_document_dsl: None,
             pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
             last_tick_wall_ms: 0.0,
             converge: HashMap::new(),
@@ -25192,7 +25262,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 1000,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_json: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework_core::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework_core::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -25202,7 +25272,7 @@ mod tutorial_tests {
             playhead_ms: 0.0,
             rate: 1.0,
             applied_ms: 0.0,
-            pre_sandbox_document_json: None,
+            pre_sandbox_document_dsl: None,
             pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
             last_tick_wall_ms: 0.0,
             converge: HashMap::new(),
@@ -25224,7 +25294,7 @@ mod tutorial_tests {
             description: None,
             duration_ms: 0,
             chapters: Vec::new(),
-            base: semio_framework_core::TutorialBase { document_json: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            base: semio_framework_core::TutorialBase { document_dsl: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
             tracks: semio_framework_core::TutorialTracks::default(),
             recorded_at: None,
         };
@@ -25234,7 +25304,7 @@ mod tutorial_tests {
             playhead_ms: 250.0,
             rate: 1.0,
             applied_ms: 0.0,
-            pre_sandbox_document_json: None,
+            pre_sandbox_document_dsl: None,
             pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
             last_tick_wall_ms: 0.0,
             converge: HashMap::new(),
@@ -26589,10 +26659,10 @@ impl ShellState {
                 event: Some(ActionDescriptor {
                     controller_id: "framework.sync".into(),
                     action: "attach".into(),
-                    args: Some(serde_json::json!({
+                    args: crate::action_args_json!({
                         "path": self.sync_card_draft,
                         "kind": kind,
-                    })),
+                    }),
                 }),
                 control_id: Some("framework.sync.attach".into()),
                 kind: HitKind::Button,
@@ -26988,7 +27058,7 @@ impl ShellState {
                 self.deferred_actions.push(ActionDescriptor {
                     controller_id: session.app.controller_id.clone(),
                     action: "setActivePanelTab".into(),
-                    args: Some(serde_json::json!({ "tabId": tab_id })),
+                    args: crate::action_args_json!({ "tabId": tab_id }),
                 });
             }
         } else if is_right {
@@ -26999,7 +27069,7 @@ impl ShellState {
                 self.deferred_actions.push(ActionDescriptor {
                     controller_id,
                     action: "setActivePanelTab".into(),
-                    args: Some(serde_json::json!({ "tabId": tab_id })),
+                    args: crate::action_args_json!({ "tabId": tab_id }),
                 });
             }
         }
@@ -28553,7 +28623,7 @@ impl ShellState {
         self.staged_action_args
             .get(&Self::staged_key(window_id, action_id))
             .and_then(|map| map.get(&arg.id).cloned())
-            .or_else(|| arg.default.clone())
+            .or_else(|| arg.default.as_ref().map(dsl_value_as_json))
     }
 
     fn arg_default(&self, action_id: &str, arg_id: &str) -> Option<serde_json::Value> {
@@ -28567,7 +28637,8 @@ impl ShellState {
             .iter()
             .find(|arg| arg.id == arg_id)?
             .default
-            .clone()
+            .as_ref()
+            .map(dsl_value_as_json)
     }
 
     /// 📝️ Renders the staged form for one expanded action and returns its consumed height. Every control
@@ -30532,7 +30603,7 @@ fn fallback_action_descriptor(controller_id: &str, fallback_action: &str, bytes:
         );
         obj.insert("name".into(), serde_json::Value::String(name.to_string()));
     }
-    ActionDescriptor { controller_id: controller_id.to_string(), action: fallback_action.to_string(), args: Some(args) }
+    ActionDescriptor { controller_id: controller_id.to_string(), action: fallback_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(args)) }
 }
 
 /// 🧮️ Pure `ffmpeg` argument computation for D5 frame extraction (precedent: `animate/video/rs/lib.rs`'s
@@ -30679,7 +30750,7 @@ fn request_media_frames(
             obj.insert("index".into(), serde_json::json!(index));
             obj.insert("total".into(), serde_json::json!(total));
         }
-        actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: frame_action.to_string(), args: Some(frame_args) });
+        actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: frame_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(frame_args)) });
     }
     let mut done_args = base_args;
     if let Some(obj) = done_args.as_object_mut() {
@@ -30687,7 +30758,7 @@ fn request_media_frames(
         obj.insert("frameCount".into(), serde_json::json!(total));
         obj.insert("sampledCount".into(), serde_json::json!(total));
     }
-    actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: done_action.to_string(), args: Some(done_args) });
+    actions.push(ActionDescriptor { controller_id: controller_id.to_string(), action: done_action.to_string(), args: semio_framework_core::optional_json_to_dsl(Some(done_args)) });
     let _ = std::fs::remove_dir_all(&scratch_dir);
     actions
 }

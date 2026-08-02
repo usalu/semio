@@ -84,6 +84,8 @@ pub enum NodeGraphError {
     #[error(transparent)]
     Json(#[from] serde_json::Error),
     #[error(transparent)]
+    Pack(#[from] store::PackError),
+    #[error(transparent)]
     Dag(#[from] dag::DagError),
 }
 //#endregion ⚠️ Errors
@@ -171,6 +173,43 @@ pub struct NodeGraphScenePayload {
     pub computing_json: Option<String>,
     pub capabilities_json: Option<String>,
     pub fixture_json: Option<String>,
+}
+
+fn expand_payload_pack_fields(payload: &mut NodeGraphScenePayload) -> Result<(), NodeGraphError> {
+    payload.nodes_json = store::pack_rt::scene_field_json_text(&payload.nodes_json)?;
+    payload.edges_json = store::pack_rt::scene_field_json_text(&payload.edges_json)?;
+    payload.viewport_json = store::pack_rt::scene_field_json_text(&payload.viewport_json)?;
+    if let Some(json) = payload.selection_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.hover_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.preview_off_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.lod_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.catalogue_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.controls_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.clusters_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.computing_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.capabilities_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    if let Some(json) = payload.fixture_json.as_mut() {
+        *json = store::pack_rt::scene_field_json_text(json)?;
+    }
+    Ok(())
 }
 
 impl NodeGraphScenePayload {
@@ -296,7 +335,19 @@ impl GraphHost {
 
     pub fn sync_from_scene_json(&mut self, scene_json: &str) -> Result<(), NodeGraphError> {
         let value: Value = serde_json::from_str(scene_json)?;
-        self.sync_from_payload(&NodeGraphScenePayload::from_json(&value))
+        self.sync_from_scene_value(&value)
+    }
+
+    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), NodeGraphError> {
+        let dsl = store::pack_rt::decode_pack_value(bytes)?;
+        let value = store::pack_rt::dsl_value_to_json(dsl);
+        self.sync_from_scene_value(&value)
+    }
+
+    fn sync_from_scene_value(&mut self, value: &Value) -> Result<(), NodeGraphError> {
+        let mut payload = NodeGraphScenePayload::from_json(value);
+        expand_payload_pack_fields(&mut payload)?;
+        self.sync_from_payload(&payload)
     }
 
     pub fn paint_scene(&self, scene: &mut canvas::Scene, width: u32, height: u32, dpr: f64) {
@@ -420,6 +471,11 @@ mod wasm_session {
         #[wasm_bindgen(js_name = syncFromSceneJson)]
         pub fn sync_from_scene_json(&self, json: &str) -> Result<(), JsValue> {
             self.state.borrow_mut().host.sync_from_scene_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = syncFromScenePack)]
+        pub fn sync_from_scene_pack(&self, bytes: &[u8]) -> Result<(), JsValue> {
+            self.state.borrow_mut().host.sync_from_scene_pack(bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = attachCanvas)]
@@ -926,6 +982,21 @@ mod tests {
         let mut host = GraphHost::default();
         let scene = r#"{"nodesJson":"[{\"id\":\"a\",\"outputs\":[{\"id\":\"out\"}]}]","edgesJson":"[]","viewportJson":"{\"x\":0,\"y\":0,\"zoom\":1}","selectionJson":"[\"a\"]"}"#;
         host.sync_from_scene_json(scene).expect("sync");
+        assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
+    }
+
+    #[test]
+    fn graph_host_sync_from_scene_pack_decodes_pack_shell() {
+        let mut host = GraphHost::default();
+        let scene = serde_json::json!({
+            "nodesJson": "[{\"id\":\"a\",\"outputs\":[{\"id\":\"out\"}]}]",
+            "edgesJson": "[]",
+            "viewportJson": "{\"x\":0,\"y\":0,\"zoom\":1}",
+            "selectionJson": "[\"a\"]"
+        });
+        let dsl = dsl::to_dsl_value(&scene).expect("dsl");
+        let bytes = store::pack_rt::encode_pack_value(&dsl);
+        host.sync_from_scene_pack(&bytes).expect("sync");
         assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
     }
 

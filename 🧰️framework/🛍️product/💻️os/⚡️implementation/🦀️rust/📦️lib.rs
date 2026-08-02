@@ -513,7 +513,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         next
     }
 
-    fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+    fn sync_workflow_node_parameter_ports(node: &OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> OsWorkflowNode {
         sync_workflow_parameter_ports(&OsWorkflow { schema: OS_WORKFLOW_SCHEMA.into(), nodes: vec![node.clone()], edges: Vec::new() }, bindings).nodes.into_iter().next().unwrap_or_else(|| node.clone())
     }
 
@@ -2082,11 +2082,11 @@ pub mod backbone {
     #[cfg(not(target_arch = "wasm32"))]
     use crate::workflow::OS_SPACE_SCHEMA;
     #[cfg(not(target_arch = "wasm32"))]
-    use crate::{OsEnvelope, OsOperation, OsProjection};
+    use crate::{OsOperation, OsProjection};
     #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
     use vcs::VcsError;
-    use store::{DocumentDsl, MemoryBackbonePort};
+    use store::MemoryBackbonePort;
     #[cfg(not(target_arch = "wasm32"))]
     use store_sync::{FolderSqliteStorage, FolderTextStorage};
 
@@ -2776,7 +2776,8 @@ pub mod instance {
         let mut defaults = serde_json::Map::new();
         for field in &config_spec.fields {
             if let Some(default) = &field.default {
-                defaults.insert(field.key.clone(), default.clone());
+                let json_default = semio_framework_core::from_dsl_value::<Value>(default.clone()).unwrap_or(Value::Null);
+                defaults.insert(field.key.clone(), json_default);
             }
         }
         Value::Object(defaults)
@@ -3092,7 +3093,7 @@ pub mod media_export_raster {
     }
 
     /// @emoji 📐️ Renders a DWG drawing back to flat SVG markup (lines and closed polygons), for the raster import path.
-    pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+    pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
         let width = (drawing.extmax[0] - drawing.extmin[0]).max(1.0).ceil() as u32;
         let height = (drawing.extmax[1] - drawing.extmin[1]).max(1.0).ceil() as u32;
         let mut paths = String::new();
@@ -3608,7 +3609,7 @@ pub mod workflow {
                     Some(dsl::FieldValue::Text(s)) => s.clone(),
                     other => return Err(dsl::__rt::field_error(format!("expected wire_format, found {other:?}"))),
                 };
-                let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
+                let format = OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
                 MediaWireFormat::Binary { format }
             }
             "document" => {
@@ -4478,7 +4479,7 @@ pub mod workflow {
             }
             for binding in bindings.iter().filter(|entry| entry.instance_id == instance_id) {
                 let parameter = parameters.iter().find(|entry| match entry {
-                    crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+                    OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
                         id == &binding.parameter_id
                     }
                 });
@@ -4487,7 +4488,7 @@ pub mod workflow {
                     file_node_kind_id: "input".into(),
                     name: parameter
                         .map(|entry| match entry {
-                            crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+                            OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
                                 name.clone()
                             }
                         })
@@ -4501,7 +4502,7 @@ pub mod workflow {
                         "binding".into(),
                         parameter
                             .map(|entry| match entry {
-                                crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+                                OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
                                     name.clone()
                                 }
                             })
@@ -4509,7 +4510,7 @@ pub mod workflow {
                     )]),
                 });
             }
-            let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+            let descriptor = os_artifact_descriptor(&instance.yields);
             for format in required_os_media_import_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
                 let ext = format.as_str();
                 rows.push(OsWorkflowVfsNodeRecord {
@@ -4527,7 +4528,7 @@ pub mod workflow {
             return rows;
         }
         if parent_id == os_workflow_vfs_outputs_folder_id(&instance_id) {
-            let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
+            let descriptor = os_artifact_descriptor(&instance.yields);
             let formats = required_os_media_export_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind));
             let mut rows = Vec::new();
             if let Some(registration) = registration.as_ref() {
@@ -5319,13 +5320,13 @@ pub mod registry {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
-            terminology_documents: std::collections::HashMap::new(),
+            terminology_documents: HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: semio_framework_core::ConfigSpec::empty(),
+            config: ConfigSpec::empty(),
             command_grammar: semio_framework_core::CommandGrammar::empty(),
             io: semio_framework_core::AppIo::default(),
             tutorials: Vec::new(),
@@ -5438,3 +5439,6 @@ pub use semio_framework_core::*;
 pub use ui_wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};
 pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};
+
+#[path = "📦️plugin_bundle_installer_shim.rs"]
+mod plugin_bundle_installer_shim;

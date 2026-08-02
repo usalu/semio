@@ -62,7 +62,7 @@ fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: DRAW_PLAY_CONTROLLER_ID.into(),
         action: action.into(),
-        args,
+        args: semio_framework_plugin::optional_json_to_dsl(args),
     }
 }
 

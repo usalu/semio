@@ -29,7 +29,7 @@
 
 /// @emoji ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
 /// forward diff, its precomputed inverse, and the HLC tick it was authored at.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct OperationEnvelope {
     pub operation_id: protocol_core::OperationId,
     pub document_id: protocol_core::DocumentId,
@@ -539,10 +539,12 @@ mod tests {
 
     //#region 🔖️Envelope
     #[test]
-    fn operation_envelope_serde_round_trips() {
+    fn operation_envelope_binary_round_trips() {
         let envelope = sample_envelope("operation-1", vec!["operation-0"]);
-        let json = serde_json::to_string(&envelope).expect("serialize");
-        let round_tripped: OperationEnvelope = serde_json::from_str(&json).expect("deserialize");
+        let mut out = Vec::new();
+        encode_envelope(&envelope, &mut out);
+        let mut pos = 0;
+        let round_tripped = decode_envelope(&out, &mut pos).expect("decode");
         assert_eq!(round_tripped, envelope);
     }
     //#endregion 🔖️Envelope

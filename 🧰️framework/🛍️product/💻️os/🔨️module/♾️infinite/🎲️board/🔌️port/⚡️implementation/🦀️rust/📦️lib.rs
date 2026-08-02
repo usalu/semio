@@ -70,6 +70,6 @@ pub struct HandleData {
     pub color_fill: Option<Color>,
     /// @emoji 🏷️ Runtime host encoding: `typst:`, `emoji:`, `image:data:…`, catalog id, or inline SVG for detail LOD.
     pub icon_kind: Option<String>,
-    pub properties: crate::PropertyBag,
+    pub properties: PropertyBag,
 }
 // #endregion 🔖️HandleKinds

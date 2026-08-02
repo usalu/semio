@@ -750,7 +750,11 @@ pub mod generation_forms {
 
     //#region 🔖️Render
     fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor { controller_id: controller_id.into(), action: action.into(), args }
+        ActionDescriptor {
+            controller_id: controller_id.into(),
+            action: action.into(),
+            args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)),
+        }
     }
 
     pub fn render_generations_tree(controller_id: &str, surface_prefix: &str, generations: &[FormGeneration], selected_id: Option<&str>) -> UiNode {
@@ -1137,7 +1141,11 @@ pub mod builder_kit {
 
     //#region 🔖️Render
     pub fn playbook_builder_action(config: &PlaybookBuilderConfig, action: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor { controller_id: config.controller_id.into(), action: action.into(), args }
+        ActionDescriptor {
+            controller_id: config.controller_id.into(),
+            action: action.into(),
+            args: args.map(|value| dsl::to_dsl_value(&value).unwrap_or(dsl::DslValue::Null)),
+        }
     }
 
     /// 🧩️ Builds the palette of insertable block kinds from a host app's built-in kinds plus any

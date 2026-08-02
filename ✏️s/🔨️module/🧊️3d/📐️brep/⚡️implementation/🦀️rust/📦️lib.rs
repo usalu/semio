@@ -5858,10 +5858,10 @@ impl BrepkitKernel {
     }
 
     fn solid_bounds_overlap(&self, a: SolidId, b: SolidId) -> bool {
-        let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+        let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
             return true;
         };
-        let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+        let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
             return true;
         };
         let margin = brepkit_math::tolerance::Tolerance::new().linear;
@@ -7004,7 +7004,7 @@ impl BrepkitKernel {
     /// 🌉️ GLB import standardized on the hand-rolled `GlbImporter` codec, converted into a solid the same way `import_dwg_sync`/`import_stl_sync` do.
     pub fn import_glb_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let mesh = semio_framework_core::GlbImporter.import(data).map_err(BrepError::Operation)?;
-        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
         let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
         let solid = import_mesh(&mut self.topo, &triangle_mesh, tolerance).map_err(Self::map_io_err)?;
@@ -7047,7 +7047,7 @@ impl BrepkitKernel {
     pub fn import_dwg_sync(&mut self, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         let drawing = semio_framework_core::dwg_from_bytes(data).map_err(BrepError::Operation)?;
         let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
-        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+        let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
         let normals: Vec<brepkit_math::vec::Vec3> = mesh.normals.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Vec3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
         let solid = import_mesh(&mut self.topo, &triangle_mesh, tolerance).map_err(Self::map_io_err)?;

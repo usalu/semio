@@ -516,12 +516,6 @@ pub fn main_impl(args: &[String]) -> i32 {
         }
     }
 }
-
-#[cfg(not(test))]
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    std::process::exit(main_impl(&args));
-}
 //#endregion 🔖️Cli
 
 //#region 🧪️Tests

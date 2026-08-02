@@ -1,0 +1,11 @@
+name=snapshot-replaced
+schema=demo/v1
+documentId=fixture-snapshot
+expectedEvent=remoteOperations
+expectedEvent=snapshotReplaced
+expectedEditId=sr-2
+inbound.0.kind=externalEdits
+inbound.0.opsFile=🔧️01-external.ops
+inbound.1.kind=replaceDocument
+inbound.1.dslFile=🗣️02-replace.dsl
+inbound.1.opsFile=🔧️02-replace.ops

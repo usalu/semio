@@ -14,6 +14,8 @@ use serde::Deserialize;
 pub enum EditorError {
     #[error("json: {0}")]
     Json(#[from] serde_json::Error),
+    #[error("pack: {0}")]
+    Pack(#[from] store::PackError),
 }
 // #endregion ⚠️ Errors
 
@@ -528,27 +530,43 @@ impl EditorHost {
 
     pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), EditorError> {
         let value: serde_json::Value = serde_json::from_str(json)?;
+        self.sync_from_scene_value(&value)
+    }
+
+    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), EditorError> {
+        let dsl = store::pack_rt::decode_pack_value(bytes)?;
+        let value = store::pack_rt::dsl_value_to_json(dsl);
+        self.sync_from_scene_value(&value)
+    }
+
+    fn expand_scene_json_field(raw: &str) -> String {
+        store::pack_rt::scene_field_json_text(raw).unwrap_or_else(|_| raw.to_string())
+    }
+
+    fn sync_from_scene_value(&mut self, value: &serde_json::Value) -> Result<(), EditorError> {
         if let Some(buffer) = value.get("buffer").and_then(|v| v.as_str()) {
             self.set_text(buffer.to_string());
         }
         if let Some(json) = value.get("selectionJson").and_then(|v| v.as_str()) {
-            if let Ok(range) = serde_json::from_str::<serde_json::Value>(json) {
+            let json = Self::expand_scene_json_field(json);
+            if let Ok(range) = serde_json::from_str::<serde_json::Value>(&json) {
                 let start = range.get("start").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
                 let end = range.get("end").and_then(|v| v.as_u64()).unwrap_or(start as u64) as usize;
                 self.set_selection_range(start, end);
             }
         }
         if let Some(json) = value.get("tokensJson").and_then(|v| v.as_str()) {
-            self.set_semantic_tokens_json(json);
+            self.set_semantic_tokens_json(&Self::expand_scene_json_field(json));
         }
         if let Some(json) = value.get("diagnosticsJson").and_then(|v| v.as_str()) {
-            self.set_diagnostics_json(json);
+            self.set_diagnostics_json(&Self::expand_scene_json_field(json));
         }
         if let Some(json) = value.get("placeholdersJson").and_then(|v| v.as_str()) {
-            self.set_placeholders_json(json);
+            self.set_placeholders_json(&Self::expand_scene_json_field(json));
         }
         if let Some(json) = value.get("occurrencesJson").and_then(|v| v.as_str()) {
-            if let Ok(value) = serde_json::from_str::<serde_json::Value>(json) {
+            let json = Self::expand_scene_json_field(json);
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json) {
                 if let Some(hover) = value.get("hover").and_then(|v| v.as_str()) {
                     self.set_hover_occurrences_json(hover);
                 }
@@ -558,29 +576,32 @@ impl EditorHost {
             }
         }
         if let Some(json) = value.get("extraCaretsJson").and_then(|v| v.as_str()) {
-            self.set_extra_carets_json(json);
+            self.set_extra_carets_json(&Self::expand_scene_json_field(json));
         }
         if let Some(json) = value.get("selectableSpansJson").and_then(|v| v.as_str()) {
-            self.set_selectable_spans_json(json);
+            self.set_selectable_spans_json(&Self::expand_scene_json_field(json));
         }
         if let Some(json) = value.get("settingsJson").and_then(|v| v.as_str()) {
-            self.set_editor_settings_json(json);
+            self.set_editor_settings_json(&Self::expand_scene_json_field(json));
         }
         if let Some(json) = value.get("cameraJson").and_then(|v| v.as_str()) {
-            if let Ok(camera) = serde_json::from_str::<serde_json::Value>(json) {
+            let json = Self::expand_scene_json_field(json);
+            if let Ok(camera) = serde_json::from_str::<serde_json::Value>(&json) {
                 let y = camera.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
                 self.set_camera(0.0, y, 1.0);
             }
         }
         if let Some(json) = value.get("overlaysJson").and_then(|v| v.as_str()) {
-            if let Ok(overlays) = serde_json::from_str::<serde_json::Value>(json) {
+            let json = Self::expand_scene_json_field(json);
+            if let Ok(overlays) = serde_json::from_str::<serde_json::Value>(&json) {
                 if let Some(y) = overlays.get("deadLineY").and_then(|v| v.as_f64()) {
                     self.set_dead_line_y(y);
                 }
             }
         }
         if let Some(json) = value.get("hoverJson").and_then(|v| v.as_str()) {
-            match serde_json::from_str::<serde_json::Value>(json) {
+            let json = Self::expand_scene_json_field(json);
+            match serde_json::from_str::<serde_json::Value>(&json) {
                 Ok(serde_json::Value::Object(range)) => {
                     let start = range.get("start").and_then(|v| v.as_u64()).map(|v| v as usize);
                     let end = range.get("end").and_then(|v| v.as_u64()).map(|v| v as usize);
@@ -1354,63 +1375,12 @@ impl EditorSession {
 
     #[wasm_bindgen(js_name = syncFromSceneJson)]
     pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), JsValue> {
-        let value: serde_json::Value = serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let mut inner = self.state.borrow_mut();
-        if let Some(buffer) = value.get("buffer").and_then(|v| v.as_str()) {
-            inner.host.set_text(buffer.to_string());
-        }
-        if let Some(json) = value.get("selectionJson").and_then(|v| v.as_str()) {
-            if let Ok(range) = serde_json::from_str::<serde_json::Value>(json) {
-                let start = range.get("start").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-                let end = range.get("end").and_then(|v| v.as_u64()).unwrap_or(start as u64) as usize;
-                inner.host.set_selection_range(start, end);
-            }
-        }
-        if let Some(json) = value.get("tokensJson").and_then(|v| v.as_str()) {
-            inner.host.set_semantic_tokens_json(json);
-        }
-        if let Some(json) = value.get("diagnosticsJson").and_then(|v| v.as_str()) {
-            inner.host.set_diagnostics_json(json);
-        }
-        if let Some(json) = value.get("placeholdersJson").and_then(|v| v.as_str()) {
-            inner.host.set_placeholders_json(json);
-        }
-        if let Some(json) = value.get("occurrencesJson").and_then(|v| v.as_str()) {
-            if let Ok(value) = serde_json::from_str::<serde_json::Value>(json) {
-                if let Some(hover) = value.get("hover").and_then(|v| v.as_str()) {
-                    inner.host.set_hover_occurrences_json(hover);
-                }
-                if let Some(selection) = value.get("selection").and_then(|v| v.as_str()) {
-                    inner.host.set_selection_occurrences_json(selection);
-                }
-            }
-        }
-        if let Some(json) = value.get("extraCaretsJson").and_then(|v| v.as_str()) {
-            inner.host.set_extra_carets_json(json);
-        }
-        if let Some(json) = value.get("selectableSpansJson").and_then(|v| v.as_str()) {
-            inner.host.set_selectable_spans_json(json);
-        }
-        if let Some(json) = value.get("settingsJson").and_then(|v| v.as_str()) {
-            inner.host.set_editor_settings_json(json);
-        }
-        if let Some(json) = value.get("cameraJson").and_then(|v| v.as_str()) {
-            if let Ok(camera) = serde_json::from_str::<serde_json::Value>(json) {
-                let x = camera.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
-                inner.host.set_camera(0.0, x, 1.0);
-            }
-        }
-        if let Some(json) = value.get("hoverJson").and_then(|v| v.as_str()) {
-            match serde_json::from_str::<serde_json::Value>(json) {
-                Ok(serde_json::Value::Object(range)) => {
-                    let start = range.get("start").and_then(|v| v.as_u64()).map(|v| v as usize);
-                    let end = range.get("end").and_then(|v| v.as_u64()).map(|v| v as usize);
-                    inner.host.set_hover_range(start, end);
-                }
-                _ => inner.host.set_hover_range(None, None),
-            }
-        }
-        Ok(())
+        self.state.borrow_mut().host.sync_from_scene_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = syncFromScenePack)]
+    pub fn sync_from_scene_pack(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
+        self.state.borrow_mut().host.sync_from_scene_pack(bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = text)]

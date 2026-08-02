@@ -6,8 +6,8 @@
  */
 // #endregion Header
 
-import type { BackboneWorkerRequest, BackboneWorkerResponse, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, OperationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireOperationEnvelope } from "./📦️index";
-import { decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePresencePeer, encodeServerFrame } from "./📦️index";
+import type { BackboneWorkerRequest, BackboneWorkerResponse, BackboneWorkerWireMessage, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, OperationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireOperationEnvelope } from "./📦️index";
+import { decodeBackboneWorkerRequest, decodeBackboneWorkerResponse, decodeClientFrame, decodeDocumentPackBytes, decodePackValue, decodePresencePeer, decodeServerFrame, encodeBackboneWorkerRequest, encodeBackboneWorkerResponse, encodeClientFrame, encodeDocumentPackBytes, encodePackValue, encodePresencePeer, encodeServerFrame } from "./📦️index";
 
 type RustWorkerHost = {
   handleRequestBytes(bytes: Uint8Array): void;
@@ -40,15 +40,14 @@ async function ensureRustHost(): Promise<RustWorkerHost | null> {
 
 const rustHostPromise = ensureRustHost();
 
-function decodeWorkerRequest(message: BackboneWorkerRequest | { readonly wire: Uint8Array }): BackboneWorkerRequest {
-  if ("wire" in message) return JSON.parse(new TextDecoder().decode(message.wire)) as BackboneWorkerRequest;
-  return message;
+function decodeWorkerRequest(message: BackboneWorkerWireMessage): BackboneWorkerRequest {
+  return decodeBackboneWorkerRequest(message.wire);
 }
 
 const workerScope = typeof self !== "undefined" ? (self as unknown as DedicatedWorkerGlobalScope) : null;
 
 if (workerScope) {
-  workerScope.onmessage = (messageEvent: MessageEvent<BackboneWorkerRequest | { readonly wire: Uint8Array }>) => {
+  workerScope.onmessage = (messageEvent: MessageEvent<BackboneWorkerWireMessage>) => {
     const request = decodeWorkerRequest(messageEvent.data);
     void rustHostPromise.then((host) => {
       if (host) {
@@ -156,27 +155,25 @@ function nextWireTimestamp(state: DocumentState): WireOperationEnvelope["timesta
  * once the wasm actor is available), so a real blake3 dependency isn't worth adding here just to
  * fill an otherwise-unused field. */
 function placeholderPayloadHash(payload: unknown): string {
-  const json = JSON.stringify(payload) ?? "null";
+  const packed = encodePackValue(payload);
   let hash = 0x811c9dc5;
-  for (let index = 0; index < json.length; index++) {
-    hash ^= json.charCodeAt(index);
+  for (let index = 0; index < packed.length; index++) {
+    hash ^= packed[index]!;
     hash = Math.imul(hash, 0x01000193);
   }
   return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
-/** 🎞️ `JSON.stringify` -> UTF-8 bytes, for {@link toWireEnvelope}'s wire payload — the TS twin of
- * the Rust actor's `serde_json::to_vec` call in `to_wire_envelope`. This actor's own convention
- * stays JSON underneath (see the crate doc this file mirrors); only the wire/storage boundary is
- * binary now (W5). */
-function encodeJsonPayload(value: unknown): number[] {
-  return Array.from(new TextEncoder().encode(JSON.stringify(value) ?? "null"));
+/** 🎞️ `store::pack_rt` wire bytes for {@link toWireEnvelope}'s diff/inverse payloads — the TS twin
+ * of the Rust actor's `encode_wire_value` call in `to_wire_envelope`. */
+function encodePackPayload(value: unknown): number[] {
+  return Array.from(encodePackValue(value));
 }
 
-/** 🎞️ The inverse of {@link encodeJsonPayload} — the TS twin of `serde_json::from_slice` in the
- * Rust actor's `from_wire_envelope`. */
-function decodeJsonPayload(bytes: readonly number[]): unknown {
-  return JSON.parse(new TextDecoder().decode(new Uint8Array(bytes)));
+/** 🎞️ The inverse of {@link encodePackPayload} — the TS twin of `decode_wire_value` in the Rust
+ * actor's `from_wire_envelope`. */
+function decodePackPayload(bytes: readonly number[]): unknown {
+  return decodePackValue(new Uint8Array(bytes));
 }
 
 /** 🌉️ Converts this fallback's local, camelCase {@link OperationEnvelope} into the snake_case
@@ -188,8 +185,8 @@ function toWireEnvelope(envelope: OperationEnvelope, timestamp: WireOperationEnv
     document_id: envelope.document,
     actor: envelope.actor,
     dependencies: [...(envelope.deps ?? [])],
-    diff: { schema: envelope.diff.schemaId, payload: encodeJsonPayload(envelope.diff.payload) },
-    inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodeJsonPayload(envelope.inverse.inverseDiff.payload) },
+    diff: { schema: envelope.diff.schemaId, payload: encodePackPayload(envelope.diff.payload) },
+    inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodePackPayload(envelope.inverse.inverseDiff.payload) },
     timestamp,
   };
 }
@@ -198,7 +195,7 @@ function toWireEnvelope(envelope: OperationEnvelope, timestamp: WireOperationEnv
  * `baseVersion` is recovered from the payload's own `sequenceNumber` (this actor's payloads are
  * always edit-shaped JSON), mirroring the Rust side's identical recovery. */
 function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
-  const payload = decodeJsonPayload(envelope.diff.payload);
+  const payload = decodePackPayload(envelope.diff.payload);
   const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
   return {
     id: envelope.operation_id,
@@ -210,7 +207,7 @@ function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
     diff: { schemaId: envelope.diff.schema, payload },
     inverse: {
       targetOperation: envelope.operation_id,
-      inverseDiff: { schemaId: envelope.inverse.schema, payload: decodeJsonPayload(envelope.inverse.payload) },
+      inverseDiff: { schemaId: envelope.inverse.schema, payload: decodePackPayload(envelope.inverse.payload) },
       baseVersion: Number.isFinite(sequenceNumber) ? Math.max(0, sequenceNumber) : 0,
       dependencies: [],
       undoPolicy: "exactBaseOnly",
@@ -729,7 +726,7 @@ if (import.meta.vitest) {
       expect(wire.operation_id).toBe(envelope.id);
       expect(wire.document_id).toBe(envelope.document);
       expect(wire.actor).toBe(envelope.actor);
-      expect(decodeJsonPayload(wire.diff.payload)).toEqual(envelope.diff.payload);
+      expect(decodePackPayload(wire.diff.payload)).toEqual(envelope.diff.payload);
 
       const recovered = fromWireEnvelope(wire);
       expect(recovered.id).toBe(envelope.id);
@@ -767,7 +764,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../kernel/store/sync/fixtures/wire");
+      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../🔨️module/🏪️store/🔄️sync/⚡️implementation/🦀️rust/🧫️fixtures/📡️wire");
 
       function loadClient(name: string) {
         const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));

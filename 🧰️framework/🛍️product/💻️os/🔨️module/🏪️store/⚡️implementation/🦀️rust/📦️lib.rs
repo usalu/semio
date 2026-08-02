@@ -221,6 +221,53 @@ pub mod pack_rt {
         decode_pack_value(bytes).map(dsl_value_to_json)
     }
 
+    /// @emoji 📦️ Prefix for base64-wrapped pack bytes in scene `*Json` string slots (TS `PACK_B64_PREFIX`).
+    pub const PACK_B64_PREFIX: &str = "pk:";
+
+    /// @emoji 📦️ Lossless pack snapshot as a `pk:`-prefixed base64 string.
+    pub fn pack_value_to_base64(bytes: &[u8]) -> String {
+        use base64::Engine;
+        format!("{}{}", PACK_B64_PREFIX, base64::engine::general_purpose::STANDARD.encode(bytes))
+    }
+
+    /// @emoji 📥️ Inverse of [`pack_value_to_base64`].
+    pub fn pack_value_from_base64(encoded: &str) -> Result<Vec<u8>, PackError> {
+        let payload = encoded.strip_prefix(PACK_B64_PREFIX).ok_or(PackError::Malformed {
+            what: "pack base64",
+            offset: 0,
+            detail: "missing pk: prefix".into(),
+        })?;
+        use base64::Engine;
+        base64::engine::general_purpose::STANDARD.decode(payload).map_err(|error| PackError::Malformed {
+            what: "pack base64",
+            offset: 0,
+            detail: error.to_string(),
+        })
+    }
+
+    /// @emoji 🎬️ Decodes a component-scene `*Json` field when it carries [`pack_value_to_base64`] bytes.
+    pub fn decode_scene_pack_field(encoded: &str) -> Result<DslValue, PackError> {
+        if encoded.starts_with(PACK_B64_PREFIX) {
+            decode_pack_value(&pack_value_from_base64(encoded)?)
+        } else {
+            Ok(json_value_to_dsl(&serde_json::from_str(encoded).map_err(|error| PackError::Malformed {
+                what: "scene field",
+                offset: 0,
+                detail: error.to_string(),
+            })?))
+        }
+    }
+
+    /// @emoji 🎬️ Expands a scene `*Json` slot to JSON text for engines that still ingest stringified payloads.
+    pub fn scene_field_json_text(field: &str) -> Result<String, PackError> {
+        if field.starts_with(PACK_B64_PREFIX) {
+            let dsl = decode_pack_value(&pack_value_from_base64(field)?)?;
+            Ok(serde_json::to_string(&dsl_value_to_json(dsl)).unwrap_or_else(|_| "null".into()))
+        } else {
+            Ok(field.to_string())
+        }
+    }
+
     /// @emoji 🧩️ Compose wire decode helper — renormalizes a `serde_json::Value` tree after pack decode.
     pub fn renormalize_json_wire_value(value: serde_json::Value) -> serde_json::Value {
         dsl_value_to_json(renormalize_whole_number_floats(json_value_to_dsl(&value)))
@@ -237,7 +284,7 @@ pub mod pack_rt {
         }
     }
 
-    fn dsl_value_to_json(value: DslValue) -> serde_json::Value {
+    pub fn dsl_value_to_json(value: DslValue) -> serde_json::Value {
         match value {
             DslValue::Null => serde_json::Value::Null,
             DslValue::Bool(b) => serde_json::Value::Bool(b),
@@ -580,7 +627,7 @@ where
 pub trait ConfigRecord: DocumentDsl {}
 
 pub fn config_spec_from_record_spec(spec: &dsl::RecordSpec) -> semio_framework_core::ConfigSpec {
-    use semio_framework_core::{ConfigFieldShape, ConfigFieldSpec, ConfigSpec};
+    use semio_framework_core::{ConfigFieldSpec, ConfigSpec};
     let fields = spec
         .fields
         .iter()
@@ -3709,7 +3756,7 @@ impl Operation<SpaceHistoryProjection> for SpaceHistoryOperation {
 // `ComposeWireOperation` needs the exact same fix and calls the same `pack_rt::` function.
 use pack_rt::renormalize_whole_number_floats;
 
-impl protocol::OpText for SpaceHistoryOperation {
+impl OpText for SpaceHistoryOperation {
     fn print_op(&self) -> String {
         serde_json::to_string(self).expect("SpaceHistoryOperation serializes infallibly")
     }

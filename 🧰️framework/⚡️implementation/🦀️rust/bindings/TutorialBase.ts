@@ -9,10 +9,10 @@ import type { TutorialUiSnapshot } from "./TutorialUiSnapshot";
  */
 export type TutorialBase = { 
 /**
- * 📂️ Full `DocumentEnvelope` JSON to sandbox-load; `None` falls back to `example_id`, and both
+ * 📂️ Full document DSL text (`DocumentTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
  * `None` falls back to the app's default/empty document.
  */
-documentJson?: string, exampleId?: string, ui: TutorialUiSnapshot, 
+documentDsl?: string, exampleId?: string, ui: TutorialUiSnapshot, 
 /**
  * 🎥️ Initial camera per window instance (every entry's `at` is `0`).
  */

@@ -2832,7 +2832,7 @@ impl BoardHost {
         let next: BTreeSet<String> = ids.iter().cloned().collect();
         let mut sorted: Vec<_> = next.iter().cloned().collect();
         sorted.sort();
-        let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+        let gesture_owned = gesture.map(ToOwned::to_owned);
         let sig = (sorted.clone(), gesture_owned.clone());
         if next == self.selection && self.last_select_emit_sig.as_ref() == Some(&sig) {
             return;
@@ -2858,7 +2858,7 @@ impl BoardHost {
         let next: BTreeSet<String> = ids.iter().cloned().collect();
         let sorted = Self::sorted_selection_ids(&next);
         let removed = Self::sorted_selection_ids(&anchor_ids.difference(&next).cloned().collect());
-        let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+        let gesture_owned = gesture.map(ToOwned::to_owned);
         let sig = (sorted.clone(), removed.clone(), gesture_owned.clone());
         if self.preselect == next && self.last_preselect_emit_sig.as_ref() == Some(&sig) {
             return;
@@ -2886,7 +2886,7 @@ impl BoardHost {
         let next: BTreeSet<String> = ids.iter().cloned().collect();
         let sorted = Self::sorted_selection_ids(&next);
         let anchor = Self::sorted_selection_ids(initial_ids);
-        let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+        let gesture_owned = gesture.map(ToOwned::to_owned);
         self.last_select_emit_sig = None;
         self.last_preselect_emit_sig = None;
         self.preselect.clear();
@@ -3007,7 +3007,7 @@ impl BoardHost {
         };
         let source_node_id = source.node_id.as_str();
         let mut out = Vec::new();
-        let mut seen = std::collections::BTreeSet::new();
+        let mut seen = BTreeSet::new();
         for (hid, h) in &self.handles {
             if h.node_id == source_node_id || !self.handle_effectively_visible(hid.as_str()) {
                 continue;
@@ -4434,7 +4434,7 @@ impl BoardHost {
         let draw_handles = self.has_ports() && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
         let draw_handle_icons = lod == BoardDrawLod::Micro;
         let link_source = self.active_link_source_handle_id().map(str::to_string);
-        let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+        let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
         for h in self.handles.values() {
             if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
                 continue;
@@ -4502,7 +4502,7 @@ impl BoardHost {
         let draw_handles = self.has_ports() && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro);
         let draw_handle_icons = lod == BoardDrawLod::Micro;
         let link_source = self.active_link_source_handle_id().map(str::to_string);
-        let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+        let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
         for h in self.handles.values() {
             if !draw_handles || !self.handle_effectively_visible(h.id.as_str()) {
                 continue;

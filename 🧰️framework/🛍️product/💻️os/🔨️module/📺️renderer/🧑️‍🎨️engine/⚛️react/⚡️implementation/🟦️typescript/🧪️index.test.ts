@@ -213,6 +213,7 @@ import {
   renderWindowMeasuresTree,
   buildToolTabs,
   toolIdFromPanelTabId,
+  sceneToSyncPack,
 } from "../../../../🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
@@ -998,7 +999,7 @@ describe("framework plugin runtime", () => {
   });
 
   it("adaptPluginHandle.handleAction round-trips an action through AppCommand::Command and reassembles requestedEffects/uiScope-free InvocationResponse", async () => {
-    const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue } = await import("@semio-tech/framework-os-core");
+    const { encodeAppFrame, decodeAppCommand, encodePackValue, decodePackValue, encodeActionWire } = await import("@semio-tech/framework-os-core");
     const fakeHandle = {
       manifest: async () => encodePackValue({ pluginId: "mock-action", label: "Mock Action", version: "0", apps: [], programs: [], examples: [] }),
       createApp: async () => 3,
@@ -1016,7 +1017,7 @@ describe("framework plugin runtime", () => {
     };
     const handle = await adaptPluginHandle("mock-action", fakeHandle as unknown as Parameters<typeof adaptPluginHandle>[1]);
     const instanceId = await handle.createApp("main");
-    const response = await handle.handleAction(instanceId, JSON.stringify({ controllerId: "c1", action: "addShot", args: { format: "png" } }), {});
+    const response = await handle.handleAction(instanceId, encodeActionWire({ controllerId: "c1", action: "addShot", args: { format: "png" } }), {});
     expect(response.output).toEqual({ echo: { kind: "action", name: "addShot", args: { format: "png" } } });
     expect(response.requestedEffects).toEqual(["requestSync"]);
   });
@@ -1504,6 +1505,17 @@ describe("framework renderer hosts", () => {
     expect(nodeGraphViewportActionArgs('{"x":12,"y":24,"zoom":1.75}')).toEqual({
       viewportJson: '{"x":12,"y":24,"zoom":1.75}',
     });
+  });
+
+  it("encodes node graph scenes as pack bytes for wasm sync", async () => {
+    const { packValueToBase64 } = await import("@semio-tech/framework-os-core");
+    const scene = {
+      nodesJson: packValueToBase64([]),
+      edgesJson: packValueToBase64([]),
+      viewportJson: packValueToBase64({ x: 0, y: 0, zoom: 1 }),
+    };
+    const bytes = sceneToSyncPack(scene);
+    expect(bytes.length).toBeGreaterThan(8);
   });
 
   it("parses slider overlay state json for flow graph hosts", () => {

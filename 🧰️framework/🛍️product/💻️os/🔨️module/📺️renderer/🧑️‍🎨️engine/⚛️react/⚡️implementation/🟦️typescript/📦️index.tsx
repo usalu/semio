@@ -452,6 +452,13 @@ import {
   AppChannelClient,
   encodePackValue,
   decodePackValue,
+  encodeActionWire,
+  decodeActionWire,
+  packValueToBase64,
+  packValueFromBase64,
+  decodeScenePackField,
+  encodeOperationEnvelopesPack,
+  decodeOperationEnvelopesPack,
   type AppFrameValue,
   type SectionProbe,
   type BackboneWorkerRequest,
@@ -917,13 +924,18 @@ function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTre
 //#endregion UiTreePanel
 
 //#region VirtualFileSystemHost
+function parseSceneJsonField<T>(encoded: string): T {
+  if (encoded.startsWith("pk:")) return decodeScenePackField(encoded) as T;
+  return JSON.parse(encoded) as T;
+}
+
 function VirtualFileSystemHost({ node, onAction }: { readonly node: Extract<UiNode, { type: "componentScene" }>; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.virtualFileSystem;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   if (!scene) return <div className="semio-vfs-empty">{emptySceneLabel}</div>;
-  const schema = JSON.parse(scene.schemaJson) as Parameters<typeof VirtualFileSystem>[0]["schema"];
-  const rows = JSON.parse(scene.rowsJson) as Parameters<typeof VirtualFileSystem>[0]["rows"];
-  const selectedRowIds = scene.selectedRowIdsJson ? (JSON.parse(scene.selectedRowIdsJson) as string[]) : undefined;
+  const schema = parseSceneJsonField<Parameters<typeof VirtualFileSystem>[0]["schema"]>(scene.schemaJson);
+  const rows = parseSceneJsonField<Parameters<typeof VirtualFileSystem>[0]["rows"]>(scene.rowsJson);
+  const selectedRowIds = scene.selectedRowIdsJson ? parseSceneJsonField<string[]>(scene.selectedRowIdsJson) : undefined;
   return (
     <VirtualFileSystem
       className="min-h-0 flex-1"
@@ -2065,22 +2077,32 @@ export const TUTORIAL_RECORDING_EXCLUDED_ACTION_IDS: ReadonlySet<string> = new S
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
 
+function presenceIdentityPackBase64(identity: { readonly clientId: string; readonly name: string }): string {
+  return packValueToBase64(identity);
+}
+
+function presenceIdentityFromPackBase64(encoded: string): { readonly clientId: string; readonly name: string } | null {
+  try {
+    const decoded = packValueFromBase64(encoded) as { readonly clientId?: string; readonly name?: string };
+    if (decoded.clientId && decoded.name) return { clientId: decoded.clientId, name: decoded.name };
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 function presenceClientIdentity(ephemeral = false): { readonly clientId: string; readonly name: string } {
   if (typeof window === "undefined") return { clientId: "server", name: "Server" };
   if (!ephemeral) {
     const stored = window.sessionStorage.getItem(PRESENCE_CLIENT_STORAGE_KEY);
     if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as { readonly clientId?: string; readonly name?: string };
-        if (parsed.clientId && parsed.name) return { clientId: parsed.clientId, name: parsed.name };
-      } catch {
-        /* reseed identity */
-      }
+      const parsed = presenceIdentityFromPackBase64(stored);
+      if (parsed) return parsed;
     }
   }
   const clientId = `client-${Math.random().toString(36).slice(2, 10)}`;
   const identity = { clientId, name: `Guest ${clientId.slice(-4).toUpperCase()}` };
-  if (!ephemeral) window.sessionStorage.setItem(PRESENCE_CLIENT_STORAGE_KEY, JSON.stringify(identity));
+  if (!ephemeral) window.sessionStorage.setItem(PRESENCE_CLIENT_STORAGE_KEY, presenceIdentityPackBase64(identity));
   return identity;
 }
 
@@ -2220,7 +2242,7 @@ function makeEffectDispatchOne(
   return async (action, args) => {
     const response = await pluginEntry.handle.handleAction(
       baseSession.instanceId,
-      JSON.stringify({ controllerId: baseSession.app.controllerId, action, args }),
+      encodeActionWire({ controllerId: baseSession.app.controllerId, action, args }),
       baseSession.viewState,
     );
     await applyEffects(response.requestedEffects ?? [], baseSession, resolveUiDirtyScope(response.uiScope));
@@ -2761,13 +2783,13 @@ function buildSpacePanelState(programs: readonly SpaceProgramEntry[], spawnedApp
 }
 
 function panelJsonFromState(state: SpacePanelState): string {
-  return JSON.stringify(state);
+  return packValueToBase64(state);
 }
 
 function parsePanelState(viewState: ViewState): SpacePanelState | null {
   if (!viewState.panelJson) return null;
   try {
-    return JSON.parse(viewState.panelJson) as SpacePanelState;
+    return packValueFromBase64(viewState.panelJson) as SpacePanelState;
   } catch {
     return null;
   }
@@ -5403,7 +5425,7 @@ export function FrameworkOsShell({
           value: (current) => (current && current.instanceId === entry.session.instanceId ? { ...current, viewState: { ...current.viewState, presencePeersJson: peersJson } } : current),
         });
       } else if (event.kind === "remoteOperations" && entry.plugin.applyOperations) {
-        void entry.plugin.applyOperations(entry.session.instanceId, JSON.stringify(event.envelopes));
+        void entry.plugin.applyOperations(entry.session.instanceId, encodeOperationEnvelopesPack(event.envelopes));
         const actorUri = `actor://${message.documentId}`;
         postPluginBackboneInbound(entry.session.pluginId, actorUri, [
           encodeBackboneMessage({
@@ -6055,7 +6077,7 @@ export function FrameworkOsShell({
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
     try {
       const document = JSON.parse(documentJson) as Record<string, unknown>;
-      await plugin.handleAction(pluginInstanceId, JSON.stringify({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
+      await plugin.handleAction(pluginInstanceId, encodeActionWire({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
     } catch (syncError) {
       console.error("[DEBUG] spawned program document sync failed", syncError);
     }
@@ -6366,16 +6388,16 @@ export function FrameworkOsShell({
       if (studioChanged) {
         openInstanceIdRef.current = null;
         console.log("[DEBUG] applyShellUri openSpace", spaceId);
-        const openResponse = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
+        const openResponse = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openSpace", args: { spaceId } }), studioSession.viewState);
         await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope));
       }
       if (openInstanceIdRef.current === (instanceId ?? null)) return;
       openInstanceIdRef.current = instanceId ?? null;
       if (instanceId) {
-        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       } else {
-        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
+        const response = await sPlugin.handleAction(studioSession.instanceId, encodeActionWire({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
         const currentPanel = parsePanelState(studioSession.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
         updateSpacePanel(buildSpacePanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
@@ -6588,7 +6610,7 @@ export function FrameworkOsShell({
           const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void program
-            .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
+            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
             .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
             .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
         }
@@ -6612,7 +6634,7 @@ export function FrameworkOsShell({
           const viewState: ViewState = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
           void program
-            .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
+            .handleAction(session.instanceId, encodeActionWire(forwarded), viewState)
             .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
             .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
         }
@@ -6722,7 +6744,7 @@ export function FrameworkOsShell({
       const interactiveAction = action.action !== "suggestionsTick" && action.action !== "fillBuildTick";
       if (interactiveAction) beginInteractivePluginAction();
       return plugin
-        .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
+        .handleAction(targetSession.instanceId, encodeActionWire(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
           console.error("[DEBUG] action failed", action.action, action.args, actionError);
@@ -6873,7 +6895,7 @@ export function FrameworkOsShell({
         if (kind.kind === "edit") {
           documentTouched = true;
           const operations = slice.forward ? kind.forwards : kind.backwards;
-          if (plugin?.applyOperations) await plugin.applyOperations(activeSession.instanceId, JSON.stringify(operations));
+          if (plugin?.applyOperations) await plugin.applyOperations(activeSession.instanceId, encodeOperationEnvelopesPack(operations));
         } else if (kind.kind === "load") {
           documentTouched = true;
           const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
@@ -6950,7 +6972,7 @@ export function FrameworkOsShell({
           if (kind.kind === "edit") {
             documentTouched = true;
             const operations = slice.forward ? kind.forwards : kind.backwards;
-            if (plugin?.applyOperations) await plugin.applyOperations(session.instanceId, JSON.stringify(operations));
+            if (plugin?.applyOperations) await plugin.applyOperations(session.instanceId, encodeOperationEnvelopesPack(operations));
           } else if (kind.kind === "load") {
             documentTouched = true;
             const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
@@ -9080,7 +9102,7 @@ export type PluginWasmHandle = {
    * site already feature-detects these (`if (plugin.loadAppDocument) ...`), so leaving them
    * `undefined` here fails loud-but-inert (a `console.error`/no-op at the call site) rather than
    * silently miscoding a `.spk` container. */
-  readonly applyOperations?: (instanceId: number, operationsJson: string) => Promise<void>;
+  readonly applyOperations?: (instanceId: number, operationsPack: string) => Promise<void>;
   readonly readAppDocument?: (instanceId: number) => Promise<string>;
   readonly loadAppDocument?: (instanceId: number, documentJson: string) => Promise<void>;
   readonly attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
@@ -9275,17 +9297,21 @@ export async function adaptPluginHandle(pluginId: string, handle: CorePluginWasm
       await handle.destroyApp(instanceId);
     },
     handleAction: (instanceId, actionJson, viewState) => {
-      const parsed = JSON.parse(actionJson) as { readonly action: string; readonly args?: unknown };
+      const parsed = decodeActionWire(actionJson);
       return performCommand(requireChannel(instanceId), { kind: "action", name: parsed.action, args: parsed.args }, viewState);
     },
     handleCommand: (instanceId, commandJson, viewState) => {
-      const parsed = JSON.parse(commandJson) as { readonly command: string; readonly args?: unknown };
-      return performCommand(requireChannel(instanceId), { kind: "command", name: parsed.command, args: parsed.args }, viewState);
+      const parsed = decodeActionWire(commandJson);
+      return performCommand(requireChannel(instanceId), { kind: "command", name: parsed.action, args: parsed.args }, viewState);
     },
     refreshUi: (instanceId, request) => performRefreshUi(requireChannel(instanceId), request),
     contextMenu: (instanceId, request) => performContextMenu(requireChannel(instanceId), request),
-    // 🚧️ Wave 1 gap — see this method's doc comment on `PluginWasmHandle` above.
-    applyOperations: undefined,
+    applyOperations: async (instanceId, operationsPack) => {
+      const envelopes = decodeOperationEnvelopesPack(operationsPack);
+      const frames = await requireChannel(instanceId).applyEnvelopes(envelopes);
+      const errorFrame = frames.find((frame): frame is Extract<AppFrameValue, { readonly Error: unknown }> => "Error" in frame);
+      if (errorFrame) throw new Error(`[DEBUG] applyOperations failed (${errorFrame.Error.code}): ${errorFrame.Error.message}`);
+    },
     readAppDocument: undefined,
     loadAppDocument: undefined,
     attachBackbone: async (instanceId, uri) => {
@@ -9424,6 +9450,7 @@ export async function createFlowSession(): Promise<FlowWasmSession> {
 //#region EditorSession
 export type EditorWasmSession = GraphWasmSession & {
   syncFromSceneJson(json: string): void;
+  syncFromScenePack?(bytes: Uint8Array): void;
   setText(text: string): void;
   text(): string;
   caret(): number;
@@ -17002,7 +17029,8 @@ type GraphFindItem = { readonly id: string; readonly label: string; readonly cat
 type GraphContextMenuItem = ContextMenuItemSpec;
 
 type FrameworkGraphSession = GraphWasmSession & {
-  syncFromSceneJson(json: string): void;
+  syncFromSceneJson?(json: string): void;
+  syncFromScenePack?(bytes: Uint8Array): void;
   pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
   pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
   pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
@@ -17458,7 +17486,7 @@ function WasmGraphSurface({
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
   const [sliderStateJson, setSliderStateJson] = useState("{}");
-  const sceneJson = useMemo(() => sceneToSyncJson(scene), [scene]);
+  const scenePack = useMemo(() => sceneToSyncPack(scene), [scene]);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -17498,18 +17526,18 @@ function WasmGraphSurface({
   }, []);
 
   useEffect(() => {
-    sessionRef.current?.syncFromSceneJson(sceneJson);
+    sessionRef.current?.syncFromScenePack?.(scenePack);
     paintOverlays();
-  }, [sceneJson, paintOverlays]);
+  }, [scenePack, paintOverlays]);
 
   const onSessionReady = useCallback(
     (session: GraphWasmSession) => {
       sessionRef.current = session as FrameworkGraphSession;
       syncSessionCanvasTheme(sessionRef.current);
-      sessionRef.current.syncFromSceneJson(sceneJson);
+      sessionRef.current.syncFromScenePack?.(scenePack);
       paintOverlays();
     },
-    [sceneJson, paintOverlays],
+    [scenePack, paintOverlays],
   );
 
   useCanvasAppearanceSync(() => {
@@ -17546,6 +17574,7 @@ function WasmGraphSurface({
       setSize: () => {},
       renderFrame: () => {},
       syncFromSceneJson: () => {},
+      syncFromScenePack: () => {},
       setCanvasThemeJson: () => {},
       pointerDownScreen: () => {},
       pointerMoveScreen: () => {},
@@ -18434,6 +18463,10 @@ export function computeDagMarqueeOverlay(pointsJson: string, crossing: boolean, 
   return { kind: "rect", x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y, coverage };
 }
 
+export function sceneToSyncPack(scene: NodeGraphScene): Uint8Array {
+  return new Uint8Array(encodePackValue(scene));
+}
+
 export function sceneToSyncJson(scene: NodeGraphScene): string {
   return JSON.stringify(scene);
 }
@@ -18583,7 +18616,7 @@ function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: Node
   if (scene.catalogueJson) session.setCatalogueJson(scene.catalogueJson);
   if (scene.lodJson) {
     try {
-      const lod = JSON.parse(scene.lodJson) as { readonly automatic?: boolean; readonly forcedLabel?: string };
+      const lod = parseSceneJsonField<{ readonly automatic?: boolean; readonly forcedLabel?: string }>(scene.lodJson);
       session.setAutomaticLod(lod.automatic !== false);
       if (lod.forcedLabel) session.setForcedDrawLodLabel(lod.forcedLabel);
     } catch {
@@ -18592,7 +18625,7 @@ function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: Node
   }
   if (!applyCamera) return;
   try {
-    const viewport = JSON.parse(scene.viewportJson) as { readonly x?: number; readonly y?: number; readonly zoom?: number };
+    const viewport = parseSceneJsonField<{ readonly x?: number; readonly y?: number; readonly zoom?: number }>(scene.viewportJson);
     session.setCamera(viewport.x ?? 0, viewport.y ?? 0, viewport.zoom ?? 1);
   } catch {
     /* ignore */
@@ -19359,7 +19392,7 @@ function identifierPrefixStart(text: string, caret: number): number {
 function parseJsonOr<T>(json: string | undefined, fallback: T): T {
   if (!json) return fallback;
   try {
-    return JSON.parse(json) as T;
+    return parseSceneJsonField<T>(json);
   } catch {
     return fallback;
   }
@@ -19420,7 +19453,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
   const sessionRef = useRef<FrameworkEditorSession | null>(null);
   const renameActiveRef = useRef(false);
   const lastHoverRangeRef = useRef<SpanRange | null>(null);
-  const sceneJson = useMemo(() => JSON.stringify(scene), [scene]);
+  const scenePack = useMemo(() => new Uint8Array(encodePackValue(scene)), [scene]);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -19431,9 +19464,9 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
 
   const syncSession = useCallback(() => {
     if (renameActiveRef.current) return;
-    sessionRef.current?.syncFromSceneJson(sceneJson);
+    sessionRef.current?.syncFromScenePack?.(scenePack);
     sessionRef.current?.renderFrame();
-  }, [sceneJson]);
+  }, [scenePack]);
 
   const [sessionEpoch, setSessionEpoch] = useState(0);
 
@@ -19491,6 +19524,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
       setSize: () => {},
       renderFrame: () => {},
       syncFromSceneJson: () => {},
+      syncFromScenePack: () => {},
       setText: () => {},
       text: () => scene.buffer,
       caret: () => scene.buffer.length,
@@ -19965,7 +19999,7 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
   const tokens = useMemo((): readonly GrammarToken[] => {
     if (!scene?.tokensJson) return [];
     try {
-      return JSON.parse(scene.tokensJson) as GrammarToken[];
+      return parseSceneJsonField<GrammarToken[]>(scene.tokensJson);
     } catch {
       return [];
     }
@@ -19973,7 +20007,7 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
   const diagnostics = useMemo((): readonly EditorDiagnostic[] => {
     if (!scene?.diagnosticsJson) return [];
     try {
-      return JSON.parse(scene.diagnosticsJson) as EditorDiagnostic[];
+      return parseSceneJsonField<EditorDiagnostic[]>(scene.diagnosticsJson);
     } catch {
       return [];
     }
@@ -20088,7 +20122,7 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
   const columns = useMemo(() => {
     if (!scene) return [] as TableColumnRecord[];
     try {
-      return JSON.parse(scene.columnsJson) as TableColumnRecord[];
+      return parseSceneJsonField<TableColumnRecord[]>(scene.columnsJson);
     } catch {
       return [];
     }
@@ -20096,7 +20130,7 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
   const rows = useMemo(() => {
     if (!scene) return [] as TableRowRecord[];
     try {
-      return JSON.parse(scene.rowsJson) as TableRowRecord[];
+      return parseSceneJsonField<TableRowRecord[]>(scene.rowsJson);
     } catch {
       return [];
     }
@@ -20104,7 +20138,7 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
   const selectedRows = useMemo(() => {
     if (!scene?.selectionJson) return undefined;
     try {
-      const parsed = JSON.parse(scene.selectionJson) as { readonly selectedIds?: readonly string[] };
+      const parsed = parseSceneJsonField<{ readonly selectedIds?: readonly string[] }>(scene.selectionJson);
       return new Set(parsed.selectedIds ?? []);
     } catch {
       return undefined;
@@ -20113,7 +20147,7 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
   const sort = useMemo(() => {
     if (!scene?.sortJson) return undefined;
     try {
-      return JSON.parse(scene.sortJson) as { readonly columnId?: string; readonly direction?: "asc" | "desc" };
+      return parseSceneJsonField<{ readonly columnId?: string; readonly direction?: "asc" | "desc" }>(scene.sortJson);
     } catch {
       return undefined;
     }
@@ -24449,7 +24483,7 @@ export function GraphTimelineHost({ node, onAction }: ComponentSceneHostProps) {
   const columns = useMemo(() => {
     if (!scene) return [] as HistoryColumn[];
     try {
-      return JSON.parse(scene.columnsJson) as HistoryColumn[];
+      return parseSceneJsonField<HistoryColumn[]>(scene.columnsJson);
     } catch {
       return [];
     }
@@ -24604,7 +24638,7 @@ export function BlockListHost({ node, onAction }: ComponentSceneHostProps) {
   const steps = useMemo(() => {
     if (!scene) return [] as StepRecord[];
     try {
-      return JSON.parse(scene.stepsJson) as StepRecord[];
+      return parseSceneJsonField<StepRecord[]>(scene.stepsJson);
     } catch {
       return [];
     }
@@ -24612,7 +24646,7 @@ export function BlockListHost({ node, onAction }: ComponentSceneHostProps) {
   const palette = useMemo(() => {
     if (!scene) return [] as PaletteEntryRecord[];
     try {
-      return JSON.parse(scene.paletteJson) as PaletteEntryRecord[];
+      return parseSceneJsonField<PaletteEntryRecord[]>(scene.paletteJson);
     } catch {
       return [];
     }
@@ -24831,7 +24865,7 @@ export function EventFeedHost({ node, onAction }: ComponentSceneHostProps) {
   const entries = useMemo(() => {
     if (!scene?.entriesJson) return [] as EventFeedEntry[];
     try {
-      return JSON.parse(scene.entriesJson) as EventFeedEntry[];
+      return parseSceneJsonField<EventFeedEntry[]>(scene.entriesJson);
     } catch {
       return [];
     }

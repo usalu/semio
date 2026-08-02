@@ -462,7 +462,7 @@ impl<'de> EnumAccess<'de> for EnumAccessTagged {
     type Variant = VariantAccessNewtype;
 
     fn variant_seed<V: DeserializeSeed<'de>>(self, seed: V) -> Result<(V::Value, Self::Variant), Self::Error> {
-        if let Some((kind, DslValue::String(variant))) = self.entries.iter().find(|(k, _)| k == "kind") {
+        if let Some((_kind, DslValue::String(variant))) = self.entries.iter().find(|(k, _)| k == "kind") {
             let payload = self
                 .entries
                 .iter()
@@ -536,7 +536,7 @@ impl<'de> VariantAccess<'de> for VariantAccessNewtype {
                 visitor.visit_seq(&mut seq)
             }
             other => {
-                let mut de = ValueDeserializer::new(other);
+                let _ = other;
                 visitor.visit_seq(&mut SeqAccessDeserializer::new(vec![]))
             }
         }

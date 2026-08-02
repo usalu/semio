@@ -7,7 +7,7 @@ description = "Db CLI — inspect, doc, wal-inspect, snapshot-inspect, verify, q
 
 [[bin]]
 name = "db"
-path = "../../../⌨️cli/⚡️implementation/🦀️rust/📦️lib.rs"
+path = "📦️main.rs"
 
 [lints]
 workspace = true

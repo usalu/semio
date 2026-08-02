@@ -2,36 +2,10 @@
 //! `framework/product/os/core/js/🟦️backbone-worker.ts`, without materializing projections.
 
 use store_sync::{
-    DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentHost, PersistenceBinding,
+    backbone_worker_wire::{self, BackboneWorkerRequest, BackboneWorkerResponse},
+    DocumentActorMsg, DocumentHost,
 };
-use serde::Deserialize;
 use wasm_bindgen::prelude::*;
-
-//#region 🔖️Protocol
-#[derive(Debug, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-enum WorkerRequest {
-    Open {
-        document_id: String,
-        schema: String,
-        bindings: Vec<PersistenceBinding>,
-        watch_external: Option<bool>,
-        actor: String,
-    },
-    Close { document_id: String },
-    Send {
-        document_id: String,
-        message: DocumentActorMsg,
-    }
-}
-
-#[derive(Debug, serde::Serialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-enum WorkerResponse {
-    Event { document_id: String, event: DocumentEvent },
-    Ready,
-}
-//#endregion 🔖️Protocol
 
 //#region 🔖️Worker
 struct DocumentEntry {
@@ -56,30 +30,24 @@ impl BackboneWorkerHost {
 
     #[wasm_bindgen(js_name = handleRequestBytes)]
     pub fn handle_request_bytes(&mut self, bytes: &[u8]) -> Result<(), JsValue> {
-        let json = std::str::from_utf8(bytes).map_err(|error| JsValue::from_str(&error.to_string()))?;
-        self.handle_request_json(json)
-    }
-
-    #[wasm_bindgen(js_name = handleRequestJson)]
-    pub fn handle_request_json(&mut self, json: &str) -> Result<(), JsValue> {
-        let request: WorkerRequest =
-            serde_json::from_str(json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        let request = backbone_worker_wire::decode_request(bytes).map_err(|error| JsValue::from_str(&error))?;
         match request {
-            WorkerRequest::Open {
+            BackboneWorkerRequest::Open {
                 document_id,
                 schema,
                 bindings,
                 watch_external,
                 actor,
             } => {
-                self.host.close(&document_id);
-                let channels = self.host.open(DocumentActorConfig {
+                let config = store_sync::DocumentActorConfig {
                     document_id: document_id.clone(),
                     schema,
                     bindings,
                     watch_external: watch_external.unwrap_or(true),
                     actor,
-                });
+                };
+                self.host.close(&document_id);
+                let channels = self.host.open(config);
                 let mut events = self.host.subscribe(&document_id);
                 let cmd_tx = channels.cmd_tx.clone();
                 self.documents.insert(document_id.clone(), DocumentEntry { cmd_tx });
@@ -87,12 +55,12 @@ impl BackboneWorkerHost {
                     loop {
                         match events.recv().await {
                             Ok(event) => {
-                                let response = WorkerResponse::Event {
+                                let response = BackboneWorkerResponse::Event {
                                     document_id: document_id.clone(),
                                     event,
                                 };
-                                if let Ok(json) = serde_json::to_string(&response) {
-                                    post_worker_message_bytes(json.as_bytes());
+                                if let Ok(bytes) = backbone_worker_wire::encode_response(&response) {
+                                    post_worker_message_bytes(&bytes);
                                 }
                             }
                             Err(_) => break,
@@ -100,12 +68,12 @@ impl BackboneWorkerHost {
                     }
                 });
             }
-            WorkerRequest::Close { document_id } => {
+            BackboneWorkerRequest::Close { document_id } => {
                 self.host.send(&document_id, DocumentActorMsg::Detach);
                 self.host.close(&document_id);
                 self.documents.remove(&document_id);
             }
-            WorkerRequest::Send { document_id, message } => {
+            BackboneWorkerRequest::Send { document_id, message } => {
                 if let Some(entry) = self.documents.get(&document_id) {
                     let _ = entry.cmd_tx.send(message);
                 }
@@ -116,11 +84,12 @@ impl BackboneWorkerHost {
 
     #[wasm_bindgen(js_name = postReady)]
     pub fn post_ready() {
-        if let Ok(json) = serde_json::to_string(&WorkerResponse::Ready) {
-            post_worker_message_bytes(json.as_bytes());
+        if let Ok(bytes) = backbone_worker_wire::encode_response(&BackboneWorkerResponse::Ready) {
+            post_worker_message_bytes(&bytes);
         }
     }
 }
+//#endregion 🔖️Worker
 
 fn post_worker_message_bytes(bytes: &[u8]) {
     let global = js_sys::global();
@@ -132,9 +101,3 @@ fn post_worker_message_bytes(bytes: &[u8]) {
         }
     }
 }
-
-#[allow(dead_code)]
-fn post_worker_message(json: &str) {
-    post_worker_message_bytes(json.as_bytes());
-}
-//#endregion 🔖️Worker

@@ -393,7 +393,7 @@ fn widget_label(widget: &Widget) -> String {
 fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> (String, String, String) {
     match widget {
         Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).map(|info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone())).unwrap_or_else(|| {
-            let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
+            let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
             (name, abbreviation, String::new())
         }),
         Widget::InputSlider { .. } => ("Slider".into(), "Slider".into(), "emoji:🎚️".into()),
@@ -403,13 +403,13 @@ fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInf
         Widget::OutputPreview { .. } => ("Preview".into(), "Preview".into(), "emoji:👁️".into()),
         Widget::OutputAction { action, .. } => {
             let title = if action.is_empty() { "Action" } else { action.as_str() };
-            let (name, abbreviation) = dag::normalize_node_display(title, title);
+            let (name, abbreviation) = normalize_node_display(title, title);
             (name, abbreviation, "emoji:⚡️".into())
         }
         Widget::OutputExport { format, .. } => export_widget_display_meta(format),
         Widget::Cluster { name, .. } => {
             let title = if name.is_empty() { "Cluster" } else { name.as_str() };
-            let (display_name, abbreviation) = dag::normalize_node_display(title, title);
+            let (display_name, abbreviation) = normalize_node_display(title, title);
             (display_name, abbreviation, "emoji:🧩️".into())
         }
     }
@@ -1173,7 +1173,7 @@ fn titleize_module(module: &str) -> String {
 pub fn flow_operator_catalogue_json() -> String {
     use std::collections::BTreeMap;
     let operators = flow_registry().operator_catalogue();
-    let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+    let mut by_module: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
     for info in operators {
         by_module.entry(info.module.clone()).or_default().push(info);
     }
@@ -1747,7 +1747,7 @@ pub struct FlowHost {
     viewport_h: u32,
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
-    ghost_node: Option<dag::DagNodeSpec>,
+    ghost_node: Option<DagNodeSpec>,
     /// ↩️ Undo/redo, backed by the standard `store::DocumentStore<FlowFixture, FlowOperation>`
     /// mechanism (see the `impl FlowHost`'s `🔖️History` region) instead of a hand-rolled snapshot stack.
     history_store: FlowStore,
@@ -4366,7 +4366,7 @@ impl Operation<FlowFixture> for FlowOperation {
 /// The camera is intentionally excluded (it is plugin runtime state).
 pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowOperation> {
     let mut operations = Vec::new();
-    let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+    let after_widget_ids: BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
     for widget in &before.widgets {
         let id = widget_id_for(widget);
         if !after_widget_ids.contains(id) {
@@ -4381,7 +4381,7 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
             Some(_) => {}
         }
     }
-    let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+    let after_synapse_ids: BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
     for synapse in &before.synapses {
         if !after_synapse_ids.contains(synapse.id.as_str()) {
             operations.push(FlowOperation::Synapses(CollectionOperation::Remove { id: synapse.id.clone() }));
@@ -4857,7 +4857,7 @@ pub fn empty_flow_projection() -> FlowFixture {
 mod flow_vcs_wasm {
     use super::*;
     use std::cell::RefCell;
-    use wasm_bindgen::prelude::*;
+    
 
     #[wasm_bindgen]
     pub struct FlowDocumentVcs {

@@ -86,7 +86,7 @@ fn available_modules(view_state: &ViewState) -> Vec<ModuleCatalogue> {
 
 //#region 🔖️Document
 fn sourcing_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: SOURCING_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn selected_ids(document: &CurateDocument) -> Vec<String> {

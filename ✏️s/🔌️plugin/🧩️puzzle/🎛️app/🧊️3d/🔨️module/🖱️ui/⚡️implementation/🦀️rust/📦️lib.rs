@@ -4,8 +4,7 @@ use puzzle_3d::Puzzle3dProjection;
 use puzzle_3d_engine::{BrushPlacePayload, Puzzle3dEngineCommand, Puzzle3dEngineOutcome, PrecomputeLane, Puzzle3dPrecomputeSession};
 use puzzle_3d_op::{puzzle3d_document_delta_operations, Puzzle3dOperation, Puzzle3dPlayProjection};
 use semio_framework_plugin::{
-    apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, SelectionSet, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
-    ui_stack_vertical, ui_text, ui_declarative_sections_to_tree, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec,
+    apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, SelectionSet, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group, ui_text, ui_declarative_sections_to_tree, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ArtifactKindSpec,
     SurfaceKind, ToolRef, UtilityDefinition, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
     IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition,
@@ -709,7 +708,7 @@ fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
 }
 
 fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn camera_json(camera: &Puzzle3dCamera) -> String {
@@ -5351,11 +5350,13 @@ pub fn create_puzzle3d_app() -> App {
 /// 🗃️ Real GLB geometry the browser round-tripped via `registerBrushMesh` this session, keyed by mesh url; falls back to a box for anything not yet loaded. `fn` pointers can't capture state, so this backs the export handler's plain-function-pointer signature.
 static PUZZLE3D_MESH_REGISTRY: LazyLock<Mutex<HashMap<String, (Vec<f32>, Vec<u32>)>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 /// 🌀️ Undoes glTF's Y-up convention to land in this world's Z-up frame — mirrors `GLB_MESH_FRAME_ROTATION_X` (a fixed +90° turn about X) from `@semio-tech/infinite-world-r3f`, which the viewer applies visually but which raw `registerBrushMesh` vertices never carry.
 fn glb_frame_correct(position: [f32; 3]) -> [f32; 3] {
     [position[0], -position[2], position[1]]
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 fn quat_rotate_point(point: [f32; 3], quat: [f64; 4]) -> [f32; 3] {
     let [qx, qy, qz, qw] = quat;
     let (x, y, z) = (point[0] as f64, point[1] as f64, point[2] as f64);
@@ -5365,6 +5366,7 @@ fn quat_rotate_point(point: [f32; 3], quat: [f64; 4]) -> [f32; 3] {
     [(x + qw * tx + ux) as f32, (y + qw * ty + uy) as f32, (z + qw * tz + uz) as f32]
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 /// 💾️ Bakes each object's world transform (GLB frame correction, then scale/orientation/origin) into a single merged mesh for OBJ/GLB export; objects whose GLB hasn't round-tripped through `registerBrushMesh` this session fall back to a box.
 fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
     let fixture: Puzzle3dFixture = serde_json::from_value(doc.clone()).map_err(|error| error.to_string())?;
@@ -5397,6 +5399,7 @@ fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::Me
     Ok(merged)
 }
 
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 /// 📥️ Tier C DWG mesh import — always returns the empty puzzle-3d fixture; never errors on a structurally valid mesh.
 fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
     serde_json::to_value(empty_fixture()).map_err(|error| error.to_string())
@@ -5407,14 +5410,17 @@ pub fn register_puzzle3d_exports() {
     // string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-3d play documents
     // without depending on this crate's concrete `Projection`/`Operation` types.
     semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle3dPlayApp>(PUZZLE3D_FIXTURE_SCHEMA);
-    semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
-    semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
-    semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
-    semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
-    semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
-    semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
-    semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
-    semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+    {
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
+        semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::ObjImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
+        semio_framework_os::register_mesh_importer("3d.puzzle", puzzle3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
+        semio_framework_os::register_mesh_dwg_export_handler("3d.puzzle", "puzzle", puzzle3d_mesh_from_document);
+        semio_framework_os::register_mesh_dwg_import_handler("3d.puzzle", puzzle3d_document_from_mesh);
+    }
 }
 //#endregion 🔖️Manifest
 

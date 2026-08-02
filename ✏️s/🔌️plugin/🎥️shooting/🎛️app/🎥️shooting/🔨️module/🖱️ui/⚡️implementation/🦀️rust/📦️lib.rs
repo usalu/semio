@@ -7,7 +7,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     ui_declarative_sections_to_tree, ui_text, tree_item_with_action, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind,
     App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
-    DocumentView, HostEffect, IconRenderExportItem, IconRenderScene, MeasureSelectItem, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
+    DocumentView, DslValue, HostEffect, IconRenderExportItem, IconRenderScene, MeasureSelectItem, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ArtifactKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
     UiNode, UiPresence, UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
     WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -90,7 +90,7 @@ fn shooting_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     ActionDescriptor {
         controller_id: SHOOTING_PLAY_CONTROLLER_ID.into(),
         action: action.into(),
-        args,
+        args: semio_framework_plugin::optional_json_to_dsl(args),
     }
 }
 
@@ -1179,7 +1179,10 @@ impl DocumentApp for ShootingPlayApp {
                         .iter()
                         .map(|shot| IconRenderExportItem {
                             filename: format!("{}.{}", shot.id, if shot.format == "png" { "png" } else { "svg" }),
-                            request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(fixture, shot, asset, &self.runtime.borrow().camera)).unwrap_or(Value::Null),
+                            request: serde_json::from_str::<Value>(&shooting_icon_render_request_json(fixture, shot, asset, &self.runtime.borrow().camera))
+                                .ok()
+                                .and_then(|value| semio_framework_plugin::to_dsl_value(&value).ok())
+                                .unwrap_or(DslValue::Null),
                         })
                         .collect();
                     if !items.is_empty() {
@@ -1480,19 +1483,19 @@ impl DocumentApp for ShootingPlayApp {
                     key: "defaultShotFormat".into(),
                     label: "Default Shot Format".into(),
                     shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["svg".into(), "png".into()] },
-                    default: Some(serde_json::json!("png")),
+                    default: Some(DslValue::String("png".into())),
                 },
                 semio_framework_plugin::ConfigFieldSpec {
                     key: "defaultShotShape".into(),
                     label: "Default Shot Shape".into(),
                     shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["rectangle".into(), "ellipse".into()] },
-                    default: Some(serde_json::json!("rectangle")),
+                    default: Some(DslValue::String("rectangle".into())),
                 },
                 semio_framework_plugin::ConfigFieldSpec {
                     key: "defaultAssetFormat".into(),
                     label: "Default Asset Format".into(),
                     shape: semio_framework_plugin::ConfigFieldShape::Select { options: vec!["glb".into()] },
-                    default: Some(serde_json::json!("glb")),
+                    default: Some(DslValue::String("glb".into())),
                 },
             ],
         }

@@ -98,7 +98,7 @@ impl Default for Process3dRuntime {
 }
 
 fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PROCESS_3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: PROCESS_3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🧰️ Host effect that programmatically switches the workpiece window's active utility — the active

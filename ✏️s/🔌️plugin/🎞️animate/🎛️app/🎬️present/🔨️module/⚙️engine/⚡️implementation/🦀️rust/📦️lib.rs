@@ -95,7 +95,7 @@ pub mod compiler {
     <body>
       <main id="animate-present-root" data-deck-schema="animate.present.deck">
         <canvas id="animate-present-canvas" width="1280" height="720"></canvas>
-        <script id="animate-present-deck" type="application/json">{escaped}</script>
+        <script id="animate-present-deck" type="text/dsl">{escaped}</script>
       </main>
       <script type="module" src="/animate/plugin/wasm/semio_s_plugin_animate.js"></script>
       <script type="module" src="player.js"></script>

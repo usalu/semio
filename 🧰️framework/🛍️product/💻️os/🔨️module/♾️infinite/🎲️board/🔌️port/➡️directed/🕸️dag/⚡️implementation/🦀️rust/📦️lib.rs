@@ -1657,7 +1657,7 @@ pub fn dag_draw_lod(zoom: f64) -> DagDrawLod {
     DagDrawLod::from_scale_index(dag_lod_index(zoom))
 }
 
-fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+fn lod_max_zoom_json(max_zoom: f64) -> Value {
     if max_zoom.is_finite() {
         serde_json::json!(max_zoom)
     } else {
@@ -1667,7 +1667,7 @@ fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
 
 /// 📶️ JSON LOD table for React window chrome (`id`, `name`, `description`, `maxZoom`).
 pub fn dag_lod_scale_json() -> String {
-    let rows: Vec<serde_json::Value> = DAG_LODS
+    let rows: Vec<Value> = DAG_LODS
         .iter()
         .map(|lod| {
             let max_zoom = if lod.max_zoom.is_finite() { lod.max_zoom + DAG_LOD_ZOOM_SHIFT } else { lod.max_zoom };
@@ -1781,7 +1781,6 @@ pub struct DagHost {
 
 struct MinimapWidgetLayout {
     panel: (f64, f64, f64, f64),
-    inner: (f64, f64, f64, f64),
     world_min_x: f64,
     world_min_y: f64,
     scale: f64,
@@ -2371,7 +2370,7 @@ impl DagHost {
         let (vx0, vy0) = to_mini(view_min_x, view_min_y);
         let (vx1, vy1) = to_mini(view_max_x, view_max_y);
         let viewport = (vx0.min(vx1), vy0.min(vy1), vx0.max(vx1), vy1.max(vy1));
-        Some(MinimapWidgetLayout { panel: (panel_x0, panel_y0, panel_x1, panel_y1), inner, world_min_x: content.min_x, world_min_y: content.min_y, scale, map_origin_x: offset_x, map_origin_y: offset_y, viewport })
+        Some(MinimapWidgetLayout { panel: (panel_x0, panel_y0, panel_x1, panel_y1), world_min_x: content.min_x, world_min_y: content.min_y, scale, map_origin_x: offset_x, map_origin_y: offset_y, viewport })
     }
 
     fn minimap_widget_screen_to_world(&self, layout: &MinimapWidgetLayout, sx: f64, sy: f64) -> (f64, f64) {
@@ -2404,7 +2403,7 @@ impl DagHost {
         None
     }
 
-    fn minimap_widget_json(&self) -> Option<serde_json::Value> {
+    fn minimap_widget_json(&self) -> Option<Value> {
         let layout = self.minimap_widget_layout(self.width, self.height)?;
         let (x0, y0, x1, y1) = layout.panel;
         Some(serde_json::json!({
@@ -4097,14 +4096,14 @@ impl DagHost {
         }
     }
 
-    pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+    pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<Value> {
         let lod = self.draw_lod_for_frame();
         let zoom = self.fixture.camera.zoom;
         let lod_index = dag_lod_index(zoom);
         Self::label_overlay_rows_for_node(node, lod, zoom, lod_index, ghost)
     }
 
-    fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+    fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<Value> {
         let paint_px = dag_label_paint_px(zoom, lod_index);
         let mut labels = Vec::new();
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
@@ -4132,7 +4131,7 @@ impl DagHost {
         if lod.shows_port_labels() && !matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
             for mut row in Self::port_label_overlay_rows(node, lod, zoom, lod_index) {
                 if let Some(obj) = row.as_object_mut() {
-                    obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+                    obj.insert("ghost".into(), Value::Bool(ghost));
                 }
                 labels.push(row);
             }
@@ -4140,7 +4139,7 @@ impl DagHost {
         labels
     }
 
-    fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+    fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<Value> {
         use canvas::text::label_extent;
         let hw = node.width * 0.5;
         let handle_inset = 8.0 / zoom.max(0.05);
@@ -4211,7 +4210,7 @@ impl DagHost {
     /// 🎚️ Slider track anchors for the HTML slider overlay.
     pub fn slider_overlay_state_json(&self) -> Result<String, DagError> {
         let cam = &self.fixture.camera;
-        let mut sliders: Vec<serde_json::Value> = Vec::new();
+        let mut sliders: Vec<Value> = Vec::new();
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let DagNodeKind::Slider { min, max, step, value, .. } = &node.kind else {

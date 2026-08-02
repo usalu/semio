@@ -50,7 +50,7 @@ fn tile_morph_prompt_effect(deck: &PresentDeck) -> HostEffect {
 }
 
 fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: ANIMATE_PRESENT_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+    ActionDescriptor { controller_id: ANIMATE_PRESENT_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 fn new_tile_id(prefix: &str) -> String {

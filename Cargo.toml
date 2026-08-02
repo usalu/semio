@@ -605,7 +605,7 @@ lto = "off"
 # and bound the affected component to a stable shard count. `vcs` moved off cdylib entirely (pure
 # rlib now — its cdylib/wasm surface moved to `store`, see EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY),
 # so only `store` needs this override today.
-[profile.release.package.semio-s-kernel-store]
+[profile.release.package.semio-framework-os-kernel-store]
 codegen-units = 16
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in

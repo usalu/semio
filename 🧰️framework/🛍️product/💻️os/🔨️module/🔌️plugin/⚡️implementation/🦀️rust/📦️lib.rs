@@ -3,6 +3,7 @@
 #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
 pub mod component {
     //! 🧩️ WASI P2 component exports for the plugin world contract.
+    #![allow(unsafe_op_in_unsafe_fn)]
 
     use crate::plugin_runtime::{ensure_plugin_initialized, plugin_clear_instance_guard, plugin_create_app, plugin_exchange, plugin_manifest};
     use wit_bindgen::generate;
@@ -99,9 +100,10 @@ use ui_wgpu::{
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+use dsl::{to_dsl_value, DslValue};
 use std::collections::{HashMap, HashSet};
 use protocol::OpText;
-use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, SpaceConflict};
+use store::{build_history_columns, create_config_envelope, create_document_envelope, ConfigStore, DocumentCommand, DocumentStore, HistoryColumn, SpaceConflict};
 
 pub struct ModeSpec {
     pub id: String,
@@ -890,7 +892,7 @@ impl AppBuilder {
                         action: ActionDescriptor {
                             controller_id: self.controller_id.clone(),
                             action: SET_ACTIVE_UTILITY_ACTION_ID.to_string(),
-                            args: Some(serde_json::json!({ "utilityId": utility.id })),
+                            args: Some(DslValue::Object(vec![("utilityId".into(), DslValue::String(utility.id.clone()))])),
                         },
                     });
                 }
@@ -904,7 +906,7 @@ impl AppBuilder {
                         action: ActionDescriptor {
                             controller_id: self.controller_id.clone(),
                             action: SET_ACTIVE_TOOL_ACTION_ID.to_string(),
-                            args: Some(serde_json::json!({ "toolId": tool.id })),
+                            args: Some(DslValue::Object(vec![("toolId".into(), DslValue::String(tool.id.clone()))])),
                         },
                     });
                 }
@@ -2415,7 +2417,7 @@ mod app_builder_tests {
             .find(|binding| binding.keys == "b")
             .expect("utility keybinding auto-injected");
         assert_eq!(binding.action.action, SET_ACTIVE_UTILITY_ACTION_ID);
-        assert_eq!(binding.action.args, Some(serde_json::json!({ "utilityId": "brush" })));
+        assert_eq!(binding.action.args, Some(DslValue::Object(vec![("utilityId".into(), DslValue::String("brush".into()))])));
     }
 
     #[test]
@@ -2477,7 +2479,7 @@ mod app_builder_tests {
             .find(|binding| binding.keys == "f")
             .expect("tool keybinding auto-injected");
         assert_eq!(binding.action.action, SET_ACTIVE_TOOL_ACTION_ID);
-        assert_eq!(binding.action.args, Some(serde_json::json!({ "toolId": "fill" })));
+        assert_eq!(binding.action.args, Some(DslValue::Object(vec![("toolId".into(), DslValue::String("fill".into()))])));
     }
 
     #[test]
@@ -2727,7 +2729,7 @@ mod app_builder_tests {
             description: None,
             duration_ms: 10_000,
             chapters: vec![],
-            base: TutorialBase { document_json: None, example_id: None, ui: TutorialUiSnapshot::default(), cameras: vec![] },
+            base: TutorialBase { document_dsl: None, example_id: None, ui: TutorialUiSnapshot::default(), cameras: vec![] },
             tracks: TutorialTracks::default(),
             recorded_at: None,
         }
@@ -3251,7 +3253,7 @@ fn history_panel_icon_id(kind: ActionKind) -> IconName {
 /// this verbatim for `FRAMEWORK_HISTORY_BODY_KEY`, so every app gets the identical panel (mirrors
 /// `ui_wgpu::ui_recovery_panel`'s "one Rust builder, both renderers" shape).
 pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool) -> UiNode {
-    let act = |action: &str, args: Option<Value>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
+    let act = |action: &str, args: Option<DslValue>| ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args };
     let history_button = |icon_id: IconName, label_en: &str, label_de: &str, action: &str, enabled: bool| {
         UiNode::Button(UiButtonNode {
             id: Some(format!("framework.history.{action}")),
@@ -3312,7 +3314,7 @@ pub fn ui_history_panel(history: &HistoryView, controller_id: &str, is_de: bool)
                 item.actions = Some(vec![UiTreeItemAction {
                     icon_id: IconName::RotateCcw,
                     label: Some(if is_de { "Zurück bis hier" } else { "Backwards" }.into()),
-                    action: act(REVERT_TO_COMMAND_ACTION_ID, Some(serde_json::json!({ "entrySeq": entry.seq }))),
+                    action: act(REVERT_TO_COMMAND_ACTION_ID, Some(DslValue::Object(vec![("entrySeq".into(), DslValue::Number(entry.seq as f64))]))),
                     reveal_on_hover: Some(true),
                 }]);
             }
@@ -3926,10 +3928,10 @@ impl<'a> Menu<'a> {
     }
 
     pub fn action_args(self, action_id: impl Into<String>, args: Value) -> Self {
-        self.action_with_args(action_id, Some(args))
+        self.action_with_args(action_id, Some(to_dsl_value(&args).expect("menu action args must convert to DslValue")))
     }
 
-    fn action_with_args(mut self, action_id: impl Into<String>, args: Option<Value>) -> Self {
+    fn action_with_args(mut self, action_id: impl Into<String>, args: Option<DslValue>) -> Self {
         let action_id = action_id.into();
         match self.registry.get(&action_id) {
             Some(definition) => {
@@ -4123,7 +4125,7 @@ pub fn node_graph_delete_selection_spec(
         NodeGraphDeleteDispatch::Direct => ("deleteSelection".into(), None),
         NodeGraphDeleteDispatch::ViaNodeGraphEdit => (
             "nodeGraphEdit".into(),
-            Some(serde_json::json!({ "operations": [{ "operation": "deleteSelection" }] })),
+            Some(to_dsl_value(&serde_json::json!({ "operations": [{ "operation": "deleteSelection" }] })).expect("delete menu args")),
         ),
     };
     Some(ContextMenuItemSpec {
@@ -4198,7 +4200,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             None,
         );
         let mut store = DocumentStore::new(envelope);
-        let mut config_store = ConfigStore::new(config_envelope);
+        let config_store = ConfigStore::new(config_envelope);
         app.seed(&mut store);
         Self {
             app,
@@ -4418,7 +4420,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> InvocationResult {
         let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
         InvocationResult {
-            output: Value::Null,
+            output: DslValue::Null,
             operations: Vec::new(),
             inverse_group: UndoGroup {
                 invocation_id,
@@ -4507,7 +4509,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         let operation_ids: Vec<OperationId> = operations.iter().map(|operation| operation.id.clone()).collect();
         let inverse_operations: Vec<InverseOperation> = operations.iter().map(|operation| operation.inverse.clone()).collect();
         InvocationResult {
-            output: Value::Null,
+            output: DslValue::Null,
             operations,
             inverse_group: UndoGroup {
                 invocation_id,
@@ -4524,17 +4526,15 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// @emoji 🧮️ Shared arg materialization for `handle_action`/`handle_command`: fills declared
     /// defaults over the staged args and rejects if any required arg is still missing.
     fn materialize_args(label: &str, defs: &[ActionArgDef], args: Option<&Value>) -> Result<Value, String> {
-        let staged = args.and_then(Value::as_object).cloned().unwrap_or_default();
-        let effective = effective_action_args(defs, &staged);
-        let missing = missing_required_args(defs, &effective);
+        let staged_dsl = args
+            .map(|value| to_dsl_value(value).unwrap_or(DslValue::Null))
+            .unwrap_or(DslValue::Object(Vec::new()));
+        let effective_dsl = effective_action_args(defs, &staged_dsl);
+        let missing = missing_required_args(defs, &effective_dsl);
         if !missing.is_empty() {
             return Err(format!("{label} missing required args: {missing:?}"));
         }
-        let mut merged = staged;
-        for (key, value) in effective {
-            merged.entry(key).or_insert(value);
-        }
-        Ok(Value::Object(merged))
+        semio_framework_core::from_dsl_value::<Value>(effective_dsl).map_err(|error| error)
     }
 
     /// @emoji 🧬️ Shared dispatch tail for `handle_action`/`handle_command`/`import_media`: given the
@@ -4699,7 +4699,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 Some((None, ActionKind::Shell, Some(inverse))) => Ok(Self::empty_result(
                     action,
                     meta,
-                    vec![HostEffect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }],
+                    vec![HostEffect::ReplayShellCommand {
+                        action_id: inverse.action_id,
+                        args: inverse
+                            .args
+                            .as_ref()
+                            .map(|value| to_dsl_value(value).unwrap_or(DslValue::Null)),
+                    }],
                     Vec::new(),
                     semio_framework_core::kernel::UiDirtyScope::None,
                 )),
@@ -4862,7 +4868,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         let emit = {
             let VcsDocumentApp { app, cache, .. } = self;
             let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+            let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
             app.import_media(port, media, &doc).map_err(|error| error.to_string())?
         };
         self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
@@ -4887,7 +4893,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
 fn history_changed_event() -> AppEvent {
     AppEvent {
         kind: "history-changed".into(),
-        payload: Value::Null,
+        payload: DslValue::Null,
     }
 }
 
@@ -5111,7 +5117,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
         let VcsDocumentApp { app, cache, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+        let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
         app.export_media(port, &doc)
     }
 
@@ -5125,7 +5131,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
         let VcsDocumentApp { app, cache, .. } = self;
         let (_, projection, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = DocumentView { projection, history }; let cfg = ConfigView { projection: config };
+        let doc = DocumentView { projection, history }; let _cfg = ConfigView { projection: config };
         app.media_fingerprint(port, &doc)
     }
 
@@ -5276,7 +5282,7 @@ use ui_wgpu::{
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-use dsl::{from_dsl_value, to_dsl_value, DslValue};
+use dsl::{from_dsl_value, to_dsl_value};
 use std::cell::{Cell, RefCell};
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -5394,9 +5400,16 @@ pub fn install_plugin_bundle(bundle: PluginBundle) {
 
 static PLUGIN_INIT_ONCE: std::sync::Once = std::sync::Once::new();
 
+static PLUGIN_BUNDLE_INSTALLER: std::sync::OnceLock<fn()> = std::sync::OnceLock::new();
+
+/// @emoji 🧩️ Registers the embedding plugin crate's bundle installer (expanded from `plugin_exports!`).
+pub fn register_plugin_bundle_installer(install: fn()) {
+    let _ = PLUGIN_BUNDLE_INSTALLER.set(install);
+}
+
 #[cfg(feature = "component-guest")]
 extern "C" {
-    fn semio_plugin_install_bundle();
+    fn semio_plugin_bundle_installer_link_shim();
 }
 
 /// Ensures the embedding plugin crate's bundle installer ran before any WIT export is served.
@@ -5405,8 +5418,13 @@ pub fn ensure_plugin_initialized() {
         #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
         crate::host_port::register_host_backbone_channel();
         #[cfg(feature = "component-guest")]
-        unsafe {
-            semio_plugin_install_bundle();
+        {
+            unsafe {
+                semio_plugin_bundle_installer_link_shim();
+            }
+            if let Some(install) = PLUGIN_BUNDLE_INSTALLER.get() {
+                install();
+            }
         }
     });
 }
@@ -6211,10 +6229,20 @@ pub fn plugin_exchange(instance_id: u32, commands: &[Vec<u8>]) -> Result<Vec<Vec
 #[macro_export]
 macro_rules! plugin_exports {
     ($bundle_fn:expr) => {
+        fn __semio_install_plugin_bundle() {
+            $crate::plugin_runtime::install_plugin_bundle(($bundle_fn)());
+        }
+
+        #[doc(hidden)]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_plugin_bundle_installer_link_shim() {
+            $crate::plugin_runtime::register_plugin_bundle_installer(__semio_install_plugin_bundle);
+        }
+
         #[doc(hidden)]
         #[unsafe(no_mangle)]
         pub extern "C" fn semio_plugin_install_bundle() {
-            $crate::plugin_runtime::install_plugin_bundle(($bundle_fn)());
+            __semio_install_plugin_bundle();
         }
 
         #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
@@ -8239,7 +8267,7 @@ mod tests {
     #[test]
     fn projection_measures_tree_matches_the_requested_taxonomy() {
         let p = WorldProjectionConfig::default();
-        let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args });
+        let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args: semio_framework_core::optional_json_to_dsl(args) });
         let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
         assert_eq!(families.len(), 2);
         let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };

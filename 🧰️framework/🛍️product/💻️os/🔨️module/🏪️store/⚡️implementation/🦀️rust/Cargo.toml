@@ -27,6 +27,7 @@ semio-framework-core = { path = "../../../../../../../🧰️framework/⚡️imp
 protocol = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/📡️protocol/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-protocol" }
 vcs = { path = "../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🌿️vcs/⚡️implementation/🦀️rust", package = "semio-framework-os-kernel-vcs" }
 blake3 = "1"
+base64 = "0.22.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"
