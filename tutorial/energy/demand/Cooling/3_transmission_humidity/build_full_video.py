@@ -4,8 +4,9 @@ import sys
 import subprocess
 from pathlib import Path
 
-project_root = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(project_root))
+NOWIGETIT_ROOT = Path("/Users/niloufarghandehariyoon/Nowgetit/NowIGetIt")
+SEMIO_ROOT = Path(__file__).resolve().parents[5]
+sys.path.insert(0, str(NOWIGETIT_ROOT))
 
 from backend.pipeline.compose import mux_scene_audio, compose_final_video
 
@@ -34,6 +35,7 @@ def main():
         return path  # will be caught by mux_scene_audio
 
     muxed_clips = []
+    manim_bin = SEMIO_ROOT / ".venv" / "bin" / "manim"
 
     for idx, (scene_name, audio_path) in enumerate(scenes, start=1):
         print(f"\n{'='*60}")
@@ -41,7 +43,7 @@ def main():
         print(f"{'='*60}")
 
         render_cmd = [
-            str(project_root / ".venv/bin/manim"),
+            str(manim_bin),
             "-qh",
             "--media_dir", str(output_dir / "media"),
             str(script_path),

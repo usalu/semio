@@ -53,7 +53,7 @@
     }
   },
   "editor.formatOnSave": true,
-  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -119,11 +119,15 @@
   "inlineChat.accessibleDiffView": "off",
   "cursor.composer.shouldAutoAcceptDiffs": true,
   "cursor.diffs.useCharacterLevelDiffs": false,
-  "manim-sideview.manimExecutable": "/Users/niloufarghandehariyoon/Documents/Master LUH/Hiwi/semio/.venv/bin/manim",
-  "manim-sideview.autoLivePreview": true,
+  "manim-sideview.defaultManimPath": "manim",
+  "manim-sideview.manimExecutableVersion": "v0.20.1",
   "manim-sideview.runOnSave": true,
-  "manim-sideview.defaultQuality": "low",
-  "manim-sideview.previewInEditor": true
+  "manim-sideview.preview": true,
+  "manim-sideview.previewAutoPlay": true,
+  "manim-sideview.previewLooping": true,
+  "manim-sideview.focusOutputOnRun": true,
+  "manim-sideview.outputToTerminal": true,
+  "manim-sideview.checkeredBackground": true
 }
 
 

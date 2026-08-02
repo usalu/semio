@@ -1,0 +1,26 @@
+{
+  "title": "Create Internal Gains Cooling Video",
+  "emoji": "\ud83d\udd25",
+  "status": "closed",
+  "description": "Build Cooling Part 1 Internal Gains as beat-based Manim scenes with TTS and compose scripts, following generate-manim-tutorial skill and the user's scene breakdown.",
+  "goal": "\ud83c\udfafr2602\ud83c\udfafupdateddocs\ud83c\udfafupdateduserdocs\ud83c\udfafupdatedtutorials",
+  "dates": {
+    "due": "2026-08-02",
+    "started": "2026-08-02",
+    "finished": "2026-08-02"
+  },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Built Cooling 2_internal_gains as beat-based Manim video (4 Beat scenes, English NARRATIONS, generate_audio/build_full_video, manim.cfg). All four beats smoke-rendered with -ql. TTS returned 403 (API key) \u2014 narrations are ready in generate_audio.py.",
+  "files": {
+    "created": [
+      "tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py",
+      "tutorial/energy/demand/Cooling/2_internal_gains/generate_audio.py",
+      "tutorial/energy/demand/Cooling/2_internal_gains/build_full_video.py",
+      "tutorial/energy/demand/Cooling/2_internal_gains/manim.cfg"
+    ],
+    "updated": [
+      ".vscode/launch.json"
+    ]
+  }
+}

@@ -208,3 +208,121 @@ The whole building needs to be shifted a little lower in order to prevent the te
 ---
 
 add all my prompting in this document .repo/💬/Niloufar.md
+
+---
+
+## 🎬 Manim / Cooling Tutorials
+
+---
+
+impliment Manim side view extention and i want to be able to use the ui of that to open this files in manim side view@tutorial/energy/demand/Cooling/2_transmission_humidity/scene_3.py
+
+---
+
+@/Users/niloufarghandehariyoon/.cursor/projects/Users-niloufarghandehariyoon-Documents-Master-LUH-Hiwi-semio/terminals/4.txt:7-8
+
+---
+
+but the direction of the ./venv is not in this folder
+
+---
+
+review what I have implemented in the 'Now I Get It' repository:/Users/niloufarghandehariyoon/Nowgetit/. Then, in the @tutorial folder, create an agent skill that can effectively generate Manim code for animations based on my descriptions (including audio additions, etc.). You can find the relevant implementation in that directory and add the new agent there
+
+---
+
+make a new folder in cooling demand, and following the other colling demands videos make this animated video with this description using our agent : Scene Breakdown: Part 1 - The Hidden Heat (Internal Gains)Global Style Settings:Background: Deep Dark (#0B0C10)Typography: Serif font for all textColor Palette: Pastel White (#E0E6ED), Pastel Cyan (#66FCF1), Pastel Teal (#45A29E), Pastel Orange (#FFAAA5), Pastel Yellow (#FFE66D), Pastel Red (#FF6B6B), Pastel Green (#CAFFBF).Beat 1: Setting the Stage (The Office Room)On-Screen Text:Main Title (Top): "Die versteckte Last: Interne Wärmegewinne" (Pastel Orange)Visual Elements:The camera zooms into the line-art house from the Introduction, transitioning into a single, enclosed rectangular room.The room uses the same line-art style: a Pastel Teal floor line and Pastel White walls and ceiling.Inside the room, simple line-art furniture appears: a desk and a chair (Pastel White).Animation/Action: The transition is smooth, scaling up the house until the walls of one room fill the frame.Voiceover Match: "Before the sun even touches our building, we have a massive heat problem already brewing inside. In commercial buildings, offices, or university lecture halls, the heat generated internally is often our primary cooling load."Beat 2: The Human Factor ($\dot{Q}_{Pers}$)On-Screen Text:Equation Box (Bottom Left):$$\dot{Q}_{Pers} = n \cdot \dot{q}_{p}$$(Pastel White)Visual Elements:A simple line-art human figure (Pastel White) appears sitting at the desk.Soft, pulsating Pastel Orange rings (representing thermal radiation) begin to emanate from the human figure.Animation/Action: As the voiceover introduces the math, the variable $\dot{q}_p$ (specific heat emission per person) pulses Pastel Orange. When a larger group is mentioned, the $n$ (number of people) pulses.Voiceover Match: "Think of a human body as a biological heater. We calculate this load, Q-dot Personen, by multiplying the number of people, $n$, by their specific heat emission, q-dot p. A single person sitting at a desk outputs roughly 100 W. Pack 50 students into a lecture hall, and you essentially have a 5,000 W space heater running constantly."Beat 3: Devices and Lighting ($\dot{Q}_{Geräte}$ & $\dot{Q}_{Licht}$)On-Screen Text:Equation Box Update (Below the first equation):$$ \dot{Q}{Geräte} = \sum P{el} \cdot f_N $$(Pastel White)$$\dot{Q}_{Licht} = \sum P_{Licht} \cdot f_g$$(Pastel White)Visual Elements:A laptop appears on the desk, and a glowing light bulb icon appears on the ceiling.Intense, jagged Pastel Orange arrows radiate upward from the laptop. A wide cone of Pastel Orange light shines downward from the ceiling bulb.Animation/Action: When the laptop appears, $P_{el}$ (electrical power) pulses. Then, $f_N$ (usage factor / Nutzungsfaktor) pulses to emphasize that not all devices run at 100% capacity all the time. The same highlight sequence happens for the lighting equation below it with the coincidence factor $f_g$ (Gleichzeitigkeitsfaktor).Voiceover Match: "But it doesn't stop with people. Every laptop, coffee machine, and server rack converts its electrical power, P el, directly into heat. We multiply this by a usage factor, f N, because not every device runs simultaneously. Add in the installed power of our ceiling lighting, P Licht, and the room starts to bake from the inside out."Beat 4: The Cumulative Load ($\dot{Q}_i$)On-Screen Text:Master Equation Box (Center Right):$$ \dot{Q}{i} = \dot{Q}{Pers} + \dot{Q}{Geräte} + \dot{Q}{Licht} $$(Pastel Orange bounding box).Visual Elements:The individual heat waves from the person, the laptop, and the light merge into a single, glowing Pastel Orange cloud that fills the upper half of the room.The individual equations on the left shrink and slide over to form the master internal load equation in the center right.Animation/Action: A subtle highlighting effect traces the borders of the equation box to draw the viewer's eye. The heat cloud gently undulates, visually demonstrating the constant pressure of internal heat. Each variable ($\dot{Q}_{Pers}$, $\dot{Q}_{Geräte}$, $\dot{Q}_{Licht}$) pulses one final time as it drops into the master sum.Voiceover Match: "In building physics, we sum all of these individual factors together to calculate our total internal cooling load, Q-dot internal. On a hot summer day, this internal heat trap means our cooling system has to work overtime, even if all the blinds are perfectly drawn."
+
+---
+
+@tutorial/energy/demand/Cooling/2_internal_gains/merged_scenes.py  I want you to translate the texts into German. Also, please make sure to use a style and positioning for the texts that are similar to the other cooling animations.
+
+---
+
+@tutorial/energy/demand/Cooling/2_internal_gains/merged_scenes.py in scene EquipmentAndPlugLoads, i want cooler animation which indicate the radiation comes up from devices, you can @tutorial/energy/demand/Heating/internal_heat_gain/merged_scenes.py use the animated radiation from this file
+
+---
+
+Additionally, the animation in the ArtificialLightingScene is really bad. I want you to improve it completely; the object styles, the texts, and everything else look unprofessional.
+
+---
+
+Also, the text 'Wärme: Hohlräume' and the subtitle below it are colliding with other objects in the scene. Please reposition them so they appear without colliding with anything else.
+the appearance of the formula displaying F_g is unclear. Since you show F_g twice, please expand the formula to make it more understandable.
+
+---
+
+this 2 texes need to be shifted to the right in ordr to not be in the white rectangle boundry :@merged_scenes.py (1003-1008)
+
+---
+
+regenarate this scene with more clear animation and grafic for explaining the formula, and also be more related to the privouse scenes :InternalGainEquation
+
+---
+
+The formulas inside the boxes are not readable, so  write them outside the boxes and animate them better ( you can minimize the boxes as well). Additionally,  the + symbol between the boxes, add more space between the three boxes in order the + symbol placed in better position, and delete the arrows pointing to the formulas
+
+---
+
+for person can you use more professional academic symbol
+
+---
+
+Regenerate all of Scene 8. The object animation explanation is poor. I want it to be more easily understood, with better graphics and improved animation
+
+---
+
+delete the person and the laptop you drew. Increase the number of moving particles, and make the insulation texture clearer. Finally, remove the arrows indicating particle movement, and instead, add text outside the wall boundary explaining how the particles movements
+
+---
+
+delete the insulation texture lines. Make all the particles the same color: a highly opaque light orange. When they collide with the wall boundary (they must actually touch the wall before bouncing back), their color should become sharper. This should continue until the particles get really hot, eventually filling the entire room with this color
+
+---
+
+ensure the particles move more smoothly and continuously without stopping. The text explaining their movement should be positioned directly underneath the center of the ground  geometry, out side of the boundry
+
+---
+
+@/Users/niloufarghandehariyoon/.cursor/projects/Users-niloufarghandehariyoon-Documents-Master-LUH-Hiwi-semio/terminals/3.txt:1011-1022
+
+---
+
+Regenerate all of Scene 9. The object animation explanation is poor. I want it to be more easily understood, with better graphics and improved animation. the arrows are animating really poor
+
+---
+
+remove the arrows. The particle animation should be continuous, allowing them to move and bounce multiple times instead of completing just a single cycle
+
+---
+
+the speed of the particles is too high, slow them down so that after touching the walls, they move into the Abluft section before the Zuluft comes in, ensuring the movement is slower and more realistic
+
+---
+
+make the animation of the abluft part ecact like zuluft but reverse
+
+---
+
+Regenerate all of Scene 10. The object animation explanation is poor. I want it to be more easily understood, with better graphics and improved animation. the rectangle in bellow is really unclear
+
+---
+
+Also, there are two boxes below that I don't understand; delete those particles. For the room, use better minimalist graphics and make the lighting yellow. The device is placed on something unclear; please make the room look more realistic overall
+
+---
+
+dont use color for table and floor, and for beleuchtung, show it as a circle minimal lamp
+
+---
+
+@tutorial/energy/demand/Cooling/2_internal_gains/merged_scenes.py in all scenes Whenever a new scene starts, the header text needs a smooth typing animation
+
+---
+
+no use the animation that 3blueone brown use for the text animation, i dont recall the name of the animation
+
+---
+
+add all of my prompt in this file @.repo/💬/Niloufar.md
+

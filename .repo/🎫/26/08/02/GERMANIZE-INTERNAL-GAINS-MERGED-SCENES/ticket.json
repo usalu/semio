@@ -1,0 +1,20 @@
+{
+  "title": "Germanize Internal Gains Merged Scenes Texts",
+  "emoji": "\ud83c\udde9\ud83c\uddea",
+  "status": "closed",
+  "description": "Translate remaining English on-screen texts in Cooling 2_internal_gains/merged_scenes.py to German and align title/caption style and positioning with other Cooling animations.",
+  "goal": "\ud83c\udfafr2602\ud83c\udfafupdateddocs\ud83c\udfafupdateduserdocs\ud83c\udfafupdatedtutorials",
+  "dates": {
+    "due": "2026-08-02",
+    "started": "2026-08-02",
+    "finished": "2026-08-02"
+  },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Translated remaining English on-screen strings in merged_scenes.py to German; normalized title/caption sizes and UP/DOWN buffs; unified P_DEEP_DARK backgrounds; Serif via Text shim fallbacks. Scene3 smoke-rendered.",
+  "files": {
+    "updated": [
+      "tutorial/energy/demand/Cooling/2_internal_gains/merged_scenes.py"
+    ]
+  }
+}

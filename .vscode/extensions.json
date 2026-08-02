@@ -26,6 +26,7 @@
     "ms-vscode.cpptools",
     "ms-python.python",
     "ms-python.vscode-pylance",
+    "rickaym.manim-sideview",
     "charliermarsh.ruff",
     "ms-toolsai.jupyter",
     "rust-lang.rust-analyzer",

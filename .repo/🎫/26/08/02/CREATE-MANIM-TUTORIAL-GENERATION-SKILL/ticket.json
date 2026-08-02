@@ -1,0 +1,28 @@
+{
+  "title": "Create Manim Tutorial Generation Skill",
+  "emoji": "\ud83c\udfac",
+  "status": "closed",
+  "description": "Review Now I Get It Manim/TTS/compose pipeline and create a tutorial agent skill that generates beat-based Manim scenes, narrations, audio, and full-video build scripts matching Cooling conventions.",
+  "goal": "\ud83c\udfafr2602\ud83c\udfafupdateddocs\ud83c\udfafupdateduserdocs\ud83c\udfafupdatedtutorials",
+  "dates": {
+    "due": "2026-08-02",
+    "started": "2026-08-02",
+    "finished": "2026-08-02"
+  },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Reviewed Now I Get It Manim/TTS/compose pipeline and Cooling beat conventions; added generate-manim-tutorial skill under tutorial/.agents/skills with reference stubs; added root .agents pointer for discovery; fixed scene_3 audio/build scripts to import NowIGetIt backend.",
+  "files": {
+    "created": [
+      "tutorial/.agents/skills/generate-manim-tutorial/SKILL.md",
+      "tutorial/.agents/skills/generate-manim-tutorial/reference.md",
+      ".agents/skills/generate-manim-tutorial/SKILL.md",
+      ".repo/\ud83c\udfab/26/08/02/CREATE-MANIM-TUTORIAL-GENERATION-SKILL/review.md",
+      ".repo/\ud83c\udfab/26/08/02/CREATE-MANIM-TUTORIAL-GENERATION-SKILL/ticket.json"
+    ],
+    "updated": [
+      "tutorial/energy/demand/Cooling/2_transmission_humidity/generate_audio.py",
+      "tutorial/energy/demand/Cooling/2_transmission_humidity/build_full_video.py"
+    ]
+  }
+}

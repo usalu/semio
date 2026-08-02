@@ -1,3 +1,9 @@
+
+
+
+
+
+
 # 8 Requirements for Summer Thermal Protection
 
 ## 8.1 General

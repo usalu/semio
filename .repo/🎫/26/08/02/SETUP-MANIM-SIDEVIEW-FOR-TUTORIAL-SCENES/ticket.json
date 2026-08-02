@@ -1,0 +1,27 @@
+{
+  "title": "Setup Manim Sideview for Tutorial Scenes",
+  "emoji": "\ud83c\udfac",
+  "status": "closed",
+  "description": "Configure the Manim Sideview VS Code/Cursor extension with correct settings keys, recommend the extension, and enable live preview of tutorial/energy cooling scene_3.py scenes via the Sideview UI.",
+  "goal": "\ud83c\udfafr2602\ud83c\udfafupdateddocs\ud83c\udfafupdateduserdocs\ud83c\udfafupdatedtutorials",
+  "dates": {
+    "due": "2026-08-02",
+    "started": "2026-08-02",
+    "finished": "2026-08-02"
+  },
+  "client": "cursor-chat",
+  "llm": "composer",
+  "summary": "Configured Manim Sideview with correct settings keys, recommended the extension, fixed Python interpreter to .venv/bin/python, added manim.cfg for low-quality Sideview previews beside scene_3.py, and verified Beat1_TransmissionOpaque renders.",
+  "files": {
+    "updated": [
+      ".vscode/settings.json",
+      ".vscode/extensions.json",
+      ".vscode/launch.json"
+    ],
+    "created": [
+      "tutorial/energy/demand/Cooling/2_transmission_humidity/manim.cfg",
+      ".repo/\ud83c\udfab/26/08/02/SETUP-MANIM-SIDEVIEW-FOR-TUTORIAL-SCENES/notes.md",
+      ".repo/\ud83c\udfab/26/08/02/SETUP-MANIM-SIDEVIEW-FOR-TUTORIAL-SCENES/ticket.json"
+    ]
+  }
+}

@@ -862,6 +862,28 @@
         "order": 200
       }
     },
+    {
+      "name": "🛠️dev🎬manim scene_3",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py Beat1_TransmissionOpaque",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 201
+      }
+    },
+    {
+      "name": "🛠️dev🎬manim scene_2",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "uv run manim -pql tutorial/energy/demand/Cooling/2_internal_gains/scene_2.py Beat1_OfficeRoom",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 202
+      }
+    },
     // #endregion
 
     // #region 📦 Build
