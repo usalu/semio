@@ -3,21 +3,23 @@
 use flow_core::dag::DagFixture;
 use flow_core::forms_bridge::apply_generation_values_to_fixture;
 use flow_core::{CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
-use flow_module_brep::tessellate_geometry_json;
+use flow_module_brep::tessellate_geometry;
 use playbook::{selected_generation, GenerationPlayState};
 use procedural_3d::{widget_id, Procedural3dDocument};
-use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::SelectionSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashSet;
 use store::DocumentDsl;
 
 //#region 🔖️Constants
-pub const PROCEDURAL_FALLBACK_MESH_KIND: &str = "box";
 pub const PROCEDURAL_EXAMPLE_HEX_COLUMN: &str = "hexagonal-mushroom-column";
 pub const PROCEDURAL_EXAMPLE_RECT_EXTRUDE: &str = "rectangle-extrude-volume";
 pub const PROCEDURAL_EXAMPLE_SPHERE_TORUS: &str = "sphere-cut-with-torus";
+pub const PROCEDURAL_EXAMPLE_BOX_FILLET: &str = "box-fillet-preview";
+pub const PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE: &str = "sphere-box-fuse";
+pub const PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE: &str = "face-sweep-extrude";
+pub const PROCEDURAL_EXAMPLE_RECTANGLE_WIRE: &str = "rectangle-wire-preview";
+pub const PROCEDURAL_EXAMPLE_BOX_SHELL: &str = "box-shell-preview";
 //#endregion 🔖️Constants
 
 //#region 🔖️EvalCache
@@ -112,7 +114,7 @@ impl Default for Procedural3dRuntime {
 }
 
 pub fn default_show_mode() -> String {
-    "solid".into()
+    "shaded".into()
 }
 
 pub fn default_selection_method() -> String {
@@ -125,6 +127,7 @@ pub struct Procedural3dPreviewCache {
     pub signature: u64,
     pub meshes_json: String,
     pub instances_json: String,
+    pub status_json: Option<String>,
 }
 //#endregion 🔖️Types
 
@@ -145,6 +148,11 @@ pub fn example_projection(example_id: &str) -> Procedural3dDocument {
         PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT),
         PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT),
         PROCEDURAL_EXAMPLE_SPHERE_TORUS => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT),
+        PROCEDURAL_EXAMPLE_BOX_FILLET => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT),
+        PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT),
+        PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT),
+        PROCEDURAL_EXAMPLE_RECTANGLE_WIRE => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT),
+        PROCEDURAL_EXAMPLE_BOX_SHELL => Some(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT),
         "" => None,
         _ => None,
     };
@@ -193,42 +201,80 @@ pub fn generation_fixture_for(fixture: &FlowFixture, generation: &GenerationPlay
     }
 }
 
+fn preview_cache_signature(fixture: &FlowFixture, eval_json: &str, runtime: &Procedural3dRuntime) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    fixture_signature(fixture).hash(&mut hasher);
+    eval_json.hash(&mut hasher);
+    runtime.lod_mode.hash(&mut hasher);
+    runtime.show_mode.hash(&mut hasher);
+    hasher.finish()
+}
+
+pub fn preview_tolerance(lod_mode: &str) -> f64 {
+    match lod_mode {
+        "coarse" => 0.15,
+        "fine" => 0.02,
+        _ => 0.05,
+    }
+}
+
 pub fn refresh_preview_cache(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture) {
-    let signature = fixture_signature(fixture);
+    let eval_json = runtime.eval_driver.eval_json().to_string();
+    let signature = preview_cache_signature(fixture, &eval_json, runtime);
     if runtime.preview_cache.as_ref().is_some_and(|entry| entry.signature == signature) {
         return;
     }
-    let (meshes_json, instances_json) = evaluated_preview_payload(fixture, runtime);
+    let (meshes_json, instances_json) = preview_payload_from_eval(&eval_json, fixture, runtime);
+    let status_json = preview_status_json(&eval_json, fixture);
     runtime.preview_cache = Some(Procedural3dPreviewCache {
         signature,
         meshes_json,
         instances_json,
+        status_json,
     });
 }
 
 pub fn refresh_generation_preview_cache(runtime: &mut Procedural3dRuntime, fixture: &FlowFixture, generation: &GenerationPlayState) {
-    let signature = generation_preview_signature(fixture, generation);
+    let Some(selected) = selected_generation(generation) else {
+        runtime.generation_preview_cache = None;
+        return;
+    };
+    let eval_json = runtime
+        .generation_preview_text
+        .clone()
+        .unwrap_or_else(|| evaluate_generation_preview(fixture, &selected.values));
+    let signature = preview_cache_signature(fixture, &eval_json, runtime);
     if runtime.generation_preview_cache.as_ref().is_some_and(|entry| entry.signature == signature) {
         return;
     }
-    let (meshes_json, instances_json) = evaluated_preview_payload(fixture, runtime);
+    let (meshes_json, instances_json) = preview_payload_from_eval(&eval_json, fixture, runtime);
+    let status_json = preview_status_json(&eval_json, fixture);
     runtime.generation_preview_cache = Some(Procedural3dPreviewCache {
         signature,
         meshes_json,
         instances_json,
+        status_json,
     });
 }
 
-/// 🧵️ Never evaluates: a signature mismatch (fixture changed since the cache was built) means a
-/// `flowEvalTick` chain is converging on the new fixture — this returns the stale cache as-is
-/// rather than blocking the render to recompute; the scene's `statusJson` reports "computing" in
-/// the meantime (see `pending_effects`/`FlowEvalDriver`). Only a cold start (no cache at all) falls
-/// back to a placeholder mesh per node kind.
-pub fn preview_payload_cached(runtime: &Procedural3dRuntime, fixture: &FlowFixture) -> (String, String) {
+/// 🧵️ Never evaluates: returns the last converged cache or empty scene JSON while `flowEvalTick` runs.
+pub fn preview_payload_cached(runtime: &Procedural3dRuntime, _fixture: &FlowFixture) -> (String, String) {
     if let Some(cache) = &runtime.preview_cache {
         return (cache.meshes_json.clone(), cache.instances_json.clone());
     }
-    (preview_meshes_json_fallback(fixture), preview_instances_json_fallback(fixture, runtime))
+    ("[]".into(), "[]".into())
+}
+
+pub fn preview_status_cached(runtime: &Procedural3dRuntime) -> Option<String> {
+    runtime.preview_cache.as_ref().and_then(|cache| cache.status_json.clone())
+}
+
+pub fn generation_preview_payload_cached(runtime: &Procedural3dRuntime) -> (String, String) {
+    if let Some(cache) = &runtime.generation_preview_cache {
+        return (cache.meshes_json.clone(), cache.instances_json.clone());
+    }
+    ("[]".into(), "[]".into())
 }
 
 /// 🗂️ Refreshes the ephemeral base + generation mesh preview caches after a mutation, so the next
@@ -247,6 +293,7 @@ pub fn refresh_all_caches(runtime: &mut Procedural3dRuntime, fixture: &FlowFixtu
                     signature,
                     meshes_json: base.meshes_json,
                     instances_json: base.instances_json,
+                    status_json: base.status_json,
                 });
             }
         }
@@ -273,11 +320,46 @@ pub fn preview_selection_json(runtime: &Procedural3dRuntime, active_utility: &st
         runtime.hovered_node_id.as_deref(),
     ))
     .unwrap_or_else(|_| json!({}));
+    let show_mode = if runtime.show_mode.is_empty() { "shaded" } else { runtime.show_mode.as_str() };
+    let (show_edges, selection_mode, targets) = match show_mode {
+        "wireframe" => (true, "mesh", json!({ "mesh": false, "vertex": false, "edge": true, "face": false })),
+        "points" => (false, "vertex", json!({ "mesh": false, "vertex": true, "edge": false, "face": false })),
+        "shaded+edges" => (true, "mesh", json!({ "mesh": true, "vertex": false, "edge": true, "face": false })),
+        _ => (false, "mesh", json!({ "mesh": true, "vertex": false, "edge": false, "face": false })),
+    };
     if let Some(object) = value.as_object_mut() {
         object.insert("transformMode".into(), json!(active_utility));
         object.insert("gumballActive".into(), json!(!runtime.selected_node_ids.is_empty()));
+        object.insert("showEdges".into(), json!(show_edges));
+        object.insert("selectionMode".into(), json!(selection_mode));
+        object.insert("granularity".into(), json!(selection_mode));
+        object.insert("targets".into(), targets);
+        object.insert("componentIds".into(), json!([]));
     }
     value.to_string()
+}
+
+fn merge_status_json(computing: Option<String>, preview_status: Option<String>) -> Option<String> {
+    match (computing, preview_status) {
+        (Some(c), Some(p)) => {
+            let mut computing_val: Value = serde_json::from_str(&c).unwrap_or(json!({ "computing": true }));
+            let preview_val: Value = serde_json::from_str(&p).unwrap_or(json!({}));
+            if let (Some(c_obj), Some(p_obj)) = (computing_val.as_object_mut(), preview_val.as_object()) {
+                for (k, v) in p_obj {
+                    c_obj.insert(k.clone(), v.clone());
+                }
+            }
+            Some(computing_val.to_string())
+        }
+        (Some(c), None) => Some(c),
+        (None, Some(p)) => Some(p),
+        (None, None) => None,
+    }
+}
+
+pub fn preview_scene_status_json(runtime: &Procedural3dRuntime) -> Option<String> {
+    let computing = runtime.eval_driver.pending().then(|| r#"{"computing":true}"#.to_string());
+    merge_status_json(computing, preview_status_cached(runtime))
 }
 
 pub fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
@@ -344,32 +426,8 @@ pub fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
     )
 }
 
-pub fn neuron_mesh_kind(neuron_kind: &str) -> &'static str {
-    match neuron_kind {
-        "brep.prim3d.sphere" => "sphere",
-        "brep.prim3d.cylinder" => "cylinder",
-        "brep.prim3d.cone" => "cone",
-        "brep.prim3d.torus" => "torus",
-        "brep.prim3d.box" => "box",
-        "brep.solid.extrude" | "brep.bool.cut" | "brep.bool.fuse" => "box",
-        _ => PROCEDURAL_FALLBACK_MESH_KIND,
-    }
-}
-
-pub fn widget_preview_mesh_kind(widget: &Widget) -> Option<&'static str> {
-    match widget {
-        Widget::Neuron { neuron_kind, preview, .. } if *preview => Some(neuron_mesh_kind(neuron_kind)),
-        Widget::OutputPreview { .. } => Some(PROCEDURAL_FALLBACK_MESH_KIND),
-        _ => None,
-    }
-}
-
-pub fn widget_layout_position(fixture: &FlowFixture, widget_id: &str) -> (f64, f64) {
-    fixture
-        .layout
-        .get(widget_id)
-        .map(|layout| (layout.x, layout.y))
-        .unwrap_or((0.0, 0.0))
+pub fn widget_id_from_instance_id(instance_id: &str) -> &str {
+    instance_id.split('#').next().unwrap_or(instance_id)
 }
 
 pub fn is_brep_geometry_handle(handle: &str) -> bool {
@@ -405,83 +463,124 @@ pub fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<Strin
     }
 }
 
-pub fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
-    let widget_eval = eval.get(widget_id)?;
-    let channels = widget_eval.get("out").or_else(|| widget_eval.get("in"))?;
+pub fn geometry_handles_for_widget(eval: &Value, widget_id: &str) -> Vec<String> {
+    let Some(widget_eval) = eval.get(widget_id) else {
+        return Vec::new();
+    };
+    let channels = widget_eval.get("out").or_else(|| widget_eval.get("in"));
+    let Some(channels) = channels else {
+        return Vec::new();
+    };
     let mut handles = Vec::new();
     collect_geometry_handles_from_eval(channels, &mut handles);
-    handles.into_iter().next()
+    handles
 }
 
-pub fn mesh_from_tessellation_json(mesh_json: &str) -> Option<semio_framework_plugin::MeshData> {
-    let parsed: Value = serde_json::from_str(mesh_json).ok()?;
-    if parsed.get("error").is_some() {
-        return None;
+fn mesh_has_preview_geometry(data: &semio_framework_plugin::MeshData) -> bool {
+    (!data.indices.is_empty() && data.positions.len() >= 9) || data.edge_positions.len() >= 6 || (data.positions.len() >= 3 && data.indices.is_empty())
+}
+
+fn apply_show_mode_mesh(mut data: semio_framework_plugin::MeshData, show_mode: &str) -> semio_framework_plugin::MeshData {
+    let show_mode = match show_mode {
+        "solid" | "shaded" | "shaded+edges" | "wireframe" | "points" => show_mode,
+        _ => "shaded",
+    };
+    match show_mode {
+        "wireframe" => {
+            data.positions.clear();
+            data.normals.clear();
+            data.indices.clear();
+            data.face_ids.clear();
+            data
+        }
+        "points" => {
+            data.indices.clear();
+            data.normals.clear();
+            data.edge_positions.clear();
+            data
+        }
+        _ => data,
     }
-    let positions: Vec<f32> = parsed
-        .get("position")
-        .or_else(|| parsed.get("positions"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
-        .filter(|items: &Vec<f32>| !items.is_empty())?;
-    let normals: Vec<f32> = parsed
-        .get("normal")
-        .or_else(|| parsed.get("normals"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
-        .unwrap_or_default();
-    let indices: Vec<u32> = parsed
-        .get("index")
-        .or_else(|| parsed.get("indices"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_u64().map(|number| number as u32)).collect())
-        .filter(|items: &Vec<u32>| !items.is_empty())?;
-    Some(mesh_from_indexed(&positions, &normals, &indices))
 }
 
-pub fn evaluated_preview_payload(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> (String, String) {
-    let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural_neural_cache());
-    let eval_json = host.evaluate().unwrap_or_default();
-    let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
+pub fn preview_status_json(eval_json: &str, fixture: &FlowFixture) -> Option<String> {
+    let eval: Value = serde_json::from_str(eval_json).ok()?;
+    if eval.get("error").and_then(Value::as_str).is_some() {
+        return Some(json!({ "error": eval.get("error") }).to_string());
+    }
+    let mut errors = serde_json::Map::new();
+    for widget in &fixture.widgets {
+        let id = widget_id(widget).to_string();
+        let Some(entry) = eval.get(&id) else { continue };
+        if let Some(error) = entry.get("error").and_then(Value::as_str) {
+            errors.insert(id, Value::String(error.to_string()));
+        }
+    }
+    if errors.is_empty() {
+        None
+    } else {
+        Some(json!({ "widgetErrors": errors }).to_string())
+    }
+}
+
+pub fn preview_payload_from_eval(eval_json: &str, fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> (String, String) {
+    if eval_json.is_empty() {
+        return ("[]".into(), "[]".into());
+    }
+    if let Ok(parsed) = serde_json::from_str::<Value>(eval_json) {
+        if parsed.get("error").and_then(Value::as_str).is_some() {
+            return ("[]".into(), "[]".into());
+        }
+    }
+    let eval: Value = serde_json::from_str(eval_json).unwrap_or(json!({}));
+    let tolerance = preview_tolerance(&runtime.lod_mode);
+    let show_mode = if runtime.show_mode.is_empty() { "solid" } else { runtime.show_mode.as_str() };
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
     for widget in &fixture.widgets {
         let id = widget_id(widget).to_string();
-        let preview = matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. });
+        let preview = matches!(widget, Widget::Neuron { preview: true, .. });
         if !preview {
             continue;
         }
-        let Some(handle) = geometry_handle_for_widget(&eval, &id) else {
+        let handles = geometry_handles_for_widget(&eval, &id);
+        if handles.is_empty() {
             continue;
-        };
-        let mesh_id = format!("eval-{id}");
-        if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            let tessellation = tessellate_geometry_json(&handle, 0.05);
-            if let Some(data) = mesh_from_tessellation_json(&tessellation) {
-                meshes.push(json!({ "id": mesh_id, "data": data }));
+        }
+        let selected = runtime.selected_node_ids.contains(&id);
+        let hovered = runtime.hovered_node_id.as_deref() == Some(id.as_str());
+        for (index, handle) in handles.iter().enumerate() {
+            let mesh_id = if handles.len() == 1 {
+                format!("eval-{id}")
+            } else {
+                format!("eval-{id}#{index}")
+            };
+            let instance_id = if handles.len() == 1 {
+                id.clone()
+            } else {
+                format!("{id}#{index}")
+            };
+            if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
+                if let Ok(data) = tessellate_geometry(handle, tolerance) {
+                    let data = apply_show_mode_mesh(data, show_mode);
+                    if mesh_has_preview_geometry(&data) {
+                        meshes.push(json!({ "id": mesh_id, "data": data }));
+                    }
+                }
+            }
+            if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
+                instances.push(json!({
+                    "id": instance_id,
+                    "meshId": mesh_id,
+                    "position": [0.0, 0.0, 0.0],
+                    "rotation": [0.0, 0.0, 0.0, 1.0],
+                    "scale": [1.0, 1.0, 1.0],
+                    "label": id,
+                    "selected": selected,
+                    "hovered": hovered,
+                }));
             }
         }
-        if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            let (x, y) = widget_layout_position(fixture, &id);
-            let selected = runtime.selected_node_ids.contains(&id);
-            let hovered = runtime.hovered_node_id.as_deref() == Some(id.as_str());
-            let position = [x * 0.01, -y * 0.01, 0.0];
-            instances.push(json!({
-                "id": id,
-                "meshId": mesh_id,
-                "position": position,
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": id,
-                "selected": selected,
-                "hovered": hovered,
-            }));
-        }
-    }
-    if meshes.is_empty() {
-        let fallback = preview_meshes_json_fallback(fixture);
-        let fallback_instances = preview_instances_json_fallback(fixture, runtime);
-        return (fallback, fallback_instances);
     }
     (
         serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()),
@@ -494,6 +593,7 @@ pub fn evaluate_generation_preview(fixture: &FlowFixture, values: &serde_json::M
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let patched_fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| fixture.clone());
     let mut host = FlowHost::from_fixture_with_cache(patched_fixture, procedural_neural_cache());
+    host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
     host.evaluate().unwrap_or_default()
 }
 
@@ -507,72 +607,35 @@ pub fn refresh_generation_preview(runtime: &mut Procedural3dRuntime, fixture: &F
     runtime.generation_preview_text = Some(evaluate_generation_preview(fixture, &selected.values));
 }
 
-pub fn preview_instances_json_fallback(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> String {
-    let instances: Vec<Value> = fixture
-        .widgets
-        .iter()
-        .filter_map(|widget| {
-            let mesh_kind = widget_preview_mesh_kind(widget)?;
-            let id = widget_id(widget).to_string();
-            let (x, y) = widget_layout_position(fixture, &id);
-            let selected = runtime.selected_node_ids.contains(&id);
-            let hovered = runtime.hovered_node_id.as_deref() == Some(id.as_str());
-            let position = [x * 0.01, -y * 0.01, 0.0];
-            Some(json!({
-                "id": id,
-                "meshId": mesh_kind,
-                "position": position,
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": id,
-                "selected": selected,
-                "hovered": hovered,
-            }))
-        })
-        .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
-}
-
-pub fn preview_meshes_json_fallback(fixture: &FlowFixture) -> String {
-    let kinds: Vec<String> = fixture
-        .widgets
-        .iter()
-        .filter_map(|widget| widget_preview_mesh_kind(widget).map(str::to_string))
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect();
-    let fallback_kinds = if kinds.is_empty() {
-        vec![PROCEDURAL_FALLBACK_MESH_KIND.into()]
-    } else {
-        kinds
-    };
-    let meshes: Vec<Value> = fallback_kinds
-        .iter()
-        .map(|kind| {
-            let data = semio_framework_plugin::mesh_from_kind(kind);
-            json!({ "id": kind, "data": data })
-        })
-        .collect();
-    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+pub fn merge_preview_meshes(meshes: &[semio_framework_plugin::MeshData]) -> semio_framework_plugin::MeshData {
+    let mut merged = semio_framework_plugin::MeshData::default();
+    for mesh in meshes {
+        let vertex_offset = (merged.positions.len() / 3) as u32;
+        merged.positions.extend(&mesh.positions);
+        merged.normals.extend(&mesh.normals);
+        merged.colors.extend(&mesh.colors);
+        merged.indices.extend(mesh.indices.iter().map(|index| index + vertex_offset));
+        merged.edge_positions.extend(&mesh.edge_positions);
+        if !mesh.edge_ids.is_empty() {
+            let edge_base = merged.edge_ids.len() as u32;
+            merged.edge_ids.extend(mesh.edge_ids.iter().map(|id| id + edge_base));
+        }
+    }
+    merged
 }
 
 pub fn export_mesh_from_document(projection: &Procedural3dDocument) -> semio_framework_plugin::MeshData {
-    let runtime = Procedural3dRuntime::default();
-    let (meshes_json, _) = evaluated_preview_payload(&projection.fixture, &runtime);
-    if let Ok(meshes) = serde_json::from_str::<Vec<Value>>(&meshes_json) {
-        if let Some(first) = meshes.first() {
-            if let Ok(data) = serde_json::from_value(first.get("data").cloned().unwrap_or(Value::Null)) {
-                return data;
-            }
-        }
-    }
-    let kind = projection
-        .fixture
-        .widgets
-        .iter()
-        .find_map(|widget| widget_preview_mesh_kind(widget))
-        .unwrap_or(PROCEDURAL_FALLBACK_MESH_KIND);
-    semio_framework_plugin::mesh_from_kind(kind)
+    let mut runtime = Procedural3dRuntime::default();
+    let mut host = host_from_fixture(&projection.fixture);
+    let eval_json = host.evaluate().unwrap_or_default();
+    runtime.eval_driver.set_eval_json(eval_json.clone());
+    let (meshes_json, _) = preview_payload_from_eval(&eval_json, &projection.fixture, &runtime);
+    let meshes: Vec<semio_framework_plugin::MeshData> = serde_json::from_str::<Vec<Value>>(&meshes_json)
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|entry| serde_json::from_value(entry.get("data").cloned().unwrap_or(Value::Null)).ok())
+        .collect();
+    merge_preview_meshes(&meshes)
 }
 
 pub fn procedural3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
@@ -652,7 +715,12 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
     if host.fixture.widgets.iter().any(|widget| widget_id(widget) == transform_id) {
         return Ok(transform_id);
     }
-    let (source_x, source_y) = widget_layout_position(&host.fixture, selected_id);
+    let (source_x, source_y) = host
+        .fixture
+        .layout
+        .get(selected_id)
+        .map(|layout| (layout.x, layout.y))
+        .unwrap_or((0.0, 0.0));
     let descriptor = json!({ "kind": "neuron", "id": transform_id, "neuronKind": gumball_xform_kind(operation) }).to_string();
     host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
     let outgoing_port = host.fixture.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
@@ -674,12 +742,27 @@ pub fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &s
 mod tests {
     use super::*;
     use kernel_3d_scene::{aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3};
+    use std::sync::{Mutex, MutexGuard};
+
+    static TEST_SERIAL: Mutex<()> = Mutex::new(());
+
+    fn test_serial() -> MutexGuard<'static, ()> {
+        TEST_SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
+    fn preview_payload_from_evaluated_fixture(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> (String, String) {
+        let mut host = FlowHost::from_fixture(fixture.clone());
+        host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
+        let eval_json = host.evaluate().unwrap_or_default();
+        preview_payload_from_eval(&eval_json, fixture, runtime)
+    }
 
     #[test]
     fn preview_payload_has_meshes_and_instances() {
+        let _serial = test_serial();
         let projection = default_projection();
         let runtime = Procedural3dRuntime::default();
-        let (meshes_json, instances_json) = evaluated_preview_payload(&projection.fixture, &runtime);
+        let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &runtime);
         assert_ne!(meshes_json, "[]", "meshes_json was empty");
         assert_ne!(instances_json, "[]", "instances_json was empty");
         let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes json");
@@ -687,10 +770,13 @@ mod tests {
         assert!(!meshes.is_empty());
         assert!(!instances.is_empty());
         for mesh in &meshes {
+            let id = mesh.get("id").and_then(|value| value.as_str()).unwrap_or("");
+            assert!(id.starts_with("eval-"), "mesh id must be tessellated eval handle, got {id}");
             let data: semio_framework_core::MeshData =
                 serde_json::from_value(mesh.get("data").cloned().unwrap_or_default()).expect("mesh data");
             assert!(data.positions.len() >= 9, "mesh has too few positions");
             assert!(data.indices.len() >= 3, "mesh has too few indices");
+            assert!(!data.edge_positions.is_empty(), "brep preview should include edge geometry");
         }
         let camera = Camera3d {
             position: Vec3::from_array([
@@ -716,7 +802,7 @@ mod tests {
                 .get("meshId")
                 .or_else(|| instance.get("mesh_id"))
                 .and_then(|value| value.as_str())
-                .unwrap_or("box");
+                .unwrap_or("eval-missing");
             let mesh = meshes
                 .iter()
                 .find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id))
@@ -735,6 +821,7 @@ mod tests {
                     ]
                 })
                 .unwrap_or([0.0, 0.0, 0.0]);
+            assert_eq!(position, [0.0, 0.0, 0.0], "preview instances stay in world space");
             let model = Instance3d::model_from_trs(position, [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]);
             let (min, max) = transform_aabb(model, mesh3d.aabb_min, mesh3d.aabb_max);
             if aabb_intersects_frustum(&planes, min, max) {
@@ -746,6 +833,7 @@ mod tests {
 
     #[test]
     fn document_from_mesh_returns_valid_default_projection() {
+        let _serial = test_serial();
         let mesh = semio_framework_plugin::MeshData::default();
         let document = procedural3d_document_from_mesh(&mesh).expect("dwg mesh import document");
         let projection: Procedural3dDocument = serde_json::from_value(document).expect("parseable projection");
@@ -754,6 +842,7 @@ mod tests {
 
     #[test]
     fn procedural3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
+        let _serial = test_serial();
         use semio_framework_plugin::{
             GlbExporter, GlbImporter, MeshExporter, MeshImporter, ObjExporter, ObjImporter, StlExporter, StlImporter,
         };
@@ -775,6 +864,43 @@ mod tests {
         let stl_mesh = StlImporter.import(&stl_bytes).expect("stl import");
         let stl_document = procedural3d_document_from_mesh(&stl_mesh).expect("stl document from mesh");
         let _: Procedural3dDocument = serde_json::from_value(stl_document).expect("parseable stl projection");
+    }
+
+    #[test]
+    fn rectangle_wire_preview_emits_edge_only_mesh() {
+        let _serial = test_serial();
+        let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+        let runtime = Procedural3dRuntime::default();
+        let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.fixture, &runtime);
+        let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+        assert!(!meshes.is_empty(), "rectangle wire preview should tessellate curve edges");
+        let data: semio_framework_core::MeshData =
+            serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        assert!(data.indices.is_empty(), "wire preview has no shaded triangles");
+        assert!(data.edge_positions.len() >= 6, "curve preview should include edge polylines");
+        assert!(!instances_json.is_empty());
+    }
+
+    #[test]
+    fn preview_tolerance_follows_lod_mode() {
+        assert!((preview_tolerance("coarse") - 0.15).abs() < 1e-9);
+        assert!((preview_tolerance("fine") - 0.02).abs() < 1e-9);
+        assert!((preview_tolerance("") - 0.05).abs() < 1e-9);
+    }
+
+    #[test]
+    fn wireframe_show_mode_strips_shaded_triangles() {
+        let _serial = test_serial();
+        let projection = default_projection();
+        let mut runtime = Procedural3dRuntime::default();
+        runtime.show_mode = "wireframe".into();
+        let (meshes_json, _) = preview_payload_from_evaluated_fixture(&projection.fixture, &runtime);
+        let meshes: Vec<serde_json::Value> = serde_json::from_str(&meshes_json).expect("meshes");
+        assert!(!meshes.is_empty());
+        let data: semio_framework_core::MeshData =
+            serde_json::from_value(meshes[0].get("data").cloned().unwrap_or_default()).expect("mesh data");
+        assert!(data.indices.is_empty());
+        assert!(!data.edge_positions.is_empty());
     }
 }
 //#endregion 🧪️Tests

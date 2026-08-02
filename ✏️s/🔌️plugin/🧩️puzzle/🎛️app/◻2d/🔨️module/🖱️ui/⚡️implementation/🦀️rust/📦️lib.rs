@@ -1609,6 +1609,68 @@ impl Default for Puzzle2dPlayApp {
     }
 }
 
+
+/// 🖱️ On-demand puzzle 2d board context menu from selection snapshot.
+fn puzzle2d_context_menu_items(
+    fixture: &Value,
+    selected: &[String],
+    is_de: bool,
+) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec};
+    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, separator: bool, disabled: bool| ContextMenuItemSpec {
+        id: id.into(),
+        label: if separator { None } else { Some(label.into()) },
+        icon: if separator { None } else { Some(icon.into()) },
+        action: if separator { None } else { Some(action.into()) },
+        args: semio_framework_plugin::optional_json_to_dsl(args),
+        destructive: destructive.then_some(true),
+        separator: separator.then_some(true),
+        disabled: disabled.then_some(true),
+        ..Default::default()
+    };
+    if selected.is_empty() {
+        return vec![item("selectAll", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false, false, false)];
+    }
+    let selected_set: std::collections::HashSet<&str> = selected.iter().map(String::as_str).collect();
+    let mut entities: Vec<&Value> = Vec::new();
+    let mut has_selected_node = false;
+    if let Some(nodes) = fixture.get("nodes").and_then(|v| v.as_array()) {
+        for node in nodes {
+            if node.get("id").and_then(|v| v.as_str()).is_some_and(|id| selected_set.contains(id)) {
+                entities.push(node);
+                has_selected_node = true;
+            }
+            if let Some(handles) = node.get("handles").and_then(|v| v.as_array()) {
+                for handle in handles {
+                    if handle.get("id").and_then(|v| v.as_str()).is_some_and(|id| selected_set.contains(id)) {
+                        entities.push(handle);
+                    }
+                }
+            }
+        }
+    }
+    if let Some(edges) = fixture.get("edges").and_then(|v| v.as_array()) {
+        for edge in edges {
+            if edge.get("id").and_then(|v| v.as_str()).is_some_and(|id| selected_set.contains(id)) {
+                entities.push(edge);
+            }
+        }
+    }
+    let any_visible = entities.iter().any(|entity| entity.get("hidden").and_then(|v| v.as_bool()) != Some(true));
+    let any_unlocked = entities.iter().any(|entity| entity.get("locked").and_then(|v| v.as_bool()) != Some(true));
+    let phrase = selection_count_phrase(is_de, &[(selected.len(), if is_de { "Element" } else { "item" }, if is_de { "Elemente" } else { "items" })]);
+    vec![
+        item("toggleHidden", if any_visible { if is_de { "Ausblenden" } else { "Hide" } } else { if is_de { "Einblenden" } else { "Show" } }, if any_visible { "eye-off" } else { "eye" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": any_visible })), false, false, false),
+        item("toggleLocked", if any_unlocked { if is_de { "Sperren" } else { "Lock" } } else { if is_de { "Entsperren" } else { "Unlock" } }, if any_unlocked { "lock" } else { "lock-open" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": any_unlocked })), false, false, false),
+        item("sep-selection", "", "", "", None, false, true, false),
+        item("duplicate", if is_de { "Duplizieren" } else { "Duplicate" }, "copy", "duplicateSelection", None, false, false, !has_selected_node),
+        item("selectSameKind", if is_de { "Gleiche Art auswählen" } else { "Select same kind" }, "layers", "selectSameKind", None, false, false, false),
+        item("focusSelection", if is_de { "Auf Auswahl zoomen" } else { "Zoom to selection" }, "crosshair", "focusSelection", None, false, false, false),
+        item("sep-delete", "", "", "", None, false, true, false),
+        item("deleteSelection", &format!("{} ({phrase})", if is_de { "Löschen" } else { "Delete" }), "trash", "deleteSelection", None, true, false, false),
+    ]
+}
+
 impl DocumentApp for Puzzle2dPlayApp {
     type Projection = Puzzle2dPlayProjection;
     type Operation = Puzzle2dOperation;
@@ -2121,6 +2183,26 @@ impl DocumentApp for Puzzle2dPlayApp {
             group_labels: HashMap::new(),
         }
     }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &DocumentView<'_, Puzzle2dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        _registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let is_de = is_de_locale(view_state);
+        let runtime = self.runtime.borrow();
+        let mut selected = runtime.selected_ids.clone();
+        if let Some(surface) = request.surface.as_ref() {
+            let ids: Vec<String> = surface.selection.iter().flat_map(|g| g.ids.iter().cloned()).collect();
+            if !ids.is_empty() {
+                selected = ids;
+            }
+        }
+        puzzle2d_context_menu_items(&doc.projection.0, &selected, is_de)
+    }
 }
 //#endregion 🔖️Puzzle2dPlayApp
 
@@ -2230,6 +2312,7 @@ pub fn create_puzzle2d_app() -> App {
             .operation("addNode", "Add Node")
             .operation("setActiveExample", "Set Active Example")
             .operation("deleteSelection", "Delete Selection")
+            .keybinding("delete,backspace", "deleteSelection")
             .operation("duplicateSelection", "Duplicate Selection")
             .operation("forceLayout", "Force Layout")
             .operation("focusSelection", "Focus Selection")

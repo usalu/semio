@@ -22,8 +22,11 @@ export const DEMONSTRATOR_ASSETS_DIR = "♻️mit-bestand/🧺️demonstrator/�
 /** @emoji 🏷️ Shell brand ids that receive Entwerfen-mit-Bestand partner chrome in the react renderer. */
 export const ENTWERFEN_MIT_BESTAND_BRAND_IDS = [
   "entwerfen-mit-bestand-aggregator",
+  "entwerfen-mit-bestand-aussuchen",
+  "entwerfen-mit-bestand-bearbeiten",
   "entwerfen-mit-bestand-generator",
   "entwerfen-mit-bestand-koordinator",
+  "entwerfen-mit-bestand-verfolgen",
 ] as const;
 
 export type EntwerfenMitBestandBrandId = (typeof ENTWERFEN_MIT_BESTAND_BRAND_IDS)[number];
@@ -40,7 +43,7 @@ export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition 
     {
       id: "welcome",
       title: "Willkommen bei Entwerfen mit Bestand",
-      body: "Der Demonstrator vereint drei Werkzeuge des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
+      body: "Der Demonstrator vereint sechs Werkzeuge des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
       introduce: null,
       show: [],
       placement: "center",
@@ -590,6 +593,153 @@ export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
   },
 };
 //#endregion 🏷️EntwerfenMitBestandKoordinatorBrand
+
+const SOURCING_POOL_WINDOW_ID = "sourcing-pool";
+const PROCESS_WORKPIECE_WINDOW_ID = "process-workpiece";
+const GIS2D_MAIN_WINDOW_ID = "gis2d-main";
+
+//#region 🏷️EntwerfenMitBestandAussuchenBrand
+/** 🏷️ Aussuchen (sourcing): curating reclaimed building components from available stock. */
+export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-aussuchen",
+  windowTitle: "Entwerfen mit Bestand · Aussuchen",
+  logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
+  locks: { locale: "de", themeId: "semio" },
+  defaults: { exampleId: "demo-stock" },
+  ephemeral: true,
+  replayIntroductionOnLoad: true,
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  distDir: `${DEMONSTRATOR_DIST_STAGING}/aussuchen`,
+  introduction: {
+    title: "Willkommen bei Aussuchen",
+    steps: [
+      {
+        id: "viewport",
+        title: "Der Bestandspool",
+        body: "Im Aussuchen sichten Sie verfügbare Bestandskomponenten und stellen daraus eine Kuratierung zusammen. Der Pool listet alle gefundenen Komponenten mit Verfügbarkeit und Typologie.",
+        introduce: windowElementId(SOURCING_POOL_WINDOW_ID),
+        show: [],
+        placement: "auto",
+        interactions: [],
+        ordered: false,
+        logos: [],
+        demonstrations: [],
+      },
+      {
+        id: "panels",
+        title: "Paneele",
+        body: "Über die Reiter in der Leiste öffnen und schließen Sie Paneele — zum Beispiel Katalog, Dokument oder Inspektion. Klicken Sie mit der linken Maustaste auf den Katalog-Reiter, um das Katalog-Paneel zu öffnen.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [],
+        placement: "auto",
+        interactions: [{ on: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID }, label: "Katalog-Reiter anklicken" }],
+        ordered: false,
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+    ],
+  },
+};
+//#endregion 🏷️EntwerfenMitBestandAussuchenBrand
+
+//#region 🏷️EntwerfenMitBestandBearbeitenBrand
+/** 🏷️ Bearbeiten (process3d): machining steps that adapt a reclaimed component to its new use. */
+export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-bearbeiten",
+  windowTitle: "Entwerfen mit Bestand · Bearbeiten",
+  logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
+  locks: { locale: "de", themeId: "semio" },
+  defaults: { exampleId: "timber-beam-joinery" },
+  ephemeral: true,
+  replayIntroductionOnLoad: true,
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  distDir: `${DEMONSTRATOR_DIST_STAGING}/bearbeiten`,
+  introduction: {
+    title: "Willkommen bei Bearbeiten",
+    steps: [
+      {
+        id: "viewport",
+        title: "Das Werkstück",
+        body: "Im Bearbeiten legen Sie die Bearbeitungsschritte fest, mit denen eine Bestandskomponente für ihre neue Aufgabe angepasst wird. Zoomen Sie mit dem Mausrad, verschieben Sie mit Mittelklick ziehen und orbitieren Sie mit Alt + Rechtsklick ziehen.",
+        introduce: windowElementId(PROCESS_WORKPIECE_WINDOW_ID),
+        show: [],
+        placement: "auto",
+        interactions: [
+          { on: { kind: "zoom", id: PROCESS_WORKPIECE_WINDOW_ID }, label: "Zoomen (Mausrad)" },
+          { on: { kind: "pan", id: PROCESS_WORKPIECE_WINDOW_ID }, label: "Verschieben (Mittelklick ziehen)" },
+          { on: { kind: "orbit", id: PROCESS_WORKPIECE_WINDOW_ID }, label: "Orbitieren (Alt + Rechtsklick ziehen)" },
+        ],
+        ordered: false,
+        logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId(PROCESS_WORKPIECE_WINDOW_ID), x: 0.5, y: 0.5 }, deltaY: -100 } },
+        ],
+      },
+      {
+        id: "panels",
+        title: "Paneele",
+        body: "Über die Reiter in der Leiste öffnen und schließen Sie Paneele — zum Beispiel Katalog, Dokument oder Inspektion. Klicken Sie mit der linken Maustaste auf den Katalog-Reiter, um das Katalog-Paneel zu öffnen.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [],
+        placement: "auto",
+        interactions: [{ on: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID }, label: "Katalog-Reiter anklicken" }],
+        ordered: false,
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+    ],
+  },
+};
+//#endregion 🏷️EntwerfenMitBestandBearbeitenBrand
+
+//#region 🏷️EntwerfenMitBestandVerfolgenBrand
+/** 🏷️ Verfolgen (gis2d): tracking where reclaimed components come from and where they go. */
+export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-verfolgen",
+  windowTitle: "Entwerfen mit Bestand · Verfolgen",
+  logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
+  locks: { locale: "de", themeId: "semio" },
+  defaults: { exampleId: "reuse-map" },
+  ephemeral: true,
+  replayIntroductionOnLoad: true,
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  distDir: `${DEMONSTRATOR_DIST_STAGING}/verfolgen`,
+  introduction: {
+    title: "Willkommen bei Verfolgen",
+    steps: [
+      {
+        id: "viewport",
+        title: "Die Karte",
+        body: "Im Verfolgen sehen Sie, woher Bestandskomponenten stammen und wohin sie gehen. Zoomen Sie mit dem Mausrad und verschieben Sie die Karte mit Mittelklick ziehen.",
+        introduce: windowElementId(GIS2D_MAIN_WINDOW_ID),
+        show: [],
+        placement: "auto",
+        interactions: [
+          { on: { kind: "zoom", id: GIS2D_MAIN_WINDOW_ID }, label: "Zoomen (Mausrad)" },
+          { on: { kind: "pan", id: GIS2D_MAIN_WINDOW_ID }, label: "Verschieben (Mittelklick ziehen)" },
+        ],
+        ordered: false,
+        logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId(GIS2D_MAIN_WINDOW_ID), x: 0.5, y: 0.5 }, deltaY: -100 } },
+        ],
+      },
+      {
+        id: "panels",
+        title: "Paneele",
+        body: "Über die Reiter in der Leiste öffnen und schließen Sie Paneele — zum Beispiel Katalog, Dokument oder Inspektion. Klicken Sie mit der linken Maustaste auf den Katalog-Reiter, um das Katalog-Paneel zu öffnen.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [],
+        placement: "auto",
+        interactions: [{ on: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID }, label: "Katalog-Reiter anklicken" }],
+        ordered: false,
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+    ],
+  },
+};
+//#endregion 🏷️EntwerfenMitBestandVerfolgenBrand
 
 /** @emoji 🏷️ Legacy export name — the Aggregator brand after the demonstrator split. */
 export const ENTWERFEN_MIT_BESTAND_BRAND = ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND;

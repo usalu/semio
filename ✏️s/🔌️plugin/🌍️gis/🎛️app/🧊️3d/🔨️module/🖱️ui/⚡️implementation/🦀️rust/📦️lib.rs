@@ -231,6 +231,10 @@ fn render_canvas(document: &Gis3dTerrainDocument, runtime: &Gis3dPlayRuntime) ->
         None,
         None,
         None,
+        None,
+        None,
+        None,
+        None,
     );
     scene.terrain_json = Some(build_terrain_scene_json(&descriptor));
     build_world_3d_scene(GIS3D_PLAY_SURFACE, GIS3D_PLAY_APP_ID, scene)

@@ -1,0 +1,13 @@
+{
+  "title": "Workflows End to End: Typed Ports, Real Schema Flow, Config on Node",
+  "emoji": "🕸️",
+  "status": "open",
+  "description": "Master program absorbing \"Configured Node Apps\" (.cursor/plans/configured_node_apps_30251998.plan.md) and \"Workflows use pack/dsl\" (ticket 26/07/30/WORKFLOWS-USE-PACK-DSL-DOCUMENTS-AND-PROTOCOL-OP-COMMANDS). Makes workflows the real integration layer: one canonical MediaPortSpec port model populated by all ~52 apps, one kernel Workflow document (node absorbs app-instance), per-node Config artifact for UI state, typed edge negotiation replacing string-equality checks, a live scheduler + headless SpaceRunner executing real data flow (flagship: block3d's object-kind catalog -\u003e puzzle3d kit input). Full plan at /Users/ueli/.claude/plans/workflows-are-still-adhoc-zany-pearl.md. Executed wave by wave (0-6) via parallel sub-agents, file-disjoint packages per wave.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2414"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3eec5defad494cd9895fb1da5759c516"
+  ]
+}

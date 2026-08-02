@@ -8,13 +8,13 @@ use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
 static KERNEL: OnceLock<RwLock<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
-static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), String>>> = OnceLock::new();
+static MESH_CACHE: OnceLock<Mutex<HashMap<(String, u64), semio_framework_core::MeshData>>> = OnceLock::new();
 
 fn kernel() -> &'static RwLock<Box<dyn BrepKernel + Send + Sync>> {
     KERNEL.get_or_init(|| RwLock::new(Box::new(BrepkitKernel::new())))
 }
 
-fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), String>> {
+fn mesh_cache() -> &'static Mutex<HashMap<(String, u64), semio_framework_core::MeshData>> {
     MESH_CACHE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -2133,12 +2133,13 @@ mod tests {
         let live_handle = box_out.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().to_string();
         let orphan_handle = orphan.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap().to_string();
         retain_geometry_handles(std::slice::from_ref(&live_handle));
-        assert!(tessellate_geometry_json(&live_handle, 0.1).contains("position"));
-        assert!(tessellate_geometry_json(&orphan_handle, 0.1).contains("error"));
+        let live_mesh = tessellate_geometry(&live_handle, 0.1).expect("live tessellation");
+        assert!(!live_mesh.positions.is_empty());
+        assert!(tessellate_geometry(&orphan_handle, 0.1).is_err());
     }
 
     #[test]
-    fn tessellate_geometry_json_is_memoized() {
+    fn tessellate_geometry_is_memoized() {
         let _serial = test_serial();
         reset_test_kernel();
         let mut reg = Registry::new();
@@ -2149,10 +2150,10 @@ mod tests {
             "solid",
         );
         let handle = box_out.get("handle").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap();
-        let first = tessellate_geometry_json(handle, 0.1);
-        let second = tessellate_geometry_json(handle, 0.1);
-        assert_eq!(first, second);
-        assert!(first.contains("position"));
+        let first = tessellate_geometry(handle, 0.1).expect("mesh");
+        let second = tessellate_geometry(handle, 0.1).expect("mesh");
+        assert_eq!(first.positions, second.positions);
+        assert!(!first.positions.is_empty());
     }
 
     #[test]
@@ -2197,31 +2198,33 @@ pub fn retain_geometry_handles(live: &[String]) {
     evict_mesh_cache_for_handles(live);
 }
 
-/// 🧊️ Tessellates a geometry handle owned by the in-process brep kernel.
-pub fn tessellate_geometry_json(handle: &str, tolerance: f64) -> String {
+/// 🧊️ Tessellates a geometry handle owned by the in-process brep kernel into preview `MeshData`.
+pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framework_core::MeshData, String> {
     let key = (handle.to_string(), tolerance.to_bits());
     if let Ok(cache) = mesh_cache().lock() {
         if let Some(cached) = cache.get(&key) {
-            return cached.clone();
+            return Ok(cached.clone());
         }
     }
-    let json = kernel()
+    let guard = kernel()
         .read()
-        .ok()
-        .map(|kernel| {
-            let geometry = GeometryHandle(handle.to_string());
-            match block_on(kernel.tessellate(&geometry, tolerance)) {
-                Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| "{}".into()),
-                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
-            }
-        })
-        .unwrap_or_else(|| serde_json::json!({ "error": "brep kernel unavailable" }).to_string());
-    if !json.contains("\"error\"") {
-        if let Ok(mut cache) = mesh_cache().lock() {
-            cache.insert(key, json.clone());
-        }
+        .map_err(|_| "brep kernel lock poisoned".to_string())?;
+    let mesh = {
+        let geometry = GeometryHandle(handle.to_string());
+        block_on(guard.tessellate(&geometry, tolerance)).map_err(|error| error.to_string())?
+    };
+    let data = kernel_3d_brepkit::mesh_data_from_mesh_transfer(&mesh);
+    if let Ok(mut cache) = mesh_cache().lock() {
+        cache.insert(key, data.clone());
     }
-    json
+    Ok(data)
+}
+
+fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String {
+    match tessellate_geometry(handle, tolerance) {
+        Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "mesh encode failed" }).to_string()),
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
 }
 
 /// 🗑️ Disposes a geometry handle owned by the in-process brep kernel.
@@ -2338,7 +2341,7 @@ mod wasm_ext {
 
     #[wasm_bindgen]
     pub fn tessellate(handle: &str, tolerance: f64) -> String {
-        super::tessellate_geometry_json(handle, tolerance)
+        super::tessellate_geometry_json_for_wasm(handle, tolerance)
     }
 
     #[wasm_bindgen]

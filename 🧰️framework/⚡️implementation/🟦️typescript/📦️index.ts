@@ -583,7 +583,6 @@ export type World3dScene = {
   readonly engagementPreviewJson?: string;
   readonly lodJson?: string;
   readonly chunkingJson?: string;
-  readonly contextMenuJson?: string;
   readonly environmentJson?: string;
   readonly frameJson?: string;
   readonly fitJson?: string;
@@ -604,7 +603,6 @@ export type NodeGraphScene = {
   readonly viewportJson: string;
   readonly editable?: boolean;
   readonly operatorsJson?: string;
-  readonly contextMenuJson?: string;
   readonly findItemsJson?: string;
   readonly selectionJson?: string;
   readonly hoverJson?: string;
@@ -723,7 +721,6 @@ export type TiledMapScene = {
   readonly hoverJson: string;
   readonly selectionMethod: string;
   readonly selectionMode: string;
-  readonly contextMenuJson?: string;
 };
 
 /** 🧩️ A 2D board surface scene payload — mirrors the wasm `componentScene` node's `board2d` field. */

@@ -781,6 +781,77 @@ impl Default for Gis2dPlayApp {
     }
 }
 
+
+/// 🖱️ On-demand GIS tiled-map context menu from feature hit-test and selection.
+fn gis2d_context_menu_items(
+    surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
+    selected_ids: &[String],
+    is_de: bool,
+) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::ContextMenuItemSpec;
+    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, disabled: bool| ContextMenuItemSpec {
+        id: id.into(),
+        label: Some(label.into()),
+        icon: Some(icon.into()),
+        action: Some(action.into()),
+        args: semio_framework_plugin::optional_json_to_dsl(args),
+        disabled: disabled.then_some(true),
+        ..Default::default()
+    };
+    let hits = surface.map(|s| s.hits.as_slice()).unwrap_or(&[]);
+    let feature = hits.iter().find(|h| h.domain == "feature" || h.domain == "position" || h.domain == "route");
+    if let Some(feature) = feature {
+        let kind = if feature.domain == "route" { "route" } else { "position" };
+        let selected = selected_ids.iter().any(|id| id == &feature.id);
+        let mut items = vec![item(
+            "tiled-map.ctx.select",
+            if is_de { "Auswählen" } else { "Select" },
+            "mouse-pointer",
+            "setFeatureSelection",
+            Some(json!({
+                "positions": if kind == "position" { vec![&feature.id] } else { Vec::<&String>::new() },
+                "routes": if kind == "route" { vec![&feature.id] } else { Vec::<&String>::new() },
+                "mode": "default",
+            })),
+            false,
+        )];
+        if selected {
+            items.push(item(
+                "tiled-map.ctx.deselect",
+                if is_de { "Abwählen" } else { "Deselect" },
+                "square-dashed",
+                "deselect",
+                Some(json!({ "featureId": feature.id, "featureKind": kind })),
+                false,
+            ));
+        }
+        items.push(item(
+            "tiled-map.ctx.focus",
+            if is_de { "Fokussieren / Zoomen" } else { "Focus / Zoom" },
+            "crosshair",
+            "focusFeature",
+            Some(json!({ "featureId": feature.id, "featureKind": kind })),
+            false,
+        ));
+        if kind == "position" {
+            items.push(item(
+                "tiled-map.ctx.source",
+                if is_de { "Quelle öffnen" } else { "Open source" },
+                "external-link",
+                "openSource",
+                Some(json!({ "featureId": feature.id })),
+                false,
+            ));
+        }
+        return items;
+    }
+    vec![
+        item("tiled-map.ctx.select-all", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", None, false),
+        item("tiled-map.ctx.clear", if is_de { "Auswahl aufheben" } else { "Clear selection" }, "square-dashed", "clearSelection", None, selected_ids.is_empty()),
+        item("tiled-map.ctx.fit-world", if is_de { "Welt einpassen" } else { "Fit world" }, "maximize-2", "fitWorld", None, false),
+    ]
+}
+
 impl DocumentApp for Gis2dPlayApp {
     type Projection = gis2d::GisMapDocument;
     type Operation = GisMapOperation;
@@ -1027,6 +1098,19 @@ impl DocumentApp for Gis2dPlayApp {
             .window_kind_label(GIS2D_PLAY_WINDOW_MAIN, labels.window_map)
             .mode_label("edit", labels.mode_edit)
             .action_labels(gis2d_action_labels(is_de))
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &DocumentView<'_, gis2d::GisMapDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        _registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let is_de = is_de_locale(view_state);
+        let selected = self.runtime.borrow().selected_ids.clone();
+        gis2d_context_menu_items(request.surface.as_ref(), &selected, is_de)
     }
 }
 //#endregion 🔖️Gis2dPlayApp

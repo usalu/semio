@@ -5,17 +5,23 @@
 import type { ShellBrand } from "../../../../../../../🔨️module/🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementation/🟦️typescript/🟦️typescript/📦️index.ts";
 import {
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
+  ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
   ENTWERFEN_MIT_BESTAND_BRAND,
   ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 } from "../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 
 //#region 🏷️ShellBrandCatalog
 /** 🏷️ Brand ids referenced by `brand = "…"` playground registry rows and the `SEMIO_BRAND` env var. */
 export const SHELL_BRANDS: readonly ShellBrand[] = [
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
+  ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
   ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 ];
 
 /** 🎯️ Resolves a brand id against {@link SHELL_BRANDS}; warns on unknown ids so a typo'd kiosk build degrades visibly instead of silently unbranding. */
@@ -29,8 +35,11 @@ export function resolveShellBrandById(id: string | undefined): ShellBrand | unde
 
 export {
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
+  ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
   ENTWERFEN_MIT_BESTAND_BRAND,
   ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 };
 export type { ShellBrand };

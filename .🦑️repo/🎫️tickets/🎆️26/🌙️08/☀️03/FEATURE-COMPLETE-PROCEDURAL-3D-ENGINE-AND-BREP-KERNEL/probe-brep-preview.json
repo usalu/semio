@@ -1,0 +1,92 @@
+{
+  "results": {
+    "hexagonal-mushroom-column": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view\n\ncircle-off\nNo example\nHexagonal Mushroom Column\nRectangle Extru"
+    },
+    "rectangle-extrude-volume": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+    },
+    "sphere-cut-with-torus": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+    },
+    "box-fillet-preview": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+    },
+    "sphere-box-fuse": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+    },
+    "face-sweep-extrude": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+    },
+    "rectangle-wire-preview": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+    },
+    "box-shell-preview": {
+      "canvasCount": 3,
+      "worldCanvas": {
+        "w": 966,
+        "h": 807
+      },
+      "bodyText": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nLoading…\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+    }
+  },
+  "debugLogs": [
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation",
+    "[DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name",
+    "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation"
+  ],
+  "errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "ok": true
+}

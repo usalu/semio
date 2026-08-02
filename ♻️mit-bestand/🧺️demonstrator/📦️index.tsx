@@ -1,13 +1,25 @@
 // #region 🧲️Header
-/** @emoji 🎪️ Entwerfen mit Bestand demonstrator landing — general introduction, three-app preview strip, glass name overlay. */
+/** @emoji 🎪️ Entwerfen mit Bestand demonstrator landing — general introduction, six-app preview grid, glass name overlay. */
 // #endregion 🧲️Header
 
 import { createRoot } from "react-dom/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { UIIntroduction, cn, Icon, type IconName } from "@semio-tech/ui-react";
+import {
+  UIIntroduction,
+  bootstrapElementsSurfaceChromeDocument,
+  cn,
+  Icon,
+  readStoredUiChromeAppearance,
+  readStoredUiChromeLayout,
+  readStoredUiDriver,
+  useElementsSurfaceChrome,
+  type IconName,
+} from "@semio-tech/ui-react";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
 import { ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG } from "./🟦️brand.ts";
 import "./🎨️globals.css";
+
+bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance());
 
 //#region 🎪️DemonstratorApps
 type DemonstratorAppPane = {
@@ -19,29 +31,33 @@ type DemonstratorAppPane = {
   readonly tagline: string;
 };
 
+/** @emoji 🔢️ Columns and rows of the demonstrator preview grid; the strip spans `columns * 100vw` by `rows * 100vh`. */
+const DEMONSTRATOR_GRID_COLUMNS = 3;
+const DEMONSTRATOR_GRID_ROWS = 2;
+
 const DEMONSTRATOR_APP_PANES: readonly DemonstratorAppPane[] = [
   { id: "generator", label: "Generator", devPort: 6027, href: "/generator/", icon: "workflow", tagline: "Parametrische Abläufe" },
   { id: "koordinator", label: "Koordinator", devPort: 6028, href: "/koordinator/", icon: "cad-shape", tagline: "Modelle koordinieren" },
   { id: "aggregator", label: "Aggregator", devPort: 6023, href: "/aggregator/", icon: "puzzle", tagline: "Bestand zusammensetzen" },
+  { id: "aussuchen", label: "Aussuchen", devPort: 6030, href: "/aussuchen/", icon: "library", tagline: "Bestand sichten" },
+  { id: "bearbeiten", label: "Bearbeiten", devPort: 6031, href: "/bearbeiten/", icon: "hammer", tagline: "Bauteile anpassen" },
+  { id: "verfolgen", label: "Verfolgen", devPort: 6032, href: "/verfolgen/", icon: "gis2d", tagline: "Herkunft verfolgen" },
 ];
 
+function paneColumn(paneIndex: number): number {
+  return paneIndex % DEMONSTRATOR_GRID_COLUMNS;
+}
+
+function paneRow(paneIndex: number): number {
+  return Math.floor(paneIndex / DEMONSTRATOR_GRID_COLUMNS);
+}
+
 function paneAppUrl(pane: DemonstratorAppPane): string {
-  if (import.meta.env.DEV) return `http://localhost:${pane.devPort}/`;
   return pane.href;
 }
 
 function paneEmbedUrl(pane: DemonstratorAppPane): string {
   return paneAppUrl(pane);
-}
-
-/** @emoji 🧭️ Scroll offset (vw) that centers the given pane in the viewport. */
-function scrollOffsetForPaneIndex(paneIndex: number): number {
-  return Math.min(200, Math.max(0, paneIndex * 100));
-}
-
-/** @emoji 🧭️ Pane index nearest the current horizontal scroll position. */
-function paneIndexFromScrollOffset(scrollOffsetVw: number): number {
-  return Math.min(DEMONSTRATOR_APP_PANES.length - 1, Math.max(0, Math.round(scrollOffsetVw / 100)));
 }
 
 function paneIdFromLocationHash(): string | null {
@@ -50,101 +66,176 @@ function paneIdFromLocationHash(): string | null {
   return DEMONSTRATOR_APP_PANES.some((pane) => pane.id === raw) ? raw : null;
 }
 
-function replaceLocationHash(paneId: string): void {
-  const url = new URL(window.location.href);
-  if (url.hash === `#${paneId}`) return;
-  url.hash = paneId;
-  window.history.replaceState(window.history.state, "", url);
+const DEMONSTRATOR_RELOAD_ON_RETURN_KEY = "mit-bestand.demonstrator.reload-on-return";
+
+/** @emoji ♻️ Marks the overview so a later back-navigation reloads a fresh landing page. */
+function markOverviewReloadOnReturn(): void {
+  try {
+    sessionStorage.setItem(DEMONSTRATOR_RELOAD_ON_RETURN_KEY, "1");
+  } catch {
+    /* ignore quota / private mode */
+  }
 }
+
+/** @emoji ♻️ Reloads the overview when returning from an app via back-forward cache; clears the return marker after a fresh back load. */
+function installOverviewReturnReload(): void {
+  window.addEventListener("pageshow", (event) => {
+    let shouldReload = false;
+    try {
+      shouldReload = sessionStorage.getItem(DEMONSTRATOR_RELOAD_ON_RETURN_KEY) === "1";
+    } catch {
+      return;
+    }
+    if (!shouldReload) return;
+    try {
+      sessionStorage.removeItem(DEMONSTRATOR_RELOAD_ON_RETURN_KEY);
+    } catch {
+      /* ignore */
+    }
+    if (event.persisted) window.location.reload();
+  });
+}
+
+installOverviewReturnReload();
 //#endregion 🎪️DemonstratorApps
 
-//#region 🎪️DemonstratorStripGeometry
-type PaneScreenBounds = {
-  readonly leftVw: number;
-  readonly rightVw: number;
-  readonly centerVw: number;
-  readonly visible: boolean;
-};
+//#region 🎪️DemonstratorGridGeometry
+/** @emoji 🧭️ Horizontal (vw) and vertical (vh) scroll offset into the demonstrator grid. */
+type ScrollOffset = { readonly x: number; readonly y: number };
 
-/** @emoji 📐 Maps a 100vw strip pane into the current viewport after horizontal scroll (vw). */
-function paneScreenBounds(paneIndex: number, scrollOffsetVw: number): PaneScreenBounds {
-  const stripLeft = paneIndex * 100 - scrollOffsetVw;
-  const stripRight = (paneIndex + 1) * 100 - scrollOffsetVw;
-  const leftVw = Math.max(0, stripLeft);
-  const rightVw = Math.min(100, stripRight);
-  const visible = rightVw > leftVw;
-  const centerVw = visible ? (leftVw + rightVw) / 2 : stripLeft + 50;
-  return { leftVw, rightVw, centerVw, visible };
+/** @emoji 🧭️ Largest scroll offset that still keeps the last column and row flush with the viewport edge. */
+const DEMONSTRATOR_MAX_SCROLL: ScrollOffset = { x: (DEMONSTRATOR_GRID_COLUMNS - 1) * 100, y: (DEMONSTRATOR_GRID_ROWS - 1) * 100 };
+
+/** @emoji 🧭️ Scroll offset that brings the given pane fully into the viewport. */
+function scrollOffsetForPaneIndex(paneIndex: number): ScrollOffset {
+  return {
+    x: Math.min(DEMONSTRATOR_MAX_SCROLL.x, Math.max(0, paneColumn(paneIndex) * 100)),
+    y: Math.min(DEMONSTRATOR_MAX_SCROLL.y, Math.max(0, paneRow(paneIndex) * 100)),
+  };
 }
 
-type TintSegment = { readonly leftVw: number; readonly widthVw: number };
+type PaneAxisBounds = { readonly start: number; readonly end: number; readonly visible: boolean };
 
-/** @emoji 🪟️ Glass veil segments: full screen when idle; left/right flaps when a pane is revealed under a hovered name. */
-function demonstratorTintSegments(scrollOffsetVw: number, hoveredPaneIndex: number | null): readonly TintSegment[] {
-  if (hoveredPaneIndex == null) return [{ leftVw: 0, widthVw: 100 }];
-  const { leftVw, rightVw, visible } = paneScreenBounds(hoveredPaneIndex, scrollOffsetVw);
-  if (!visible) return [{ leftVw: 0, widthVw: 100 }];
-  const segments: TintSegment[] = [];
-  if (leftVw > 0) segments.push({ leftVw: 0, widthVw: leftVw });
-  if (rightVw < 100) segments.push({ leftVw: rightVw, widthVw: 100 - rightVw });
-  return segments.length > 0 ? segments : [];
+/** @emoji 📐 Maps one axis of a grid cell into the current viewport after scrolling (percent of that axis). */
+function paneAxisBounds(cellIndex: number, scrollPercent: number): PaneAxisBounds {
+  const cellStart = cellIndex * 100 - scrollPercent;
+  const start = Math.max(0, cellStart);
+  const end = Math.min(100, cellStart + 100);
+  return { start, end, visible: end > start };
 }
-//#endregion 🎪️DemonstratorStripGeometry
+
+type TintSegmentPx = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
+
+type RevealRectPx = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
+
+/** @emoji 👁 Visible on-screen bounds of a grid pane — the region that stays untinted while its card is hovered. */
+function demonstratorPaneRevealRect(paneIndex: number, scrollOffset: ScrollOffset): RevealRectPx {
+  const horizontal = paneAxisBounds(paneColumn(paneIndex), scrollOffset.x);
+  const vertical = paneAxisBounds(paneRow(paneIndex), scrollOffset.y);
+  if (!horizontal.visible || !vertical.visible) return { top: 0, left: 0, width: 0, height: 0 };
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const left = (horizontal.start / 100) * vw;
+  const right = (horizontal.end / 100) * vw;
+  const top = (vertical.start / 100) * vh;
+  const bottom = (vertical.end / 100) * vh;
+  return { top, left, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+}
+
+/** @emoji 🪟️ Full-viewport veil pieces; optional rectangular cutout leaves the hovered app pane untinted. */
+function demonstratorTintSegmentsPx(revealRect: RevealRectPx | null): readonly TintSegmentPx[] {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  if (!revealRect) return [{ top: 0, left: 0, width: vw, height: vh }];
+  const holeLeft = Math.max(0, revealRect.left);
+  const holeTop = Math.max(0, revealRect.top);
+  const holeRight = Math.min(vw, revealRect.left + revealRect.width);
+  const holeBottom = Math.min(vh, revealRect.top + revealRect.height);
+  if (holeRight <= holeLeft || holeBottom <= holeTop) return [{ top: 0, left: 0, width: vw, height: vh }];
+  const segments: TintSegmentPx[] = [];
+  if (holeTop > 0) segments.push({ top: 0, left: 0, width: vw, height: holeTop });
+  if (holeBottom < vh) segments.push({ top: holeBottom, left: 0, width: vw, height: vh - holeBottom });
+  if (holeLeft > 0) segments.push({ top: holeTop, left: 0, width: holeLeft, height: holeBottom - holeTop });
+  if (holeRight < vw) segments.push({ top: holeTop, left: holeRight, width: vw - holeRight, height: holeBottom - holeTop });
+  return segments.length > 0 ? segments : [{ top: 0, left: 0, width: vw, height: vh }];
+}
+//#endregion 🎪️DemonstratorGridGeometry
 
 //#region 🎪️DemonstratorLanding
 function DemonstratorLanding() {
+  const surfaceChrome = useMemo(
+    () => ({
+      appearance: readStoredUiChromeAppearance(),
+      device: (readStoredUiChromeLayout() === "tablet" ? "tablet" : "desktop") as const,
+      driver: readStoredUiDriver(),
+    }),
+    [],
+  );
+  useElementsSurfaceChrome(surfaceChrome);
+
   const [introductionStep, setIntroductionStep] = useState(0);
   const [showIntroduction, setShowIntroduction] = useState(true);
   const [hoveredPaneId, setHoveredPaneId] = useState<string | null>(null);
-  const scrollTargetRef = useRef(0);
-  const scrollCurrentRef = useRef(0);
-  const [scrollOffsetVw, setScrollOffsetVw] = useState(0);
-  const syncedHashPaneRef = useRef<string | null>(null);
+  const [revealRect, setRevealRect] = useState<RevealRectPx | null>(null);
+  const hoveredPaneIdRef = useRef<string | null>(null);
+  const scrollTargetRef = useRef<ScrollOffset>({ x: 0, y: 0 });
+  const scrollCurrentRef = useRef<ScrollOffset>({ x: 0, y: 0 });
+  const [scrollOffset, setScrollOffset] = useState<ScrollOffset>({ x: 0, y: 0 });
 
-  const applyPaneScroll = useCallback((paneIndex: number, syncHash: boolean) => {
+  const applyPaneScroll = useCallback((paneIndex: number) => {
     const offset = scrollOffsetForPaneIndex(paneIndex);
     scrollTargetRef.current = offset;
     scrollCurrentRef.current = offset;
-    setScrollOffsetVw(offset);
-    if (syncHash) {
-      const paneId = DEMONSTRATOR_APP_PANES[paneIndex]?.id;
-      if (paneId) {
-        syncedHashPaneRef.current = paneId;
-        replaceLocationHash(paneId);
-      }
-    }
+    setScrollOffset(offset);
   }, []);
 
   useEffect(() => {
     const hashPaneId = paneIdFromLocationHash();
     if (hashPaneId) {
       const index = DEMONSTRATOR_APP_PANES.findIndex((pane) => pane.id === hashPaneId);
-      if (index >= 0) applyPaneScroll(index, false);
-    } else {
-      syncedHashPaneRef.current = DEMONSTRATOR_APP_PANES[0]?.id ?? null;
-      replaceLocationHash(DEMONSTRATOR_APP_PANES[0]!.id);
+      if (index >= 0) applyPaneScroll(index);
     }
     const onHashChange = () => {
       const paneId = paneIdFromLocationHash();
       if (!paneId) return;
       const index = DEMONSTRATOR_APP_PANES.findIndex((pane) => pane.id === paneId);
-      if (index >= 0) applyPaneScroll(index, false);
+      if (index >= 0) applyPaneScroll(index);
     };
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, [applyPaneScroll]);
 
-  const hoveredPaneIndex = useMemo(() => {
-    if (hoveredPaneId == null) return null;
-    const index = DEMONSTRATOR_APP_PANES.findIndex((pane) => pane.id === hoveredPaneId);
-    return index >= 0 ? index : null;
-  }, [hoveredPaneId]);
+  const refreshRevealRect = useCallback((paneId: string | null, offset: ScrollOffset) => {
+    if (!paneId) {
+      setRevealRect(null);
+      return;
+    }
+    const paneIndex = DEMONSTRATOR_APP_PANES.findIndex((pane) => pane.id === paneId);
+    if (paneIndex < 0) {
+      setRevealRect(null);
+      return;
+    }
+    setRevealRect(demonstratorPaneRevealRect(paneIndex, offset));
+  }, []);
 
-  const tintSegments = useMemo(() => demonstratorTintSegments(scrollOffsetVw, hoveredPaneIndex), [scrollOffsetVw, hoveredPaneIndex]);
+  const tintSegments = useMemo(() => demonstratorTintSegmentsPx(revealRect), [revealRect]);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (hoveredPaneId) refreshRevealRect(hoveredPaneId, scrollCurrentRef.current);
+      else setRevealRect(null);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [hoveredPaneId, refreshRevealRect]);
 
   useEffect(() => {
     const onMove = (event: MouseEvent) => {
-      scrollTargetRef.current = (event.clientX / window.innerWidth) * 200;
+      if (hoveredPaneIdRef.current) return;
+      scrollTargetRef.current = {
+        x: (event.clientX / window.innerWidth) * DEMONSTRATOR_MAX_SCROLL.x,
+        y: (event.clientY / window.innerHeight) * DEMONSTRATOR_MAX_SCROLL.y,
+      };
     };
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
@@ -155,35 +246,39 @@ function DemonstratorLanding() {
     const tick = () => {
       const current = scrollCurrentRef.current;
       const target = scrollTargetRef.current;
-      const next = current + (target - current) * 0.12;
+      const next = { x: current.x + (target.x - current.x) * 0.12, y: current.y + (target.y - current.y) * 0.12 };
       scrollCurrentRef.current = next;
-      setScrollOffsetVw(next);
-      const paneIndex = paneIndexFromScrollOffset(next);
-      const paneId = DEMONSTRATOR_APP_PANES[paneIndex]?.id;
-      if (paneId && paneId !== syncedHashPaneRef.current) {
-        syncedHashPaneRef.current = paneId;
-        replaceLocationHash(paneId);
-      }
+      setScrollOffset(next);
+      if (hoveredPaneIdRef.current) refreshRevealRect(hoveredPaneIdRef.current, next);
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [refreshRevealRect]);
 
   const dismissIntroduction = useCallback((_completed: boolean) => {
     setShowIntroduction(false);
   }, []);
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <div className="flex h-full" style={{ width: "300vw", transform: `translateX(-${scrollOffsetVw}vw)` }}>
+    <div className="relative h-full w-full overflow-hidden bg-background text-foreground">
+      <div
+        className="grid"
+        style={{
+          gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID_COLUMNS}, 100vw)`,
+          gridTemplateRows: `repeat(${DEMONSTRATOR_GRID_ROWS}, 100vh)`,
+          width: `${DEMONSTRATOR_GRID_COLUMNS * 100}vw`,
+          height: `${DEMONSTRATOR_GRID_ROWS * 100}vh`,
+          transform: `translate(-${scrollOffset.x}vw, -${scrollOffset.y}vh)`,
+        }}
+      >
         {DEMONSTRATOR_APP_PANES.map((pane) => (
           <iframe
             key={pane.id}
             title={pane.label}
             src={paneEmbedUrl(pane)}
-            className="pointer-events-none h-full border-0"
-            style={{ width: "100vw" }}
+            className="pointer-events-none border-0"
+            style={{ width: "100vw", height: "100vh" }}
           />
         ))}
       </div>
@@ -191,25 +286,42 @@ function DemonstratorLanding() {
       <div className="pointer-events-none absolute inset-0 z-30">
         {tintSegments.map((segment, index) => (
           <div
-            key={`tint-${index}-${segment.leftVw}`}
-            className="ui-veil absolute top-0 bottom-0"
-            style={{ left: `${segment.leftVw}vw`, width: `${segment.widthVw}vw` }}
+            key={`tint-${index}-${segment.top}-${segment.left}`}
+            className="ui-veil absolute"
+            style={{ top: segment.top, left: segment.left, width: segment.width, height: segment.height }}
           />
         ))}
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-[31] grid grid-cols-3 items-center">
-        {DEMONSTRATOR_APP_PANES.map((pane) => {
+      <div
+        className="pointer-events-none absolute inset-0 z-[31] grid items-center"
+        style={{ gridTemplateColumns: `repeat(${DEMONSTRATOR_GRID_COLUMNS}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${DEMONSTRATOR_GRID_ROWS}, minmax(0, 1fr))` }}
+      >
+        {DEMONSTRATOR_APP_PANES.map((pane, paneIndex) => {
           const active = hoveredPaneId === pane.id;
           return (
             <div key={pane.id} className="flex justify-center px-double">
               <a
                 href={paneAppUrl(pane)}
-                onMouseEnter={() => setHoveredPaneId(pane.id)}
-                onMouseLeave={() => setHoveredPaneId((current) => (current === pane.id ? null : current))}
+                onClick={() => {
+                  markOverviewReloadOnReturn();
+                }}
+                onMouseEnter={() => {
+                  hoveredPaneIdRef.current = pane.id;
+                  setHoveredPaneId(pane.id);
+                  scrollTargetRef.current = scrollOffsetForPaneIndex(paneIndex);
+                  refreshRevealRect(pane.id, scrollCurrentRef.current);
+                }}
+                onMouseLeave={() => {
+                  if (hoveredPaneIdRef.current === pane.id) {
+                    hoveredPaneIdRef.current = null;
+                    setHoveredPaneId(null);
+                    setRevealRect(null);
+                  }
+                }}
                 className={cn(
-                  "pointer-events-auto group flex min-h-[11rem] w-full max-w-[18rem] flex-col items-center justify-center gap-double",
-                  "rounded-xl border border-border-normal px-triple py-huge text-center",
+                  "pointer-events-auto group flex min-h-[8.5rem] w-full max-w-[15rem] flex-col items-center justify-center gap-single",
+                  "rounded-xl border border-border-normal px-double py-triple text-center",
                   "ui-glass shadow-md outline-none",
                   "transition-[transform,box-shadow,border-color,background-color] duration-200",
                   "hover:-translate-y-0.5 hover:border-border-emphasized hover:shadow-xl",
@@ -217,17 +329,11 @@ function DemonstratorLanding() {
                   active && "-translate-y-0.5 border-border-emphasized shadow-xl",
                 )}
               >
-                <span
-                  className={cn(
-                    "flex size-huge items-center justify-center rounded-lg border border-border-normal bg-background/60 p-double transition-colors",
-                    "group-hover:border-border-emphasized group-hover:bg-hover-window",
-                    active && "border-border-emphasized bg-hover-window",
-                  )}
-                >
-                  <Icon icon={pane.icon} size="xl" className="text-foreground" title={pane.label} />
+                <span className="flex size-workbench shrink-0 items-center justify-center rounded-md border border-border-normal/80 bg-background/50">
+                  <Icon icon={pane.icon} size="large" className="text-muted-foreground group-hover:text-foreground" title={pane.label} />
                 </span>
                 <span className="flex flex-col gap-half">
-                  <span className="text-3xl font-semibold tracking-tight text-foreground">{pane.label}</span>
+                  <span className="text-2xl font-semibold tracking-tight text-foreground">{pane.label}</span>
                   <span className="text-sm text-muted-foreground">{pane.tagline}</span>
                 </span>
                 <span className="inline-flex items-center gap-single text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">

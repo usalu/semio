@@ -1,0 +1,1 @@
+{"info":{"w":780,"h":807,"cw":780,"ch":807},"stub":false,"flow":true,"urls":["http://127.0.0.1:6021/@fs/Users/ueli/Documents/semio/node_modules/@semio-tech/flow-core/flow_core.js","️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/pkg/flow_core_bg.wasm"]}

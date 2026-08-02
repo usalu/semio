@@ -140,6 +140,7 @@ fn apply_canvas_options(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
 
 fn host_from_fixture(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> FlowHost {
     let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), flow_play_neural_cache());
+    host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
     seed_host_catalogue(&mut host, &runtime.catalogue_sections_json);
     apply_canvas_options(&mut host, runtime);
     runtime.eval_driver.install_baseline_into(&mut host);
@@ -1109,6 +1110,9 @@ impl DocumentApp for FlowPlayApp {
                 let handles = runtime.selected_handle_ids.clone();
                 let operations = host_operations(fixture, &*runtime, |host| {
                     sync_host_selection_domains(host, &nodes, &edges, &handles);
+                    if !host.has_selection() {
+                        return false;
+                    }
                     host.delete_selection().is_ok()
                 });
                 if !operations.is_empty() {
@@ -1695,6 +1699,115 @@ mod tests {
             .unwrap_or("")
             .contains("\"disabled\":true"), "preview enabled after contextMenuAt: {after}");
     }
+
+    #[test]
+    fn context_menu_annotates_mixed_selection_counts_and_omits_delete_without_selection() {
+        let mut app = flow_app_with_registry();
+        let empty = context_menu_items(&mut app, &ViewState::default(), Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: "main".into(),
+            kind: "nodeGraph".into(),
+            hits: vec![],
+            selection: vec![],
+            text: None,
+        })).to_string();
+        assert!(!empty.contains(r#""id":"delete-selection""#), "empty must omit delete: {empty}");
+
+        app.handle_action(
+            "setSelection",
+            Some(&json!({
+                "ids": ["n1", "n2", "n3", "n4", "n5", "n6", "n7", "n8"],
+                "edgeIds": ["e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "e10", "e11", "e12", "e13"]
+            })),
+            &ViewState::default(),
+            &meta("local"),
+        ).expect("setSelection");
+        let menu = context_menu_items(&mut app, &ViewState::default(), Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: "main".into(),
+            kind: "nodeGraph".into(),
+            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "node".into(), id: "n1".into(), label: None }],
+            selection: vec![
+                semio_framework_plugin::ContextMenuSelectionGroup {
+                    domain: "node".into(),
+                    ids: vec!["n1".into(), "n2".into(), "n3".into(), "n4".into(), "n5".into(), "n6".into(), "n7".into(), "n8".into()],
+                },
+                semio_framework_plugin::ContextMenuSelectionGroup {
+                    domain: "edge".into(),
+                    ids: (1..=13).map(|i| format!("e{i}")).collect(),
+                },
+            ],
+            text: None,
+        })).to_string();
+        eprintln!("[DEBUG] mixed selection context menu: {menu}");
+        assert!(menu.contains(r#""id":"delete-selection""#), "mixed selection must expose delete: {menu}");
+        assert!(menu.contains("8 nodes and 13 edges"), "count phrase missing: {menu}");
+        assert!(menu.contains("deleteSelection"), "delete action missing: {menu}");
+    }
+
+    #[test]
+    fn context_menu_for_edge_hit_uses_runtime_edge_selection() {
+        let mut app = flow_app_with_registry();
+        app.handle_action(
+            "setSelection",
+            Some(&json!({ "ids": [], "edgeIds": ["syn-1"] })),
+            &ViewState::default(),
+            &meta("local"),
+        ).expect("setSelection");
+        let menu = context_menu_items(&mut app, &ViewState::default(), Some(semio_framework_plugin::ContextMenuSurfaceTarget {
+            surface_id: "main".into(),
+            kind: "nodeGraph".into(),
+            hits: vec![semio_framework_plugin::ContextMenuHit { domain: "edge".into(), id: "syn-1".into(), label: None }],
+            selection: vec![],
+            text: None,
+        })).to_string();
+        eprintln!("[DEBUG] edge selection context menu: {menu}");
+        assert!(menu.contains(r#""id":"delete-selection""#), "edge selection must expose delete: {menu}");
+        assert!(menu.contains("1 edge") || menu.contains("1 Kante"), "edge count phrase missing: {menu}");
+    }
+
+    #[test]
+    fn host_from_fixture_deletes_edge_selected_by_synapse_domain() {
+        let runtime = FlowPlayRuntime::default();
+        let fixture = FlowFixture::default();
+        let mut host = host_from_fixture(&fixture, &runtime);
+        sync_host_selection_domains(&mut host, &[], &["s1".into()], &[]);
+        eprintln!(
+            "[DEBUG] host_from_fixture edge selection: has={} edge_ids={:?}",
+            host.has_selection(),
+            host.dag.selected_edge_ids()
+        );
+        assert!(host.has_selection(), "s1 must resolve through host_from_fixture edge map");
+        host.delete_selection().expect("deleteSelection");
+        assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
+        eprintln!(
+            "[DEBUG] host_from_fixture after delete: synapses={:?}",
+            host.fixture.synapses.iter().map(|synapse| synapse.id.as_str()).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn delete_selection_action_removes_selected_synapses() {
+        let mut app = flow_app_with_registry();
+        let before = app.projection().expect("projection").synapses.len();
+        app.handle_action(
+            "setSelection",
+            Some(&json!({ "ids": [], "edgeIds": ["s1"] })),
+            &ViewState::default(),
+            &meta("local"),
+        ).expect("setSelection");
+        let result = app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("deleteSelection");
+        eprintln!("[DEBUG] deleteSelection action ops_len={}", result.operations.len());
+        let after = app.projection().expect("projection");
+        eprintln!(
+            "[DEBUG] deleteSelection action remaining={:?}",
+            after.synapses.iter().map(|synapse| synapse.id.as_str()).collect::<Vec<_>>()
+        );
+        assert!(!result.operations.is_empty(), "deleteSelection must emit operations for an edge");
+        assert!(!after.synapses.iter().any(|synapse| synapse.id == "s1"), "synapse s1 must be removed");
+        assert_eq!(after.synapses.len(), before - 1);
+    }
+
+
+
 
     #[test]
     fn two_instances_converge_on_disjoint_edits() {

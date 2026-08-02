@@ -1684,7 +1684,8 @@ use std::collections::HashMap;
 //#region 🔖Action
 pub use super::layout::{ActionDescriptor, StyleSpec, UiPresence, UiState, UiStatus};
 pub use super::layout::{
-    ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef,
+    ContextMenuHit, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse,
+    ContextMenuSelectionGroup, ContextMenuSurfaceTarget, ContextMenuTextContext, UiMenuRef,
 };
 //#endregion 🔖Action
 
@@ -2791,8 +2792,6 @@ pub struct World3dScene {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub chunking_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub context_menu_json: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub environment_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub frame_json: Option<String>,
@@ -2831,7 +2830,6 @@ impl World3dScene {
             engagement_preview_json: None,
             lod_json: None,
             chunking_json: None,
-            context_menu_json: None,
             environment_json: None,
             frame_json: None,
             fit_json: None,
@@ -2943,8 +2941,6 @@ pub struct NodeGraphScene {
     pub editable: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operators_json: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub context_menu_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub find_items_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3154,8 +3150,6 @@ pub struct TiledMapScene {
     pub selection_method: String,
     #[serde(default = "tiled_map_default_selection_mode")]
     pub selection_mode: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub context_menu_json: Option<String>,
 }
 
 pub fn tiled_map_default_render_mode() -> String {
@@ -3222,7 +3216,6 @@ impl TiledMapScene {
             hover_json: tiled_map_default_hover_json(),
             selection_method: tiled_map_default_selection_method(),
             selection_mode: tiled_map_default_selection_mode(),
-            context_menu_json: None,
         }
     }
 }
@@ -3602,7 +3595,6 @@ impl NodeGraphScene {
             viewport_json,
             editable: None,
             operators_json: None,
-            context_menu_json: None,
             find_items_json: None,
             selection_json: None,
             hover_json: None,
@@ -4601,7 +4593,6 @@ mod ui_node_wire_format_tests {
                         engagement_preview_json: None,
                         lod_json: None,
                         chunking_json: None,
-                        context_menu_json: None,
                         environment_json: None,
                         frame_json: None,
                         fit_json: None,

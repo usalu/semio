@@ -920,8 +920,12 @@ fn build_world_scene_for_pane(
             preview,
             None,
             Some(world3d_chunking_json(256.0, 8000.0)),
-            None,
             Some(world3d_environment_json(&envelope.runtime.sun)),
+            None,
+            None,
+            None,
+            None,
+            None,
         ),
     )
 }
@@ -3402,10 +3406,10 @@ mod tests {
                 * (0.5 + CAD_FOREST_REFERENCE_Y_OFFSET_RATIO);
         assert!(
             (reference.origin[1] - expected_y).abs() < 1e-9,
-            "reference y {} should be centered then moved +30% of its height",
+            "reference y {} should be centered then moved +20% of its height",
             reference.origin[1]
         );
-        assert_eq!(CAD_FOREST_REFERENCE_Y_OFFSET_RATIO, 0.3);
+        assert_eq!(CAD_FOREST_REFERENCE_Y_OFFSET_RATIO, 0.2);
         assert!(reference.locked, "example references default locked like puzzle 3d");
         assert_eq!(reference.width_world, 28.6);
     }

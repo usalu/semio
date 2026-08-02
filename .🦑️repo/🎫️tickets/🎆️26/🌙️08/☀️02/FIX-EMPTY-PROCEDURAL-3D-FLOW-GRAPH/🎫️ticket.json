@@ -1,8 +1,9 @@
 {
   "title": "Fix Empty Procedural 3D Flow Graph",
   "emoji": "🧊",
-  "status": "open",
+  "status": "closed",
   "description": "Procedural 3d shows empty flows but good preview. Fix the flows. Root cause: dispatch_command_frame dropped pack envelope fallback.",
+  "summary": "Procedural flow panels were empty because Vite resolved bare @semio-tech/flow-core to the no-op playground wasm stub. Fixed playgroundFlowWasmDevStubPlugin to resolve workspace package main/module/exports. Restored dispatch_command_frame pack-envelope fallback in semio-framework-plugin for unmigrated apps. Verified flow_core.js loads, flow canvas sized, 3d+2d probes ok; ui-styling-tokens vitest 74 pass.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪54bf3353a88644009e81cd1bd2ec9be1"

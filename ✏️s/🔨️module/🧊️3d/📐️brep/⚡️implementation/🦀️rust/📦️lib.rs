@@ -5738,10 +5738,6 @@ pub struct BrepkitKernel {
     topo: Topology,
     seq: u32,
     registry: std::collections::HashMap<String, Entry>,
-    /// 🐌️➡️⚡️ Coarse-tessellation cache for [`Self::boolean_mesh_sync`]'s torus fallback, keyed by
-    /// `(SolidId, deflection_bits)` — repeated booleans against the same static operand (the
-    /// slider-drag motivating case) skip re-tessellating that operand every call. Invalidated by
-    /// [`Self::invalidate_solid_derived_caches`] wherever a `SolidId` is mutated in place.
     mesh_boolean_cache: std::collections::HashMap<(SolidId, u64), brepkit_operations::tessellate::TriangleMesh>,
 }
 
@@ -5756,14 +5752,10 @@ impl BrepkitKernel {
         Self { topo: Topology::new(), seq: 0, registry: std::collections::HashMap::new(), mesh_boolean_cache: std::collections::HashMap::new() }
     }
 
-    /// 🧹️ Evicts derived-data caches for a `SolidId` that's about to be mutated in place
-    /// (`translate`/`rotate`/`scale`/`heal_solid`/`convert_to_nurbs` reuse the same `SolidId`
-    /// rather than registering a fresh one, unlike every other mutating operation).
     fn invalidate_solid_derived_caches(&mut self, solid: SolidId) {
         self.mesh_boolean_cache.retain(|(id, _), _| *id != solid);
     }
 
-    /// ⚡️ Tessellates a solid at `deflection`, reusing a cached mesh when available.
     fn cached_tessellate_solid(&mut self, solid: SolidId, deflection: f64) -> Result<brepkit_operations::tessellate::TriangleMesh, BrepError> {
         let key = (solid, deflection.to_bits());
         if let Some(mesh) = self.mesh_boolean_cache.get(&key) {
@@ -5857,6 +5849,25 @@ impl BrepkitKernel {
         explorer::solid_faces(&self.topo, solid).map(|faces| faces.into_iter().any(|face_id| self.topo.face(face_id).ok().is_some_and(|face| matches!(face.surface(), FaceSurface::Torus(_))))).unwrap_or(false)
     }
 
+    fn boolean_mesh_sync(&mut self, operator: BooleanOp, a: SolidId, b: SolidId) -> Result<SolidId, BrepError> {
+        let deflection = 0.1;
+        let tol = brepkit_math::tolerance::Tolerance::new();
+        let mesh_a = self.cached_tessellate_solid(a, deflection)?;
+        let mesh_b = self.cached_tessellate_solid(b, deflection)?;
+        let mb = match mesh_boolean(&mesh_a, &mesh_b, operator, tol.linear) {
+            Ok(result) => result,
+            Err(brepkit_operations::OperationsError::EmptyResult { .. }) if operator == BooleanOp::Intersect => {
+                return Ok(self.topo.add_empty_solid());
+            }
+            Err(error) => return Err(Self::map_err(error)),
+        };
+        import_mesh(&mut self.topo, &mb.mesh, tol.linear).map_err(Self::map_io_err)
+    }
+
+    fn solid_volume(&self, solid: SolidId) -> Option<f64> {
+        measure::solid_volume(&self.topo, solid, 0.1).ok()
+    }
+
     fn solid_bounds_overlap(&self, a: SolidId, b: SolidId) -> bool {
         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
             return true;
@@ -5873,31 +5884,19 @@ impl BrepkitKernel {
             && aabb_a.max.z() + margin >= aabb_b.min.z()
     }
 
-    fn boolean_mesh_sync(&mut self, operator: BooleanOp, a: SolidId, b: SolidId) -> Result<SolidId, BrepError> {
-        // 🐌️ Coarser than the default render deflection on purpose: this only feeds the
-        // triangle-triangle boolean, not the final mesh, and a finer value multiplies the
-        // CDT/mesh-boolean triangle count enough to turn torus-involving cuts into a
-        // multi-second (wasm: ~20s) synchronous stall on the caller's thread.
-        let deflection = 0.1;
-        let tol = brepkit_math::tolerance::Tolerance::new();
-        let mesh_a = self.cached_tessellate_solid(a, deflection)?;
-        let mesh_b = self.cached_tessellate_solid(b, deflection)?;
-        let mb = match mesh_boolean(&mesh_a, &mesh_b, operator, tol.linear) {
-            Ok(result) => result,
-            Err(brepkit_operations::OperationsError::EmptyResult { .. }) if operator == BooleanOp::Intersect => {
-                return Ok(self.topo.add_empty_solid());
-            }
-            Err(error) => return Err(Self::map_err(error)),
-        };
-        import_mesh(&mut self.topo, &mb.mesh, tol.linear).map_err(Self::map_io_err)
-    }
-
     fn boolean_sync(&mut self, operator: BooleanOp, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
         let torus_involved = self.solid_has_torus_surface(a_id) || self.solid_has_torus_surface(b_id);
-        let use_mesh = torus_involved && self.solid_bounds_overlap(a_id, b_id);
-        let solid = if use_mesh { self.boolean_mesh_sync(operator, a_id, b_id)? } else { boolean(&mut self.topo, operator, a_id, b_id).map_err(Self::map_err)? };
+        let prefer_mesh = torus_involved && self.solid_bounds_overlap(a_id, b_id);
+        let solid = if prefer_mesh {
+            match boolean(&mut self.topo, operator, a_id, b_id) {
+                Ok(solid) if self.solid_volume(solid).is_some_and(|volume| volume > 1e-9) => solid,
+                _ => self.boolean_mesh_sync(operator, a_id, b_id)?,
+            }
+        } else {
+            boolean(&mut self.topo, operator, a_id, b_id).map_err(Self::map_err)?
+        };
         Ok(self.register_solid(solid))
     }
 
@@ -7183,23 +7182,42 @@ impl BrepkitKernel {
                 let nurbs = Self::surface_to_nurbs(s)?;
                 let (ua, ub) = nurbs.domain_u();
                 let (va, vb) = nurbs.domain_v();
-                let grid = surface_grid(&nurbs, (ua, ub), (va, vb), 16, 16);
+                let span_u = (ub - ua).abs().max(1e-6);
+                let span_v = (vb - va).abs().max(1e-6);
+                let cols = ((span_u / tol).ceil() as usize).clamp(8, 128);
+                let rows = ((span_v / tol).ceil() as usize).clamp(8, 128);
+                let grid = surface_grid(&nurbs, (ua, ub), (va, vb), cols, rows);
                 let mut position = Vec::new();
                 let mut normal = Vec::new();
                 let mut index = Vec::new();
-                let rows = grid.len();
-                let cols = grid.first().map_or(0, Vec::len);
-                for row in &grid {
-                    for p in row {
+                let grid_rows = grid.len();
+                let grid_cols = grid.first().map_or(0, Vec::len);
+                for (r, row) in grid.iter().enumerate() {
+                    for (c, p) in row.iter().enumerate() {
                         position.extend([p.x() as f32, p.y() as f32, p.z() as f32]);
-                        normal.extend([0.0, 0.0, 1.0]);
+                        let u = ua + span_u * c as f64 / (grid_cols.saturating_sub(1).max(1) as f64);
+                        let v = va + span_v * r as f64 / (grid_rows.saturating_sub(1).max(1) as f64);
+                        let du = (span_u * 0.01).max(1e-6);
+                        let dv = (span_v * 0.01).max(1e-6);
+                        let pu = nurbs.evaluate(u + du, v);
+                        let pv = nurbs.evaluate(u, v + dv);
+                        let tu = BkVec3::new(pu.x() - p.x(), pu.y() - p.y(), pu.z() - p.z());
+                        let tv = BkVec3::new(pv.x() - p.x(), pv.y() - p.y(), pv.z() - p.z());
+                        let mut n = tu.cross(tv);
+                        let len = (n.x() * n.x() + n.y() * n.y() + n.z() * n.z()).sqrt();
+                        if len > 1e-12 {
+                            n = BkVec3::new(n.x() / len, n.y() / len, n.z() / len);
+                        } else {
+                            n = BkVec3::new(0.0, 0.0, 1.0);
+                        }
+                        normal.extend([n.x() as f32, n.y() as f32, n.z() as f32]);
                     }
                 }
-                for r in 0..rows - 1 {
-                    for c in 0..cols - 1 {
-                        let i0 = r * cols + c;
+                for r in 0..grid_rows.saturating_sub(1) {
+                    for c in 0..grid_cols.saturating_sub(1) {
+                        let i0 = r * grid_cols + c;
                         let i1 = i0 + 1;
-                        let i2 = (r + 1) * cols + c;
+                        let i2 = (r + 1) * grid_cols + c;
                         let i3 = i2 + 1;
                         index.extend([i0 as u32, i2 as u32, i1 as u32, i1 as u32, i2 as u32, i3 as u32]);
                     }
@@ -7844,6 +7862,23 @@ mod tests {
         let mesh = kernel.tessellate_sync(&cut, 0.1).unwrap();
         assert!(!mesh.position.is_empty());
         assert!(!mesh.index.is_empty());
+    }
+
+    #[test]
+    fn sphere_solid_tessellation_normals_are_unit_and_not_all_axis_aligned() {
+        let mut kernel = BrepkitKernel::new();
+        let sphere = kernel.sphere_prim_sync(1.0).unwrap();
+        let transfer = kernel.tessellate_sync(&sphere, 0.05).unwrap();
+        assert!(transfer.normal.len() >= 9);
+        let mut distinct = std::collections::HashSet::new();
+        for chunk in transfer.normal.chunks_exact(3) {
+            let len = (chunk[0] * chunk[0] + chunk[1] * chunk[1] + chunk[2] * chunk[2]).sqrt();
+            assert!((len - 1.0).abs() < 0.05, "normal should be unit length, got {chunk:?}");
+            let key = (chunk[0].round() as i32, chunk[1].round() as i32, chunk[2].round() as i32);
+            distinct.insert(key);
+        }
+        assert!(distinct.len() > 4, "sphere normals should vary across the surface");
+        assert!(!distinct.contains(&(0, 0, 1)) || distinct.len() > 1, "normals should not collapse to +Z");
     }
 
     #[test]

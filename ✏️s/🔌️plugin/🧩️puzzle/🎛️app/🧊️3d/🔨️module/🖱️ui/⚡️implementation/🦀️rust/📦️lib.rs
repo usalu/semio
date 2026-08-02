@@ -3133,111 +3133,71 @@ fn puzzle3d_engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Win
     }
 }
 
-fn puzzle3d_context_menu_json(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Option<String> {
+fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::ContextMenuItemSpec;
     let selection = &envelope.runtime.selection;
+    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool, separator: bool| ContextMenuItemSpec {
+        id: id.into(),
+        label: if separator { None } else { Some(label.into()) },
+        icon: if separator { None } else { Some(icon.into()) },
+        action: if separator { None } else { Some(action.into()) },
+        args: semio_framework_plugin::optional_json_to_dsl(args),
+        destructive: destructive.then_some(true),
+        separator: separator.then_some(true),
+        ..Default::default()
+    };
     if !selection.object_ids.is_empty() {
         let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
         let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
-        let items = vec![
-            json!({ "id": "duplicate", "label": labels.duplicate, "icon": "copy", "action": "duplicateSelection" }),
-            json!({ "id": "select-same-kind", "label": labels.select_same_kind, "icon": "layers", "action": "selectSameKindSelection" }),
-            json!({ "id": "sep-flags", "separator": true }),
-            json!({
-                "id": "hide-show",
-                "label": if all_hidden { labels.show } else { labels.hide },
-                "icon": if all_hidden { "eye" } else { "eye-off" },
-                "action": "setSelectionFlag",
-                "args": { "flag": "hidden", "value": !all_hidden },
-            }),
-            json!({
-                "id": "lock-unlock",
-                "label": if all_locked { labels.unlock } else { labels.lock },
-                "icon": if all_locked { "lock-open" } else { "lock" },
-                "action": "setSelectionFlag",
-                "args": { "flag": "locked", "value": !all_locked },
-            }),
-            json!({ "id": "sep-zoom", "separator": true }),
-            json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }),
-            json!({ "id": "sep-delete", "separator": true }),
-            json!({ "id": "delete", "label": labels.delete, "icon": "trash", "action": "deleteSelection", "destructive": true }),
+        let count = selection.object_ids.len();
+        let phrase = if count == 1 { format!("1 {}", labels.object) } else { format!("{count} {}", labels.objects) };
+        return vec![
+            item("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false, false),
+            item("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false, false),
+            item("sep-flags", "", "", "", None, false, true),
+            item("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false, false),
+            item("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false, false),
+            item("sep-zoom", "", "", "", None, false, true),
+            item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false),
+            item("sep-delete", "", "", "", None, false, true),
+            item("delete", &format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true, false),
         ];
-        return serde_json::to_string(&items).ok();
     }
     if !selection.vortex_ids.is_empty() {
         let mut items = Vec::new();
         if let [only] = selection.vortex_ids.as_slice() {
-            items.push(json!({
-                "id": "suggest",
-                "label": labels.suggest_objects,
-                "icon": "sparkles",
-                "action": "openVortexSuggestions",
-                "args": { "fullId": only },
-            }));
-            items.push(json!({ "id": "sep-suggest", "separator": true }));
+            items.push(item("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only })), false, false));
+            items.push(item("sep-suggest", "", "", "", None, false, true));
         }
-        items.push(json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }));
-        items.push(json!({ "id": "sep-delete", "separator": true }));
-        items.push(json!({ "id": "delete", "label": labels.delete, "icon": "trash", "action": "deleteSelection", "destructive": true }));
-        return serde_json::to_string(&items).ok();
+        items.push(item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false));
+        items.push(item("sep-delete", "", "", "", None, false, true));
+        items.push(item("delete", labels.delete, "trash", "deleteSelection", None, true, false));
+        return items;
     }
     if let Some(id) = selection.attraction_ids.first() {
-        let items = vec![json!({
-            "id": "delete",
-            "label": labels.delete,
-            "icon": "trash",
-            "action": "deleteAttraction",
-            "args": { "id": id },
-            "destructive": true,
-        })];
-        return serde_json::to_string(&items).ok();
+        return vec![item("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id })), true, false)];
     }
     if let Some(id) = selection.target_volume_ids.first() {
         let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
         let hidden = target_volume.map(|volume| volume.hidden).unwrap_or(false);
         let locked = target_volume.map(|volume| volume.locked).unwrap_or(false);
-        let items = vec![
-            json!({
-                "id": "hide-show",
-                "label": if hidden { labels.show } else { labels.hide },
-                "icon": if hidden { "eye" } else { "eye-off" },
-                "action": "setTargetVolumeFlag",
-                "args": { "id": id, "flag": "hidden", "value": !hidden },
-            }),
-            json!({
-                "id": "lock-unlock",
-                "label": if locked { labels.unlock } else { labels.lock },
-                "icon": if locked { "lock-open" } else { "lock" },
-                "action": "setTargetVolumeFlag",
-                "args": { "id": id, "flag": "locked", "value": !locked },
-            }),
-            json!({ "id": "sep-delete", "separator": true }),
-            json!({
-                "id": "delete",
-                "label": labels.delete,
-                "icon": "trash",
-                "action": "deleteTargetVolume",
-                "args": { "id": id },
-                "destructive": true,
-            }),
+        return vec![
+            item("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "hidden", "value": !hidden })), false, false),
+            item("lock-unlock", if locked { labels.unlock } else { labels.lock }, if locked { "lock-open" } else { "lock" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "locked", "value": !locked })), false, false),
+            item("sep-delete", "", "", "", None, false, true),
+            item("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id })), true, false),
         ];
-        return serde_json::to_string(&items).ok();
     }
-    if let Some(_id) = selection.reference_ids.first() {
-        let items = vec![
-            json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }),
-            json!({ "id": "sep-delete", "separator": true }),
-            json!({
-                "id": "delete",
-                "label": labels.delete,
-                "icon": "trash",
-                "action": "deleteSelection",
-                "destructive": true,
-            }),
+    if selection.reference_ids.first().is_some() {
+        return vec![
+            item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false),
+            item("sep-delete", "", "", "", None, false, true),
+            item("delete", labels.delete, "trash", "deleteSelection", None, true, false),
         ];
-        return serde_json::to_string(&items).ok();
     }
-    None
+    Vec::new()
 }
+
 //#endregion 🔖️Engagement
 
 //#region 🔖️Measures
@@ -4785,8 +4745,12 @@ impl DocumentApp for Puzzle3dPlayApp {
                         None,
                         Some(world3d_lod_json(&envelope.runtime)),
                         Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
-                        puzzle3d_context_menu_json(&envelope, labels),
                         Some(world3d_environment_json(&envelope.runtime.sun)),
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
                     ),
                 )
             }
@@ -4864,6 +4828,27 @@ impl DocumentApp for Puzzle3dPlayApp {
 
     fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
         puzzle3d_app_labels_overlay(view_state)
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &DocumentView<'_, Puzzle3dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        _registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let labels = puzzle3d_labels(view_state);
+        let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
+        let active_utility = puzzle3d_scene_active_utility(view_state, Some(wid));
+        let mut envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow().clone(), &active_utility);
+        if let Some(surface) = request.surface.as_ref() {
+            let object_ids: Vec<String> = surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node").flat_map(|g| g.ids.iter().cloned()).collect();
+            if !object_ids.is_empty() {
+                envelope.runtime.selection.object_ids = object_ids.into();
+            }
+        }
+        puzzle3d_context_menu_items(&envelope, labels)
     }
 }
 //#endregion 🔖️Puzzle3dPlayApp

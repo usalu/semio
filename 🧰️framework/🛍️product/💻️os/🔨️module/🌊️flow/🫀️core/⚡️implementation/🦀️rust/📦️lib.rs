@@ -4083,7 +4083,10 @@ impl FlowSession {
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn tessellate(handle: &str, tolerance: f64) -> String {
-    flow_module_brep::tessellate_geometry_json(handle, tolerance)
+    match flow_module_brep::tessellate_geometry(handle, tolerance) {
+        Ok(mesh) => serde_json::to_string(&mesh).unwrap_or_else(|_| serde_json::json!({ "error": "mesh encode failed" }).to_string()),
+        Err(error) => serde_json::json!({ "error": error }).to_string(),
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -6663,6 +6666,18 @@ mod tests {
     }
 
     #[test]
+    fn delete_selection_removes_edge_selected_by_synapse_id_domain() {
+        let mut host = host_with_test_bridge();
+        let before = host.fixture.synapses.len();
+        host.dag.set_selection_domains_json(r#"{"nodes":[],"edges":["s1"],"handles":[]}"#);
+        assert!(host.has_selection(), "synapse id s1 must map into engine edge selection");
+        host.delete_selection().unwrap();
+        assert!(host.fixture.synapses.len() < before);
+        assert!(!host.fixture.synapses.iter().any(|synapse| synapse.id == "s1"));
+    }
+
+
+    #[test]
     fn align_selection_left_aligns_selected_widget_layout() {
         let mut host = host_with_test_bridge();
         host.move_widget("slider", -120.0, 20.0).unwrap();
@@ -7064,9 +7079,9 @@ mod tests {
         assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
         let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
         assert!(handle.starts_with("solid-"));
-        let mesh: serde_json::Value = serde_json::from_str(&flow_module_brep::tessellate_geometry_json(handle, 0.05)).expect("solid mesh json");
-        assert!(mesh.get("error").is_none(), "solid tessellation: {mesh}");
-        assert!(mesh.get("position").and_then(serde_json::Value::as_array).is_some_and(|positions| !positions.is_empty()));
+        let mesh = flow_module_brep::tessellate_geometry(handle, 0.05).expect("solid mesh");
+        assert!(!mesh.positions.is_empty());
+        assert!(mesh.indices.len() >= 3);
     }
 
     #[test]

@@ -151,6 +151,36 @@ export const boardRedrawHandlesFixtureJson = wasmJson;
 export const boardRedrawLayoutFixtureJson = wasmJson;
 `;
 
+function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, subpath: string | undefined): string[] {
+  const pkgRoot = resolve(repoRoot, "node_modules", pkgName);
+  const candidates: string[] = [];
+  let manifest: { exports?: Record<string, string | { import?: string; default?: string }>; module?: string; main?: string } | undefined;
+  try {
+    manifest = JSON.parse(readFileSync(resolve(pkgRoot, "package.json"), "utf8"));
+  } catch {
+    /* package.json may be absent for a half-linked workspace package */
+  }
+  const pushExportTarget = (key: string) => {
+    const exp = manifest?.exports?.[key];
+    const target = typeof exp === "string" ? exp : (exp?.import ?? exp?.default);
+    if (target) candidates.push(resolve(pkgRoot, target));
+  };
+  if (subpath) {
+    candidates.push(resolve(pkgRoot, subpath));
+    if (subpath.startsWith("pkg/")) {
+      candidates.push(resolve(pkgRoot, "rs", subpath));
+      candidates.push(resolve(pkgRoot, subpath.slice("pkg/".length)));
+    }
+    pushExportTarget(`./${subpath}`);
+    pushExportTarget(subpath);
+  } else {
+    pushExportTarget(".");
+    if (manifest?.module) candidates.push(resolve(pkgRoot, manifest.module));
+    if (manifest?.main) candidates.push(resolve(pkgRoot, manifest.main));
+  }
+  return candidates;
+}
+
 /** @emoji 🧱️ Stubs missing wasm pkg imports until `nx run …:wasm` artifacts exist. */
 export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
   return {
@@ -165,34 +195,15 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
         if (existsSync(resolve(dirname(importer), cleanId))) return undefined;
         return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
       }
-      const workspacePkg = cleanId.match(/^(@semio-tech\/[^/]+)\/(.+)$/);
+      const workspacePkg = cleanId.match(/^(@semio-tech\/[^/]+)(?:\/(.+))?$/);
       const candidates: string[] = [];
       if (workspacePkg) {
         const [, pkgName, subpath] = workspacePkg;
-        const pkgRoot = resolve(repoRoot, "node_modules", pkgName);
-        candidates.push(resolve(pkgRoot, subpath));
-        if (subpath.startsWith("pkg/")) {
-          candidates.push(resolve(pkgRoot, "rs", subpath));
-          // Package root may already be the wasm-pack `pkg/` folder (flow-core workspace layout).
-          candidates.push(resolve(pkgRoot, subpath.slice("pkg/".length)));
-        }
-        try {
-          const manifest = JSON.parse(readFileSync(resolve(pkgRoot, "package.json"), "utf8")) as {
-            exports?: Record<string, string | { import?: string; default?: string }>;
-          };
-          const exp = manifest.exports?.[`./${subpath}`] ?? manifest.exports?.[subpath];
-          const target = typeof exp === "string" ? exp : (exp?.import ?? exp?.default);
-          if (target) candidates.push(resolve(pkgRoot, target));
-        } catch {
-          /* package.json may be absent for a half-linked workspace package */
-        }
+        candidates.push(...workspaceWasmPkgResolveCandidates(repoRoot, pkgName, subpath));
       } else {
         candidates.push(resolve(repoRoot, cleanId));
       }
       const hit = candidates.find((abs) => existsSync(abs));
-      // When package root is already the wasm-pack `pkg/` folder, `.../pkg/foo.js` resolves to
-      // `pkgRoot/foo.js` via the stripped candidate above — return that absolute path so Vite does
-      // not keep looking for a nested `pkg/` that does not exist.
       if (hit) return hit;
       return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
     },
@@ -503,8 +514,8 @@ export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<Playgro
 export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
   "html{color-scheme:light dark}html,body,#root{height:100%;margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
 
-/** @emoji 🌓️ Synchronous system appearance bootstrap for play `🌐️index.html` heads. */
-export const PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT = `(function(){var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)");var dark=m.matches;d.classList.toggle("dark",dark);d.dataset.uiAppearance=dark?"dark":"light";d.style.colorScheme=dark?"dark":"light";if(document.body){document.body.style.colorScheme=dark?"dark":"light";document.body.style.backgroundColor=dark?"#001117":"#f7f3e3";document.body.style.color=dark?"#f7f3e3":"#001117";}})();`;
+/** @emoji 🌓️ Synchronous appearance bootstrap for play `🌐️index.html` heads — prefers persisted `ui.chrome.appearance`, else system. */
+export const PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT = `(function(){var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)");var stored=null;try{stored=localStorage.getItem("ui.chrome.appearance")}catch(e){}var dark=stored==="dark"||(stored!=="light"&&m.matches);d.classList.toggle("dark",dark);d.dataset.uiAppearance=dark?"dark":"light";d.style.colorScheme=dark?"dark":"light";if(document.body){document.body.style.colorScheme=dark?"dark":"light";document.body.style.backgroundColor=dark?"#001117":"#f7f3e3";document.body.style.color=dark?"#f7f3e3":"#001117";}})();`;
 
 /** @emoji 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */
 export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal(){document.documentElement.dataset.semioStyled="ready"}var link=document.getElementById("semio-play-styles");if(link){if(link.sheet)reveal();else link.addEventListener("load",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();`;
@@ -1630,6 +1641,26 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
   const repoRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "../../../../../..");
 
+  describe("playgroundFlowWasmDevStubPlugin", () => {
+    const importer = resolve(repoRoot, "🧰️framework/🛍️product/💻️os/🔨️module/📺️renderer/🧑️‍🎨️engine/⚛️react/⚡️implementation/🟦️typescript/📦️index.tsx");
+    const plugin = playgroundFlowWasmDevStubPlugin(repoRoot);
+    const resolveId = plugin.resolveId as (id: string, importer: string) => string | undefined;
+
+    it("resolves bare @semio-tech/flow-core to the wasm-pack entry, not the stub", () => {
+      const resolved = resolveId("@semio-tech/flow-core", importer);
+      expect(resolved).toBeDefined();
+      expect(resolved).not.toContain("playground-wasm-stub");
+      expect(resolved).toMatch(/flow_core\.js$/);
+      expect(existsSync(resolved!)).toBe(true);
+    });
+
+    it("falls back to stub for an unbuilt @semio-tech wasm package subpath", () => {
+      const id = "@semio-tech/__playground_wasm_stub_test_missing__/pkg/entry.js";
+      const resolved = resolveId(id, importer);
+      expect(resolved).toBe(`${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(id)}`);
+    });
+  });
+
   describe("isPlaygroundOptimizedDepUrl", () => {
     it("matches Vite prebundle chunk URLs", () => {
       expect(isPlaygroundOptimizedDepUrl("/node_modules/.vite/deps/chunk-ABC.js?v=1")).toBe(true);
@@ -1746,6 +1777,7 @@ if (import.meta.vitest) {
 
     it("exposes inline appearance and reveal scripts", () => {
       expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("prefers-color-scheme");
+      expect(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT).toContain("ui.chrome.appearance");
       expect(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT).toContain("semio-play-styles");
       expect(PLAYGROUND_PLAY_BOOT_INLINE_STYLE).toContain("data-semio-styled");
     });

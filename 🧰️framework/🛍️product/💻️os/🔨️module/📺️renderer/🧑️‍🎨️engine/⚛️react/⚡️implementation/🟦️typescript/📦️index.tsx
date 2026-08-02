@@ -13102,48 +13102,6 @@ export function mapContextMenuSpecs(
   });
 }
 
-/** @emoji 🕸️ Rewrites node-graph context-menu rows for the effective right-click selection so preview/zoom/clear/delete enable immediately without waiting for a plugin round-trip. */
-export function enrichNodeGraphContextMenuItems(
-  specs: readonly ContextMenuItemSpec[],
-  options: { readonly selectedIds: readonly string[]; readonly previewOffIds?: readonly string[] },
-): ContextMenuItemSpec[] {
-  const selectedIds = options.selectedIds;
-  const previewOffIds = options.previewOffIds ?? [];
-  const hasSelection = selectedIds.length > 0;
-  const allPreviewOff = hasSelection && selectedIds.every((id) => previewOffIds.includes(id));
-  return specs.map((spec) => {
-    if (spec.separator) return spec;
-    switch (spec.id) {
-      case "toggle-preview": {
-        const showLabel = spec.label?.replace(/hide|ausblenden/i, (match) => (match.toLowerCase() === "ausblenden" ? "einblenden" : "Show"));
-        const hideLabel = spec.label?.replace(/show|einblenden/i, (match) => (match.toLowerCase() === "einblenden" ? "ausblenden" : "Hide"));
-        return {
-          ...spec,
-          disabled: !hasSelection,
-          checked: hasSelection ? !allPreviewOff : undefined,
-          icon: allPreviewOff ? "eye" : "eye-off",
-          label: allPreviewOff ? (showLabel ?? "Show preview") : (hideLabel ?? "Hide preview"),
-          action: "setPreviewOff",
-          args: { ids: [...selectedIds], value: !allPreviewOff },
-        };
-      }
-      case "zoom-to-selection":
-        return { ...spec, disabled: !hasSelection, action: spec.action ?? "focusSelection" };
-      case "clear-selection":
-        return { ...spec, disabled: !hasSelection, action: spec.action ?? "clearSelection" };
-      case "delete-selection":
-        return {
-          ...spec,
-          disabled: !hasSelection,
-          action: spec.action ?? "nodeGraphEdit",
-          args: spec.args ?? { operations: [{ operation: "deleteSelection" }] },
-        };
-      default:
-        return spec;
-    }
-  });
-}
-
 function parseInteraction(interactionJson: string | undefined): WorldInteractionRecord {
   if (!interactionJson) return {};
   try {
@@ -15763,7 +15721,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
   const brushPreview = useMemo(() => parseBrushPreview(scene?.brushPreviewJson), [scene?.brushPreviewJson]);
-  const contextMenuItems = useMemo(() => parseJsonArray<WorldContextMenuItem>(scene?.contextMenuJson), [scene?.contextMenuJson]);
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
@@ -15830,7 +15787,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     () => getWorldSelectionPreview(node.controllerId),
     () => getWorldSelectionPreviewServerSnapshot(node.controllerId),
   );
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
   const catalogueDragDepthRef = useRef(0);
   const catalogueDragEncodedRef = useRef<string | null>(null);
@@ -15851,9 +15808,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
   const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId);
   useEffect(() => {
-    if (contextMenu == null || contextMenuItems.length === 0 || suggestionMenuOwnsThisWindow) return;
-    logContextMenuOpen("world3d", contextMenuItems);
-  }, [contextMenu, contextMenuItems, suggestionMenuOwnsThisWindow]);
+    if (contextMenu == null || contextMenu.specs.length === 0 || suggestionMenuOwnsThisWindow) return;
+    logContextMenuOpen("world3d", contextMenu.specs);
+  }, [contextMenu, suggestionMenuOwnsThisWindow]);
   useEffect(() => {
     if (!interaction.suggestionMenu?.open) return;
     logContextMenuOpen("world3d-suggestions", suggestionMenuItems(interaction.suggestionMenu, interaction.brushCandidateIndex ?? 0));
@@ -16762,13 +16719,26 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-orbit-view-gizmo=""
       data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       onContextMenu={(event) => {
-        if (event.altKey) return;
+        if (event.altKey || !requestContextMenu) return;
         const target = resolveWorldContextMenuTarget(interaction, selection);
-        if (!target) return;
         event.preventDefault();
         event.stopPropagation();
-        dispatch("contextMenuAt", { kind: target.kind, id: target.id });
-        setContextMenu({ x: event.clientX, y: event.clientY });
+        void (async () => {
+          if (target) dispatch("contextMenuAt", { kind: target.kind, id: target.id });
+          const selectionGroups = [];
+          if ((selection.ids?.length ?? 0) > 0) selectionGroups.push({ domain: "object", ids: [...(selection.ids ?? [])] });
+          if ((selection.componentIds?.length ?? 0) > 0) selectionGroups.push({ domain: "feature", ids: (selection.componentIds ?? []).map(String) });
+          const hits = target ? [{ domain: target.kind, id: target.id }] : [];
+          const specs = await requestContextMenu({
+            viewState: {},
+            menu: { id: "world3d" },
+            surface: { surfaceId: node.surfaceId, kind: "world3d", hits, selection: selectionGroups },
+            windowInstanceId: windowInstanceId ?? undefined,
+            point: { x: event.clientX, y: event.clientY },
+          });
+          console.log("[DEBUG] world3d context menu open", { target, itemIds: specs.map((item) => item.id) });
+          setContextMenu({ x: event.clientX, y: event.clientY, specs });
+        })();
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -16963,9 +16933,9 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         )
       ) : null}
       <ContextMenuController
-        open={contextMenu != null && contextMenuItems.length > 0 && !suggestionMenuOwnsThisWindow}
+        open={contextMenu != null && (contextMenu.specs?.length ?? 0) > 0 && !suggestionMenuOwnsThisWindow}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapWorldContextMenuSpecs(contextMenuItems)}
+        items={mapWorldContextMenuSpecs(contextMenu?.specs ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -17403,22 +17373,11 @@ function isEditableGraphKeyTarget(target: EventTarget | null): boolean {
   return target.closest("[contenteditable='true'], [role='textbox']") != null;
 }
 
-function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, parsedNodes: readonly WorkflowNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
+function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, _parsedNodes: readonly WorkflowNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
   if (!editable || isEditableGraphKeyTarget(event.target)) return;
-  const mod = event.metaKey || event.ctrlKey;
-  if (mod && event.key.toLowerCase() === "a") {
-    event.preventDefault();
-    dispatch("setMediaNodeSelection", { nodeIds: parsedNodes.map((node) => node.id) });
-    return;
-  }
   if (event.key === "Escape") {
     event.preventDefault();
     dispatch("setMediaNodeSelection", { nodeIds: [] });
-    return;
-  }
-  if (event.key === "Delete" || event.key === "Backspace") {
-    event.preventDefault();
-    dispatch("deleteSelection", {});
   }
 }
 //#endregion Keyboard
@@ -17803,7 +17762,7 @@ function DiagramGraphFallback({
   parsedNodes,
   parsedEdges,
   findItems,
-  contextMenuItems,
+  requestContextMenu,
   onAction,
 }: {
   readonly scene: NodeGraphScene;
@@ -17812,7 +17771,7 @@ function DiagramGraphFallback({
   readonly parsedNodes: readonly WorkflowNodeRecord[];
   readonly parsedEdges: readonly WorkflowEdgeRecord[];
   readonly findItems: readonly GraphFindItem[];
-  readonly contextMenuItems: readonly GraphContextMenuItem[];
+  readonly requestContextMenu?: (request: PluginContextMenuRequest) => Promise<readonly ContextMenuItemSpec[]>;
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const viewport = useMemo(() => parseViewport(scene.viewportJson ?? "{}"), [scene.viewportJson]);
@@ -17835,7 +17794,7 @@ function DiagramGraphFallback({
   const mapContextMenu = useMapContextMenuSpecs(dispatch);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
 
   return (
     <div
@@ -17864,10 +17823,19 @@ function DiagramGraphFallback({
         dispatch("spawnApp", { pluginId: payload.pluginId, appId: payload.appId, position: { x, y } });
       }}
       onContextMenu={(event) => {
-        if (!editable || contextMenuItems.length === 0) return;
+        if (!editable || !requestContextMenu) return;
         event.preventDefault();
         event.stopPropagation();
-        setContextMenu({ x: event.clientX, y: event.clientY });
+        void (async () => {
+          const specs = await requestContextMenu({
+            viewState: {},
+            menu: { id: "nodeGraph" },
+            surface: { surfaceId: node.surfaceId, kind: "nodeGraph", hits: [], selection: [] },
+            point: { x: event.clientX, y: event.clientY },
+          });
+          console.log("[DEBUG] diagram context menu open", { itemIds: specs.map((item) => item.id) });
+          setContextMenu({ x: event.clientX, y: event.clientY, specs });
+        })();
       }}
     >
       <Diagram
@@ -17931,7 +17899,7 @@ function DiagramGraphFallback({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenu(contextMenuItems)}
+        items={mapContextMenu(contextMenu?.specs ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -17971,7 +17939,6 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
   const parsedNodes = useMemo(() => parseJsonArray<WorkflowNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
   const parsedEdges = useMemo(() => parseJsonArray<WorkflowEdgeRecord>(scene?.edgesJson), [scene?.edgesJson]);
   const findItems = useMemo(() => parseJsonArray<GraphFindItem>(scene?.findItemsJson), [scene?.findItemsJson]);
-  const contextMenuItems = useMemo(() => parseJsonArray<GraphContextMenuItem>(scene?.contextMenuJson), [scene?.contextMenuJson]);
   const presencePeers = useMemo(() => parseJsonArray<PresencePeer>(scene?.presencePeersJson), [scene?.presencePeersJson]);
   const isClient = useClient();
   const emptySceneLabel = useLabel("ui.host.emptyScene");
@@ -18016,7 +17983,7 @@ export function NodeGraphHost({ node, onAction, requestContextMenu }: ComponentS
           <WasmGraphSurface scene={scene} surfaceId={node.surfaceId} controllerId={node.controllerId} editable={editable} requestContextMenu={requestContextMenu} onAction={onAction} />
         )
       ) : (
-        <DiagramGraphFallback scene={scene} node={node} editable={editable} parsedNodes={parsedNodes} parsedEdges={parsedEdges} findItems={findItems} contextMenuItems={contextMenuItems} onAction={onAction} />
+        <DiagramGraphFallback scene={scene} node={node} editable={editable} parsedNodes={parsedNodes} parsedEdges={parsedEdges} findItems={findItems} requestContextMenu={requestContextMenu} onAction={onAction} />
       )}
       <PresencePeersOverlay peers={presencePeers} />
     </div>
@@ -19361,7 +19328,7 @@ function HighlightedBuffer({ buffer, tokens }: { readonly buffer: string; readon
 //#endregion HighlightedBuffer
 
 //#region EditingHelpers
-/** 🌐️ Resolves a translation key outside of component render (e.g. `buildTextEditorContextMenuItems`) — an alias of {@link shellLabel} scoped to this region. */
+/** 🌐️ Resolves a translation key outside of component render (e.g. text-editor context menu helpers) — an alias of {@link shellLabel} scoped to this region. */
 function hostLabel(key: UiTranslationKey): string {
   return shellLabel(key);
 }
@@ -19400,54 +19367,6 @@ function parseJsonOr<T>(json: string | undefined, fallback: T): T {
   }
 }
 
-/** 🧭️ Builds the right-click menu rows for a text-editor surface, independent of the active language. */
-export function buildTextEditorContextMenuItems(
-  input: { readonly canSuggest: boolean; readonly hasSelection: boolean; readonly canRename: boolean; readonly pickTargets: readonly PickTarget[] },
-  actions: {
-    readonly suggest: () => void;
-    readonly selectToken: () => void;
-    readonly selectLine: () => void;
-    readonly selectAll: () => void;
-    readonly rename: () => void;
-    readonly cut: () => void;
-    readonly copy: () => void;
-    readonly paste: () => void;
-    readonly format: () => void;
-    readonly lint: () => void;
-    readonly pickTarget: (target: PickTarget) => void;
-  },
-): ContextMenuItem[] {
-  const items: ContextMenuItem[] = [];
-  if (input.canSuggest) {
-    items.push({ id: "writer-suggest", label: hostLabel("ui.contextMenu.suggestCompletions"), icon: "sparkles", shortcut: "Alt+Right click", onSelect: actions.suggest });
-    items.push({ id: "writer-suggest-sep", separator: true });
-  }
-  if (input.pickTargets.length > 1) {
-    for (const target of input.pickTargets) {
-      items.push({
-        id: `writer-pick-${target.domain}-${target.id}`,
-        label: `${hostLabel("ui.contextMenu.select")} ${target.domain === "token" ? target.label : target.domain}`,
-        icon: target.domain === "token" ? "text-cursor" : "list-ordered",
-        onSelect: () => actions.pickTarget(target),
-      });
-    }
-    items.push({ id: "writer-pick-sep", separator: true });
-  }
-  items.push({ id: "writer-select-token", label: hostLabel("ui.contextMenu.selectToken"), icon: "text-cursor", onSelect: actions.selectToken });
-  items.push({ id: "writer-select-line", label: hostLabel("ui.contextMenu.selectLine"), icon: "list-ordered", onSelect: actions.selectLine });
-  items.push({ id: "writer-select-all", label: hostLabel("ui.contextMenu.selectAll"), icon: "select-all", shortcut: "⌘️A", onSelect: actions.selectAll });
-  if (input.canRename) {
-    items.push({ id: "writer-rename", label: hostLabel("ui.contextMenu.rename"), icon: "edit-3", shortcut: "F2", onSelect: actions.rename });
-  }
-  items.push({ id: "writer-clip-sep", separator: true });
-  items.push({ id: "writer-cut", label: hostLabel("ui.contextMenu.cut"), icon: "scissors", shortcut: "⌘️X", disabled: !input.hasSelection, onSelect: actions.cut });
-  items.push({ id: "writer-copy", label: hostLabel("ui.contextMenu.copy"), icon: "copy", shortcut: "⌘️C", disabled: !input.hasSelection, onSelect: actions.copy });
-  items.push({ id: "writer-paste", label: hostLabel("ui.contextMenu.paste"), icon: "clipboard", shortcut: "⌘️V", onSelect: actions.paste });
-  items.push({ id: "writer-format-sep", separator: true });
-  items.push({ id: "writer-format", label: hostLabel("ui.contextMenu.formatDocument"), icon: "align-left", shortcut: "⇧️⌘️F", onSelect: actions.format });
-  items.push({ id: "writer-lint", label: hostLabel("ui.contextMenu.lintDocument"), icon: "alert-circle", onSelect: actions.lint });
-  return items;
-}
 //#endregion EditingHelpers
 
 //#region WasmEditorSurface
@@ -19713,6 +19632,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
         onContextMenu={(event) => {
           event.preventDefault();
           event.stopPropagation();
+          void (async () => {
           const session = sessionRef.current;
           if (!session) return;
           dismissContextMenu();
@@ -19729,69 +19649,99 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
           }
           const pickTargets = parseJsonOr<readonly PickTarget[]>(session.pickTargetsAtScreenJson(sx, sy), []);
           const hasSelection = session.anchor() !== session.caret();
-          const items = buildTextEditorContextMenuItems(
-            { canSuggest: completions.length > 0, hasSelection, canRename: renameInfo != null, pickTargets },
-            {
-              suggest: openCompletions,
-              selectToken: () => {
-                session.selectSpanAt(session.caret());
-                session.renderFrame();
-                emitSelection();
-              },
-              selectLine: () => {
-                const range = lineRangeAt(scene.buffer, session.caret());
-                session.setSelectionRange(range.start, range.end);
-                session.renderFrame();
-                emitSelection();
-              },
-              selectAll: () => {
-                session.selectAll();
-                session.renderFrame();
-                emitSelection();
-              },
-              rename: startRename,
-              cut: () => {
-                void navigator.clipboard.writeText(session.selectionText());
-                session.replaceSelection("");
-                dispatch(textEditorActions.edit, { text: session.text() });
-                session.renderFrame();
-                emitSelection();
-              },
-              copy: () => {
-                void navigator.clipboard.writeText(session.selectionText());
-              },
-              paste: () => {
-                void navigator.clipboard.readText().then((text) => {
-                  session.replaceSelection(text);
-                  dispatch(textEditorActions.edit, { text: session.text() });
-                  session.renderFrame();
-                  emitSelection();
-                });
-              },
-              format: () => dispatch(textEditorActions.formatDocument, {}),
-              lint: () => dispatch("lintDocument", {}),
-              pickTarget: (target) => {
-                if (target.domain === "token") {
-                  const [start, end] = target.id.split(":").map(Number);
-                  if (start != null && end != null) {
-                    session.setSelectionRange(start, end);
-                    session.renderFrame();
-                    emitSelection();
-                  }
-                } else if (target.domain === "line") {
-                  const lines = scene.buffer.split("\n");
-                  const lineIndex = Number(target.id);
-                  let offset = 0;
-                  for (let i = 0; i < lineIndex; i++) offset += (lines[i]?.length ?? 0) + 1;
-                  const lineLength = lines[lineIndex]?.length ?? 0;
-                  session.setSelectionRange(offset, offset + lineLength);
-                  session.renderFrame();
-                  emitSelection();
+          const localActions: Record<string, () => void> = {
+            requestCompletions: openCompletions,
+            selectToken: () => {
+              session.selectSpanAt(session.caret());
+              session.renderFrame();
+              emitSelection();
+            },
+            selectLine: () => {
+              const caret = session.caret();
+              const buffer = scene.buffer;
+              const lines = buffer.split("\n");
+              let offset = 0;
+              let lineIndex = 0;
+              for (let i = 0; i < lines.length; i++) {
+                const next = offset + (lines[i]?.length ?? 0) + 1;
+                if (caret < next || i === lines.length - 1) {
+                  lineIndex = i;
+                  break;
                 }
+                offset = next;
+              }
+              offset = 0;
+              for (let i = 0; i < lineIndex; i++) offset += (lines[i]?.length ?? 0) + 1;
+              const lineLength = lines[lineIndex]?.length ?? 0;
+              session.setSelectionRange(offset, offset + lineLength);
+              session.renderFrame();
+              emitSelection();
+            },
+            selectAll: () => {
+              session.setSelectionRange(0, scene.buffer.length);
+              session.renderFrame();
+              emitSelection();
+            },
+            commitRename: () => {
+              if (renameInfo) startRename(renameInfo);
+            },
+            cut: () => {
+              document.execCommand("cut");
+            },
+            copy: () => {
+              document.execCommand("copy");
+            },
+            paste: () => {
+              document.execCommand("paste");
+            },
+            formatDocument: () => dispatch(textEditorActions.formatDocument ?? "formatDocument"),
+            lintDocument: () => dispatch("lintDocument"),
+          };
+          for (const target of pickTargets) {
+            localActions[`pick:${target.domain}:${target.id}`] = () => {
+              /* pick handled via menu row args if present */
+            };
+          }
+          if (!requestContextMenu) return;
+          const specs = await requestContextMenu({
+            viewState: {},
+            menu: { id: "textEditor" },
+            surface: {
+              surfaceId,
+              kind: "textEditor",
+              hits: pickTargets.map((target) => ({ domain: target.domain, id: target.id, label: target.label })),
+              selection: [],
+              text: {
+                caret: session.caret(),
+                hasSelection,
+                word: undefined,
+                canRename: renameInfo != null,
+                hasCompletions: completions.length > 0,
               },
             },
-          );
+            point: { x: event.clientX, y: event.clientY },
+          });
+          console.log("[DEBUG] text editor context menu open", { itemIds: specs.map((item) => item.id), hasSelection });
+          const items = specs.map((spec) => ({
+            id: spec.id,
+            label: spec.label,
+            icon: spec.icon,
+            shortcut: spec.shortcut,
+            disabled: spec.disabled,
+            separator: spec.separator,
+            destructive: spec.destructive,
+            onSelect: () => {
+              const action = spec.action;
+              if (!action) return;
+              if (localActions[action]) {
+                localActions[action]!();
+                return;
+              }
+              dispatch(action, spec.args as Record<string, unknown> | undefined);
+            },
+          }));
           setContextMenu({ position: { x: event.clientX, y: event.clientY }, items });
+          })();
         }}
       >
         {renameDraft ? (
@@ -19995,7 +19945,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
 //#endregion WasmEditorSurface
 
 //#region TextEditorHost
-export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
+export function TextEditorHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.textEditor;
   const isClient = useClient();
   const tokens = useMemo((): readonly GrammarToken[] => {
@@ -20023,7 +19973,7 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
   return (
     <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId}>
       {isClient ? (
-        <WasmEditorSurface scene={scene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} />
+        <WasmEditorSurface scene={scene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} requestContextMenu={requestContextMenu} />
       ) : (
         <div className="relative min-h-0 flex-1">
           <HighlightedBuffer buffer={scene.buffer} tokens={tokens} />
@@ -21293,60 +21243,6 @@ class MapRenderer {
 }
 //#endregion MapRenderer
 
-//#region ContextMenu
-function buildTiledMapContextMenuItems(scene: TiledMapScene, feature: MapHoveredFeature | null, dispatch: (action: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
-  const selection = parseFeatureSelection(scene.selectionJson);
-  if (feature) {
-    const selected = feature.kind === "position" ? selection.positions.includes(feature.id) : selection.routes.includes(feature.id);
-    const items: ContextMenuItem[] = [
-      {
-        id: "tiled-map.ctx.select",
-        label: hostLabel("ui.contextMenu.select"),
-        onSelect: () =>
-          dispatch("setFeatureSelection", {
-            positions: feature.kind === "position" ? [feature.id] : [],
-            routes: feature.kind === "route" ? [feature.id] : [],
-            mode: "default",
-          }),
-      },
-    ];
-    if (selected) {
-      items.push({
-        id: "tiled-map.ctx.deselect",
-        label: hostLabel("ui.contextMenu.deselect"),
-        onSelect: () => dispatch("deselect", { featureId: feature.id, featureKind: feature.kind }),
-      });
-    }
-    items.push({
-      id: "tiled-map.ctx.focus",
-      label: hostLabel("ui.contextMenu.focusZoom"),
-      onSelect: () => dispatch("focusFeature", { featureId: feature.id, featureKind: feature.kind }),
-    });
-    if (feature.kind === "position") {
-      const meta = parsePositionMeta(scene.mapFixtureJson).get(feature.id);
-      if (meta?.sourceUrl) {
-        items.push({
-          id: "tiled-map.ctx.source",
-          label: hostLabel("ui.contextMenu.openSource"),
-          onSelect: () => dispatch("openSource", { featureId: feature.id }),
-        });
-      }
-    }
-    return items;
-  }
-  return [
-    { id: "tiled-map.ctx.select-all", label: hostLabel("ui.contextMenu.selectAll"), onSelect: () => dispatch("selectAll") },
-    {
-      id: "tiled-map.ctx.clear",
-      label: hostLabel("ui.contextMenu.clearSelection"),
-      disabled: selection.positions.length + selection.routes.length === 0,
-      onSelect: () => dispatch("clearSelection"),
-    },
-    { id: "tiled-map.ctx.fit-world", label: hostLabel("ui.contextMenu.fitWorld"), onSelect: () => dispatch("fitWorld") },
-  ];
-}
-//#endregion ContextMenu
-
 //#region TiledMapHost
 export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.tiledMap;
@@ -21378,6 +21274,8 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
     },
     [node.controllerId, node.surfaceId, onAction],
   );
+
+  const mapTiledContextMenu = useMapContextMenuSpecs(dispatch);
 
   const dispatchCamera = useCallback(
     (camera: MapCamera) => {
@@ -21800,10 +21698,24 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
     const onContextMenu = (event: MouseEvent): void => {
       event.preventDefault();
       event.stopPropagation();
-      const point = clientToLocal(event.clientX, event.clientY);
-      const feature = queryHitFeature(point);
-      const items = buildTiledMapContextMenuItems(scene, feature, dispatch);
-      setContextMenu({ open: items.length > 0, position: { x: event.clientX, y: event.clientY }, items });
+      if (!requestContextMenu || !scene) return;
+      void (async () => {
+        const point = clientToLocal(event.clientX, event.clientY);
+        const feature = queryHitFeature(point);
+        const hits = feature ? [{ domain: feature.kind === "route" ? "route" : "position", id: feature.id }] : [];
+        const selection = parseFeatureSelection(scene.selectionJson);
+        const selectionGroups = [];
+        if (selection.positions.length > 0) selectionGroups.push({ domain: "position", ids: selection.positions });
+        if (selection.routes.length > 0) selectionGroups.push({ domain: "route", ids: selection.routes });
+        const specs = await requestContextMenu({
+          viewState: {},
+          menu: { id: "tiledMap" },
+          surface: { surfaceId: node.surfaceId, kind: "tiledMap", hits, selection: selectionGroups },
+          point: { x: event.clientX, y: event.clientY },
+        });
+        console.log("[DEBUG] tiled map context menu open", { feature, itemIds: specs.map((item) => item.id) });
+        setContextMenu({ open: specs.length > 0, position: { x: event.clientX, y: event.clientY }, specs });
+      })();
     };
     canvas.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
@@ -21826,7 +21738,7 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
       <canvas ref={canvasRef} className="absolute inset-0 block size-full touch-none outline-none focus:outline-none" />
       {marqueeOverlay?.shape === "rect" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} /> : null}
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
-      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
+      <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={mapTiledContextMenu(contextMenu.specs)} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {hoveredFeature?.kind === "position" ? (
         <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
           {(() => {
@@ -21854,7 +21766,6 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
 //#region Types
 type BoardCamera = { readonly x: number; readonly y: number; readonly zoom: number };
 type BoardEventRow = { readonly name: string; readonly payload?: unknown };
-type Puzzle2dSelectionMenuItem = ContextMenuItemSpec;
 type Puzzle2dFixtureDropPayload = {
   readonly kindId: string;
   readonly catalogSlice: string;
@@ -22018,56 +21929,6 @@ function puzzle2dEntityFlag(entity: Record<string, unknown> | undefined, key: "h
 }
 
 /** @emoji 🖱️ Right-click menu for the current selection: Hide/Show, Lock/Unlock, Duplicate, Select same kind, Zoom to selection, Delete — mirrors the premigration canvas context menu. */
-export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJson: string): readonly Puzzle2dSelectionMenuItem[] {
-  let fixture: { readonly nodes?: readonly Record<string, unknown>[]; readonly edges?: readonly Record<string, unknown>[] } = {};
-  try {
-    fixture = JSON.parse(fixtureJson) as typeof fixture;
-  } catch {
-    /* empty fixture */
-  }
-  const selected = parseSelectionIds(selectionJson);
-  if (selected.length === 0) {
-    return [{ id: "selectAll", label: hostLabel("ui.contextMenu.selectAll"), icon: "select-all", action: "selectAll" }];
-  }
-
-  const selectedSet = new Set(selected);
-  const nodes = fixture.nodes ?? [];
-  const edges = fixture.edges ?? [];
-  const selectedEntities: Record<string, unknown>[] = [];
-  let hasSelectedNode = false;
-  for (const node of nodes) {
-    const id = node.id;
-    if (typeof id === "string" && selectedSet.has(id)) {
-      selectedEntities.push(node);
-      hasSelectedNode = true;
-    }
-    const handles = node.handles;
-    if (Array.isArray(handles)) {
-      for (const handle of handles as Record<string, unknown>[]) {
-        const handleId = handle.id;
-        if (typeof handleId === "string" && selectedSet.has(handleId)) selectedEntities.push(handle);
-      }
-    }
-  }
-  for (const edge of edges) {
-    const id = edge.id;
-    if (typeof id === "string" && selectedSet.has(id)) selectedEntities.push(edge);
-  }
-
-  const anyVisible = selectedEntities.some((entity) => !puzzle2dEntityFlag(entity, "hidden"));
-  const anyUnlocked = selectedEntities.some((entity) => !puzzle2dEntityFlag(entity, "locked"));
-
-  return [
-    { id: "toggleHidden", label: anyVisible ? hostLabel("ui.contextMenu.hide") : hostLabel("ui.contextMenu.show"), icon: anyVisible ? "eye-off" : "eye", action: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
-    { id: "toggleLocked", label: anyUnlocked ? hostLabel("ui.contextMenu.lock") : hostLabel("ui.contextMenu.unlock"), icon: anyUnlocked ? "lock" : "lock-open", action: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
-    { id: "sep-selection", separator: true },
-    { id: "duplicate", label: hostLabel("ui.contextMenu.duplicate"), icon: "copy", action: "duplicateSelection", disabled: !hasSelectedNode },
-    { id: "selectSameKind", label: hostLabel("ui.contextMenu.selectSameKind"), icon: "layers", action: "selectSameKind" },
-    { id: "focusSelection", label: hostLabel("ui.contextMenu.zoomToSelection"), icon: "crosshair", action: "focusSelection" },
-    { id: "sep-delete", separator: true },
-    { id: "deleteSelection", label: hostLabel("ui.contextMenu.delete"), icon: "trash", action: "deleteSelection", destructive: true },
-  ];
-}
 //#endregion SelectionMenu
 
 //#region FixtureDrop
@@ -22223,7 +22084,7 @@ export function pushPuzzle2dFixtureDropPreview(controllerId: string, previewJson
 //#endregion PeerSync
 
 //#region Board2dHost
-export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
+export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSceneHostProps) {
   const scene = node.board2d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const sceneRef = useRef(scene);
@@ -22243,7 +22104,7 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
   const pendingSelectionJsonRef = useRef<string | null>(null);
   const onPeerGestureEndedRef = useRef<() => void>(() => {});
   const [sessionEpoch, setSessionEpoch] = useState(0);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly items: readonly Puzzle2dSelectionMenuItem[] } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly specs: readonly ContextMenuItemSpec[] } | null>(null);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -22747,22 +22608,6 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
         flushBoardEvents();
         return;
       }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a") {
-        event.preventDefault();
-        dispatch("selectAll");
-        return;
-      }
-      if (event.key === "Delete" || event.key === "Backspace") {
-        if (parseSelectionIds(scene.selectionJson).length === 0) return;
-        event.preventDefault();
-        session.deleteSelection?.();
-        try {
-          session.renderFrame();
-        } catch {
-          /* gpu not ready */
-        }
-        flushBoardEvents();
-      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -22772,36 +22617,50 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
   //#region ContextMenu
   const onContextMenu = useCallback(
     (event: MouseEvent<HTMLDivElement>): void => {
-      if (!scene?.interactive) return;
+      if (!scene?.interactive || !requestContextMenu) return;
       const session = sessionRef.current;
       if (!session?.pickTargetsAtScreenJson) return;
       event.preventDefault();
       event.stopPropagation();
-      const rect = event.currentTarget.getBoundingClientRect();
-      const sx = event.clientX - rect.left;
-      const sy = event.clientY - rect.top;
-      let targets: CanvasPickTarget[] = [];
-      try {
-        targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
-      } catch {
-        targets = [];
-      }
-      const best = pickMostSpecificCanvasTarget(targets);
-      let selectionIds = parseSelectionIds(scene.selectionJson);
-      if (best && !selectionIds.includes(best.id)) {
-        selectionIds = [best.id];
-        if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(JSON.stringify(selectionIds));
+      void (async () => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const sx = event.clientX - rect.left;
+        const sy = event.clientY - rect.top;
+        let targets: CanvasPickTarget[] = [];
         try {
-          session.renderFrame();
+          targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
         } catch {
-          /* gpu not ready */
+          targets = [];
         }
-        dispatch("setSelection", { ids: selectionIds });
-      }
-      const items = buildPuzzle2dSelectionMenuItems(scene.fixtureJson, JSON.stringify(selectionIds));
-      setContextMenu({ x: event.clientX, y: event.clientY, items });
+        const best = pickMostSpecificCanvasTarget(targets);
+        let selectionIds = parseSelectionIds(scene.selectionJson);
+        if (best && !selectionIds.includes(best.id)) {
+          selectionIds = [best.id];
+          if (session.setSelectionIdsJsonSilent) session.setSelectionIdsJsonSilent(JSON.stringify(selectionIds));
+          try {
+            session.renderFrame();
+          } catch {
+            /* gpu not ready */
+          }
+          dispatch("setSelection", { ids: selectionIds });
+        }
+        const hits = targets.map((target) => ({ domain: target.domain, id: target.id, label: target.label }));
+        const specs = await requestContextMenu({
+          viewState: {},
+          menu: { id: "board2d" },
+          surface: {
+            surfaceId: node.surfaceId,
+            kind: "board2d",
+            hits,
+            selection: selectionIds.length > 0 ? [{ domain: "node", ids: selectionIds }] : [],
+          },
+          point: { x: event.clientX, y: event.clientY },
+        });
+        console.log("[DEBUG] board2d context menu open", { itemIds: specs.map((item) => item.id), selectionIds });
+        setContextMenu({ x: event.clientX, y: event.clientY, specs });
+      })();
     },
-    [dispatch, scene?.fixtureJson, scene?.interactive, scene?.selectionJson],
+    [dispatch, node.surfaceId, requestContextMenu, scene?.interactive, scene?.selectionJson],
   );
   //#endregion ContextMenu
 
@@ -22879,7 +22738,7 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenu(contextMenu?.items ?? [])}
+        items={mapContextMenu(contextMenu?.specs ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}

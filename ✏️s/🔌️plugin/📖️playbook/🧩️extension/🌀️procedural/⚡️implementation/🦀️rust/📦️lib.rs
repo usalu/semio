@@ -1,7 +1,7 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
 use flow_core::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
-use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry_json};
+use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry};
 use playbook::{visible_blocks, PlaybookBlock};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
@@ -311,8 +311,7 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
         };
         let mesh_id = format!("eval-{id}");
         if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            let tessellation = tessellate_geometry_json(&handle, 0.05);
-            if let Some(data) = mesh_from_tessellation_json(&tessellation) {
+            if let Ok(data) = tessellate_geometry(&handle, 0.05) {
                 meshes.push(json!({ "id": mesh_id, "data": data }));
             }
         }

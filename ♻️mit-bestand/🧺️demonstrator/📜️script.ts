@@ -18,8 +18,8 @@ const demonstratorRoot = import.meta.dir;
 const distDir = join(demonstratorRoot, "dist");
 const stagingRoot = join(demonstratorRoot, "dist-staging");
 
-const APP_SLUGS = ["generator", "koordinator", "aggregator"] as const;
-const PLAYGROUND_VARIANTS = ["generator", "koordinator", "aggregator"] as const;
+const APP_SLUGS = ["generator", "koordinator", "aggregator", "aussuchen", "bearbeiten", "verfolgen"] as const;
+const PLAYGROUND_VARIANTS = ["generator", "koordinator", "aggregator", "aussuchen", "bearbeiten", "verfolgen"] as const;
 
 //#region 📦️AssembleDist
 function copyTreeMerge(src: string, dest: string): void {

@@ -5388,11 +5388,6 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         check_json_payload(&format!("{scene_label} nodeGraph.edges"), &graph.edges_json, limits)?;
         check_json_payload(&format!("{scene_label} nodeGraph.viewport"), &graph.viewport_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.operators"), &graph.operators_json, limits)?;
-        check_optional_json_payload(
-            &format!("{scene_label} nodeGraph.contextMenu"),
-            &graph.context_menu_json,
-            limits,
-        )?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.findItems"), &graph.find_items_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.selection"), &graph.selection_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} nodeGraph.hover"), &graph.hover_json, limits)?;
@@ -5501,11 +5496,6 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         )?;
         check_json_payload(&format!("{scene_label} gisMap.selection"), &map.selection_json, limits)?;
         check_json_payload(&format!("{scene_label} gisMap.hover"), &map.hover_json, limits)?;
-        check_optional_json_payload(
-            &format!("{scene_label} gisMap.contextMenu"),
-            &map.context_menu_json,
-            limits,
-        )?;
     }
     if let Some(board) = &scene.board2d {
         check_json_payload(&format!("{scene_label} board2d.fixture"), &board.fixture_json, limits)?;
@@ -6946,7 +6936,6 @@ mod render_plan_validator_tests {
                 engagement_preview_json: None,
                 lod_json: None,
                 chunking_json: None,
-                context_menu_json: None,
                 environment_json: None,
                 frame_json: None,
                 fit_json: None,
@@ -8365,7 +8354,7 @@ pub mod scenes {
 
 use crate::engine_canvas;
 use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
-use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem, ShellState};
+use crate::shell::{push_find_item, ContextMenuItem, ShellFindItem, ShellState};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
 use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence, UiSelectItem, UiSelectNode, UiTextNode};
@@ -13998,7 +13987,7 @@ struct GraphContextMenuItem {
     args: Option<Value>,
     #[serde(default)]
     children: Vec<GraphContextMenuItem>,
-}
+ }
 
 fn map_graph_context_menu_item(scene: &UiComponentSceneNode, item: GraphContextMenuItem) -> Option<ContextMenuItem> {
     if item.separator {
@@ -14026,20 +14015,10 @@ fn map_graph_context_menu_item(scene: &UiComponentSceneNode, item: GraphContextM
         children,
         disabled: item.disabled,
         ..Default::default()
-    })
+     })
 }
 
-fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &ui_wgpu::NodeGraphScene) {
-    let Some(raw) = graph.context_menu_json.as_deref() else {
-        return;
-    };
-    let items: Vec<GraphContextMenuItem> = serde_json::from_str(raw).unwrap_or_default();
-    for item in items {
-        if let Some(shell_item) = map_graph_context_menu_item(scene, item) {
-            push_context_menu_item(shell_item);
-        }
-    }
-}
+
 
 /** @emoji 🕸️ Applies node-hit context to a scene context-menu action. */
 pub fn resolve_graph_context_action(
@@ -14177,7 +14156,6 @@ fn render_node_graph(
         return render_placeholder("node-graph", bounds, ctx);
     };
     let nodes = parse_graph_nodes(&graph.nodes_json);
-    push_graph_context_menu(scene, graph);
     for node in &nodes {
         register_graph_node(&node.id, node.instance_id.as_deref());
         let label = node
@@ -14286,145 +14264,7 @@ fn paint_tiled_map_marquee(
 }
 
 /** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
-pub fn push_tiled_map_context_menu(
-    surface_id: &str,
-    controller_id: &str,
-    inner: Rect,
-    x: f32,
-    y: f32,
-) {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
-    let Some(hit_json) = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)) else {
-        return;
-    };
-    let hit: Value = serde_json::from_str(&hit_json).unwrap_or(Value::Null);
-    let (kind, id) = (
-        hit.get("kind").and_then(|value| value.as_str()),
-        hit.get("id").and_then(|value| value.as_str()),
-    );
-    if let (Some(kind), Some(id)) = (kind, id) {
-        let selected = engine_canvas::with_map_host(surface_id, |host| {
-            if kind == "position" {
-                host.selected_positions_json().iter().any(|row| row == id)
-            } else {
-                host.selected_routes_json().iter().any(|row| row == id)
-            }
-        })
-        .unwrap_or(false);
-        push_context_menu_item(ContextMenuItem {
-            id: format!("{surface_id}.context.select"),
-            label: "Select".into(),
-            icon: None,
-            destructive: false,
-            action: Some(engine_canvas::map_action(
-                controller_id,
-                ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
-                json!({
-                    "surfaceId": surface_id,
-                    "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
-                    "routes": if kind == "route" { vec![id] } else { Vec::<&str>::new() },
-                    "mode": "default",
-                }),
-            )),
-            ..Default::default()
-        });
-        if selected {
-            push_context_menu_item(ContextMenuItem {
-                id: format!("{surface_id}.context.deselect"),
-                label: "Deselect".into(),
-                icon: None,
-                destructive: false,
-                action: Some(engine_canvas::map_action(
-                    controller_id,
-                    ui_wgpu::tiled_map_actions::DESELECT,
-                    json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
-                )),
-                ..Default::default()
-            });
-        }
-        push_context_menu_item(ContextMenuItem {
-            id: format!("{surface_id}.context.focus"),
-            label: "Focus / zoom to".into(),
-            icon: None,
-            destructive: false,
-            action: Some(engine_canvas::map_action(
-                controller_id,
-                ui_wgpu::tiled_map_actions::FOCUS_FEATURE,
-                json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
-            )),
-            ..Default::default()
-        });
-        if kind == "position" {
-            let has_source = engine_canvas::with_map_host(surface_id, |host| {
-                host.positions
-                    .get(id)
-                    .and_then(|row| row.source_url.as_deref())
-                    .filter(|url| !url.is_empty())
-                    .is_some()
-            })
-            .unwrap_or(false);
-            if has_source {
-                push_context_menu_item(ContextMenuItem {
-                    id: format!("{surface_id}.context.source"),
-                    label: "Open source".into(),
-                    icon: None,
-                    destructive: false,
-                    action: Some(engine_canvas::map_action(
-                        controller_id,
-                        ui_wgpu::tiled_map_actions::OPEN_SOURCE,
-                        json!({ "surfaceId": surface_id, "featureId": id }),
-                    )),
-                    ..Default::default()
-                });
-            }
-        }
-        return;
-    }
-    push_context_menu_item(ContextMenuItem {
-        id: format!("{surface_id}.context.select-all"),
-        label: "Select all".into(),
-        icon: None,
-        destructive: false,
-        action: Some(engine_canvas::map_action(
-            controller_id,
-            ui_wgpu::tiled_map_actions::SELECT_ALL,
-            json!({ "surfaceId": surface_id }),
-        )),
-        ..Default::default()
-    });
-    let has_selection = engine_canvas::with_map_host(surface_id, |host| {
-        !host.selected_positions_json().is_empty() || !host.selected_routes_json().is_empty()
-    })
-    .unwrap_or(false);
-    push_context_menu_item(ContextMenuItem {
-        id: format!("{surface_id}.context.clear"),
-        label: "Clear selection".into(),
-        icon: None,
-        destructive: false,
-        action: if has_selection {
-            Some(engine_canvas::map_action(
-                controller_id,
-                ui_wgpu::tiled_map_actions::CLEAR_SELECTION,
-                json!({ "surfaceId": surface_id }),
-            ))
-        } else {
-            None
-        },
-        ..Default::default()
-    });
-    push_context_menu_item(ContextMenuItem {
-        id: format!("{surface_id}.context.fit-world"),
-        label: "Fit world".into(),
-        icon: None,
-        destructive: false,
-        action: Some(engine_canvas::map_action(
-            controller_id,
-            ui_wgpu::tiled_map_actions::FIT_WORLD,
-            json!({ "surfaceId": surface_id }),
-        )),
-        ..Default::default()
-    });
-}
+
 
 pub fn tiled_map_pointer_down(
     surface_id: &str,
@@ -15110,31 +14950,7 @@ pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[
 //#endregion Puzzle2dSelectionMenu
 
 /// @emoji 🧩️ Pushes board-2d context-menu items for a screen-space hit, eagerly selecting the clicked target if it isn't already selected (mirrors the React host's `onContextMenu`).
-pub async fn open_board2d_context_menu(shell: &mut ShellState, surface_id: &str, controller_id: &str, fixture_json: &str, inner: Rect, x: f32, y: f32) {
-    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
-    let best = engine_canvas::board_pick_best_target_id(surface_id, sx, sy);
-    let current: Vec<String> = engine_canvas::with_board_host(surface_id, |host| host.selection.iter().cloned().collect()).unwrap_or_default();
-    let mut effective = current.clone();
-    if let Some(id) = &best {
-        if !effective.contains(id) {
-            effective = vec![id.clone()];
-            engine_canvas::with_board_host_mut(surface_id, |host| host.set_selection_ids_silent(std::slice::from_ref(id)));
-            let _ = shell
-                .dispatch_action(engine_canvas::board_action(controller_id, "setSelection", json!({ "ids": effective })))
-                .await;
-        }
-    }
-    for item in build_puzzle2d_selection_menu_items(fixture_json, &effective) {
-        push_context_menu_item(ContextMenuItem {
-            id: format!("{surface_id}.context.{}", item.id),
-            label: item.label,
-            icon: Some(item.icon),
-            destructive: item.destructive,
-            action: if item.disabled { None } else { Some(engine_canvas::board_action(controller_id, &item.action, item.args.unwrap_or(Value::Null))) },
-            ..Default::default()
-        });
-    }
-}
+
 //#endregion Board2d
 
 //#region VirtualFileSystem
@@ -16654,7 +16470,7 @@ use crate::dock::{
 use crate::engine_canvas::theme_is_dark;
 use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
 use crate::scenes::{
-    clear_graph_node_context, open_board2d_context_menu, push_tiled_map_context_menu, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, TiledMapSurface, NodeGraphSurface,
+    clear_graph_node_context, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, TiledMapSurface, NodeGraphSurface,
     Board2dSurface,
 };
 use infinite_world::{
@@ -16758,7 +16574,6 @@ pub struct ShellFindItem {
 
 thread_local! {
     static FIND_ITEM_SINK: std::cell::RefCell<Vec<ShellFindItem>> = std::cell::RefCell::new(Vec::new());
-    static CONTEXT_MENU_SINK: std::cell::RefCell<Vec<ContextMenuItem>> = std::cell::RefCell::new(Vec::new());
 }
 
 pub fn push_find_item(item: ShellFindItem) {
@@ -16769,13 +16584,46 @@ pub fn take_find_items() -> Vec<ShellFindItem> {
     FIND_ITEM_SINK.with(|cell| std::mem::take(&mut *cell.borrow_mut()))
 }
 
-pub fn push_context_menu_item(item: ContextMenuItem) {
-    CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().push(item));
+
+
+/// 🖱️ Maps an on-demand plugin context-menu spec into the wgpu shell menu row.
+fn shell_context_menu_item_from_spec(spec: ui_wgpu::ContextMenuItemSpec, controller_id: &str) -> ContextMenuItem {
+    let ui_wgpu::ContextMenuItemSpec {
+        id,
+        label,
+        icon,
+        shortcut,
+        disabled,
+        separator,
+        checked,
+        destructive,
+        action,
+        args,
+        children,
+        ..
+    } = spec;
+    ContextMenuItem {
+        id,
+        label: label.unwrap_or_default(),
+        icon,
+        shortcut,
+        destructive: destructive.unwrap_or(false),
+        action: action.map(|action| ActionDescriptor {
+            controller_id: controller_id.into(),
+            action,
+            args,
+        }),
+        children: children
+            .unwrap_or_default()
+            .into_iter()
+            .map(|child| shell_context_menu_item_from_spec(child, controller_id))
+            .collect(),
+        disabled: disabled.unwrap_or(false),
+        separator: separator.unwrap_or(false),
+        checked: checked.unwrap_or(false),
+    }
 }
 
-pub fn take_context_menu_items() -> Vec<ContextMenuItem> {
-    CONTEXT_MENU_SINK.with(|cell| std::mem::take(&mut *cell.borrow_mut()))
-}
 
 //#region ShellTypes
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -16815,12 +16663,15 @@ pub struct ContextMenuItem {
     pub id: String,
     pub label: String,
     pub icon: Option<String>,
+    pub shortcut: Option<String>,
     pub destructive: bool,
     pub action: Option<ActionDescriptor>,
     pub children: Vec<ContextMenuItem>,
     pub disabled: bool,
     pub separator: bool,
+    pub checked: bool,
 }
+
 
 #[derive(Clone, Debug, Default)]
 pub struct ContextMenuState {
@@ -19484,28 +19335,8 @@ impl ShellState {
             return Ok(());
         }
         if button == 2 {
-            for (surface_id, surface) in &self.tiled_map_states {
-                if surface.bounds.contains(x, y) {
-                    push_tiled_map_context_menu(
-                        surface_id,
-                        &surface.controller_id,
-                        surface.bounds,
-                        x,
-                        y,
-                    );
-                    break;
-                }
-            }
-            let puzzle_board_hit = self
-                .board2d_states
-                .iter()
-                .find(|(_, surface)| surface.bounds.contains(x, y))
-                .map(|(surface_id, surface)| (surface_id.clone(), surface.controller_id.clone(), surface.fixture_json.clone(), surface.bounds));
-            if let Some((surface_id, controller_id, fixture_json, bounds)) = puzzle_board_hit {
-                open_board2d_context_menu(self, &surface_id, &controller_id, &fixture_json, bounds, x, y).await;
-            }
             let hit = input.hit_at(x, y).cloned();
-            self.open_context_menu(x, y, hit);
+            self.open_context_menu(x, y, hit).await;
             self.right_click = RightClickState { pending: true, x, y };
             return Ok(());
         }
@@ -20708,21 +20539,69 @@ impl ShellState {
         false
     }
 
-    fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
+    async fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
         let node_id = hit.as_ref().and_then(|hit| {
             hit.control_id.as_deref().and_then(|id| {
                 id.rsplit_once(".node.").map(|(_, node_id)| node_id.to_string())
             })
         });
-        let mut items = take_context_menu_items()
-            .into_iter()
-            .map(|mut item| {
-                if let Some(action) = item.action.take() {
-                    item.action = Some(resolve_graph_context_action(&action, node_id.as_deref()));
-                }
-                item
+        let edge_id = hit.as_ref().and_then(|hit| {
+            hit.control_id.as_deref().and_then(|id| {
+                id.rsplit_once(".edge.").map(|(_, edge_id)| edge_id.to_string())
             })
-            .collect::<Vec<_>>();
+        });
+        let (surface_id, kind, hits) = self.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref());
+        let mut items = Vec::new();
+        if let Some(session) = self.session.clone() {
+            let shortcut_by_action: std::collections::HashMap<String, String> = session
+                .app
+                .keybindings
+                .iter()
+                .map(|binding| (binding.action.action.clone(), binding.keys.clone()))
+                .collect();
+            let hits_len = hits.len();
+            let request = serde_json::json!({
+                "viewState": session.view_state,
+                "menu": { "id": kind.clone() },
+                "surface": {
+                    "surfaceId": surface_id,
+                    "kind": kind.clone(),
+                    "hits": hits,
+                },
+                "point": { "x": x as f64, "y": y as f64 },
+            });
+            if let Some(program) = self.plugins.iter().find(|plugin| plugin.plugin_id == session.plugin_id) {
+                match program.context_menu(session.instance_id, request).await {
+                    Ok(specs) => {
+                        eprintln!(
+                            "[DEBUG] wgpu context menu open kind={} hits={} item_ids={:?}",
+                            kind,
+                            hits_len,
+                            specs.iter().map(|spec| spec.id.as_str()).collect::<Vec<_>>()
+                        );
+                        items = specs
+                            .into_iter()
+                            .map(|spec| {
+                                let mut item = shell_context_menu_item_from_spec(spec, &session.app.controller_id);
+                                if item.shortcut.is_none() {
+                                    if let Some(action) = item.action.as_ref() {
+                                        item.shortcut = shortcut_by_action.get(&action.action).cloned();
+                                    }
+                                }
+                                if let Some(action) = item.action.take() {
+                                    item.action = Some(resolve_graph_context_action(&action, node_id.as_deref()));
+                                }
+                                item
+                            })
+                            .collect();
+                    }
+                    Err(error) => {
+                        eprintln!("[DEBUG] wgpu context menu failed: {error}");
+                        self.error = Some(error);
+                    }
+                }
+            }
+        }
         if items.is_empty() {
             if let (Some(node_id), Some(session)) = (node_id.as_deref(), &self.session) {
                 items.push(ContextMenuItem {
@@ -20738,26 +20617,6 @@ impl ShellState {
                     ..Default::default()
                 });
             }
-        }
-        if items.is_empty() {
-            items = vec![
-                ContextMenuItem {
-                    id: "shell.context.copy".into(),
-                    label: "Copy".into(),
-                    icon: None,
-                    destructive: false,
-                    action: None,
-                    ..Default::default()
-                },
-                ContextMenuItem {
-                    id: "shell.context.paste".into(),
-                    label: "Paste".into(),
-                    icon: None,
-                    destructive: false,
-                    action: None,
-                    ..Default::default()
-                },
-            ];
         }
         if let Some(controller_id) = self.host_controller_id() {
             items.push(ContextMenuItem {
@@ -20782,6 +20641,52 @@ impl ShellState {
         });
         self.overlay_state = OverlayState::None;
     }
+
+    fn resolve_context_menu_surface(
+        &self,
+        x: f32,
+        y: f32,
+        node_id: Option<&str>,
+        edge_id: Option<&str>,
+    ) -> (String, String, Vec<ui_wgpu::ContextMenuHit>) {
+        let mut hits = Vec::new();
+        if let Some(node_id) = node_id {
+            hits.push(ui_wgpu::ContextMenuHit {
+                domain: "node".into(),
+                id: node_id.into(),
+                label: None,
+            });
+        }
+        if let Some(edge_id) = edge_id {
+            hits.push(ui_wgpu::ContextMenuHit {
+                domain: "edge".into(),
+                id: edge_id.into(),
+                label: None,
+            });
+        }
+        for (surface_id, surface) in &self.node_graph_states {
+            if surface.bounds.contains(x, y) {
+                return (surface_id.clone(), "nodeGraph".into(), hits);
+            }
+        }
+        for (surface_id, surface) in &self.tiled_map_states {
+            if surface.bounds.contains(x, y) {
+                return (surface_id.clone(), "tiledMap".into(), hits);
+            }
+        }
+        for (surface_id, surface) in &self.board2d_states {
+            if surface.bounds.contains(x, y) {
+                return (surface_id.clone(), "board2d".into(), hits);
+            }
+        }
+        for (surface_id, surface) in &self.world3d_states {
+            if surface.bounds.contains(x, y) {
+                return (surface_id.clone(), "world3d".into(), hits);
+            }
+        }
+        ("shell".into(), "window".into(), hits)
+    }
+
 
     fn sync_context_menu_hover(&mut self, input: &InputState<ActionDescriptor>) {
         let Some(menu) = self.context_menu.as_mut() else {
@@ -23701,7 +23606,7 @@ mod command_registry_tests {
 // 🍿️ w3-overlays-chrome-polish (WP15+WP16): tooltips, a generic modal dialog, and the app introduction
 // tour — layered on the existing immediate-mode chrome without new `ShellState` fields or `OverlayState`
 // variants (both live in the off-limits `ShellTypes` region this wave, see region-claims.json). State
-// lives in thread-locals, mirroring this file's own `CONTEXT_MENU_SINK`/`FIND_ITEM_SINK` idiom just above.
+// lives in thread-locals, mirroring this file's own `FIND_ITEM_SINK` idiom just above.
 // Placement math reuses `ui_wgpu`'s w1d-events-overlay manager types (`OverlayKind`, `OverlayPlacement`,
 // `resolve_overlay_placement`) even though the manager's own `EventRouter`/`open_overlay` stay
 // `pub(crate)` to `ui_wgpu` (an `engine::Ui`/retained-`UiTree` implementation detail) and out of reach
@@ -25346,7 +25251,6 @@ impl ShellState {
         draw.push_solid([0.0, 0.0, w, h], theme.background);
         let body = self.body_rect(theme);
         FIND_ITEM_SINK.with(|cell| cell.borrow_mut().clear());
-        CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().clear());
         chrome_tooltip_titles_clear();
         chrome_element_rects_clear();
         chrome_compute_click_edge(input.pointer_down);
@@ -28948,9 +28852,13 @@ impl ShellState {
         origin_y: f32,
     ) {
         let row_h = theme.control_height;
-        let w = 180.0;
-        let row_count = items.iter().filter(|item| !item.separator).count();
-        let h = row_count as f32 * row_h + 8.0;
+        let mut w = 180.0;
+        for item in items.iter().filter(|item| !item.separator) {
+            let label_w = item.label.chars().count() as f32 * theme.font_size_body * 0.55;
+            let shortcut_w = item.shortcut.as_ref().map(|s| s.chars().count() as f32 * theme.font_size_small * 0.55 + 16.0).unwrap_or(0.0);
+            w = f32::max(w, 56.0_f32 + label_w + shortcut_w);
+        }
+        let h = items.len() as f32 * row_h + 8.0;
         let rect = Rect::new(origin_x, origin_y, w, h);
         overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
         let icon_size = theme.font_size_body;
@@ -28959,6 +28867,9 @@ impl ShellState {
         let mut ordinal = 0usize;
         for (index, item) in items.iter().enumerate() {
             if item.separator {
+                let rule_y = rect.y + 4.0 + visual_row as f32 * row_h + row_h * 0.5;
+                overlay.push_solid([rect.x + 8.0, rule_y, w - 16.0, 1.0], theme.text_muted);
+                visual_row += 1;
                 continue;
             }
             ordinal += 1;
@@ -29018,6 +28929,20 @@ impl ShellState {
                 theme.font_size_small,
                 if item.disabled { theme.text_muted } else { fg },
             );
+            if let Some(shortcut) = item.shortcut.as_deref() {
+                let shortcut_w = shortcut.chars().count() as f32 * theme.font_size_small * 0.55;
+                chrome_text(
+                    overlay,
+                    atlas,
+                    input,
+                    theme,
+                    shortcut,
+                    row.x + row.w - 8.0 - shortcut_w,
+                    row.y + (row.h + theme.font_size_small) * 0.5 - 1.0,
+                    theme.font_size_small,
+                    theme.text_muted,
+                );
+            }
             if !item.disabled {
                 input.register_hit(HitTarget {
                     rect: row,
@@ -30912,12 +30837,12 @@ mod context_menu_keyboard_tests {
                 id: "a".into(),
                 label: "A".into(),
                 ..Default::default()
-            },
+             },
             ContextMenuItem {
                 id: "b".into(),
                 label: "B".into(),
                 ..Default::default()
-            },
+             },
         ];
         assert_eq!(context_menu_path_for_ordinal(&items, &[], 2), Some(vec![1]));
     }

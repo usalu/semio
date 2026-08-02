@@ -465,6 +465,47 @@ impl Default for WriterPlayApp {
     }
 }
 
+
+/// 🖱️ On-demand writer text-editor context menu from caret/selection/completions context.
+fn writer_context_menu_items(
+    text: Option<&semio_framework_plugin::ContextMenuTextContext>,
+    is_de: bool,
+) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::ContextMenuItemSpec;
+    let text = text;
+    let can_suggest = text.map(|t| t.has_completions).unwrap_or(false);
+    let has_selection = text.map(|t| t.has_selection).unwrap_or(false);
+    let can_rename = text.map(|t| t.can_rename).unwrap_or(false);
+    let item = |id: &str, label: &str, icon: &str, action: &str, disabled: bool| ContextMenuItemSpec {
+        id: id.into(),
+        label: Some(label.into()),
+        icon: Some(icon.into()),
+        action: Some(action.into()),
+        disabled: disabled.then_some(true),
+        ..Default::default()
+    };
+    let sep = |id: &str| ContextMenuItemSpec { id: id.into(), separator: Some(true), ..Default::default() };
+    let mut items = Vec::new();
+    if can_suggest {
+        items.push(item("writer-suggest", if is_de { "Vervollständigungen vorschlagen" } else { "Suggest completions" }, "sparkles", "requestCompletions", false));
+        items.push(sep("writer-suggest-sep"));
+    }
+    items.push(item("writer-select-token", if is_de { "Token auswählen" } else { "Select token" }, "text-cursor", "selectToken", false));
+    items.push(item("writer-select-line", if is_de { "Zeile auswählen" } else { "Select line" }, "list-ordered", "selectLine", false));
+    items.push(item("writer-select-all", if is_de { "Alles auswählen" } else { "Select All" }, "select-all", "selectAll", false));
+    if can_rename {
+        items.push(item("writer-rename", if is_de { "Umbenennen" } else { "Rename" }, "edit-3", "commitRename", false));
+    }
+    items.push(sep("writer-clip-sep"));
+    items.push(item("writer-cut", if is_de { "Ausschneiden" } else { "Cut" }, "scissors", "cut", !has_selection));
+    items.push(item("writer-copy", if is_de { "Kopieren" } else { "Copy" }, "copy", "copy", !has_selection));
+    items.push(item("writer-paste", if is_de { "Einfügen" } else { "Paste" }, "clipboard", "paste", false));
+    items.push(sep("writer-format-sep"));
+    items.push(item("writer-format", if is_de { "Dokument formatieren" } else { "Format document" }, "align-left", "formatDocument", false));
+    items.push(item("writer-lint", if is_de { "Dokument prüfen" } else { "Lint document" }, "alert-circle", "lintDocument", false));
+    items
+}
+
 impl DocumentApp for WriterPlayApp {
     type Projection = WriterProjection;
     type Operation = WriterOperation;
@@ -820,6 +861,19 @@ impl DocumentApp for WriterPlayApp {
             .mode_label("edit", labels.mode_edit)
             .action_labels(writer_action_labels(is_de))
             .utility_labels(writer_utility_labels(is_de))
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &DocumentView<'_, WriterProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        _registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let is_de = is_de_locale(view_state);
+        let text = request.surface.as_ref().and_then(|surface| surface.text.as_ref());
+        writer_context_menu_items(text, is_de)
     }
 }
 //#endregion 🔖️WriterPlayApp

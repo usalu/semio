@@ -8,11 +8,13 @@ use playbook::{
 };
 use procedural_3d::{widget_id, Procedural3dDocument, PROCEDURAL_3D_SCHEMA};
 use procedural_3d_engine::{
-    ensure_gumball_node, fixture_to_workflow, generation_fixture_for, generation_preview_signature, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json,
-    gumball_widget_number_param, gumball_widget_offset, host_from_fixture, host_from_fixture_with_driver, preview_camera_json, preview_payload_cached, preview_selection_json, refresh_all_caches,
-    refresh_generation_preview, Procedural3dRuntime, PROCEDURAL_EXAMPLE_HEX_COLUMN, PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_TORUS,
+    ensure_gumball_node, fixture_to_workflow, generation_preview_payload_cached, gumball_rotate_params_json, gumball_scale_params_json, gumball_translate_params_json,
+    gumball_widget_number_param, gumball_widget_offset, host_from_fixture, host_from_fixture_with_driver,     preview_camera_json, preview_payload_cached, preview_scene_status_json, preview_selection_json,
+    preview_status_cached, refresh_all_caches, refresh_generation_preview, refresh_preview_cache, widget_id_from_instance_id, Procedural3dRuntime, PROCEDURAL_EXAMPLE_HEX_COLUMN,
+    PROCEDURAL_EXAMPLE_RECT_EXTRUDE, PROCEDURAL_EXAMPLE_SPHERE_TORUS, PROCEDURAL_EXAMPLE_BOX_FILLET, PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE,
+    PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, PROCEDURAL_EXAMPLE_BOX_SHELL,
 };
-use procedural_3d_engine::{default_projection, example_projection, evaluated_preview_payload};
+use procedural_3d_engine::{default_projection, example_projection};
 use procedural_3d_op::{procedural3d_fixture_operations, Procedural3dOperation};
 use semio_framework_plugin::{
     apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout, merge_world_selection_ids, tree_item_with_action, ui_inspector_groups_to_tree,
@@ -94,29 +96,39 @@ fn mesh_selection_ids(args: Option<&Value>, fallback: &SelectionSet) -> Vec<Stri
 }
 
 fn generation_preview_payload(view: &Procedural3dPlayView) -> (String, String) {
-    let fixture = generation_fixture_for(&view.fixture, &view.generation);
-    let signature = generation_preview_signature(&fixture, &view.generation);
-    if let Some(cache) = &view.runtime.generation_preview_cache {
-        if cache.signature == signature {
-            return (cache.meshes_json.clone(), cache.instances_json.clone());
-        }
-    }
-    evaluated_preview_payload(&fixture, &view.runtime)
+    generation_preview_payload_cached(&view.runtime)
 }
 
-/// 🎚️ Level-of-detail display measure for the flow window — the migrated home of the old LOD
-/// utility bar toggles (a display option, never an interactive utility). Dispatches `setLodMode` (a View action).
+/// 🎚️ Level-of-detail tessellation deflection for the flow window.
 fn procedural3d_lod_measure(lod_mode: &str) -> WindowMeasure {
-    let current = if lod_mode.is_empty() { "solid" } else { lod_mode };
+    let current = if lod_mode.is_empty() { "medium" } else { lod_mode };
     WindowMeasure::Select {
         id: "procedural3d-measure-lod".into(),
         label: Some("LOD".into()),
         value: current.into(),
         items: vec![
-            MeasureSelectItem { id: "procedural3d-measure-lod-solid".into(), value: "solid".into(), label: "Solid".into() },
-            MeasureSelectItem { id: "procedural3d-measure-lod-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
+            MeasureSelectItem { id: "procedural3d-measure-lod-coarse".into(), value: "coarse".into(), label: "Coarse".into() },
+            MeasureSelectItem { id: "procedural3d-measure-lod-medium".into(), value: "medium".into(), label: "Medium".into() },
+            MeasureSelectItem { id: "procedural3d-measure-lod-fine".into(), value: "fine".into(), label: "Fine".into() },
         ],
         on_change: procedural_action("setLodMode", None),
+    }
+}
+
+/// 👁️ Preview shading mode for the world-3d window.
+fn procedural3d_show_mode_measure(show_mode: &str) -> WindowMeasure {
+    let current = if show_mode.is_empty() { "shaded" } else { show_mode };
+    WindowMeasure::Select {
+        id: "procedural3d-measure-show".into(),
+        label: Some("Show".into()),
+        value: current.into(),
+        items: vec![
+            MeasureSelectItem { id: "procedural3d-measure-show-shaded".into(), value: "shaded".into(), label: "Shaded".into() },
+            MeasureSelectItem { id: "procedural3d-measure-show-edges".into(), value: "shaded+edges".into(), label: "Shaded + edges".into() },
+            MeasureSelectItem { id: "procedural3d-measure-show-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
+            MeasureSelectItem { id: "procedural3d-measure-show-points".into(), value: "points".into(), label: "Points".into() },
+        ],
+        on_change: procedural_action("setShowMode", None),
     }
 }
 //#endregion 🔖️DocumentHelpers
@@ -535,8 +547,11 @@ impl DocumentApp for Procedural3dPlayApp {
                 let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                 let ids: Vec<String> = args
                     .and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_default();
+                    .and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok())
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|id| widget_id_from_instance_id(id.as_str()).to_string())
+                    .collect();
                 {
                     let mut runtime = self.runtime.borrow_mut();
                     runtime.selected_node_ids = merge_world_selection_ids(&runtime.selected_node_ids, &ids, merge);
@@ -544,7 +559,8 @@ impl DocumentApp for Procedural3dPlayApp {
                 ActionEmit::default()
             }
             "worldHover" => {
-                self.runtime.borrow_mut().hovered_node_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(|id| widget_id_from_instance_id(id).to_string());
+                self.runtime.borrow_mut().hovered_node_id = id;
                 ActionEmit::default()
             }
             "setSelectionMethod" => {
@@ -553,13 +569,17 @@ impl DocumentApp for Procedural3dPlayApp {
             }
             "setLodMode" => {
                 if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                    self.runtime.borrow_mut().lod_mode = mode.into();
+                    let mut runtime = self.runtime.borrow_mut();
+                    runtime.lod_mode = mode.into();
+                    refresh_preview_cache(&mut runtime, fixture);
                 }
                 ActionEmit::default()
             }
             "setShowMode" => {
                 if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                    self.runtime.borrow_mut().show_mode = mode.into();
+                    let mut runtime = self.runtime.borrow_mut();
+                    runtime.show_mode = mode.into();
+                    refresh_preview_cache(&mut runtime, fixture);
                 }
                 ActionEmit::default()
             }
@@ -815,15 +835,6 @@ impl DocumentApp for Procedural3dPlayApp {
                     serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
                 };
                 let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(&envelope.runtime.eval_driver));
-                let context_menu_json = serde_json::to_string(&json!([{
-                    "id": "delete-selection",
-                    "label": labels.delete_selection,
-                    "icon": "trash",
-                    "action": "nodeGraphEdit",
-                    "args": { "operations": [{ "operation": "deleteSelection" }] },
-                    "destructive": true,
-                }]))
-                .ok();
                 build_node_graph_scene(
                     PROCEDURAL_3D_PLAY_SURFACE_MAIN,
                     PROCEDURAL_3D_PLAY_APP_ID,
@@ -837,7 +848,6 @@ impl DocumentApp for Procedural3dPlayApp {
                         computing_json: flow_extras.computing_json,
                         selection_json,
                         hover_json: node_graph_hover_json(&envelope.runtime),
-                        context_menu_json,
                         ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
                     },
                 )
@@ -848,7 +858,7 @@ impl DocumentApp for Procedural3dPlayApp {
                     PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
                     PROCEDURAL_3D_PLAY_APP_ID,
                     ui_wgpu::World3dScene {
-                        status_json: envelope.runtime.eval_driver.pending().then(|| r#"{"computing":true}"#.to_string()),
+                        status_json: preview_scene_status_json(&envelope.runtime),
                         ..world3d_scene(
                             preview_camera_json(&envelope.runtime),
                             meshes_json,
@@ -880,7 +890,8 @@ impl DocumentApp for Procedural3dPlayApp {
         _view_state: &ViewState,
     ) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
         let runtime = self.runtime.borrow();
-        let measures = vec![world3d_sun_measures("procedural3d", &runtime.sun, procedural_action)];
+        let mut measures = vec![procedural3d_show_mode_measure(&runtime.show_mode)];
+        measures.push(world3d_sun_measures("procedural3d", &runtime.sun, procedural_action));
         std::collections::HashMap::from([
             (PROCEDURAL_3D_PLAY_WINDOW_MAIN.to_string(), vec![procedural3d_lod_measure(&runtime.lod_mode)]),
             (PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), measures.clone()),
@@ -905,9 +916,35 @@ impl DocumentApp for Procedural3dPlayApp {
                 (PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", "Sechseckige Pilzsäule"),
                 (PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen"),
                 (PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", "Kugel mit Torus geschnitten"),
+                (PROCEDURAL_EXAMPLE_BOX_FILLET, "Box Fillet Preview", "Kantenrundung Vorschau"),
+                (PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse", "Kugel und Quader vereinen"),
+                (PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, "Face Sweep Extrude", "Fläche extrudieren"),
+                (PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, "Rectangle Wire Preview", "Rechteck-Draht Vorschau"),
+                (PROCEDURAL_EXAMPLE_BOX_SHELL, "Box Shell Preview", "Hohlkörper Vorschau"),
             ]))
     }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &DocumentView<'_, Procedural3dDocument>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+        let labels = procedural3d_labels(view_state);
+        let is_de = semio_framework_plugin::is_de_locale(view_state);
+        let selected = self.runtime.borrow().selected_node_ids.as_slice().to_vec();
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        let mut menu = Menu::of(registry);
+        if let Some(spec) = node_graph_delete_selection_spec(labels.delete_selection, is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+            menu = menu.item(spec);
+        }
+        menu.build()
+    }
 }
+
 
 /// 🎯️ Parses `nodeGraphHover` args into the hovered widget id — accepts `null`, `{ nodeId }`, or a
 /// `DagChannelRef` `{ widgetId, port, direction }` payload from the flow graph session.
@@ -1105,6 +1142,11 @@ pub fn create_procedural3d_app() -> App {
                     ActionArgOption::new(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column"),
                     ActionArgOption::new(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume"),
                     ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus"),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_BOX_FILLET, "Box Fillet Preview"),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse"),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, "Face Sweep Extrude"),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, "Rectangle Wire Preview"),
+                    ActionArgOption::new(PROCEDURAL_EXAMPLE_BOX_SHELL, "Box Shell Preview"),
                 ]).required(),
             ])
             // 🧰️ Transform gumball — an exclusive utility group scoped to the 3D preview window (active utility is host-owned).
@@ -1118,6 +1160,11 @@ pub fn create_procedural3d_app() -> App {
     .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_HEX_COLUMN), "hexagon")
     .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECT_EXTRUDE), "box")
     .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_TORUS), "circle")
+    .example(PROCEDURAL_EXAMPLE_BOX_FILLET, "Box Fillet Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_FILLET), "box")
+    .example(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, "Sphere Box Fuse", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE), "blend")
+    .example(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, "Face Sweep Extrude", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE), "layers")
+    .example(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, "Rectangle Wire Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_RECTANGLE_WIRE), "square")
+    .example(PROCEDURAL_EXAMPLE_BOX_SHELL, "Box Shell Preview", procedural_3d_engine::example_document_json(PROCEDURAL_EXAMPLE_BOX_SHELL), "box")
     .workflow("procedural3d", "Procedural 3D", "brep")
 }
 //#endregion 🔖️Manifest

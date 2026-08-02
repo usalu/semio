@@ -23,8 +23,11 @@ import {
 import {
   ENTWERFEN_MIT_BESTAND_BRAND,
   ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
+  ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
   ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
   ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
 } from "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🏷️brand/📦️index.ts";
 import {
   ENTWERFEN_MIT_BESTAND_BRAND_IDS,
@@ -46,7 +49,6 @@ import {
   readCanvas2dSurfaceColors,
   Board2dHost,
   board2dCameraActionArgs,
-  buildPuzzle2dSelectionMenuItems,
   beginPuzzle2dPeerGesture,
   collectPuzzle2dLiveMirrorOperations,
   coalesceBoard2dEvents,
@@ -55,7 +57,6 @@ import {
   formatKeybindingShortcut,
   buildKeysByActionId,
   suggestionMenuItems,
-  enrichNodeGraphContextMenuItems,
   notifyPuzzle2dPeersGestureEnded,
   parsePuzzle2dCatalogueDragPayload,
   board2dPeers,
@@ -81,7 +82,6 @@ import {
   TableHost,
   GraphTimelineHost,
   TextEditorHost,
-  buildTextEditorContextMenuItems,
   lineRangeAt,
   multiSpanReplace,
   World3dHost,
@@ -1888,10 +1888,6 @@ describe("framework renderer hosts", () => {
     unregisterBoard2dPeer("notify-test", "pane.sibling");
   });
 
-  it("builds a select-all menu when nothing is selected", () => {
-    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify({ nodes: [], edges: [] }), "[]");
-    expect(items).toEqual([{ id: "selectAll", label: "Select all", icon: "maximize-2", action: "selectAll" }]);
-  });
 
   it("maps context menu specs onto UI items with icons, colors, hover, and select handlers", () => {
     const dispatch = vi.fn();
@@ -1979,56 +1975,19 @@ describe("framework renderer hosts", () => {
     expect(items[0]?.shortcut).toBeUndefined();
   });
 
-  it("enriches node-graph context menu rows for the effective right-click selection", () => {
-    const base = [
-      { id: "add-node", label: "Add node…", icon: "plus", action: "openSpotlight" },
-      { id: "toggle-preview", label: "Hide preview", icon: "eye-off", disabled: true, action: "setPreviewOff", args: { ids: [], value: true } },
-      { id: "zoom-to-selection", label: "Zoom to Selection", icon: "crosshair", disabled: true, action: "focusSelection" },
-      { id: "clear-selection", label: "Clear Selection", icon: "square-dashed", disabled: true, action: "clearSelection" },
-      { id: "delete-selection", label: "Delete selection", icon: "trash", disabled: true, destructive: true, action: "nodeGraphEdit" },
-    ];
-    const enabled = enrichNodeGraphContextMenuItems(base, { selectedIds: ["slider"], previewOffIds: [] });
-    expect(enabled.find((item) => item.id === "toggle-preview")).toMatchObject({
-      disabled: false,
-      checked: true,
-      icon: "eye-off",
-      label: "Hide preview",
-      args: { ids: ["slider"], value: true },
-    });
-    expect(enabled.find((item) => item.id === "zoom-to-selection")).toMatchObject({ disabled: false });
-    expect(enabled.find((item) => item.id === "delete-selection")).toMatchObject({ disabled: false });
-    const show = enrichNodeGraphContextMenuItems(base, { selectedIds: ["slider"], previewOffIds: ["slider"] });
-    expect(show.find((item) => item.id === "toggle-preview")).toMatchObject({
-      disabled: false,
-      checked: false,
-      icon: "eye",
-      label: "Show preview",
-      args: { ids: ["slider"], value: false },
-    });
+  it("enriches context menu shortcuts from app keybindings via mapContextMenuSpecs", () => {
+    const keys = new Map([["deleteSelection", "delete,backspace"]]);
+    const items = mapContextMenuSpecs(
+      [{ id: "delete-selection", label: "Delete Selection (8 nodes and 13 edges)", action: "deleteSelection", destructive: true }],
+      () => {},
+      keys,
+    );
+    expect(items[0]?.shortcut).toBeTruthy();
+    expect(items[0]?.label).toContain("8 nodes and 13 edges");
   });
 
-  it("builds the full selection menu with Hide/Lock/Duplicate/SelectSameKind/ZoomToSelection/Delete for a visible unlocked node", () => {
-    const fixture = { nodes: [{ id: "alpha", nodeKind: "seed" }], edges: [] };
-    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify(fixture), JSON.stringify(["alpha"]));
-    expect(items.map((item) => item.id)).toEqual(["toggleHidden", "toggleLocked", "sep-selection", "duplicate", "selectSameKind", "focusSelection", "sep-delete", "deleteSelection"]);
-    expect(items.find((item) => item.id === "toggleHidden")).toMatchObject({ label: "Hide", icon: "eye-off", args: { flag: "hidden", value: true } });
-    expect(items.find((item) => item.id === "toggleLocked")).toMatchObject({ label: "Lock", icon: "lock", args: { flag: "locked", value: true } });
-    expect(items.find((item) => item.id === "duplicate")).toMatchObject({ disabled: false, icon: "copy" });
-    expect(items.find((item) => item.id === "deleteSelection")).toMatchObject({ destructive: true, icon: "trash" });
-  });
 
-  it("flips the selection menu labels to Show/Unlock for an already hidden and locked node", () => {
-    const fixture = { nodes: [{ id: "alpha", nodeKind: "seed", hidden: true, locked: true }], edges: [] };
-    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify(fixture), JSON.stringify(["alpha"]));
-    expect(items.find((item) => item.id === "toggleHidden")).toMatchObject({ label: "Show", args: { flag: "hidden", value: false } });
-    expect(items.find((item) => item.id === "toggleLocked")).toMatchObject({ label: "Unlock", args: { flag: "locked", value: false } });
-  });
 
-  it("disables Duplicate when the selection is only a handle, not a node", () => {
-    const fixture = { nodes: [{ id: "alpha", nodeKind: "seed", handles: [{ id: "alpha:v0", handleKind: "port" }] }], edges: [] };
-    const items = buildPuzzle2dSelectionMenuItems(JSON.stringify(fixture), JSON.stringify(["alpha:v0"]));
-    expect(items.find((item) => item.id === "duplicate")).toMatchObject({ disabled: true });
-  });
 
   it("parses a catalogue drag payload and builds a drop-preview JSON", () => {
     const encoded = JSON.stringify({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 });
@@ -2584,54 +2543,7 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("semio-text-editor-host");
   });
 
-  it("buildTextEditorContextMenuItems prepends suggest when completions are available", () => {
-    const items = buildTextEditorContextMenuItems(
-      { canSuggest: true, hasSelection: false, canRename: false, pickTargets: [] },
-      {
-        suggest: () => {},
-        selectToken: () => {},
-        selectLine: () => {},
-        selectAll: () => {},
-        rename: () => {},
-        cut: () => {},
-        copy: () => {},
-        paste: () => {},
-        format: () => {},
-        lint: () => {},
-        pickTarget: () => {},
-      },
-    );
-    expect(items[0]?.id).toBe("writer-suggest");
-    expect(items[0]?.label).toBe("Suggest completions");
-  });
 
-  it("buildTextEditorContextMenuItems includes pick rows when multiple targets overlap", () => {
-    const items = buildTextEditorContextMenuItems(
-      {
-        canSuggest: false,
-        hasSelection: false,
-        canRename: false,
-        pickTargets: [
-          { domain: "line", id: "0", label: "Line 1" },
-          { domain: "token", id: "0:5", label: "MATCH" },
-        ],
-      },
-      {
-        suggest: () => {},
-        selectToken: () => {},
-        selectLine: () => {},
-        selectAll: () => {},
-        rename: () => {},
-        cut: () => {},
-        copy: () => {},
-        paste: () => {},
-        format: () => {},
-        lint: () => {},
-        pickTarget: () => {},
-      },
-    );
-    expect(items.some((item) => item.id === "writer-pick-token-0:5")).toBe(true);
-  });
 
   it("multiSpanReplace renames every occurrence and remaps spans", () => {
     const result = multiSpanReplace(
@@ -4430,15 +4342,21 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(localStorage.getItem("ui.introduction.seen.entwerfen-mit-bestand-aggregator:puzzle3d-play")).toBeNull();
   });
 
-  it("registers all three Entwerfen mit Bestand demonstrator shell brands", () => {
+  it("registers all six Entwerfen mit Bestand demonstrator shell brands", () => {
     expect(ENTWERFEN_MIT_BESTAND_BRAND_IDS).toEqual([
       "entwerfen-mit-bestand-aggregator",
+      "entwerfen-mit-bestand-aussuchen",
+      "entwerfen-mit-bestand-bearbeiten",
       "entwerfen-mit-bestand-generator",
       "entwerfen-mit-bestand-koordinator",
+      "entwerfen-mit-bestand-verfolgen",
     ]);
     expect(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.id).toBe("entwerfen-mit-bestand-aggregator");
+    expect(ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND.id).toBe("entwerfen-mit-bestand-aussuchen");
+    expect(ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND.id).toBe("entwerfen-mit-bestand-bearbeiten");
     expect(ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND.id).toBe("entwerfen-mit-bestand-generator");
     expect(ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND.id).toBe("entwerfen-mit-bestand-koordinator");
+    expect(ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND.id).toBe("entwerfen-mit-bestand-verfolgen");
     expect(ENTWERFEN_MIT_BESTAND_BRAND).toBe(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND);
     expect(ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
   });

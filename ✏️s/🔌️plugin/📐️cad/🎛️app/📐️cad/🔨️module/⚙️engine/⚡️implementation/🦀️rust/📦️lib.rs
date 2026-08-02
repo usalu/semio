@@ -2383,7 +2383,7 @@ pub const CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX: f64 = 692.0;
 
 const CAD_FOREST_REFERENCE_BASE_ORIGIN_XY: [f64; 2] = [-24.0, -18.0];
 
-pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.3;
+pub const CAD_FOREST_REFERENCE_Y_OFFSET_RATIO: f64 = 0.2;
 
 static CAD_BREP_KERNEL: OnceLock<Mutex<Box<dyn BrepKernel + Send + Sync>>> = OnceLock::new();
 

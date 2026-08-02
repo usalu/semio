@@ -1343,6 +1343,66 @@
         "uriFormat": "%s"
       }
     },
+    {
+      "name": "🛠️dev🏚️mitbestand🪵️aussuchen⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:aussuchen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6030",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 216
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6030)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏚️mitbestand🏭️bearbeiten⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:bearbeiten",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6031",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 217
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6031)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏚️mitbestand🌍️verfolgen⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:verfolgen",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6032",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 218
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6032)",
+        "uriFormat": "%s"
+      }
+    },
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",

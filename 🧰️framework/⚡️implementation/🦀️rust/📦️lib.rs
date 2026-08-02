@@ -5878,6 +5878,9 @@ pub fn effective_action_args(
     defs: &[ActionArgDef],
     staged: &DslValue,
 ) -> DslValue {
+    if defs.is_empty() {
+        return staged.clone();
+    }
     let mut effective = Vec::new();
     for def in defs {
         if let Some(value) = staged.get(&def.id) {

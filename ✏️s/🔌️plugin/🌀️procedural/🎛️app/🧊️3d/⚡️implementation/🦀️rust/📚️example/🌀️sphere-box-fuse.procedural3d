@@ -1,0 +1,26 @@
+schema="flow.fixture"
+camera {
+  x=140 y=-70 zoom=2
+}
+layout={
+  box=x=80 y=-80 fuse=x=280 y=-80 preview=x=400 y=-80 radius=x=40 y=-120 size=x=40 y=-160
+}
+synapses [id:TEXT wire:WIRE] {
+  e1 radius@number->sphere@radius
+  e2 size@number->box@width
+  e3 size@number->box@depth
+  e4 size@number->box@height
+  e5 sphere@solid->fuse@a
+  e6 box@solid->fuse@b
+  e7 fuse@solid->preview
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
+widgets {
+  input-slider id="radius" value=1.2 min=0.2 max=3 step=0.1
+  input-slider id="size" value=1.5 min=0.5 max=4 step=0.1
+  neuron id="sphere" neuron-kind=brep.prim3d.sphere preview=false input-ports=[ "radius" ] output-ports=[ ] params=[ ]
+  neuron id="box" neuron-kind=brep.prim3d.box preview=false input-ports=[ "width" "depth" "height" ] output-ports=[ ] params=[ ]
+  neuron id="fuse" neuron-kind=brep.bool.fuse preview=true input-ports=[ "a" "b" ] output-ports=[ ] params=[ ]
+  output-preview id="preview" preview=[ ] expanded=[ ]
+}

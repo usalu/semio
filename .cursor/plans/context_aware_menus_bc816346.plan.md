@@ -13,22 +13,22 @@ todos:
     status: completed
   - id: app-menus
     content: Implement DocumentApp::context_menu for flow, space, puzzle 3d/5d, dag, sequence, jack, rewrite, procedural 2d/3d and delete every context_menu_json builder and scene field
-    status: in_progress
+    status: completed
   - id: move-host-menus
     content: Move the puzzle 2d, tiled map, and text editor menu builders out of the React renderer into their respective apps
-    status: pending
+    status: completed
   - id: keybindings
     content: Declare delete/backspace and other menu-row keybindings per app and remove the hardcoded canvas key handlers so the shell dispatcher is the only path
-    status: in_progress
+    status: completed
   - id: react-wiring
     content: Rewire all React onContextMenu handlers to the on-demand request, delete enrichNodeGraphContextMenuItems, and mount shell/window/panel/tree menus
-    status: in_progress
+    status: completed
   - id: wgpu-parity
     content: Add shortcut/separator/disabled support to the wgpu shell menu, request menus through the bridge, and delete the render-time item sink
-    status: pending
+    status: completed
   - id: validate
     content: Extend existing test regions, run cargo and vitest suites, and confirm runtime behaviour with [DEBUG] logs for empty canvas, mixed selection counts, and edge deletion
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     app_labels, build_node_graph_scene, build_table_scene, build_text_editor_scene,
     is_de_locale, localized_label_map, resolve_labels, text_identifier_occurrences_json, tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
-    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
+    ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppActionRegistry, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, ContextMenuItemSpec, ContextMenuRequest, DocumentApp,
     DocumentView, MeasureSelectItem, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ArtifactKindSpec,
     TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
@@ -680,9 +680,6 @@ fn render_graph(fixture: &GraphFixture, runtime: &TrinityJackRuntime) -> UiNode 
         TRINITY_JACK_PLAY_CONTROLLER_ID,
         NodeGraphScene {
             selection_json,
-            context_menu_json: Some(
-                r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"operations":[{"operation":"deleteSelection"}]},"destructive":true}]"#.into(),
-            ),
             lod_json: trinity_lod_json_for_window(runtime, TRINITY_JACK_PLAY_WINDOW_GRAPH),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
@@ -977,6 +974,26 @@ impl DocumentApp for TrinityJackPlayApp {
             .window_kind_label(TRINITY_JACK_PLAY_WINDOW_EDITOR, labels.window_editor)
             .window_kind_label(TRINITY_JACK_PLAY_WINDOW_RESULTS, labels.window_results)
             .action_labels(trinity_jack_action_labels(is_de_locale(view_state)))
+    }
+
+    fn context_menu(
+        &self,
+        request: &ContextMenuRequest,
+        _doc: &DocumentView<'_, GraphFixture>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &AppActionRegistry,
+    ) -> Vec<ContextMenuItemSpec> {
+        use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
+
+        let is_de = is_de_locale(view_state);
+        let selected = self.runtime.borrow().selected_node_ids.clone();
+        let (nodes, edges) = selection_domains_from_surface(request.surface.as_ref(), &selected, &[]);
+        let mut menu = Menu::of(registry);
+        if let Some(spec) = node_graph_delete_selection_spec("Delete selection", is_de, nodes.len(), edges.len(), NodeGraphDeleteDispatch::ViaNodeGraphEdit) {
+            menu = menu.item(spec);
+        }
+        menu.build()
     }
 }
 //#endregion 🔖️TrinityJackPlayApp

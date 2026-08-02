@@ -63,21 +63,104 @@ fn s_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn workflow_context_menu_json(labels: &SStudioLabels) -> String {
-    json!([
-        { "id": "open-instance", "label": labels.context_open_instance, "icon": "external-link", "action": "openInstance" },
-        { "id": "duplicate-instance", "label": labels.context_duplicate, "icon": "copy", "action": "duplicateAppInstance" },
-        { "id": "copy-instance", "label": labels.context_copy, "icon": "clipboard-copy", "action": "copyAppInstance" },
-        { "id": "paste-instance", "label": labels.context_paste, "icon": "clipboard", "action": "pasteAppInstance" },
-        { "id": "rename-instance", "label": labels.context_rename_label, "icon": "edit-3", "action": "renameAppInstance" },
-        { "id": "sep-remove", "separator": true },
-        { "id": "remove-instance", "label": labels.context_remove, "icon": "trash", "action": "removeAppInstance", "destructive": true },
-        { "id": "sep-selection", "separator": true },
-        { "id": "select-all", "label": labels.context_select_all, "icon": "maximize-2", "action": "setMediaNodeSelection", "args": { "selectAll": true } },
-        { "id": "clear-selection", "label": labels.context_clear_selection, "icon": "square-dashed", "action": "setMediaNodeSelection", "args": { "nodeIds": [] } },
-        { "id": "reorganize", "label": labels.context_reorganize, "icon": "layout-grid", "action": "reorganizeWorkflow" }
-    ])
-    .to_string()
+/// 🖱️ On-demand space workflow context menu from hit-test and selection snapshot.
+fn space_workflow_context_menu_items(
+    registry: &semio_framework_plugin::AppActionRegistry,
+    labels: &SStudioLabels,
+    is_de: bool,
+    surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>,
+    selected_node_ids: &[String],
+) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, selection_domains_from_surface, ContextMenuItemSpec, Menu};
+
+    let hits = surface.map(|target| target.hits.as_slice()).unwrap_or(&[]);
+    let (nodes, _) = selection_domains_from_surface(surface, selected_node_ids, &[]);
+    let hit_node = hits.iter().find(|hit| hit.domain == "node").map(|hit| hit.id.as_str());
+    let mut menu = Menu::of(registry);
+    if hits.is_empty() {
+        menu = menu
+            .item(ContextMenuItemSpec {
+                id: "paste-instance".into(),
+                label: Some(labels.context_paste.into()),
+                icon: Some("clipboard".into()),
+                action: Some("pasteAppInstance".into()),
+                ..Default::default()
+            })
+            .item(ContextMenuItemSpec {
+                id: "select-all".into(),
+                label: Some(labels.context_select_all.into()),
+                icon: Some("maximize-2".into()),
+                action: Some("setMediaNodeSelection".into()),
+                args: optional_json_to_dsl(Some(json!({ "selectAll": true }))),
+                ..Default::default()
+            })
+            .item(ContextMenuItemSpec {
+                id: "reorganize".into(),
+                label: Some(labels.context_reorganize.into()),
+                icon: Some("layout-grid".into()),
+                action: Some("reorganizeWorkflow".into()),
+                ..Default::default()
+            });
+    }
+    if hit_node.is_some() || !nodes.is_empty() {
+        menu = menu
+            .item(ContextMenuItemSpec {
+                id: "open-instance".into(),
+                label: Some(labels.context_open_instance.into()),
+                icon: Some("external-link".into()),
+                action: Some("openInstance".into()),
+                ..Default::default()
+            })
+            .item(ContextMenuItemSpec {
+                id: "duplicate-instance".into(),
+                label: Some(labels.context_duplicate.into()),
+                icon: Some("copy".into()),
+                action: Some("duplicateAppInstance".into()),
+                ..Default::default()
+            })
+            .item(ContextMenuItemSpec {
+                id: "copy-instance".into(),
+                label: Some(labels.context_copy.into()),
+                icon: Some("clipboard-copy".into()),
+                action: Some("copyAppInstance".into()),
+                ..Default::default()
+            })
+            .item(ContextMenuItemSpec {
+                id: "rename-instance".into(),
+                label: Some(labels.context_rename_label.into()),
+                icon: Some("edit-3".into()),
+                action: Some("renameAppInstance".into()),
+                ..Default::default()
+            });
+        let phrase = selection_count_phrase(
+            is_de,
+            &[(nodes.len().max(if hit_node.is_some() && nodes.is_empty() { 1 } else { 0 }), if is_de { "Knoten" } else { "node" }, if is_de { "Knoten" } else { "nodes" })],
+        );
+        let remove_label = if phrase.is_empty() {
+            labels.context_remove.to_string()
+        } else {
+            format!("{} ({phrase})", labels.context_remove)
+        };
+        menu = menu.separator().item(ContextMenuItemSpec {
+            id: "remove-instance".into(),
+            label: Some(remove_label),
+            icon: Some("trash".into()),
+            action: Some("removeAppInstance".into()),
+            destructive: Some(true),
+            ..Default::default()
+        });
+        if !nodes.is_empty() {
+            menu = menu.separator().item(ContextMenuItemSpec {
+                id: "clear-selection".into(),
+                label: Some(labels.context_clear_selection.into()),
+                icon: Some("square-dashed".into()),
+                action: Some("setMediaNodeSelection".into()),
+                args: optional_json_to_dsl(Some(json!({ "nodeIds": [] }))),
+                ..Default::default()
+            });
+        }
+    }
+    menu.build()
 }
 
 // 🫀️ The shared `presence:` backbone-URI hack (`read_os_presence_peers`/`write_os_presence`/
@@ -935,7 +1018,6 @@ fn render_workflow(projection: &OsProjection, runtime: &StudioRuntimeState, labe
         NodeGraphScene {
             editable: Some(true),
             operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
-            context_menu_json: Some(workflow_context_menu_json(labels)),
             find_items_json: Some(graph_payload.find_items_json),
             selection_json,
             hover_json,
@@ -1955,6 +2037,20 @@ impl DocumentApp for SpaceApp {
             .window_kind_label(S_PLAY_WINDOW_MEDIA_VFS, labels.window_media_vfs)
             .window_kind_label(S_PLAY_WINDOW_COMPILED_DAG, labels.window_compiled_dag)
             .action_labels(s_studio_action_labels(is_de))
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        _doc: &DocumentView<'_, OsProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let labels = resolve_labels::<SStudioLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        let selected = self.runtime.borrow().selected_media_node_ids.clone();
+        space_workflow_context_menu_items(registry, labels, is_de, request.surface.as_ref(), &selected)
     }
 }
 //#endregion 🔖️SpaceApp

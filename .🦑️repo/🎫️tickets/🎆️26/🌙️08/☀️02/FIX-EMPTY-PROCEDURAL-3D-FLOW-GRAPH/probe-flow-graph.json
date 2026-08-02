@@ -1,0 +1,66 @@
+{
+  "hexagonal": {
+    "title": "semio · procedural · 3d",
+    "canvasCount": 3,
+    "canvases": [
+      {
+        "w": 966,
+        "h": 807,
+        "cw": 966,
+        "ch": 807
+      },
+      {
+        "w": 966,
+        "h": 807,
+        "cw": 966,
+        "ch": 807
+      },
+      {
+        "w": 451,
+        "h": 807,
+        "cw": 451,
+        "ch": 807
+      }
+    ],
+    "flowCanvasSized": true,
+    "bodyHasFlow": true
+  },
+  "rectangle": {
+    "title": "semio · procedural · 3d",
+    "canvasCount": 3,
+    "canvases": [
+      {
+        "w": 966,
+        "h": 807,
+        "cw": 966,
+        "ch": 807
+      },
+      {
+        "w": 966,
+        "h": 807,
+        "cw": 966,
+        "ch": 807
+      },
+      {
+        "w": 451,
+        "h": 807,
+        "cw": 451,
+        "ch": 807
+      }
+    ],
+    "flowCanvasSized": true,
+    "bodyHasFlow": true
+  },
+  "moduleUrls": [
+    "200 http://127.0.0.1:6018/@fs/Users/ueli/Documents/semio/node_modules/@semio-tech/flow-core/flow_core.js",
+    "200 1:6018/@fs/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/pkg/flow_core_bg.wasm",
+    "200 http://127.0.0.1:6018/@fs/Users/ueli/Documents/semio/node_modules/@semio-tech/flow-core/flow_core.js",
+    "200 1:6018/@fs/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🌊️flow/🫀️core/⚡️implementation/🦀️rust/pkg/flow_core_bg.wasm"
+  ],
+  "usesFlowStub": false,
+  "usesFlowCore": true,
+  "errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "ok": true
+}

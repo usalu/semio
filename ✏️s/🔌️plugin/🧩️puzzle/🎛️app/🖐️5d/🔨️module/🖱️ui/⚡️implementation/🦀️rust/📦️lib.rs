@@ -1441,38 +1441,38 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime, active_utility: &str) -> St
     .to_string()
 }
 
-fn puzzle5d_context_menu_json(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Option<String> {
+fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels, is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec};
     if envelope.runtime.selection.part_ids.is_empty() {
-        return None;
+        return Vec::new();
     }
     let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| envelope.runtime.selection.part_ids.contains(&part.id)).collect();
     let all_hidden = !selected.is_empty() && selected.iter().all(|part| part.part_2d.hidden.unwrap_or(false));
     let all_locked = !selected.is_empty() && selected.iter().all(|part| part.part_2d.locked.unwrap_or(false));
-    let items = vec![
-        json!({ "id": "duplicate", "label": labels.duplicate, "icon": "copy", "action": "duplicateSelection" }),
-        json!({ "id": "select-same-kind", "label": labels.select_same_kind, "icon": "layers", "action": "selectSameKindSelection" }),
-        json!({ "id": "sep-flags", "separator": true }),
-        json!({
-            "id": "hide-show",
-            "label": if all_hidden { labels.show } else { labels.hide },
-            "icon": if all_hidden { "eye" } else { "eye-off" },
-            "action": "setSelectionFlag",
-            "args": { "flag": "hidden", "value": !all_hidden },
-        }),
-        json!({
-            "id": "lock-unlock",
-            "label": if all_locked { labels.unlock } else { labels.lock },
-            "icon": if all_locked { "lock-open" } else { "lock" },
-            "action": "setSelectionFlag",
-            "args": { "flag": "locked", "value": !all_locked },
-        }),
-        json!({ "id": "sep-zoom", "separator": true }),
-        json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }),
-        json!({ "id": "sep-delete", "separator": true }),
-        json!({ "id": "delete", "label": labels.delete, "icon": "trash", "action": "deleteSelection", "destructive": true }),
-    ];
-    serde_json::to_string(&items).ok()
+    let phrase = selection_count_phrase(is_de, &[(envelope.runtime.selection.part_ids.len(), if is_de { "Teil" } else { "part" }, if is_de { "Teile" } else { "parts" })]);
+    let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<serde_json::Value>, destructive: bool, separator: bool| ContextMenuItemSpec {
+        id: id.into(),
+        label: if separator { None } else { Some(label.into()) },
+        icon: if separator { None } else { Some(icon.into()) },
+        action: if separator { None } else { Some(action.into()) },
+        args: semio_framework_plugin::optional_json_to_dsl(args),
+        destructive: destructive.then_some(true),
+        separator: separator.then_some(true),
+        ..Default::default()
+    };
+    vec![
+        item("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false, false),
+        item("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false, false),
+        item("sep-flags", "", "", "", None, false, true),
+        item("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false, false),
+        item("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false, false),
+        item("sep-zoom", "", "", "", None, false, true),
+        item("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false, false),
+        item("sep-delete", "", "", "", None, false, true),
+        item("delete", &format!("{} ({phrase})", labels.delete), "trash", "deleteSelection", None, true, false),
+    ]
 }
+
 
 fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
     json!({ "position": camera.position, "target": camera.target, "zoom": camera.zoom, "fov": 45.0 }).to_string()
@@ -3017,8 +3017,12 @@ impl DocumentApp for Puzzle5dPlayApp {
                         None,
                         None,
                         Some(world3d_chunking_json(256.0, 8000.0)),
-                        puzzle5d_context_menu_json(&envelope, labels),
                         Some(world3d_environment_json(&envelope.runtime.sun)),
+                        None,
+                        None,
+                        None,
+                        None,
+                        None,
                     ),
                 )
             }
@@ -3078,6 +3082,27 @@ impl DocumentApp for Puzzle5dPlayApp {
             tutorial_labels: HashMap::new(),
             group_labels: HashMap::new(),
         }
+    }
+
+    fn context_menu(
+        &self,
+        request: &semio_framework_plugin::ContextMenuRequest,
+        doc: &DocumentView<'_, Puzzle5dPlayProjection>,
+        _cfg: &semio_framework_plugin::ConfigView<'_, semio_framework_plugin::NoConfig>,
+        view_state: &ViewState,
+        _registry: &semio_framework_plugin::AppActionRegistry,
+    ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+        let labels = puzzle5d_labels(view_state);
+        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        let active_utility = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
+        let mut envelope = scene_from_projection(&doc.projection.0, self.runtime.borrow_mut().clone(), &active_utility);
+        if let Some(surface) = request.surface.as_ref() {
+            let part_ids: Vec<String> = surface.selection.iter().filter(|g| g.domain == "object" || g.domain == "node" || g.domain == "part").flat_map(|g| g.ids.iter().cloned()).collect();
+            if !part_ids.is_empty() {
+                envelope.runtime.selection.part_ids = part_ids.into();
+            }
+        }
+        puzzle5d_context_menu_items(&envelope, labels, is_de)
     }
 }
 //#endregion 🔖️Puzzle5dPlayApp

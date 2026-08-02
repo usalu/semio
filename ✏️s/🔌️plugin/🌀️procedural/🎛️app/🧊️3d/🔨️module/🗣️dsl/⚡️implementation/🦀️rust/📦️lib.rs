@@ -10,6 +10,16 @@ pub const PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../..
 pub const PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🌀️rectangle-extrude-volume.procedural3d");
 /// 📦️ The `procedural3d-play` "sphere cut with torus" example.
 pub const PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🌀️sphere-cut-with-torus.procedural3d");
+/// 📦️ Box with filleted edges.
+pub const PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🌀️box-fillet-preview.procedural3d");
+/// 📦️ Sphere fused with a box.
+pub const PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🌀️sphere-box-fuse.procedural3d");
+/// 📦️ Planar face swept along a vector.
+pub const PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🌀️face-sweep-extrude.procedural3d");
+/// 📦️ Rectangle wire curve preview.
+pub const PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🌀️rectangle-wire-preview.procedural3d");
+/// 📦️ Hollow shell from a box solid.
+pub const PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌️plugin/🌀️procedural/🎛️app/🧊️3d/⚡️implementation/🦀️rust/📚️example/🌀️box-shell-preview.procedural3d");
 
 /// 📖️ Parses `.procedural3d` DSL text into a `Procedural3dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Procedural3dDocument, store::TextError> {
@@ -51,6 +61,41 @@ mod tests {
     #[test]
     fn dsl_round_trip_sphere_cut_with_torus_fixture() {
         let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT).expect("parse 🌀️sphere-cut-with-torus.procedural3d fixture");
+        test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
+    }
+
+    #[test]
+    fn dsl_round_trip_box_fillet_preview_fixture() {
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_BOX_FILLET_TEXT).expect("parse box fillet fixture");
+        test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
+    }
+
+    #[test]
+    fn dsl_round_trip_sphere_box_fuse_fixture() {
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_SPHERE_BOX_FUSE_TEXT).expect("parse sphere box fuse fixture");
+        test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
+    }
+
+    #[test]
+    fn dsl_round_trip_face_sweep_extrude_fixture() {
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_FACE_SWEEP_EXTRUDE_TEXT).expect("parse face sweep extrude fixture");
+        test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
+    }
+
+    #[test]
+    fn dsl_round_trip_rectangle_wire_preview_fixture() {
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("parse rectangle wire fixture");
+        test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
+    }
+
+    #[test]
+    fn dsl_round_trip_box_shell_preview_fixture() {
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_BOX_SHELL_TEXT).expect("parse box shell fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }

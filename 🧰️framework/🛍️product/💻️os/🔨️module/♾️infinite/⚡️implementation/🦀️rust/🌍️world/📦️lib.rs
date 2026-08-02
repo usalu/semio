@@ -3511,7 +3511,6 @@ mod tests {
                 engagement_preview_json: None,
                 lod_json: None,
                 chunking_json: None,
-                context_menu_json: None,
                 environment_json: None,
                 frame_json: None,
                 fit_json: None,

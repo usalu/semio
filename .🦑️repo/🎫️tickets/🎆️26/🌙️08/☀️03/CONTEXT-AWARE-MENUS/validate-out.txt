@@ -1,0 +1,28 @@
+Context-aware menus — end-to-end validation
+
+wgpu-parity:
+- cargo check -p semio-framework-os-renderer-wgpu — OK
+- Right-click requests ProgramBridge::context_menu with typed surface/hits
+- Render-time CONTEXT_MENU_SINK / push_*_context_menu removed
+- Shell menu draws shortcuts, separators, skips disabled hits
+
+flow:
+- cargo test -p semio-s-app-flow-ui context_menu — 5 passed
+  [DEBUG] empty canvas omits delete-selection
+  [DEBUG] mixed: Delete selection (8 nodes and 13 edges)
+  [DEBUG] edge: Delete selection (1 edge)
+- cargo test host_from_fixture_deletes_edge / delete_selection_action_removes — passed
+  [DEBUG] deleteSelection edge s1: remaining=["s2"] ops_len=2
+
+plugin:
+- cargo test -p semio-framework-plugin selection_count — selection_count_phrase_formats_mixed_selection ok
+
+react:
+- bun nx run @semio-tech/framework-renderer-react:test -- -t "context menu" — 4 passed
+
+Root fixes found while finishing:
+1. effective_action_args: empty ActionArgDef list now passes staged args through (setSelection was stripping ids)
+2. host_from_fixture: seed flow_neuron_kind_infos_json so dag edges/ports exist (edge deleteSelection was a no-op)
+3. deleteSelection mutate: return false when host has no selection
+
+Repo MCP auth was skipped; local scratch folder used instead of ticket_open/close.

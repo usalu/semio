@@ -18,6 +18,13 @@ app = "process3d-play"
 aliases = ["process 3d"]
 ports = { react = 6022, wgpu = 6122 }
 
+[[package.metadata.semio.playground]]
+variant = "bearbeiten"
+app = "process3d-play"
+brand = "entwerfen-mit-bestand-bearbeiten"
+aliases = ["entwerfen-mit-bestand-bearbeiten"]
+ports = { react = 6031, wgpu = 6131 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "../../../../../../../✏️s/🔌️plugin/🏭️process/🛂️manifest/🗿️artifact/⚡️implementation/🦀️rust/📦️lib.rs"

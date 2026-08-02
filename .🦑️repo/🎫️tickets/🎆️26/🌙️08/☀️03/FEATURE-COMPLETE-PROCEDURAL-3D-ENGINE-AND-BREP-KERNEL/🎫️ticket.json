@@ -1,0 +1,7 @@
+{
+  "id": "2026/08/03/FEATURE-COMPLETE-PROCEDURAL-3D-ENGINE-AND-BREP-KERNEL",
+  "title": "Feature-Complete Procedural 3D Engine and BREP Kernel",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "status": "closed",
+  "summary": "Replaced procedural 3D placeholder-box preview with typed tessellate_geometry → MeshData, single eval_driver path, world-space instances, show mode/LOD/status wiring, five new brep-family examples, stronger engine/kernel tests, and Playwright screenshots per example in this ticket folder. Torus booleans keep analytic-first with mesh fallback when intersect volume is zero."
+}

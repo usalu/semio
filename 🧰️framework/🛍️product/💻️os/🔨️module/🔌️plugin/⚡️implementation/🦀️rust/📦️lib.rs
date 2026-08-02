@@ -6457,7 +6457,7 @@ mod semio_plugin_macro_tests {
                 // as an event — proving `setActiveUtility` forwards `view_state.active_utility_id` and emits no operations.
                 "setActiveUtility" => ActionEmit::event(AppEvent {
                     kind: "active-utility".into(),
-                    payload: json!({ "utilityId": view_state.active_utility_id.clone().unwrap_or_default() }),
+                    payload: dsl::to_dsl_value(&json!({ "utilityId": view_state.active_utility_id.clone().unwrap_or_default() })).unwrap_or(dsl::DslValue::Null),
                 }),
                 // 🧪️ A real `View`-kind inverse, computed from the app's own runtime state (mirrors
                 // camera-style apps): captures the pre-dispatch selection so backwards can restore it.
@@ -6725,7 +6725,7 @@ mod semio_plugin_macro_tests {
         // instead of replaying anything locally, and does NOT append a new log entry on its own.
         assert_eq!(
             result.requested_effects,
-            vec![HostEffect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(json!({ "themeId": "light" })) }]
+            vec![HostEffect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework_core::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]
         );
         assert_eq!(app.test_history().commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
     }
@@ -7305,7 +7305,7 @@ mod semio_plugin_macro_tests {
             .expect("setActiveUtility is a valid View action");
         assert!(result.operations.is_empty(), "utility switching must not create history");
         let event = result.events.iter().find(|event| event.kind == "active-utility").expect("echoed active utility");
-        assert_eq!(event.payload, json!({ "utilityId": "brush" }));
+        assert_eq!(event.payload, dsl::to_dsl_value(&json!({ "utilityId": "brush" })).unwrap());
     }
 
     #[test]
@@ -7995,8 +7995,12 @@ pub fn world3d_scene(
         None,
         None,
         None,
-        None,
         Some(world3d_environment_json(sun)),
+        None,
+        None,
+        None,
+        None,
+        None,
     )
 }
 
@@ -8014,8 +8018,12 @@ pub fn world3d_scene_extended(
     engagement_preview_json: Option<String>,
     lod_json: Option<String>,
     chunking_json: Option<String>,
-    context_menu_json: Option<String>,
     environment_json: Option<String>,
+    frame_json: Option<String>,
+    fit_json: Option<String>,
+    terrain_json: Option<String>,
+    points_json: Option<String>,
+    status_json: Option<String>,
 ) -> World3dScene {
     World3dScene {
         camera_json,
@@ -8031,13 +8039,12 @@ pub fn world3d_scene_extended(
         engagement_preview_json,
         lod_json,
         chunking_json,
-        context_menu_json,
         environment_json,
-        frame_json: None,
-        fit_json: None,
-        terrain_json: None,
-        points_json: None,
-        status_json: None,
+        frame_json,
+        fit_json,
+        terrain_json,
+        points_json,
+        status_json,
     }
 }
 
