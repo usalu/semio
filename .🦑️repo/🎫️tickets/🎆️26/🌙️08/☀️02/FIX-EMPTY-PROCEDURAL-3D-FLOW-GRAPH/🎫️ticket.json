@@ -1,0 +1,10 @@
+{
+  "title": "Fix Empty Procedural 3D Flow Graph",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Procedural 3d shows empty flows but good preview. Fix the flows. Root cause: dispatch_command_frame dropped pack envelope fallback.",
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪54bf3353a88644009e81cd1bd2ec9be1"
+  ]
+}

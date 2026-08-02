@@ -69,6 +69,7 @@
     "compose/site/*",
     "♻️mit-bestand/🎤️präsentation/*",
     "♻️mit-bestand/📋️bericht/⚡️implementation/🟦️typescript",
+    "♻️mit-bestand/🧺️demonstrator",
     "🧰️framework/🛍️product/📓️print/⚡️implementation/🟦️typescript"
   ],
   "engines": {
@@ -104,6 +105,9 @@
     "dev:puzzle:5d": "bun ./📜️script.ts dev 5d",
     "dev:puzzle:5d:concrete-forest": "bun ./📜️script.ts dev 5d fixture concrete",
     "dev:mit-bestand:aggregator": "bun ./📜️script.ts dev aggregator",
+    "dev:mit-bestand:generator": "bun ./📜️script.ts dev generator",
+    "dev:mit-bestand:koordinator": "bun ./📜️script.ts dev koordinator",
+    "dev:mit-bestand:demonstrator": "bun nx run @semio-tech/mit-bestand-demonstrator:dev",
     "dev:gis:2d": "bun ./📜️script.ts dev gis 2d",
     "dev:gis:3d": "bun ./📜️script.ts dev gis 3d",
     "dev:fem:2d": "bun ./📜️script.ts dev fem 2d",
@@ -141,6 +145,7 @@
     "build:print": "bun nx run @semio-tech/print:build",
     "build:mit-bestand:zwischenbericht": "bun nx run @semio-tech/mit-bestand-bericht:build",
     "build:mit-bestand:aggregator": "bun nx run @semio-tech/framework-os-dev:build -- aggregator",
+    "build:mit-bestand:demonstrator": "bun nx run @semio-tech/mit-bestand-demonstrator:build",
     "build:forms": "bun nx run @semio-tech/framework-playground-dev:build -- --app forms",
     "build:raster": "bun nx run @semio-tech/framework-playground-dev:build -- --app raster",
     "build:draw": "bun nx run @semio-tech/framework-playground-dev:build -- --app draw",

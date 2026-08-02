@@ -1,0 +1,9 @@
+{
+  "title": "Fix Cut Concrete Cad Example",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "CAD hexagonal cut concrete forest example is not showing; shape pane shows only a box and building/energy/structure panes are empty. Fix end-to-end so all four panes render the fixture geometry.",
+  "goal": "🎯️r2602🎯️runningsketchpad",
+  "sessions": [],
+  "summary": "Root cause: CadPlayApp::initial_projection seeded default_document (one placeholder box, empty building/energy/structure panes), and forest_play_document collapsed to that same placeholder whenever shape import returned empty. Fixed by (1) making forest_play_scene the initial projection, (2) never falling back to default_document from forest_play_document, (3) setting play fixture shape model id to spatial.shape and typology to spatial.shape.kernel.solid, (4) correcting TS play fixture filenames (.model.json), (5) caching forest_play_scene, (6) repairing BrepkitKernel test imports. Verified: semio-s-app-cad-engine 26/26, UI forest+initial tests, cad-pack round-trip."
+}

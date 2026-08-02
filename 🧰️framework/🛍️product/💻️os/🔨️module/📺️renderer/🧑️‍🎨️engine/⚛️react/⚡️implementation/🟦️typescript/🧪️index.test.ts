@@ -20,7 +20,16 @@ import {
   type UtilityNode,
   type UiNode,
 } from "@semio-tech/framework-core";
-import { ENTWERFEN_MIT_BESTAND_BRAND } from "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🏷️brand/📦️index.ts";
+import {
+  ENTWERFEN_MIT_BESTAND_BRAND,
+  ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
+  ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
+} from "../../../../../../../../../🧰️framework/🛍️product/💻️os/🔨️module/🧑️‍💻️dev/⚡️implementation/🟦️typescript/🏷️brand/📦️index.ts";
+import {
+  ENTWERFEN_MIT_BESTAND_BRAND_IDS,
+  ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION,
+} from "../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 import { Footer, navbarFillItem, SelectionMarquee, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import {
   aProjectOfLuhUdkFooterItem,
@@ -30,7 +39,7 @@ import {
   UDK_LOGO_URL,
   UDK_URL,
   ZUKUNFT_BAU_PROJECT_URL,
-} from "../../../../../../../../../♻️mit-bestand/🧺️aggregator/⚛️footer.tsx";
+} from "../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
 import {
   Canvas2dHost,
   worldToScreenLogical,
@@ -4357,7 +4366,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
   });
 
   it("resolveShellDefaults prefers env defaults over brand defaults and initialShellState seeds without locking", () => {
-    const brand = { id: "entwerfen-mit-bestand", windowTitle: "Entwerfen mit Bestand · Aggregator", defaults: { exampleId: "concrete-forest" } };
+    const brand = { id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", defaults: { exampleId: "concrete-forest" } };
     expect(resolveShellDefaults(brand, { exampleId: "nakagin-capsule-tower" })).toEqual({ exampleId: "nakagin-capsule-tower" });
     expect(resolveShellDefaults(brand, undefined)).toEqual({ exampleId: "concrete-forest" });
     expect(resolveShellDefaults(undefined, undefined)).toEqual({ exampleId: undefined });
@@ -4384,9 +4393,9 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(shouldReplayIntroductionOnLoad(undefined)).toBe(false);
     expect(shouldReplayIntroductionOnLoad({ id: "plain", windowTitle: "Plain" })).toBe(false);
     expect(shouldReplayIntroductionOnLoad({ id: "plain", windowTitle: "Plain", replayIntroductionOnLoad: false })).toBe(false);
-    expect(shouldReplayIntroductionOnLoad({ id: "entwerfen-mit-bestand", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(true);
+    expect(shouldReplayIntroductionOnLoad({ id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(true);
     expect(shouldPersistIntroductionSeen({ id: "plain", windowTitle: "Plain" })).toBe(true);
-    expect(shouldPersistIntroductionSeen({ id: "entwerfen-mit-bestand", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(false);
+    expect(shouldPersistIntroductionSeen({ id: "entwerfen-mit-bestand-aggregator", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(false);
     expect(ENTWERFEN_MIT_BESTAND_BRAND.replayIntroductionOnLoad).toBe(true);
   });
 
@@ -4414,16 +4423,29 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(ephemeralState.layout.shellLayout).toBeNull();
     localStorage.setItem("ui.chrome.appearance", "dark");
     localStorage.setItem("semio.os.dock", "{}");
-    localStorage.setItem("ui.introduction.seen.entwerfen-mit-bestand:puzzle3d-play", "true");
+    localStorage.setItem("ui.introduction.seen.entwerfen-mit-bestand-aggregator:puzzle3d-play", "true");
     clearDurableShellStorage();
     expect(localStorage.getItem("ui.chrome.appearance")).toBeNull();
     expect(localStorage.getItem("semio.os.dock")).toBeNull();
-    expect(localStorage.getItem("ui.introduction.seen.entwerfen-mit-bestand:puzzle3d-play")).toBeNull();
+    expect(localStorage.getItem("ui.introduction.seen.entwerfen-mit-bestand-aggregator:puzzle3d-play")).toBeNull();
   });
 
-  it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
-    const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "panels", "catalogue-objects", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
+  it("registers all three Entwerfen mit Bestand demonstrator shell brands", () => {
+    expect(ENTWERFEN_MIT_BESTAND_BRAND_IDS).toEqual([
+      "entwerfen-mit-bestand-aggregator",
+      "entwerfen-mit-bestand-generator",
+      "entwerfen-mit-bestand-koordinator",
+    ]);
+    expect(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.id).toBe("entwerfen-mit-bestand-aggregator");
+    expect(ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND.id).toBe("entwerfen-mit-bestand-generator");
+    expect(ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND.id).toBe("entwerfen-mit-bestand-koordinator");
+    expect(ENTWERFEN_MIT_BESTAND_BRAND).toBe(ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND);
+    expect(ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
+  });
+
+  it("ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out", () => {
+    const steps = ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND.introduction!.steps;
+    expect(steps.map((step) => step.id)).toEqual(["viewport", "panels", "catalogue-objects", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
     const viewport = steps.find((step) => step.id === "viewport")!;
     expect(viewport.ordered).toBe(false);
     expect(viewport.interactions.map((interaction) => interaction.on)).toEqual([
@@ -4488,18 +4510,18 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     });
     expect(steps.find((step) => step.id === "fill-distribution")?.body).toMatch(/Schieberegler|Verteilung/i);
 
-    const funding = steps.find((step) => step.id === "funding")!;
+    const funding = ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
     for (const logo of funding.logos!) {
-      expect(logo.src).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
-      expect(logo.darkSrc).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
+      expect(logo.src).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
+      expect(logo.darkSrc).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
       expect(logo.alt).toBeTruthy();
     }
     const zukunftBauLogo = funding.logos!.find((logo) => logo.href === ZUKUNFT_BAU_PROJECT_URL);
     expect(zukunftBauLogo).toBeDefined();
   });
 
-  it("mit-bestand/aggregator footer credits render the funding/partner logos, links, and locale text", () => {
+  it("mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text", () => {
     const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem(), navbarFillItem("fillRight")] }));
     expect(fundedByMarkup).toContain("<button");
     expect(fundedByMarkup).toContain("Funded by");
@@ -4526,8 +4548,8 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(projectOfIconOnlyMarkup).not.toContain(">und<");
     expect(projectOfIconOnlyMarkup).toContain(LUH_LOGO_URL);
     expect(projectOfIconOnlyMarkup).toContain(UDK_LOGO_URL);
-    expect(LUH_LOGO_URL).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
-    expect(UDK_LOGO_URL).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
+    expect(LUH_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
+    expect(UDK_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
   });
 
   it("buildOsCommands omits only the commands for locked prefs", () => {

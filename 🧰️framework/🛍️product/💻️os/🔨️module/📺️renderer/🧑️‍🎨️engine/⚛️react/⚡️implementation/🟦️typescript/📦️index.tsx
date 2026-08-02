@@ -4,7 +4,8 @@
 
 export type { ActionDescriptor, UiComponentSceneNode, UiNode } from "@semio-tech/framework-core";
 
-import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../../♻️mit-bestand/🧺️aggregator/⚛️footer.tsx";
+import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../../♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx";
+import { ENTWERFEN_MIT_BESTAND_BRAND_IDS } from "../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 
 import React, {
   lazy,
@@ -5497,6 +5498,7 @@ export function FrameworkOsShell({
   // directly here rather than the not-yet-declared local to avoid a definition-order dependency.
   useEffect(() => {
     if (!session || !activeIntroduction || shellState.tutorial.activeTutorialId != null) return;
+    if (typeof window !== "undefined" && window.self !== window.top) return;
     if (!replayIntroductionOnLoad && readStoredIntroductionSeen(introductionSeenKey)) return;
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
   }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId]);
@@ -8871,7 +8873,7 @@ export function FrameworkOsShell({
           { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
           { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
         ];
-    if (brand?.id === "entwerfen-mit-bestand") {
+    if (brand?.id && (ENTWERFEN_MIT_BESTAND_BRAND_IDS as readonly string[]).includes(brand.id)) {
       items.push(
         { key: "footerProjectOfGap", className: "w-huge", content: null },
         aProjectOfLuhUdkFooterItem("aProjectOfLuhUdk", uiLocale, mobile),

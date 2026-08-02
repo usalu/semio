@@ -1,0 +1,5 @@
+    Checking semio-framework-ui-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️module/🖱️ui/🧊️wgpu/⚡️implementation/🦀️rust)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/⚡️implementation/🦀️rust)
+    Checking semio-framework-os-kernel-store v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🏪️store/⚡️implementation/🦀️rust)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️product/💻️os/🔨️module/🔌️plugin/⚡️implementation/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 4.09s

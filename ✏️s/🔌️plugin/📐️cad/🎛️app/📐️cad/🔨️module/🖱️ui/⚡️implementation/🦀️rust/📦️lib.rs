@@ -32,7 +32,7 @@ use semio_framework_plugin::{
     ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json,
     world3d_environment_json, world3d_mesh_id_from_url, world3d_projection_action_moves_pose,
     world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json,
-    world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay,
+    world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay,
     AppLabelsOverlayExt, ArtifactKindSpec, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType,
     OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, IconName, SET_ACTIVE_UTILITY_ACTION_ID,
     UiFieldNode, UiGroupNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode,
@@ -2218,7 +2218,7 @@ impl DocumentApp for CadPlayApp {
     }
 
     fn initial_projection(&self) -> CadScene {
-        default_document()
+        forest_play_scene()
     }
 
     fn handle_action(
@@ -3127,35 +3127,35 @@ pub fn create_cad_app() -> App {
             .operation("scaleSelection", "Scale Selection")
             .operation("applyTransformation", "Apply Transformation")
             .operation("importCadFile", "Import CAD File")
-            .operation("patchCadPlayReference", "Patch Reference")
-            .operation("engagementSubmit", "Engagement Submit")
+            .action_with(ActionDefinition::new_catalog("patchCadPlayReference", "Patch Reference", ActionKind::Operation).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementSubmit", "Engagement Submit", ActionKind::Operation).in_palette(false))
             .view_action("setCamera", "Set Camera")
             .view_action("setProjection", "Set Projection")
             .view_action("setProjectionParam", "Set Projection Parameter")
             .operation("focusModelDefinition", "Focus Model Definition")
             .operation("setActiveExample", "Set Active Example")
-            .view_action("setSelection", "Set Selection")
-            .view_action("setNodeSelection", "Set Node Selection")
-            .view_action("worldSelect", "World Select")
-            .view_action("worldHover", "World Hover")
-            .view_action("setHover", "Set Hover")
-            .view_action("worldPick", "World Pick")
-            .view_action("setSelectionMethod", "Set Selection Method")
-            .view_action("setReferenceSelection", "Set Reference Selection")
-            .view_action("referenceHover", "Reference Hover")
-            .view_action("engagementInput", "Engagement Input")
-            .view_action("engagementPossibleSelect", "Engagement Possible Select")
-            .view_action("engagementRepeatLast", "Engagement Repeat Last")
-            .view_action("engagementAbort", "Engagement Abort")
-            .view_action("worldPointerDown", "World Pointer Down")
-            .view_action("worldPointerMove", "World Pointer Move")
-            .view_action("engagementPointerDown", "Engagement Pointer Down")
-            .view_action("setPrimitiveSelection", "Set Primitive Selection")
+            .action_with(ActionDefinition::new_catalog("setSelection", "Set Selection", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setNodeSelection", "Set Node Selection", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldSelect", "World Select", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldHover", "World Hover", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setHover", "Set Hover", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldPick", "World Pick", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setSelectionMethod", "Set Selection Method", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setReferenceSelection", "Set Reference Selection", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("referenceHover", "Reference Hover", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementInput", "Engagement Input", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementPossibleSelect", "Engagement Possible Select", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementRepeatLast", "Engagement Repeat Last", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementAbort", "Engagement Abort", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldPointerDown", "World Pointer Down", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("worldPointerMove", "World Pointer Move", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("engagementPointerDown", "Engagement Pointer Down", ActionKind::View).in_palette(false))
+            .action_with(ActionDefinition::new_catalog("setPrimitiveSelection", "Set Primitive Selection", ActionKind::View).in_palette(false))
             .view_action("toggleSun", "Toggle Sun")
             .view_action("setSunAzimuth", "Set Sun Azimuth")
             .view_action("setSunElevation", "Set Sun Elevation")
             .view_action("setSunIntensity", "Set Sun Intensity")
-            .view_action("setDislocateOption", "Set Dislocate Option")
+            .action_with(ActionDefinition::new_catalog("setDislocateOption", "Set Dislocate Option", ActionKind::View).in_palette(false))
             .shell_action("saveSelected", "Save Selected")
             .shell_action("saveInPlay", "Save In Play")
             .shell_action("saveCurrent", "Save Current")
@@ -3339,6 +3339,18 @@ mod tests {
         assert!(!scene.building_objects.is_empty(), "building pane");
         assert!(!scene.energy_objects.is_empty(), "energy pane");
         assert!(!scene.structure_classic_objects.is_empty(), "structure classic pane");
+    }
+
+    #[test]
+    fn initial_projection_is_cut_concrete_forest_not_placeholder_box() {
+        let app = CadPlayApp::default();
+        let scene = app.initial_projection();
+        assert_eq!(scene.id, CAD_EXAMPLE_FOREST_LEFT);
+        assert_ne!(scene.objects.first().map(|object| object.id.as_str()), Some("object-box-1"));
+        assert!(!scene.building_objects.is_empty(), "building pane must not be the empty default placeholder");
+        assert!(!scene.energy_objects.is_empty(), "energy pane must not be the empty default placeholder");
+        assert!(!scene.structure_classic_objects.is_empty(), "structure pane must not be the empty default placeholder");
+        assert!(scene.objects.iter().all(|object| object.solid_handle.is_some()));
     }
 
     #[test]
@@ -3547,7 +3559,7 @@ mod tests {
         // 🧰️ The framework auto-injects `setActiveUtility` as a View action once utilities are declared —
         // cad must NOT also declare it as an Operation.
         let set_active_utility = definition.actions.iter().find(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID).expect("setActiveUtility auto-injected");
-        assert_eq!(set_active_utility.kind, semio_framework_plugin::ActionKind::View);
+        assert_eq!(set_active_utility.kind, ActionKind::View);
         // 🚦️ Transform utilities gate the action panel while active (the default) — cad declares no
         // passive `allows_actions_while_active` view utilities.
         assert!(definition.utilities.iter().all(|utility| !utility.allows_actions_while_active));
@@ -3555,6 +3567,58 @@ mod tests {
         for window in &definition.window_kinds {
             let refs: Vec<&str> = window.utilities.iter().map(|utility_ref| utility_ref.as_str()).collect();
             assert_eq!(refs, vec![CAD_DISLOCATE_UTILITY_ID], "window {} utilities", window.id);
+        }
+    }
+
+    #[test]
+    fn internal_and_plumbing_actions_excluded_from_palette() {
+        let definition = create_cad_app().definition;
+        let hidden_actions = [
+            "patchCadPlayReference",
+            "engagementSubmit",
+            "setSelection",
+            "setNodeSelection",
+            "worldSelect",
+            "worldHover",
+            "setHover",
+            "worldPick",
+            "setSelectionMethod",
+            "setReferenceSelection",
+            "referenceHover",
+            "engagementInput",
+            "engagementPossibleSelect",
+            "engagementRepeatLast",
+            "engagementAbort",
+            "worldPointerDown",
+            "worldPointerMove",
+            "engagementPointerDown",
+            "setPrimitiveSelection",
+            "setDislocateOption",
+        ];
+        for action_id in hidden_actions {
+            let action = definition
+                .actions
+                .iter()
+                .find(|entry| entry.id == action_id)
+                .unwrap_or_else(|| panic!("action {action_id} missing from manifest"));
+            assert!(!action.in_palette, "internal action {action_id} must have in_palette: false");
+        }
+
+        let palette_user_actions = [
+            "addObject",
+            "deleteObject",
+            "duplicateObject",
+            "translateSelection",
+            "rotateSelection",
+            "scaleSelection",
+        ];
+        for action_id in palette_user_actions {
+            let action = definition
+                .actions
+                .iter()
+                .find(|entry| entry.id == action_id)
+                .unwrap_or_else(|| panic!("user action {action_id} missing from manifest"));
+            assert!(action.in_palette, "user action {action_id} must have in_palette: true");
         }
     }
 

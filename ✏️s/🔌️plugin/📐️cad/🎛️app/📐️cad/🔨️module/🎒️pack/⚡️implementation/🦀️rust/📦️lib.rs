@@ -18,7 +18,6 @@ pub fn decode(bytes: &[u8]) -> Result<CadScene, PackError> {
 mod tests {
     use super::*;
     use cad_document::{empty_cad_projection, CadEdge, CadEdgeCurve, CadFace, CadGeometry, CadNode, CadObject, CadPaneId, CadPlaneSurface, CadPrimitiveSlot, CadReference, CadShell, CadSolid, CadVertex, CadWire};
-    use serde_json::json;
 
     fn sample_object(id: &str) -> CadObject {
         CadObject {
@@ -39,7 +38,7 @@ mod tests {
 
     fn sample_geometry() -> CadGeometry {
         CadGeometry {
-            anchors: vec![json!({ "id": "anchor-1", "position": [0.0, 0.0, 0.0] })],
+            anchors: vec![],
             vertices: vec![CadVertex { id: "v1".into(), position: [0.0, 0.0, 0.0] }, CadVertex { id: "v2".into(), position: [1.0, 0.0, 0.0] }],
             edges: vec![CadEdge { id: "e1".into(), vertex_ids: vec!["v1".into(), "v2".into()], curve: CadEdgeCurve { kind: "line".into() } }],
             wires: vec![CadWire { id: "w1".into(), edge_ids: vec!["e1".into()] }],

@@ -3738,6 +3738,17 @@ impl ActionDefinition {
         self.args = args.into_iter().collect();
         self
     }
+
+    /// @emoji 🎨️ Sets palette visibility for this action.
+    pub fn with_in_palette(mut self, in_palette: bool) -> Self {
+        self.in_palette = in_palette;
+        self
+    }
+
+    /// @emoji 🎨️ Sets palette visibility for this action.
+    pub fn in_palette(self, in_palette: bool) -> Self {
+        self.with_in_palette(in_palette)
+    }
 }
 
 /// @emoji ⏪️ The framework-owned action id apps dispatch to revert to a past command-log entry —

@@ -1284,7 +1284,65 @@
       }
     },
     {
-      "name": "🛠️dev🧩️puzzle🩻️2d⚛️react",
+      "name": "🛠️dev🏚️mitbestand🎪️demonstrator",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:demonstrator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "MIT_BESTAND_DEMONSTRATOR_PORT": "6029",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 213
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6029)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏚️mitbestand⚙️generator⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:generator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6027",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 214
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6027)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏚️mitbestand🧭️koordinator⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:koordinator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6028",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 215
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6028)",
+        "uriFormat": "%s"
+      }
+    },
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",
@@ -4010,6 +4068,17 @@
       "presentation": {
         "group": "4_build",
         "order": 132
+      }
+    },
+    {
+      "name": "📦️build🏚️mitbestand🎪️demonstrator",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:mit-bestand:demonstrator",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 133
       }
     },
     {

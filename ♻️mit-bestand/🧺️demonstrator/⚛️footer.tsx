@@ -59,13 +59,13 @@ export function ZukunftBauLogo({ className, style }: { className?: string; style
 
 //#region 🏛️LuhLogo
 /** @emoji 🏛️ Leibniz Universität Hannover wordmark for partner chrome credits. @see https://www.iek.uni-hannover.de/ngs/team */
-export const LUH_LOGO_URL = "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️luh.png";
+export const LUH_LOGO_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logo/🖼️luh.png";
 /** @emoji 🏛️ Dark-appearance LUH wordmark. */
-export const LUH_LOGO_DARK_URL = "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️luh-dark.png";
+export const LUH_LOGO_DARK_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logo/🖼️luh-dark.png";
 /** @emoji 🏛️ LUH NGS team page. */
 export const LUH_URL = "https://www.iek.uni-hannover.de/ngs/team";
 
-/** @emoji 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `♻️mit-bestand/🧺️aggregator/🖼️asset`. */
+/** @emoji 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
 export function LuhLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
@@ -78,13 +78,13 @@ export function LuhLogo({ className, style }: { className?: string; style?: Reac
 
 //#region 🏛️UdkLogo
 /** @emoji 🏛️ Universität der Künste Berlin wordmark for partner chrome credits. @see https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/ */
-export const UDK_LOGO_URL = "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️udk.png";
+export const UDK_LOGO_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logo/🖼️udk.png";
 /** @emoji 🏛️ Dark-appearance UdK wordmark. */
-export const UDK_LOGO_DARK_URL = "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️udk-dark.png";
+export const UDK_LOGO_DARK_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️asset/🪧️logo/🖼️udk-dark.png";
 /** @emoji 🏛️ UdK KET team page. */
 export const UDK_URL = "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/";
 
-/** @emoji 🏛️ Universität der Künste Berlin logo with light/dark variants served from `♻️mit-bestand/🧺️aggregator/🖼️asset`. */
+/** @emoji 🏛️ Universität der Künste Berlin logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
 export function UdkLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>

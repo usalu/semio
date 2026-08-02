@@ -4845,8 +4845,9 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
 
     /// 🎯️ The actual body of `PluginApp::handle_command_frame` — see `dispatch_action`'s doc. Prefers
     /// `DocumentApp::handle_typed_command`; when the app returns `None` (hasn't migrated to typed
-    /// commands yet) falls back to decoding `command_bytes` as a legacy JSON envelope — removed;
-    /// apps must handle typed command frames via `DocumentApp::handle_typed_command`.
+    /// commands yet) falls back to decoding `command_bytes` as a `store::pack_rt::decode_wire_value`
+    /// `{kind, name, args}` envelope and routing through `dispatch_action`/`dispatch_command` unchanged
+    /// — so an unmigrated app keeps working byte-identically over the new binary channel.
     fn dispatch_command_frame(&mut self, command_bytes: &[u8], view_state: &ViewState, meta: &ActionMeta) -> Result<InvocationResult, String> {
         self.refresh_cache()?;
         let typed = {
@@ -4858,7 +4859,17 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         match typed {
             Some(Ok(emit)) => self.dispatch_emit("typed-command", emit, meta),
             Some(Err(message)) => Err(message),
-            None => Err("app must handle command frames via handle_typed_command".into()),
+            None => {
+                let envelope = store::pack_rt::decode_wire_value(command_bytes).map_err(|error| error.to_string())?;
+                let kind = envelope.get("kind").and_then(DslValue::as_str).unwrap_or("action").to_string();
+                let name = envelope.get("name").and_then(DslValue::as_str).unwrap_or("").to_string();
+                let args = envelope.get("args").cloned().map(store::pack_rt::dsl_value_to_json);
+                if kind == "command" {
+                    self.dispatch_command(&name, args.as_ref(), view_state, meta)
+                } else {
+                    self.dispatch_action(&name, args.as_ref(), view_state, meta)
+                }
+            }
         }
     }
 

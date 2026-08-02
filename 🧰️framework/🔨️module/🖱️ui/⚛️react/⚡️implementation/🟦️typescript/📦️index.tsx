@@ -37819,7 +37819,7 @@ if (treeVitest) {
       expect(measuresMarkup).not.toContain("border-emphasized");
     });
 
-    it("emphasizes parent shell borders via CSS while the pointer is inside navbar, footer, panel, or pane", async () => {
+    it("keeps inactive window chrome neutral while controls emphasize only on direct hover", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
@@ -37831,20 +37831,20 @@ if (treeVitest) {
       expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
       expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
       expect(css).toContain("background-color: var(--border-emphasized-color)");
-      expect(css).toMatch(/\[data-window-silhouette\]:not\(\[data-active="true"\]\):hover \[data-window-silhouette-border\]\[data-kind="normal"\] path/);
+      expect(css).not.toMatch(/\[data-window-silhouette\]:not\(\[data-active="true"\]\):hover \[data-window-silhouette-border\]\[data-kind="normal"\] path/);
       expect(css).toMatch(/:is\(\[data-slot="panel"\]\[data-panel="mobilePanel"\]\):hover\s*\[data-slot="chrome-frame"\]/);
       expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
       expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
       expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
       expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
-      expect(css).toMatch(
-        /\[data-window-silhouette\]:is\(\s*:has\(\[data-slot="mode-dock-stack-body"\]:hover\)[\s\S]*?\)\s*\[data-slot="mode-dock-tab"\]\[data-stack-active="true"\]:not\(\[data-handle-hovered="true"\]\)\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
-      );
-      expect(css).toMatch(
-        /\[data-window-silhouette\]:is\([\s\S]*?:has\(\[data-slot="mode-dock-tab"\]\[data-stack-active="true"\]:hover\)[\s\S]*?\)\s*\[data-slot="mode-dock-tab"\]\[data-stack-active="true"\]\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
-      );
-      expect(css).toMatch(/\[data-slot="window-chrome-stack"\]:is\([\s\S]*?:has\(\[data-slot="panel-content"\]:hover\)[\s\S]*?\)\s*\[data-slot\$="-tab-button"\]\[data-active="true"\]:not\(\[data-handle-hovered="true"\]\)\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
-      expect(css).toMatch(/\[data-slot="window-chrome-stack"\]:is\([\s\S]*?:has\(\[data-slot="window-chrome-controls"\]:hover\)[\s\S]*?\)\s*\[data-slot\$="-tab-button"\]\[data-active="true"\]\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
+      expect(css).not.toContain(':has([data-slot="mode-dock-stack-body"]:hover)');
+      expect(css).not.toContain(') [data-slot="mode-dock-tab"][data-stack-active="true"]:not([data-handle-hovered="true"])');
+      expect(css).not.toContain(') [data-slot="mode-dock-tab"][data-stack-active="true"] [data-slot="drag-handle"]');
+      expect(css).not.toContain(') [data-slot$="-tab-button"][data-active="true"]:not([data-handle-hovered="true"])');
+      expect(css).not.toContain(') [data-slot$="-tab-button"][data-active="true"] [data-slot="drag-handle"]');
+      expect(css).not.toContain(') [data-slot="window-pane-chrome-toggle"]:not([data-handle-hovered="true"])');
+      expect(css).not.toContain(') [data-slot="window-pane-chrome-toggle"] [data-slot="drag-handle"]');
+      expect(modeDockTabClassName).toContain("hover:not-data-[handle-hovered=true]:text-emphasized");
     });
 
     it("panel and pane silhouettes stay normal until the surface receives focus and expose fold controls", async () => {
@@ -38099,11 +38099,13 @@ if (treeVitest) {
       expect(rightMarkup).not.toMatch(/data-slot="window-chrome-stack"[^>]*flex-col-reverse/);
     });
 
-    it("pane and panel chrome toggles keep the drag handle inside data-hover-scope so parent hover can emphasize it", () => {
+    it("pane and panel chrome toggles emphasize only their own hovered content", () => {
       const paneMarkup = renderToStaticMarkup(<WindowPaneChromeToggle id="ui.pane.toggle.hover" icon={WINDOW_PANE_MEASURES_ICON} label="Options" dragPointerProps={{ onPointerDown: () => {} }} />);
       expect(paneMarkup).toContain("data-hover-scope");
       expect(paneMarkup).toContain('data-slot="drag-handle"');
       expect(paneMarkup).toMatch(/data-hover-scope[\s\S]*data-slot="drag-handle"/);
+      const toggleClassName = paneMarkup.match(/data-slot="window-pane-chrome-toggle"[^>]*class="([^"]+)"/)?.[1] ?? "";
+      expect(toggleClassName).toContain("hover:not-data-[handle-hovered=true]:text-emphasized");
       const handleClassName = paneMarkup.match(/data-slot="drag-handle"[^>]*class="([^"]+)"/)?.[1] ?? "";
       expect(handleClassName).toContain("text-muted-foreground");
       expect(handleClassName).toContain("hover:text-emphasized");

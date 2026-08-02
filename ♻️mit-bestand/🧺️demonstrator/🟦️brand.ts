@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🏷️ "Entwerfen mit Bestand Aggregator" brand — German, reuse-terminology, theme-locked standalone puzzle3d. */
+/** @emoji 🏷️ Entwerfen mit Bestand demonstrator brands — shared landing introduction plus per-app shell brands. */
 // #endregion 🧲️Header
 
 import {
@@ -7,9 +7,81 @@ import {
   panelTabFirstDraggableElementId,
   windowElementId,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+  type IntroductionDefinition,
   type ShellBrand,
   type TutorialDefinition,
 } from "../../🧰️framework/⚡️implementation/🟦️typescript/📦️index.ts";
+
+//#region 🏷️DemonstratorShared
+/** @emoji 🌐️ Production host for the merged demonstrator static site. */
+export const DEMONSTRATOR_HOST = "demonstrator.entwerfen.mit-bestand.de";
+
+/** @emoji 🗂️ Repo-root-relative static assets for all demonstrator brands and the landing page. */
+export const DEMONSTRATOR_ASSETS_DIR = "♻️mit-bestand/🧺️demonstrator/🖼️asset";
+
+/** @emoji 🏷️ Shell brand ids that receive Entwerfen-mit-Bestand partner chrome in the react renderer. */
+export const ENTWERFEN_MIT_BESTAND_BRAND_IDS = [
+  "entwerfen-mit-bestand-aggregator",
+  "entwerfen-mit-bestand-generator",
+  "entwerfen-mit-bestand-koordinator",
+] as const;
+
+export type EntwerfenMitBestandBrandId = (typeof ENTWERFEN_MIT_BESTAND_BRAND_IDS)[number];
+
+/** @emoji ✒️ Semio emblem shared across demonstrator brands and the landing page. */
+export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
+
+const demonstratorLogoUrl = (file: string) => `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logo/${file}`;
+
+/** @emoji 🎓️ General demonstrator introduction shown on the landing page only (not inside app shells). */
+export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition = {
+  title: "Willkommen bei Entwerfen mit Bestand",
+  steps: [
+    {
+      id: "welcome",
+      title: "Willkommen bei Entwerfen mit Bestand",
+      body: "Der Demonstrator vereint drei Werkzeuge des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
+      introduce: null,
+      show: [],
+      placement: "center",
+      interactions: [],
+      ordered: false,
+      logos: [],
+      demonstrations: [],
+    },
+    {
+      id: "prototype",
+      title: "Früher Prototyp",
+      body: "Dieser Demonstrator befindet sich in aktiver Entwicklung. Viele Funktionen sind noch unvollständig oder nur als Platzhalter vorhanden — sie zeigen die Richtung des Projekts, nicht seinen finalen Stand. Wenn die Seite nicht mehr richtig funktioniert, können Sie sie neu laden.",
+      introduce: null,
+      show: [],
+      placement: "center",
+      interactions: [],
+      ordered: false,
+      logos: [],
+      demonstrations: [],
+    },
+    {
+      id: "funding",
+      title: "Förderhinweis",
+      body: "Dieses Projekt wird gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung im Auftrag des Bundesministeriums für Wohnen, Stadtentwicklung und Bauwesen aus Mitteln der Zukunft Bau Forschungsförderung.",
+      introduce: null,
+      show: [],
+      placement: "center",
+      interactions: [],
+      ordered: false,
+      logos: [
+        { src: demonstratorLogoUrl("🖼️bmwsb.png"), darkSrc: demonstratorLogoUrl("🖼️bmwsb-dark.png"), alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
+        { src: demonstratorLogoUrl("🖼️bbsr.png"), darkSrc: demonstratorLogoUrl("🖼️bbsr-dark.png"), alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
+        { src: demonstratorLogoUrl("🖼️zukunft-bau.png"), darkSrc: demonstratorLogoUrl("🖼️zukunft-bau-dark.png"), alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
+      ],
+      demonstrations: [],
+    },
+  ],
+};
+
+const DEMONSTRATOR_DIST_STAGING = "♻️mit-bestand/🧺️demonstrator/dist-staging";
+//#endregion 🏷️DemonstratorShared
 
 //#region 🎬️EntwerfenMitBestandTutorial
 /** 🪟️ The Aggregator's one 3D window instance — matches `puzzle/plugin/rs/lib.rs`'s `puzzle3d-main` window
@@ -260,13 +332,10 @@ export const ENTWERFEN_MIT_BESTAND_TUTORIAL: TutorialDefinition = {
 };
 //#endregion 🎬️EntwerfenMitBestandTutorial
 
-//#region 🏷️EntwerfenMitBestandBrand
-/** @emoji ✒️ Semio emblem. */
-const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
-
-/** 🏷️ The Aggregator ships puzzle3d with locked German locale, locked reuse terminology (window "Aggregator", document "Entwerfen mit Bestand", example "Abbau Aufbau"), locked semio theme, switchable appearance, a brand-owned German introduction, a brand-owned recorded tutorial (`ENTWERFEN_MIT_BESTAND_TUTORIAL`), and Abbau Aufbau (`concrete-forest`) seeded as the default-but-switchable example. Ephemeral: nothing survives a window refresh — dock, panes, chrome prefs, and the introduction all reset to brand defaults. Introduced/shown element ids reference `puzzle/plugin/rs/lib.rs`'s puzzle3d app (`puzzle3d-main`, `transform`, `addObjectKind`, `puzzle3d-play-vortex-show`, `tool.fill`, `puzzle3d-play-distribution`, `puzzle3d-play-kinds.objects`, `setVortexShow`, `acceptSuggestion`) and `framework/core/js`'s `FRAMEWORK_PANEL_TAB_CATALOGUE_ID`. Tour order: viewport → open Katalog panel → expand Baukomponenten → drag-and-drop → transform → Verbindungspunkte → Vorschlag wählen → Füllen → Verteilung. */
-export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
-  id: "entwerfen-mit-bestand",
+//#region 🏷️EntwerfenMitBestandAggregatorBrand
+/** 🏷️ Aggregator (puzzle3d): reuse terminology, app-specific introduction, recorded tutorial, Abbau Aufbau default example. */
+export const ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-aggregator",
   windowTitle: "Entwerfen mit Bestand · Aggregator",
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
   locks: { locale: "de", terminology: "reuse", themeId: "semio" },
@@ -274,52 +343,11 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
   ephemeral: true,
   replayIntroductionOnLoad: true,
   tutorials: [ENTWERFEN_MIT_BESTAND_TUTORIAL],
-  assetsDir: "♻️mit-bestand/🧺️aggregator/🖼️asset",
-  distDir: "♻️mit-bestand/🧺️aggregator/dist",
-  cnameHost: "demonstrator.entwerfen.mit-bestand.de",
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  distDir: `${DEMONSTRATOR_DIST_STAGING}/aggregator`,
   introduction: {
     title: "Willkommen beim Aggregator",
     steps: [
-      {
-        id: "welcome",
-        title: "Willkommen bei Entwerfen mit Bestand",
-        body: "Der Aggregator ist der Demonstrator des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
-        introduce: null,
-        show: [],
-        placement: "center",
-        interactions: [],
-        ordered: false,
-        logos: [],
-        demonstrations: [],
-      },
-      {
-        id: "prototype",
-        title: "Früher Prototyp",
-        body: "Dieser Demonstrator befindet sich in aktiver Entwicklung. Viele Funktionen sind noch unvollständig oder nur als Platzhalter vorhanden — sie zeigen die Richtung des Projekts, nicht seinen finalen Stand. Wenn die Seite nicht mehr richtig funktioniert, können Sie sie neu laden.",
-        introduce: null,
-        show: [],
-        placement: "center",
-        interactions: [],
-        ordered: false,
-        logos: [],
-        demonstrations: [],
-      },
-      {
-        id: "funding",
-        title: "Förderhinweis",
-        body: "Dieses Projekt wird gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung im Auftrag des Bundesministeriums für Wohnen, Stadtentwicklung und Bauwesen aus Mitteln der Zukunft Bau Forschungsförderung.",
-        introduce: null,
-        show: [],
-        placement: "center",
-        interactions: [],
-        ordered: false,
-        logos: [
-          { src: "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️bmwsb.png", darkSrc: "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️bmwsb-dark.png", alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
-          { src: "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️bbsr.png", darkSrc: "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️bbsr-dark.png", alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
-          { src: "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️zukunft-bau.png", darkSrc: "/♻️mit-bestand/🧺️aggregator/🖼️asset/🪧️logo/🖼️zukunft-bau-dark.png", alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
-        ],
-        demonstrations: [],
-      },
       {
         id: "viewport",
         title: "Die 3D-Ansicht",
@@ -458,4 +486,110 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
     ],
   },
 };
-//#endregion 🏷️EntwerfenMitBestandBrand
+//#endregion 🏷️EntwerfenMitBestandAggregatorBrand
+
+const PROCEDURAL_MAIN_WINDOW_ID = "procedural-main";
+const CAD_SHAPE_WINDOW_ID = "cad-play-shape";
+
+//#region 🏷️EntwerfenMitBestandGeneratorBrand
+/** 🏷️ Generator (procedural3d): parametric flow editor for reuse-oriented component generation. */
+export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-generator",
+  windowTitle: "Entwerfen mit Bestand · Generator",
+  logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
+  locks: { locale: "de", themeId: "semio" },
+  defaults: { exampleId: "hexagonal-mushroom-column" },
+  ephemeral: true,
+  replayIntroductionOnLoad: true,
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  distDir: `${DEMONSTRATOR_DIST_STAGING}/generator`,
+  introduction: {
+    title: "Willkommen beim Generator",
+    steps: [
+      {
+        id: "viewport",
+        title: "Der Ablauf-Editor",
+        body: "Im Generator entwerfen Sie parametrische Abläufe für Baukomponenten. Zoomen Sie mit dem Mausrad, verschieben Sie mit Mittelklick ziehen und orbitieren Sie mit Alt + Rechtsklick ziehen.",
+        introduce: windowElementId(PROCEDURAL_MAIN_WINDOW_ID),
+        show: [],
+        placement: "auto",
+        interactions: [
+          { on: { kind: "zoom", id: PROCEDURAL_MAIN_WINDOW_ID }, label: "Zoomen (Mausrad)" },
+          { on: { kind: "pan", id: PROCEDURAL_MAIN_WINDOW_ID }, label: "Verschieben (Mittelklick ziehen)" },
+          { on: { kind: "orbit", id: PROCEDURAL_MAIN_WINDOW_ID }, label: "Orbitieren (Alt + Rechtsklick ziehen)" },
+        ],
+        ordered: false,
+        logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId(PROCEDURAL_MAIN_WINDOW_ID), x: 0.5, y: 0.5 }, deltaY: -100 } },
+        ],
+      },
+      {
+        id: "panels",
+        title: "Paneele",
+        body: "Über die Reiter in der Leiste öffnen und schließen Sie Paneele — zum Beispiel Katalog, Dokument oder Inspektion. Klicken Sie mit der linken Maustaste auf den Katalog-Reiter, um das Katalog-Paneel zu öffnen.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [],
+        placement: "auto",
+        interactions: [{ on: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID }, label: "Katalog-Reiter anklicken" }],
+        ordered: false,
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+    ],
+  },
+};
+//#endregion 🏷️EntwerfenMitBestandGeneratorBrand
+
+//#region 🏷️EntwerfenMitBestandKoordinatorBrand
+/** 🏷️ Koordinator (cad): multi-model coordination for shape, building, energy, and structure views. */
+export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
+  id: "entwerfen-mit-bestand-koordinator",
+  windowTitle: "Entwerfen mit Bestand · Koordinator",
+  logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
+  locks: { locale: "de", themeId: "semio" },
+  defaults: { exampleId: "hexagonal-cut-concrete-forest-left" },
+  ephemeral: true,
+  replayIntroductionOnLoad: true,
+  assetsDir: DEMONSTRATOR_ASSETS_DIR,
+  distDir: `${DEMONSTRATOR_DIST_STAGING}/koordinator`,
+  introduction: {
+    title: "Willkommen beim Koordinator",
+    steps: [
+      {
+        id: "viewport",
+        title: "Die Modellansichten",
+        body: "Der Koordinator verbindet Form-, Gebäude-, Energie- und Tragwerksmodelle. Zoomen Sie mit dem Mausrad, verschieben Sie mit Mittelklick ziehen und orbitieren Sie mit Alt + Rechtsklick ziehen.",
+        introduce: windowElementId(CAD_SHAPE_WINDOW_ID),
+        show: [],
+        placement: "auto",
+        interactions: [
+          { on: { kind: "zoom", id: CAD_SHAPE_WINDOW_ID }, label: "Zoomen (Mausrad)" },
+          { on: { kind: "pan", id: CAD_SHAPE_WINDOW_ID }, label: "Verschieben (Mittelklick ziehen)" },
+          { on: { kind: "orbit", id: CAD_SHAPE_WINDOW_ID }, label: "Orbitieren (Alt + Rechtsklick ziehen)" },
+        ],
+        ordered: false,
+        logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId(CAD_SHAPE_WINDOW_ID), x: 0.5, y: 0.5 }, deltaY: -100 } },
+        ],
+      },
+      {
+        id: "panels",
+        title: "Paneele",
+        body: "Über die Reiter öffnen Sie Katalog, Dokument und weitere Paneele. Klicken Sie auf den Katalog-Reiter, um verfügbare Bausteine zu durchsuchen.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [],
+        placement: "auto",
+        interactions: [{ on: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID }, label: "Katalog-Reiter anklicken" }],
+        ordered: false,
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+    ],
+  },
+};
+//#endregion 🏷️EntwerfenMitBestandKoordinatorBrand
+
+/** @emoji 🏷️ Legacy export name — the Aggregator brand after the demonstrator split. */
+export const ENTWERFEN_MIT_BESTAND_BRAND = ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND;

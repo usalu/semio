@@ -569,6 +569,7 @@ pub mod geometry_import {
     #[cfg(test)]
     mod tests {
         use super::*;
+        use kernel_3d_brepkit::BrepkitKernel;
 
         fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
             let i0 = mesh.indices[triangle_index * 3] as usize;
@@ -1197,6 +1198,7 @@ pub mod transformation {
     #[cfg(test)]
     mod tests {
         use super::*;
+        use kernel_3d_brepkit::BrepkitKernel;
 
         #[test]
         fn derive_from_geometry_classifies_box() {
@@ -2154,6 +2156,7 @@ pub mod interaction {
     #[cfg(test)]
     mod tests {
         use super::*;
+        use kernel_3d_brepkit::BrepkitKernel;
 
         #[test]
         fn catalog_includes_json_driven_and_legacy_building_entries() {
@@ -2612,13 +2615,11 @@ pub fn default_document() -> CadScene {
     }
 }
 
-/// @emoji 🪟️ Builds the quad play document: shape/building/energy/structure-classic panes each
-/// sourced from their own model definition inside the shared fixture JSON.
+/// @emoji 📟️ Builds the quad play document: shape/building/energy/structure-classic panes each
+/// sourced from their own model definition inside the shared fixture JSON. Empty panes stay empty —
+/// never collapse to `default_document` (that single-box placeholder was the cut-concrete bug).
 fn forest_play_document(source_json: &str, id: &str) -> CadScene {
     let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
-    if shape_objects.is_empty() {
-        return default_document();
-    }
     let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
     let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
     let (structure_classic_objects, structure_classic_geometry) =
@@ -2645,9 +2646,13 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
 }
 
 /// @emoji 🌲️ The Concrete Forest Left example projection — a bare `CadScene` (no runtime/history),
-/// wrapped into a `DocumentStore` by `VcsDocumentApp` when spawned.
+/// wrapped into a `DocumentStore` by `VcsDocumentApp` when spawned. Cached so manifest registration,
+/// `initial_projection`, and `setActiveExample` share one BREP import instead of rebuilding thrice.
 pub fn forest_play_scene() -> CadScene {
-    forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)
+    static FOREST_PLAY_SCENE: OnceLock<CadScene> = OnceLock::new();
+    FOREST_PLAY_SCENE
+        .get_or_init(|| forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT))
+        .clone()
 }
 
 pub fn next_cad_id(prefix: &str) -> String {

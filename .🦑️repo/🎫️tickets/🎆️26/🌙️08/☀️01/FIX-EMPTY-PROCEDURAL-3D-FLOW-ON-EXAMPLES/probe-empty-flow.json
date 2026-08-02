@@ -1,0 +1,234 @@
+{
+  "title": "semio · procedural · 3d",
+  "bodyStart": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nProjection\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+  "hasExclamation": false,
+  "editText": "Edit\n  \n  \n  \n",
+  "canvasCount": 3,
+  "canvases": [
+    {
+      "w": 300,
+      "h": 150,
+      "cw": 966,
+      "ch": 807,
+      "parent": "relative h-full w-full"
+    },
+    {
+      "w": 966,
+      "h": 807,
+      "cw": 966,
+      "ch": 807,
+      "parent": "relative h-full w-full"
+    },
+    {
+      "w": 451,
+      "h": 807,
+      "cw": 451,
+      "ch": 807,
+      "parent": ""
+    }
+  ],
+  "svgNodeCount": 0,
+  "allSvg": [
+    {
+      "w": 182,
+      "h": 22,
+      "children": 1,
+      "slot": "window-chrome-silhouette-border"
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 6,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 6,
+      "slot": ""
+    },
+    {
+      "w": 92,
+      "h": 22,
+      "children": 1,
+      "slot": "window-chrome-silhouette-border"
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 6,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 24,
+      "h": 24,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 10,
+      "h": 10,
+      "children": 1,
+      "slot": ""
+    },
+    {
+      "w": 10,
+      "h": 10,
+      "children": 1,
+      "slot": ""
+    },
+    {
+      "w": 10,
+      "h": 10,
+      "children": 1,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 3,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 973,
+      "h": 836,
+      "children": 1,
+      "slot": "mode-dock-silhouette-border"
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 6,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 4,
+      "slot": ""
+    },
+    {
+      "w": 16,
+      "h": 16,
+      "children": 2,
+      "slot": ""
+    }
+  ],
+  "danger": [
+    {
+      "tag": "BUTTON",
+      "text": "\n  \n  \n  \n  \nDocument\n  \n  \n  \n  \n  \n  \n",
+      "cls": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-selectable disabled:pointer-events-none di"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "\n  \n  \n  \n  \nCatalogue\n  \n  \n  \n  \n  \n  \n",
+      "cls": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-selectable disabled:pointer-events-none di"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "\n  \n  \n  \n  \nInspection\n  \n  \n  \n  \n  \n  \n",
+      "cls": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-selectable disabled:pointer-events-none di"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Fullscreen\n  \n  \n  \n  \n",
+      "cls": "text-element justify-center gap-single text-xs font-medium bg-transparent cursor-selectable disabled:pointer-events-none"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "\n  \n\n  \nHexagonal Mushroom Column\n  \n",
+      "cls": "text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex items-cen"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Edit\n  \n  \n  \n",
+      "cls": "justify-center gap-single text-xs font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disable"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "Generate\n  \n  \n  \n  \n",
+      "cls": "text-element justify-center gap-single text-xs font-medium bg-transparent cursor-selectable disabled:pointer-events-none"
+    },
+    {
+      "tag": "DIV",
+      "text": "\n  \n  \n  \n  \nFlow\n  \n  \n  \n  \n  \n  \n",
+      "cls": "pointer-events-auto text-element inline-flex justify-center gap-single text-xs font-medium bg-transparent cursor-selecta"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "\n  \n  \n  \n  \nWindow Options",
+      "cls": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-selectable disabled:cursor-not-allowed [&_"
+    },
+    {
+      "tag": "BUTTON",
+      "text": "\n  \nActions",
+      "cls": "text-element inline-flex justify-center gap-single text-xs font-medium cursor-selectable disabled:cursor-not-allowed [&_"
+    }
+  ],
+  "windowSample": [
+    {
+      "slot": "window",
+      "title": "",
+      "text": "\n  \n  \n  \n  \nWindow Options\n  \nActions\n  \n  \n  \nUtilities",
+      "childCount": 2
+    },
+    {
+      "slot": "window",
+      "title": "",
+      "text": "\n  \n  \n  \n  \nProjection\n  \n  \n  \n  \n  \n  \n\n  \n  \n  \n  \nWindow Options\n  \nActions\n  \n  \n  \nUtilities",
+      "childCount": 2
+    }
+  ],
+  "consoles": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] action failed setActiveExample {exampleId: hexagonal-mushroom-column} Error: [DEBUG] action 'setActiveExample' failed (handler): app must handle command frames via handle_typed_command\n    at performCommand (http://127.0.0.1:6018/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx:7699:13)"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] action failed nodeGraphSelect {surfaceId: procedural.play, nodeIds: Array(0)} Error: [DEBUG] action 'nodeGraphSelect' failed (handler): app must handle command frames via handle_typed_command\n    at performCommand (http://127.0.0.1:6018/@fs/Users/ueli/Documents/semio/%F0%9F%A7%B0%EF%B8%8Fframework/%F0%9F%9B%8D%EF%B8%8Fproduct/%F0%9F%92%BB%EF%B8%8Fos/%F0%9F%94%A8%EF%B8%8Fmodule/%F0%9F%93%BA%EF%B8%8Frenderer/%F0%9F%A7%91%EF%B8%8F%E2%80%8D%F0%9F%8E%A8%EF%B8%8Fengine/%E2%9A%9B%EF%B8%8Freact/%E2%9A%A1%EF%B8%8Fimplementation/%F0%9F%9F%A6%EF%B8%8Ftypescript/%F0%9F%93%A6%EF%B8%8Findex.tsx:7699:13)"
+    }
+  ],
+  "allConsoleCount": 6
+}

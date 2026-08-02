@@ -7136,7 +7136,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { resolve } = await import("node:path");
       const { ModelSpace } = await import("@semio-tech/cad-js-core");
-      const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../asset/play/🔣️hexagonal-cut-concrete-forest-left.🔣️model.json"), "utf8"));
+      const json = JSON.parse(readFileSync(resolve(import.meta.dirname, "../../asset/play/🔣️hexagonal-cut-concrete-forest-left.model.json"), "utf8"));
       const model = (ModelSpace.fromJSON(json).models[defaultModelDefinitionId()] ?? ModelSpace.fromJSON(json).models[""])!;
       const mdId = defaultModelDefinitionId();
       expect(Object.keys(model.solids).length).toBeGreaterThan(0);

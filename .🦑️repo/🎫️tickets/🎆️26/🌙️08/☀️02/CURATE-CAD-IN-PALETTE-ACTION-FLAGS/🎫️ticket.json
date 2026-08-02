@@ -1,0 +1,9 @@
+{
+  "title": "Curate Cad In Palette Action Flags",
+  "emoji": "📐️",
+  "status": "closed",
+  "description": "Curate CAD in_palette action flags in create_cad_app() so internal pointer/engagement plumbing actions are excluded from the command palette and context menus.",
+  "goal": "R26-02",
+  "sessions": [],
+  "summary": "Curated CAD's action in_palette flags in create_cad_app(): (1) Added with_in_palette and in_palette builder methods to ActionDefinition in semio-framework-core (🧰️framework/⚡️implementation/🦀️rust/📦️lib.rs); (2) Marked all 20 internal/plumbing actions (worldHover, setHover, worldPick, engagementInput, engagementPossibleSelect, engagementRepeatLast, engagementAbort, worldPointerDown, worldPointerMove, engagementPointerDown, referenceHover, setSelectionMethod, setSelection, setNodeSelection, setReferenceSelection, setPrimitiveSelection, setDislocateOption, patchCadPlayReference, engagementSubmit, worldSelect) with in_palette: false in create_cad_app(); (3) Extended CAD's unit tests with internal_and_plumbing_actions_excluded_from_palette() to assert that internal plumbing actions have in_palette: false and user actions retain in_palette: true; (4) Verified all 65 unit tests in semio-s-app-cad-ui pass cleanly."
+}
